@@ -23,7 +23,8 @@
     "@aws-sdk/client-s3": "^3.997.0",
     "@aws-sdk/s3-request-presigner": "^3.997.0",
     "@prisma/client": "^5.22.0",
-    "bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",
     "jsonwebtoken": "^9.0.3",
@@ -37,7 +38,6 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
     "@types/cookie": "^0.6.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
