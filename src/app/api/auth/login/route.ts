@@ -52,10 +52,9 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error("[login] caught:", msg);
+    console.error("[login] error:", e);
     return NextResponse.json(
-      { error: "An unexpected error occurred", _debug: msg },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }
