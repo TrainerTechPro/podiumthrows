@@ -51,9 +51,11 @@ export async function POST(request: NextRequest) {
     response.headers.set("Set-Cookie", setAuthCookie(token));
 
     return response;
-  } catch {
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[login] caught:", msg);
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "An unexpected error occurred", _debug: msg },
       { status: 500 }
     );
   }
