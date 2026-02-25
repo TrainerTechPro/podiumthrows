@@ -1,0 +1,38 @@
+import Link from "next/link";
+import {
+  requireCoachSession,
+  getCoachSessions,
+  getWorkoutPlans,
+} from "@/lib/data/coach";
+import { Button } from "@/components/ui/Button";
+import { SessionsTabs } from "./_sessions-tabs";
+
+export default async function SessionsPage() {
+  const { coach } = await requireCoachSession();
+  const [sessions, plans] = await Promise.all([
+    getCoachSessions(coach.id),
+    getWorkoutPlans(coach.id),
+  ]);
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
+            Sessions
+          </h1>
+          <p className="text-sm text-muted mt-0.5">
+            Manage workout plans and track athlete sessions.
+          </p>
+        </div>
+        <Link href="/coach/sessions/new">
+          <Button variant="primary">New Session</Button>
+        </Link>
+      </div>
+
+      {/* Client tabs */}
+      <SessionsTabs sessions={sessions} plans={plans} />
+    </div>
+  );
+}

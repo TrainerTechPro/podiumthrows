@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #fafafa;
+    --foreground: #171717;
+    --card-bg: #ffffff;
+    --card-border: #e5e5e5;
+    --muted: #737373;
+    --muted-bg: #f5f5f5;
+  }
+
+  .dark {
+    --background: #0a0a0a;
+    --foreground: #fafafa;
+    --card-bg: #171717;
+    --card-border: #262626;
+    --muted: #a3a3a3;
+    --muted-bg: #1e1e1e;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] font-body;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-shadow duration-200 hover:shadow-card-hover;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+      bg-primary-500 text-white font-medium text-sm
+      hover:bg-primary-600 active:bg-primary-700
+      focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2
+      disabled:opacity-50 disabled:cursor-not-allowed
+      transition-colors duration-150;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+      bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-surface-100
+      font-medium text-sm border border-surface-200 dark:border-surface-700
+      hover:bg-surface-200 dark:hover:bg-surface-700
+      focus:outline-none focus:ring-2 focus:ring-surface-400/50 focus:ring-offset-2
+      disabled:opacity-50 disabled:cursor-not-allowed
+      transition-colors duration-150;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+      bg-danger-500 text-white font-medium text-sm
+      hover:bg-danger-600 active:bg-danger-700
+      focus:outline-none focus:ring-2 focus:ring-danger-500/50 focus:ring-offset-2
+      disabled:opacity-50 disabled:cursor-not-allowed
+      transition-colors duration-150;
+  }
+
+  .input {
+    @apply w-full px-3.5 py-2.5 rounded-xl text-sm
+      bg-[var(--card-bg)] border border-[var(--card-border)]
+      text-[var(--foreground)] placeholder:text-surface-400
+      focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500
+      disabled:opacity-50 disabled:cursor-not-allowed
+      transition-colors duration-150;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5;
+  }
+
+  .shimmer {
+    @apply animate-shimmer bg-gradient-to-r from-surface-200 via-surface-100 to-surface-200
+      dark:from-surface-800 dark:via-surface-700 dark:to-surface-800
+      bg-[length:200%_100%] rounded-xl;
+  }
+}
+
+@layer utilities {
+  .text-muted {
+    color: var(--muted);
+  }
+
+  .bg-muted {
+    background-color: var(--muted-bg);
+  }
+}
+
+/* ─── RPE Slider Custom Styles ─────────────────────────────────────────────── */
+.rpe-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.rpe-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.rpe-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid var(--rpe-color, #f59e0b);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
+  margin-top: -7px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.rpe-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+
+.rpe-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.rpe-slider::-moz-range-thumb {
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid var(--rpe-color, #f59e0b);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+/* ─── Sidebar transition ──────────────────────────────────────────────────── */
+.sidebar-enter {
+  transform: translateX(-100%);
+}
+.sidebar-enter-active {
+  transform: translateX(0);
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar-exit-active {
+  transform: translateX(-100%);
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}

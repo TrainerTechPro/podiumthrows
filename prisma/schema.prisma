@@ -1,0 +1,611 @@
+// Podium Throws — Full Database Schema
+// PostgreSQL via Prisma ORM (Vercel Postgres)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ──────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  COACH
+  ATHLETE
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  ELITE
+}
+
+enum EventType {
+  SHOT_PUT
+  DISCUS
+  HAMMER
+  JAVELIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+/// Bondarchuk exercise classification
+enum ExerciseCategory {
+  CE  // Competitive Exercise (the throw itself)
+  SDE // Special Developmental Exercise
+  SPE // Special Preparatory Exercise
+  GPE // General Preparatory Exercise
+}
+
+enum SessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum HydrationLevel {
+  POOR
+  ADEQUATE
+  GOOD
+}
+
+enum InjuryStatus {
+  NONE
+  MONITORING
+  ACTIVE
+}
+
+enum QuestionnaireType {
+  ONBOARDING
+  ASSESSMENT
+  CHECK_IN
+  CUSTOM
+}
+
+enum AchievementType {
+  PERSONAL_BEST
+  STREAK
+  MILESTONE
+  ASSESSMENT
+  TRAINING
+}
+
+/// Bondarchuk athlete classification
+enum BondarchukAthleteType {
+  EXPLOSIVE
+  SPEED_STRENGTH
+  STRENGTH_SPEED
+  STRENGTH
+}
+
+// ─── USER & AUTH ────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  coachProfile   CoachProfile?
+  athleteProfile AthleteProfile?
+
+  @@index([email])
+  @@index([role])
+}
+
+// ─── COACH ──────────────────────────────────────────────────────────────────
+
+model CoachProfile {
+  id               String           @id @default(cuid())
+  userId           String           @unique
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName        String
+  lastName         String
+  bio              String?
+  organization     String?
+  avatarUrl        String?
+  plan                 SubscriptionPlan @default(FREE)
+  stripeCustomerId     String?          @unique
+  stripeSubscriptionId String?          @unique
+  currentPeriodEnd     DateTime?
+
+  athletes       AthleteProfile[]
+  exercises      Exercise[]
+  workoutPlans   WorkoutPlan[]
+  questionnaires Questionnaire[]
+  videoUploads   VideoUpload[]
+  teams          Team[]
+  invitations    Invitation[]
+  drills         Drill[]
+  notifications  Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([plan])
+}
+
+// ─── ATHLETE ────────────────────────────────────────────────────────────────
+
+model AthleteProfile {
+  id          String     @id @default(cuid())
+  userId      String     @unique
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coachId     String
+  coach       CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  firstName   String
+  lastName    String
+  events      EventType[]
+  gender      Gender
+  dateOfBirth DateTime?
+  avatarUrl   String?
+  heightCm    Float?
+  weightKg    Float?
+
+  // Streak tracking
+  currentStreak    Int @default(0)
+  longestStreak    Int @default(0)
+  lastActivityDate DateTime?
+
+  trainingSessions  TrainingSession[]
+  sessionLogs       SessionLog[]
+  throwLogs         ThrowLog[]
+  readinessCheckIns ReadinessCheckIn[]
+  assessments       BondarchukAssessment[]
+  goals             Goal[]
+  achievements      Achievement[]
+  responses                QuestionnaireResponse[]
+  questionnaireAssignments QuestionnaireAssignment[]
+  videoUploads             VideoUpload[]
+  teamMemberships          TeamMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([userId])
+}
+
+// ─── EXERCISES ──────────────────────────────────────────────────────────────
+
+model Exercise {
+  id              String           @id @default(cuid())
+  coachId         String?
+  coach           CoachProfile?    @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  name            String
+  description     String?
+  videoUrl        String?
+  category        ExerciseCategory
+  event           EventType?
+  implementWeight Float?           // kg — for throws exercises
+  equipment       String?          // "barbell" | "implement" | "medicine ball" | "bodyweight" | "dumbbell" | "kettlebell" | "band"
+  defaultSets     Int?             // Convenience defaults for session builder
+  defaultReps     String?          // "3" or "3-5" or "AMRAP"
+  correlationData Json?            // Bondarchuk correlation coefficients
+  isGlobal        Boolean          @default(false) // System-provided vs coach-created
+
+  blockExercises BlockExercise[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([category])
+  @@index([event])
+  @@index([isGlobal])
+}
+
+// ─── WORKOUT PLANS & BLOCKS ─────────────────────────────────────────────────
+
+model WorkoutPlan {
+  id          String       @id @default(cuid())
+  coachId     String
+  coach       CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  event       EventType?
+  isTemplate  Boolean      @default(false)
+
+  blocks   WorkoutBlock[]
+  sessions TrainingSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([event])
+}
+
+model WorkoutBlock {
+  id          String      @id @default(cuid())
+  planId      String
+  plan        WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  name        String      // e.g., "Throwing Block 1", "Strength Block"
+  order       Int         // Block sequence within the plan
+  blockType   String      // "throwing" | "strength" | "warmup" | "cooldown"
+  restSeconds Int?        // Rest between blocks
+  notes       String?
+
+  exercises BlockExercise[]
+
+  @@index([planId])
+  @@index([order])
+}
+
+model BlockExercise {
+  id           String       @id @default(cuid())
+  blockId      String
+  block        WorkoutBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  exerciseId   String
+  exercise     Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  order        Int          // Exercise sequence within the block
+  sets         Int?
+  reps         String?      // "3" or "3-5" or "AMRAP"
+  weight       String?      // "80kg" or "75-80%" or "competition"
+  rpe          Float?       // Target RPE 1-10
+  distance     String?      // For throws: target distance
+  restSeconds  Int?
+  notes        String?
+  implementKg  Float?       // Specific implement weight for this exercise
+
+  @@index([blockId])
+  @@index([exerciseId])
+  @@index([order])
+}
+
+// ─── TRAINING SESSIONS & LOGS ───────────────────────────────────────────────
+
+model TrainingSession {
+  id            String          @id @default(cuid())
+  planId        String?
+  plan          WorkoutPlan?    @relation(fields: [planId], references: [id], onDelete: SetNull)
+  athleteId     String
+  athlete       AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  scheduledDate DateTime
+  completedDate DateTime?
+  status        SessionStatus   @default(SCHEDULED)
+  notes         String?
+  coachNotes    String?
+  rpe           Float?          // Overall session RPE
+
+  logs      SessionLog[]
+  throwLogs ThrowLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([athleteId])
+  @@index([planId])
+  @@index([scheduledDate])
+  @@index([status])
+  @@index([athleteId, scheduledDate])
+}
+
+model SessionLog {
+  id          String          @id @default(cuid())
+  sessionId   String
+  session     TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athleteId   String
+  athlete     AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  exerciseName String         // Denormalized for historical reference
+  sets        Int
+  reps        Int?
+  weight      Float?          // kg
+  rpe         Float?          // 1-10
+  distance    Float?          // meters (for throws)
+  notes       String?
+  completedAt DateTime        @default(now())
+
+  @@index([sessionId])
+  @@index([athleteId])
+  @@index([completedAt])
+}
+
+// ─── THROW LOGS ─────────────────────────────────────────────────────────────
+
+model ThrowLog {
+  id              String           @id @default(cuid())
+  athleteId       String
+  athlete         AthleteProfile   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  sessionId       String?
+  session         TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  event           EventType
+  implementWeight Float            // kg
+  distance        Float            // meters
+  date            DateTime         @default(now())
+  isPersonalBest  Boolean          @default(false)
+  isCompetition   Boolean          @default(false)
+  rpe             Float?           // 1-10 per-throw RPE
+  attemptNumber   Int?             // ordering within a session
+  notes           String?
+  videoUrl        String?
+
+  @@index([athleteId])
+  @@index([athleteId, event])
+  @@index([athleteId, date])
+  @@index([event])
+  @@index([date])
+  @@index([isPersonalBest])
+}
+
+// ─── BONDARCHUK ASSESSMENT ──────────────────────────────────────────────────
+
+model BondarchukAssessment {
+  id          String               @id @default(cuid())
+  athleteId   String
+  athlete     AthleteProfile       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  results     Json                 // Detailed exercise correlation results
+  athleteType BondarchukAthleteType
+  notes       String?
+  completedAt DateTime             @default(now())
+
+  @@index([athleteId])
+  @@index([completedAt])
+}
+
+// ─── DRILL LIBRARY ─────────────────────────────────────────────────────────
+
+model Drill {
+  id           String                  @id @default(cuid())
+  coachId      String?
+  coach        CoachProfile?           @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  name         String
+  description  String?
+  videoUrl     String?
+  event        EventType?
+  category     ExerciseCategory
+  implementKg  Float?
+  difficulty   String?                 // "beginner" | "intermediate" | "advanced"
+  cues         String[]
+  athleteTypes BondarchukAthleteType[]
+  isGlobal     Boolean                 @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([event])
+  @@index([category])
+}
+
+// ─── READINESS CHECK-IN ─────────────────────────────────────────────────────
+
+model ReadinessCheckIn {
+  id            String         @id @default(cuid())
+  athleteId     String
+  athlete       AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  date          DateTime       @default(now())
+  overallScore  Float          // 1-10 computed average
+  sleepQuality  Int            // 1-10
+  sleepHours    Float          // decimal hours
+  soreness      Int            // 1-10
+  sorenessArea  String?        // e.g., "lower back", "shoulders"
+  stressLevel   Int            // 1-10
+  energyMood    Int            // 1-10
+  hydration     HydrationLevel
+  injuryStatus  InjuryStatus   @default(NONE)
+  injuryNotes   String?
+  notes         String?
+
+  @@unique([athleteId, date])
+  @@index([athleteId])
+  @@index([date])
+  @@index([athleteId, date])
+}
+
+// ─── QUESTIONNAIRES ─────────────────────────────────────────────────────────
+
+model Questionnaire {
+  id          String            @id @default(cuid())
+  coachId     String
+  coach       CoachProfile      @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  type        QuestionnaireType
+  questions   Json              // Array of { id, text, type, options?, required }
+  status      String            @default("draft") // "draft" or "published"
+  isActive    Boolean           @default(true)
+
+  responses   QuestionnaireResponse[]
+  assignments QuestionnaireAssignment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([type])
+  @@index([status])
+}
+
+model QuestionnaireResponse {
+  id              String         @id @default(cuid())
+  questionnaireId String
+  questionnaire   Questionnaire  @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  answers         Json           // Array of { questionId, questionText, answer }
+  completedAt     DateTime       @default(now())
+
+  @@index([questionnaireId])
+  @@index([athleteId])
+  @@index([completedAt])
+}
+
+model QuestionnaireAssignment {
+  id              String         @id @default(cuid())
+  questionnaireId String
+  questionnaire   Questionnaire  @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  assignedAt      DateTime       @default(now())
+  completedAt     DateTime?
+
+  @@unique([questionnaireId, athleteId])
+  @@index([athleteId])
+  @@index([questionnaireId])
+}
+
+// ─── GOALS & ACHIEVEMENTS ───────────────────────────────────────────────────
+
+model Goal {
+  id            String         @id @default(cuid())
+  athleteId     String
+  athlete       AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  targetValue   Float
+  currentValue  Float          @default(0)
+  startingValue Float?         // baseline for progress % and projected completion
+  unit          String         // "meters", "kg", "sessions", etc.
+  event         EventType?
+  deadline      DateTime?
+  status        GoalStatus     @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([athleteId])
+  @@index([status])
+  @@index([athleteId, status])
+}
+
+model Achievement {
+  id          String          @id @default(cuid())
+  athleteId   String
+  athlete     AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  type        AchievementType
+  title       String
+  description String?
+  badgeKey    String?         // e.g. "streak_7", "pr_SHOT_PUT", "sessions_50" — used for deduplication
+  metadata    Json?           // e.g., { distance: 18.5, event: "SHOT_PUT" }
+  earnedAt    DateTime        @default(now())
+
+  @@unique([athleteId, badgeKey])
+  @@index([athleteId])
+  @@index([type])
+  @@index([earnedAt])
+}
+
+// ─── VIDEO ──────────────────────────────────────────────────────────────────
+
+model VideoUpload {
+  id           String          @id @default(cuid())
+  coachId      String?
+  coach        CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  athleteId    String?
+  athlete      AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  url          String
+  storageKey   String?         // R2 object key or local path for deletion
+  thumbnailUrl String?
+  title        String?
+  description  String?
+  event        EventType?
+  status       String          @default("ready") // "uploading" | "ready" | "failed"
+  category     String?         // "training" | "competition" | "drill" | "analysis"
+  tags         String[]
+  annotations  Json?           // Array of Annotation objects
+  durationSec  Float?
+  fileSizeMb   Float?
+  sharedWithAthletes String[]  // athlete IDs for sharing
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([athleteId])
+  @@index([event])
+  @@index([category])
+  @@index([createdAt])
+}
+
+// ─── TEAMS ──────────────────────────────────────────────────────────────────
+
+model Team {
+  id      String       @id @default(cuid())
+  coachId String
+  coach   CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name    String
+  description String?
+
+  members TeamMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+}
+
+model TeamMember {
+  id        String         @id @default(cuid())
+  teamId    String
+  team      Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime       @default(now())
+
+  @@unique([teamId, athleteId])
+  @@index([teamId])
+  @@index([athleteId])
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String       @id @default(cuid())
+  coachId   String
+  coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId String?      // which athlete triggered the notification
+  type      String       // "PR_ALERT" | "LOW_READINESS" | "QUESTIONNAIRE_COMPLETE" | "STREAK_BROKEN"
+  title     String
+  body      String
+  metadata  Json?        // { event, distance, unit, readinessScore, etc. }
+  read      Boolean      @default(false)
+  createdAt DateTime     @default(now())
+
+  @@index([coachId, read])
+  @@index([coachId, createdAt])
+}
+
+// ─── INVITATIONS ────────────────────────────────────────────────────────────
+
+model Invitation {
+  id        String           @id @default(cuid())
+  coachId   String
+  coach     CoachProfile     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  email     String
+  token     String           @unique @default(cuid())
+  status    InvitationStatus @default(PENDING)
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([email])
+  @@index([token])
+  @@index([status])
+}
