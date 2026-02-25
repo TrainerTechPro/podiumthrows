@@ -1,12 +1,31 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn("STRIPE_SECRET_KEY not set — Stripe features will not work");
+// Lazy singleton — avoids module-level initialization crash when
+// STRIPE_SECRET_KEY is absent at build time (Vercel static analysis).
+let _stripe: Stripe | null = null;
+
+function getStripeInstance(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      throw new Error(
+        "STRIPE_SECRET_KEY is not set. Add it to your Vercel environment variables."
+      );
+    }
+    _stripe = new Stripe(key, {
+      apiVersion: "2026-01-28.clover",
+      typescript: true,
+    });
+  }
+  return _stripe;
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "", {
-  apiVersion: "2026-01-28.clover",
-  typescript: true,
+// Proxy so callers can use `stripe.X` without change — actual instance
+// is created on first property access, not at module load time.
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getStripeInstance(), prop, receiver);
+  },
 });
 
 export const PLANS = {
