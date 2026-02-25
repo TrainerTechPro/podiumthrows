@@ -167,7 +167,7 @@ export default async function CoachThrowsPage({
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
             Throws Dashboard
@@ -178,7 +178,7 @@ export default async function CoachThrowsPage({
         </div>
         <Link
           href="/coach/throws/programming"
-          className="btn btn-primary text-sm shrink-0"
+          className="btn btn-primary text-sm"
         >
           Exercise Programming
         </Link>

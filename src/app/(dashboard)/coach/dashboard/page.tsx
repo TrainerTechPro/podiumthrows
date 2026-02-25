@@ -252,14 +252,14 @@ export default async function CoachDashboardPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
             Good morning, {coach.firstName}.
           </h1>
           <p className="text-sm text-muted mt-0.5">{today}</p>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2">
           <Link
             href="/coach/athletes"
             className="btn btn-secondary text-sm"

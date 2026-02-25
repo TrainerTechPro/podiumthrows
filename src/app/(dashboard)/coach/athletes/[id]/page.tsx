@@ -506,16 +506,23 @@ function ThrowsTab({ throws }: { throws: ThrowLogItem[] }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--card-border)]">
-                    {["Date", "Event", "Implement", "Distance", ""].map((h, i) => (
+                    {[
+                      { label: "Date",      align: "left",  hide: false, w: ""     },
+                      { label: "Event",     align: "left",  hide: false, w: ""     },
+                      { label: "Implement", align: "right", hide: true,  w: ""     },
+                      { label: "Distance",  align: "right", hide: false, w: ""     },
+                      { label: "",          align: "right", hide: false, w: "w-24" },
+                    ].map(({ label, align, hide, w }, i) => (
                       <th
                         key={i}
                         className={cn(
                           "px-5 py-3 text-xs font-semibold text-muted uppercase tracking-wider",
-                          i >= 2 ? "text-right" : "text-left",
-                          i === 4 ? "w-24" : ""
+                          align === "right" ? "text-right" : "text-left",
+                          w,
+                          hide && "hidden sm:table-cell"
                         )}
                       >
-                        {h}
+                        {label}
                       </th>
                     ))}
                   </tr>
@@ -532,7 +539,7 @@ function ThrowsTab({ throws }: { throws: ThrowLogItem[] }) {
                       <td className="px-5 py-3 text-sm text-[var(--foreground)] whitespace-nowrap">
                         {formatEventName(t.event)}
                       </td>
-                      <td className="px-5 py-3 text-right text-sm tabular-nums text-muted">
+                      <td className="hidden sm:table-cell px-5 py-3 text-right text-sm tabular-nums text-muted">
                         {t.implementWeight}kg
                       </td>
                       <td className="px-5 py-3 text-right">
@@ -773,9 +780,17 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--card-border)]">
-                    {["Date", "Score", "Sleep", "Soreness", "Stress", "Energy", "Hydration"].map((h) => (
-                      <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
-                        {h}
+                            {[
+                      { label: "Date",      hide: false },
+                      { label: "Score",     hide: false },
+                      { label: "Sleep",     hide: true  },
+                      { label: "Soreness",  hide: true  },
+                      { label: "Stress",    hide: true  },
+                      { label: "Energy",    hide: true  },
+                      { label: "Hydration", hide: true  },
+                    ].map(({ label, hide }) => (
+                      <th key={label} className={cn("px-4 py-2.5 text-left text-[10px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap", hide && "hidden sm:table-cell")}>
+                        {label}
                       </th>
                     ))}
                   </tr>
@@ -793,11 +808,11 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
                           {p.overallScore.toFixed(1)}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-xs tabular-nums">{p.sleepQuality}/10</td>
-                      <td className="px-4 py-2.5 text-xs tabular-nums">{p.soreness}/10</td>
-                      <td className="px-4 py-2.5 text-xs tabular-nums">{p.stressLevel}/10</td>
-                      <td className="px-4 py-2.5 text-xs tabular-nums">{p.energyMood}/10</td>
-                      <td className="px-4 py-2.5 text-xs capitalize">{p.hydration.toLowerCase()}</td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.sleepQuality}/10</td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.soreness}/10</td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.stressLevel}/10</td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.energyMood}/10</td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs capitalize">{p.hydration.toLowerCase()}</td>
                     </tr>
                   ))}
                 </tbody>

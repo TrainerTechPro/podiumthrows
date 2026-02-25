@@ -215,7 +215,7 @@ export function StepExercises({
             />
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto space-y-1 pr-1">
+          <div className="max-h-[40vh] min-h-[160px] overflow-y-auto space-y-1 pr-1">
             {filteredExercises.length === 0 ? (
               <p className="text-sm text-muted py-4 text-center">No matching exercises.</p>
             ) : (
@@ -307,7 +307,7 @@ export function StepExercises({
                   </div>
 
                   {/* Config row */}
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <Input
                       label="Sets"
                       type="number"
