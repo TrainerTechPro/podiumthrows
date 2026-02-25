@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/components";
 import { IMPLEMENT_PRESETS, VALID_EVENTS } from "@/lib/throws";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */

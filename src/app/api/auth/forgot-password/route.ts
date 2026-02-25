@@ -3,11 +3,7 @@ import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 
-// Store password reset tokens (in production, use a database table)
-// For now, we use a simple in-memory map. In production, add a PasswordResetToken model.
-const resetTokens = new Map<string, { userId: string; expiresAt: Date }>();
-
-export { resetTokens };
+import { resetTokens } from "@/lib/resetTokenStore";
 
 export async function POST(request: NextRequest) {
   try {

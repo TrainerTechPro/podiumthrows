@@ -5,7 +5,7 @@ import type { EventType } from "@prisma/client";
 
 /* ─── GET — list athlete's own goals ──────────────────────────────────────── */
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {

@@ -96,7 +96,7 @@ export default function MarketingFooter() {
             © {new Date().getFullYear()} Podium Throws. All rights reserved.
           </p>
           <div className="flex items-center gap-1 text-xs text-surface-700">
-            <span>Methodology rooted in Dr. Anatoliy Bondarchuk's research</span>
+            <span>Methodology rooted in Dr. Anatoliy Bondarchuk&apos;s research</span>
           </div>
         </div>
       </div>

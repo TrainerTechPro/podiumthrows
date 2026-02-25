@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Avatar, Badge } from "@/components";
+import { Badge } from "@/components";
 import {
   requireAthleteSession,
   getAthleteStats,

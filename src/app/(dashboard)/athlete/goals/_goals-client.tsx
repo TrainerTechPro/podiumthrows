@@ -3,7 +3,6 @@
 import { useState, useCallback, useTransition } from "react";
 import { Badge, Button, EmptyState, Modal, ProgressBar, useConfirm } from "@/components";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import type { GoalItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
 

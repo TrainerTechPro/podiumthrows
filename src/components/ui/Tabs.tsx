@@ -4,8 +4,6 @@ import {
   createContext,
   useContext,
   useState,
-  useRef,
-  useEffect,
   HTMLAttributes,
   ReactNode,
   KeyboardEvent,

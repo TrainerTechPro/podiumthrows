@@ -111,7 +111,7 @@ function LogoMark() {
 
 /* ─── Sidebar header (logo + user) ──────────────────────────────────────── */
 
-function SidebarHeader({ user }: { user: DashboardUser }) {
+function SidebarHeader({ user: _user }: { user: DashboardUser }) {
   return (
     <div className="space-y-3">
       <LogoMark />

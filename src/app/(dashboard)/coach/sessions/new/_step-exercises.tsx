@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { validateImplementSequence, validateCrossBlockSequence } from "@/lib/bondarchuk";
 import type { BlockData, BlockExerciseData } from "./_step-blocks";

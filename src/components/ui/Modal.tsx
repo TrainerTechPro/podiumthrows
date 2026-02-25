@@ -4,7 +4,6 @@ import {
   useEffect,
   useRef,
   ReactNode,
-  HTMLAttributes,
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";

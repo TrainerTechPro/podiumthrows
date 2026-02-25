@@ -18,13 +18,6 @@ function formatEventName(event: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
 const EVENT_TABS = ["ALL", "SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
 type EventFilter = (typeof EVENT_TABS)[number];
 

@@ -181,7 +181,6 @@ export default async function SessionDetailPage({
   };
   const isActive =
     session.status === "SCHEDULED" || session.status === "IN_PROGRESS";
-  const isCompleted = session.status === "COMPLETED";
   const hasPrescription = session.blocks.length > 0;
 
   return (

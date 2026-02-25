@@ -225,7 +225,7 @@ export default async function AthletesPage() {
         pageSize={25}
         emptyTitle="No athletes yet"
         emptyDescription="Invite athletes to your roster to get started."
-        onRowClick={(row) => {
+        onRowClick={() => {
           // Handled by ActionCell link; this is a fallback for row-level clicks
         }}
       />

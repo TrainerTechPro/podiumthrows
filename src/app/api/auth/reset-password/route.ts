@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
-import { resetTokens } from "@/app/api/auth/forgot-password/route";
+import { resetTokens } from "@/lib/resetTokenStore";
 
 export async function POST(request: NextRequest) {
   try {

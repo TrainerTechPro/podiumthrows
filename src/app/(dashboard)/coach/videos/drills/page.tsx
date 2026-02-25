@@ -56,8 +56,6 @@ export default async function DrillVideoLibraryPage({
   });
 
   const events = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
-  const categories = ["CE", "SDE", "SPE", "GPE"];
-  const difficulties = ["beginner", "intermediate", "advanced"];
 
   return (
     <div className="space-y-6">

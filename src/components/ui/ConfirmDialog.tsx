@@ -3,7 +3,6 @@
 import { useState, ReactNode } from "react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
-import { cn } from "@/lib/utils";
 
 export interface ConfirmDialogProps {
   open: boolean;

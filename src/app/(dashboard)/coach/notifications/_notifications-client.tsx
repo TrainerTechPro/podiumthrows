@@ -146,10 +146,10 @@ interface NotificationsClientProps {
   unreadCount: number;
 }
 
-export function NotificationsClient({ initialNotifications, unreadCount: initialUnread }: NotificationsClientProps) {
+export function NotificationsClient({ initialNotifications, unreadCount: _initialUnread }: NotificationsClientProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [filter, setFilter] = useState<FilterType>("all");
-  const [_isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

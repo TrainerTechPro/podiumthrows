@@ -174,7 +174,6 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
   const { ratio, acute, chronic, sessionsInAcute, sessionsInChronic } = acwr;
   const isDanger  = ratio > 1.5;
   const isWarning = (!isDanger && ratio > 1.3) || ratio < 0.8;
-  const isOptimal = !isDanger && !isWarning;
 
   const ratioColor = isDanger ? "text-red-500" : isWarning ? "text-amber-500" : "text-emerald-500";
   const badgeVariant: "danger" | "warning" | "success" = isDanger ? "danger" : isWarning ? "warning" : "success";

@@ -100,7 +100,7 @@ export function LineChart({
   const chartW = VIEWBOX_W - PAD.left - PAD.right;
   const chartH = height - PAD.top - PAD.bottom;
 
-  const { yMin, yMax, renderedSeries, xLabels, yTicks } = useMemo(() => {
+  const { renderedSeries, xLabels, yTicks } = useMemo(() => {
     if (allData.length === 0)
       return { yMin: 0, yMax: 10, renderedSeries: [], xLabels: [], yTicks: [] };
 

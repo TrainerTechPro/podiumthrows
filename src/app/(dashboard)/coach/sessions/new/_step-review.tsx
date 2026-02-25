@@ -29,7 +29,6 @@ const TYPE_BADGE: Record<string, "danger" | "warning" | "success" | "neutral"> =
 export function StepReview({
   basics,
   blocks,
-  exercises: _exercises,
   athletes,
   isTemplate,
   onIsTemplateChange,

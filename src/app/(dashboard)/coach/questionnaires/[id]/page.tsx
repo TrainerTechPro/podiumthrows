@@ -8,7 +8,6 @@ import {
 } from "@/lib/data/coach";
 import { Badge } from "@/components/ui/Badge";
 import { QuestionnaireBuilder } from "../_questionnaire-builder";
-import { AssignModal } from "../_assign-modal";
 import { QuestionnaireActions } from "./_questionnaire-actions";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
