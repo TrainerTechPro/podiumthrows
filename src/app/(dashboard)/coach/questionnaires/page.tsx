@@ -9,13 +9,19 @@ const TYPE_LABELS: Record<string, string> = {
   ONBOARDING: "Onboarding",
   ASSESSMENT: "Assessment",
   CHECK_IN: "Check-in",
+  READINESS: "Readiness",
+  COMPETITION: "Competition",
+  INJURY: "Injury",
   CUSTOM: "Custom",
 };
 
-const TYPE_BADGE_VARIANT: Record<string, "primary" | "success" | "warning" | "info" | "neutral"> = {
+const TYPE_BADGE_VARIANT: Record<string, "primary" | "success" | "warning" | "info" | "neutral" | "danger"> = {
   ONBOARDING: "info",
   ASSESSMENT: "warning",
   CHECK_IN: "primary",
+  READINESS: "success",
+  COMPETITION: "info",
+  INJURY: "danger",
   CUSTOM: "neutral",
 };
 
@@ -34,7 +40,7 @@ export default async function QuestionnairesPage() {
             Questionnaires
           </h1>
           <p className="text-sm text-muted mt-1">
-            Create and manage questionnaires for your athletes.
+            Create and manage forms, check-ins, and assessments for your athletes.
           </p>
         </div>
         <Link
@@ -54,7 +60,7 @@ export default async function QuestionnairesPage() {
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Create Questionnaire
+          Create Form
         </Link>
       </div>
 
@@ -85,65 +91,73 @@ export default async function QuestionnairesPage() {
               href="/coach/questionnaires/new"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
             >
-              Create Questionnaire
+              Create Form
             </Link>
           }
         />
       ) : (
         <div className="space-y-3">
-          {questionnaires.map((q) => (
-            <Link
-              key={q.id}
-              href={`/coach/questionnaires/${q.id}`}
-              className="card p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-[var(--foreground)] group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
-                    {q.title}
-                  </h3>
-                  <Badge variant={TYPE_BADGE_VARIANT[q.type] ?? "neutral"}>
-                    {TYPE_LABELS[q.type] ?? q.type}
-                  </Badge>
-                  <Badge variant={q.status === "published" ? "success" : "neutral"}>
-                    {q.status === "published" ? "Published" : "Draft"}
-                  </Badge>
-                </div>
-                {q.description && (
-                  <p className="text-sm text-muted truncate">{q.description}</p>
-                )}
-              </div>
+          {questionnaires.map((q) => {
+            const itemCount = q.blockCount > 0 ? q.blockCount : q.questionCount;
+            const itemLabel = q.blockCount > 0 ? "blocks" : "questions";
 
-              <div className="flex items-center gap-6 text-sm text-muted shrink-0">
-                <div className="text-center">
-                  <div className="font-semibold text-[var(--foreground)]">{q.questionCount}</div>
-                  <div className="text-[10px]">questions</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-semibold text-[var(--foreground)]">{q.responseCount}</div>
-                  <div className="text-[10px]">responses</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-semibold text-[var(--foreground)]">{q.assignmentCount}</div>
-                  <div className="text-[10px]">assigned</div>
-                </div>
-              </div>
-
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-muted shrink-0"
+            return (
+              <Link
+                key={q.id}
+                href={`/coach/questionnaires/${q.id}`}
+                className="card p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
               >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </Link>
-          ))}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h3 className="font-semibold text-[var(--foreground)] group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+                      {q.title}
+                    </h3>
+                    <Badge variant={TYPE_BADGE_VARIANT[q.type] ?? "neutral"}>
+                      {TYPE_LABELS[q.type] ?? q.type}
+                    </Badge>
+                    <Badge variant={q.status === "published" ? "success" : "neutral"}>
+                      {q.status === "published" ? "Published" : "Draft"}
+                    </Badge>
+                    {q.scoringEnabled && (
+                      <Badge variant="info">Scored</Badge>
+                    )}
+                  </div>
+                  {q.description && (
+                    <p className="text-sm text-muted truncate">{q.description}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-6 text-sm text-muted shrink-0">
+                  <div className="text-center hidden sm:block">
+                    <div className="font-semibold text-[var(--foreground)]">{itemCount}</div>
+                    <div className="text-[10px]">{itemLabel}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-[var(--foreground)]">{q.responseCount}</div>
+                    <div className="text-[10px]">responses</div>
+                  </div>
+                  <div className="text-center hidden sm:block">
+                    <div className="font-semibold text-[var(--foreground)]">{q.assignmentCount}</div>
+                    <div className="text-[10px]">assigned</div>
+                  </div>
+                </div>
+
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-muted shrink-0"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

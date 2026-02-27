@@ -6,9 +6,11 @@ import {
   getCoachStats,
   getRecentActivity,
   getFlaggedAthletes,
+  getTeamReadinessTrends,
   type ActivityItem,
   type FlaggedAthlete,
   type CoachStats,
+  type TeamReadinessEntry,
 } from "@/lib/data/coach";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -232,15 +234,118 @@ function FlaggedCard({ athlete }: { athlete: FlaggedAthlete }) {
   );
 }
 
+/* ─── Team Readiness Widget ─────────────────────────────────────────────── */
+
+function TrendIcon({ trend }: { trend: TeamReadinessEntry["trend"] }) {
+  if (trend === "up") {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+        <polyline points="17 6 23 6 23 12" />
+      </svg>
+    );
+  }
+  if (trend === "down") {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+        <polyline points="17 18 23 18 23 12" />
+      </svg>
+    );
+  }
+  if (trend === "stable") {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+    );
+  }
+  return null;
+}
+
+function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
+  if (entries.length === 0) return null;
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+        Team Readiness
+        <span className="ml-2 text-xs font-normal normal-case text-surface-400">
+          latest scores
+        </span>
+      </h2>
+      <div className="card p-0 overflow-hidden">
+        <div className="divide-y divide-[var(--card-border)]">
+          {entries.map((entry) => {
+            const pct =
+              entry.maxScore > 0 && entry.latestScore !== null
+                ? (entry.latestScore / entry.maxScore) * 100
+                : 0;
+            const scoreColorClass =
+              pct >= 70
+                ? "text-emerald-600 dark:text-emerald-400"
+                : pct >= 40
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-red-600 dark:text-red-400";
+            const barColorClass =
+              pct >= 70
+                ? "bg-emerald-500"
+                : pct >= 40
+                ? "bg-amber-500"
+                : "bg-red-500";
+
+            return (
+              <Link
+                key={entry.athleteId}
+                href={`/coach/athletes/${entry.athleteId}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+              >
+                <Avatar
+                  name={entry.athleteName}
+                  src={entry.avatarUrl}
+                  size="sm"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                    {entry.athleteName}
+                  </p>
+                  <div className="mt-1 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${barColorClass}`}
+                      style={{ width: `${Math.min(pct, 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <TrendIcon trend={entry.trend} />
+                  <span className={cn("text-sm font-semibold tabular-nums", scoreColorClass)}>
+                    {entry.latestScore !== null
+                      ? entry.latestScore.toFixed(1)
+                      : "—"}
+                  </span>
+                  <span className="text-[10px] text-muted">
+                    / {entry.maxScore}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
-  const [stats, activity, flagged] = await Promise.all([
+  const [stats, activity, flagged, readiness] = await Promise.all([
     getCoachStats(coach.id),
     getRecentActivity(coach.id),
     getFlaggedAthletes(coach.id),
+    getTeamReadinessTrends(coach.id),
   ]);
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -318,6 +423,9 @@ export default async function CoachDashboardPage() {
           </div>
         </section>
       </div>
+
+      {/* Team Readiness */}
+      <ReadinessWidget entries={readiness} />
     </div>
   );
 }

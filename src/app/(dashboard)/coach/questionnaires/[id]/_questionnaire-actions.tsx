@@ -27,7 +27,10 @@ export function QuestionnaireActions({
   const router = useRouter();
   const [showAssign, setShowAssign] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [cloning, setCloning] = useState(false);
 
   async function handleDelete() {
     setDeleting(true);
@@ -46,14 +49,70 @@ export function QuestionnaireActions({
     }
   }
 
+  async function handleClone() {
+    setCloning(true);
+    try {
+      const res = await fetch(
+        `/api/coach/questionnaires/${questionnaireId}/clone`,
+        { method: "POST" }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/coach/questionnaires/${data.questionnaire.id}`);
+        router.refresh();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCloning(false);
+    }
+  }
+
+  async function handleArchive() {
+    setArchiving(true);
+    try {
+      const res = await fetch(`/api/coach/questionnaires/${questionnaireId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "archived" }),
+      });
+      if (res.ok) {
+        router.refresh();
+        setShowArchive(false);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setArchiving(false);
+    }
+  }
+
+  async function handleUnarchive() {
+    try {
+      const res = await fetch(`/api/coach/questionnaires/${questionnaireId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "draft" }),
+      });
+      if (res.ok) router.refresh();
+    } catch {
+      // ignore
+    }
+  }
+
+  const isArchived = status === "archived";
+
   return (
     <>
-      <div className="flex items-center gap-2 shrink-0">
-        <Link href={`/coach/questionnaires/${questionnaireId}?edit=true`}>
-          <Button variant="outline" className="text-sm">
-            Edit
-          </Button>
-        </Link>
+      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+        {!isArchived && (
+          <Link href={`/coach/questionnaires/${questionnaireId}?edit=true`}>
+            <Button variant="outline" className="text-sm">
+              Edit
+            </Button>
+          </Link>
+        )}
+
         {status === "published" && (
           <Button
             variant="secondary"
@@ -63,6 +122,34 @@ export function QuestionnaireActions({
             Assign
           </Button>
         )}
+
+        <Button
+          variant="ghost"
+          className="text-sm"
+          onClick={handleClone}
+          disabled={cloning}
+        >
+          {cloning ? "Cloning..." : "Duplicate"}
+        </Button>
+
+        {isArchived ? (
+          <Button
+            variant="outline"
+            className="text-sm"
+            onClick={handleUnarchive}
+          >
+            Unarchive
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            className="text-sm"
+            onClick={() => setShowArchive(true)}
+          >
+            Archive
+          </Button>
+        )}
+
         <Button
           variant="danger"
           className="text-sm"
@@ -81,6 +168,17 @@ export function QuestionnaireActions({
         questionnaireId={questionnaireId}
         athletes={athletes}
         assignedAthleteIds={assignedAthleteIds}
+      />
+
+      <ConfirmDialog
+        open={showArchive}
+        onClose={() => setShowArchive(false)}
+        onConfirm={handleArchive}
+        title="Archive Questionnaire"
+        description="This will archive the questionnaire. It will no longer appear in active lists or be assignable. You can unarchive it later."
+        confirmLabel="Archive"
+        variant="danger"
+        loading={archiving}
       />
 
       <ConfirmDialog

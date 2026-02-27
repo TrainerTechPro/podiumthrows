@@ -2,18 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachSession, getQuestionnaireById } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 
-const VALID_TYPES = ["ONBOARDING", "ASSESSMENT", "CHECK_IN", "CUSTOM"];
-const VALID_STATUSES = ["draft", "published"];
-const VALID_QUESTION_TYPES = [
-  "short_text",
-  "long_text",
-  "number",
-  "scale_1_5",
-  "scale_1_10",
-  "single_choice",
-  "multiple_choice",
-  "yes_no",
+const VALID_TYPES = [
+  "ONBOARDING", "ASSESSMENT", "CHECK_IN", "READINESS",
+  "COMPETITION", "INJURY", "CUSTOM",
 ];
+const VALID_STATUSES = ["draft", "published", "archived"];
 
 export async function GET(
   _req: NextRequest,
@@ -40,7 +33,6 @@ export async function PUT(
   try {
     const { coach } = await requireCoachSession();
 
-    // Verify ownership
     const existing = await prisma.questionnaire.findFirst({
       where: { id: params.id, coachId: coach.id },
       select: { id: true },
@@ -51,7 +43,13 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { title, description, type, questions, status } = body;
+    const {
+      title, description, type, status,
+      blocks, questions,
+      displayMode, welcomeScreen, thankYouScreen,
+      conditionalLogic, scoringEnabled, scoringRules,
+      allowAnonymous, expiresAt,
+    } = body;
 
     // Validation
     if (title !== undefined && (typeof title !== "string" || title.trim().length === 0)) {
@@ -61,39 +59,32 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid type" }, { status: 400 });
     }
     if (status !== undefined && !VALID_STATUSES.includes(status)) {
-      return NextResponse.json({ error: "Status must be draft or published" }, { status: 400 });
+      return NextResponse.json({ error: "Status must be draft, published, or archived" }, { status: 400 });
     }
 
-    // Validate questions if provided
-    if (questions !== undefined) {
-      if (!Array.isArray(questions) || questions.length === 0) {
-        return NextResponse.json(
-          { error: "At least one question is required" },
-          { status: 400 }
-        );
-      }
-      for (const q of questions) {
-        if (!q.id || !q.text || !q.type) {
-          return NextResponse.json(
-            { error: "Each question must have id, text, and type" },
-            { status: 400 }
-          );
-        }
-        if (!VALID_QUESTION_TYPES.includes(q.type)) {
-          return NextResponse.json(
-            { error: `Invalid question type: ${q.type}` },
-            { status: 400 }
-          );
-        }
-      }
-    }
-
+    // Build update payload — only include fields that were sent
     const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title.trim();
     if (description !== undefined) updateData.description = description?.trim() || null;
     if (type !== undefined) updateData.type = type;
-    if (questions !== undefined) updateData.questions = questions;
     if (status !== undefined) updateData.status = status;
+    if (questions !== undefined) updateData.questions = questions;
+    if (blocks !== undefined) updateData.blocks = blocks;
+    if (displayMode !== undefined) updateData.displayMode = displayMode;
+    if (welcomeScreen !== undefined) updateData.welcomeScreen = welcomeScreen;
+    if (thankYouScreen !== undefined) updateData.thankYouScreen = thankYouScreen;
+    if (conditionalLogic !== undefined) updateData.conditionalLogic = conditionalLogic;
+    if (scoringEnabled !== undefined) updateData.scoringEnabled = scoringEnabled;
+    if (scoringRules !== undefined) updateData.scoringRules = scoringRules;
+    if (allowAnonymous !== undefined) updateData.allowAnonymous = allowAnonymous;
+    if (expiresAt !== undefined) updateData.expiresAt = expiresAt ? new Date(expiresAt) : null;
+
+    // Handle archive: deactivate when archiving
+    if (status === "archived") {
+      updateData.isActive = false;
+    } else if (status === "published" || status === "draft") {
+      updateData.isActive = true;
+    }
 
     const questionnaire = await prisma.questionnaire.update({
       where: { id: params.id },
@@ -113,7 +104,6 @@ export async function DELETE(
   try {
     const { coach } = await requireCoachSession();
 
-    // Verify ownership
     const existing = await prisma.questionnaire.findFirst({
       where: { id: params.id, coachId: coach.id },
       select: { id: true },

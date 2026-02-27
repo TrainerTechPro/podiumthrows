@@ -562,8 +562,11 @@ export type AthleteQuestionnaireItem = {
   description: string | null;
   type: string;
   questionCount: number;
+  blockCount: number;
+  dueDate: string | null;
   assignedAt: string;
   completedAt: string | null;
+  hasDraft: boolean;
 };
 
 export async function getAthleteAssignedQuestionnaires(
@@ -579,15 +582,25 @@ export async function getAthleteAssignedQuestionnaires(
           description: true,
           type: true,
           questions: true,
+          blocks: true,
           status: true,
+          isActive: true,
+          expiresAt: true,
         },
       },
     },
     orderBy: { assignedAt: "desc" },
   });
 
+  const now = new Date();
+
   return assignments
-    .filter((a) => a.questionnaire.status === "published")
+    .filter((a) => {
+      const q = a.questionnaire;
+      if (q.status !== "published" || !q.isActive) return false;
+      if (q.expiresAt && q.expiresAt < now) return false;
+      return true;
+    })
     .map((a) => ({
       assignmentId: a.id,
       questionnaireId: a.questionnaire.id,
@@ -597,8 +610,13 @@ export async function getAthleteAssignedQuestionnaires(
       questionCount: Array.isArray(a.questionnaire.questions)
         ? (a.questionnaire.questions as unknown[]).length
         : 0,
+      blockCount: Array.isArray(a.questionnaire.blocks)
+        ? (a.questionnaire.blocks as unknown[]).length
+        : 0,
+      dueDate: a.dueDate?.toISOString() ?? null,
       assignedAt: a.assignedAt.toISOString(),
       completedAt: a.completedAt?.toISOString() ?? null,
+      hasDraft: a.draftAnswers != null,
     }));
 }
 
@@ -614,8 +632,15 @@ export type QuestionnaireForFill = {
     options?: string[];
     required?: boolean;
   }>;
+  blocks: unknown[] | null;
+  displayMode: string;
+  welcomeScreen: unknown | null;
+  thankYouScreen: unknown | null;
+  conditionalLogic: unknown | null;
+  scoringEnabled: boolean;
   alreadyCompleted: boolean;
   assignmentId: string | null;
+  draftAnswers: Record<string, unknown> | null;
 };
 
 export async function getQuestionnaireForFill(
@@ -630,17 +655,26 @@ export async function getQuestionnaireForFill(
       description: true,
       type: true,
       questions: true,
+      blocks: true,
+      displayMode: true,
+      welcomeScreen: true,
+      thankYouScreen: true,
+      conditionalLogic: true,
+      scoringEnabled: true,
       status: true,
+      isActive: true,
+      expiresAt: true,
     },
   });
 
   if (!questionnaire || questionnaire.status !== "published") return null;
+  if (!questionnaire.isActive) return null;
+  if (questionnaire.expiresAt && questionnaire.expiresAt < new Date()) return null;
 
-  // Check if assigned
-  const assignment = await prisma.questionnaireAssignment.findUnique({
-    where: {
-      questionnaireId_athleteId: { questionnaireId, athleteId },
-    },
+  // Check if assigned (find latest uncompleted assignment first, then any)
+  const assignment = await prisma.questionnaireAssignment.findFirst({
+    where: { questionnaireId, athleteId },
+    orderBy: { assignedAt: "desc" },
   });
 
   if (!assignment) return null;
@@ -651,8 +685,15 @@ export async function getQuestionnaireForFill(
     description: questionnaire.description,
     type: questionnaire.type as string,
     questions: (questionnaire.questions as unknown as QuestionnaireForFill["questions"]) ?? [],
+    blocks: questionnaire.blocks as unknown[] | null,
+    displayMode: questionnaire.displayMode as string,
+    welcomeScreen: questionnaire.welcomeScreen,
+    thankYouScreen: questionnaire.thankYouScreen,
+    conditionalLogic: questionnaire.conditionalLogic,
+    scoringEnabled: questionnaire.scoringEnabled,
     alreadyCompleted: !!assignment.completedAt,
     assignmentId: assignment.id,
+    draftAnswers: assignment.draftAnswers as Record<string, unknown> | null,
   };
 }
 

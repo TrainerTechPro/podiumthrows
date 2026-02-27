@@ -96,3 +96,35 @@ export async function getAthleteProfile(userId: string) {
     where: { userId },
   });
 }
+
+/**
+ * Check if a user can access a specific voice note.
+ * - Creator (coach or athlete who created it) can access
+ * - If tied to a session, the session's athlete or their coach can access
+ */
+export async function canAccessVoiceNote(
+  userId: string,
+  role: "COACH" | "ATHLETE",
+  noteId: string
+): Promise<boolean> {
+  const note = await prisma.voiceNote.findUnique({
+    where: { id: noteId },
+    select: {
+      coachId: true,
+      athleteId: true,
+      sessionId: true,
+      coach: { select: { userId: true } },
+      athlete: { select: { userId: true } },
+    },
+  });
+  if (!note) return false;
+
+  if (note.coach?.userId === userId) return true;
+  if (note.athlete?.userId === userId) return true;
+
+  if (note.sessionId) {
+    return canAccessSession(userId, role, note.sessionId);
+  }
+
+  return false;
+}

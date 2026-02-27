@@ -12,7 +12,19 @@
       "Bash(node -e \":*)",
       "Bash(npx tsc:*)",
       "Bash(npx next build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(# Find Vercel auth/config files find /Users/anthonysommers -name \"\"auth.json\"\" -path \"\"*vercel*\"\" find /Users/anthonysommers -name \"\"*.json\"\" -path \"\"*vercel*\"\")",
+      "Bash(vercel ls:*)",
+      "Bash(vercel env:*)",
+      "Bash(npx prisma migrate deploy:*)",
+      "Bash(ls:*)",
+      "Bash(openssl rand:*)",
+      "Bash(vercel:*)",
+      "Bash(curl -s \"https://api.vercel.com/v2/deployments?teamId=team_AVSCxKnN5HClXGxRztV8wbjy&projectId=podium-throws&limit=5\" -H \"Authorization: Bearer UM1iuC4LT5aODTvjGS4PTiJ4\")",
+      "Bash(curl -s \"https://api.vercel.com/v3/deployments/dpl_8WZAZMEuoD7mMpJjGNaJAaAQ58BR/events?teamId=team_AVSCxKnN5HClXGxRztV8wbjy&limit=100&types=stderr,stdout,error,warning,fatal\" -H \"Authorization: Bearer UM1iuC4LT5aODTvjGS4PTiJ4\")",
+      "Bash(curl:*)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

@@ -46,3 +46,7 @@ export function setAuthCookie(token: string): string {
 export function clearAuthCookie(): string {
   return "auth-token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
 }
+
+export async function getCurrentUser(): Promise<JWTPayload | null> {
+  return getSession();
+}

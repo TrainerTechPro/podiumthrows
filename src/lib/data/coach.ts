@@ -7,6 +7,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import type { SubscriptionPlan } from "@prisma/client";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
@@ -1469,6 +1470,9 @@ export type QuestionnaireListItem = {
   type: string;
   status: string;
   questionCount: number;
+  blockCount: number;
+  displayMode: string;
+  scoringEnabled: boolean;
   responseCount: number;
   assignmentCount: number;
   createdAt: string;
@@ -1477,7 +1481,7 @@ export type QuestionnaireListItem = {
 
 export async function getCoachQuestionnaires(coachId: string): Promise<QuestionnaireListItem[]> {
   const questionnaires = await prisma.questionnaire.findMany({
-    where: { coachId },
+    where: { coachId, isActive: true },
     include: {
       _count: {
         select: {
@@ -1496,6 +1500,9 @@ export async function getCoachQuestionnaires(coachId: string): Promise<Questionn
     type: q.type as string,
     status: q.status,
     questionCount: Array.isArray(q.questions) ? (q.questions as unknown[]).length : 0,
+    blockCount: Array.isArray(q.blocks) ? (q.blocks as unknown[]).length : 0,
+    displayMode: q.displayMode as string,
+    scoringEnabled: q.scoringEnabled,
     responseCount: q._count.responses,
     assignmentCount: q._count.assignments,
     createdAt: q.createdAt.toISOString(),
@@ -1516,6 +1523,11 @@ export type QuestionnaireDetail = {
     options?: string[];
     required?: boolean;
   }>;
+  blocks: unknown[] | null;
+  displayMode: string;
+  conditionalLogic: unknown | null;
+  scoringEnabled: boolean;
+  scoringRules: unknown | null;
   isActive: boolean;
   responseCount: number;
   assignmentCount: number;
@@ -1548,6 +1560,11 @@ export async function getQuestionnaireById(
     type: q.type as string,
     status: q.status,
     questions: (q.questions as unknown as QuestionnaireDetail["questions"]) ?? [],
+    blocks: (q.blocks as unknown[] | null) ?? null,
+    displayMode: q.displayMode as string,
+    conditionalLogic: q.conditionalLogic ?? null,
+    scoringEnabled: q.scoringEnabled,
+    scoringRules: q.scoringRules ?? null,
     isActive: q.isActive,
     responseCount: q._count.responses,
     assignmentCount: q._count.assignments,
@@ -1562,10 +1579,25 @@ export type QuestionnaireResponseItem = {
   athleteName: string;
   avatarUrl: string | null;
   answers: Array<{
-    questionId: string;
-    questionText: string;
+    questionId?: string;
+    questionText?: string;
+    blockId?: string;
+    blockLabel?: string;
+    blockType?: string;
     answer: unknown;
   }>;
+  scores: {
+    blockScores: Array<{
+      blockId: string;
+      blockLabel: string;
+      blockType: string;
+      answer: unknown;
+      score?: number;
+    }>;
+    compositeScore: number | null;
+    maxPossibleScore: number;
+  } | null;
+  durationSeconds: number | null;
   completedAt: string;
 };
 
@@ -1601,6 +1633,8 @@ export async function getQuestionnaireResponses(
     athleteName: `${r.athlete.firstName} ${r.athlete.lastName}`,
     avatarUrl: r.athlete.avatarUrl,
     answers: (r.answers as unknown as QuestionnaireResponseItem["answers"]) ?? [],
+    scores: (r.scores as unknown as QuestionnaireResponseItem["scores"]) ?? null,
+    durationSeconds: r.durationSeconds ?? null,
     completedAt: r.completedAt.toISOString(),
   }));
 }
@@ -1642,6 +1676,159 @@ export async function getQuestionnaireAssignments(
     assignedAt: a.assignedAt.toISOString(),
     completedAt: a.completedAt?.toISOString() ?? null,
   }));
+}
+
+/* ─── Score Trends (for recurring forms) ──────────────────────────────────── */
+
+export type ScoreTrendPoint = {
+  responseId: string;
+  athleteId: string;
+  athleteName: string;
+  compositeScore: number | null;
+  maxPossibleScore: number;
+  completedAt: string;
+};
+
+export async function getQuestionnaireScoreTrends(
+  questionnaireId: string,
+  coachId: string,
+  limit = 50
+): Promise<ScoreTrendPoint[]> {
+  const q = await prisma.questionnaire.findFirst({
+    where: { id: questionnaireId, coachId },
+    select: { id: true, scoringEnabled: true },
+  });
+  if (!q || !q.scoringEnabled) return [];
+
+  const responses = await prisma.questionnaireResponse.findMany({
+    where: {
+      questionnaireId,
+      scores: { not: Prisma.JsonNull },
+    },
+    include: {
+      athlete: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+    orderBy: { completedAt: "asc" },
+    take: limit,
+  });
+
+  return responses.map((r) => {
+    const scores = r.scores as unknown as {
+      compositeScore: number | null;
+      maxPossibleScore: number;
+    } | null;
+    return {
+      responseId: r.id,
+      athleteId: r.athlete.id,
+      athleteName: `${r.athlete.firstName} ${r.athlete.lastName}`,
+      compositeScore: scores?.compositeScore ?? null,
+      maxPossibleScore: scores?.maxPossibleScore ?? 0,
+      completedAt: r.completedAt.toISOString(),
+    };
+  });
+}
+
+/* ─── Team Readiness Overview (for dashboard widget) ─────────────────────── */
+
+export type TeamReadinessEntry = {
+  athleteId: string;
+  athleteName: string;
+  avatarUrl: string | null;
+  latestScore: number | null;
+  maxScore: number;
+  completedAt: string;
+  trend: "up" | "down" | "stable" | null;
+};
+
+export async function getTeamReadinessTrends(
+  coachId: string
+): Promise<TeamReadinessEntry[]> {
+  // Find all readiness/check-in questionnaires for this coach that have scoring
+  const readinessQuestionnaires = await prisma.questionnaire.findMany({
+    where: {
+      coachId,
+      scoringEnabled: true,
+      type: { in: ["READINESS", "CHECK_IN"] },
+    },
+    select: { id: true },
+  });
+
+  if (readinessQuestionnaires.length === 0) return [];
+
+  const qIds = readinessQuestionnaires.map((q) => q.id);
+
+  // Get the latest 2 scored responses per athlete across all readiness forms
+  const athletes = await prisma.athleteProfile.findMany({
+    where: { coachId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+    },
+  });
+
+  const results: TeamReadinessEntry[] = [];
+
+  for (const athlete of athletes) {
+    const recentResponses = await prisma.questionnaireResponse.findMany({
+      where: {
+        athleteId: athlete.id,
+        questionnaireId: { in: qIds },
+        scores: { not: Prisma.JsonNull },
+      },
+      orderBy: { completedAt: "desc" },
+      take: 2,
+      select: {
+        scores: true,
+        completedAt: true,
+      },
+    });
+
+    if (recentResponses.length === 0) continue;
+
+    const latest = recentResponses[0];
+    const latestScores = latest.scores as unknown as {
+      compositeScore: number | null;
+      maxPossibleScore: number;
+    } | null;
+
+    let trend: "up" | "down" | "stable" | null = null;
+    if (recentResponses.length >= 2) {
+      const prev = recentResponses[1];
+      const prevScores = prev.scores as unknown as {
+        compositeScore: number | null;
+      } | null;
+      if (
+        latestScores?.compositeScore != null &&
+        prevScores?.compositeScore != null
+      ) {
+        const diff = latestScores.compositeScore - prevScores.compositeScore;
+        trend = diff > 0.5 ? "up" : diff < -0.5 ? "down" : "stable";
+      }
+    }
+
+    results.push({
+      athleteId: athlete.id,
+      athleteName: `${athlete.firstName} ${athlete.lastName}`,
+      avatarUrl: athlete.avatarUrl,
+      latestScore: latestScores?.compositeScore ?? null,
+      maxScore: latestScores?.maxPossibleScore ?? 0,
+      completedAt: latest.completedAt.toISOString(),
+      trend,
+    });
+  }
+
+  // Sort by score ascending so low readiness shows first
+  results.sort((a, b) => (a.latestScore ?? 0) - (b.latestScore ?? 0));
+
+  return results;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

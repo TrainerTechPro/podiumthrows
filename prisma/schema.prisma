@@ -39,7 +39,7 @@ enum Gender {
 
 /// Bondarchuk exercise classification
 enum ExerciseCategory {
-  CE  // Competitive Exercise (the throw itself)
+  CE // Competitive Exercise (the throw itself)
   SDE // Special Developmental Exercise
   SPE // Special Preparatory Exercise
   GPE // General Preparatory Exercise
@@ -81,7 +81,29 @@ enum QuestionnaireType {
   ONBOARDING
   ASSESSMENT
   CHECK_IN
+  READINESS
+  COMPETITION
+  INJURY
   CUSTOM
+}
+
+enum FormDisplayMode {
+  ALL_AT_ONCE
+  ONE_PER_PAGE
+  SECTIONED
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  SPECIFIC_DAYS
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum AssignmentSource {
+  MANUAL
+  RECURRING
 }
 
 enum AchievementType {
@@ -110,8 +132,9 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  coachProfile   CoachProfile?
-  athleteProfile AthleteProfile?
+  coachProfile        CoachProfile?
+  athleteProfile      AthleteProfile?
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
   @@index([role])
@@ -120,19 +143,20 @@ model User {
 // ─── COACH ──────────────────────────────────────────────────────────────────
 
 model CoachProfile {
-  id               String           @id @default(cuid())
-  userId           String           @unique
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  firstName        String
-  lastName         String
-  bio              String?
-  organization     String?
-  avatarUrl        String?
+  id                   String           @id @default(cuid())
+  userId               String           @unique
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName            String
+  lastName             String
+  bio                  String?
+  organization         String?
+  avatarUrl            String?
   plan                 SubscriptionPlan @default(FREE)
   stripeCustomerId     String?          @unique
   stripeSubscriptionId String?          @unique
   currentPeriodEnd     DateTime?
 
+  // Core relations (existing PT models)
   athletes       AthleteProfile[]
   exercises      Exercise[]
   workoutPlans   WorkoutPlan[]
@@ -142,6 +166,20 @@ model CoachProfile {
   invitations    Invitation[]
   drills         Drill[]
   notifications  Notification[]
+
+  // Throws module relations (from TrainingTracker)
+  throwsSessions    ThrowsSession[]
+  throwAnalyses     ThrowAnalysis[]
+  analysisVideos    AnalysisVideo[]
+  videoAnnotations  VideoAnnotation[]
+  podiumRoster      ThrowsProfile[]   @relation("ThrowsProfileCoach")
+  practiceSessions  PracticeSession[]
+  generatedPrograms TrainingProgram[]
+  drillVideos       DrillVideo[]
+
+  // Utility relations (from TrainingTracker)
+  voiceNotes   VoiceNote[]
+  activityLogs ActivityLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -153,9 +191,9 @@ model CoachProfile {
 // ─── ATHLETE ────────────────────────────────────────────────────────────────
 
 model AthleteProfile {
-  id          String     @id @default(cuid())
-  userId      String     @unique
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   coachId     String
   coach       CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
   firstName   String
@@ -168,21 +206,55 @@ model AthleteProfile {
   weightKg    Float?
 
   // Streak tracking
-  currentStreak    Int @default(0)
-  longestStreak    Int @default(0)
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
   lastActivityDate DateTime?
 
-  trainingSessions  TrainingSession[]
-  sessionLogs       SessionLog[]
-  throwLogs         ThrowLog[]
-  readinessCheckIns ReadinessCheckIn[]
-  assessments       BondarchukAssessment[]
-  goals             Goal[]
-  achievements      Achievement[]
+  // Performance benchmarks (stored as JSON string)
+  // e.g. { squat1RM, bench1RM, deadlift1RM, cleanAndJerk1RM, snatch1RM, overheadPress1RM, ... }
+  performanceBenchmarks String? @db.Text
+
+  // Core relations (existing PT models)
+  trainingSessions         TrainingSession[]
+  sessionLogs              SessionLog[]
+  throwLogs                ThrowLog[]
+  readinessCheckIns        ReadinessCheckIn[]
+  assessments              BondarchukAssessment[]
+  goals                    Goal[]
+  achievements             Achievement[]
   responses                QuestionnaireResponse[]
   questionnaireAssignments QuestionnaireAssignment[]
   videoUploads             VideoUpload[]
   teamMemberships          TeamMember[]
+
+  // Throws module relations (from TrainingTracker)
+  throwsAssignments        ThrowsAssignment[]
+  throwsPRs                ThrowsPR[]
+  throwsDrillPRs           ThrowsDrillPR[]
+  throwsCheckIns           ThrowsCheckIn[]
+  throwsTyping             ThrowsTyping?
+  throwsComplexes          ThrowsComplex[]
+  throwsCompetitions       ThrowsCompetition[]
+  selfLoggedSessions       AthleteThrowsSession[]
+  throwAnalyses            ThrowAnalysis[]
+  analysisVideos           AnalysisVideo[]
+  videoAnnotations         VideoAnnotation[]
+  mobilityAssessments      MobilityAssessment[]
+  drillVideos              DrillVideo[]
+  throwsProfile            ThrowsProfile?
+  throwsTestingRecords     ThrowsTestingRecord[]
+  throwsCompetitionResults ThrowsCompetitionResult[]
+  throwsInjuries           ThrowsInjury[]
+  practiceAttempts         PracticeAttempt[]
+  trainingPrograms         TrainingProgram[]
+  equipmentInventory       EquipmentInventory?
+
+  // Utility relations (from TrainingTracker)
+  voiceNotes       VoiceNote[]
+  bodyMeasurements BodyMeasurement[]
+  injuries         Injury[]
+  riskAssessments  RiskAssessment[]
+  smartGoals       AthleteGoal[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -202,11 +274,11 @@ model Exercise {
   videoUrl        String?
   category        ExerciseCategory
   event           EventType?
-  implementWeight Float?           // kg — for throws exercises
-  equipment       String?          // "barbell" | "implement" | "medicine ball" | "bodyweight" | "dumbbell" | "kettlebell" | "band"
-  defaultSets     Int?             // Convenience defaults for session builder
-  defaultReps     String?          // "3" or "3-5" or "AMRAP"
-  correlationData Json?            // Bondarchuk correlation coefficients
+  implementWeight Float? // kg — for throws exercises
+  equipment       String? // "barbell" | "implement" | "medicine ball" | "bodyweight" | "dumbbell" | "kettlebell" | "band"
+  defaultSets     Int? // Convenience defaults for session builder
+  defaultReps     String? // "3" or "3-5" or "AMRAP"
+  correlationData Json? // Bondarchuk correlation coefficients
   isGlobal        Boolean          @default(false) // System-provided vs coach-created
 
   blockExercises BlockExercise[]
@@ -245,10 +317,10 @@ model WorkoutBlock {
   id          String      @id @default(cuid())
   planId      String
   plan        WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  name        String      // e.g., "Throwing Block 1", "Strength Block"
-  order       Int         // Block sequence within the plan
-  blockType   String      // "throwing" | "strength" | "warmup" | "cooldown"
-  restSeconds Int?        // Rest between blocks
+  name        String // e.g., "Throwing Block 1", "Strength Block"
+  order       Int // Block sequence within the plan
+  blockType   String // "throwing" | "strength" | "warmup" | "cooldown"
+  restSeconds Int? // Rest between blocks
   notes       String?
 
   exercises BlockExercise[]
@@ -258,20 +330,20 @@ model WorkoutBlock {
 }
 
 model BlockExercise {
-  id           String       @id @default(cuid())
-  blockId      String
-  block        WorkoutBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
-  exerciseId   String
-  exercise     Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-  order        Int          // Exercise sequence within the block
-  sets         Int?
-  reps         String?      // "3" or "3-5" or "AMRAP"
-  weight       String?      // "80kg" or "75-80%" or "competition"
-  rpe          Float?       // Target RPE 1-10
-  distance     String?      // For throws: target distance
-  restSeconds  Int?
-  notes        String?
-  implementKg  Float?       // Specific implement weight for this exercise
+  id          String       @id @default(cuid())
+  blockId     String
+  block       WorkoutBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  exerciseId  String
+  exercise    Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  order       Int // Exercise sequence within the block
+  sets        Int?
+  reps        String? // "3" or "3-5" or "AMRAP"
+  weight      String? // "80kg" or "75-80%" or "competition"
+  rpe         Float? // Target RPE 1-10
+  distance    String? // For throws: target distance
+  restSeconds Int?
+  notes       String?
+  implementKg Float? // Specific implement weight for this exercise
 
   @@index([blockId])
   @@index([exerciseId])
@@ -281,20 +353,21 @@ model BlockExercise {
 // ─── TRAINING SESSIONS & LOGS ───────────────────────────────────────────────
 
 model TrainingSession {
-  id            String          @id @default(cuid())
+  id            String         @id @default(cuid())
   planId        String?
-  plan          WorkoutPlan?    @relation(fields: [planId], references: [id], onDelete: SetNull)
+  plan          WorkoutPlan?   @relation(fields: [planId], references: [id], onDelete: SetNull)
   athleteId     String
-  athlete       AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  athlete       AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   scheduledDate DateTime
   completedDate DateTime?
-  status        SessionStatus   @default(SCHEDULED)
+  status        SessionStatus  @default(SCHEDULED)
   notes         String?
   coachNotes    String?
-  rpe           Float?          // Overall session RPE
+  rpe           Float? // Overall session RPE
 
-  logs      SessionLog[]
-  throwLogs ThrowLog[]
+  logs       SessionLog[]
+  throwLogs  ThrowLog[]
+  voiceNotes VoiceNote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -307,26 +380,26 @@ model TrainingSession {
 }
 
 model SessionLog {
-  id          String          @id @default(cuid())
-  sessionId   String
-  session     TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  athleteId   String
-  athlete     AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  exerciseName String         // Denormalized for historical reference
-  sets        Int
-  reps        Int?
-  weight      Float?          // kg
-  rpe         Float?          // 1-10
-  distance    Float?          // meters (for throws)
-  notes       String?
-  completedAt DateTime        @default(now())
+  id           String          @id @default(cuid())
+  sessionId    String
+  session      TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athleteId    String
+  athlete      AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  exerciseName String // Denormalized for historical reference
+  sets         Int
+  reps         Int?
+  weight       Float? // kg
+  rpe          Float? // 1-10
+  distance     Float? // meters (for throws)
+  notes        String?
+  completedAt  DateTime        @default(now())
 
   @@index([sessionId])
   @@index([athleteId])
   @@index([completedAt])
 }
 
-// ─── THROW LOGS ─────────────────────────────────────────────────────────────
+// ─── THROW LOGS (PT legacy — links to TrainingSession) ──────────────────────
 
 model ThrowLog {
   id              String           @id @default(cuid())
@@ -335,13 +408,13 @@ model ThrowLog {
   sessionId       String?
   session         TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   event           EventType
-  implementWeight Float            // kg
-  distance        Float            // meters
+  implementWeight Float // kg
+  distance        Float // meters
   date            DateTime         @default(now())
   isPersonalBest  Boolean          @default(false)
   isCompetition   Boolean          @default(false)
-  rpe             Float?           // 1-10 per-throw RPE
-  attemptNumber   Int?             // ordering within a session
+  rpe             Float? // 1-10 per-throw RPE
+  attemptNumber   Int? // ordering within a session
   notes           String?
   videoUrl        String?
 
@@ -356,13 +429,13 @@ model ThrowLog {
 // ─── BONDARCHUK ASSESSMENT ──────────────────────────────────────────────────
 
 model BondarchukAssessment {
-  id          String               @id @default(cuid())
+  id          String                @id @default(cuid())
   athleteId   String
-  athlete     AthleteProfile       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  results     Json                 // Detailed exercise correlation results
+  athlete     AthleteProfile        @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  results     Json // Detailed exercise correlation results
   athleteType BondarchukAthleteType
   notes       String?
-  completedAt DateTime             @default(now())
+  completedAt DateTime              @default(now())
 
   @@index([athleteId])
   @@index([completedAt])
@@ -380,7 +453,7 @@ model Drill {
   event        EventType?
   category     ExerciseCategory
   implementKg  Float?
-  difficulty   String?                 // "beginner" | "intermediate" | "advanced"
+  difficulty   String? // "beginner" | "intermediate" | "advanced"
   cues         String[]
   athleteTypes BondarchukAthleteType[]
   isGlobal     Boolean                 @default(false)
@@ -396,21 +469,21 @@ model Drill {
 // ─── READINESS CHECK-IN ─────────────────────────────────────────────────────
 
 model ReadinessCheckIn {
-  id            String         @id @default(cuid())
-  athleteId     String
-  athlete       AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  date          DateTime       @default(now())
-  overallScore  Float          // 1-10 computed average
-  sleepQuality  Int            // 1-10
-  sleepHours    Float          // decimal hours
-  soreness      Int            // 1-10
-  sorenessArea  String?        // e.g., "lower back", "shoulders"
-  stressLevel   Int            // 1-10
-  energyMood    Int            // 1-10
-  hydration     HydrationLevel
-  injuryStatus  InjuryStatus   @default(NONE)
-  injuryNotes   String?
-  notes         String?
+  id           String         @id @default(cuid())
+  athleteId    String
+  athlete      AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  date         DateTime       @default(now())
+  overallScore Float // 1-10 computed average
+  sleepQuality Int // 1-10
+  sleepHours   Float // decimal hours
+  soreness     Int // 1-10
+  sorenessArea String? // e.g., "lower back", "shoulders"
+  stressLevel  Int // 1-10
+  energyMood   Int // 1-10
+  hydration    HydrationLevel
+  injuryStatus InjuryStatus   @default(NONE)
+  injuryNotes  String?
+  notes        String?
 
   @@unique([athleteId, date])
   @@index([athleteId])
@@ -427,12 +500,26 @@ model Questionnaire {
   title       String
   description String?
   type        QuestionnaireType
-  questions   Json              // Array of { id, text, type, options?, required }
-  status      String            @default("draft") // "draft" or "published"
+  questions   Json // Legacy: Array of { id, text, type, options?, required }
+  blocks      Json? // New: Array of FormBlock objects
+  status      String            @default("draft") // "draft" | "published" | "archived"
   isActive    Boolean           @default(true)
 
-  responses   QuestionnaireResponse[]
-  assignments QuestionnaireAssignment[]
+  // Advanced form features
+  displayMode      FormDisplayMode @default(ALL_AT_ONCE)
+  welcomeScreen    Json? // WelcomeConfig
+  thankYouScreen   Json? // ThankYouConfig
+  conditionalLogic Json? // ConditionalRule[]
+  scoringEnabled   Boolean         @default(false)
+  scoringRules     Json? // ScoringConfig
+  isTemplate       Boolean         @default(false)
+  templateName     String?
+  allowAnonymous   Boolean         @default(false)
+  expiresAt        DateTime?
+
+  responses         QuestionnaireResponse[]
+  assignments       QuestionnaireAssignment[]
+  recurringSchedule RecurringSchedule?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -440,6 +527,7 @@ model Questionnaire {
   @@index([coachId])
   @@index([type])
   @@index([status])
+  @@index([isTemplate])
 }
 
 model QuestionnaireResponse {
@@ -448,26 +536,67 @@ model QuestionnaireResponse {
   questionnaire   Questionnaire  @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
   athleteId       String
   athlete         AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  answers         Json           // Array of { questionId, questionText, answer }
+  answers         Json // Array of { questionId/blockId, questionText/blockLabel, answer }
+  assignmentId    String?
+  scores          Json? // { blockScores, compositeScore, maxPossibleScore }
+  isAnonymous     Boolean        @default(false)
+  durationSeconds Int? // How long athlete took to fill out
   completedAt     DateTime       @default(now())
 
   @@index([questionnaireId])
   @@index([athleteId])
   @@index([completedAt])
+  @@index([assignmentId])
 }
 
 model QuestionnaireAssignment {
-  id              String         @id @default(cuid())
+  id              String             @id @default(cuid())
   questionnaireId String
-  questionnaire   Questionnaire  @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  questionnaire   Questionnaire      @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
   athleteId       String
-  athlete         AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  assignedAt      DateTime       @default(now())
+  athlete         AthleteProfile     @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  assignedAt      DateTime           @default(now())
   completedAt     DateTime?
+  dueDate         DateTime?
+  source          AssignmentSource   @default(MANUAL)
+  scheduleId      String?
+  schedule        RecurringSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  instanceDate    DateTime? // For recurring: the specific instance date
+  draftAnswers    Json? // Save & resume support
 
-  @@unique([questionnaireId, athleteId])
+  @@unique([questionnaireId, athleteId, instanceDate])
   @@index([athleteId])
   @@index([questionnaireId])
+  @@index([scheduleId])
+  @@index([dueDate])
+  @@index([athleteId, completedAt])
+}
+
+// ─── RECURRING SCHEDULE ─────────────────────────────────────────────────────
+
+model RecurringSchedule {
+  id              String              @id @default(cuid())
+  questionnaireId String              @unique
+  questionnaire   Questionnaire       @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  frequency       RecurrenceFrequency
+  specificDays    Int[] // 0=Sun ... 6=Sat (for SPECIFIC_DAYS)
+  timeOfDay       String? // "08:00" — informational
+  athleteIds      String[] // Specific athlete IDs
+  teamIds         String[] // Team IDs (resolved at runtime)
+  assignToAll     Boolean             @default(false)
+  startDate       DateTime
+  endDate         DateTime?
+  isActive        Boolean             @default(true)
+  lastRunAt       DateTime?
+  nextRunAt       DateTime?
+
+  assignments QuestionnaireAssignment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([nextRunAt])
 }
 
 // ─── GOALS & ACHIEVEMENTS ───────────────────────────────────────────────────
@@ -480,8 +609,8 @@ model Goal {
   description   String?
   targetValue   Float
   currentValue  Float          @default(0)
-  startingValue Float?         // baseline for progress % and projected completion
-  unit          String         // "meters", "kg", "sessions", etc.
+  startingValue Float? // baseline for progress % and projected completion
+  unit          String // "meters", "kg", "sessions", etc.
   event         EventType?
   deadline      DateTime?
   status        GoalStatus     @default(ACTIVE)
@@ -501,8 +630,8 @@ model Achievement {
   type        AchievementType
   title       String
   description String?
-  badgeKey    String?         // e.g. "streak_7", "pr_SHOT_PUT", "sessions_50" — used for deduplication
-  metadata    Json?           // e.g., { distance: 18.5, event: "SHOT_PUT" }
+  badgeKey    String? // e.g. "streak_7", "pr_SHOT_PUT", "sessions_50" — used for deduplication
+  metadata    Json? // e.g., { distance: 18.5, event: "SHOT_PUT" }
   earnedAt    DateTime        @default(now())
 
   @@unique([athleteId, badgeKey])
@@ -514,24 +643,24 @@ model Achievement {
 // ─── VIDEO ──────────────────────────────────────────────────────────────────
 
 model VideoUpload {
-  id           String          @id @default(cuid())
-  coachId      String?
-  coach        CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: SetNull)
-  athleteId    String?
-  athlete      AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: SetNull)
-  url          String
-  storageKey   String?         // R2 object key or local path for deletion
-  thumbnailUrl String?
-  title        String?
-  description  String?
-  event        EventType?
-  status       String          @default("ready") // "uploading" | "ready" | "failed"
-  category     String?         // "training" | "competition" | "drill" | "analysis"
-  tags         String[]
-  annotations  Json?           // Array of Annotation objects
-  durationSec  Float?
-  fileSizeMb   Float?
-  sharedWithAthletes String[]  // athlete IDs for sharing
+  id                 String          @id @default(cuid())
+  coachId            String?
+  coach              CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  athleteId          String?
+  athlete            AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  url                String
+  storageKey         String? // R2 object key or local path for deletion
+  thumbnailUrl       String?
+  title              String?
+  description        String?
+  event              EventType?
+  status             String          @default("ready") // "uploading" | "ready" | "failed"
+  category           String? // "training" | "competition" | "drill" | "analysis"
+  tags               String[]
+  annotations        Json? // Array of Annotation objects
+  durationSec        Float?
+  fileSizeMb         Float?
+  sharedWithAthletes String[] // athlete IDs for sharing
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -546,10 +675,10 @@ model VideoUpload {
 // ─── TEAMS ──────────────────────────────────────────────────────────────────
 
 model Team {
-  id      String       @id @default(cuid())
-  coachId String
-  coach   CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  name    String
+  id          String       @id @default(cuid())
+  coachId     String
+  coach       CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name        String
   description String?
 
   members TeamMember[]
@@ -579,11 +708,11 @@ model Notification {
   id        String       @id @default(cuid())
   coachId   String
   coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  athleteId String?      // which athlete triggered the notification
-  type      String       // "PR_ALERT" | "LOW_READINESS" | "QUESTIONNAIRE_COMPLETE" | "STREAK_BROKEN"
+  athleteId String? // which athlete triggered the notification
+  type      String // "PR_ALERT" | "LOW_READINESS" | "QUESTIONNAIRE_COMPLETE" | "STREAK_BROKEN"
   title     String
   body      String
-  metadata  Json?        // { event, distance, unit, readinessScore, etc. }
+  metadata  Json? // { event, distance, unit, readinessScore, etc. }
   read      Boolean      @default(false)
   createdAt DateTime     @default(now())
 
@@ -609,4 +738,1126 @@ model Invitation {
   @@index([email])
   @@index([token])
   @@index([status])
+}
+
+// ─── AUTH UTILITIES ─────────────────────────────────────────────────────────
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ─── VOICE NOTES ────────────────────────────────────────────────────────────
+
+model VoiceNote {
+  id            String           @id @default(cuid())
+  coachId       String?
+  coach         CoachProfile?    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId     String?
+  athlete       AthleteProfile?  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  sessionId     String?
+  session       TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  audioData     String // Base64 encoded audio (or R2 URL)
+  duration      Int // Duration in seconds
+  transcription String? // Placeholder for future transcription
+  createdAt     DateTime         @default(now())
+
+  @@index([sessionId])
+  @@index([coachId])
+  @@index([athleteId])
+}
+
+// ─── ACTIVITY LOG ────────────────────────────────────────────────────────────
+
+model ActivityLog {
+  id        String       @id @default(cuid())
+  coachId   String
+  coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  userId    String?
+  action    String // SIGN_IN, CREATE_ATHLETE, PRESCRIBE_SESSION, IMPORT_EXERCISE, SEND_QUESTIONNAIRE, INVITE_ATHLETE, UPGRADE_PLAN, etc.
+  details   String?
+  ipAddress String?
+  createdAt DateTime     @default(now())
+
+  @@index([coachId, createdAt])
+}
+
+// ─── BODY MEASUREMENTS ──────────────────────────────────────────────────────
+
+model BodyMeasurement {
+  id         String         @id @default(cuid())
+  athleteId  String
+  athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  date       String // YYYY-MM-DD
+  weight     Float? // kg
+  bodyFat    Float? // percentage
+  chest      Float? // cm
+  waist      Float? // cm
+  hips       Float? // cm
+  leftArm    Float? // cm
+  rightArm   Float? // cm
+  leftThigh  Float? // cm
+  rightThigh Float? // cm
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([athleteId, date])
+}
+
+// ─── GENERAL INJURY & RISK ──────────────────────────────────────────────────
+
+model Injury {
+  id            String         @id @default(cuid())
+  athleteId     String
+  athlete       AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  injuryDate    String
+  recoveryDate  String?
+  bodyPart      String
+  severity      String
+  type          String?
+  description   String?
+  treatmentPlan String?
+  recovered     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([athleteId, injuryDate])
+}
+
+model RiskAssessment {
+  id             String         @id @default(cuid())
+  athleteId      String
+  athlete        AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  assessmentDate String
+
+  acuteLoad   Float
+  chronicLoad Float
+  acwr        Float
+  ewmaAcute   Float?
+  ewmaChronic Float?
+  ewmaAcwr    Float?
+  monotony    Float?
+  strain      Float?
+
+  riskScore       Float
+  riskLevel       String
+  recommendations String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([athleteId, assessmentDate])
+}
+
+// ─── MOBILITY ASSESSMENT ────────────────────────────────────────────────────
+
+model MobilityAssessment {
+  id             String         @id @default(cuid())
+  athleteId      String
+  athlete        AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  assessmentDate String // YYYY-MM-DD
+
+  // FMS-style scores (1-3 scale: 1=needs work, 2=acceptable, 3=optimal)
+  deepSquat              Int?
+  hurdleStep             Int?
+  inlineLunge            Int?
+  shoulderMobility       Int?
+  activeStraightLegRaise Int?
+  trunkStabilityPushup   Int?
+  rotaryStability        Int?
+
+  // Range of motion measurements (degrees)
+  ankleDorsiflexion   Float?
+  hipFlexion          Float?
+  hipExtension        Float?
+  hipInternalRotation Float?
+  hipExternalRotation Float?
+  shoulderFlexion     Float?
+  shoulderExtension   Float?
+  thoracicRotation    Float?
+
+  // Flexibility tests
+  sitAndReach     Float? // cm
+  thomasTest      String? // PASS, FAIL, MODIFIED
+  oberTest        String? // PASS, FAIL
+  hamstringLength Int? // 1-5 rating
+
+  // Calculated totals
+  fmsTotal      Int? // Sum of FMS scores (max 21)
+  overallRating String? // POOR, FAIR, GOOD, EXCELLENT
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([athleteId, assessmentDate])
+}
+
+// ─── SMART GOALS ────────────────────────────────────────────────────────────
+
+/// SMART-framework goals (full framework). Different from PT's Goal model (simple target/current/unit).
+model AthleteGoal {
+  id          String         @id @default(cuid())
+  athleteId   String
+  athlete     AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  category    String // PERFORMANCE, STRENGTH, ENDURANCE, FLEXIBILITY, BODY_COMPOSITION, SKILL, NUTRITION, RECOVERY, OTHER
+
+  // SMART framework
+  specific   String // What exactly do you want to achieve?
+  measurable String // How will you measure progress?
+  achievable String // What makes this realistic?
+  relevant   String // Why is this important to you?
+  timeBound  String // Target date YYYY-MM-DD
+
+  status        String   @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED, ABANDONED
+  progress      Int      @default(0) // 0-100 percentage
+  startDate     String?
+  completedDate String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([athleteId, status])
+}
+
+// ─── PODIUM THROWS MODULE ───────────────────────────────────────────────────
+// Sport-specific module for track & field throws coaching
+// (Shot Put, Discus, Hammer Throw, Javelin)
+// Based on Bondarchuk Transfer of Training methodology
+
+/// Coach-authored throws session template (prescriptive, not live).
+model ThrowsSession {
+  id                String       @id @default(cuid())
+  coachId           String
+  coach             CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name              String
+  sessionType       String // THROWS_ONLY, THROWS_LIFT, LIFT_ONLY, COMPETITION_SIM
+  targetPhase       String? // ACCUMULATION, TRANSMUTATION, REALIZATION, COMPETITION
+  event             String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  estimatedDuration Int? // minutes
+  tags              String? // JSON array of tags
+  notes             String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  blocks      ThrowsBlock[]
+  assignments ThrowsAssignment[]
+
+  @@index([coachId])
+}
+
+/// A block (throwing, strength, warmup, etc.) within a ThrowsSession.
+model ThrowsBlock {
+  id        String        @id @default(cuid())
+  sessionId String
+  session   ThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  blockType String // WARMUP, THROWING, STRENGTH, PLYOMETRIC, COOLDOWN, NOTES
+  position  Int // Order in session (0-based)
+  config    String // JSON: block-type-specific configuration
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  throwLogs ThrowsBlockLog[]
+
+  @@index([sessionId, position])
+}
+
+/// Assignment of a ThrowsSession to an athlete for a specific date.
+model ThrowsAssignment {
+  id           String         @id @default(cuid())
+  sessionId    String
+  session      ThrowsSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athleteId    String
+  athlete      AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  assignedDate String // YYYY-MM-DD
+  status       String         @default("ASSIGNED") // ASSIGNED, NOTIFIED, IN_PROGRESS, COMPLETED, PARTIAL, SKIPPED
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  // Post-session feedback
+  rpe           Int? // 1–10
+  selfFeeling   String? // GREAT, GOOD, AVERAGE, POOR, VERY_POOR
+  feedbackNotes String?
+  skipReason    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  throwLogs ThrowsBlockLog[]
+
+  @@index([athleteId, assignedDate])
+  @@index([sessionId])
+}
+
+/// Individual throw logged within a ThrowsBlock during an assignment.
+/// NOTE: renamed from ThrowLog (TT) to ThrowsBlockLog to avoid conflict with
+/// PT's existing ThrowLog model (which links to TrainingSession).
+model ThrowsBlockLog {
+  id           String           @id @default(cuid())
+  assignmentId String
+  assignment   ThrowsAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  blockId      String
+  block        ThrowsBlock      @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  throwNumber  Int
+  distance     Float? // meters
+  implement    String // e.g. "9kg", "7.26kg"
+  notes        String?
+  createdAt    DateTime         @default(now())
+
+  @@index([assignmentId])
+  @@index([blockId])
+}
+
+// ─── LIVE PRACTICE LOGGING ──────────────────────────────────────────────────
+
+/// Coach-led live practice session grouping all attempt logs.
+model PracticeSession {
+  id        String       @id @default(cuid())
+  coachId   String
+  coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name      String
+  date      String // YYYY-MM-DD
+  notes     String?
+  status    String       @default("ACTIVE") // ACTIVE | CLOSED
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  attempts PracticeAttempt[]
+
+  @@index([coachId, date])
+}
+
+/// Individual throw attempt logged during a live practice session.
+model PracticeAttempt {
+  id            String          @id @default(cuid())
+  sessionId     String
+  session       PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  athleteId     String
+  athlete       AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  event         String // SHOT_PUT | DISCUS | HAMMER | JAVELIN
+  implement     String // e.g. "7.26kg"
+  distance      Float? // meters
+  drillType     String? // STANDING | POWER_POSITION | HALF_TURN | SOUTH_AFRICAN | GLIDE | SPIN | FULL_THROW | OTHER
+  coachNote     String?
+  videoUrl      String? // R2 public URL
+  isPR          Boolean         @default(false)
+  attemptNumber Int // sequence within session for this athlete
+  createdAt     DateTime        @default(now())
+
+  @@index([sessionId])
+  @@index([athleteId, event])
+}
+
+// ─── THROWS PRs ──────────────────────────────────────────────────────────────
+
+/// Implement-specific personal record per athlete/event/implement combo.
+model ThrowsPR {
+  id         String         @id @default(cuid())
+  athleteId  String
+  athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  event      String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  implement  String // e.g. "7.26kg", "2kg"
+  distance   Float // meters
+  achievedAt String // YYYY-MM-DD
+  source     String? // TRAINING, COMPETITION
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([athleteId, event, implement])
+  @@index([athleteId, event])
+}
+
+/// Drill-type-specific personal record per athlete/event/drillType/implement combo.
+model ThrowsDrillPR {
+  id         String         @id @default(cuid())
+  athleteId  String
+  athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  event      String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  drillType  String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
+  implement  String // e.g. "7.26kg"
+  distance   Float // meters
+  achievedAt String // YYYY-MM-DD
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([athleteId, event, drillType, implement])
+  @@index([athleteId])
+}
+
+// ─── THROWS ATHLETE PROFILING ───────────────────────────────────────────────
+
+/// Daily Bondarchuk check-in (self-feeling, soreness, implement feeling).
+model ThrowsCheckIn {
+  id           String         @id @default(cuid())
+  athleteId    String
+  athlete      AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  date         String // YYYY-MM-DD
+  selfFeeling  Int // 1-5 Bondarchuk self-feeling scale
+  sleepHours   Float? // Hours slept
+  sleepQuality Int? // 1-5 subjective
+  energy       Int? // 1-10 energy level
+
+  // Soreness body map (0-10 each)
+  sorenessGeneral  Int?
+  sorenessShoulder Int?
+  sorenessBack     Int?
+  sorenessHip      Int?
+  sorenessKnee     Int?
+  sorenessElbow    Int?
+  sorenessWrist    Int?
+
+  // Implement feeling (only on relevant days)
+  lightImplFeeling Int? // 1-5
+  heavyImplFeeling Int? // 1-5
+
+  // Authorship tracking
+  source String @default("ATHLETE") // ATHLETE | COACH
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([athleteId, date])
+  @@index([athleteId, date])
+}
+
+/// Bondarchuk typing classification quiz results and computed profile.
+model ThrowsTyping {
+  id        String         @id @default(cuid())
+  athleteId String         @unique
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  // Quiz responses (JSON per assessment)
+  quizAdaptationSpeed String? // JSON
+  quizTransferType    String? // JSON
+  quizSelfFeeling     String? // JSON
+  quizLightImpl       String? // JSON
+  quizRecovery        String? // JSON
+
+  // Computed classification
+  adaptationGroup         Int? // 1=Fast, 2=Moderate, 3=Slow
+  transferType            String? // heavy-dominant, competition-dominant, balanced
+  selfFeelingAccuracy     String? // accurate, moderate, poor
+  lightImplResponse       String? // normal-87pct, tolerant-13pct
+  recoveryProfile         String? // fast, standard, slow
+  recommendedMethod       String? // complex, stage-complex, stage-variation, block-complex
+  optimalComplexDuration  String? // "3-4 weeks", "4-5 weeks", "5-7 weeks"
+  estimatedSessionsToForm Int?
+
+  // Data-driven confidence (0-100 each)
+  confidenceAdaptation  Int @default(0)
+  confidenceTransfer    Int @default(0)
+  confidenceSelfFeeling Int @default(0)
+  complexesAnalyzed     Int @default(0)
+  totalSessionsTracked  Int @default(0)
+
+  quizCompletedDate String? // YYYY-MM-DD
+  lastRefinedDate   String? // YYYY-MM-DD
+
+  // Source of classification
+  typingSource String @default("QUIZ") // QUIZ | COACH
+
+  // Coach-assigned quiz alert
+  quizAssignedByCoach Boolean @default(false)
+  quizAssignedDate    String? // YYYY-MM-DD
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// A Bondarchuk training complex (group of exercises used in a mesocycle).
+model ThrowsComplex {
+  id                String         @id @default(cuid())
+  athleteId         String
+  athlete           AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  startDate         String // YYYY-MM-DD
+  endDate           String? // null = current complex
+  exercises         String // JSON array of exercise names
+  sessionsCount     Int            @default(0)
+  enteredSportsForm Boolean        @default(false)
+  sessionsToForm    Int? // null if not yet entered
+  peakMark          Float? // meters
+  avgMarkAtForm     Float? // meters
+  oscillationBand   Float? // % spread of marks at form
+  event             String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([athleteId, endDate])
+}
+
+/// Competition calendar entry for an athlete.
+model ThrowsCompetition {
+  id        String         @id @default(cuid())
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  name      String
+  date      String // YYYY-MM-DD
+  event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  priority  String         @default("B") // A, B, C
+  result    Float? // meters (filled after competition)
+  resultBy  String? // COACH | ATHLETE — who entered the result
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([athleteId, date])
+}
+
+// ─── ATHLETE SELF-LOG ───────────────────────────────────────────────────────
+
+/// Athlete self-logged throws session (outside of coach-prescribed sessions).
+model AthleteThrowsSession {
+  id        String         @id @default(cuid())
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  date      String // YYYY-MM-DD
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  drillLogs AthleteDrillLog[]
+
+  @@index([athleteId, date])
+}
+
+/// Individual drill entry within an AthleteThrowsSession.
+model AthleteDrillLog {
+  id              String               @id @default(cuid())
+  sessionId       String
+  session         AthleteThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  drillType       String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
+  implementWeight Float? // kg
+  throwCount      Int                  @default(0)
+  bestMark        Float? // meters
+  notes           String?
+  createdAt       DateTime             @default(now())
+
+  @@index([sessionId])
+}
+
+// ─── THROWFLOW — AI BIOMECHANICAL ANALYSIS ──────────────────────────────────
+
+/// AI analysis result for a single throw video.
+model ThrowAnalysis {
+  id          String          @id @default(cuid())
+  coachId     String?
+  coach       CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId   String?
+  athlete     AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  event       String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  drillType   String // FULL_THROW, STANDING, POWER_POSITION, HALF_TURN, GLIDE, SPIN, SOUTH_AFRICAN
+  cameraAngle String // SIDE, BEHIND, FRONT, DIAGONAL
+
+  // Calibration inputs
+  athleteHeight   Float? // cm
+  implementWeight Float? // kg
+  knownDistance   Float? // meters
+
+  // Analysis results (JSON)
+  phaseScores    String? // JSON: { phases: [{ name, score, notes }] }
+  energyLeaks    String? // JSON: [{ description, percentImpact, frameIndex }]
+  releaseMetrics String? // JSON: { angle, velocityRating, height, theoreticalDistance }
+  overallScore   Float? // 0-100 composite score
+  issueCards     String? // JSON: [{ title, description, severity, frameIndex, drill }]
+  drillRecs      String? // JSON: [{ name, description, targetIssue }]
+  rawAnalysis    String? // Full AI response text
+
+  // Video metadata
+  frameCount    Int    @default(0)
+  videoDuration Float? // seconds
+
+  status       String  @default("PENDING") // PENDING, ANALYZING, COMPLETED, FAILED
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([athleteId])
+  @@index([event])
+}
+
+// ─── VIDEO ANALYSIS PLATFORM ────────────────────────────────────────────────
+
+/// Video uploaded for frame-by-frame annotation analysis.
+model AnalysisVideo {
+  id            String          @id @default(cuid())
+  coachId       String?
+  coach         CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId     String?
+  athlete       AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  fileName      String // Original filename
+  filePath      String // Storage path
+  fileSize      Int // Size in bytes
+  mimeType      String // e.g., video/mp4
+  duration      Float? // Duration in seconds
+  width         Int? // Video width in pixels
+  height        Int? // Video height in pixels
+  fps           Float? // Frame rate
+  thumbnailPath String? // Generated thumbnail path
+  eventType     String? // SHOT_PUT, DISCUS, HAMMER, JAVELIN, OTHER
+  tags          String? // JSON array of tags
+  sessionDate   String? // YYYY-MM-DD
+  status        String          @default("READY") // UPLOADING, PROCESSING, READY, ERROR
+  reviewStatus  String          @default("UNREVIEWED") // UNREVIEWED, IN_REVIEW, REVIEWED
+  starred       Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  annotations VideoAnnotation[]
+
+  @@index([coachId])
+  @@index([athleteId])
+  @@index([reviewStatus])
+  @@index([eventType])
+}
+
+/// Tool-based annotation on a specific frame range of a video.
+model VideoAnnotation {
+  id         String          @id @default(cuid())
+  videoId    String
+  video      AnalysisVideo   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  coachId    String?
+  coach      CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId  String?
+  athlete    AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  tool       String // FREEHAND, LINE, ARROW, CIRCLE, RECTANGLE, TEXT, ANGLE
+  frameStart Int // Starting frame number
+  frameEnd   Int? // Ending frame (for range annotations)
+  data       String // JSON: tool-specific data (points, color, thickness, text, angle value, etc.)
+  color      String          @default("#FF0000")
+  thickness  Int             @default(3) // 1=thin, 2=medium, 3=thick
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([videoId, frameStart])
+  @@index([coachId])
+  @@index([athleteId])
+}
+
+// ─── THROWS PROFILING SYSTEM ─────────────────────────────────────────────────
+
+/// Gatekeeper: one row per athlete enrolled in Podium Throws.
+/// All throws-module UI conditionally renders only when a row exists
+/// with status = 'active'. Soft-delete: status = 'inactive'.
+model ThrowsProfile {
+  id         String         @id @default(cuid())
+  athleteId  String         @unique
+  athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  enrolledBy String // coachId who enrolled the athlete
+  coach      CoachProfile   @relation("ThrowsProfileCoach", fields: [enrolledBy], references: [id])
+
+  // Core classification
+  event  String // SHOT_PUT | DISCUS | HAMMER | JAVELIN
+  gender String // MALE | FEMALE
+  status String @default("active") // active | inactive
+
+  // Competition PB (meters) — drives distance band + KPI analysis
+  competitionPb       Float?
+  currentDistanceBand String? // e.g. "60-65" (cached, recomputed on test update)
+
+  // Latest implement PRs for deficit calculation (meters)
+  heavyImplementPr Float?
+  heavyImplementKg Float?
+  lightImplementPr Float?
+  lightImplementKg Float?
+
+  // Strength benchmarks snapshot (JSON)
+  strengthBenchmarks String?
+
+  // KPI deficit analysis (computed by calculateDeficits(), stored for reads)
+  deficitPrimary   String?
+  deficitSecondary String?
+  deficitStatus    String?
+  overPowered      Boolean @default(false)
+  muscledOut       Boolean @default(false)
+
+  // Bondarchuk adaptation classification
+  adaptationProfile Int?
+  sessionsToForm    Int?
+  recommendedMethod String?
+
+  coachNotes String?
+
+  enrolledAt DateTime  @default(now())
+  inactiveAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  testingRecords     ThrowsTestingRecord[]
+  competitionResults ThrowsCompetitionResult[]
+  throwsInjuries     ThrowsInjury[]
+
+  @@index([enrolledBy])
+  @@index([status])
+}
+
+/// Reference KPI table seeded from Bondarchuk Transfer of Training.
+model ThrowsKpiStandard {
+  id           String @id @default(cuid())
+  event        String
+  gender       String
+  distanceBand String
+
+  heavyImplRatioMin     Float
+  heavyImplRatioTypical Float
+  lightImplRatioMin     Float
+  lightImplRatioTypical Float
+
+  squatToBodyweightMin      Float?
+  squatToBodyweightTypical  Float?
+  benchToBodyweightMin      Float?
+  benchToBodyweightTypical  Float?
+  cleanToBodyweightMin      Float?
+  cleanToBodyweightTypical  Float?
+  snatchToBodyweightMin     Float?
+  snatchToBodyweightTypical Float?
+
+  deficitThresholdBelow    Float?
+  deficitThresholdFarBelow Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([event, gender, distanceBand])
+  @@index([event, gender])
+}
+
+/// Individual testing session record (full battery or partial).
+model ThrowsTestingRecord {
+  id              String         @id @default(cuid())
+  throwsProfileId String
+  throwsProfile   ThrowsProfile  @relation(fields: [throwsProfileId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  testDate String
+  testType String @default("FULL_BATTERY")
+
+  competitionMark Float?
+  heavyImplMark   Float?
+  heavyImplKg     Float?
+  lightImplMark   Float?
+  lightImplKg     Float?
+
+  squatKg      Float?
+  benchKg      Float?
+  snatchKg     Float?
+  cleanKg      Float?
+  ohpKg        Float?
+  rdlKg        Float?
+  bodyWeightKg Float?
+
+  distanceBandAtTest     String?
+  deficitPrimaryAtTest   String?
+  deficitSecondaryAtTest String?
+  overPoweredAtTest      Boolean?
+
+  enteredBy String   @default("COACH")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([throwsProfileId])
+  @@index([athleteId, testDate])
+}
+
+/// Bondarchuk-specific competition result log.
+model ThrowsCompetitionResult {
+  id              String         @id @default(cuid())
+  throwsProfileId String
+  throwsProfile   ThrowsProfile  @relation(fields: [throwsProfileId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  competitionName String
+  date            String
+  event           String
+  priority        String @default("B")
+
+  result   Float?
+  wind     Float?
+  placing  Int?
+  attempts String? // JSON array of individual attempts
+
+  competitionLevel String?
+  conditions       String?
+
+  inSportsForm               Boolean?
+  sessionsSinceProgramChange Int?
+  selfFeelingOnDay           Int?
+  weekInBlock                Int?
+
+  resultBy  String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([throwsProfileId])
+  @@index([athleteId, date])
+}
+
+/// Throws-specific injury record (separate from general Injury model).
+model ThrowsInjury {
+  id              String         @id @default(cuid())
+  throwsProfileId String
+  throwsProfile   ThrowsProfile  @relation(fields: [throwsProfileId], references: [id], onDelete: Cascade)
+  athleteId       String
+  athlete         AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  injuryDate        String
+  returnToThrowDate String?
+  fullReturnDate    String?
+
+  bodyPart String
+  side     String?
+  severity String
+  type     String?
+
+  throwsBanned   Boolean @default(false)
+  heavyBanned    Boolean @default(false)
+  strengthBanned Boolean @default(false)
+  modifiedLoad   Boolean @default(false)
+
+  description   String?
+  treatmentPlan String?
+
+  recovered     Boolean @default(false)
+  recoveredDate String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([throwsProfileId])
+  @@index([athleteId, injuryDate])
+}
+
+// ─── DRILL PR VIDEOS ─────────────────────────────────────────────────────────
+
+/// Short (max 10s) video clips of drill personal records.
+model DrillVideo {
+  id         String          @id @default(cuid())
+  athleteId  String?
+  athlete    AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  coachId    String?
+  coach      CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  title      String
+  drillType  String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW, OTHER
+  event      String // SHOT_PUT, DISCUS, HAMMER, JAVELIN, OTHER
+  filePath   String // Storage path (R2 key or local path)
+  fileSize   Int // Bytes
+  mimeType   String
+  duration   Float // seconds (max 10)
+  trimStart  Float           @default(0)
+  trimEnd    Float           @default(10)
+  notes      String?
+  uploadedBy String // ATHLETE or COACH
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([athleteId, createdAt])
+  @@index([coachId])
+  @@index([drillType])
+  @@index([event])
+}
+
+// ─── GLOBAL EXERCISE LIBRARY ─────────────────────────────────────────────────
+
+/// Reference library of 1700+ exercises with full instructions.
+/// NOT coach-scoped — shared globally.
+model ExerciseLibrary {
+  id          String   @id @default(cuid())
+  name        String
+  muscleGroup String // Neck, Back, Chest, Shoulders, Upper Arms, Forearms, Thighs, Hips, Calves, Waist, Olympic, Plyometrics
+  equipment   String? // Barbell, Dumbbell, Cable, Machine, Bodyweight, Band, etc.
+  target      String? // JSON array of primary target muscles
+  synergists  String? // JSON array of synergist muscles
+  stabilizers String? // JSON array of stabilizer muscles
+  preparation String? // Setup instructions
+  execution   String? // Movement instructions
+  tips        String? // Coaching cues / comments
+  force       String? // Push, Pull, N/A
+  mechanics   String? // Compound, Isolation
+  utility     String? // Basic, Auxiliary, Stretch
+  videoUrl    String? // YouTube link for video demo
+  videoEmbed  String? // YouTube embed HTML or iframe src
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([muscleGroup])
+  @@index([name])
+}
+
+// ─── BONDARCHUK TRAINING ENGINE ──────────────────────────────────────────────
+// Automated periodization engine for throws training programs.
+// Generates macrocycles → mesocycles → microcycles → daily sessions.
+
+/// Top-level container for a generated Bondarchuk training program (macrocycle).
+model TrainingProgram {
+  id        String         @id @default(cuid())
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  coachId   String?
+  coach     CoachProfile?  @relation(fields: [coachId], references: [id])
+
+  // Classification
+  event  String // HAMMER (future: SHOT_PUT, DISCUS, JAVELIN)
+  gender String // MALE | FEMALE
+  status String @default("ACTIVE") // ACTIVE | PAUSED | COMPLETED | ARCHIVED
+
+  // Goal
+  startDate    String // YYYY-MM-DD
+  targetDate   String // YYYY-MM-DD
+  goalDistance Float // meters target
+  startingPr   Float // competition PR at program creation
+
+  // Schedule preferences
+  daysPerWeek    Int     @default(4) // 2-5
+  sessionsPerDay Int     @default(1) // 1-2
+  includeLift    Boolean @default(true)
+
+  // Adaptation profile snapshot at program creation
+  adaptationGroup   Int? // 1=Fast, 2=Moderate, 3=Slow
+  sessionsToForm    Int? // predicted sessions to peak
+  recommendedMethod String? // complex | stage-complex
+
+  // Current state tracking
+  currentPhaseId    String? // FK to current ProgramPhase (not enforced to avoid circular)
+  currentWeekNumber Int     @default(1)
+  currentComplexNum Int     @default(1)
+
+  // Program generation config (JSON snapshot of all engine input)
+  generationConfig String // JSON
+
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  phases                ProgramPhase[]
+  sessions              ProgramSession[]
+  adaptationCheckpoints AdaptationCheckpoint[]
+
+  @@index([athleteId, status])
+  @@index([coachId])
+}
+
+/// A mesocycle/phase within the macrocycle.
+model ProgramPhase {
+  id        String          @id @default(cuid())
+  programId String
+  program   TrainingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  phase         String // ACCUMULATION | TRANSMUTATION | REALIZATION | COMPETITION
+  phaseOrder    Int // sequence within macrocycle (1, 2, 3, ...)
+  startWeek     Int // week number in program (1-based)
+  endWeek       Int // week number
+  durationWeeks Int
+
+  // Phase targets
+  throwsPerWeekTarget Int
+  strengthDaysTarget  Int
+
+  // Phase ratios (from PHASE_RATIOS)
+  cePercent Float
+  sdPercent Float
+  spPercent Float
+  gpPercent Float
+
+  // Implement distribution (from PHASE_IMPLEMENT_DIST)
+  lightPercent Float
+  compPercent  Float
+  heavyPercent Float
+
+  // Exercise complex for this phase
+  exerciseComplex String // JSON: [{name, classification, implementKg?, setsMin, setsMax, repsMin, repsMax}]
+
+  status String @default("PLANNED") // PLANNED | ACTIVE | COMPLETED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions ProgramSession[]
+
+  @@index([programId, phaseOrder])
+}
+
+/// An individual prescribed daily workout within the program.
+model ProgramSession {
+  id        String          @id @default(cuid())
+  programId String
+  program   TrainingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  phaseId   String
+  phase     ProgramPhase    @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  // Scheduling
+  weekNumber    Int // 1-based week in program
+  dayOfWeek     Int // 1=Mon, 7=Sun
+  dayType       String // A | B | C | D | E | MEET (from WEEKLY_SCHEDULES)
+  scheduledDate String? // YYYY-MM-DD (null until calendar populated)
+
+  // Session content
+  sessionType String // THROWS_ONLY | THROWS_LIFT | LIFT_ONLY | COMPETITION_SIM | RECOVERY
+  focusLabel  String // "High Vol Technical", "Strength Emphasis", etc.
+
+  // Prescribed content (JSON)
+  throwsPrescription   String // JSON: [{implement, category, drillType, sets, repsPerSet, restSeconds, notes}]
+  strengthPrescription String? // JSON: [{exerciseName, classification, sets, reps, intensityPercent, loadKg, restSeconds}]
+  warmupPrescription   String? // JSON: [{name, duration, notes}]
+
+  // Targets
+  totalThrowsTarget Int
+  estimatedDuration Int? // minutes
+
+  // Completion tracking
+  status      String    @default("PLANNED") // PLANNED | SCHEDULED | IN_PROGRESS | COMPLETED | SKIPPED
+  completedAt DateTime?
+
+  // Alternate session tracking
+  wasModified        Boolean @default(false)
+  actualPrescription String? // JSON: what athlete actually did if different
+  modificationNotes  String? // why they changed it
+
+  // Athlete feedback (filled post-session)
+  actualThrows Int?
+  selfFeeling  String? // GREAT | GOOD | AVERAGE | POOR | VERY_POOR
+  rpe          Int? // 1-10
+  bestMark     Float? // best throw distance this session (meters)
+  sessionNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  throwResults ProgramThrowResult[]
+  liftResults  ProgramLiftResult[]
+  bestMarks    SessionBestMark[]
+
+  @@index([programId, weekNumber, dayOfWeek])
+  @@index([scheduledDate])
+  @@index([phaseId])
+}
+
+/// Individual throw result logged against a prescribed session.
+model ProgramThrowResult {
+  id        String         @id @default(cuid())
+  sessionId String
+  session   ProgramSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  throwNumber Int
+  implement   String // "7.26kg", "8kg", etc.
+  distance    Float? // meters
+  drillType   String? // FULL_THROW, STANDING, HALF_TURN, etc.
+  notes       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+/// Strength exercise result logged against a prescribed session.
+model ProgramLiftResult {
+  id        String         @id @default(cuid())
+  sessionId String
+  session   ProgramSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  exerciseName String
+  sets         Int?
+  reps         Int?
+  weight       Float? // kg
+  rpe          Int? // 1-10
+  notes        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+/// Best mark per implement for a session.
+model SessionBestMark {
+  id        String         @id @default(cuid())
+  sessionId String
+  session   ProgramSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  implement String // "7.26kg", "6kg", "8kg", etc.
+  distance  Float // meters
+  drillType String? // FULL_THROW, STANDING, etc.
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, implement])
+  @@index([sessionId])
+}
+
+/// Available implements and equipment per athlete.
+model EquipmentInventory {
+  id        String         @id @default(cuid())
+  athleteId String         @unique
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  // Implements owned: JSON array of {weightKg: number, type: "hammer"|"weight"|"shot"|"disc"|"jav"}
+  implements String // JSON
+
+  // Facilities available
+  hasCage        Boolean @default(true)
+  hasRing        Boolean @default(true)
+  hasFieldAccess Boolean @default(true)
+  hasGym         Boolean @default(true)
+
+  // Gym equipment: JSON {barbell, squat_rack, platform, dumbbells, cables, med_balls, boxes, bands}
+  gymEquipment String? // JSON
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Records of adaptation assessments during program execution.
+/// Tracks when complexes should rotate per Bondarchuk methodology.
+model AdaptationCheckpoint {
+  id        String          @id @default(cuid())
+  programId String
+  program   TrainingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  checkDate     String // YYYY-MM-DD
+  weekNumber    Int
+  complexNumber Int
+
+  // Performance data snapshot
+  recentMarks String // JSON: array of last 10 competition-weight marks
+  markTrend   String // IMPROVING | PLATEAU | DECLINING
+  averageMark Float?
+  peakMark    Float?
+  markSlope   Float? // linear regression slope
+
+  // Readiness trend
+  avgReadiness Float?
+  avgSoreness  Float?
+
+  // Strength trend
+  strengthTrend String? // IMPROVING | STABLE | DECLINING
+
+  // Decision
+  recommendation String // CONTINUE | ROTATE_COMPLEX | REDUCE_VOLUME | INCREASE_VOLUME | DELOAD | ADVANCE_PHASE
+  reasoning      String
+  applied        Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([programId, checkDate])
 }

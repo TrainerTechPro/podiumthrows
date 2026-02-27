@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { FormRendererShell } from "@/components/form-renderer/FormRendererShell";
+import type { FormBlock, FormDisplayMode, ConditionalRule } from "@/lib/forms/types";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -24,6 +26,13 @@ type Props = {
     description: string | null;
     type: string;
     questions: Question[];
+    blocks: unknown[] | null;
+    displayMode: string;
+    welcomeScreen: unknown | null;
+    thankYouScreen: unknown | null;
+    conditionalLogic: unknown | null;
+    scoringEnabled: boolean;
+    draftAnswers: Record<string, unknown> | null;
   };
 };
 
@@ -32,6 +41,36 @@ type AnswerMap = Record<string, unknown>;
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
 export function QuestionnaireForm({ questionnaire }: Props) {
+  const blocks = questionnaire.blocks as FormBlock[] | null;
+  const hasBlocks = blocks && blocks.length > 0;
+
+  // Use the new block-based renderer when blocks are present
+  if (hasBlocks) {
+    return (
+      <FormRendererShell
+        questionnaireId={questionnaire.id}
+        title={questionnaire.title}
+        description={questionnaire.description}
+        blocks={blocks}
+        displayMode={questionnaire.displayMode as FormDisplayMode}
+        conditionalLogic={
+          questionnaire.conditionalLogic as ConditionalRule[] | undefined
+        }
+        scoringEnabled={questionnaire.scoringEnabled}
+        draftAnswers={questionnaire.draftAnswers}
+      />
+    );
+  }
+
+  // Legacy question-based rendering
+  return (
+    <LegacyQuestionForm questionnaire={questionnaire} />
+  );
+}
+
+/* ─── Legacy Question Form ────────────────────────────────────────────────── */
+
+function LegacyQuestionForm({ questionnaire }: Props) {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [submitting, setSubmitting] = useState(false);
@@ -108,7 +147,19 @@ export function QuestionnaireForm({ questionnaire }: Props) {
   if (submitted) {
     return (
       <div className="card p-8 text-center space-y-3">
-        <div className="text-4xl">🎉</div>
+        <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mx-auto">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="text-green-500"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
         <h2 className="text-lg font-semibold text-[var(--foreground)]">
           Submitted Successfully
         </h2>

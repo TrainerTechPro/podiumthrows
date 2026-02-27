@@ -1,59 +1,83 @@
-# Podium Throws — Build Plan (From Scratch)
+# Migration: Podium Throws Module from TrainingTracker
 
-## Step 1: Project Scaffold
+**Goal:** Extract only the Podium Throws-specific module from TrainingTracker and bring it into this project. Leave existing Podium Throws features intact.
 
-- [ ] 1.1 Initialize Next.js 14.2 App Router with TypeScript (`npx create-next-app@14`)
-- [ ] 1.2 Install dependencies: Tailwind 3.4, Prisma, bcrypt, jsonwebtoken, stripe, uuid
-- [ ] 1.3 Configure Tailwind: custom amber/gold primary palette, dark mode `"class"`, Outfit + DM Sans fonts
-- [ ] 1.4 Configure path aliases in `tsconfig.json` (`@/components`, `@/lib`, etc.)
-- [ ] 1.5 Set up Prisma with PostgreSQL provider
-- [ ] 1.6 Create full directory structure:
-  - `src/app/(auth)/login`, `register`, `forgot-password`, `reset-password`
-  - `src/app/(dashboard)/coach/` — dashboard, athletes, training, throws, video, settings
-  - `src/app/(dashboard)/athlete/` — dashboard, training, throws, readiness, goals, settings
-  - `src/app/api/` — auth, athletes, training, throws, readiness, video, stripe
-  - `src/components/` — ui/, layout/, forms/, charts/
-  - `src/lib/` — auth.ts, prisma.ts, stripe.ts, calculations.ts
-- [ ] 1.7 Configure ESLint + Prettier
-- [ ] 1.8 Create `vercel.json` with security headers (HSTS, CSP, X-Frame-Options)
-- [ ] 1.9 Create `.env.example` with all required env vars
+## Phase 1: Config Files ✅
+- [x] Copy `next.config.js` (security headers, 2GB body limit, image patterns, bcryptjs)
+- [x] Merge `tailwind.config.ts` (add spring animations, plugins, ease-spring easing, strict type scale)
+- [x] Copy `vitest.config.ts` + test setup
 
-## Step 2: Database Schema
+## Phase 2: Package Dependencies ✅
+- [x] Add `recharts`
+- [x] Add `tsx`
+- [x] Add test infra: `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`, `@vitejs/plugin-react`
 
-- [ ] 2.1 Define enums: UserRole, SubscriptionPlan, EventType, ExerciseCategory, etc.
-- [ ] 2.2 User model (email, passwordHash, role, timestamps)
-- [ ] 2.3 CoachProfile (name, bio, org, avatar, plan, stripeCustomerId)
-- [ ] 2.4 AthleteProfile (name, events[], gender, dob, avatar, coachId, streaks)
-- [ ] 2.5 Exercise model (name, description, videoUrl, category CE|SD|SP|GP, event, implementWeight, correlationData)
-- [ ] 2.6 WorkoutPlan + WorkoutBlock + BlockExercise (structured training plans)
-- [ ] 2.7 TrainingSession + SessionLog (assigned work + logged results)
-- [ ] 2.8 ThrowLog (athlete, event, implement, distance, date, video, session link)
-- [ ] 2.9 BondarchukAssessment (athlete, results JSON, athleteType)
-- [ ] 2.10 ReadinessCheckIn (full breakdown: sleep, soreness, stress, energy, hydration, injury)
-- [ ] 2.11 Questionnaire + QuestionnaireResponse
-- [ ] 2.12 Goal + Achievement models
-- [ ] 2.13 VideoUpload (url, thumbnail, annotations JSON)
-- [ ] 2.14 Team model (coach groups)
-- [ ] 2.15 Invitation model (email invites with token)
-- [ ] 2.16 Add @@index annotations on all FKs and query-hot fields
-- [ ] 2.17 Validate schema with `npx prisma validate`
+## Phase 3: Prisma Schema Additions ✅
+New models added:
+- [x] ThrowsSession, ThrowsBlock, ThrowsAssignment
+- [x] PracticeSession, PracticeAttempt
+- [x] ThrowsPR, ThrowsDrillPR
+- [x] ThrowsCheckIn, ThrowsTyping
+- [x] ThrowsComplex, ThrowsCompetition
+- [x] AthleteThrowsSession, AthleteDrillLog
+- [x] ThrowAnalysis, AnalysisVideo, VideoAnnotation
+- [x] ThrowsProfile, ThrowsKpiStandard
+- [x] ThrowsTestingRecord, ThrowsCompetitionResult, ThrowsInjury
+- [x] DrillVideo, ExerciseLibrary
+- [x] TrainingProgram, ProgramPhase, ProgramSession
+- [x] ProgramThrowResult, ProgramLiftResult, SessionBestMark
+- [x] EquipmentInventory, AdaptationCheckpoint, VoiceNote
+- [x] Schema field upgrades: tokenVersion on User, richer AthleteProfile/CoachProfile fields
+- [x] Added `performanceBenchmarks String? @db.Text` to AthleteProfile
 
-## Step 3: Seed File
+## Phase 4: Core Lib Files ✅
+- [x] `src/lib/throws/` (constants, correlations, podium-profile, profile-constants, profile-utils, validation)
+- [x] `src/lib/throws/engine/` (all 13 engine files)
+- [x] `src/lib/throwflow/` (4 AI analysis files)
+- [x] Individual lib files: activity-log, built-in-exercises, env, exercisedb, focus-mode, logger, muscle-visualizer, rate-limit, wger, workout-templates, workspaces
+- [x] `src/lib/calculations/` (injury-risk, training-load, wellness-score)
 
-- [ ] 3.1 1 coach (coach@example.com / coach123, Pro plan)
-- [ ] 3.2 4 athletes (shot put, discus, hammer, javelin) linked to coach
-- [ ] 3.3 Exercise library: ~20 exercises across CE/SD/SP/GP categories
-- [ ] 3.4 2-3 workout plans with blocks
-- [ ] 3.5 8-10 training sessions per athlete (mix of completed/scheduled)
-- [ ] 3.6 14 days of readiness check-ins per athlete with realistic variance
-- [ ] 3.7 5-10 throw logs per athlete with realistic distances
-- [ ] 3.8 1 Bondarchuk assessment per athlete
-- [ ] 3.9 2-3 goals per athlete (mix of in-progress/completed)
-- [ ] 3.10 Achievements per athlete
-- [ ] 3.11 1 team grouping all 4 athletes
+## Phase 5: Components ✅
+- [x] `src/components/session/` (8 session-flow components)
+- [x] `src/components/podium-throws-panel.tsx`
+- [x] Individual components: animated-counter, drill-video-upload, exercise-library-page, exercise-name-link, icons, session-preview, shimmer-loading, user-avatar, page-transition, notification-bell, plate-calculator, profile-picture-editor, dark-mode-toggle, tools-page
+- [x] `src/components/video-analysis/` additions: ComparisonView, ScrubberRuler
 
-## Step 4: Verification
+## Phase 6: API Routes ✅
+- [x] `src/app/api/throws/` (all ~25 sub-routes)
+- [x] `src/app/api/throwflow/` (2 routes)
+- [x] `src/app/api/drill-videos/` (3 routes)
+- [x] `src/app/api/exercise-library/` (5 routes)
+- [x] `src/app/api/muscles/visualize/route.ts`
+- [x] `src/app/api/voice-notes/` (2 routes)
+- [x] `src/app/api/activity/route.ts`
 
-- [ ] 4.1 Run `tsc --noEmit` — zero errors
-- [ ] 4.2 Run `npx prisma validate` — schema valid
-- [ ] 4.3 Verify directory structure matches CLAUDE.md spec
+## Phase 7: Pages ✅
+- [x] `src/app/(dashboard)/coach/throws/` (dashboard, roster, practice, builder, library, analyze, profile/typing)
+- [x] `src/app/(dashboard)/coach/my-program/` (dashboard, onboard, session detail)
+- [x] `src/app/(dashboard)/coach/drill-videos/page.tsx`
+- [x] `src/app/(dashboard)/coach/tools/page.tsx`
+- [x] `src/app/(dashboard)/athlete/throws/` (replace with full TrainingTracker version)
+- [x] `src/app/(dashboard)/athlete/drill-videos/page.tsx`
+- [x] `src/app/(dashboard)/athlete/tools/page.tsx`
+
+## Phase 8: Typecheck ✅
+- [x] Run `tsc --noEmit` — zero errors
+- [x] Run `npm run lint` — zero errors (warnings only)
+- [x] Verify dev server starts cleanly
+- [x] Run `prisma db push` to sync schema to local database
+
+---
+## Review
+**Migration complete as of 2026-02-26.**
+
+Key schema adaptations made during migration:
+- `getCurrentUser` alias added to `src/lib/auth.ts` (PT uses `getSession()`)
+- `firstName`/`lastName` on User → `email` (PT stores names on profiles, not User)
+- `profilePictureUrl` → `avatarUrl` on AthleteProfile
+- `weight`/`height` → `weightKg`/`heightCm` on AthleteProfile
+- `prisma.throwLog` (TT semantics) → `prisma.throwsBlockLog` in throws/logs and throws/profile routes
+- Added `performanceBenchmarks String? @db.Text` to AthleteProfile
+- Added `"downlevelIteration": true` to tsconfig for Set/Map iteration
+- Replaced 3 stale engine files (generate-phase, generate-week, select-exercises) with TT's current versions
+- Copied missing components: EmptyState, toast, tools-page, user-avatar, rpe-slider, session/\*

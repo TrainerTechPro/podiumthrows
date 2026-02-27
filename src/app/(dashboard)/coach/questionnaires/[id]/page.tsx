@@ -7,16 +7,38 @@ import {
   getQuestionnaireAssignments,
 } from "@/lib/data/coach";
 import { Badge } from "@/components/ui/Badge";
-import { QuestionnaireBuilder } from "../_questionnaire-builder";
+import { FormBuilderShell } from "@/components/form-builder";
 import { QuestionnaireActions } from "./_questionnaire-actions";
+import type { FormBlock } from "@/lib/forms/types";
+import { BLOCK_REGISTRY } from "@/lib/forms/block-registry";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
 const TYPE_LABELS: Record<string, string> = {
-  ONBOARDING: "PAR-Q / Onboarding",
+  ONBOARDING: "Onboarding",
   ASSESSMENT: "Assessment",
   CHECK_IN: "Check-in",
+  READINESS: "Readiness",
+  COMPETITION: "Competition",
+  INJURY: "Injury Report",
   CUSTOM: "Custom",
+};
+
+const DISPLAY_MODE_LABELS: Record<string, string> = {
+  ALL_AT_ONCE: "All at Once",
+  ONE_PER_PAGE: "One per Page",
+  SECTIONED: "Sectioned",
+};
+
+const QUESTION_TYPE_LABELS_SIMPLE: Record<string, string> = {
+  short_text: "Short Text",
+  long_text: "Long Text",
+  number: "Number",
+  scale_1_5: "1-5 Scale",
+  scale_1_10: "1-10 Scale",
+  single_choice: "Single Choice",
+  multiple_choice: "Multiple Choice",
+  yes_no: "Yes/No",
 };
 
 /* ─── Page ────────────────────────────────────────────────────────────────── */
@@ -35,27 +57,43 @@ export default async function QuestionnaireDetailPage({
 
   const isEditing = searchParams.edit === "true";
 
-  // If editing, show the builder
+  // If editing, show the new form builder
   if (isEditing) {
     return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-          Edit Questionnaire
-        </h1>
-        <QuestionnaireBuilder
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/coach/questionnaires/${questionnaire.id}`}
+            className="text-muted hover:text-[var(--foreground)] transition-colors"
+            aria-label="Back to detail"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+          </Link>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
+            Edit Questionnaire
+          </h1>
+        </div>
+        <FormBuilderShell
           initialData={{
             id: questionnaire.id,
             title: questionnaire.title,
             description: questionnaire.description,
             type: questionnaire.type,
             status: questionnaire.status,
-            questions: questionnaire.questions as Array<{
-              id: string;
-              text: string;
-              type: "short_text" | "long_text" | "number" | "scale_1_5" | "scale_1_10" | "single_choice" | "multiple_choice" | "yes_no";
-              options?: string[];
-              required: boolean;
-            }>,
+            displayMode: questionnaire.displayMode,
+            blocks: (questionnaire.blocks as FormBlock[]) ?? undefined,
+            questions: questionnaire.questions,
           }}
         />
       </div>
@@ -69,6 +107,13 @@ export default async function QuestionnaireDetailPage({
   ]);
 
   const assignedAthleteIds = assignments.map((a) => a.athleteId);
+
+  // Determine which items to show: blocks (new) or questions (legacy)
+  const blocks = questionnaire.blocks as FormBlock[] | null;
+  const hasBlocks = blocks && blocks.length > 0;
+  const itemCount = hasBlocks
+    ? blocks.length
+    : questionnaire.questions.length;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -98,16 +143,29 @@ export default async function QuestionnaireDetailPage({
               {questionnaire.title}
             </h1>
           </div>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <Badge
-              variant={questionnaire.status === "published" ? "success" : "neutral"}
+              variant={
+                questionnaire.status === "published"
+                  ? "success"
+                  : questionnaire.status === "archived"
+                  ? "warning"
+                  : "neutral"
+              }
             >
-              {questionnaire.status === "published" ? "Published" : "Draft"}
+              {questionnaire.status === "published"
+                ? "Published"
+                : questionnaire.status === "archived"
+                ? "Archived"
+                : "Draft"}
             </Badge>
             <Badge variant="info">{TYPE_LABELS[questionnaire.type] ?? questionnaire.type}</Badge>
+            <Badge variant="neutral">
+              {DISPLAY_MODE_LABELS[questionnaire.displayMode] ?? questionnaire.displayMode}
+            </Badge>
             <span className="text-xs text-muted">
-              {questionnaire.questions.length} question
-              {questionnaire.questions.length !== 1 ? "s" : ""}
+              {itemCount} {hasBlocks ? "block" : "question"}
+              {itemCount !== 1 ? "s" : ""}
             </span>
           </div>
           {questionnaire.description && (
@@ -150,32 +208,60 @@ export default async function QuestionnaireDetailPage({
         </div>
       </div>
 
-      {/* Questions preview */}
+      {/* Block/Question preview */}
       <div className="card p-4 space-y-4">
         <h2 className="text-sm font-semibold text-[var(--foreground)]">
-          Questions
+          {hasBlocks ? "Blocks" : "Questions"}
         </h2>
-        {questionnaire.questions.map((q, i) => (
-          <div key={q.id} className="flex gap-3 text-sm">
-            <span className="text-muted font-mono shrink-0 w-5 text-right">
-              {i + 1}.
-            </span>
-            <div>
-              <span className="text-[var(--foreground)]">{q.text}</span>
-              {q.required && (
-                <span className="text-red-500 ml-1 text-xs">*</span>
-              )}
-              <span className="text-muted ml-2 text-xs">
-                ({QUESTION_TYPE_LABELS_SIMPLE[q.type] ?? q.type})
-              </span>
-              {q.options && q.options.length > 0 && (
-                <div className="text-xs text-muted mt-0.5">
-                  Options: {q.options.join(", ")}
+
+        {hasBlocks
+          ? blocks.map((block, i) => {
+              const meta = BLOCK_REGISTRY[block.type];
+              return (
+                <div key={block.id} className="flex gap-3 text-sm">
+                  <span className="text-muted font-mono shrink-0 w-5 text-right">
+                    {i + 1}.
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[var(--foreground)]">
+                      {block.label || meta?.label || block.type}
+                    </span>
+                    {block.required && (
+                      <span className="text-red-500 ml-1 text-xs">*</span>
+                    )}
+                    <span className="text-muted ml-2 text-xs">
+                      ({meta?.label ?? block.type})
+                    </span>
+                    {block.description && (
+                      <p className="text-xs text-muted mt-0.5 truncate">
+                        {block.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
+              );
+            })
+          : questionnaire.questions.map((q, i) => (
+              <div key={q.id} className="flex gap-3 text-sm">
+                <span className="text-muted font-mono shrink-0 w-5 text-right">
+                  {i + 1}.
+                </span>
+                <div>
+                  <span className="text-[var(--foreground)]">{q.text}</span>
+                  {q.required && (
+                    <span className="text-red-500 ml-1 text-xs">*</span>
+                  )}
+                  <span className="text-muted ml-2 text-xs">
+                    ({QUESTION_TYPE_LABELS_SIMPLE[q.type] ?? q.type})
+                  </span>
+                  {q.options && q.options.length > 0 && (
+                    <div className="text-xs text-muted mt-0.5">
+                      Options: {q.options.join(", ")}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
       </div>
 
       {/* Assignments */}
@@ -233,14 +319,3 @@ export default async function QuestionnaireDetailPage({
     </div>
   );
 }
-
-const QUESTION_TYPE_LABELS_SIMPLE: Record<string, string> = {
-  short_text: "Short Text",
-  long_text: "Long Text",
-  number: "Number",
-  scale_1_5: "1-5 Scale",
-  scale_1_10: "1-10 Scale",
-  single_choice: "Single Choice",
-  multiple_choice: "Multiple Choice",
-  yes_no: "Yes/No",
-};

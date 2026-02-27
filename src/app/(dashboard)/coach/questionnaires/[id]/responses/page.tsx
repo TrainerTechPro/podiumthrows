@@ -4,8 +4,10 @@ import {
   requireCoachSession,
   getQuestionnaireById,
   getQuestionnaireResponses,
+  getQuestionnaireScoreTrends,
 } from "@/lib/data/coach";
 import { ResponseViewer } from "./_response-viewer";
+import { ResponseTrendChart } from "./_response-charts";
 
 export default async function ResponsesPage({
   params,
@@ -17,7 +19,10 @@ export default async function ResponsesPage({
 
   if (!questionnaire) notFound();
 
-  const responses = await getQuestionnaireResponses(params.id, coach.id);
+  const [responses, scoreTrends] = await Promise.all([
+    getQuestionnaireResponses(params.id, coach.id),
+    getQuestionnaireScoreTrends(params.id, coach.id),
+  ]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -51,10 +56,16 @@ export default async function ResponsesPage({
         </p>
       </div>
 
+      {/* Score trend chart (only shows if scoring enabled + has data) */}
+      {questionnaire.scoringEnabled && scoreTrends.length > 0 && (
+        <ResponseTrendChart trends={scoreTrends} />
+      )}
+
       <ResponseViewer
         responses={responses}
         questions={questionnaire.questions}
         questionnaireType={questionnaire.type}
+        scoringEnabled={questionnaire.scoringEnabled}
       />
     </div>
   );
