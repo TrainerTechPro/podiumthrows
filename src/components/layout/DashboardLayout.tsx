@@ -12,6 +12,7 @@ import {
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ToastProvider as TTToastProvider } from "@/components/toast";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -222,6 +223,7 @@ export function DashboardLayout({
 
   return (
     <ToastProvider>
+    <TTToastProvider>
       <div className="flex h-screen bg-[var(--background)] overflow-hidden">
         {/* Sidebar */}
         <Sidebar
@@ -256,6 +258,7 @@ export function DashboardLayout({
           </main>
         </div>
       </div>
+    </TTToastProvider>
     </ToastProvider>
   );
 }
