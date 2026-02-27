@@ -53,12 +53,6 @@ const PLAN_LIMITS: Record<string, number> = {
   ELITE: Infinity,
 };
 
-const PLAN_PRICES: Record<string, number> = {
-  FREE: 0,
-  PRO: 29,
-  ELITE: 99,
-};
-
 const ACTION_LABELS: Record<string, string> = {
   SIGN_IN: "Signed in",
   CREATE_ATHLETE: "Added athlete",
