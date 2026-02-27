@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import bcrypt from "bcryptjs";
 
 export async function GET() {
   try {
@@ -25,6 +26,9 @@ export async function GET() {
             organization: true,
             avatarUrl: true,
             plan: true,
+            stripeCustomerId: true,
+            enabledModules: true,
+            _count: { select: { athletes: true } },
           },
         },
         athleteProfile: {
@@ -47,10 +51,66 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ success: true, user });
   } catch {
     return NextResponse.json(
       { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    }
+
+    const body = await request.json();
+
+    // Password change
+    if (body.currentPassword && body.newPassword) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { passwordHash: true },
+      });
+      if (!user) {
+        return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+      }
+      const valid = await bcrypt.compare(body.currentPassword, user.passwordHash);
+      if (!valid) {
+        return NextResponse.json({ success: false, error: "Current password is incorrect" }, { status: 400 });
+      }
+      const hash = await bcrypt.hash(body.newPassword, 10);
+      await prisma.user.update({
+        where: { id: session.userId },
+        data: { passwordHash: hash },
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    // Profile update (coach)
+    if (session.role === "COACH") {
+      const updateData: Record<string, string> = {};
+      if (body.firstName !== undefined) updateData.firstName = body.firstName;
+      if (body.lastName !== undefined) updateData.lastName = body.lastName;
+      if (body.bio !== undefined) updateData.bio = body.bio;
+      if (body.organization !== undefined) updateData.organization = body.organization;
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.coachProfile.update({
+          where: { userId: session.userId },
+          data: updateData,
+        });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ success: false, error: "Nothing to update" }, { status: 400 });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

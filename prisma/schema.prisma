@@ -155,6 +155,8 @@ model CoachProfile {
   stripeCustomerId     String?          @unique
   stripeSubscriptionId String?          @unique
   currentPeriodEnd     DateTime?
+  preferences          String?          @default("{}")
+  enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
 
   // Core relations (existing PT models)
   athletes       AthleteProfile[]
