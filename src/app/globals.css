@@ -10,6 +10,18 @@
     --card-border: #e5e5e5;
     --muted: #737373;
     --muted-bg: #f5f5f5;
+
+    /* ─── TT legacy variable aliases (migrated pages) ── */
+    --color-text: #171717;
+    --color-text-2: #404040;
+    --color-text-3: #737373;
+    --color-surface: #ffffff;
+    --color-surface-2: #f5f5f5;
+    --color-border: #e5e5e5;
+    --color-bg-subtle: #f5f5f5;
+    --color-gold: #f59e0b;
+    --color-gold-dark: #d97706;
+    --color-gold-light: #fcd34d;
   }
 
   .dark {
@@ -19,6 +31,18 @@
     --card-border: #262626;
     --muted: #a3a3a3;
     --muted-bg: #1e1e1e;
+
+    /* ─── TT legacy variable aliases (migrated pages) ── */
+    --color-text: #fafafa;
+    --color-text-2: #d4d4d4;
+    --color-text-3: #a3a3a3;
+    --color-surface: #171717;
+    --color-surface-2: #1e1e1e;
+    --color-border: #262626;
+    --color-bg-subtle: #1e1e1e;
+    --color-gold: #f59e0b;
+    --color-gold-dark: #d97706;
+    --color-gold-light: #fcd34d;
   }
 
   html {
@@ -45,44 +69,45 @@
   }
 
   .card-hover {
-    @apply card transition-shadow duration-200 hover:shadow-card-hover;
+    @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
   }
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
       bg-primary-500 text-white font-medium text-sm
-      hover:bg-primary-600 active:bg-primary-700
+      hover:bg-primary-600 active:bg-primary-700 active:scale-[0.97]
       focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2
       disabled:opacity-50 disabled:cursor-not-allowed
-      transition-colors duration-150;
+      transition-all duration-150;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
       bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-surface-100
       font-medium text-sm border border-surface-200 dark:border-surface-700
-      hover:bg-surface-200 dark:hover:bg-surface-700
+      hover:bg-surface-200 dark:hover:bg-surface-700 active:scale-[0.97]
       focus:outline-none focus:ring-2 focus:ring-surface-400/50 focus:ring-offset-2
       disabled:opacity-50 disabled:cursor-not-allowed
-      transition-colors duration-150;
+      transition-all duration-150;
   }
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
       bg-danger-500 text-white font-medium text-sm
-      hover:bg-danger-600 active:bg-danger-700
+      hover:bg-danger-600 active:bg-danger-700 active:scale-[0.97]
       focus:outline-none focus:ring-2 focus:ring-danger-500/50 focus:ring-offset-2
       disabled:opacity-50 disabled:cursor-not-allowed
-      transition-colors duration-150;
+      transition-all duration-150;
   }
 
   .input {
     @apply w-full px-3.5 py-2.5 rounded-xl text-sm
       bg-[var(--card-bg)] border border-[var(--card-border)]
       text-[var(--foreground)] placeholder:text-surface-400
-      focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500
+      focus:outline-none focus:ring-[3px] focus:ring-primary-500/30 focus:border-primary-500
+      focus:shadow-[0_0_0_4px_rgb(245_158_11/0.08)]
       disabled:opacity-50 disabled:cursor-not-allowed
-      transition-colors duration-150;
+      transition-all duration-150;
   }
 
   .label {
@@ -103,6 +128,11 @@
 
   .bg-muted {
     background-color: var(--muted-bg);
+  }
+
+  /* Active nav icon — bolder stroke for "filled" feel */
+  .icon-active svg {
+    stroke-width: 2.25;
   }
 }
 

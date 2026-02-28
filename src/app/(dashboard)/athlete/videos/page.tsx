@@ -23,7 +23,7 @@ export default async function AthleteVideosPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
+        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
           My Videos
         </h1>
         <p className="text-sm text-muted mt-0.5">

@@ -403,7 +403,7 @@ export default function CoachSettingsPage() {
     <>
       <div className="max-w-2xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Settings</h1>
+          <h1 className="text-2xl font-bold font-heading text-[var(--color-text)]">Settings</h1>
           <p className="text-[var(--color-text-2)] mt-1">Manage your profile, billing, and preferences</p>
         </div>
 

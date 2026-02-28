@@ -452,7 +452,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">My Goals</h1>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">My Goals</h1>
           <p className="text-sm text-muted mt-0.5">
             {activeGoals.length} active goal{activeGoals.length !== 1 ? "s" : ""}
           </p>

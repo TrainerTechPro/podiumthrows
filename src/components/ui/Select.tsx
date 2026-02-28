@@ -9,6 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { cn } from "@/lib/utils";
+import { ChevronDown, Check, X } from "lucide-react";
 
 export interface SelectOption<T = string> {
   value: T;
@@ -157,10 +158,15 @@ export function Select<T extends string | number = string>({
                 className="text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors p-0.5 rounded"
                 aria-label="Clear selection"
               >
-                <XIcon />
+                <X size={12} strokeWidth={2.5} aria-hidden="true" />
               </span>
             )}
-            <ChevronIcon open={open} />
+            <ChevronDown
+              size={14}
+              strokeWidth={2.5}
+              className={cn("text-surface-400 transition-transform duration-150", open && "rotate-180")}
+              aria-hidden="true"
+            />
           </span>
         </button>
 
@@ -223,7 +229,7 @@ export function Select<T extends string | number = string>({
                     </div>
                     {opt.value === value && (
                       <span className="shrink-0 mt-0.5 text-primary-500">
-                        <CheckIcon />
+                        <Check size={14} strokeWidth={2.5} aria-hidden="true" />
                       </span>
                     )}
                   </li>
@@ -244,40 +250,3 @@ export function Select<T extends string | number = string>({
   );
 }
 
-/* ─── Icons ──────────────────────────────────────────────────────────────── */
-
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("text-surface-400 transition-transform duration-150", open && "rotate-180")}
-      aria-hidden="true"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-function XIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}

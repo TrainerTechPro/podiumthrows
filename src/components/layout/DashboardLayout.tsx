@@ -4,6 +4,7 @@ import { useState, ReactNode, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { Sun, Moon, Menu, X } from "lucide-react";
 import {
   Sidebar,
   COACH_NAV_SECTIONS,
@@ -13,7 +14,37 @@ import {
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
-import { ToastProvider as TTToastProvider } from "@/components/toast";
+
+/* ─── Theme toggle ───────────────────────────────────────────────────────── */
+
+function ThemeToggle() {
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  function toggle() {
+    const nowDark = !isDark;
+    document.documentElement.classList.toggle("dark", nowDark);
+    document.cookie = `theme=${nowDark ? "dark" : "light"}; path=/; max-age=31536000; SameSite=Lax`;
+    setIsDark(nowDark);
+  }
+
+  return (
+    <button
+      onClick={toggle}
+      className="p-2 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {isDark ? (
+        <Sun size={18} strokeWidth={2} aria-hidden="true" />
+      ) : (
+        <Moon size={18} strokeWidth={2} aria-hidden="true" />
+      )}
+    </button>
+  );
+}
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -54,30 +85,11 @@ function HamburgerButton({
       aria-label={open ? "Close navigation" : "Open navigation"}
       aria-expanded={open}
     >
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        {open ? (
-          <>
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </>
-        ) : (
-          <>
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </>
-        )}
-      </svg>
+      {open ? (
+        <X size={20} strokeWidth={2} aria-hidden="true" />
+      ) : (
+        <Menu size={20} strokeWidth={2} aria-hidden="true" />
+      )}
     </button>
   );
 }
@@ -164,6 +176,9 @@ function TopBar({
         <div className="flex items-center gap-2">{actions}</div>
       )}
 
+      {/* Theme toggle */}
+      <ThemeToggle />
+
       {/* User avatar (mobile) */}
       <div className="lg:hidden">
         <Avatar name={user.name} src={user.avatarUrl} size="sm" />
@@ -210,7 +225,6 @@ export function DashboardLayout({
 
   return (
     <ToastProvider>
-    <TTToastProvider>
       <div className="flex h-screen bg-[var(--background)] overflow-hidden">
         {/* Sidebar */}
         <Sidebar
@@ -245,7 +259,6 @@ export function DashboardLayout({
           </main>
         </div>
       </div>
-    </TTToastProvider>
     </ToastProvider>
   );
 }

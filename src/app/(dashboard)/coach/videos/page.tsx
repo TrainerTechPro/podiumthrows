@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatEventType } from "@/lib/utils";
 import { formatTimestamp } from "@/components/video/types";
+import { Video } from "lucide-react";
 
 export const metadata = { title: "Video Library — Podium Throws" };
 
@@ -140,12 +141,7 @@ export default async function VideoLibraryPage({
       {/* Video Grid */}
       {videos.length === 0 ? (
         <EmptyState
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="23 7 16 12 23 17 23 7" />
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-            </svg>
-          }
+          icon={<Video size={24} strokeWidth={1.5} aria-hidden="true" />}
           title={searchParams.search ? `No results for "${searchParams.search}"` : "No videos yet"}
           description={
             searchParams.search

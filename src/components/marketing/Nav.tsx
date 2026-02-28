@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 
 function ThrowingCircle({ className = "w-8 h-8" }: { className?: string }) {
   return (
@@ -15,21 +16,6 @@ function ThrowingCircle({ className = "w-8 h-8" }: { className?: string }) {
   );
 }
 
-function MenuIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5" aria-hidden="true">
-      <path d="M4 12h16M4 6h16M4 18h16" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5" aria-hidden="true">
-      <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 const NAV_LINKS = [
   { href: "/#features", label: "Features" },
@@ -112,7 +98,7 @@ export default function MarketingNav() {
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
         >
-          {menuOpen ? <CloseIcon /> : <MenuIcon />}
+          {menuOpen ? <X size={20} strokeWidth={1.5} aria-hidden="true" /> : <Menu size={20} strokeWidth={1.5} aria-hidden="true" />}
         </button>
       </div>
 

@@ -38,7 +38,8 @@ export default function RootLayout({
 }>) {
   const cookieStore = cookies();
   const theme = cookieStore.get("theme")?.value;
-  const darkClass = theme === "dark" ? " dark" : "";
+  // Dark mode is the default; only opt out with explicit "light" cookie
+  const darkClass = theme !== "light" ? " dark" : "";
 
   return (
     <html
@@ -46,6 +47,13 @@ export default function RootLayout({
       className={`${outfit.variable} ${dmSans.variable}${darkClass}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#f59e0b" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body>{children}</body>
     </html>
   );

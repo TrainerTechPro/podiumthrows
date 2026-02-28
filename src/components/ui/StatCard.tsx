@@ -1,5 +1,6 @@
 import { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export type TrendDirection = "up" | "down" | "flat";
 
@@ -30,22 +31,8 @@ const accentColors = {
 };
 
 function TrendArrow({ direction }: { direction: TrendDirection }) {
-  if (direction === "flat") {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {direction === "up" ? (
-        <polyline points="18 15 12 9 6 15" />
-      ) : (
-        <polyline points="6 9 12 15 18 9" />
-      )}
-    </svg>
-  );
+  const Icon = direction === "flat" ? Minus : direction === "up" ? TrendingUp : TrendingDown;
+  return <Icon size={14} strokeWidth={2.5} aria-hidden="true" />;
 }
 
 function getTrendColor(direction: TrendDirection, positiveIsUp: boolean): string {

@@ -2,6 +2,13 @@
 
 import { useState, useMemo, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Search as SearchLucide,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+} from "lucide-react";
 import { EmptyState } from "./EmptyState";
 import { SkeletonTableRow } from "./Skeleton";
 
@@ -117,7 +124,7 @@ export function DataTable<T extends Record<string, unknown>>({
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           {searchable && (
             <div className="relative flex-1 min-w-[180px] max-w-xs">
-              <SearchIcon />
+              <SearchLucide size={16} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" aria-hidden="true" />
               <input
                 type="search"
                 value={query}
@@ -230,7 +237,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 disabled={page === 1}
                 aria-label="Previous page"
               >
-                <ChevronLeft />
+                <ChevronLeftIcon size={14} strokeWidth={2.5} aria-hidden="true" />
               </PageButton>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) =>
                 Math.abs(p - page) <= 2 || p === 1 || p === totalPages ? (
@@ -250,7 +257,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 disabled={page === totalPages}
                 aria-label="Next page"
               >
-                <ChevronRight />
+                <ChevronRightIcon size={14} strokeWidth={2.5} aria-hidden="true" />
               </PageButton>
             </div>
           </div>
@@ -295,63 +302,16 @@ function PageButton({
 }
 
 function SortIcon({ active, direction }: { active: boolean; direction: SortDirection }) {
+  const Icon = !active || direction === "asc" ? ChevronDown : ChevronUp;
   return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+    <Icon
+      size={12}
+      strokeWidth={2.5}
       className={cn(
         "transition-colors",
         active ? "text-primary-500" : "text-surface-300 dark:text-surface-600"
       )}
       aria-hidden="true"
-    >
-      {!active || direction === "asc" ? (
-        <polyline points="6 9 12 15 18 9" />
-      ) : (
-        <polyline points="18 15 12 9 6 15" />
-      )}
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-
-function ChevronLeft() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  );
-}
-
-function ChevronRight() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
+    />
   );
 }

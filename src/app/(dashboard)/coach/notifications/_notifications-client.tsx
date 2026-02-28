@@ -198,7 +198,7 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Notifications</h1>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Notifications</h1>
           <p className="text-sm text-muted mt-0.5">
             {unreadCount > 0
               ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`

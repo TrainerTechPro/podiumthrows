@@ -207,7 +207,7 @@ export default function ThrowFlowAnalyzePage() {
  <div
  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
  step >= s
- ? "bg-blue-600 text-white"
+ ? "bg-amber-500 text-white"
  : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
  }`}
  >
@@ -222,7 +222,7 @@ export default function ThrowFlowAnalyzePage() {
  {s < 3 && (
  <div
  className={`w-12 h-0.5 ${
- step > s ? "bg-blue-600" : "bg-[var(--color-bg-subtle)]"
+ step > s ? "bg-amber-500" : "bg-[var(--color-bg-subtle)]"
  }`}
  />
  )}
@@ -252,7 +252,7 @@ export default function ThrowFlowAnalyzePage() {
  onClick={() => setEvent(opt.value)}
  className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
  event === opt.value
- ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+ ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
  : "border-[var(--color-border)] text-[var(--color-text-2)] hover:border-[var(--color-border-strong)]"
  }`}
  >
@@ -272,7 +272,7 @@ export default function ThrowFlowAnalyzePage() {
  onClick={() => setDrillType(opt.value)}
  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
  drillType === opt.value
- ? "bg-blue-600 text-white"
+ ? "bg-amber-500 text-white"
  : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
  }`}
  >
@@ -292,13 +292,13 @@ export default function ThrowFlowAnalyzePage() {
  onClick={() => setCameraAngle(opt.value)}
  className={`p-3 rounded-lg border-2 text-left transition-all ${
  cameraAngle === opt.value
- ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+ ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
  : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
  }`}
  >
  <div className={`text-sm font-medium ${
  cameraAngle === opt.value
- ? "text-blue-700 dark:text-blue-300"
+ ? "text-amber-700 dark:text-amber-300"
  : "text-[var(--color-text-2)]"
  }`}>
  {opt.label}
@@ -382,9 +382,9 @@ export default function ThrowFlowAnalyzePage() {
  Step 2: Upload Video
  </h2>
 
- <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
- <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Tips for best results</h3>
- <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+ <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+ <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Tips for best results</h3>
+ <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
  <li>- Film from the {CAMERA_OPTIONS.find(c => c.value === cameraAngle)?.label.toLowerCase()} for this analysis</li>
  <li>- Keep camera steady (tripod recommended)</li>
  <li>- Ensure full throw is captured from setup to recovery</li>
@@ -399,7 +399,7 @@ export default function ThrowFlowAnalyzePage() {
  className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
  videoFile
  ? "border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/10"
- : "border-[var(--color-border-strong)] hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+ : "border-[var(--color-border-strong)] hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/10"
  }`}
  >
  <input
@@ -482,7 +482,7 @@ export default function ThrowFlowAnalyzePage() {
  </div>
  <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2">
  <div
- className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+ className="bg-amber-500 h-2 rounded-full transition-all duration-300"
  style={{ width: `${extractionProgress}%` }}
  />
  </div>

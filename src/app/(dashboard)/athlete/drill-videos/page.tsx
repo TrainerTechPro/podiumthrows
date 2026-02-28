@@ -106,7 +106,7 @@ export default function AthleteDrillVideosPage() {
  <div className="max-w-4xl">
  <div className="flex items-start justify-between mb-6">
  <div>
- <h1 className="text-2xl font-bold text-[var(--color-text)]">Drill PR Videos</h1>
+ <h1 className="text-2xl font-bold font-heading text-[var(--color-text)]">Drill PR Videos</h1>
  <p className="text-[var(--color-text-2)] mt-1 text-sm">
  Short clips of your best drill performances (max 10 seconds each)
  </p>

@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ChevronRight as ChevronRightIcon } from "lucide-react";
 
 export interface BreadcrumbItem {
   label: string;
@@ -12,24 +13,6 @@ export interface BreadcrumbsProps {
   className?: string;
 }
 
-function ChevronRight() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-surface-300 dark:text-surface-600 shrink-0"
-      aria-hidden="true"
-    >
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  );
-}
 
 export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
   return (
@@ -64,7 +47,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
               </li>
               {!isLast && (
                 <li aria-hidden="true" className="flex items-center">
-                  <ChevronRight />
+                  <ChevronRightIcon size={14} strokeWidth={2} className="text-surface-300 dark:text-surface-600 shrink-0" aria-hidden="true" />
                 </li>
               )}
             </Fragment>

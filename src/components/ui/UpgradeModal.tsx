@@ -5,6 +5,7 @@ import { Modal, Button } from "@/components";
 import { PLANS } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
 import type { PlanName } from "@/lib/stripe";
+import { Check } from "lucide-react";
 
 /* ── Feature lists per plan ──────────────────────────────────────────────── */
 
@@ -73,7 +74,7 @@ function PlanCard({
       <ul className="space-y-1.5 flex-1">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2 text-sm text-[var(--foreground)]">
-            <CheckIcon className="mt-0.5 shrink-0 text-emerald-500" />
+            <Check size={14} strokeWidth={2.5} className="mt-0.5 shrink-0 text-emerald-500" aria-hidden="true" />
             {f}
           </li>
         ))}
@@ -174,21 +175,3 @@ export function UpgradeModal({
   );
 }
 
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}

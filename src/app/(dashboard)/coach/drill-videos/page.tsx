@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/toast";
 import DrillVideoUpload from "@/components/drill-video-upload";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Video } from "lucide-react";
 
 interface DrillVideo {
  id: string;
@@ -140,7 +142,7 @@ export default function CoachDrillVideosPage() {
  <div className="max-w-5xl">
  <div className="flex items-start justify-between mb-6">
  <div>
- <h1 className="text-2xl font-bold text-[var(--color-text)]">Drill PR Videos</h1>
+ <h1 className="text-2xl font-bold font-heading text-[var(--color-text)]">Drill PR Videos</h1>
  <p className="text-[var(--color-text-2)] mt-1 text-sm">
  Short clips of drill personal records from your athletes (max 10 seconds each)
  </p>
@@ -238,25 +240,19 @@ export default function CoachDrillVideosPage() {
  ))}
  </div>
  ) : filteredVideos.length === 0 ? (
- <div className="card text-center py-16">
- <div className="w-16 h-16 rounded-2xl bg-[rgba(212,168,67,0.12)] flex items-center justify-center mx-auto mb-4">
- <svg className="w-8 h-8 text-[var(--color-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.88v6.24a1 1 0 01-1.447.888L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
- </svg>
- </div>
- <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">
- {videos.length === 0 ? "No drill videos yet" : "No videos match your filters"}
- </h3>
- <p className="text-[var(--color-text-2)] text-sm mb-6 max-w-sm mx-auto">
- {videos.length === 0
+ <div className="card">
+ <EmptyState
+ icon={<Video size={24} strokeWidth={1.5} aria-hidden="true" />}
+ title={videos.length === 0 ? "No drill videos yet" : "No videos match your filters"}
+ description={videos.length === 0
  ? "Upload short video clips of athlete drill PRs to track technique and progress over time."
  : "Try adjusting your filters."}
- </p>
- {videos.length === 0 && (
- <button onClick={() => { setUploadForAthleteId(""); setShowUpload(true); }} className="btn-primary mx-auto">
+ action={videos.length === 0 && (
+ <button onClick={() => { setUploadForAthleteId(""); setShowUpload(true); }} className="btn-primary">
  Upload First Drill Video
  </button>
  )}
+ />
  </div>
  ) : (
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

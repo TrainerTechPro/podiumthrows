@@ -31,7 +31,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
 
 function getScoreColor(score: number): string {
  if (score >= 85) return "text-green-600 dark:text-green-400";
- if (score >= 70) return "text-blue-600 dark:text-blue-400";
+ if (score >= 70) return "text-emerald-600 dark:text-emerald-400";
  if (score >= 55) return "text-amber-600 dark:text-amber-400";
  return "text-red-600 dark:text-red-400";
 }
@@ -76,7 +76,7 @@ export default function ThrowFlowHistoryPage() {
  onClick={() => setFilterEvent("")}
  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
  !filterEvent
- ? "bg-blue-600 text-white"
+ ? "bg-amber-500 text-white"
  : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] "
  }`}
  >
@@ -88,7 +88,7 @@ export default function ThrowFlowHistoryPage() {
  onClick={() => setFilterEvent(value)}
  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
  filterEvent === value
- ? "bg-blue-600 text-white"
+ ? "bg-amber-500 text-white"
  : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] "
  }`}
  >

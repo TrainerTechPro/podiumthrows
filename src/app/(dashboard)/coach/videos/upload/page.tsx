@@ -44,7 +44,7 @@ export default async function UploadVideoPage() {
           </svg>
           Back to Video Library
         </a>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
+        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
           Upload Video
         </h1>
         <p className="text-sm text-muted mt-1">

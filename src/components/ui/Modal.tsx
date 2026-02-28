@@ -8,6 +8,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
@@ -94,7 +95,7 @@ export function Modal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-[fadeIn_150ms_ease]"
+        className="absolute inset-0 bg-black/60 backdrop-blur-[6px] animate-fade-in"
         aria-hidden="true"
       />
 
@@ -103,7 +104,7 @@ export function Modal({
         ref={panelRef}
         className={cn(
           "relative w-full bg-[var(--card-bg)] border border-[var(--card-border)]",
-          "rounded-2xl shadow-xl animate-[slideUp_200ms_cubic-bezier(0.4,0,0.2,1)]",
+          "rounded-2xl shadow-2xl animate-spring-up",
           size === "full" && "overflow-hidden",
           sizeClasses[size],
           className
@@ -132,7 +133,7 @@ export function Modal({
                 className="shrink-0 rounded-lg p-1.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-800 dark:hover:text-surface-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
                 aria-label="Close"
               >
-                <CloseIcon />
+                <X size={16} strokeWidth={2.5} aria-hidden="true" />
               </button>
             )}
           </div>
@@ -157,15 +158,6 @@ export function Modal({
       </div>
     </div>,
     document.body
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
   );
 }
 

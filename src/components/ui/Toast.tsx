@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { CheckCircle2, XCircle, AlertTriangle, Info, X } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -93,24 +94,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 /* ─── Individual Toast Item ──────────────────────────────────────────────── */
 
+const toastIconProps = { size: 18, strokeWidth: 2.5, "aria-hidden": true as const };
+
 const variantStyles: Record<ToastVariant, { icon: ReactNode; bar: string; container: string }> = {
   success: {
-    icon: <SuccessIcon />,
+    icon: <CheckCircle2 {...toastIconProps} className="text-success-500" />,
     bar: "bg-success-500",
     container: "border-success-200 dark:border-success-500/30",
   },
   error: {
-    icon: <ErrorIcon />,
+    icon: <XCircle {...toastIconProps} className="text-danger-500" />,
     bar: "bg-danger-500",
     container: "border-danger-200 dark:border-danger-500/30",
   },
   warning: {
-    icon: <WarningIcon />,
+    icon: <AlertTriangle {...toastIconProps} className="text-warning-500" />,
     bar: "bg-warning-500",
     container: "border-warning-200 dark:border-warning-500/30",
   },
   info: {
-    icon: <InfoIcon />,
+    icon: <Info {...toastIconProps} className="text-info-500" />,
     bar: "bg-info-500",
     container: "border-info-200 dark:border-info-500/30",
   },
@@ -148,10 +151,10 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
       aria-live="polite"
       className={cn(
         "relative w-full max-w-sm bg-[var(--card-bg)] border rounded-xl shadow-lg overflow-hidden",
-        "transition-all duration-300",
+        "transition-all duration-300 ease-spring",
         visible
-          ? "opacity-100 translate-x-0"
-          : "opacity-0 translate-x-4",
+          ? "opacity-100 translate-x-0 scale-100"
+          : "opacity-0 translate-x-8 scale-95",
         container
       )}
     >
@@ -179,7 +182,7 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
           className="shrink-0 mt-0.5 rounded p-0.5 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors"
           aria-label="Dismiss"
         >
-          <DismissIcon />
+          <X size={14} strokeWidth={2.5} aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -189,7 +192,9 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
 /* ─── Toaster (stacking container) ──────────────────────────────────────── */
 
 function Toaster({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: string) => void }) {
-  if (typeof document === "undefined") return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
 
   return createPortal(
     <div
@@ -206,52 +211,3 @@ function Toaster({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: string) =
   );
 }
 
-/* ─── Icons ──────────────────────────────────────────────────────────────── */
-
-function SuccessIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-  );
-}
-
-function ErrorIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="15" y1="9" x2="9" y2="15" />
-      <line x1="9" y1="9" x2="15" y2="15" />
-    </svg>
-  );
-}
-
-function WarningIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  );
-}
-
-function InfoIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-  );
-}
-
-function DismissIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}

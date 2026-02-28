@@ -1,7 +1,16 @@
 import { requireCoachSession } from "@/lib/data/coach";
 import { redirect } from "next/navigation";
+import { Target } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export const metadata = { title: "Team Goals — Podium Throws" };
+
+const PLANNED_FEATURES = [
+  "Season PR targets by event (shot, disc, hammer, jav)",
+  "Goal progress bars linked to real throw log data",
+  "Competition-readiness scoring per athlete",
+  "Goal completion history and trend charts",
+];
 
 export default async function CoachGoalsPage() {
   try {
@@ -12,7 +21,6 @@ export default async function CoachGoalsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
@@ -23,50 +31,24 @@ export default async function CoachGoalsPage() {
         </p>
       </div>
 
-      {/* Coming soon card */}
-      <div className="card px-8 py-16 flex flex-col items-center text-center gap-5">
-        {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-primary-500/10 flex items-center justify-center">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-primary-500"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <circle cx="12" cy="12" r="6" />
-            <circle cx="12" cy="12" r="2" />
-          </svg>
-        </div>
+      {/* Coming soon */}
+      <div className="card px-8 py-12">
+        <EmptyState
+          icon={<Target size={28} strokeWidth={1.75} className="text-primary-500" />}
+          title="Roster-Wide Goal Tracking"
+          description="See every athlete's season targets in one view — distance goals, PR milestones, and competition-readiness benchmarks."
+        />
 
-        <div className="space-y-2 max-w-md">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold uppercase tracking-wide">
+        {/* Coming soon badge */}
+        <div className="flex justify-center mt-4">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold uppercase tracking-wide">
             Coming Soon
-          </div>
-          <h2 className="text-xl font-bold font-heading text-[var(--foreground)]">
-            Roster-Wide Goal Tracking
-          </h2>
-          <p className="text-sm text-muted leading-relaxed">
-            See every athlete&apos;s season targets in one view —
-            distance goals, PR milestones, and competition-readiness benchmarks.
-            Spot who&apos;s on track and who needs a check-in before the next meet.
-          </p>
+          </span>
         </div>
 
-        {/* Feature previews */}
-        <ul className="mt-2 space-y-2.5 text-left w-full max-w-sm">
-          {[
-            "Season PR targets by event (shot, disc, hammer, jav)",
-            "Goal progress bars linked to real throw log data",
-            "Competition-readiness scoring per athlete",
-            "Goal completion history and trend charts",
-          ].map((feat) => (
+        {/* Feature preview list */}
+        <ul className="mt-6 space-y-2.5 text-left w-full max-w-sm mx-auto">
+          {PLANNED_FEATURES.map((feat) => (
             <li key={feat} className="flex items-start gap-2.5 text-sm text-muted">
               <svg
                 width="14"
@@ -88,7 +70,7 @@ export default async function CoachGoalsPage() {
         </ul>
 
         {/* Tip: athletes already have goals */}
-        <p className="text-xs text-muted mt-2 max-w-sm">
+        <p className="text-xs text-muted mt-6 max-w-sm mx-auto text-center">
           In the meantime, you can view and manage each athlete&apos;s individual
           goals from their{" "}
           <a

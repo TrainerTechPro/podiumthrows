@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import EmptyState from "@/components/EmptyState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
  LineChart,
  Line,
@@ -274,10 +274,9 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  if (sessionCount === 0) return (
  <div className="card">
  <EmptyState
- headline="No throws logged yet"
- subtext="Log your first session to see trends"
- ctaLabel="Log a Session"
- ctaOnClick={onLogSession}
+ title="No throws logged yet"
+ description="Log your first session to see trends"
+ action={<button className="btn-primary" onClick={onLogSession}>Log a Session</button>}
  />
  </div>
  );

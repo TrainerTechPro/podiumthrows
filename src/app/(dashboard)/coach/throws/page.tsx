@@ -76,10 +76,10 @@ type SortKey = "urgency" | "name" | "event" | "throws" | "days";
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const EVENT_COLORS_MAP: Record<string, string> = {
- SP: "#D4915A",
- DT: "#6A9FD8",
- HT: "#5BB88A",
- JT: "#D46A6A",
+ SP: "#f59e0b",
+ DT: "#3b82f6",
+ HT: "#10b981",
+ JT: "#ef4444",
 };
 
 const EVENT_LABELS_MAP: Record<string, string> = {
@@ -90,10 +90,10 @@ const EVENT_LABELS_MAP: Record<string, string> = {
 };
 
 const PHASE_COLORS: Record<TrainingPhase, string> = {
- ACCUMULATION: "#6A9FD8",
- TRANSMUTATION: "#5BB88A",
- REALIZATION: "#D4915A",
- COMPETITION: "#D46A6A",
+ ACCUMULATION: "#f59e0b",
+ TRANSMUTATION: "#10b981",
+ REALIZATION: "#f97316",
+ COMPETITION: "#ef4444",
 };
 
 const PHASE_SHORT: Record<string, string> = {
@@ -205,7 +205,7 @@ function ImplementSplitBar({
     {heavyPct > 0 && (
      <div
       className="flex items-center justify-center text-[9px] font-bold text-white"
-      style={{ width: `${heavyPct}%`, backgroundColor: "#D46A6A" }}
+      style={{ width: `${heavyPct}%`, backgroundColor: "#ef4444" }}
       title={`Heavy: ${heavyPct}%`}
      >
       {heavyPct >= 20 ? `${heavyPct}%` : ""}
@@ -214,7 +214,7 @@ function ImplementSplitBar({
     {compPct > 0 && (
      <div
       className="flex items-center justify-center text-[9px] font-bold text-white"
-      style={{ width: `${compPct}%`, backgroundColor: "#5BB88A" }}
+      style={{ width: `${compPct}%`, backgroundColor: "#22c55e" }}
       title={`Comp: ${compPct}%`}
      >
       {compPct >= 20 ? `${compPct}%` : ""}
@@ -223,7 +223,7 @@ function ImplementSplitBar({
     {lightPct > 0 && (
      <div
       className="flex items-center justify-center text-[9px] font-bold text-white"
-      style={{ width: `${lightPct}%`, backgroundColor: "#6A9FD8" }}
+      style={{ width: `${lightPct}%`, backgroundColor: "#a78bfa" }}
       title={`Light: ${lightPct}%`}
      >
       {lightPct >= 20 ? `${lightPct}%` : ""}
@@ -435,9 +435,9 @@ export default function ThrowsDashboard() {
      href="/coach/throws/invite"
      className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group"
     >
-     <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+     <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
       <svg
-       className="w-5 h-5 text-blue-600 dark:text-blue-400"
+       className="w-5 h-5 text-amber-600 dark:text-amber-400"
        fill="none"
        stroke="currentColor"
        viewBox="0 0 24 24"
@@ -1101,21 +1101,21 @@ export default function ThrowsDashboard() {
       <div className="flex h-6 rounded-full overflow-hidden">
        <div
         className="flex items-center justify-center text-[10px] font-bold text-white"
-        style={{ width: `${phaseDist.heavyPercent}%`, backgroundColor: "#D46A6A" }}
+        style={{ width: `${phaseDist.heavyPercent}%`, backgroundColor: "#ef4444" }}
         title={`Heavy: ${phaseDist.heavyPercent}%`}
        >
         {phaseDist.heavyPercent}%
        </div>
        <div
         className="flex items-center justify-center text-[10px] font-bold text-white"
-        style={{ width: `${phaseDist.compPercent}%`, backgroundColor: "#5BB88A" }}
+        style={{ width: `${phaseDist.compPercent}%`, backgroundColor: "#22c55e" }}
         title={`Comp: ${phaseDist.compPercent}%`}
        >
         {phaseDist.compPercent}%
        </div>
        <div
         className="flex items-center justify-center text-[10px] font-bold text-white"
-        style={{ width: `${phaseDist.lightPercent}%`, backgroundColor: "#6A9FD8" }}
+        style={{ width: `${phaseDist.lightPercent}%`, backgroundColor: "#a78bfa" }}
         title={`Light: ${phaseDist.lightPercent}%`}
        >
         {phaseDist.lightPercent}%
@@ -1171,7 +1171,7 @@ export default function ThrowsDashboard() {
         className="w-full rounded-t-md transition-all"
         style={{
          height: `${entry.volumeMultiplier * 100}%`,
-         backgroundColor: "#D46A6A",
+         backgroundColor: "#f59e0b",
          opacity: 0.3 + entry.volumeMultiplier * 0.7,
         }}
        />

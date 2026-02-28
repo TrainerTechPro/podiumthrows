@@ -1,7 +1,16 @@
 import { requireCoachSession } from "@/lib/data/coach";
 import { redirect } from "next/navigation";
+import { Heart } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export const metadata = { title: "Team Wellness — Podium Throws" };
+
+const PLANNED_FEATURES = [
+  "Daily readiness heatmap across your roster",
+  "Sleep, soreness, and stress breakdowns",
+  "7-day rolling wellness trends per athlete",
+  "Alerts when athletes dip below threshold",
+];
 
 export default async function CoachWellnessPage() {
   try {
@@ -12,7 +21,6 @@ export default async function CoachWellnessPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
@@ -23,47 +31,24 @@ export default async function CoachWellnessPage() {
         </p>
       </div>
 
-      {/* Coming soon card */}
-      <div className="card px-8 py-16 flex flex-col items-center text-center gap-5">
-        {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#f43f5e"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </div>
+      {/* Coming soon */}
+      <div className="card px-8 py-12">
+        <EmptyState
+          icon={<Heart size={28} strokeWidth={1.75} className="text-rose-500" />}
+          title="Team Wellness Dashboard"
+          description="Get a real-time view of your entire roster's readiness scores, sleep quality, soreness levels, and stress trends — all in one place."
+        />
 
-        <div className="space-y-2 max-w-md">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold uppercase tracking-wide">
+        {/* Coming soon badge */}
+        <div className="flex justify-center mt-4">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold uppercase tracking-wide">
             Coming Soon
-          </div>
-          <h2 className="text-xl font-bold font-heading text-[var(--foreground)]">
-            Team Wellness Dashboard
-          </h2>
-          <p className="text-sm text-muted leading-relaxed">
-            Get a real-time view of your entire roster&apos;s readiness scores,
-            sleep quality, soreness levels, and stress trends — all in one place.
-            Identify athletes who need load adjustments before they break down.
-          </p>
+          </span>
         </div>
 
-        {/* Feature previews */}
-        <ul className="mt-2 space-y-2.5 text-left w-full max-w-sm">
-          {[
-            "Daily readiness heatmap across your roster",
-            "Sleep, soreness, and stress breakdowns",
-            "7-day rolling wellness trends per athlete",
-            "Alerts when athletes dip below threshold",
-          ].map((feat) => (
+        {/* Feature preview list */}
+        <ul className="mt-6 space-y-2.5 text-left w-full max-w-sm mx-auto">
+          {PLANNED_FEATURES.map((feat) => (
             <li key={feat} className="flex items-start gap-2.5 text-sm text-muted">
               <svg
                 width="14"

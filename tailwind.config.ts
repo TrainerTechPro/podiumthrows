@@ -189,6 +189,10 @@ const config: Config = {
           "50%": { transform: "scaleY(0.95) rotate(2deg)" },
           "75%": { transform: "scaleY(1.05) rotate(-1deg)" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
       },
       animation: {
         // Existing
@@ -213,6 +217,7 @@ const config: Config = {
         "chip-in": "chip-in 0.3s ease-out both",
         "progress-fill": "progress-fill 1s ease-out both",
         "streak-flame": "streak-flame 2s ease-in-out infinite",
+        "float": "float 3s ease-in-out infinite",
       },
       transitionTimingFunction: {
         "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
