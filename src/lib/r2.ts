@@ -135,13 +135,16 @@ export function generateImageKey(userId: string, fileName: string): string {
 
 export async function getPresignedUploadUrl(
   key: string,
-  contentType: string
+  _contentType: string
 ): Promise<{ uploadUrl: string; publicUrl: string }> {
   const client = getClient();
+  // Do NOT include ContentType in the command — this keeps content-type out of
+  // the AWS signature (X-Amz-SignedHeaders). iPhone videos have inconsistent
+  // file.type values ("", "video/quicktime", etc.) which caused signature
+  // mismatches and 403 errors on iOS.
   const command = new PutObjectCommand({
     Bucket: getBucket(),
     Key: key,
-    ContentType: contentType,
   });
   const uploadUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
   return { uploadUrl, publicUrl: getPublicUrl(key) };
