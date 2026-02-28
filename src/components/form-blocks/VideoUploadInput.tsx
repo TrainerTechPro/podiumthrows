@@ -6,7 +6,7 @@ import type { BlockInputProps } from "./types";
 
 type UploadState = "idle" | "uploading" | "error";
 
-const ACCEPTED_EXTENSIONS = ".mp4,.mov,.webm,.avi,.mkv,.m4v,.3gp";
+const ACCEPTED_VIDEO = "video/*";
 
 export function VideoUploadInput({
   block,
@@ -31,6 +31,7 @@ export function VideoUploadInput({
       const validMimes = [
         "video/mp4", "video/quicktime", "video/webm",
         "video/x-msvideo", "video/x-matroska", "video/x-m4v", "video/3gpp",
+        "video/hevc",
       ];
 
       if (!file.type.startsWith("video/") && !validExts.includes(ext)) {
@@ -126,6 +127,7 @@ export function VideoUploadInput({
           <video
             src={url}
             controls
+            playsInline
             className="mx-auto max-h-48 rounded-lg"
           />
           <div className="flex justify-center gap-3">
@@ -212,7 +214,7 @@ export function VideoUploadInput({
       <input
         ref={fileInputRef}
         type="file"
-        accept={ACCEPTED_EXTENSIONS}
+        accept={ACCEPTED_VIDEO}
         className="hidden"
         onChange={handleInputChange}
         disabled={disabled}

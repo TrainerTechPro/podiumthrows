@@ -440,6 +440,7 @@ export default function ThrowFlowAnalyzePage() {
  <video
  src={videoPreview}
  controls
+ playsInline
  className="w-full max-h-64 object-contain"
  />
  </div>
