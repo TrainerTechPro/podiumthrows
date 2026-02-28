@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { fetchCoachByUserId } from "@/lib/data/coach";
+import { getThrowsSessions } from "@/lib/data/throws";
 import { logger } from "@/lib/logger";
 
 // GET /api/throws/sessions — list all throws sessions for current coach
@@ -11,23 +13,12 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const coach = await prisma.coachProfile.findUnique({
-      where: { userId: currentUser.userId },
-    });
+    const coach = await fetchCoachByUserId(currentUser.userId);
     if (!coach) {
       return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
     }
 
-    const sessions = await prisma.throwsSession.findMany({
-      where: { coachId: coach.id },
-      include: {
-        blocks: { orderBy: { position: "asc" } },
-        assignments: {
-          include: { athlete: { include: { user: { select: { id: true, email: true } } } } },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const sessions = await getThrowsSessions(coach.id);
 
     return NextResponse.json({ success: true, data: sessions });
   } catch (error) {

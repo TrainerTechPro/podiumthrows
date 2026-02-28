@@ -4,11 +4,21 @@
  * so they can be passed from Server Components to Client Components.
  */
 
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import type { SubscriptionPlan } from "@prisma/client";
+
+/**
+ * Per-request cached coachProfile lookup by userId.
+ * React cache() deduplicates identical calls within one server render tree,
+ * so the layout and each page both calling this never fire more than one query.
+ */
+export const fetchCoachByUserId = cache(async (userId: string) => {
+  return prisma.coachProfile.findUnique({ where: { userId } });
+});
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -175,9 +185,7 @@ export async function requireCoachSession() {
   const session = await getSession();
   if (!session || session.role !== "COACH") redirect("/login");
 
-  const coach = await prisma.coachProfile.findUnique({
-    where: { userId: session.userId },
-  });
+  const coach = await fetchCoachByUserId(session.userId);
   if (!coach) redirect("/login");
 
   return { session, coach };
@@ -2094,17 +2102,26 @@ export async function getUnreadNotificationCount(coachId: string): Promise<numbe
  * Compute onboarding checklist status from real data — no step counter needed.
  * Returns early if onboarding is already completed/dismissed.
  */
-export async function getOnboardingStatus(coachId: string): Promise<OnboardingStatus> {
-  // Quick check: if already completed, skip the count queries
-  const coach = await prisma.coachProfile.findUnique({
-    where: { id: coachId },
-    select: { onboardingCompletedAt: true },
-  });
+export async function getOnboardingStatus(
+  coachId: string,
+  /** Pass the already-fetched value to avoid a redundant coachProfile query. */
+  cachedCompletedAt?: Date | null
+): Promise<OnboardingStatus> {
+  // Use caller-supplied value when available; fall back to a DB lookup otherwise
+  const onboardingCompletedAt =
+    cachedCompletedAt !== undefined
+      ? cachedCompletedAt
+      : (
+          await prisma.coachProfile.findUnique({
+            where: { id: coachId },
+            select: { onboardingCompletedAt: true },
+          })
+        )?.onboardingCompletedAt ?? null;
 
-  if (coach?.onboardingCompletedAt) {
+  if (onboardingCompletedAt) {
     return {
       isCompleted: true,
-      completedAt: coach.onboardingCompletedAt.toISOString(),
+      completedAt: onboardingCompletedAt.toISOString(),
       steps: [],
       completedCount: 4,
       totalSteps: 4,

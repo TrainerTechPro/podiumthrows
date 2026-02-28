@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
-import { getUnreadNotificationCount } from "@/lib/data/coach";
+import { fetchCoachByUserId, getUnreadNotificationCount } from "@/lib/data/coach";
 
 export default async function CoachLayout({
   children,
@@ -12,16 +11,7 @@ export default async function CoachLayout({
   const session = await getSession();
   if (!session || session.role !== "COACH") redirect("/login");
 
-  const coach = await prisma.coachProfile.findUnique({
-    where: { userId: session.userId },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      avatarUrl: true,
-      plan: true,
-    },
-  });
+  const coach = await fetchCoachByUserId(session.userId);
 
   if (!coach) redirect("/login");
 

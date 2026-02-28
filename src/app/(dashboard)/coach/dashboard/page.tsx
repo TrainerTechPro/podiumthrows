@@ -341,7 +341,7 @@ export default async function CoachDashboardPage() {
     getRecentActivity(coach.id),
     getFlaggedAthletes(coach.id),
     getTeamReadinessTrends(coach.id),
-    getOnboardingStatus(coach.id),
+    getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
   ]);
 
   const now = new Date();
