@@ -39,55 +39,47 @@ function formatEventName(event: string): string {
 /* ─── Stat Bar ───────────────────────────────────────────────────────────── */
 
 function StatBar({ stats }: { stats: CoachStats }) {
-  const items = [
-    {
-      value: stats.totalAthletes,
-      label: "Athletes",
-      color: "text-[var(--foreground)]",
-    },
-    {
-      value: stats.lowReadiness,
-      label: "Low Readiness",
-      color: stats.lowReadiness > 0 ? "text-amber-500" : "text-[var(--foreground)]",
-      warn: stats.lowReadiness > 0,
-    },
-    {
-      value: stats.sessionsToday,
-      label: "Sessions Today",
-      color: "text-[var(--foreground)]",
-    },
-    {
-      value: stats.injured,
-      label: "Injured",
-      color: stats.injured > 0 ? "text-red-500" : "text-[var(--foreground)]",
-      warn: stats.injured > 0,
-    },
-    {
-      value:
-        stats.complianceRate !== null ? `${stats.complianceRate}%` : "—",
-      label: "30-day Compliance",
-      color:
-        stats.complianceRate !== null && stats.complianceRate >= 80
-          ? "text-emerald-500"
-          : stats.complianceRate !== null && stats.complianceRate < 60
-          ? "text-amber-500"
-          : "text-[var(--foreground)]",
-    },
-  ];
-
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-[var(--card-border)] rounded-xl overflow-hidden border border-[var(--card-border)]">
-      {items.map((item, i) => (
-        <div
-          key={i}
-          className="bg-[var(--card-bg)] px-5 py-4"
-        >
-          <p className={cn("text-2xl font-bold tabular-nums font-heading", item.color)}>
-            {item.value}
-          </p>
-          <p className="text-xs text-muted mt-0.5">{item.label}</p>
-        </div>
-      ))}
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted border-b border-[var(--card-border)] pb-6">
+      <span>
+        <span className="font-semibold text-[var(--foreground)]">{stats.totalAthletes}</span>
+        {" athletes on roster"}
+      </span>
+
+      {stats.sessionsToday > 0 && (
+        <span>
+          <span className="font-semibold text-[var(--foreground)]">{stats.sessionsToday}</span>
+          {" session"}{stats.sessionsToday !== 1 ? "s" : ""}{" today"}
+        </span>
+      )}
+
+      {stats.complianceRate !== null && (
+        <span>
+          <span className={cn(
+            "font-semibold",
+            stats.complianceRate >= 80
+              ? "text-emerald-600 dark:text-emerald-400"
+              : stats.complianceRate < 60
+              ? "text-amber-500"
+              : "text-[var(--foreground)]"
+          )}>
+            {stats.complianceRate}%
+          </span>
+          {" 30-day compliance"}
+        </span>
+      )}
+
+      {stats.lowReadiness > 0 && (
+        <Badge variant="warning">
+          {stats.lowReadiness} low readiness
+        </Badge>
+      )}
+
+      {stats.injured > 0 && (
+        <Badge variant="danger">
+          {stats.injured} injured
+        </Badge>
+      )}
     </div>
   );
 }
@@ -374,31 +366,31 @@ export default async function CoachDashboardPage() {
       )}
 
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-            Good morning, {coach.firstName}.
-          </h1>
-          <p className="text-sm text-muted mt-0.5">{today}</p>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
+              Good morning, {coach.firstName}.
+            </h1>
+            <p className="text-sm text-muted mt-0.5">{today}</p>
+          </div>
+          <div className="flex gap-2">
+            <Link
+              href="/coach/athletes"
+              className="btn-secondary text-sm"
+            >
+              View Athletes
+            </Link>
+            <Link
+              href="/coach/athletes"
+              className="btn-primary text-sm"
+            >
+              + Invite Athlete
+            </Link>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Link
-            href="/coach/athletes"
-            className="btn btn-secondary text-sm"
-          >
-            View Athletes
-          </Link>
-          <Link
-            href="/coach/athletes"
-            className="btn btn-primary text-sm"
-          >
-            + Invite Athlete
-          </Link>
-        </div>
+        <StatBar stats={stats} />
       </div>
-
-      {/* Stat Bar */}
-      <StatBar stats={stats} />
 
       {/* Two-column body */}
       <div className="grid lg:grid-cols-5 gap-6">

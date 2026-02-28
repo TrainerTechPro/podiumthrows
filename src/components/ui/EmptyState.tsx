@@ -40,8 +40,8 @@ export function EmptyState({
       {icon && (
         <div
           className={cn(
-            "rounded-2xl bg-surface-100 dark:bg-surface-800/60 text-surface-400 dark:text-surface-500 flex items-center justify-center shrink-0 animate-float",
-            compact ? "w-10 h-10 [&_svg]:w-5 [&_svg]:h-5" : "w-16 h-16 [&_svg]:w-8 [&_svg]:h-8"
+            "text-surface-300 dark:text-surface-600 shrink-0",
+            compact ? "[&_svg]:w-6 [&_svg]:h-6" : "[&_svg]:w-9 [&_svg]:h-9"
           )}
         >
           {icon}

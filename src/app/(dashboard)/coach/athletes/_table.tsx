@@ -59,31 +59,27 @@ function EventsCell({ row }: { row: AthleteRosterItem }) {
 function ReadinessCell({ row }: { row: AthleteRosterItem }) {
   const r = row.latestReadiness;
   if (!r) {
-    return (
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-[var(--card-border)] shrink-0" />
-        <span className="text-muted text-sm">No check-in</span>
-      </div>
-    );
+    return <span className="text-muted text-sm">—</span>;
   }
 
   const dotColor =
     r.score >= 8 ? "bg-emerald-500" : r.score >= 5 ? "bg-amber-500" : "bg-red-500";
 
-  const dateDiff = Math.floor((Date.now() - new Date(r.date).getTime()) / (1000 * 60 * 60 * 24));
-  const dateLabel = dateDiff === 0 ? "Today" : dateDiff === 1 ? "Yesterday" : `${dateDiff}d ago`;
-  const isStale = dateDiff > 2;
+  // Show only the highest-priority status
+  const statusBadge =
+    r.injuryStatus === "ACTIVE" ? (
+      <Badge variant="danger">Injured</Badge>
+    ) : r.injuryStatus === "MONITORING" ? (
+      <Badge variant="warning">Watch</Badge>
+    ) : r.score < 5 ? (
+      <Badge variant="danger">Low</Badge>
+    ) : null;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-2">
       <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
-      <span className="text-sm font-bold tabular-nums">{r.score.toFixed(1)}</span>
-      {r.score < 5 && <Badge variant="danger">Low</Badge>}
-      {r.injuryStatus === "ACTIVE" && <Badge variant="danger">Injured</Badge>}
-      {r.injuryStatus === "MONITORING" && <Badge variant="warning">Watch</Badge>}
-      <span className={`text-sm tabular-nums ${isStale ? "text-amber-600 dark:text-amber-400" : "text-muted"}`}>
-        {dateLabel}
-      </span>
+      <span className="text-sm font-semibold tabular-nums">{r.score.toFixed(1)}</span>
+      {statusBadge}
     </div>
   );
 }
