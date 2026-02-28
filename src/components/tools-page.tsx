@@ -93,7 +93,7 @@ function UnitToggle({ value, onChange }: { value: UnitSystem; onChange: (v: Unit
         <button
           key={u}
           onClick={() => onChange(u)}
-          className={`px-3 py-1.5 text-caption font-medium transition-colors ${
+          className={`px-3 py-3 text-caption font-medium transition-colors min-h-[44px] ${
             value === u
               ? "bg-primary-500 text-white"
               : "bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
@@ -291,7 +291,7 @@ function BarbellRackCalc() {
       <Row label={`Target weight (${unitLabel})`}>
         <NumInput value={target} onChange={setTarget} placeholder={unit === "imperial" ? "225" : "100"} min="1" />
       </Row>
-      <p className="text-caption text-gray-400 dark:text-gray-500">
+      <p className="text-sm text-gray-400 dark:text-gray-500">
         Bar weight: {unit === "imperial" ? "45 lbs" : "20 kg"}
       </p>
       <CalcButton onClick={calc} />
@@ -432,7 +432,7 @@ function StrengthStandardsCalc() {
       {results && !hasAnyEntry && bw && (
         <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">Enter at least one lift to see your level</p>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">ExRx bodyweight ratio standards · Untrained → Novice → Intermediate → Advanced → Elite</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">ExRx bodyweight ratio standards · Untrained → Novice → Intermediate → Advanced → Elite</p>
     </CalcCard>
   );
 }
@@ -499,7 +499,7 @@ function WilksDOTSCalc() {
           </div>
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">Normalizes total for bodyweight · Total = Squat + Bench + Deadlift</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">Normalizes total for bodyweight · Total = Squat + Bench + Deadlift</p>
     </CalcCard>
   );
 }
@@ -613,7 +613,7 @@ function VerticalJumpPowerCalc() {
       </div>
       <div className="flex gap-2">
         {(["imperial", "metric"] as const).map(u => (
-          <button key={u} onClick={() => setUnit(u)} className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${unit === u ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
+          <button key={u} onClick={() => setUnit(u)} className={`flex-1 py-3 rounded-lg min-h-[44px] text-sm font-medium transition-colors ${unit === u ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
             {u === "imperial" ? "Imperial" : "Metric"}
           </button>
         ))}
@@ -1015,7 +1015,7 @@ function IdealBodyWeightCalc() {
           </div>
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">Devine, Robinson, Miller, Hamwi formulas · Reference ranges only, not a health target</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">Devine, Robinson, Miller, Hamwi formulas · Reference ranges only, not a health target</p>
     </CalcCard>
   );
 }
@@ -1092,7 +1092,7 @@ function FitnessTestingCalc() {
       <div className="flex gap-2 flex-wrap">
         {(["pushup","situp"] as const).map(t => (
           <button key={t} onClick={() => setTest(t)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${test === t ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-700 text-gray-600 dark:text-gray-300"}`}>
+            className={`px-3 py-3 rounded-lg min-h-[44px] text-xs font-medium transition-colors ${test === t ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-700 text-gray-600 dark:text-gray-300"}`}>
             {t === "pushup" ? "Push-up" : "Sit-up (1 min)"}
           </button>
         ))}
@@ -1134,7 +1134,7 @@ function FitnessTestingCalc() {
           </div>
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">
+      <p className="text-sm text-gray-400 dark:text-gray-500">
         {test === "pushup" ? "ACSM norms · Males: full push-up · Females: modified (knee push-up)" : "ACSM norms · Timed 1-minute sit-up test"}
       </p>
     </CalcCard>
@@ -1204,7 +1204,7 @@ function Skinfold7Calc() {
           <ResultBox label="7-site sum" value={`${fmt(result.sum, 1)} mm`} sub="Total of all 7 measurements" />
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">Jackson & Pollock (1978) 7-site formula · Siri equation · More accurate than 3-site</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">Jackson & Pollock (1978) 7-site formula · Siri equation · More accurate than 3-site</p>
     </CalcCard>
   );
 }
@@ -1280,7 +1280,7 @@ function TargetHRCalc() {
             )}
           </div>
           {!restHR && (
-            <p className="text-caption text-gray-400 dark:text-gray-500">Enter resting HR for Karvonen method</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Enter resting HR for Karvonen method</p>
           )}
         </div>
       )}
@@ -1635,7 +1635,7 @@ function METCalorieCalc() {
           </div>
 
           {/* Formula note */}
-          <p className="text-caption text-gray-400 dark:text-gray-500">
+          <p className="text-sm text-gray-400 dark:text-gray-500">
             {machine === "treadmill"
               ? `ACSM ${parseFloat(speed) * (unit === "metric" ? 1/1.60934 : 1) < 3.7 ? "walking" : "running"} metabolic equation · VO₂ = ${
                   parseFloat(speed) * (unit === "metric" ? 1/1.60934 : 1) < 3.7
@@ -1709,7 +1709,7 @@ function VO2MaxCalc() {
       <div className="flex gap-2 flex-wrap">
         {(["cooper", "mile5", "rockport"] as const).map(t => (
           <button key={t} onClick={() => { setTest(t); setResult(null); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${test === t ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-700 text-gray-600 dark:text-gray-300"}`}>
+            className={`px-3 py-3 rounded-lg min-h-[44px] text-xs font-medium transition-colors ${test === t ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-700 text-gray-600 dark:text-gray-300"}`}>
             {t === "cooper" ? "Cooper 12-min" : t === "mile5" ? "1.5-Mile Run" : "Rockport Walk"}
           </button>
         ))}
@@ -1764,7 +1764,7 @@ function VO2MaxCalc() {
           <ResultBox label="Category" value={result.cat} sub="Based on sex" />
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">
+      <p className="text-sm text-gray-400 dark:text-gray-500">
         {test === "cooper"  ? "Cooper (1968) · VO₂max = (distance m − 504.9) / 44.73" :
          test === "mile5"   ? "George et al. (1993) · VO₂max = 483 / time(min) + 3.5" :
                               "Kline et al. (1987) Rockport 1-Mile Walk Test"}
@@ -1811,7 +1811,7 @@ function HeartRateZoneCalc() {
       </div>
       <div className="flex gap-2">
         {(["karvonen", "percent"] as const).map(m => (
-          <button key={m} onClick={() => setMethod(m)} className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${method === m ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
+          <button key={m} onClick={() => setMethod(m)} className={`flex-1 py-3 rounded-lg min-h-[44px] text-sm font-medium transition-colors ${method === m ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
             {m === "karvonen" ? "Karvonen" : "% Max HR"}
           </button>
         ))}
@@ -2079,7 +2079,7 @@ function ProteinNeedsCalc() {
           />
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">Based on ISSN & ACSM protein intake recommendations</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">Based on ISSN & ACSM protein intake recommendations</p>
     </CalcCard>
   );
 }
@@ -2173,7 +2173,7 @@ function MacroCalc() {
           </div>
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">Protein 4 kcal/g · Carbs 4 kcal/g · Fat 9 kcal/g</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">Protein 4 kcal/g · Carbs 4 kcal/g · Fat 9 kcal/g</p>
     </CalcCard>
   );
 }
@@ -2241,14 +2241,14 @@ function BMRTDEECalc() {
       </div>
       <div className="flex gap-2">
         {(["imperial", "metric"] as const).map(u => (
-          <button key={u} onClick={() => setUnit(u)} className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${unit === u ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
+          <button key={u} onClick={() => setUnit(u)} className={`flex-1 py-3 rounded-lg min-h-[44px] text-sm font-medium transition-colors ${unit === u ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
             {u === "imperial" ? "Imperial" : "Metric"}
           </button>
         ))}
       </div>
       <div className="flex gap-2">
         {(["male", "female"] as const).map(s => (
-          <button key={s} onClick={() => setSex(s)} className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${sex === s ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
+          <button key={s} onClick={() => setSex(s)} className={`flex-1 py-3 rounded-lg min-h-[44px] text-sm font-medium transition-colors ${sex === s ? "bg-primary-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
             {s === "male" ? "Male" : "Female"}
           </button>
         ))}
@@ -2667,7 +2667,7 @@ function TrainingPaceZonesCalc() {
           </div>
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">Jack Daniels VDOT methodology · Enter a recent race time for best accuracy</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">Jack Daniels VDOT methodology · Enter a recent race time for best accuracy</p>
     </CalcCard>
   );
 }
@@ -2787,7 +2787,7 @@ function AgeGradedRunningCalc() {
           </div>
         </div>
       )}
-      <p className="text-caption text-gray-400 dark:text-gray-500">WMA-style age grading · Compares performance fairly across ages and sexes</p>
+      <p className="text-sm text-gray-400 dark:text-gray-500">WMA-style age grading · Compares performance fairly across ages and sexes</p>
     </CalcCard>
   );
 }
@@ -3079,7 +3079,7 @@ export default function ToolsPage({ isCoach: _isCoach = false }: ToolsPageProps)
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-caption font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+              className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-caption font-medium whitespace-nowrap transition-all flex-shrink-0 min-h-[44px] ${
                 activeTab === tab.id
                   ? "bg-primary-500 text-white shadow-sm"
                   : "bg-white dark:bg-surface-800 text-gray-600 dark:text-gray-400 border border-gray-200/80 dark:border-white/8 hover:border-primary-300 dark:hover:border-primary-600/40"

@@ -18,7 +18,7 @@ export function BillingToggle({
     <div className="inline-flex items-center gap-1 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 p-1 rounded-xl">
       <button
         onClick={() => onChange("monthly")}
-        className={`px-5 py-2 rounded-lg text-sm font-semibold font-body transition-all duration-200 ${
+        className={`px-5 py-2.5 rounded-lg text-sm font-semibold font-body transition-all duration-200 min-h-[44px] ${
           billing === "monthly"
             ? "bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm"
             : "text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300"
@@ -28,7 +28,7 @@ export function BillingToggle({
       </button>
       <button
         onClick={() => onChange("annual")}
-        className={`px-5 py-2 rounded-lg text-sm font-semibold font-body transition-all duration-200 flex items-center gap-2 ${
+        className={`px-5 py-2.5 rounded-lg text-sm font-semibold font-body transition-all duration-200 flex items-center gap-2 min-h-[44px] ${
           billing === "annual"
             ? "bg-white dark:bg-surface-700 text-surface-900 dark:text-white shadow-sm"
             : "text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-300"

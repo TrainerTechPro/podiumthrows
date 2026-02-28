@@ -34,13 +34,13 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+      className="p-3 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
       {isDark ? (
-        <Sun size={18} strokeWidth={2} aria-hidden="true" />
+        <Sun size={20} strokeWidth={2} aria-hidden="true" />
       ) : (
-        <Moon size={18} strokeWidth={2} aria-hidden="true" />
+        <Moon size={20} strokeWidth={2} aria-hidden="true" />
       )}
     </button>
   );
@@ -81,7 +81,7 @@ function HamburgerButton({
   return (
     <button
       onClick={onClick}
-      className="lg:hidden p-2 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+      className="lg:hidden p-3 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
       aria-label={open ? "Close navigation" : "Open navigation"}
       aria-expanded={open}
     >
@@ -127,7 +127,7 @@ function SidebarFooter({ user }: { user: DashboardUser }) {
       <Avatar name={user.name} src={user.avatarUrl} size="sm" status="online" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[var(--foreground)] truncate">{user.name}</p>
-        <p className="text-xs text-muted truncate capitalize">
+        <p className="text-sm text-muted truncate capitalize">
           {user.role.toLowerCase()}
           {user.plan && ` · ${user.plan}`}
         </p>

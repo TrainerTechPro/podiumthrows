@@ -94,7 +94,7 @@ export default function MarketingNav() {
         {/* Mobile toggle */}
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="md:hidden p-2 text-[#8a8278] hover:text-white transition-colors"
+          className="md:hidden p-3 text-[#8a8278] hover:text-white transition-colors"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
         >

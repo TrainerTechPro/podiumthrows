@@ -93,7 +93,7 @@ export default async function VideoLibraryPage({
             <Link
               key={cat.value}
               href={href}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              className={`px-3 py-2.5 rounded-full text-xs font-medium transition-colors inline-flex items-center justify-center min-h-[44px] min-w-[44px] ${
                 isActive
                   ? "bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300"
                   : "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700"
@@ -221,7 +221,7 @@ export default async function VideoLibraryPage({
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-2 text-[10px] text-surface-400">
+                <div className="flex items-center gap-3 mt-2 text-sm text-surface-400">
                   {video.annotationCount > 0 && (
                     <span className="flex items-center gap-0.5">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

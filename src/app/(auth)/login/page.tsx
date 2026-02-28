@@ -93,7 +93,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-between">
           <Link
             href="/forgot-password"
-            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline py-2.5 inline-block min-h-[44px] flex items-center"
           >
             Forgot password?
           </Link>
@@ -130,11 +130,11 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="text-center text-sm text-muted mt-6">
+      <p className="text-center text-sm text-muted mt-4">
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="text-primary-600 dark:text-primary-400 hover:underline font-medium"
+          className="text-primary-600 dark:text-primary-400 hover:underline font-medium py-3 inline-flex items-center min-h-[44px]"
         >
           Register
         </Link>

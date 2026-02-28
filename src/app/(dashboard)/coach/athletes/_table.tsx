@@ -81,7 +81,7 @@ function ReadinessCell({ row }: { row: AthleteRosterItem }) {
       {r.score < 5 && <Badge variant="danger">Low</Badge>}
       {r.injuryStatus === "ACTIVE" && <Badge variant="danger">Injured</Badge>}
       {r.injuryStatus === "MONITORING" && <Badge variant="warning">Watch</Badge>}
-      <span className={`text-xs tabular-nums ${isStale ? "text-amber-600 dark:text-amber-400" : "text-muted"}`}>
+      <span className={`text-sm tabular-nums ${isStale ? "text-amber-600 dark:text-amber-400" : "text-muted"}`}>
         {dateLabel}
       </span>
     </div>
@@ -101,7 +101,7 @@ function ActionCell({ row }: { row: AthleteRosterItem }) {
   return (
     <Link
       href={`/coach/athletes/${row.id}`}
-      className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium"
+      className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium inline-flex items-center justify-center min-h-[44px] min-w-[44px]"
     >
       View →
     </Link>

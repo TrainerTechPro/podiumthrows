@@ -45,7 +45,7 @@ export default async function QuestionnairesPage() {
         </div>
         <Link
           href="/coach/questionnaires/new"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors shrink-0"
+          className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors shrink-0 min-h-[44px]"
         >
           <svg
             width="16"
@@ -89,7 +89,7 @@ export default async function QuestionnairesPage() {
           action={
             <Link
               href="/coach/questionnaires/new"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors min-h-[44px]"
             >
               Create Form
             </Link>

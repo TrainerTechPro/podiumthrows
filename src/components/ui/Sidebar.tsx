@@ -65,7 +65,7 @@ function SidebarNavItem({ item }: { item: NavItem }) {
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+        "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-150 group",
         isActive
           ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
           : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100"
@@ -157,7 +157,7 @@ export function Sidebar({
           {sections.map((section, si) => (
             <div key={si}>
               {section.title && (
-                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-surface-400 dark:text-surface-500">
+                <p className="px-3 mb-1.5 text-sm font-semibold uppercase tracking-widest text-surface-400 dark:text-surface-500">
                   {section.title}
                 </p>
               )}

@@ -378,7 +378,7 @@ export default function ThrowsDashboard() {
       Bondarchuk Transfer of Training — Volume IV Programming
      </p>
     </div>
-    <div className="flex gap-2 self-start sm:self-auto">
+    <div className="flex flex-wrap gap-2 self-start sm:self-auto">
      <Link
       href="/coach/throws/invite"
       className="btn-secondary whitespace-nowrap flex items-center gap-1.5"
@@ -426,9 +426,9 @@ export default function ThrowsDashboard() {
        />
       </svg>
      </div>
-     <div>
-      <p className="text-sm font-semibold text-[var(--color-text)]">Live Practice</p>
-      <p className="text-xs text-[var(--color-text-2)]">Log attempts in real time</p>
+     <div className="min-w-0">
+      <p className="text-sm font-semibold text-[var(--color-text)] truncate">Live Practice</p>
+      <p className="text-sm text-[var(--color-text-2)] truncate">Log attempts in real time</p>
      </div>
     </Link>
     <Link
@@ -450,9 +450,9 @@ export default function ThrowsDashboard() {
        />
       </svg>
      </div>
-     <div>
-      <p className="text-sm font-semibold text-[var(--color-text)]">Invite Athlete</p>
-      <p className="text-xs text-[var(--color-text-2)]">Generate a shareable link</p>
+     <div className="min-w-0">
+      <p className="text-sm font-semibold text-[var(--color-text)] truncate">Invite Athlete</p>
+      <p className="text-sm text-[var(--color-text-2)] truncate">Generate a shareable link</p>
      </div>
     </Link>
     <Link
@@ -474,9 +474,9 @@ export default function ThrowsDashboard() {
        />
       </svg>
      </div>
-     <div>
-      <p className="text-sm font-semibold text-[var(--color-text)]">View as Athlete</p>
-      <p className="text-xs text-[var(--color-text-2)]">Preview the athlete experience</p>
+     <div className="min-w-0">
+      <p className="text-sm font-semibold text-[var(--color-text)] truncate">View as Athlete</p>
+      <p className="text-sm text-[var(--color-text-2)] truncate">Preview the athlete experience</p>
      </div>
     </Link>
     <Link
@@ -498,9 +498,9 @@ export default function ThrowsDashboard() {
        />
       </svg>
      </div>
-     <div>
-      <p className="text-sm font-semibold text-[var(--color-text)]">Build Program</p>
-      <p className="text-xs text-[var(--color-text-2)]">Generate a Bondarchuk macrocycle</p>
+     <div className="min-w-0">
+      <p className="text-sm font-semibold text-[var(--color-text)] truncate">Build Program</p>
+      <p className="text-sm text-[var(--color-text-2)] truncate">Generate Bondarchuk macrocycle</p>
      </div>
     </Link>
    </div>
@@ -511,7 +511,7 @@ export default function ThrowsDashboard() {
     <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
      <div className="flex items-center gap-2 flex-wrap">
       <h2 className="text-sm font-semibold text-[var(--color-text)]">Roster Pulse</h2>
-      <span className="text-xs text-[var(--color-text-3)]">{pulse.length} enrolled</span>
+      <span className="text-sm text-[var(--color-text-3)]">{pulse.length} enrolled</span>
       {needsAttention > 0 && (
        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,7 +528,7 @@ export default function ThrowsDashboard() {
      </div>
      <Link
       href="/coach/throws/roster"
-      className="text-xs text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] font-medium flex-shrink-0"
+      className="text-xs text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] font-medium flex-shrink-0 inline-flex items-center min-h-[44px]"
      >
       Full Roster →
      </Link>
@@ -965,34 +965,34 @@ export default function ThrowsDashboard() {
    {/* Stats Cards */}
    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div className="card !p-4">
-     <p className="text-xs font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
       Sessions
      </p>
      <p className="text-2xl font-bold text-[var(--color-text)] mt-1">{sessions.length}</p>
-     <p className="text-xs text-[var(--color-text-3)] mt-0.5">in library</p>
+     <p className="text-sm text-[var(--color-text-3)] mt-0.5">in library</p>
     </div>
     <div className="card !p-4">
-     <p className="text-xs font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
       Assigned
      </p>
      <p className="text-2xl font-bold text-[var(--color-text)] mt-1">{totalAssignments}</p>
-     <p className="text-xs text-[var(--color-text-3)] mt-0.5">total assignments</p>
+     <p className="text-sm text-[var(--color-text-3)] mt-0.5">total assignments</p>
     </div>
     <div className="card !p-4">
-     <p className="text-xs font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
       Completed
      </p>
      <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
       {completedAssignments}
      </p>
-     <p className="text-xs text-[var(--color-text-3)] mt-0.5">
+     <p className="text-sm text-[var(--color-text-3)] mt-0.5">
       {totalAssignments > 0
        ? `${Math.round((completedAssignments / totalAssignments) * 100)}% rate`
        : "no data yet"}
      </p>
     </div>
     <div className="card !p-4">
-     <p className="text-xs font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
       Events
      </p>
      <div className="flex flex-wrap gap-1 mt-2">
@@ -1023,7 +1023,7 @@ export default function ThrowsDashboard() {
        <button
         key={phase}
         onClick={() => setSelectedPhase(phase)}
-        className={`px-3 py-2.5 rounded-full text-xs font-semibold transition-colors ${
+        className={`px-3 py-3 rounded-full text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center ${
          selectedPhase === phase
           ? "text-white"
           : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
@@ -1039,7 +1039,7 @@ export default function ThrowsDashboard() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
      {/* Classification Ratios */}
      <div className="rounded-lg bg-[var(--color-surface-2)]/50 p-3 space-y-2">
-      <p className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+      <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
        Classification Ratios
       </p>
       <div className="space-y-1.5">
@@ -1061,31 +1061,31 @@ export default function ThrowsDashboard() {
         </div>
        ))}
       </div>
-      <p className="text-[10px] text-[var(--color-text-3)] mt-1">
+      <p className="text-sm text-[var(--color-text-3)] mt-1">
        {CLASSIFICATIONS.CE.label} | {CLASSIFICATIONS.SD.label}
       </p>
      </div>
 
      {/* Weekly Parameters */}
      <div className="rounded-lg bg-[var(--color-surface-2)]/50 p-3 space-y-2">
-      <p className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+      <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
        Weekly Parameters
       </p>
       <div className="grid grid-cols-2 gap-2">
        <div>
-        <p className="text-[10px] text-[var(--color-text-3)]">Throws/Wk</p>
+        <p className="text-sm text-[var(--color-text-3)]">Throws/Wk</p>
         <p className="text-sm font-bold text-[var(--color-text)]">
          {phaseConfig.throwsPerWeekMin}–{phaseConfig.throwsPerWeekMax}
         </p>
        </div>
        <div>
-        <p className="text-[10px] text-[var(--color-text-3)]">Strength Days</p>
+        <p className="text-sm text-[var(--color-text-3)]">Strength Days</p>
         <p className="text-sm font-bold text-[var(--color-text)]">
          {phaseConfig.strengthDaysMin}–{phaseConfig.strengthDaysMax}
         </p>
        </div>
        <div>
-        <p className="text-[10px] text-[var(--color-text-3)]">Duration</p>
+        <p className="text-sm text-[var(--color-text-3)]">Duration</p>
         <p className="text-sm font-bold text-[var(--color-text)]">
          {phaseConfig.durationWeeksMin}–{phaseConfig.durationWeeksMax} wk
         </p>
@@ -1095,7 +1095,7 @@ export default function ThrowsDashboard() {
 
      {/* Implement Distribution */}
      <div className="rounded-lg bg-[var(--color-surface-2)]/50 p-3 space-y-2">
-      <p className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+      <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
        Implement Distribution
       </p>
       <div className="flex h-6 rounded-full overflow-hidden">
@@ -1131,7 +1131,7 @@ export default function ThrowsDashboard() {
 
     {/* Weekly Schedule */}
     <div>
-     <p className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-wider mb-2">
+     <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider mb-2">
       Weekly Template — {selectedPhase.charAt(0) + selectedPhase.slice(1).toLowerCase()}
      </p>
      <div className="overflow-x-auto">
