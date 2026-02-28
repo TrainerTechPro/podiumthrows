@@ -32,7 +32,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.r2.dev https://*.s3.amazonaws.com https://*.s3.*.amazonaws.com https://v2.exercisedb.io",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.stripe.com",
+              "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com",
               "media-src 'self' blob: https://*.r2.dev",
               "worker-src 'self'",
               "frame-src 'self' https://js.stripe.com",

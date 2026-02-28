@@ -76,9 +76,12 @@ export const ALLOWED_VIDEO_TYPES = [
   "video/mp4",
   "video/quicktime", // .mov
   "video/webm",
+  "video/hevc",      // iPhone HEVC recordings
+  "video/x-m4v",     // .m4v
+  "video/3gpp",      // .3gp (mobile recordings)
 ];
 
-export const ALLOWED_VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm"];
+export const ALLOWED_VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm", ".m4v", ".3gp"];
 
 export const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",

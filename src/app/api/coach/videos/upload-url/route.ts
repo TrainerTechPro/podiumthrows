@@ -3,7 +3,6 @@ import { requireCoachSession } from "@/lib/data/coach";
 import {
   isR2Configured,
   isAllowedVideoType,
-  isAllowedVideoExtension,
   generateVideoKey,
   getPresignedUploadUrl,
   getPublicUrl,
@@ -28,10 +27,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file type
-    if (!isAllowedVideoType(contentType) || !isAllowedVideoExtension(fileName)) {
+    // Validate file type — be lenient with MIME (some mobile browsers send odd types)
+    const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+    const validExts = ["mp4", "mov", "webm", "m4v", "3gp"];
+    if (!isAllowedVideoType(contentType) && !validExts.includes(ext)) {
       return NextResponse.json(
-        { error: "Only MP4, MOV, and WebM video files are allowed" },
+        { error: "Unsupported video format. Please use MP4, MOV, or WebM." },
         { status: 400 }
       );
     }

@@ -34,7 +34,14 @@ const CATEGORY_OPTIONS: SelectOption<string>[] = [
   { value: "analysis", label: "Analysis" },
 ];
 
-const ALLOWED_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
+const ALLOWED_TYPES = [
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "video/hevc",
+  "video/x-m4v",
+  "video/3gpp",
+];
 const MAX_SIZE_MB = 500;
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
@@ -59,8 +66,14 @@ export function UploadForm({ athleteOptions }: Props) {
   /* ── File selection ──────────────────────────────────────────────────── */
 
   const handleFileSelect = useCallback((selectedFile: File) => {
-    // Validate type
-    if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+    // Validate type — allow empty MIME (some mobile browsers) if extension is ok
+    const ext = selectedFile.name.split(".").pop()?.toLowerCase() ?? "";
+    const validExts = ["mp4", "mov", "webm", "m4v", "3gp"];
+    if (selectedFile.type && !ALLOWED_TYPES.includes(selectedFile.type) && !validExts.includes(ext)) {
+      setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
+      return;
+    }
+    if (!selectedFile.type && !validExts.includes(ext)) {
       setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
       return;
     }
@@ -144,9 +157,13 @@ export function UploadForm({ athleteOptions }: Props) {
           };
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) resolve();
-            else reject(new Error("Upload failed"));
+            else {
+              let msg = `Upload failed (${xhr.status})`;
+              try { msg = JSON.parse(xhr.responseText)?.error ?? msg; } catch { /* ignore */ }
+              reject(new Error(msg));
+            }
           };
-          xhr.onerror = () => reject(new Error("Upload failed"));
+          xhr.onerror = () => reject(new Error("Upload failed — check your connection"));
           xhr.open("POST", uploadUrl);
           xhr.send(formData);
         });
@@ -161,11 +178,11 @@ export function UploadForm({ athleteOptions }: Props) {
           };
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) resolve();
-            else reject(new Error("Upload failed"));
+            else reject(new Error(`Upload failed (${xhr.status})`));
           };
-          xhr.onerror = () => reject(new Error("Upload failed"));
+          xhr.onerror = () => reject(new Error("Upload failed — check your connection"));
           xhr.open("PUT", uploadUrl);
-          xhr.setRequestHeader("Content-Type", file.type);
+          xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
           xhr.send(file);
         });
       }
@@ -291,7 +308,7 @@ export function UploadForm({ athleteOptions }: Props) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm"
+          accept="video/*"
           onChange={handleInputChange}
           className="hidden"
         />
