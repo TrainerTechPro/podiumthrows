@@ -10,7 +10,7 @@ import { CODE_EVENT_MAP, type EventCode } from "@/lib/throws/constants";
 
 interface AthleteInfo {
  id: string;
- profilePictureUrl?: string | null;
+ avatarUrl?: string | null;
  user: { firstName: string; lastName: string };
  throwsProfile: {
  event: string;
@@ -36,7 +36,7 @@ interface PracticeAttempt {
  createdAt: string;
  athlete: {
  id: string;
- profilePictureUrl?: string | null;
+ avatarUrl?: string | null;
  user: { firstName: string; lastName: string };
  };
 }
@@ -231,7 +231,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  <div className="sticky top-0 bg-[var(--color-surface)] px-5 pt-5 pb-3 border-b border-[var(--color-border)] flex items-center justify-between">
  <div className="flex items-center gap-3">
  <UserAvatar
- src={athlete.profilePictureUrl}
+ src={athlete.avatarUrl}
  firstName={athlete.user.firstName}
  lastName={athlete.user.lastName}
  size="sm"
@@ -460,7 +460,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  return (
  <div className="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-surface-2)]/50 hover:bg-[var(--color-bg-subtle)] transition-colors">
  <UserAvatar
- src={attempt.athlete.profilePictureUrl}
+ src={attempt.athlete.avatarUrl}
  firstName={attempt.athlete.user.firstName}
  lastName={attempt.athlete.user.lastName}
  size="sm"
@@ -596,12 +596,12 @@ export default function LiveSessionPage() {
  lightImplementKg: number | null;
  athlete: {
  id: string;
- profilePictureUrl?: string | null;
+ avatarUrl?: string | null;
  user: { firstName: string; lastName: string };
  };
  }[]).map((p) => ({
  id: p.athleteId,
- profilePictureUrl: p.athlete.profilePictureUrl,
+ avatarUrl: p.athlete.avatarUrl,
  user: p.athlete.user,
  throwsProfile: {
  event: CODE_EVENT_MAP[p.event as EventCode] ?? p.event,
@@ -810,7 +810,7 @@ export default function LiveSessionPage() {
  } ${isSelected ? "border-[rgba(212,168,67,0.3)] dark:border-[var(--color-gold)] shadow-md" : ""}`}
  >
  <UserAvatar
- src={athlete.profilePictureUrl}
+ src={athlete.avatarUrl}
  firstName={athlete.user.firstName}
  lastName={athlete.user.lastName}
  size="sm"

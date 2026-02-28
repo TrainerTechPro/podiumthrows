@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
 
 export const maxDuration = 120; // Allow up to 2 minutes for large uploads
-import { join } from "path";
 import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
-import { isR2Configured, uploadSingleFile, getPublicUrl } from "@/lib/r2";
+import { isR2Configured, uploadSingleFile, getPublicUrl, saveFileLocally } from "@/lib/r2";
 import { logger } from "@/lib/logger";
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const MAX_DURATION = 10.5; // 10 seconds + tiny buffer
-const DRILL_VIDEO_DIR = join("/tmp", "uploads", "drill-videos");
 
 const ALLOWED_TYPES = [
   "video/mp4",
@@ -200,11 +197,8 @@ export async function POST(request: NextRequest) {
       await uploadSingleFile(fileKey, videoBuffer, mimeType);
       filePath = getPublicUrl(fileKey);
     } else {
-      // Local storage fallback
-      await mkdir(DRILL_VIDEO_DIR, { recursive: true });
-      const localPath = join(DRILL_VIDEO_DIR, `${randomUUID()}.${ext}`);
-      await writeFile(localPath, videoBuffer);
-      filePath = localPath;
+      // Local storage fallback — save to public/uploads/
+      filePath = await saveFileLocally(fileKey, videoBuffer);
     }
 
     const drillVideo = await prisma.drillVideo.create({

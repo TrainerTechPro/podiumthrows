@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getCurrentUser } from "@/lib/auth";
-import { isR2Configured, uploadSingleFile, getPublicUrl } from "@/lib/r2";
+import { isR2Configured, uploadSingleFile, getPublicUrl, saveFileLocally } from "@/lib/r2";
 import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
@@ -73,11 +73,9 @@ export async function POST(request: NextRequest) {
       const url = getPublicUrl(key);
       return NextResponse.json({ success: true, url });
     } else {
-      // Dev fallback — return a placeholder URL
-      return NextResponse.json({
-        success: true,
-        url: `/api/throws/practice/video-upload/placeholder/${key}`,
-      });
+      // Dev fallback — save to public/uploads/
+      const localUrl = await saveFileLocally(key, buffer);
+      return NextResponse.json({ success: true, url: localUrl });
     }
   } catch (error) {
     logger.error("POST /api/throws/practice/video-upload error", { context: "throws/practice/video-upload", error: error });
