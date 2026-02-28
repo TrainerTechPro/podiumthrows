@@ -229,14 +229,17 @@ export function OnboardingChecklist({
 
   return (
     <div className="card overflow-hidden">
-      {/* Header gradient band */}
-      <div className="bg-gradient-to-r from-primary-500 to-amber-500 px-6 py-5 sm:px-8 sm:py-6">
-        <h2 className="text-xl sm:text-2xl font-bold font-heading text-white">
-          Welcome to Podium Throws, {firstName}.
-        </h2>
-        <p className="text-sm text-white/80 mt-1">
-          Complete these steps to unlock your coaching dashboard.
-        </p>
+      {/* Header */}
+      <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-[var(--card-border)] flex items-start gap-4">
+        <div className="w-1 self-stretch rounded-full bg-primary-500 shrink-0" />
+        <div>
+          <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
+            Welcome to Podium Throws, {firstName}.
+          </h2>
+          <p className="text-sm text-muted mt-0.5">
+            Complete these steps to unlock your coaching dashboard.
+          </p>
+        </div>
       </div>
 
       {/* Progress bar */}

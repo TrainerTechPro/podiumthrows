@@ -9,6 +9,7 @@ const nextConfig = {
     instrumentationHook: true,
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       // Cloudflare R2 public buckets
       { protocol: 'https', hostname: '*.r2.dev' },

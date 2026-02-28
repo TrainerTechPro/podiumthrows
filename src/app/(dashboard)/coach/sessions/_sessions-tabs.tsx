@@ -39,14 +39,15 @@ const sessionColumns: Column<CoachSessionItem>[] = [
   {
     key: "athleteFirstName",
     header: "Athlete",
+    className: "min-w-[160px]",
     cell: (row) => (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0">
         <Avatar
           name={`${row.athleteFirstName} ${row.athleteLastName}`}
           src={row.athleteAvatarUrl}
           size="sm"
         />
-        <span className="font-medium">
+        <span className="font-medium truncate whitespace-nowrap">
           {row.athleteFirstName} {row.athleteLastName}
         </span>
       </div>
@@ -69,6 +70,9 @@ const sessionColumns: Column<CoachSessionItem>[] = [
     key: "status",
     header: "Status",
     cell: (row) => {
+      if (row.status === "SCHEDULED") {
+        return <span className="text-sm text-muted">Scheduled</span>;
+      }
       const s = STATUS_BADGE[row.status] ?? { label: row.status, variant: "neutral" as const };
       return <Badge variant={s.variant}>{s.label}</Badge>;
     },

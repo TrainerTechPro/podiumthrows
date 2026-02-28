@@ -93,10 +93,10 @@ export default async function VideoLibraryPage({
             <Link
               key={cat.value}
               href={href}
-              className={`px-3 py-2.5 rounded-full text-xs font-medium transition-colors inline-flex items-center justify-center min-h-[44px] min-w-[44px] ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300"
-                  : "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700"
+                  : "text-surface-500 dark:text-surface-400 hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
               }`}
             >
               {cat.label}
@@ -174,8 +174,8 @@ export default async function VideoLibraryPage({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-surface-400">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="flex items-center justify-center h-full bg-gradient-to-br from-surface-800 to-surface-900 text-surface-600">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="23 7 16 12 23 17 23 7" />
                       <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                     </svg>

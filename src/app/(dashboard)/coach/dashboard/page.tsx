@@ -164,7 +164,7 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
     <div className="space-y-1">
       {items.length === 0 && (
-        <p className="text-sm text-muted py-8 text-center">
+        <p className="text-sm text-muted py-4 text-center">
           No activity in the last 48 hours.
         </p>
       )}
@@ -344,7 +344,11 @@ export default async function CoachDashboardPage() {
     getOnboardingStatus(coach.id),
   ]);
 
-  const today = new Date().toLocaleDateString("en-US", {
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const today = now.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -370,20 +374,20 @@ export default async function CoachDashboardPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-              Good morning, {coach.firstName}.
+              {greeting}, {coach.firstName}.
             </h1>
             <p className="text-sm text-muted mt-0.5">{today}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
             <Link
               href="/coach/athletes"
-              className="btn-secondary text-sm"
+              className="text-sm text-muted hover:text-[var(--foreground)] transition-colors"
             >
               View Athletes
             </Link>
             <Link
               href="/coach/athletes"
-              className="btn-primary text-sm"
+              className="btn-primary text-sm py-1.5 px-3"
             >
               + Invite Athlete
             </Link>
@@ -419,7 +423,7 @@ export default async function CoachDashboardPage() {
           </h2>
           <div className="card py-1">
             {flagged.length === 0 ? (
-              <p className="text-sm text-muted py-8 text-center">
+              <p className="text-sm text-muted py-4 text-center">
                 All athletes are in good shape.
               </p>
             ) : (

@@ -32,17 +32,31 @@ type Props = {
   onPause?: () => void;
   overlay?: ReactNode;
   className?: string;
+  /** Hide built-in controls (use when a master control bar is provided externally) */
+  showControls?: boolean;
+  /** Override the click handler on the video element (e.g. to drive a master play/pause) */
+  onVideoClick?: () => void;
 };
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
 export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
   function VideoPlayer(
-    { src, poster, onTimeUpdate, onReady, onPlay, onPause, overlay, className },
+    {
+      src,
+      poster,
+      onTimeUpdate,
+      onReady,
+      onPlay,
+      onPause,
+      overlay,
+      className,
+      showControls = true,
+      onVideoClick,
+    },
     ref
   ) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const progressRef = useRef<HTMLDivElement>(null);
     const [playing, setPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -126,11 +140,10 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
       setShowSpeedMenu(false);
     }
 
-    function handleProgressClick(e: React.MouseEvent<HTMLDivElement>) {
-      if (!progressRef.current || !videoRef.current) return;
-      const rect = progressRef.current.getBoundingClientRect();
-      const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      videoRef.current.currentTime = frac * duration;
+    function handleScrub(e: React.ChangeEvent<HTMLInputElement>) {
+      const time = parseFloat(e.target.value);
+      if (videoRef.current) videoRef.current.currentTime = time;
+      setCurrentTime(time);
     }
 
     function toggleMute() {
@@ -178,6 +191,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
     /* ── Keyboard shortcuts ─────────────────────────────────────────────── */
 
     useEffect(() => {
+      if (!showControls) return; // let master control bar handle keys
       function handleKey(e: KeyboardEvent) {
         if (
           e.target instanceof HTMLInputElement ||
@@ -229,7 +243,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
       document.addEventListener("keydown", handleKey);
       return () => document.removeEventListener("keydown", handleKey);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [duration, muted]);
+    }, [duration, muted, showControls]);
 
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -248,7 +262,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
           onLoadedMetadata={handleLoadedMetadata}
           onPlay={handlePlay}
           onPause={handlePause}
-          onClick={togglePlay}
+          onClick={onVideoClick ?? togglePlay}
           playsInline
           preload="metadata"
         />
@@ -260,10 +274,10 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
           </div>
         )}
 
-        {/* Play button overlay (when paused, no overlay interaction) */}
-        {!playing && !overlay && (
+        {/* Play button overlay (when paused, no overlay interaction) — only in standalone mode */}
+        {showControls && !playing && !overlay && (
           <button
-            onClick={togglePlay}
+            onClick={onVideoClick ?? togglePlay}
             className="absolute inset-0 flex items-center justify-center bg-black/20"
           >
             <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
@@ -280,115 +294,127 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
           </button>
         )}
 
-        {/* Controls */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pt-8 pb-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* Progress bar */}
-          <div
-            ref={progressRef}
-            className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer mb-2 group/prog hover:h-2.5 transition-all"
-            onClick={handleProgressClick}
-          >
-            <div
-              className="h-full bg-primary-500 rounded-full relative"
-              style={{ width: `${progress}%` }}
-            >
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary-400 shadow opacity-0 group-hover/prog:opacity-100 transition-opacity" />
+        {/* Controls — hidden when showControls=false (master control bar takes over) */}
+        {showControls && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pt-8 pb-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Precision scrub slider (replaces click-only progress bar) */}
+            <div className="relative mb-2 group/scrub">
+              {/* Background track */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1.5 bg-white/20 rounded-full pointer-events-none group-hover/scrub:h-2.5 transition-all"
+              />
+              {/* Filled track */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 left-0 h-1.5 bg-primary-500 rounded-full pointer-events-none group-hover/scrub:h-2.5 transition-all"
+                style={{ width: `${progress}%` }}
+              />
+              {/* Scrub range input */}
+              <input
+                type="range"
+                min={0}
+                max={duration || 1}
+                step={0.0333}
+                value={currentTime}
+                onChange={handleScrub}
+                className="relative w-full opacity-0 h-4 cursor-pointer"
+                aria-label="Scrub video"
+              />
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 text-white text-xs">
-            {/* Play/Pause */}
-            <button
-              onClick={togglePlay}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-              title={playing ? "Pause (Space)" : "Play (Space)"}
-            >
-              {playing ? <PauseIcon /> : <PlayIcon />}
-            </button>
-
-            {/* Frame step */}
-            <button
-              onClick={() => frameStep(-1)}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Previous frame (,)"
-            >
-              <FrameBackIcon />
-            </button>
-            <button
-              onClick={() => frameStep(1)}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Next frame (.)"
-            >
-              <FrameForwardIcon />
-            </button>
-
-            {/* Time */}
-            <span className="font-mono tabular-nums min-w-[100px]">
-              {formatTimestamp(currentTime)} / {formatTimestamp(duration)}
-            </span>
-
-            <div className="flex-1" />
-
-            {/* Speed */}
-            <div className="relative">
+            <div className="flex items-center gap-2 text-white text-xs">
+              {/* Play/Pause */}
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowSpeedMenu(!showSpeedMenu);
-                }}
-                className="px-2 py-0.5 hover:bg-white/10 rounded transition-colors font-mono"
-                title="Playback speed"
+                onClick={togglePlay}
+                className="p-1 hover:bg-white/10 rounded transition-colors"
+                title={playing ? "Pause (Space)" : "Play (Space)"}
               >
-                {speed}x
+                {playing ? <PauseIcon /> : <PlayIcon />}
               </button>
-              {showSpeedMenu && (
-                <div className="absolute bottom-full right-0 mb-1 bg-surface-900 border border-surface-700 rounded-lg py-1 shadow-xl z-10">
-                  {PLAYBACK_SPEEDS.map((s) => (
-                    <button
-                      key={s}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        changeSpeed(s);
-                      }}
-                      className={`block w-full text-left px-3 py-1 text-xs hover:bg-white/10 ${
-                        speed === s ? "text-primary-400" : "text-white"
-                      }`}
-                    >
-                      {s}x
-                    </button>
-                  ))}
-                </div>
-              )}
+
+              {/* Frame step */}
+              <button
+                onClick={() => frameStep(-1)}
+                className="p-1 hover:bg-white/10 rounded transition-colors"
+                title="Previous frame (,)"
+              >
+                <FrameBackIcon />
+              </button>
+              <button
+                onClick={() => frameStep(1)}
+                className="p-1 hover:bg-white/10 rounded transition-colors"
+                title="Next frame (.)"
+              >
+                <FrameForwardIcon />
+              </button>
+
+              {/* Time */}
+              <span className="font-mono tabular-nums min-w-[100px]">
+                {formatTimestamp(currentTime)} / {formatTimestamp(duration)}
+              </span>
+
+              <div className="flex-1" />
+
+              {/* Speed */}
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSpeedMenu(!showSpeedMenu);
+                  }}
+                  className="px-2 py-0.5 hover:bg-white/10 rounded transition-colors font-mono"
+                  title="Playback speed"
+                >
+                  {speed}x
+                </button>
+                {showSpeedMenu && (
+                  <div className="absolute bottom-full right-0 mb-1 bg-surface-900 border border-surface-700 rounded-lg py-1 shadow-xl z-10">
+                    {PLAYBACK_SPEEDS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          changeSpeed(s);
+                        }}
+                        className={`block w-full text-left px-3 py-1 text-xs hover:bg-white/10 ${
+                          speed === s ? "text-primary-400" : "text-white"
+                        }`}
+                      >
+                        {s}x
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Volume */}
+              <button
+                onClick={toggleMute}
+                className="p-1 hover:bg-white/10 rounded transition-colors"
+                title="Mute (M)"
+              >
+                {muted || volume === 0 ? <MuteIcon /> : <VolumeIcon />}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={muted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="w-16 h-1 accent-primary-500 cursor-pointer"
+              />
+
+              {/* Fullscreen */}
+              <button
+                onClick={toggleFullscreen}
+                className="p-1 hover:bg-white/10 rounded transition-colors"
+                title="Fullscreen (F)"
+              >
+                {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+              </button>
             </div>
-
-            {/* Volume */}
-            <button
-              onClick={toggleMute}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Mute (M)"
-            >
-              {muted || volume === 0 ? <MuteIcon /> : <VolumeIcon />}
-            </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={muted ? 0 : volume}
-              onChange={handleVolumeChange}
-              className="w-16 h-1 accent-primary-500 cursor-pointer"
-            />
-
-            {/* Fullscreen */}
-            <button
-              onClick={toggleFullscreen}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-              title="Fullscreen (F)"
-            >
-              {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
-            </button>
           </div>
-        </div>
+        )}
       </div>
     );
   }

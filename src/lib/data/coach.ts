@@ -1437,26 +1437,21 @@ export async function getAthleteACWR(athleteId: string): Promise<AthleteACWR> {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const twentyEightDaysAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
 
-  const [acuteSessions, chronicSessions] = await Promise.all([
-    prisma.trainingSession.findMany({
-      where: {
-        athleteId,
-        status: "COMPLETED",
-        completedDate: { gte: sevenDaysAgo },
-        rpe: { not: null },
-      },
-      select: { rpe: true },
-    }),
-    prisma.trainingSession.findMany({
-      where: {
-        athleteId,
-        status: "COMPLETED",
-        completedDate: { gte: twentyEightDaysAgo },
-        rpe: { not: null },
-      },
-      select: { rpe: true },
-    }),
-  ]);
+  // Single query for the full 28-day window; partition in JS for the 7-day acute window
+  const allSessions = await prisma.trainingSession.findMany({
+    where: {
+      athleteId,
+      status: "COMPLETED",
+      completedDate: { gte: twentyEightDaysAgo },
+      rpe: { not: null },
+    },
+    select: { rpe: true, completedDate: true },
+  });
+
+  const chronicSessions = allSessions;
+  const acuteSessions = allSessions.filter(
+    (s) => s.completedDate !== null && s.completedDate >= sevenDaysAgo
+  );
 
   if (chronicSessions.length === 0) return null;
 
@@ -1793,22 +1788,35 @@ export async function getTeamReadinessTrends(
     },
   });
 
+  // Batch all athlete responses in a single query instead of N per-athlete queries
+  const allResponses = await prisma.questionnaireResponse.findMany({
+    where: {
+      athleteId: { in: athletes.map((a) => a.id) },
+      questionnaireId: { in: qIds },
+      scores: { not: Prisma.JsonNull },
+    },
+    orderBy: { completedAt: "desc" },
+    select: {
+      athleteId: true,
+      scores: true,
+      completedAt: true,
+    },
+  });
+
+  // Group by athlete, keep latest 2 per athlete (responses are desc-sorted globally)
+  const responsesByAthlete = new Map<string, typeof allResponses>();
+  for (const r of allResponses) {
+    const arr = responsesByAthlete.get(r.athleteId) ?? [];
+    if (arr.length < 2) {
+      arr.push(r);
+      responsesByAthlete.set(r.athleteId, arr);
+    }
+  }
+
   const results: TeamReadinessEntry[] = [];
 
   for (const athlete of athletes) {
-    const recentResponses = await prisma.questionnaireResponse.findMany({
-      where: {
-        athleteId: athlete.id,
-        questionnaireId: { in: qIds },
-        scores: { not: Prisma.JsonNull },
-      },
-      orderBy: { completedAt: "desc" },
-      take: 2,
-      select: {
-        scores: true,
-        completedAt: true,
-      },
-    });
+    const recentResponses = responsesByAthlete.get(athlete.id) ?? [];
 
     if (recentResponses.length === 0) continue;
 
@@ -1922,7 +1930,20 @@ export async function getCoachVideos(
 
   const videos = await prisma.videoUpload.findMany({
     where,
-    include: {
+    select: {
+      id: true,
+      title: true,
+      url: true,
+      thumbnailUrl: true,
+      event: true,
+      category: true,
+      status: true,
+      athleteId: true,
+      annotations: true,
+      durationSec: true,
+      fileSizeMb: true,
+      tags: true,
+      createdAt: true,
       athlete: { select: { id: true, firstName: true, lastName: true } },
     },
     orderBy: { createdAt: "desc" },

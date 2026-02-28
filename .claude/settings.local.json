@@ -24,7 +24,18 @@
       "Bash(curl -s \"https://api.vercel.com/v2/deployments?teamId=team_AVSCxKnN5HClXGxRztV8wbjy&projectId=podium-throws&limit=5\" -H \"Authorization: Bearer UM1iuC4LT5aODTvjGS4PTiJ4\")",
       "Bash(curl -s \"https://api.vercel.com/v3/deployments/dpl_8WZAZMEuoD7mMpJjGNaJAaAQ58BR/events?teamId=team_AVSCxKnN5HClXGxRztV8wbjy&limit=100&types=stderr,stdout,error,warning,fatal\" -H \"Authorization: Bearer UM1iuC4LT5aODTvjGS4PTiJ4\")",
       "Bash(curl:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(git diff-tree --no-commit-id -r --name-only 483f107)",
+      "Bash(git diff-tree --no-commit-id -r --name-only 18b9e70)",
+      "Bash(wc -l \"/Users/anthonysommers/claude-code-projects/Podium Throws/src/app/\\(dashboard\\)/coach/throws/page.tsx\")",
+      "Bash(npx prisma generate)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(POSTGRES_PRISMA_URL=\"postgresql://anthonysommers@localhost:5432/podium_throws\" POSTGRES_URL_NON_POOLING=\"postgresql://anthonysommers@localhost:5432/podium_throws\" npx prisma db push)",
+      "Bash(npm run build)",
+      "Bash(POSTGRES_PRISMA_URL=postgresql://anthonysommers@localhost:5432/podium_throws POSTGRES_URL_NON_POOLING=postgresql://anthonysommers@localhost:5432/podium_throws npx prisma db push)",
+      "Bash(npm install framer-motion lucide-react)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }

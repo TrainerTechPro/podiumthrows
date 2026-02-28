@@ -94,15 +94,16 @@ export function LineChart({
   formatX = (label) => label,
   emptyMessage = "No data yet",
 }: LineChartProps) {
-  const allSeries: LineChartSeries[] = series ?? (data ? [{ data, color }] : []);
-  const allData = allSeries.flatMap((s) => s.data);
-
   const chartW = VIEWBOX_W - PAD.left - PAD.right;
   const chartH = height - PAD.top - PAD.bottom;
 
-  const { renderedSeries, xLabels, yTicks } = useMemo(() => {
+  // allSeries/allData computed inside memo so deps are stable prop references
+  const { allData, renderedSeries, xLabels, yTicks } = useMemo(() => {
+    const allSeries: LineChartSeries[] = series ?? (data ? [{ data, color }] : []);
+    const allData = allSeries.flatMap((s) => s.data);
+
     if (allData.length === 0)
-      return { yMin: 0, yMax: 10, renderedSeries: [], xLabels: [], yTicks: [] };
+      return { allData, renderedSeries: [], xLabels: [], yTicks: [] };
 
     const values = allData.map((d) => d.value);
     const yMin = yMinProp ?? Math.max(0, Math.floor(Math.min(...values) - 0.5));
@@ -129,8 +130,8 @@ export function LineChart({
       return { value: yMax - (yMax - yMin) * frac, frac };
     });
 
-    return { yMin, yMax, renderedSeries, xLabels, yTicks };
-  }, [allData, allSeries, yMinProp, yMaxProp, chartW, chartH, gridLines]);
+    return { allData, renderedSeries, xLabels, yTicks };
+  }, [data, series, color, yMinProp, yMaxProp, chartW, chartH, gridLines]);
 
   if (allData.length === 0) {
     return (
