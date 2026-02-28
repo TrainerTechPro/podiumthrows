@@ -161,9 +161,10 @@ export function UploadForm({ athleteOptions }: Props) {
       return;
     }
 
-    // Check MediaRecorder support
+    // Check MediaRecorder + captureStream support (captureStream not available on iOS Safari)
     const supported =
       typeof MediaRecorder !== "undefined" &&
+      "captureStream" in document.createElement("video") &&
       (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus") ||
         MediaRecorder.isTypeSupported("video/webm") ||
         MediaRecorder.isTypeSupported("video/mp4"));
@@ -278,8 +279,15 @@ export function UploadForm({ athleteOptions }: Props) {
       setPhase("selected");
     } catch (err) {
       setIsTrimming(false);
-      setErrorMsg(err instanceof Error ? err.message : "Trim failed");
-      setPhase("error");
+      // If the browser doesn't support captureStream, fall back to uploading the original
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("captureStream") || msg.includes("not supported")) {
+        setTrimmedBlob(file);
+        setPhase("selected");
+      } else {
+        setErrorMsg(msg || "Trim failed");
+        setPhase("error");
+      }
     }
   }
 
