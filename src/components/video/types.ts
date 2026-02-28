@@ -55,9 +55,23 @@ export const STROKE_WIDTHS = [
 
 export const DEFAULT_ANNOTATION_DURATION = 3; // seconds
 
+/* ─── Frame Constants (60fps sports analysis) ─────────────────────────────── */
+
+/** Standard high-speed sports camera FPS for throws analysis */
+export const ANALYSIS_FPS = 60;
+
+/** Exact duration of one frame at 60fps (0.016667s) */
+export const FRAME_STEP = 1 / ANALYSIS_FPS;
+
+/** Snap a raw time value to the nearest exact frame boundary */
+export function snapToFrame(rawTime: number, fps: number = ANALYSIS_FPS): number {
+  const step = 1 / fps;
+  return Math.round(rawTime / step) * step;
+}
+
 /* ─── Speed Options ────────────────────────────────────────────────────────── */
 
-export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.5, 2];
+export const PLAYBACK_SPEEDS = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2];
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 

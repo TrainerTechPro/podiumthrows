@@ -667,6 +667,8 @@ model VideoUpload {
   fileSizeMb         Float?
   sharedWithAthletes String[] // athlete IDs for sharing
 
+  frameAnnotations FrameAnnotation[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -675,6 +677,20 @@ model VideoUpload {
   @@index([event])
   @@index([category])
   @@index([createdAt])
+}
+
+/// AI-generated frame annotation (pose landmarks, joint angles) stored per timestamp.
+model FrameAnnotation {
+  id        String      @id @default(cuid())
+  videoId   String
+  video     VideoUpload @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  timestamp Float       // Time in seconds (snapped to frame boundary)
+  source    String      @default("mediapipe") // "mediapipe" | "manual"
+  payload   Json        // { landmarks: PoseLandmark[], angles: { [key]: { value: number, label: string } } }
+  createdAt DateTime    @default(now())
+
+  @@unique([videoId, timestamp, source])
+  @@index([videoId, timestamp])
 }
 
 // ─── TEAMS ──────────────────────────────────────────────────────────────────
@@ -1865,4 +1881,28 @@ model AdaptationCheckpoint {
   createdAt DateTime @default(now())
 
   @@index([programId, checkDate])
+}
+
+// ─── LEAD CAPTURE ────────────────────────────────────────────────────────────
+
+/// Captured from squeeze pages and lead magnets.
+/// Integration point: sync rows to ConvertKit/Mailchimp via webhook or cron.
+model Lead {
+  id        String   @id @default(cuid())
+  email     String
+  name      String?
+  source    String   @default("deficit-finder") // which lead magnet
+  event     String?  // SP, DT, HT, JT
+  gender    String?  // M, F
+  // Deficit finder specific data
+  deficitResult Json?  // snapshot of their result for follow-up emails
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  convertedToUser Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([source])
+  @@index([createdAt])
 }

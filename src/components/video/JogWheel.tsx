@@ -8,6 +8,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
 } from "react";
+import { snapToFrame } from "./types";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -17,6 +18,8 @@ type Props = {
   onSeek: (time: number) => void;
   /** Seconds per pixel of drag */
   sensitivity?: number;
+  /** Video FPS for frame-snapping (default 60) */
+  fps?: number;
   className?: string;
 };
 
@@ -34,6 +37,7 @@ export function JogWheel({
   duration,
   onSeek,
   sensitivity = 0.02,
+  fps,
   className,
 }: Props) {
   const stripRef = useRef<HTMLDivElement>(null);
@@ -50,10 +54,13 @@ export function JogWheel({
 
   const seekClamped = useCallback(
     (delta: number) => {
-      const newTime = Math.max(0, Math.min(duration, currentTime + delta));
-      onSeek(newTime);
+      const raw = currentTime + delta;
+      // Snap to exact frame boundary for precise analysis
+      const snapped = snapToFrame(raw, fps);
+      const clamped = Math.max(0, Math.min(duration, snapped));
+      onSeek(clamped);
     },
-    [currentTime, duration, onSeek]
+    [currentTime, duration, onSeek, fps]
   );
 
   /* ── Momentum animation loop ───────────────────────────────────────── */

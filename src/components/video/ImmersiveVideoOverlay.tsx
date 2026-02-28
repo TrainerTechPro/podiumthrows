@@ -11,8 +11,14 @@ import { AnnotationCanvas } from "./AnnotationCanvas";
 import { ImmersiveAnnotationToolbar } from "./ImmersiveAnnotationToolbar";
 import { ImmersiveScrubBar } from "./ImmersiveScrubBar";
 import { VoiceNarrationRecorder } from "./VoiceNarrationRecorder";
+import { ZoomableVideoContainer } from "./ZoomableVideoContainer";
+import { useZoomPan } from "./useZoomPan";
+import { PoseOverlay } from "./PoseOverlay";
+import { usePoseDetection } from "./usePoseDetection";
 import {
   PLAYBACK_SPEEDS,
+  FRAME_STEP,
+  snapToFrame,
   type Annotation,
   type AnnotationTool,
 } from "./types";
@@ -71,6 +77,17 @@ export function ImmersiveVideoOverlay({
   const [isNarrating, setIsNarrating] = useState(false);
   const [narrationBlob, setNarrationBlob] = useState<Blob | null>(null);
 
+  /* ── Zoom/pan state ───────────────────────────────────────────── */
+  const zoomPan = useZoomPan({
+    enabled: open,
+    isDrawingActive: isEditing && activeTool !== "select",
+    maxScale: 5,
+  });
+
+  /* ── Pose detection state ────────────────────────────────────── */
+  const poseDetection = usePoseDetection();
+  const [showAngles, setShowAngles] = useState(true);
+
   /* ── Initialize on open ─────────────────────────────────────────── */
 
   useEffect(() => {
@@ -83,7 +100,8 @@ export function ImmersiveVideoOverlay({
     setIsNarrating(false);
     setNarrationBlob(null);
     setShowSpeedMenu(false);
-  }, [open, parentAnnotations]);
+    zoomPan.resetZoom();
+  }, [open, parentAnnotations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!open || !videoRef.current) return;
@@ -159,6 +177,19 @@ export function ImmersiveVideoOverlay({
           e.preventDefault();
           seekBy(5);
           break;
+        case "=":
+        case "+":
+          e.preventDefault();
+          zoomPan.zoomIn();
+          break;
+        case "-":
+          e.preventDefault();
+          zoomPan.zoomOut();
+          break;
+        case "0":
+          e.preventDefault();
+          zoomPan.resetZoom();
+          break;
       }
     }
     document.addEventListener("keydown", handleKey);
@@ -180,7 +211,9 @@ export function ImmersiveVideoOverlay({
   function frameStep(direction: 1 | -1) {
     if (!videoRef.current) return;
     videoRef.current.pause();
-    videoRef.current.currentTime += direction * (1 / 30);
+    // Snap to exact 60fps frame boundary
+    const raw = videoRef.current.currentTime + direction * FRAME_STEP;
+    videoRef.current.currentTime = snapToFrame(raw);
   }
 
   function seekBy(seconds: number) {
@@ -258,6 +291,29 @@ export function ImmersiveVideoOverlay({
     pushUndo();
     setLocalAnnotations([]);
   }, [localAnnotations, pushUndo]);
+
+  /* ── Pose detection: detect on current frame when paused ────────── */
+
+  useEffect(() => {
+    if (!poseDetection.active || !videoRef.current || playing) return;
+    // Detect on the current paused frame
+    poseDetection.detectFrame(videoRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poseDetection.active, playing, currentTime]);
+
+  const handlePoseToggle = useCallback(async () => {
+    if (!poseDetection.active) {
+      // First time: initialize model, then activate
+      await poseDetection.initialize();
+      poseDetection.toggle();
+      // Detect immediately on current frame
+      if (videoRef.current) {
+        poseDetection.detectFrame(videoRef.current);
+      }
+    } else {
+      poseDetection.toggle();
+    }
+  }, [poseDetection]);
 
   /* ── Close speed menu on outside click ──────────────────────────── */
 
@@ -337,6 +393,64 @@ export function ImmersiveVideoOverlay({
           </svg>
         </button>
 
+        {/* AI Pose detection toggle */}
+        <button
+          onClick={handlePoseToggle}
+          disabled={poseDetection.loading}
+          className={`p-2 rounded-xl transition-colors ${
+            poseDetection.active
+              ? "text-green-400 bg-green-500/20"
+              : "text-white/70 hover:text-white hover:bg-white/10"
+          } disabled:opacity-50`}
+          title={
+            poseDetection.loading
+              ? "Loading AI model…"
+              : poseDetection.active
+                ? "Hide pose skeleton"
+                : "Show AI pose skeleton"
+          }
+        >
+          {poseDetection.loading ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" className="animate-spin">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="32" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {/* Stick figure icon */}
+              <circle cx="12" cy="4" r="2" />
+              <line x1="12" y1="6" x2="12" y2="14" />
+              <line x1="12" y1="8" x2="8" y2="12" />
+              <line x1="12" y1="8" x2="16" y2="12" />
+              <line x1="12" y1="14" x2="9" y2="20" />
+              <line x1="12" y1="14" x2="15" y2="20" />
+            </svg>
+          )}
+        </button>
+
+        {/* Angle toggle (when pose active) */}
+        {poseDetection.active && (
+          <button
+            onClick={() => setShowAngles((prev) => !prev)}
+            className={`px-2 py-1 rounded-xl text-[10px] font-medium transition-colors ${
+              showAngles
+                ? "text-green-400 bg-green-500/20"
+                : "text-white/60 hover:text-white hover:bg-white/10"
+            }`}
+            title={showAngles ? "Hide joint angles" : "Show joint angles"}
+          >
+            {showAngles ? "∠ On" : "∠ Off"}
+          </button>
+        )}
+
         {/* Mic (editing only) */}
         {isEditing && (
           <VoiceNarrationRecorder
@@ -366,33 +480,53 @@ export function ImmersiveVideoOverlay({
 
       {/* ═══════ Video Area ═══════ */}
       <div className="flex-1 relative overflow-hidden">
-        <video
-          ref={videoRef}
-          src={videoSrc}
-          poster={poster}
-          className="w-full h-full object-contain"
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          onEnded={handleEnded}
-          onClick={togglePlay}
-          playsInline
-          preload="metadata"
-        />
-
-        {/* Annotation canvas overlay */}
-        <div className="absolute inset-0 pointer-events-none [&>*]:pointer-events-auto">
-          <AnnotationCanvas
-            annotations={localAnnotations}
-            currentTime={currentTime}
-            isEditing={isEditing}
-            activeTool={activeTool}
-            activeColor={activeColor}
-            activeStrokeWidth={activeStrokeWidth}
-            onAnnotationAdd={isEditing ? addAnnotation : undefined}
+        {/* Zoomable container wraps video + annotation canvas */}
+        <ZoomableVideoContainer
+          zoomPan={zoomPan}
+          showIndicator={true}
+          className="w-full h-full"
+        >
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            poster={poster}
+            className="w-full h-full object-contain"
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            onEnded={handleEnded}
+            onClick={togglePlay}
+            playsInline
+            preload="metadata"
           />
-        </div>
+
+          {/* Pose skeleton overlay — scales with zoom, behind annotations */}
+          {poseDetection.active && (
+            <PoseOverlay
+              pose={poseDetection.pose}
+              showAngles={showAngles}
+              color="#00ff88"
+              jointColor="#ffffff"
+              lineWidth={2.5}
+            />
+          )}
+
+          {/* Annotation canvas overlay — scales with zoom */}
+          <div className="absolute inset-0 pointer-events-none [&>*]:pointer-events-auto">
+            <AnnotationCanvas
+              annotations={localAnnotations}
+              currentTime={currentTime}
+              isEditing={isEditing}
+              activeTool={activeTool}
+              activeColor={activeColor}
+              activeStrokeWidth={activeStrokeWidth}
+              onAnnotationAdd={isEditing ? addAnnotation : undefined}
+            />
+          </div>
+        </ZoomableVideoContainer>
+
+        {/* ── Overlays OUTSIDE zoom container (don't scale) ── */}
 
         {/* Immersive annotation toolbar (editing only) */}
         {isEditing && (
@@ -416,7 +550,7 @@ export function ImmersiveVideoOverlay({
         {!playing && (
           <button
             onClick={togglePlay}
-            className="absolute inset-0 flex items-center justify-center bg-black/10 transition-colors hover:bg-black/20"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/10 transition-colors hover:bg-black/20"
           >
             <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <svg
@@ -434,11 +568,20 @@ export function ImmersiveVideoOverlay({
 
         {/* Narration recording indicator */}
         {narrationBlob && (
-          <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
+          <div className="absolute top-3 left-3 z-40 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
             </svg>
             <span className="text-[10px] text-green-400 font-medium">Narration recorded</span>
+          </div>
+        )}
+
+        {/* Pose detection error indicator */}
+        {poseDetection.error && (
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-red-500/80 backdrop-blur-sm rounded-lg px-3 py-1.5">
+            <span className="text-[10px] text-white font-medium">
+              Pose detection error: {poseDetection.error}
+            </span>
           </div>
         )}
       </div>

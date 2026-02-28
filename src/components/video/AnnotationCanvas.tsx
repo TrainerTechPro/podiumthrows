@@ -222,19 +222,34 @@ export function AnnotationCanvas({
     [drawState.phase, getPoint, finishDraw]
   );
 
-  /* ── Touch handlers ──────────────────────────────────────────────────── */
+  /* ── Touch handlers (with multi-touch guard for pinch-to-zoom) ────── */
 
   const handleTouchStart = useCallback(
     (e: ReactTouchEvent<HTMLCanvasElement>) => {
+      // Multi-touch guard: 2+ fingers = pinch/zoom, not drawing
+      if (e.touches.length > 1) {
+        // Cancel any in-progress drawing — user is pinching
+        if (drawState.phase === "drawing") {
+          setDrawState({ phase: "idle" });
+        }
+        return; // Let ZoomableVideoContainer handle the pinch
+      }
       if (!isEditing || activeTool === "select") return;
       e.preventDefault();
       startDraw(getPointFromTouch(e));
     },
-    [isEditing, activeTool, getPointFromTouch, startDraw]
+    [isEditing, activeTool, drawState.phase, getPointFromTouch, startDraw]
   );
 
   const handleTouchMove = useCallback(
     (e: ReactTouchEvent<HTMLCanvasElement>) => {
+      // Multi-touch guard: if a second finger joins, cancel drawing
+      if (e.touches.length > 1) {
+        if (drawState.phase === "drawing") {
+          setDrawState({ phase: "idle" });
+        }
+        return;
+      }
       if (drawState.phase !== "drawing") return;
       e.preventDefault();
       continueDraw(getPointFromTouch(e));
@@ -245,6 +260,8 @@ export function AnnotationCanvas({
   const handleTouchEnd = useCallback(
     (e: ReactTouchEvent<HTMLCanvasElement>) => {
       if (drawState.phase !== "drawing") return;
+      // Only finish if this is the last finger leaving
+      if (e.touches.length > 0) return;
       e.preventDefault();
       finishDraw(getPointFromTouch(e));
     },

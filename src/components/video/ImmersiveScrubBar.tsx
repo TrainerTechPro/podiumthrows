@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { JogWheel } from "./JogWheel";
-import { formatTimestamp } from "./types";
+import { FRAME_STEP, snapToFrame, formatTimestamp } from "./types";
 import type { Annotation } from "./types";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
@@ -28,7 +28,10 @@ export function ImmersiveScrubBar({
 
   const handleScrub = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      onSeek(parseFloat(e.target.value));
+      // Snap to exact 60fps frame boundary for precise analysis
+      const rawTime = parseFloat(e.target.value);
+      const exactFrameTime = snapToFrame(rawTime);
+      onSeek(exactFrameTime);
     },
     [onSeek]
   );
@@ -64,7 +67,7 @@ export function ImmersiveScrubBar({
           type="range"
           min={0}
           max={duration || 1}
-          step={0.0333}
+          step={FRAME_STEP}
           value={currentTime}
           onChange={handleScrub}
           className="relative w-full opacity-0 h-6 cursor-pointer"
