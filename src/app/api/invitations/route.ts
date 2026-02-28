@@ -5,6 +5,44 @@ import { getSession } from "@/lib/auth";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { sendInvitationEmail } from "@/lib/email";
 
+/* ── GET — list all invitations for the authenticated coach ── */
+export async function GET() {
+  try {
+    const session = await getSession();
+    if (!session || session.role !== "COACH") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const coach = await prisma.coachProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
+    });
+    if (!coach) {
+      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+    }
+
+    const invitations = await prisma.invitation.findMany({
+      where: { coachId: coach.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        email: true,
+        token: true,
+        status: true,
+        expiresAt: true,
+        createdAt: true,
+      },
+    });
+
+    return NextResponse.json({ ok: true, data: invitations });
+  } catch (err) {
+    console.error("[GET /api/invitations]", err);
+    return NextResponse.json({ error: "Failed to fetch invitations." }, { status: 500 });
+  }
+}
+
+/* ── POST — create a new invitation ── */
 export async function POST(req: NextRequest) {
   try {
     /* ── Auth ── */
@@ -73,7 +111,7 @@ export async function POST(req: NextRequest) {
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    await prisma.invitation.create({
+    const invitation = await prisma.invitation.create({
       data: {
         coachId: coach.id,
         email,
@@ -81,13 +119,21 @@ export async function POST(req: NextRequest) {
         status: "PENDING",
         expiresAt,
       },
+      select: {
+        id: true,
+        email: true,
+        token: true,
+        status: true,
+        expiresAt: true,
+        createdAt: true,
+      },
     });
 
     /* ── Send email ── */
     const coachName = `${coach.firstName} ${coach.lastName}`;
     await sendInvitationEmail(email, coachName, token);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, data: invitation });
   } catch (err) {
     console.error("[POST /api/invitations]", err);
     return NextResponse.json({ error: "Failed to send invitation." }, { status: 500 });

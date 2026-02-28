@@ -19,10 +19,12 @@ export function InviteAthleteButton({
   const upgradeModal = useModal();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [inviteLink, setInviteLink] = useState("");
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
 
   const atLimit = planLimit !== Infinity && athleteCount >= planLimit;
+  const success = !!inviteLink;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,7 +40,9 @@ export function InviteAthleteButton({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to send invitation");
-      setSuccess(true);
+      const token = data.data?.token;
+      const link = `${window.location.origin}/register?invite=${token}`;
+      setInviteLink(link);
       setEmail("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -47,19 +51,43 @@ export function InviteAthleteButton({
     }
   }
 
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+    } catch {
+      const el = document.createElement("input");
+      el.value = inviteLink;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   function handleOpen() {
-    setSuccess(false);
+    setInviteLink("");
     setError("");
     setEmail("");
+    setCopied(false);
     modal.onOpen();
+  }
+
+  function handleInviteAnother() {
+    setInviteLink("");
+    setError("");
+    setEmail("");
+    setCopied(false);
   }
 
   return (
     <>
       <Button
         variant="primary"
-        size="sm"
+        size="md"
         onClick={atLimit ? upgradeModal.onOpen : handleOpen}
+        aria-label="Invite a new athlete"
       >
         + Invite Athlete
       </Button>
@@ -94,18 +122,61 @@ export function InviteAthleteButton({
         }
       >
         {success ? (
-          <div className="text-center py-4 space-y-2">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+          <div className="space-y-4 py-1">
+            {/* Success header */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--foreground)]">Invitation sent!</p>
+                <p className="text-sm text-muted">Email delivered. Share the link below too.</p>
+              </div>
             </div>
-            <p className="font-semibold text-[var(--foreground)]">Invitation sent!</p>
-            <p className="text-sm text-muted">
-              They&apos;ll receive an email with a link to create their athlete account.
-            </p>
-            <div className="pt-2">
-              <Button variant="secondary" size="sm" onClick={() => { setSuccess(false); setEmail(""); }}>
+
+            {/* Copy link section */}
+            <div className="rounded-lg bg-[var(--surface)] border border-[var(--border)] p-3 space-y-2">
+              <p className="text-xs font-medium text-muted uppercase tracking-wide">Invite link</p>
+              <div className="flex gap-2 items-center">
+                <input
+                  readOnly
+                  value={inviteLink}
+                  aria-label="Invite link"
+                  className="flex-1 text-xs font-mono bg-transparent text-[var(--foreground)] outline-none truncate"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <button
+                  onClick={copyLink}
+                  aria-label={copied ? "Link copied" : "Copy invite link"}
+                  className={`shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                    copied
+                      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                      : "bg-[var(--surface-raised)] text-[var(--foreground)] hover:bg-[var(--surface-hover)]"
+                  }`}
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <p className="text-xs text-muted">Expires in 7 days.</p>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="ghost" size="sm" onClick={modal.onClose}>
+                Done
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleInviteAnother}>
                 Invite another
               </Button>
             </div>
