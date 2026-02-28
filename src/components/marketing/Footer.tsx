@@ -49,9 +49,9 @@ const FOOTER_COLS = [
 export default function MarketingFooter() {
   return (
     <footer className="bg-surface-950 text-surface-400 border-t border-surface-800">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 sm:pt-16 pb-8">
         {/* Top grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-10 mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-10 mb-10 sm:mb-16">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 group mb-5">
