@@ -667,6 +667,13 @@ model VideoUpload {
   fileSizeMb         Float?
   sharedWithAthletes String[] // athlete IDs for sharing
 
+  // Transcode pipeline (GOP-15 for scrub-friendly playback)
+  transcodedUrl   String? // R2 URL of GOP-15 transcoded version
+  transcodedKey   String? // R2 storage key for transcoded file
+  transcodeStatus String? @default("pending") // "pending" | "processing" | "ready" | "failed"
+  fps             Float?  @default(60) // Detected or assumed FPS
+  gopInterval     Int?    // Group of Pictures size (15 after transcode)
+
   frameAnnotations FrameAnnotation[]
 
   createdAt DateTime @default(now())

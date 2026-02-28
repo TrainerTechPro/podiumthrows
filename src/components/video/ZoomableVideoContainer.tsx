@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { UseZoomPanReturn } from "./useZoomPan";
+import type { UseZoomPanReturn, ZoomPanState } from "./useZoomPan";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -10,6 +10,10 @@ type Props = {
   children: ReactNode;
   showIndicator?: boolean;
   className?: string;
+  /** External zoom/pan state to follow (follower mode — pass-through to useZoomPan) */
+  linkedZoomState?: ZoomPanState;
+  /** Fires on every zoom/pan change (leader mode — pass-through to useZoomPan) */
+  onZoomStateChange?: (state: ZoomPanState) => void;
 };
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
@@ -19,6 +23,12 @@ export function ZoomableVideoContainer({
   children,
   showIndicator = true,
   className,
+  // linkedZoomState and onZoomStateChange are pass-through props.
+  // The parent provides them to useZoomPan's `linkedState` and `onTransformChange`
+  // options when creating the zoomPan instance. They're declared here
+  // for type documentation and DX but not consumed directly.
+  linkedZoomState: _linkedZoomState,
+  onZoomStateChange: _onZoomStateChange,
 }: Props) {
   const { state, containerRef, isZoomed, isTransitioning, resetZoom } = zoomPan;
 

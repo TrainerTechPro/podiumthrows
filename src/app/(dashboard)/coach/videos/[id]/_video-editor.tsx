@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { VideoDetail } from "@/lib/data/coach";
-import { VideoPlayer, type VideoPlayerHandle } from "@/components/video/VideoPlayer";
-import { AnnotationCanvas } from "@/components/video/AnnotationCanvas";
 import { AnnotationToolbar } from "@/components/video/AnnotationToolbar";
 import { AnnotationTimeline } from "@/components/video/AnnotationTimeline";
 import { AnnotationList } from "@/components/video/AnnotationList";
@@ -15,6 +13,10 @@ import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import type { Annotation, AnnotationTool } from "@/components/video/types";
 import { ImmersiveVideoOverlay } from "@/components/video/ImmersiveVideoOverlay";
+import {
+  VideoAnalysisWorkspace,
+  type VideoAnalysisWorkspaceHandle,
+} from "@/components/video/VideoAnalysisWorkspace";
 import { formatEventType } from "@/lib/utils";
 import { formatTimestamp } from "@/components/video/types";
 
@@ -40,23 +42,18 @@ type CompareVideo = {
 export function VideoEditor({ video, athletes }: Props) {
   const router = useRouter();
   const { success: toastSuccess, error: toastError } = useToast();
-  const playerRef = useRef<VideoPlayerHandle>(null);
-  const compareRef = useRef<VideoPlayerHandle>(null);
-  const ghostVideoRef = useRef<HTMLVideoElement>(null);
+  const workspaceRef = useRef<VideoAnalysisWorkspaceHandle>(null);
 
-  // Primary video state
+  // Primary video state (updated by VideoAnalysisWorkspace)
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(video.durationSec ?? 0);
 
   // Analysis mode
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode>("single");
-  const [masterTime, setMasterTime] = useState(0);
-  const [masterPlaying, setMasterPlaying] = useState(false);
   const [compareVideo, setCompareVideo] = useState<CompareVideo | null>(null);
   const [compareVideos, setCompareVideos] = useState<CompareVideo[] | null>(null);
   const [loadingCompare, setLoadingCompare] = useState(false);
   const [ghostOpacity, setGhostOpacity] = useState(50);
-  const [compareSpeed, setCompareSpeed] = useState(1);
 
   // Annotation state
   const [annotations, setAnnotations] = useState<Annotation[]>(() => {
@@ -110,8 +107,6 @@ export function VideoEditor({ video, athletes }: Props) {
       // Toggle off
       setAnalysisMode("single");
       setCompareVideo(null);
-      setMasterPlaying(false);
-      playerRef.current?.pause();
       return;
     }
     setAnalysisMode(mode);
@@ -120,75 +115,7 @@ export function VideoEditor({ video, athletes }: Props) {
 
   function selectCompareVideo(cv: CompareVideo) {
     setCompareVideo(cv);
-    setMasterTime(playerRef.current?.currentTime ?? 0);
   }
-
-  /* ── Master sync controls ────────────────────────────────────────────── */
-
-  const handlePrimaryTimeUpdate = useCallback(
-    (t: number) => {
-      setCurrentTime(t);
-      setMasterTime(t);
-    },
-    []
-  );
-
-  function handleMasterSeek(t: number) {
-    setMasterTime(t);
-    playerRef.current?.seekTo(t);
-    if (analysisMode === "split" && compareRef.current) {
-      compareRef.current.seekTo(t);
-    }
-    if (analysisMode === "ghost" && ghostVideoRef.current) {
-      ghostVideoRef.current.currentTime = t;
-    }
-  }
-
-  function toggleMasterPlay() {
-    if (masterPlaying) {
-      playerRef.current?.pause();
-      if (analysisMode === "split") compareRef.current?.pause();
-      if (analysisMode === "ghost") ghostVideoRef.current?.pause();
-      setMasterPlaying(false);
-    } else {
-      playerRef.current?.play();
-      if (analysisMode === "split" && compareVideo) compareRef.current?.play();
-      if (analysisMode === "ghost" && compareVideo)
-        ghostVideoRef.current?.play();
-      setMasterPlaying(true);
-    }
-  }
-
-  function frameMasterStep(dir: 1 | -1) {
-    const step = dir * (1 / 30);
-    const t = Math.max(0, Math.min(duration, masterTime + step));
-    handleMasterSeek(t);
-    // Pause both when stepping frames
-    playerRef.current?.pause();
-    if (analysisMode === "split") compareRef.current?.pause();
-    if (analysisMode === "ghost") ghostVideoRef.current?.pause();
-    setMasterPlaying(false);
-  }
-
-  function reSync() {
-    if (analysisMode === "split" && compareRef.current) {
-      compareRef.current.seekTo(masterTime);
-    }
-    if (analysisMode === "ghost" && ghostVideoRef.current) {
-      ghostVideoRef.current.currentTime = masterTime;
-    }
-  }
-
-  // Keep ghost video speed in sync
-  useEffect(() => {
-    if (ghostVideoRef.current) {
-      ghostVideoRef.current.playbackRate = compareSpeed;
-    }
-  }, [compareSpeed]);
-
-  // Sync masterPlaying state when primary video auto-pauses (e.g., reaches end)
-  const handlePrimaryPause = useCallback(() => setMasterPlaying(false), []);
-  const handlePrimaryPlay = useCallback(() => setMasterPlaying(true), []);
 
   /* ── Annotation management ───────────────────────────────────────────── */
 
@@ -295,26 +222,11 @@ export function VideoEditor({ video, athletes }: Props) {
     }
   }
 
-  /* ── Seek helper ─────────────────────────────────────────────────────── */
+  /* ── Seek helper (delegates to workspace) ────────────────────────────── */
 
   function seekTo(time: number) {
-    playerRef.current?.seekTo(time);
-    if (analysisMode !== "single") handleMasterSeek(time);
+    workspaceRef.current?.seekTo(time);
   }
-
-  /* ── Annotation canvas (shared across all modes) ─────────────────────── */
-
-  const annotationCanvas = (
-    <AnnotationCanvas
-      annotations={annotations}
-      currentTime={currentTime}
-      isEditing={isEditing}
-      activeTool={activeTool}
-      activeColor={activeColor}
-      activeStrokeWidth={activeStrokeWidth}
-      onAnnotationAdd={addAnnotation}
-    />
-  );
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
@@ -373,8 +285,6 @@ export function VideoEditor({ video, athletes }: Props) {
             onClick={() => {
               setAnalysisMode("single");
               setCompareVideo(null);
-              setMasterPlaying(false);
-              playerRef.current?.pause();
             }}
           />
           <ModeButton
@@ -457,167 +367,69 @@ export function VideoEditor({ video, athletes }: Props) {
       >
         {/* Left/Main: Video area */}
         <div className="space-y-3">
-          {/* ── SINGLE MODE ────────────────────────────────────────── */}
-          {analysisMode === "single" && (
-            <VideoPlayer
-              ref={playerRef}
-              src={video.url}
-              poster={video.thumbnailUrl ?? undefined}
-              onTimeUpdate={setCurrentTime}
-              onReady={setDuration}
-              onPlay={handlePrimaryPlay}
-              onPause={handlePrimaryPause}
-              overlay={annotationCanvas}
-              className="aspect-video"
-            />
-          )}
-
-          {/* ── SPLIT MODE ─────────────────────────────────────────── */}
-          {analysisMode === "split" && (
-            <div className="grid grid-cols-2 gap-2">
-              {/* Video A — primary with annotations */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 px-1">
-                  <span className="w-5 h-5 rounded bg-primary-500 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                    A
-                  </span>
-                  <span className="text-xs font-medium text-[var(--foreground)] truncate">
-                    {video.title ?? "Untitled"}
-                  </span>
+          {/* ── Video Analysis Workspace ───────────────────────────── */}
+          {/* Compare video picker shown when in split/ghost mode without a selection */}
+          {analysisMode !== "single" && !compareVideo && (
+            <div className="mb-2">
+              {analysisMode === "ghost" ? (
+                <div className="aspect-video bg-black rounded-xl overflow-hidden relative">
+                  <div className="absolute inset-0 flex items-start justify-center pt-8">
+                    <div className="bg-surface-900/95 rounded-xl p-4 w-72 shadow-2xl">
+                      <p className="text-sm font-medium text-white mb-3 text-center">
+                        Select ghost video
+                      </p>
+                      <CompareVideoPicker
+                        videos={compareVideos}
+                        loading={loadingCompare}
+                        onSelect={selectCompareVideo}
+                        dark
+                      />
+                    </div>
+                  </div>
                 </div>
-                <VideoPlayer
-                  ref={playerRef}
-                  src={video.url}
-                  poster={video.thumbnailUrl ?? undefined}
-                  onTimeUpdate={handlePrimaryTimeUpdate}
-                  onReady={(d) => setDuration(d)}
-                  onPlay={handlePrimaryPlay}
-                  onPause={handlePrimaryPause}
-                  showControls={false}
-                  onVideoClick={toggleMasterPlay}
-                  overlay={annotationCanvas}
-                  className="aspect-video"
-                />
-              </div>
-
-              {/* Video B — comparison */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5 px-1">
-                  <span className="w-5 h-5 rounded bg-surface-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                    B
-                  </span>
-                  <span className="text-xs font-medium text-surface-500 truncate">
-                    {compareVideo?.title ?? "Select video…"}
-                  </span>
-                </div>
-                {compareVideo ? (
-                  <VideoPlayer
-                    ref={compareRef}
-                    src={compareVideo.url}
-                    showControls={false}
-                    onVideoClick={toggleMasterPlay}
-                    className="aspect-video"
-                  />
-                ) : (
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="aspect-video bg-surface-100 dark:bg-surface-900 rounded-xl flex items-center justify-center text-surface-400 text-sm">
+                    Primary video (A)
+                  </div>
                   <CompareVideoPicker
                     videos={compareVideos}
                     loading={loadingCompare}
                     onSelect={selectCompareVideo}
                   />
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ── GHOST MODE ─────────────────────────────────────────── */}
-          {analysisMode === "ghost" && (
-            <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-              {/* Primary video — no built-in controls */}
-              <VideoPlayer
-                ref={playerRef}
-                src={video.url}
-                poster={video.thumbnailUrl ?? undefined}
-                onTimeUpdate={handlePrimaryTimeUpdate}
-                onReady={(d) => setDuration(d)}
-                onPlay={handlePrimaryPlay}
-                onPause={handlePrimaryPause}
-                showControls={false}
-                onVideoClick={toggleMasterPlay}
-                className="w-full h-full rounded-none"
-              />
-
-              {/* Ghost video overlay */}
-              {compareVideo && (
-                <video
-                  ref={ghostVideoRef}
-                  src={compareVideo.url}
-                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                  style={{ opacity: ghostOpacity / 100 }}
-                  playsInline
-                  preload="metadata"
-                  muted
-                />
-              )}
-
-              {/* Annotation canvas — on top of both videos */}
-              <div
-                className="absolute inset-0"
-                style={{ pointerEvents: isEditing ? "auto" : "none" }}
-              >
-                {annotationCanvas}
-              </div>
-
-              {/* Ghost video picker overlay (when no compare selected) */}
-              {!compareVideo && (
-                <div className="absolute inset-0 flex items-start justify-center pt-8">
-                  <div className="bg-surface-900/95 rounded-xl p-4 w-72 shadow-2xl">
-                    <p className="text-sm font-medium text-white mb-3 text-center">
-                      Select ghost video
-                    </p>
-                    <CompareVideoPicker
-                      videos={compareVideos}
-                      loading={loadingCompare}
-                      onSelect={selectCompareVideo}
-                      dark
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Ghost labels */}
-              {compareVideo && (
-                <div className="absolute top-2 left-2 flex items-center gap-2 pointer-events-none">
-                  <span className="text-[10px] bg-primary-500/80 text-white px-2 py-0.5 rounded font-medium">
-                    A — {video.title ?? "Primary"}
-                  </span>
-                  <span
-                    className="text-[10px] bg-surface-600/80 text-white px-2 py-0.5 rounded font-medium"
-                    style={{ opacity: ghostOpacity / 100 + 0.4 }}
-                  >
-                    B — {compareVideo.title ?? "Ghost"}
-                  </span>
                 </div>
               )}
             </div>
           )}
 
-          {/* ── MASTER CONTROL BAR (split + ghost modes) ───────────── */}
-          {isMasterMode && (
-            <MasterControls
-              playing={masterPlaying}
-              currentTime={masterTime}
-              duration={duration}
-              onTogglePlay={toggleMasterPlay}
-              onSeek={handleMasterSeek}
-              onFrameStep={frameMasterStep}
-              onReSync={compareVideo ? reSync : undefined}
-              analysisMode={analysisMode}
+          {/* The workspace handles all video rendering, controls, JogWheel, and sync */}
+          {(analysisMode === "single" || compareVideo) && (
+            <VideoAnalysisWorkspace
+              ref={workspaceRef}
+              videoA={{
+                src: video.url,
+                poster: video.thumbnailUrl ?? undefined,
+                title: video.title ?? undefined,
+              }}
+              videoB={
+                compareVideo
+                  ? {
+                      src: compareVideo.url,
+                      title: compareVideo.title ?? undefined,
+                    }
+                  : undefined
+              }
+              mode={analysisMode}
+              annotations={annotations}
+              isEditing={isEditing}
+              activeTool={activeTool}
+              activeColor={activeColor}
+              activeStrokeWidth={activeStrokeWidth}
+              onAnnotationAdd={addAnnotation}
+              onTimeUpdate={setCurrentTime}
+              onDurationReady={setDuration}
               ghostOpacity={ghostOpacity}
-              onGhostOpacityChange={analysisMode === "ghost" ? setGhostOpacity : undefined}
-              compareSpeed={compareSpeed}
-              onCompareSpeedChange={setCompareSpeed}
-              hasCompare={!!compareVideo}
-              onChangeCompare={() => setCompareVideo(null)}
+              onGhostOpacityChange={setGhostOpacity}
             />
           )}
 
@@ -818,231 +630,7 @@ export function VideoEditor({ video, athletes }: Props) {
   );
 }
 
-/* ─── Master Control Bar ───────────────────────────────────────────────────── */
-
-type MasterControlsProps = {
-  playing: boolean;
-  currentTime: number;
-  duration: number;
-  onTogglePlay: () => void;
-  onSeek: (t: number) => void;
-  onFrameStep: (dir: 1 | -1) => void;
-  onReSync?: () => void;
-  analysisMode: AnalysisMode;
-  ghostOpacity: number;
-  onGhostOpacityChange?: (v: number) => void;
-  compareSpeed: number;
-  onCompareSpeedChange: (v: number) => void;
-  hasCompare: boolean;
-  onChangeCompare: () => void;
-};
-
-const MASTER_SPEEDS = [0.25, 0.5, 0.75, 1, 1.5, 2];
-
-function MasterControls({
-  playing,
-  currentTime,
-  duration,
-  onTogglePlay,
-  onSeek,
-  onFrameStep,
-  onReSync,
-  analysisMode,
-  ghostOpacity,
-  onGhostOpacityChange,
-  compareSpeed,
-  onCompareSpeedChange,
-  hasCompare,
-  onChangeCompare,
-}: MasterControlsProps) {
-  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-
-  useEffect(() => {
-    if (!showSpeedMenu) return;
-    const h = () => setShowSpeedMenu(false);
-    document.addEventListener("click", h);
-    return () => document.removeEventListener("click", h);
-  }, [showSpeedMenu]);
-
-  // Keyboard shortcuts in master mode
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      )
-        return;
-      switch (e.key) {
-        case " ":
-        case "k":
-          e.preventDefault();
-          onTogglePlay();
-          break;
-        case ",":
-          e.preventDefault();
-          onFrameStep(-1);
-          break;
-        case ".":
-          e.preventDefault();
-          onFrameStep(1);
-          break;
-      }
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onTogglePlay, onFrameStep]);
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const modeLabel = analysisMode === "ghost" ? "Ghost" : "Split";
-
-  return (
-    <div className="bg-surface-900 dark:bg-surface-950 rounded-xl px-4 py-3 space-y-2.5">
-      {/* Mode badge + change compare button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-400">
-            {modeLabel} Analysis
-          </span>
-          {hasCompare && (
-            <span className="text-[10px] text-surface-500">
-              · Synchronized playback
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {analysisMode === "ghost" && onGhostOpacityChange && (
-            <label className="flex items-center gap-1.5 text-[10px] text-surface-400">
-              Ghost
-              <input
-                type="range"
-                min={10}
-                max={90}
-                step={5}
-                value={ghostOpacity}
-                onChange={(e) => onGhostOpacityChange(parseInt(e.target.value))}
-                className="w-16 h-1 accent-primary-500 cursor-pointer"
-              />
-              {ghostOpacity}%
-            </label>
-          )}
-          {hasCompare && (
-            <button
-              onClick={onChangeCompare}
-              className="text-[10px] text-surface-400 hover:text-white transition-colors px-2 py-0.5 rounded hover:bg-surface-800"
-            >
-              Change B
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Precision scrub slider */}
-      <div className="relative group/scrub">
-        {/* Track */}
-        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1.5 bg-white/10 rounded-full pointer-events-none" />
-        {/* Filled */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 left-0 h-1.5 bg-primary-500 rounded-full pointer-events-none"
-          style={{ width: `${progress}%` }}
-        />
-        {/* Range input */}
-        <input
-          type="range"
-          min={0}
-          max={duration || 1}
-          step={0.0333}
-          value={currentTime}
-          onChange={(e) => onSeek(parseFloat(e.target.value))}
-          className="relative w-full opacity-0 h-4 cursor-pointer"
-          aria-label="Scrub both videos"
-        />
-      </div>
-
-      {/* Controls row */}
-      <div className="flex items-center gap-2 text-white">
-        {/* Frame back */}
-        <button
-          onClick={() => onFrameStep(-1)}
-          className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
-          title="Previous frame (,)"
-        >
-          <MasterFrameBackIcon />
-        </button>
-
-        {/* Play / Pause */}
-        <button
-          onClick={onTogglePlay}
-          className="w-8 h-8 rounded-full bg-primary-500 hover:bg-primary-400 flex items-center justify-center transition-colors shrink-0"
-          title={playing ? "Pause (Space)" : "Play (Space)"}
-        >
-          {playing ? <SmallPauseIcon /> : <SmallPlayIcon />}
-        </button>
-
-        {/* Frame forward */}
-        <button
-          onClick={() => onFrameStep(1)}
-          className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
-          title="Next frame (.)"
-        >
-          <MasterFrameFwdIcon />
-        </button>
-
-        {/* Time display */}
-        <span className="font-mono text-xs tabular-nums text-surface-300 min-w-[110px]">
-          {formatTimestamp(currentTime)}
-          <span className="text-surface-600"> / </span>
-          {formatTimestamp(duration)}
-        </span>
-
-        <div className="flex-1" />
-
-        {/* Speed selector */}
-        <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowSpeedMenu((v) => !v);
-            }}
-            className="px-2 py-0.5 hover:bg-white/10 rounded transition-colors text-xs font-mono text-surface-300"
-            title="Playback speed"
-          >
-            {compareSpeed}x
-          </button>
-          {showSpeedMenu && (
-            <div className="absolute bottom-full right-0 mb-1 bg-surface-800 border border-surface-600 rounded-lg py-1 shadow-xl z-20">
-              {MASTER_SPEEDS.map((s) => (
-                <button
-                  key={s}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCompareSpeedChange(s);
-                    setShowSpeedMenu(false);
-                  }}
-                  className={`block w-full text-left px-3 py-1 text-xs hover:bg-white/10 ${
-                    compareSpeed === s ? "text-primary-400" : "text-white"
-                  }`}
-                >
-                  {s}x
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Re-sync button */}
-        {onReSync && (
-          <button
-            onClick={onReSync}
-            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-surface-400 hover:text-white"
-            title="Re-sync video B to current time"
-          >
-            <ReSyncIcon />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
+/* ─── Master Control Bar: now handled by VideoAnalysisWorkspace ─────────── */
 
 /* ─── Compare Video Picker ─────────────────────────────────────────────────── */
 
@@ -1231,48 +819,5 @@ function GhostIcon() {
   );
 }
 
-function SmallPlayIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-      <polygon points="5 3 19 12 5 21" />
-    </svg>
-  );
-}
-
-function SmallPauseIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-      <rect x="6" y="4" width="4" height="16" />
-      <rect x="14" y="4" width="4" height="16" />
-    </svg>
-  );
-}
-
-function MasterFrameBackIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="11 19 2 12 11 5" />
-      <line x1="2" y1="12" x2="22" y2="12" />
-    </svg>
-  );
-}
-
-function MasterFrameFwdIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="13 5 22 12 13 19" />
-      <line x1="22" y1="12" x2="2" y2="12" />
-    </svg>
-  );
-}
-
-function ReSyncIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="1 4 1 10 7 10" />
-      <polyline points="23 20 23 14 17 14" />
-      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-    </svg>
-  );
-}
+/* Master control icons removed — now in VideoAnalysisWorkspace */
 

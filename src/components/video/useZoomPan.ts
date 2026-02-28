@@ -18,6 +18,10 @@ export type UseZoomPanOptions = {
   enabled?: boolean;
   /** When true, single-finger/mouse = draw, not pan */
   isDrawingActive?: boolean;
+  /** External state to follow (follower mode — mirrors another instance) */
+  linkedState?: ZoomPanState;
+  /** Fires on every transform change (leader mode — broadcasts to followers) */
+  onTransformChange?: (state: ZoomPanState) => void;
 };
 
 export type UseZoomPanReturn = {
@@ -52,11 +56,13 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
     wheelSensitivity = DEFAULT_WHEEL_SENSITIVITY,
     enabled = true,
     isDrawingActive = false,
+    linkedState,
+    onTransformChange,
   } = options;
 
   /* ── State ───────────────────────────────────────────────────────── */
 
-  const [state, setState] = useState<ZoomPanState>({
+  const [state, _setStateRaw] = useState<ZoomPanState>({
     scale: 1,
     translateX: 0,
     translateY: 0,
@@ -64,6 +70,24 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  /** Tracks whether the current state change originated locally (prevents follower feedback loops) */
+  const isLocalChangeRef = useRef(false);
+  const onTransformChangeRef = useRef(onTransformChange);
+  onTransformChangeRef.current = onTransformChange;
+
+  /** Wrapped setState that broadcasts to followers when change is local */
+  const setState = useCallback((next: ZoomPanState | ((prev: ZoomPanState) => ZoomPanState)) => {
+    _setStateRaw((prev) => {
+      const resolved = typeof next === "function" ? next(prev) : next;
+      // Only broadcast if this is a local (user-initiated) change
+      if (onTransformChangeRef.current) {
+        // Schedule broadcast after state update to avoid re-entry
+        queueMicrotask(() => onTransformChangeRef.current?.(resolved));
+      }
+      return resolved;
+    });
+  }, []);
 
   /* ── Refs for gesture tracking ──────────────────────────────────── */
 
@@ -124,7 +148,7 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
       const { tx, ty } = clampTranslate(newTx, newTy, clamped);
       setState({ scale: clamped, translateX: tx, translateY: ty });
     },
-    [clampScale, clampTranslate]
+    [clampScale, clampTranslate, setState]
   );
 
   /* ── Animated transition helper ──────────────────────────────────── */
@@ -135,7 +159,7 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
       setState(target);
       setTimeout(() => setIsTransitioning(false), TRANSITION_DURATION_MS);
     },
-    []
+    [setState]
   );
 
   /* ── Programmatic controls ──────────────────────────────────────── */
@@ -369,6 +393,7 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
     clampTranslate,
     zoomAroundPoint,
     animateToState,
+    setState,
   ]);
 
   /* ── Mouse pan (desktop: click + drag when zoomed) ──────────────── */
@@ -421,7 +446,20 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [enabled, isDrawingActive, clampTranslate]);
+  }, [enabled, isDrawingActive, clampTranslate, setState]);
+
+  /* ── Follower: apply linkedState from leader ────────────────────── */
+
+  useEffect(() => {
+    if (!linkedState) return;
+    // Skip if this is a local change echoing back
+    if (isLocalChangeRef.current) {
+      isLocalChangeRef.current = false;
+      return;
+    }
+    // Apply leader's state directly (no broadcast back)
+    _setStateRaw(linkedState);
+  }, [linkedState]);
 
   /* ── Derived ────────────────────────────────────────────────────── */
 
