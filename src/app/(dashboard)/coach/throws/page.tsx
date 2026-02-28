@@ -396,6 +396,9 @@ export default function ThrowsDashboard() {
      <Link href="/coach/throws/roster" className="btn-secondary whitespace-nowrap">
       Roster
      </Link>
+     <Link href="/coach/throws/program-builder" className="btn-secondary whitespace-nowrap">
+      Build Program
+     </Link>
      <Link href="/coach/throws/builder" className="btn-primary whitespace-nowrap">
       Build Session
      </Link>
@@ -403,10 +406,10 @@ export default function ThrowsDashboard() {
    </div>
 
    {/* Quick Actions */}
-   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
     <Link
      href="/coach/throws/practice"
-     className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group col-span-2 sm:col-span-1"
+     className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group"
     >
      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
       <svg
@@ -474,6 +477,30 @@ export default function ThrowsDashboard() {
      <div>
       <p className="text-sm font-semibold text-[var(--color-text)]">View as Athlete</p>
       <p className="text-xs text-[var(--color-text-2)]">Preview the athlete experience</p>
+     </div>
+    </Link>
+    <Link
+     href="/coach/throws/program-builder"
+     className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group"
+    >
+     <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+      <svg
+       className="w-5 h-5 text-amber-600 dark:text-amber-400"
+       fill="none"
+       stroke="currentColor"
+       viewBox="0 0 24 24"
+      >
+       <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+       />
+      </svg>
+     </div>
+     <div>
+      <p className="text-sm font-semibold text-[var(--color-text)]">Build Program</p>
+      <p className="text-xs text-[var(--color-text-2)]">Generate a Bondarchuk macrocycle</p>
      </div>
     </Link>
    </div>

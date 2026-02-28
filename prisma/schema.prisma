@@ -157,6 +157,7 @@ model CoachProfile {
   currentPeriodEnd     DateTime?
   preferences          String?          @default("{}")
   enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
+  onboardingCompletedAt DateTime?       // null = not completed; timestamp = completed/dismissed
 
   // Core relations (existing PT models)
   athletes       AthleteProfile[]
@@ -206,6 +207,8 @@ model AthleteProfile {
   avatarUrl   String?
   heightCm    Float?
   weightKg    Float?
+
+  onboardingCompletedAt DateTime? // null = not completed; timestamp = completed/dismissed
 
   // Streak tracking
   currentStreak    Int       @default(0)

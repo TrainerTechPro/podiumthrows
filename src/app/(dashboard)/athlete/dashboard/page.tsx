@@ -5,11 +5,13 @@ import {
   requireAthleteSession,
   getAthleteStats,
   getAthleteUpcomingSessions,
+  getAthleteOnboardingGuide,
 } from "@/lib/data/athlete";
 import {
   getAthleteReadinessTrend,
   getAthleteRecentPRs,
 } from "@/lib/data/coach";
+import { WelcomeCard } from "./_welcome-card";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -177,11 +179,12 @@ function PRCard({ event, distance, date }: { event: string; distance: number; da
 export default async function AthleteDashboardPage() {
   const { athlete } = await requireAthleteSession();
 
-  const [stats, upcoming, trend, recentPRs] = await Promise.all([
+  const [stats, upcoming, trend, recentPRs, guide] = await Promise.all([
     getAthleteStats(athlete.id),
     getAthleteUpcomingSessions(athlete.id, 5),
     getAthleteReadinessTrend(athlete.id, 7),
     getAthleteRecentPRs(athlete.id, 4),
+    getAthleteOnboardingGuide(athlete.id, athlete.onboardingCompletedAt),
   ]);
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -210,6 +213,11 @@ export default async function AthleteDashboardPage() {
           </Link>
         )}
       </div>
+
+      {/* Post-onboarding welcome card */}
+      {guide.showGuide && (
+        <WelcomeCard firstName={athlete.firstName} guide={guide} />
+      )}
 
       {/* Top row: Readiness widget + stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

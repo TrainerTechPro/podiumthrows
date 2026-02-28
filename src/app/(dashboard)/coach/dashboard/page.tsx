@@ -7,11 +7,14 @@ import {
   getRecentActivity,
   getFlaggedAthletes,
   getTeamReadinessTrends,
+  getOnboardingStatus,
+  PLAN_LIMITS,
   type ActivityItem,
   type FlaggedAthlete,
   type CoachStats,
   type TeamReadinessEntry,
 } from "@/lib/data/coach";
+import { OnboardingChecklist } from "./_onboarding-checklist";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -341,11 +344,12 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
 export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
-  const [stats, activity, flagged, readiness] = await Promise.all([
+  const [stats, activity, flagged, readiness, onboarding] = await Promise.all([
     getCoachStats(coach.id),
     getRecentActivity(coach.id),
     getFlaggedAthletes(coach.id),
     getTeamReadinessTrends(coach.id),
+    getOnboardingStatus(coach.id),
   ]);
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -354,8 +358,21 @@ export default async function CoachDashboardPage() {
     day: "numeric",
   });
 
+  const planLimit = PLAN_LIMITS[coach.plan];
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+      {/* Onboarding Checklist — shown only for new coaches */}
+      {!onboarding.isCompleted && (
+        <OnboardingChecklist
+          firstName={coach.firstName}
+          status={onboarding}
+          athleteCount={stats.totalAthletes}
+          planLimit={planLimit}
+          currentPlan={coach.plan}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

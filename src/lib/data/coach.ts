@@ -149,6 +149,25 @@ export type CoachStats = {
   complianceRate: number | null;
 };
 
+export type OnboardingStep = {
+  key: string;
+  label: string;
+  description: string;
+  completed: boolean;
+  href: string;
+  ctaLabel: string;
+  /** If true, this step is locked until the previous step is completed */
+  requiresPrevious: boolean;
+};
+
+export type OnboardingStatus = {
+  isCompleted: boolean;
+  completedAt: string | null;
+  steps: OnboardingStep[];
+  completedCount: number;
+  totalSteps: number;
+};
+
 /* ─── Auth Helper ─────────────────────────────────────────────────────────── */
 
 /** Require authenticated coach session. Redirects to /login otherwise. */
@@ -2046,4 +2065,95 @@ export async function getUnreadNotificationCount(coachId: string): Promise<numbe
   return prisma.notification.count({
     where: { coachId, read: false },
   });
+}
+
+/* ─── Onboarding Status ──────────────────────────────────────────────────── */
+
+/**
+ * Compute onboarding checklist status from real data — no step counter needed.
+ * Returns early if onboarding is already completed/dismissed.
+ */
+export async function getOnboardingStatus(coachId: string): Promise<OnboardingStatus> {
+  // Quick check: if already completed, skip the count queries
+  const coach = await prisma.coachProfile.findUnique({
+    where: { id: coachId },
+    select: { onboardingCompletedAt: true },
+  });
+
+  if (coach?.onboardingCompletedAt) {
+    return {
+      isCompleted: true,
+      completedAt: coach.onboardingCompletedAt.toISOString(),
+      steps: [],
+      completedCount: 4,
+      totalSteps: 4,
+    };
+  }
+
+  // Derive step completion from actual data
+  const [athleteCount, pendingInviteCount, throwsProfileCount, profileWithPb, programCount, sessionCount] =
+    await Promise.all([
+      prisma.athleteProfile.count({ where: { coachId } }),
+      prisma.invitation.count({ where: { coachId, status: "PENDING" } }),
+      prisma.throwsProfile.count({ where: { enrolledBy: coachId } }),
+      prisma.throwsProfile.count({
+        where: { enrolledBy: coachId, competitionPb: { not: null } },
+      }),
+      prisma.trainingProgram.count({ where: { coachId } }),
+      prisma.throwsSession.count({ where: { coachId } }),
+    ]);
+
+  const hasAthlete = athleteCount > 0 || pendingInviteCount > 0;
+  const hasThrowsProfile = throwsProfileCount > 0;
+  const hasAssessment = profileWithPb > 0;
+  const hasProgram = programCount > 0 || sessionCount > 0;
+
+  const steps: OnboardingStep[] = [
+    {
+      key: "invite",
+      label: "Invite your first athlete",
+      description: "Send a link to an athlete to join your roster",
+      completed: hasAthlete,
+      href: "/coach/athletes",
+      ctaLabel: "Invite Athlete",
+      requiresPrevious: false,
+    },
+    {
+      key: "throws_profile",
+      label: "Create a throws profile",
+      description: "Set up event, gender, and competition PB for an athlete",
+      completed: hasThrowsProfile,
+      href: "/coach/throws",
+      ctaLabel: "Create Profile",
+      requiresPrevious: true,
+    },
+    {
+      key: "assessment",
+      label: "Run a baseline assessment",
+      description: "Record implement PRs to diagnose training deficits",
+      completed: hasAssessment,
+      href: "/coach/throws",
+      ctaLabel: "Run Assessment",
+      requiresPrevious: true,
+    },
+    {
+      key: "program",
+      label: "Build your first program",
+      description: "Generate a Bondarchuk training program",
+      completed: hasProgram,
+      href: "/coach/throws/program-builder",
+      ctaLabel: "Build Program",
+      requiresPrevious: true,
+    },
+  ];
+
+  const completedCount = steps.filter((s) => s.completed).length;
+
+  return {
+    isCompleted: completedCount === steps.length,
+    completedAt: null,
+    steps,
+    completedCount,
+    totalSteps: steps.length,
+  };
 }

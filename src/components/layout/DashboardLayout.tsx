@@ -2,6 +2,7 @@
 
 import { useState, ReactNode, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -83,30 +84,16 @@ function HamburgerButton({
 
 /* ─── Logo mark ──────────────────────────────────────────────────────────── */
 
-function LogoMark() {
+function LogoMark({ size = 44 }: { size?: number }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="w-8 h-8 rounded-xl bg-primary-500 flex items-center justify-center shrink-0">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-        </svg>
-      </div>
-      <div className="leading-tight">
-        <p className="text-sm font-bold font-heading text-[var(--foreground)]">Podium</p>
-        <p className="text-[10px] font-medium text-muted -mt-0.5">Throws</p>
-      </div>
-    </div>
+    <Image
+      src="/logo.png"
+      alt="Podium Throws"
+      width={size}
+      height={size}
+      className="rounded-xl shrink-0"
+      priority
+    />
   );
 }
 
@@ -159,7 +146,7 @@ function TopBar({
 
       {/* Logo (mobile only — desktop shows in sidebar) */}
       <div className="lg:hidden">
-        <LogoMark />
+        <LogoMark size={38} />
       </div>
 
       {/* Breadcrumbs */}

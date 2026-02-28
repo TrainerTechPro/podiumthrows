@@ -119,12 +119,41 @@ export async function requireAthleteSession() {
 
   if (!athlete) redirect("/athlete/onboarding");
 
-  // Redirect to onboarding if profile is minimal (no events set)
-  // Onboarding is complete when athlete has set their events/gender/DOB
+  // Formal check: onboardingCompletedAt is set
+  // Legacy fallback: events/DOB/height are populated (for athletes who onboarded before tracking)
   const isOnboarded =
-    athlete.events.length > 0 || athlete.dateOfBirth !== null || athlete.heightCm !== null;
+    athlete.onboardingCompletedAt !== null ||
+    athlete.events.length > 0 ||
+    athlete.dateOfBirth !== null ||
+    athlete.heightCm !== null;
 
   return { session, athlete, isOnboarded };
+}
+
+/** Require athlete who has NOT yet completed onboarding. Redirects onboarded athletes to dashboard. */
+export async function requireUnonboardedAthlete() {
+  const session = await getSession();
+  if (!session || session.role !== "ATHLETE") redirect("/login");
+
+  const athlete = await prisma.athleteProfile.findUnique({
+    where: { userId: session.userId },
+    include: {
+      coach: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+    },
+  });
+
+  if (!athlete) redirect("/login");
+
+  // Already onboarded? Go to dashboard
+  const isOnboarded =
+    athlete.onboardingCompletedAt !== null ||
+    athlete.events.length > 0 ||
+    athlete.dateOfBirth !== null ||
+    athlete.heightCm !== null;
+
+  if (isOnboarded) redirect("/athlete/dashboard");
+
+  return { session, athlete };
 }
 
 /* ─── Profile ─────────────────────────────────────────────────────────────── */
@@ -839,6 +868,102 @@ export async function getAthleteAchievements(
     metadata: a.metadata as Record<string, unknown> | null,
     earnedAt: a.earnedAt.toISOString(),
   }));
+}
+
+/* ─── Athlete Goals with Progress ────────────────────────────────────────── */
+
+/* ─── Onboarding Guide (Post-onboarding welcome card data) ──────────────── */
+
+export type OnboardingGuideStep = {
+  key: string;
+  label: string;
+  description: string;
+  href: string;
+  completed: boolean;
+};
+
+export type OnboardingGuide = {
+  showGuide: boolean;
+  completedCount: number;
+  totalSteps: number;
+  steps: OnboardingGuideStep[];
+};
+
+/**
+ * Returns a post-onboarding guide for newly onboarded athletes.
+ * Shows for 7 days after `onboardingCompletedAt`, or until all steps are done.
+ */
+export async function getAthleteOnboardingGuide(
+  athleteId: string,
+  onboardingCompletedAt: Date | null
+): Promise<OnboardingGuide> {
+  const GUIDE_WINDOW_DAYS = 7;
+  const noGuide: OnboardingGuide = {
+    showGuide: false,
+    completedCount: 0,
+    totalSteps: 3,
+    steps: [],
+  };
+
+  // Not formally onboarded — no guide
+  if (!onboardingCompletedAt) return noGuide;
+
+  // Expired? (older than 7 days)
+  const daysSinceOnboarding =
+    (Date.now() - onboardingCompletedAt.getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSinceOnboarding > GUIDE_WINDOW_DAYS) return noGuide;
+
+  // Check step completion in parallel
+  const [hasCheckIn, hasSession, hasThrowLog] = await Promise.all([
+    prisma.readinessCheckIn
+      .findFirst({ where: { athleteId }, select: { id: true } })
+      .then(Boolean),
+    prisma.trainingSession
+      .findFirst({
+        where: { athleteId, status: "COMPLETED" },
+        select: { id: true },
+      })
+      .then(Boolean),
+    prisma.throwLog
+      .findFirst({ where: { athleteId }, select: { id: true } })
+      .then(Boolean),
+  ]);
+
+  const steps: OnboardingGuideStep[] = [
+    {
+      key: "checkin",
+      label: "Submit a wellness check-in",
+      description: "Help your coach understand how you're feeling today.",
+      href: "/athlete/wellness",
+      completed: hasCheckIn,
+    },
+    {
+      key: "sessions",
+      label: "Check your training sessions",
+      description: "See what your coach has planned for you.",
+      href: "/athlete/sessions",
+      completed: hasSession,
+    },
+    {
+      key: "throws",
+      label: "Explore your throw history",
+      description: "Track your progress and personal bests.",
+      href: "/athlete/throws",
+      completed: hasThrowLog,
+    },
+  ];
+
+  const completedCount = steps.filter((s) => s.completed).length;
+
+  // All steps done? Hide the guide
+  if (completedCount >= steps.length) return noGuide;
+
+  return {
+    showGuide: true,
+    completedCount,
+    totalSteps: steps.length,
+    steps,
+  };
 }
 
 /* ─── Athlete Goals with Progress ────────────────────────────────────────── */
