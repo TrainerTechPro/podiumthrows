@@ -8,6 +8,7 @@ import { AnnotationCanvas } from "@/components/video/AnnotationCanvas";
 import { AnnotationTimeline } from "@/components/video/AnnotationTimeline";
 import { AnnotationList } from "@/components/video/AnnotationList";
 import { Badge } from "@/components/ui/Badge";
+import { ImmersiveVideoOverlay } from "@/components/video/ImmersiveVideoOverlay";
 import type { Annotation } from "@/components/video/types";
 import { formatEventType } from "@/lib/utils";
 
@@ -23,6 +24,8 @@ export function AthleteVideoViewer({ video }: Props) {
   const playerRef = useRef<VideoPlayerHandle>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(video.durationSec ?? 0);
+
+  const [showImmersive, setShowImmersive] = useState(false);
 
   const annotations: Annotation[] = Array.isArray(video.annotations)
     ? (video.annotations as Annotation[])
@@ -65,6 +68,15 @@ export function AthleteVideoViewer({ video }: Props) {
             )}
           </div>
         </div>
+
+        {/* Full Screen Review */}
+        <button
+          onClick={() => setShowImmersive(true)}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+          title="Open full screen review"
+        >
+          Full Screen
+        </button>
       </div>
 
       {/* ── Main layout ──────────────────────────────────────────────── */}
@@ -142,6 +154,18 @@ export function AthleteVideoViewer({ video }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ── Immersive Video Overlay ──────────────────────────────────── */}
+      <ImmersiveVideoOverlay
+        open={showImmersive}
+        onClose={() => setShowImmersive(false)}
+        videoSrc={video.url}
+        poster={video.thumbnailUrl ?? undefined}
+        title={video.title ?? "Untitled Video"}
+        annotations={annotations}
+        isEditing={false}
+        initialTime={currentTime}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   useEffect,
   useCallback,
   type MouseEvent as ReactMouseEvent,
+  type TouchEvent as ReactTouchEvent,
 } from "react";
 import {
   type Annotation,
@@ -81,7 +82,7 @@ export function AnnotationCanvas({
     canvas.height = canvasSize.height;
   }, [canvasSize]);
 
-  /* ── Normalized point from mouse event ───────────────────────────────── */
+  /* ── Normalized point helpers ────────────────────────────────────────── */
 
   const getPoint = useCallback(
     (e: ReactMouseEvent<HTMLCanvasElement>): Point => {
@@ -96,14 +97,25 @@ export function AnnotationCanvas({
     []
   );
 
-  /* ── Mouse handlers ──────────────────────────────────────────────────── */
+  const getPointFromTouch = useCallback(
+    (e: ReactTouchEvent<HTMLCanvasElement>): Point => {
+      const canvas = canvasRef.current;
+      if (!canvas) return { x: 0, y: 0 };
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0] || e.changedTouches[0];
+      return {
+        x: (touch.clientX - rect.left) / rect.width,
+        y: (touch.clientY - rect.top) / rect.height,
+      };
+    },
+    []
+  );
 
-  const handleMouseDown = useCallback(
-    (e: ReactMouseEvent<HTMLCanvasElement>) => {
+  /* ── Shared drawing logic ──────────────────────────────────────────── */
+
+  const startDraw = useCallback(
+    (pt: Point) => {
       if (!isEditing || activeTool === "select") return;
-      e.preventDefault();
-
-      const pt = getPoint(e);
 
       if (activeTool === "text") {
         setTextPos(pt);
@@ -114,15 +126,12 @@ export function AnnotationCanvas({
 
       setDrawState({ phase: "drawing", points: [pt] });
     },
-    [isEditing, activeTool, getPoint]
+    [isEditing, activeTool]
   );
 
-  const handleMouseMove = useCallback(
-    (e: ReactMouseEvent<HTMLCanvasElement>) => {
+  const continueDraw = useCallback(
+    (pt: Point) => {
       if (drawState.phase !== "drawing") return;
-      e.preventDefault();
-
-      const pt = getPoint(e);
 
       if (activeTool === "freehand") {
         setDrawState((prev) =>
@@ -131,7 +140,6 @@ export function AnnotationCanvas({
             : prev
         );
       } else {
-        // For line/arrow/circle: update second point
         setDrawState((prev) =>
           prev.phase === "drawing"
             ? { ...prev, points: [prev.points[0], pt] }
@@ -139,21 +147,18 @@ export function AnnotationCanvas({
         );
       }
     },
-    [drawState.phase, activeTool, getPoint]
+    [drawState.phase, activeTool]
   );
 
-  const handleMouseUp = useCallback(
-    (e: ReactMouseEvent<HTMLCanvasElement>) => {
+  const finishDraw = useCallback(
+    (pt: Point) => {
       if (drawState.phase !== "drawing") return;
-      e.preventDefault();
 
-      const pt = getPoint(e);
       let finalPoints = [...drawState.points];
 
       if (activeTool === "freehand") {
         finalPoints.push(pt);
       } else if (activeTool === "angle") {
-        // Angle needs 3 points: click, click, click
         if (finalPoints.length < 3) {
           setDrawState({ phase: "drawing", points: [...finalPoints, pt] });
           return;
@@ -162,7 +167,7 @@ export function AnnotationCanvas({
         finalPoints = [finalPoints[0], pt];
       }
 
-      // Skip if points are too close (accidental click)
+      // Skip if points are too close (accidental click/tap)
       if (
         activeTool !== "freehand" &&
         finalPoints.length === 2 &&
@@ -186,15 +191,64 @@ export function AnnotationCanvas({
       onAnnotationAdd?.(annotation);
       setDrawState({ phase: "idle" });
     },
-    [
-      drawState,
-      activeTool,
-      currentTime,
-      activeColor,
-      activeStrokeWidth,
-      onAnnotationAdd,
-      getPoint,
-    ]
+    [drawState, activeTool, currentTime, activeColor, activeStrokeWidth, onAnnotationAdd]
+  );
+
+  /* ── Mouse handlers ──────────────────────────────────────────────────── */
+
+  const handleMouseDown = useCallback(
+    (e: ReactMouseEvent<HTMLCanvasElement>) => {
+      e.preventDefault();
+      startDraw(getPoint(e));
+    },
+    [getPoint, startDraw]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: ReactMouseEvent<HTMLCanvasElement>) => {
+      if (drawState.phase !== "drawing") return;
+      e.preventDefault();
+      continueDraw(getPoint(e));
+    },
+    [drawState.phase, getPoint, continueDraw]
+  );
+
+  const handleMouseUp = useCallback(
+    (e: ReactMouseEvent<HTMLCanvasElement>) => {
+      if (drawState.phase !== "drawing") return;
+      e.preventDefault();
+      finishDraw(getPoint(e));
+    },
+    [drawState.phase, getPoint, finishDraw]
+  );
+
+  /* ── Touch handlers ──────────────────────────────────────────────────── */
+
+  const handleTouchStart = useCallback(
+    (e: ReactTouchEvent<HTMLCanvasElement>) => {
+      if (!isEditing || activeTool === "select") return;
+      e.preventDefault();
+      startDraw(getPointFromTouch(e));
+    },
+    [isEditing, activeTool, getPointFromTouch, startDraw]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: ReactTouchEvent<HTMLCanvasElement>) => {
+      if (drawState.phase !== "drawing") return;
+      e.preventDefault();
+      continueDraw(getPointFromTouch(e));
+    },
+    [drawState.phase, getPointFromTouch, continueDraw]
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: ReactTouchEvent<HTMLCanvasElement>) => {
+      if (drawState.phase !== "drawing") return;
+      e.preventDefault();
+      finishDraw(getPointFromTouch(e));
+    },
+    [drawState.phase, getPointFromTouch, finishDraw]
   );
 
   /* ── Text commit ─────────────────────────────────────────────────────── */
@@ -300,6 +354,9 @@ export function AnnotationCanvas({
             setDrawState({ phase: "idle" });
           }
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       />
 
       {/* Text input overlay */}

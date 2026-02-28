@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import type { Annotation, AnnotationTool } from "@/components/video/types";
+import { ImmersiveVideoOverlay } from "@/components/video/ImmersiveVideoOverlay";
 import { formatEventType } from "@/lib/utils";
 import { formatTimestamp } from "@/components/video/types";
 
@@ -81,6 +82,9 @@ export function VideoEditor({ video, athletes }: Props) {
 
   // Delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Immersive mode
+  const [showImmersive, setShowImmersive] = useState(false);
 
   /* ── Load compare video list ─────────────────────────────────────────── */
 
@@ -402,6 +406,15 @@ export function VideoEditor({ video, athletes }: Props) {
           }`}
         >
           {isEditing ? "Editing" : "View Mode"}
+        </button>
+
+        {/* Immersive */}
+        <button
+          onClick={() => setShowImmersive(true)}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+          title="Open immersive review mode"
+        >
+          Immersive
         </button>
 
         {/* Share */}
@@ -785,6 +798,21 @@ export function VideoEditor({ video, athletes }: Props) {
         }
         confirmLabel="Delete"
         variant="danger"
+      />
+
+      {/* ── Immersive Video Overlay ──────────────────────────────────── */}
+      <ImmersiveVideoOverlay
+        open={showImmersive}
+        onClose={() => setShowImmersive(false)}
+        videoSrc={video.url}
+        poster={video.thumbnailUrl ?? undefined}
+        title={video.title ?? "Untitled Video"}
+        annotations={annotations}
+        onAnnotationsChange={setAnnotations}
+        isEditing={isEditing}
+        onSave={saveAnnotations}
+        isSaving={isSaving}
+        initialTime={currentTime}
       />
     </div>
   );
