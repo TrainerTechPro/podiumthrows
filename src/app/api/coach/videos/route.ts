@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
       tags,
       durationSec,
       fileSizeMb,
+      thumbnailUrl,
     } = body as {
       url?: string;
       storageKey?: string;
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
       tags?: string[];
       durationSec?: number;
       fileSizeMb?: number;
+      thumbnailUrl?: string;
     };
 
     if (!url) {
@@ -106,6 +108,7 @@ export async function POST(req: NextRequest) {
         tags: tags || [],
         durationSec: durationSec || null,
         fileSizeMb: fileSizeMb || null,
+        thumbnailUrl: thumbnailUrl || null,
         status: "ready",
       },
     });

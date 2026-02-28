@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -14,11 +14,14 @@ type Props = {
 
 type UploadPhase =
   | "idle"
-  | "selected"
+  | "trimming"   // user selects trim window + thumbnail
+  | "selected"   // trim confirmed, showing metadata form
   | "uploading"
   | "creating"
   | "done"
   | "error";
+
+const MAX_CLIP_SEC = 10;
 
 const EVENT_OPTIONS: SelectOption<string>[] = [
   { value: "SHOT_PUT", label: formatEventType("SHOT_PUT") },
@@ -42,19 +45,88 @@ const ALLOWED_TYPES = [
   "video/x-m4v",
   "video/3gpp",
 ];
+const ALLOWED_EXTS = ["mp4", "mov", "webm", "m4v", "3gp"];
 const MAX_SIZE_MB = 500;
+
+/* ─── Trim Range Slider ───────────────────────────────────────────────────── */
+
+function TrimRangeSlider({
+  duration,
+  trimStart,
+  onStartChange,
+}: {
+  duration: number;
+  trimStart: number;
+  onStartChange: (val: number) => void;
+}) {
+  const maxStart = Math.max(0, duration - MAX_CLIP_SEC);
+  const trimEnd = Math.min(trimStart + MAX_CLIP_SEC, duration);
+  const startPct = (trimStart / duration) * 100;
+  const endPct = (trimEnd / duration) * 100;
+
+  return (
+    <div className="space-y-1">
+      <div className="relative h-6 flex items-center">
+        {/* Track background */}
+        <div className="absolute w-full h-2 rounded-full bg-surface-200 dark:bg-surface-700" />
+        {/* Selected window */}
+        <div
+          className="absolute h-2 rounded-full bg-primary-500/50"
+          style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }}
+        />
+        {/* Range input — invisible but handles interaction */}
+        <input
+          type="range"
+          min={0}
+          max={maxStart}
+          step={0.1}
+          value={trimStart}
+          onChange={(e) => onStartChange(Number(e.target.value))}
+          className="absolute w-full opacity-0 cursor-pointer h-full"
+        />
+        {/* Start thumb visual */}
+        <div
+          className="absolute w-4 h-4 rounded-full bg-primary-500 border-2 border-white shadow pointer-events-none -translate-x-1/2"
+          style={{ left: `${startPct}%` }}
+        />
+        {/* End thumb visual */}
+        <div
+          className="absolute w-4 h-4 rounded-full bg-primary-400 border-2 border-white shadow pointer-events-none -translate-x-1/2"
+          style={{ left: `${endPct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
 export function UploadForm({ athleteOptions }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [file, setFile] = useState<File | null>(null);
+  const [objectUrl, setObjectUrl] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Trim state
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [needsTrim, setNeedsTrim] = useState(false);
+  const [trimStart, setTrimStart] = useState(0);
+  const [trimEnd, setTrimEnd] = useState(0);
+  const [trimmedBlob, setTrimmedBlob] = useState<Blob | File | null>(null);
+  const [trimProgress, setTrimProgress] = useState(0);
+  const [isTrimming, setIsTrimming] = useState(false);
+  const [mediaRecorderSupported, setMediaRecorderSupported] = useState(true);
+
+  // Thumbnail state
+  const [thumbnailBlob, setThumbnailBlob] = useState<Blob | null>(null);
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string>("");
 
   // Metadata
   const [title, setTitle] = useState("");
@@ -63,37 +135,63 @@ export function UploadForm({ athleteOptions }: Props) {
   const [event, setEvent] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
 
+  /* ── Cleanup object URLs on unmount ──────────────────────────────────── */
+
+  useEffect(() => {
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   /* ── File selection ──────────────────────────────────────────────────── */
 
   const handleFileSelect = useCallback((selectedFile: File) => {
-    // Validate type — allow empty MIME (some mobile browsers) if extension is ok
     const ext = selectedFile.name.split(".").pop()?.toLowerCase() ?? "";
-    const validExts = ["mp4", "mov", "webm", "m4v", "3gp"];
-    if (selectedFile.type && !ALLOWED_TYPES.includes(selectedFile.type) && !validExts.includes(ext)) {
+    if (selectedFile.type && !ALLOWED_TYPES.includes(selectedFile.type) && !ALLOWED_EXTS.includes(ext)) {
       setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
       return;
     }
-    if (!selectedFile.type && !validExts.includes(ext)) {
+    if (!selectedFile.type && !ALLOWED_EXTS.includes(ext)) {
       setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
       return;
     }
-    // Validate size
-    const sizeMb = selectedFile.size / (1024 * 1024);
-    if (sizeMb > MAX_SIZE_MB) {
-      setErrorMsg(`File too large (${sizeMb.toFixed(0)}MB). Maximum is ${MAX_SIZE_MB}MB.`);
+    if (selectedFile.size / (1024 * 1024) > MAX_SIZE_MB) {
+      setErrorMsg(`File too large. Maximum is ${MAX_SIZE_MB}MB.`);
       return;
     }
+
+    // Check MediaRecorder support
+    const supported =
+      typeof MediaRecorder !== "undefined" &&
+      (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus") ||
+        MediaRecorder.isTypeSupported("video/webm") ||
+        MediaRecorder.isTypeSupported("video/mp4"));
+    setMediaRecorderSupported(supported);
+
+    // Revoke previous object URL
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    const url = URL.createObjectURL(selectedFile);
 
     setFile(selectedFile);
+    setObjectUrl(url);
     setErrorMsg("");
-    setPhase("selected");
+    setTrimStart(0);
+    setTrimEnd(0);
+    setTrimmedBlob(null);
+    setThumbnailBlob(null);
+    if (thumbnailPreviewUrl) {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+      setThumbnailPreviewUrl("");
+    }
+    setPhase("trimming");
 
-    // Auto-fill title from filename
     if (!title) {
       const name = selectedFile.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
       setTitle(name);
     }
-  }, [title]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, objectUrl, thumbnailPreviewUrl]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -112,25 +210,107 @@ export function UploadForm({ athleteOptions }: Props) {
     [handleFileSelect]
   );
 
+  /* ── Video metadata loaded ───────────────────────────────────────────── */
+
+  const handleVideoMetadata = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const dur = video.duration;
+    if (!isFinite(dur)) return;
+    setVideoDuration(dur);
+    const shouldTrim = dur > MAX_CLIP_SEC;
+    setNeedsTrim(shouldTrim);
+    setTrimStart(0);
+    setTrimEnd(shouldTrim ? MAX_CLIP_SEC : dur);
+  }, []);
+
+  /* ── Trim start change ───────────────────────────────────────────────── */
+
+  const handleTrimStartChange = useCallback((val: number) => {
+    const start = Math.max(0, Math.min(val, videoDuration - MAX_CLIP_SEC));
+    const end = Math.min(start + MAX_CLIP_SEC, videoDuration);
+    setTrimStart(start);
+    setTrimEnd(end);
+    if (videoRef.current) videoRef.current.currentTime = start;
+  }, [videoDuration]);
+
+  /* ── Thumbnail capture ───────────────────────────────────────────────── */
+
+  const captureThumbnail = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 360;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+      const url = URL.createObjectURL(blob);
+      setThumbnailBlob(blob);
+      setThumbnailPreviewUrl(url);
+    }, "image/jpeg", 0.85);
+  }, [thumbnailPreviewUrl]);
+
+  /* ── Trim confirm ────────────────────────────────────────────────────── */
+
+  async function handleTrimConfirm() {
+    if (!file) return;
+
+    if (!needsTrim || !mediaRecorderSupported) {
+      // No trim needed or can't trim — upload original
+      setTrimmedBlob(file);
+      setPhase("selected");
+      return;
+    }
+
+    setIsTrimming(true);
+    setTrimProgress(0);
+
+    try {
+      const blob = await trimVideo(file, trimStart, trimEnd, setTrimProgress);
+      setTrimmedBlob(blob);
+      setIsTrimming(false);
+      setPhase("selected");
+    } catch (err) {
+      setIsTrimming(false);
+      setErrorMsg(err instanceof Error ? err.message : "Trim failed");
+      setPhase("error");
+    }
+  }
+
   /* ── Upload ──────────────────────────────────────────────────────────── */
 
   async function handleUpload() {
-    if (!file || !title.trim()) return;
+    if (!trimmedBlob || !file || !title.trim()) return;
     setPhase("uploading");
     setProgress(0);
     setErrorMsg("");
 
     try {
-      // 1. Get upload URL
-      const urlRes = await fetch("/api/coach/videos/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          fileSizeMb: file.size / (1024 * 1024),
+      // Request video + thumbnail URLs in parallel
+      const [urlRes, thumbRes] = await Promise.all([
+        fetch("/api/coach/videos/upload-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            contentType: file.type || "video/mp4",
+            fileSizeMb: trimmedBlob.size / (1024 * 1024),
+          }),
         }),
-      });
+        thumbnailBlob
+          ? fetch("/api/coach/videos/upload-thumbnail-url", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ fileName: "thumbnail.jpg", contentType: "image/jpeg" }),
+            })
+          : Promise.resolve(null),
+      ]);
 
       if (!urlRes.ok) {
         const data = await urlRes.json();
@@ -139,21 +319,48 @@ export function UploadForm({ athleteOptions }: Props) {
 
       const { uploadUrl, key, publicUrl, mode } = await urlRes.json();
 
-      // 2. Upload file
+      // Upload thumbnail if we have one
+      let thumbnailPublicUrl: string | undefined;
+      if (thumbRes?.ok && thumbnailBlob) {
+        try {
+          const thumbData = await thumbRes.json();
+          const { uploadUrl: thumbUrl, key: thumbKey, publicUrl: thumbPublicUrl, mode: thumbMode } = thumbData;
+
+          if (thumbMode === "local") {
+            const fd = new FormData();
+            fd.append("file", thumbnailBlob, "thumbnail.jpg");
+            fd.append("key", thumbKey);
+            await fetch("/api/coach/videos/upload-thumbnail-local", { method: "POST", body: fd });
+            thumbnailPublicUrl = thumbPublicUrl;
+          } else {
+            const thumbXhrOk = await new Promise<boolean>((resolve) => {
+              const xhr = new XMLHttpRequest();
+              xhr.onload = () => resolve(xhr.status >= 200 && xhr.status < 300);
+              xhr.onerror = () => resolve(false);
+              xhr.open("PUT", thumbUrl);
+              xhr.send(thumbnailBlob);
+            });
+            if (thumbXhrOk) thumbnailPublicUrl = thumbPublicUrl;
+          }
+        } catch {
+          // Thumbnail upload is non-fatal
+          console.warn("[Upload] Thumbnail upload failed — continuing without thumbnail");
+        }
+      }
+
+      // Upload video blob
       abortRef.current = new AbortController();
 
       if (mode === "local") {
-        // Local multipart upload
+        const ext = file.name.split(".").pop() ?? "mp4";
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", trimmedBlob, `trimmed.${ext}`);
         formData.append("key", key);
 
         const xhr = new XMLHttpRequest();
         await new Promise<void>((resolve, reject) => {
           xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              setProgress(Math.round((e.loaded / e.total) * 100));
-            }
+            if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
           };
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) resolve();
@@ -168,35 +375,29 @@ export function UploadForm({ athleteOptions }: Props) {
           xhr.send(formData);
         });
       } else {
-        // R2 presigned PUT
+        // R2 presigned PUT — no Content-Type header (iOS-safe)
         const xhr = new XMLHttpRequest();
         await new Promise<void>((resolve, reject) => {
           xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              setProgress(Math.round((e.loaded / e.total) * 100));
-            }
+            if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
           };
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) resolve();
             else reject(new Error(`Upload failed (${xhr.status})`));
           };
-          xhr.onerror = () => reject(new Error("Upload failed — check your connection"));
+          xhr.onerror = () => {
+            console.error("[Upload] XHR onerror — uploadUrl:", uploadUrl);
+            reject(new Error("Upload failed — CORS or network error. Check browser console."));
+          };
           xhr.open("PUT", uploadUrl);
-          xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
-          xhr.send(file);
+          xhr.send(trimmedBlob);
         });
       }
 
-      // 3. Create video record
+      // Create video record
       setPhase("creating");
 
-      // Try to get video duration
-      let durationSec: number | undefined;
-      try {
-        durationSec = await getVideoDuration(file);
-      } catch {
-        // Duration is optional
-      }
+      const durationSec = needsTrim ? trimEnd - trimStart : videoDuration || undefined;
 
       const createRes = await fetch("/api/coach/videos", {
         method: "POST",
@@ -210,7 +411,8 @@ export function UploadForm({ athleteOptions }: Props) {
           event: event || undefined,
           category: category || undefined,
           durationSec,
-          fileSizeMb: file.size / (1024 * 1024),
+          fileSizeMb: trimmedBlob.size / (1024 * 1024),
+          thumbnailUrl: thumbnailPublicUrl,
         }),
       });
 
@@ -221,11 +423,7 @@ export function UploadForm({ athleteOptions }: Props) {
 
       const { video } = await createRes.json();
       setPhase("done");
-
-      // Navigate to the video editor
-      setTimeout(() => {
-        router.push(`/coach/videos/${video.id}`);
-      }, 500);
+      setTimeout(() => router.push(`/coach/videos/${video.id}`), 500);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Upload failed");
       setPhase("error");
@@ -236,16 +434,24 @@ export function UploadForm({ athleteOptions }: Props) {
 
   function handleCancel() {
     abortRef.current?.abort();
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
     setPhase("idle");
     setFile(null);
+    setObjectUrl("");
+    setTrimmedBlob(null);
+    setThumbnailBlob(null);
+    setThumbnailPreviewUrl("");
     setProgress(0);
+    setTrimProgress(0);
+    setIsTrimming(false);
     setErrorMsg("");
   }
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
   const isUploading = phase === "uploading" || phase === "creating";
-  const fileSizeMb = file ? (file.size / (1024 * 1024)).toFixed(1) : "0";
+  const showMetadata = phase === "selected" || isUploading || phase === "done" || phase === "error";
 
   return (
     <div className="space-y-6">
@@ -253,14 +459,14 @@ export function UploadForm({ athleteOptions }: Props) {
       <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+        onClick={() => !file && fileInputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-xl transition-colors ${
           file
             ? "border-primary-300 dark:border-primary-600 bg-primary-50/50 dark:bg-primary-500/5"
-            : "border-surface-300 dark:border-surface-600 hover:border-primary-400 dark:hover:border-primary-500 bg-surface-50 dark:bg-surface-900"
+            : "border-surface-300 dark:border-surface-600 hover:border-primary-400 dark:hover:border-primary-500 bg-surface-50 dark:bg-surface-900 cursor-pointer"
         } ${isUploading ? "pointer-events-none" : ""}`}
       >
-        <div className="flex flex-col items-center py-12 px-6">
+        <div className="flex flex-col items-center py-10 px-6">
           {file ? (
             <>
               <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-3">
@@ -269,17 +475,11 @@ export function UploadForm({ athleteOptions }: Props) {
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-[var(--foreground)]">
-                {file.name}
-              </p>
-              <p className="text-xs text-muted mt-1">{fileSizeMb} MB</p>
-              {!isUploading && (
+              <p className="text-sm font-medium text-[var(--foreground)]">{file.name}</p>
+              <p className="text-xs text-muted mt-1">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
+              {!isUploading && phase !== "trimming" && (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFile(null);
-                    setPhase("idle");
-                  }}
+                  onClick={(e) => { e.stopPropagation(); handleCancel(); }}
                   className="mt-2 text-xs text-red-500 hover:text-red-600"
                 >
                   Remove
@@ -296,10 +496,10 @@ export function UploadForm({ athleteOptions }: Props) {
                 </svg>
               </div>
               <p className="text-sm font-medium text-[var(--foreground)]">
-                Drop a video file here or click to browse
+                Drop a video here or click to browse
               </p>
               <p className="text-xs text-muted mt-1">
-                MP4, MOV, or WebM · Max {MAX_SIZE_MB}MB
+                MP4, MOV, or WebM · Max {MAX_SIZE_MB}MB · 10 second clips
               </p>
             </>
           )}
@@ -314,6 +514,155 @@ export function UploadForm({ athleteOptions }: Props) {
         />
       </div>
 
+      {/* ── Trim + Thumbnail panel ─────────────────────────────────────── */}
+      {phase === "trimming" && objectUrl && (
+        <div className="card p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">
+              Clip &amp; Thumbnail
+            </h2>
+            {videoDuration > 0 && (
+              <span className="text-xs text-muted tabular-nums">
+                {videoDuration.toFixed(1)}s total
+              </span>
+            )}
+          </div>
+
+          {/* Video preview */}
+          <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <video
+              ref={videoRef}
+              src={objectUrl}
+              onLoadedMetadata={handleVideoMetadata}
+              className="w-full h-full object-contain"
+              playsInline
+              controls
+              preload="metadata"
+            />
+          </div>
+
+          {/* Hidden canvas for thumbnail capture */}
+          <canvas ref={canvasRef} className="hidden" />
+
+          {/* Trim slider — only if video needs trimming */}
+          {needsTrim && !isTrimming && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-[var(--foreground)]">
+                  Select 10-second clip
+                </label>
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  Max 10s required
+                </span>
+              </div>
+              <TrimRangeSlider
+                duration={videoDuration}
+                trimStart={trimStart}
+                onStartChange={handleTrimStartChange}
+              />
+              <div className="flex justify-between text-xs text-muted tabular-nums">
+                <span>Start: {trimStart.toFixed(1)}s</span>
+                <span>End: {trimEnd.toFixed(1)}s</span>
+                <span className="text-primary-600 dark:text-primary-400 font-medium">
+                  {(trimEnd - trimStart).toFixed(1)}s clip
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Trim progress */}
+          {isTrimming && (
+            <ProgressBar
+              value={trimProgress}
+              variant="primary"
+              showLabel
+              label={`Trimming clip… ${Math.round(trimProgress)}%`}
+              size="md"
+              animate
+            />
+          )}
+
+          {/* MediaRecorder not supported warning */}
+          {needsTrim && !mediaRecorderSupported && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Your browser does not support video trimming. The full video will be uploaded.
+              </p>
+            </div>
+          )}
+
+          {/* Thumbnail capture */}
+          {!isTrimming && (
+            <div className="flex items-center gap-3 pt-1 border-t border-surface-100 dark:border-surface-800">
+              <p className="text-xs text-muted flex-1">
+                Scrub the video to any frame, then capture it as the thumbnail.
+              </p>
+              <button
+                type="button"
+                onClick={captureThumbnail}
+                className="btn-secondary text-xs py-1.5 px-3 shrink-0"
+              >
+                Capture Thumbnail
+              </button>
+              {thumbnailPreviewUrl && (
+                <div className="relative shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={thumbnailPreviewUrl}
+                    alt="Thumbnail preview"
+                    className="w-16 h-10 object-cover rounded border border-surface-200 dark:border-surface-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      URL.revokeObjectURL(thumbnailPreviewUrl);
+                      setThumbnailPreviewUrl("");
+                      setThumbnailBlob(null);
+                    }}
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center"
+                    aria-label="Remove thumbnail"
+                  >
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          {!isTrimming && (
+            <div className="flex items-center gap-3 pt-2 border-t border-surface-100 dark:border-surface-800">
+              <button
+                type="button"
+                onClick={handleTrimConfirm}
+                className="btn-primary"
+              >
+                {needsTrim ? "Trim & Continue" : "Continue"}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="btn-ghost text-sm"
+              >
+                Cancel
+              </button>
+              {!needsTrim && (
+                <span className="text-xs text-muted ml-auto">
+                  Video is already ≤ 10s — no trim needed
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Upload progress ───────────────────────────────────────────── */}
       {isUploading && (
         <div className="space-y-2">
@@ -321,11 +670,7 @@ export function UploadForm({ athleteOptions }: Props) {
             value={phase === "creating" ? 100 : progress}
             variant="primary"
             showLabel
-            label={
-              phase === "creating"
-                ? "Creating video record…"
-                : `Uploading… ${progress}%`
-            }
+            label={phase === "creating" ? "Saving video…" : `Uploading… ${progress}%`}
             size="md"
             animate
           />
@@ -350,10 +695,7 @@ export function UploadForm({ athleteOptions }: Props) {
             <p className="text-sm text-red-700 dark:text-red-300">{errorMsg}</p>
             {phase === "error" && (
               <button
-                onClick={() => {
-                  setPhase("selected");
-                  setErrorMsg("");
-                }}
+                onClick={() => { setPhase("selected"); setErrorMsg(""); }}
                 className="text-xs text-red-500 hover:underline mt-1"
               >
                 Try again
@@ -363,112 +705,203 @@ export function UploadForm({ athleteOptions }: Props) {
         </div>
       )}
 
-      {/* ── Metadata form ─────────────────────────────────────────────── */}
-      <div className="card p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">
-          Video Details
-        </h2>
+      {/* ── Metadata form — shown after trim is confirmed ─────────────── */}
+      {showMetadata && (
+        <div className="card p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">Video Details</h2>
 
-        {/* Title */}
-        <div>
-          <label className="block text-xs font-medium text-[var(--foreground)] mb-1">
-            Title <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. John — Shot Put Full Turn Analysis"
-            className="input w-full"
-            disabled={isUploading}
-          />
-        </div>
+          {/* Title */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--foreground)] mb-1">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. John — Shot Put Full Turn Analysis"
+              className="input w-full"
+              disabled={isUploading}
+            />
+          </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-xs font-medium text-[var(--foreground)] mb-1">
-            Description
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional notes about this video…"
-            rows={3}
-            className="input w-full resize-none"
-            disabled={isUploading}
-          />
-        </div>
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-medium text-[var(--foreground)] mb-1">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Optional notes about this video…"
+              rows={3}
+              className="input w-full resize-none"
+              disabled={isUploading}
+            />
+          </div>
 
-        {/* Athlete + Event row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Athlete + Event */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Athlete"
+              options={athleteOptions}
+              value={athleteId}
+              onChange={setAthleteId}
+              placeholder="Select athlete…"
+              searchable
+              clearable
+              disabled={isUploading}
+            />
+            <Select
+              label="Event"
+              options={EVENT_OPTIONS}
+              value={event}
+              onChange={setEvent}
+              placeholder="Select event…"
+              clearable
+              disabled={isUploading}
+            />
+          </div>
+
+          {/* Category */}
           <Select
-            label="Athlete"
-            options={athleteOptions}
-            value={athleteId}
-            onChange={setAthleteId}
-            placeholder="Select athlete…"
-            searchable
+            label="Category"
+            options={CATEGORY_OPTIONS}
+            value={category}
+            onChange={setCategory}
+            placeholder="Select category…"
             clearable
             disabled={isUploading}
           />
-          <Select
-            label="Event"
-            options={EVENT_OPTIONS}
-            value={event}
-            onChange={setEvent}
-            placeholder="Select event…"
-            clearable
-            disabled={isUploading}
-          />
         </div>
-
-        {/* Category */}
-        <Select
-          label="Category"
-          options={CATEGORY_OPTIONS}
-          value={category}
-          onChange={setCategory}
-          placeholder="Select category…"
-          clearable
-          disabled={isUploading}
-        />
-      </div>
+      )}
 
       {/* ── Actions ───────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleUpload}
-          disabled={!file || !title.trim() || isUploading}
-          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isUploading ? "Uploading…" : "Upload & Continue"}
-        </button>
-        <a
-          href="/coach/videos"
-          className="btn-ghost text-sm"
-        >
-          Cancel
-        </a>
-      </div>
+      {showMetadata && (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleUpload}
+            disabled={!trimmedBlob || !title.trim() || isUploading}
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isUploading ? "Uploading…" : "Upload & Continue"}
+          </button>
+          <a href="/coach/videos" className="btn-ghost text-sm">
+            Cancel
+          </a>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 
-function getVideoDuration(file: File): Promise<number> {
+/**
+ * Trim a video file client-side using MediaRecorder + captureStream.
+ * Works on iOS 14.3+ (outputs video/mp4) and desktop (outputs video/webm).
+ * The video plays in real time during recording (~10s for a 10s clip).
+ */
+function trimVideo(
+  file: File,
+  startSec: number,
+  endSec: number,
+  onProgress: (pct: number) => void
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
+    const clipDuration = endSec - startSec;
     const video = document.createElement("video");
-    video.preload = "metadata";
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(video.src);
-      if (isFinite(video.duration)) {
-        resolve(video.duration);
-      } else {
-        reject(new Error("Could not determine duration"));
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+
+    const srcUrl = URL.createObjectURL(file);
+
+    // Pick best supported MIME type
+    const mimeType =
+      MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+        ? "video/webm;codecs=vp8,opus"
+        : MediaRecorder.isTypeSupported("video/webm")
+        ? "video/webm"
+        : MediaRecorder.isTypeSupported("video/mp4")
+        ? "video/mp4"
+        : "";
+
+    if (!mimeType) {
+      URL.revokeObjectURL(srcUrl);
+      reject(new Error("No supported MediaRecorder format found in this browser"));
+      return;
+    }
+
+    const chunks: BlobPart[] = [];
+    let recorder: MediaRecorder;
+    let startedAt = 0;
+    let stopTimeout: ReturnType<typeof setTimeout>;
+
+    video.oncanplay = () => {
+      video.currentTime = startSec;
+    };
+
+    video.onseeked = () => {
+      if (recorder) return; // Already started — ignore duplicate seeks
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stream: MediaStream = (video as any).captureStream?.() ?? (video as any).mozCaptureStream?.();
+        if (!stream) {
+          URL.revokeObjectURL(srcUrl);
+          reject(new Error("captureStream() not supported in this browser"));
+          return;
+        }
+
+        recorder = new MediaRecorder(stream, { mimeType });
+
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) chunks.push(e.data);
+          const elapsed = performance.now() - startedAt;
+          onProgress(Math.min(95, (elapsed / (clipDuration * 1000)) * 100));
+        };
+
+        recorder.onstop = () => {
+          clearTimeout(stopTimeout);
+          URL.revokeObjectURL(srcUrl);
+          onProgress(100);
+          resolve(new Blob(chunks, { type: mimeType }));
+        };
+
+        recorder.onerror = () => {
+          clearTimeout(stopTimeout);
+          URL.revokeObjectURL(srcUrl);
+          reject(new Error("MediaRecorder error during trim"));
+        };
+
+        recorder.start(200); // chunk every 200ms
+        startedAt = performance.now();
+
+        video.play().catch((err) => {
+          recorder.stop();
+          URL.revokeObjectURL(srcUrl);
+          reject(err);
+        });
+
+        // Stop recording after clipDuration + small buffer
+        stopTimeout = setTimeout(() => {
+          if (recorder.state !== "inactive") {
+            video.pause();
+            recorder.stop();
+          }
+        }, clipDuration * 1000 + 200);
+      } catch (err) {
+        URL.revokeObjectURL(srcUrl);
+        reject(err);
       }
     };
-    video.onerror = () => reject(new Error("Could not load video"));
-    video.src = URL.createObjectURL(file);
+
+    video.onerror = () => {
+      URL.revokeObjectURL(srcUrl);
+      reject(new Error("Could not load video for trimming"));
+    };
+
+    video.src = srcUrl;
+    video.load();
   });
 }
