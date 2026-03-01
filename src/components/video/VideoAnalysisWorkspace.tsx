@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   useEffect,
+  useMemo,
   useImperativeHandle,
   forwardRef,
   type ReactNode,
@@ -63,6 +64,8 @@ export type VideoAnalysisWorkspaceHandle = {
 /* ─── Constants ───────────────────────────────────────────────────────────── */
 
 const SYNC_DRIFT_THRESHOLD = FRAME_STEP * 1.5; // ~25ms at 60fps
+/** Minimum time advance before triggering a React re-render — suppresses sub-frame noise */
+const MIN_TIME_DELTA = FRAME_STEP * 0.5;
 const SPEED_OPTIONS = PLAYBACK_SPEEDS;
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
@@ -146,15 +149,28 @@ export const VideoAnalysisWorkspace = forwardRef<
     translateY: 0,
   });
 
-  // rAF refs
-  const syncRafRef = useRef(0);
-  const timeUpdateRafRef = useRef(0);
+  // Master render loop (unified — replaces separate syncRafRef + timeUpdateRafRef)
+  const masterLoopRef = useRef(0);
+  /** Tracks last time value pushed to React state, throttling sub-frame re-renders */
+  const lastReportedTimeRef = useRef(-1);
+  /** Mirrors syncLock state — safe to read inside rAF without stale closure */
+  const syncLockRef = useRef(syncLock);
+  /** Mirrors mode prop — safe to read inside rAF without stale closure */
+  const modeRef = useRef(mode);
 
-  /* ── Keep syncOffsetRef in sync with state ─────────────────────────── */
+  /* ── Keep mutable refs current (prevents stale closures in rAF loop) ── */
 
   useEffect(() => {
     syncOffsetRef.current = syncOffset;
   }, [syncOffset]);
+
+  useEffect(() => {
+    syncLockRef.current = syncLock;
+  }, [syncLock]);
+
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
 
   /* ── Zoom/Pan hooks ────────────────────────────────────────────────── */
 
@@ -192,53 +208,43 @@ export const VideoAnalysisWorkspace = forwardRef<
     if (videoBRef.current) setBCurrentTime(videoBRef.current.currentTime);
   }, []);
 
-  /* ── Time update loop (rAF for smooth updates) ─────────────────────── */
+  /* ── Master render loop — single unified 60 fps tick ───────────────── */
+  //
+  // Replaces the old separate timeUpdateRafRef and syncRafRef loops.
+  // Reads syncLock/mode from refs to avoid stale closures and eliminate
+  // dependency-driven restarts on every toggle.
 
   useEffect(() => {
-    const v = videoARef.current;
-    if (!v) return;
-
     function tick() {
-      if (v && !v.paused) {
-        const t = v.currentTime;
-        setCurrentTime(t);
-        onTimeUpdate?.(t);
-      }
-      timeUpdateRafRef.current = requestAnimationFrame(tick);
-    }
+      masterLoopRef.current = requestAnimationFrame(tick);
 
-    timeUpdateRafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(timeUpdateRafRef.current);
-  }, [onTimeUpdate]);
+      const vA = videoARef.current;
+      if (!vA || vA.paused) return;
 
-  /* ── Continuous playback sync (rAF drift correction with offset) ────── */
+      const t = vA.currentTime;
 
-  useEffect(() => {
-    if (mode === "single" || !syncLock) return;
-
-    const vA = videoARef.current;
-    const vB = videoBRef.current;
-    if (!vA || !vB) return;
-
-    function correctDrift() {
-      if (vA && vB && !vA.paused) {
-        // Use ref so the closure always reads the current offset without
-        // triggering a re-subscription of this effect.
-        const offset = syncOffsetRef.current;
-        const targetBTime = vA.currentTime - offset;
+      // Sync drift correction — only when B exists and sync is locked
+      const vB = videoBRef.current;
+      if (modeRef.current !== "single" && syncLockRef.current && vB) {
+        const targetBTime = t - syncOffsetRef.current;
         const bDur = isFinite(vB.duration) ? vB.duration : Infinity;
         const clampedB = Math.max(0, Math.min(bDur, targetBTime));
-        const drift = Math.abs(vB.currentTime - clampedB);
-        if (drift > SYNC_DRIFT_THRESHOLD) {
+        if (Math.abs(vB.currentTime - clampedB) > SYNC_DRIFT_THRESHOLD) {
           vB.currentTime = clampedB;
         }
       }
-      syncRafRef.current = requestAnimationFrame(correctDrift);
+
+      // Throttle React re-renders: skip if time hasn't advanced a meaningful amount.
+      // This prevents double renders when the browser delivers sub-frame currentTime updates.
+      if (Math.abs(t - lastReportedTimeRef.current) < MIN_TIME_DELTA) return;
+      lastReportedTimeRef.current = t;
+      setCurrentTime(t);
+      onTimeUpdate?.(t);
     }
 
-    syncRafRef.current = requestAnimationFrame(correctDrift);
-    return () => cancelAnimationFrame(syncRafRef.current);
-  }, [mode, syncLock]);
+    masterLoopRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(masterLoopRef.current);
+  }, [onTimeUpdate]);
 
   /* ── Playback speed sync ───────────────────────────────────────────── */
 
@@ -517,6 +523,12 @@ export const VideoAnalysisWorkspace = forwardRef<
       onAnnotationAdd={onAnnotationAdd}
     />
   );
+
+  /* ── Memoized timestamp strings (avoids string alloc every rAF tick) ── */
+
+  const formattedCurrentTime = useMemo(() => formatTimestamp(currentTime), [currentTime]);
+  const formattedDuration = useMemo(() => formatTimestamp(duration), [duration]);
+  const formattedBCurrentTime = useMemo(() => formatTimestamp(bCurrentTime), [bCurrentTime]);
 
   /* ── Computed ───────────────────────────────────────────────────────── */
 
@@ -994,15 +1006,15 @@ export const VideoAnalysisWorkspace = forwardRef<
 
           {/* Time display — shows A time always; B time alongside when unlinked/B-active */}
           <span className="font-mono text-xs tabular-nums text-surface-300 min-w-[110px]">
-            {formatTimestamp(currentTime)}
+            {formattedCurrentTime}
             <span className="text-surface-600"> / </span>
-            {formatTimestamp(duration)}
+            {formattedDuration}
           </span>
 
           {/* Video B time readout when unlinked and B is the active panel */}
           {jogWheelTargetsB && (
             <span className="font-mono text-[10px] tabular-nums text-amber-400/80">
-              B: {formatTimestamp(bCurrentTime)}
+              B: {formattedBCurrentTime}
             </span>
           )}
 
