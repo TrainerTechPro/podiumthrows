@@ -26,10 +26,11 @@ export async function POST() {
     }
 
     /* ── Create portal session ── */
-    const returnUrl =
-      process.env.NEXT_PUBLIC_APP_URL
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/coach/settings`
-        : "http://localhost:3000/coach/settings";
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+    if (!APP_URL && process.env.NODE_ENV === "production") {
+      throw new Error("NEXT_PUBLIC_APP_URL must be set in production");
+    }
+    const returnUrl = `${APP_URL || "http://localhost:3000"}/coach/settings`;
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: coach.stripeCustomerId,

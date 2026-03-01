@@ -17,6 +17,8 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
   title: "Podium Throws — Elite Throws Coaching Platform",
   description:
@@ -31,6 +33,23 @@ export const metadata: Metadata = {
     "Bondarchuk",
     "training management",
   ],
+  metadataBase: new URL(APP_URL),
+  openGraph: {
+    title: "Podium Throws — Elite Throws Coaching Platform",
+    description:
+      "The coaching platform built for Olympic-level track & field throws coaches.",
+    url: APP_URL,
+    siteName: "Podium Throws",
+    images: [{ url: `${APP_URL}/api/og`, width: 1200, height: 630, alt: "Podium Throws" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Podium Throws — Elite Throws Coaching Platform",
+    description:
+      "The coaching platform built for Olympic-level track & field throws coaches.",
+    images: [`${APP_URL}/api/og`],
+  },
 };
 
 export default function RootLayout({

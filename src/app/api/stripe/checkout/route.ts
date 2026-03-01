@@ -4,7 +4,11 @@ import { getSession } from "@/lib/auth";
 import { stripe, PLANS, getOrCreateStripeCustomer } from "@/lib/stripe";
 import type { PlanName } from "@/lib/stripe";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+if (!APP_URL && process.env.NODE_ENV === "production") {
+  throw new Error("NEXT_PUBLIC_APP_URL must be set in production");
+}
+const baseUrl = APP_URL || "http://localhost:3000";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,8 +73,8 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { coachId: coach.id, plan: planKey },
       subscription_data: { metadata: { coachId: coach.id, plan: planKey } },
-      success_url: `${APP_URL}/coach/settings?upgraded=1`,
-      cancel_url: `${APP_URL}/coach/settings`,
+      success_url: `${baseUrl}/coach/settings?upgraded=1`,
+      cancel_url: `${baseUrl}/coach/settings`,
       allow_promotion_codes: true,
     });
 

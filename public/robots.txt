@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Disallow: /coach/
+Disallow: /athlete/
+Disallow: /api/
+Sitemap: https://podiumthrows.com/sitemap.xml

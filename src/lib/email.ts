@@ -10,11 +10,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+if (!APP_URL && process.env.NODE_ENV === "production") {
+  throw new Error("NEXT_PUBLIC_APP_URL must be set in production");
+}
+const baseUrl = APP_URL || "http://localhost:3000";
 const FROM_EMAIL = process.env.SMTP_FROM || "Podium Throws <noreply@podiumthrows.com>";
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
-  const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
   await transporter.sendMail({
     from: FROM_EMAIL,
@@ -43,7 +47,7 @@ export async function sendInvitationEmail(
   coachName: string,
   token: string
 ): Promise<void> {
-  const inviteUrl = `${APP_URL}/register?invite=${token}`;
+  const inviteUrl = `${baseUrl}/register?invite=${token}`;
 
   await transporter.sendMail({
     from: FROM_EMAIL,
