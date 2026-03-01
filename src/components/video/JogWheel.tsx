@@ -5,6 +5,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
 } from "react";
@@ -49,10 +50,20 @@ type Props = {
    */
   frameMode?: FrameMode;
   /**
-   * When true, dragging right moves backward in time (film-strip mental model).
-   * When false (default), dragging right moves forward (timeline mental model).
+   * When true, dragging left moves the video forward (film-strip mental model).
+   * When false (default), dragging right moves the video forward (timeline mental model).
    */
   invertScroll?: boolean;
+  /**
+   * Scales the friction applied during momentum decay (default 1.0).
+   * - 0   = stops immediately (maximum friction)
+   * - 1.0 = default feel
+   * - >1  = free-spinning (wheel coasts much longer)
+   *
+   * Effective friction is clamped to [0, 0.999] — values ≥ 1 would
+   * never converge; values < 0 are nonsensical.
+   */
+  momentumMultiplier?: number;
   className?: string;
 };
 
@@ -62,6 +73,9 @@ const FRICTION = 0.94;
 const MIN_VELOCITY = 0.1; // px/frame — stop threshold
 const TICK_COUNT = 60; // visual tick marks
 const TICK_SPACING = 12; // px between ticks
+/** One full visual cycle of the tick strip. The major/minor pattern repeats
+ *  every STRIP_CYCLE px, so modulo-wrapping is seamless. */
+const STRIP_CYCLE = TICK_COUNT * TICK_SPACING; // 720 px
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
@@ -74,6 +88,7 @@ export function JogWheel({
   videoRef,
   frameMode,
   invertScroll = false,
+  momentumMultiplier = 1.0,
   className,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -90,6 +105,8 @@ export function JogWheel({
   const frameIndexRef = useRef(frameMode?.currentFrame ?? 0);
   /** Visual offset for tick strip (imperative, not React state in fast path) */
   const offsetRef = useRef(0);
+  /** Mirrors momentumMultiplier prop — read inside rAF loop to avoid stale closures */
+  const momentumMultiplierRef = useRef(momentumMultiplier);
   const [offset, setOffset] = useState(0);
   const [active, setActive] = useState(false);
 
@@ -110,6 +127,11 @@ export function JogWheel({
     }
   }, [frameMode]);
 
+  // Keep momentumMultiplierRef in sync with prop
+  useEffect(() => {
+    momentumMultiplierRef.current = momentumMultiplier;
+  }, [momentumMultiplier]);
+
   /** Whether to use frame-perfect mode (highest priority) */
   const useFrameMode = !!frameMode;
   /** Whether to use direct DOM mutation (zero-jitter fast path) */
@@ -129,12 +151,15 @@ export function JogWheel({
         videoRef.current.currentTime = clamped;
       }
 
-      // Directly mutate tick strip transform — zero React overhead
+      // Frame-exact tick strip update.
+      // frameIdx * TICK_SPACING gives an absolute pixel offset that advances by
+      // exactly TICK_SPACING per frame — no floating-point drift with short clips.
+      // Modulo STRIP_CYCLE keeps the value within strip bounds; wrapping is
+      // visually seamless because the major/minor pattern repeats every STRIP_CYCLE px.
       if (tickStripRef.current) {
-        const timeOffset =
-          duration > 0
-            ? (clamped / duration) * TICK_COUNT * TICK_SPACING
-            : 0;
+        const frameDuration = 1 / (fps ?? 60);
+        const frameIdx = Math.round(clamped / frameDuration);
+        const timeOffset = (frameIdx * TICK_SPACING) % STRIP_CYCLE;
         tickStripRef.current.style.transform = `translateX(${
           -timeOffset + offsetRef.current * 0.05
         }px)`;
@@ -223,8 +248,13 @@ export function JogWheel({
       : velocityRef.current * sensitivity;
     seek(delta);
 
-    // Apply friction
-    velocityRef.current *= FRICTION;
+    // Apply friction scaled by momentumMultiplier (read from ref — stale-closure safe).
+    // Clamped to [0, 0.999]: values ≥ 1 would prevent convergence.
+    const effectiveFriction = Math.min(
+      0.999,
+      FRICTION * momentumMultiplierRef.current
+    );
+    velocityRef.current *= effectiveFriction;
 
     // Visual offset
     if (useDirectDOM || useFrameMode) {
@@ -327,6 +357,23 @@ export function JogWheel({
     }
   }, [animateMomentum, syncReactState]);
 
+  /* ── Keyboard: ArrowLeft / ArrowRight step one frame ───────────────── */
+
+  const handleKeyDown = useCallback(
+    (e: ReactKeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      const frameDuration = 1 / (fps ?? 60);
+      const dir = e.key === "ArrowRight" ? 1 : -1;
+      const next = snapToFrame(
+        Math.max(0, Math.min(duration, currentTime + dir * frameDuration)),
+        fps
+      );
+      onSeek(next);
+    },
+    [currentTime, duration, fps, onSeek]
+  );
+
   /* ── Mouse event wrappers ──────────────────────────────────────────── */
 
   const handleMouseDown = useCallback(
@@ -390,19 +437,30 @@ export function JogWheel({
 
   /* ── Render ────────────────────────────────────────────────────────── */
 
-  // Calculate visual offset based on time position
-  const timeOffset =
-    duration > 0 ? (currentTime / duration) * TICK_COUNT * TICK_SPACING : 0;
+  // Frame-exact tick offset: each frame advances exactly TICK_SPACING pixels,
+  // eliminating sub-pixel drift that occurs with the old (currentTime/duration)
+  // percentage formula on short clips. Modulo STRIP_CYCLE keeps the value in
+  // bounds — wraps are seamless because the tick pattern repeats every STRIP_CYCLE px.
+  const frameDuration = 1 / (fps ?? 60);
+  const frameIndex = Math.round(currentTime / frameDuration);
+  const timeOffset = (frameIndex * TICK_SPACING) % STRIP_CYCLE;
 
   return (
     <div
       ref={containerRef}
-      className={`relative h-10 overflow-hidden select-none touch-none ${className ?? ""}`}
+      tabIndex={0}
+      role="slider"
+      aria-valuemin={0}
+      aria-valuemax={duration}
+      aria-valuenow={currentTime}
+      aria-label="Video scrubber — use arrow keys to step frames"
+      className={`relative h-10 overflow-hidden select-none touch-none outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 focus-visible:ring-offset-black rounded ${className ?? ""}`}
       style={{ cursor: active ? "grabbing" : "grab" }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onKeyDown={handleKeyDown}
     >
       {/* Gradient fade edges */}
       <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none" />

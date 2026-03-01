@@ -46,6 +46,14 @@ const DOUBLE_TAP_DISTANCE_PX = 30;
 const ZOOM_STEP = 0.5;
 const TRANSITION_DURATION_MS = 300;
 
+/** Asymptotic ceiling for rubber-band overdrag (px). The formula
+ *  `MAX_OVERDRAG * (1 − e^(−overshoot / MAX_OVERDRAG))` never exceeds this. */
+const MAX_OVERDRAG = 50;
+/** Spring-back animation duration (ms). */
+const SPRING_DURATION_MS = 350;
+/** Exponent for ease-out curve: 3 = cubic (fast snap, gentle settle). */
+const SPRING_EASE_POWER = 3;
+
 /* ─── Hook ────────────────────────────────────────────────────────────────── */
 
 export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
@@ -108,12 +116,20 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
   const pendingWheelCenter = useRef({ x: 0, y: 0 });
   const wheelRaf = useRef(0);
 
+  /** RAF handle for the spring-back animation */
+  const springRafRef = useRef(0);
+
   // Keep a ref copy of state for event handlers
   const stateRef = useRef(state);
   stateRef.current = state;
 
   /* ── Clamping ───────────────────────────────────────────────────── */
 
+  /**
+   * Hard clamp — the strict pan boundary.
+   * Used by: zoom helpers, pinch moves, and as the spring-back *target*.
+   * Never allows the translated content to escape the container edges.
+   */
   const clampTranslate = useCallback(
     (tx: number, ty: number, scale: number): { tx: number; ty: number } => {
       if (scale <= 1) return { tx: 0, ty: 0 };
@@ -131,10 +147,96 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
     []
   );
 
+  /**
+   * Resistive clamp — iOS-style rubber-band for pan moves.
+   * Allows the user to drag up to MAX_OVERDRAG px past the hard boundary, but
+   * applies exponential friction so each additional pixel costs progressively
+   * more finger movement:
+   *
+   *   pullback = MAX_OVERDRAG × (1 − e^(−overshoot / MAX_OVERDRAG))
+   *
+   * The curve is asymptotic at MAX_OVERDRAG — impossible to reach the ceiling
+   * no matter how far the user drags. Spring-back snaps it home on release.
+   */
+  const clampTranslateResistive = useCallback(
+    (tx: number, ty: number, scale: number): { tx: number; ty: number } => {
+      if (scale <= 1) return { tx: 0, ty: 0 };
+      const el = containerRef.current;
+      if (!el) return { tx, ty };
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      const minTx = w * (1 - scale);
+      const minTy = h * (1 - scale);
+
+      const resist = (v: number, lo: number, hi: number): number => {
+        if (v >= lo && v <= hi) return v;
+        const overshoot = v < lo ? lo - v : v - hi;
+        const pull = MAX_OVERDRAG * (1 - Math.exp(-overshoot / MAX_OVERDRAG));
+        return v < lo ? lo - pull : hi + pull;
+      };
+
+      return {
+        tx: resist(tx, minTx, 0),
+        ty: resist(ty, minTy, 0),
+      };
+    },
+    []
+  );
+
   const clampScale = useCallback(
     (s: number) => Math.max(minScale, Math.min(maxScale, s)),
     [minScale, maxScale]
   );
+
+  /* ── Spring-back ────────────────────────────────────────────────── */
+
+  /**
+   * If the current translation is outside the strict bounds (due to rubber-band
+   * overdrag), animates it back to the nearest in-bounds position using a cubic
+   * ease-out curve. No-ops if already within 0.5 px of the boundary.
+   *
+   * Called from handleTouchEnd and handleMouseUp. Any new gesture cancels it.
+   */
+  const springBack = useCallback(() => {
+    const s = stateRef.current;
+    const { tx: targetTx, ty: targetTy } = clampTranslate(
+      s.translateX,
+      s.translateY,
+      s.scale
+    );
+
+    if (
+      Math.abs(s.translateX - targetTx) < 0.5 &&
+      Math.abs(s.translateY - targetTy) < 0.5
+    ) {
+      return; // Already within tolerance — skip animation
+    }
+
+    const startTx = s.translateX;
+    const startTy = s.translateY;
+    const startTime = performance.now();
+
+    if (springRafRef.current) cancelAnimationFrame(springRafRef.current);
+
+    function animate(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / SPRING_DURATION_MS);
+      // Cubic ease-out: snappy start, gentle settle at the boundary
+      const eased = 1 - Math.pow(1 - progress, SPRING_EASE_POWER);
+      const tx = startTx + (targetTx - startTx) * eased;
+      const ty = startTy + (targetTy - startTy) * eased;
+
+      setState((prev) => ({ ...prev, translateX: tx, translateY: ty }));
+
+      if (progress < 1) {
+        springRafRef.current = requestAnimationFrame(animate);
+      } else {
+        springRafRef.current = 0;
+      }
+    }
+
+    springRafRef.current = requestAnimationFrame(animate);
+  }, [clampTranslate, setState]);
 
   /* ── Zoom-around-point helper ───────────────────────────────────── */
 
@@ -207,6 +309,14 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
     [clampScale, zoomAroundPoint]
   );
 
+  /* ── Spring-back cleanup on unmount ─────────────────────────────── */
+
+  useEffect(() => {
+    return () => {
+      if (springRafRef.current) cancelAnimationFrame(springRafRef.current);
+    };
+  }, []);
+
   /* ── Wheel zoom (native listener for passive:false) ─────────────── */
 
   useEffect(() => {
@@ -265,6 +375,12 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
     }
 
     function handleTouchStart(e: TouchEvent) {
+      // Cancel any in-progress spring animation immediately — user has taken control
+      if (springRafRef.current) {
+        cancelAnimationFrame(springRafRef.current);
+        springRafRef.current = 0;
+      }
+
       if (e.touches.length >= 2) {
         // ── Pinch start ──
         isPinching.current = true;
@@ -294,19 +410,44 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
         );
 
         if (dt < DOUBLE_TAP_THRESHOLD_MS && dist < DOUBLE_TAP_DISTANCE_PX) {
-          // Double tap detected
           e.preventDefault();
           lastTapTime.current = 0;
-          const rect = el!.getBoundingClientRect();
-          const cx = touch.clientX - rect.left;
-          const cy = touch.clientY - rect.top;
 
           if (s.scale > 1) {
+            // Already zoomed — reset to 1x
             animateToState({ scale: 1, translateX: 0, translateY: 0 });
           } else {
-            setIsTransitioning(true);
-            zoomAroundPoint(doubleTapScale, cx, cy);
-            setTimeout(() => setIsTransitioning(false), TRANSITION_DURATION_MS);
+            // ── Smart zoom: center the tapped content point in the viewport ──
+            //
+            // Unlike a simple pivot-zoom (where the tapped pixel stays in place),
+            // this translates the video so the exact pixel the coach tapped ends
+            // up at the *center* of the viewport — like punching in on a body part.
+            //
+            // Steps:
+            //  1. Convert tap position (container coords) → video-content coords,
+            //     accounting for any current pan/scale state.
+            //  2. Compute the translation that places that content point at the
+            //     viewport center after the zoom is applied.
+            //  3. Hard-clamp (can't show past video edge) and animate.
+            const rect = el!.getBoundingClientRect();
+            const w = el!.clientWidth;
+            const h = el!.clientHeight;
+
+            // Tap in container-local coordinates
+            const cx = touch.clientX - rect.left;
+            const cy = touch.clientY - rect.top;
+
+            // Map to video-content coordinates (trivial at scale=1, useful if
+            // the user somehow double-taps while already partially zoomed)
+            const contentX = (cx - s.translateX) / s.scale;
+            const contentY = (cy - s.translateY) / s.scale;
+
+            // Translation so contentX/Y lands at viewport center after zoom
+            const newTx = w / 2 - contentX * doubleTapScale;
+            const newTy = h / 2 - contentY * doubleTapScale;
+            const { tx, ty } = clampTranslate(newTx, newTy, doubleTapScale);
+
+            animateToState({ scale: doubleTapScale, translateX: tx, translateY: ty });
           }
           return;
         }
@@ -342,6 +483,7 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
         const panDx = currentMid.x - mid.x;
         const panDy = currentMid.y - mid.y;
 
+        // Hard clamp during pinch — rubber-band during pinch is disorienting
         const { tx, ty } = clampTranslate(newTx + panDx, newTy + panDy, newScale);
         setState({ scale: newScale, translateX: tx, translateY: ty });
         return;
@@ -355,7 +497,8 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
         lastPanPos.current = { x: touch.clientX, y: touch.clientY };
 
         setState((prev) => {
-          const { tx, ty } = clampTranslate(
+          // Resistive clamp: allows overdrag with exponential friction
+          const { tx, ty } = clampTranslateResistive(
             prev.translateX + dx,
             prev.translateY + dy,
             prev.scale
@@ -369,10 +512,13 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
       if (e.touches.length < 2) isPinching.current = false;
       if (e.touches.length === 0) {
         isPanning.current = false;
-        // Snap to 1x if scale is very close
         const s = stateRef.current;
         if (s.scale < 1.05 && s.scale > 0.95) {
+          // Scale near 1x — snap fully to default
           animateToState({ scale: 1, translateX: 0, translateY: 0 });
+        } else {
+          // Spring back if the pan went past the hard boundary
+          springBack();
         }
       }
     }
@@ -391,8 +537,10 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
     doubleTapScale,
     clampScale,
     clampTranslate,
+    clampTranslateResistive,
     zoomAroundPoint,
     animateToState,
+    springBack,
     setState,
   ]);
 
@@ -409,6 +557,12 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
       // Left button only
       if (e.button !== 0) return;
 
+      // Cancel any in-progress spring animation when user grabs
+      if (springRafRef.current) {
+        cancelAnimationFrame(springRafRef.current);
+        springRafRef.current = 0;
+      }
+
       isPanning.current = true;
       lastPanPos.current = { x: e.clientX, y: e.clientY };
       el!.style.cursor = "grabbing";
@@ -422,7 +576,8 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
       lastPanPos.current = { x: e.clientX, y: e.clientY };
 
       setState((prev) => {
-        const { tx, ty } = clampTranslate(
+        // Resistive clamp during drag for iOS-style rubber-band feel
+        const { tx, ty } = clampTranslateResistive(
           prev.translateX + dx,
           prev.translateY + dy,
           prev.scale
@@ -432,10 +587,11 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
     }
 
     function handleMouseUp() {
-      if (isPanning.current) {
-        isPanning.current = false;
-        if (el) el.style.cursor = "";
-      }
+      if (!isPanning.current) return;
+      isPanning.current = false;
+      if (el) el.style.cursor = "";
+      // Spring back if dragged past the hard boundary
+      springBack();
     }
 
     el.addEventListener("mousedown", handleMouseDown);
@@ -446,7 +602,7 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanReturn {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [enabled, isDrawingActive, clampTranslate, setState]);
+  }, [enabled, isDrawingActive, clampTranslateResistive, springBack, setState]);
 
   /* ── Follower: apply linkedState from leader ────────────────────── */
 
