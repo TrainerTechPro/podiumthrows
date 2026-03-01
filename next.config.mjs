@@ -22,6 +22,14 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Service worker must not be cached by the browser
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           {
@@ -32,7 +40,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.r2.dev https://*.s3.amazonaws.com https://*.s3.*.amazonaws.com https://v2.exercisedb.io",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com",
+              "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com https://*.r2.dev",
               "media-src 'self' blob: https://*.r2.dev",
               "worker-src 'self'",
               "frame-src 'self' https://js.stripe.com",

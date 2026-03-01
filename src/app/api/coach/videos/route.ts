@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
+const VALID_STATUSES = ["uploading", "processing", "ready", "failed"];
 
 export async function GET(req: NextRequest) {
   try {
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
       durationSec,
       fileSizeMb,
       thumbnailUrl,
+      status: requestedStatus,
     } = body as {
       url?: string;
       storageKey?: string;
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
       durationSec?: number;
       fileSizeMb?: number;
       thumbnailUrl?: string;
+      status?: string;
     };
 
     if (!url) {
@@ -66,6 +69,15 @@ export async function POST(req: NextRequest) {
     if (!title || title.trim().length === 0) {
       return NextResponse.json(
         { error: "title is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate status if provided (defaults to "ready" for backward compat)
+    const initialStatus = requestedStatus ?? "ready";
+    if (!VALID_STATUSES.includes(initialStatus)) {
+      return NextResponse.json(
+        { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
         { status: 400 }
       );
     }
@@ -114,7 +126,7 @@ export async function POST(req: NextRequest) {
         durationSec: durationSec || null,
         fileSizeMb: fileSizeMb || null,
         thumbnailUrl: thumbnailUrl || null,
-        status: "ready",
+        status: initialStatus,
       },
     });
 

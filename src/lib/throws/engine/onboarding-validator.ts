@@ -2,6 +2,7 @@
 // Validates all fields required before program generation.
 
 import type { OnboardingData, ValidationResult } from "./types";
+import { COMPETITION_WEIGHTS, EVENT_CODE_MAP } from "../constants";
 
 export function validateOnboarding(
   data: Partial<OnboardingData>,
@@ -41,18 +42,51 @@ export function validateOnboarding(
   if (!data.implements || data.implements.length === 0) {
     errors.implements = "At least one implement is required";
   } else {
-    const hasCompetition = data.implements.some(
-      (i) =>
-        (data.event === "HAMMER" &&
-          ((data.gender === "MALE" && i.weightKg === 7.26) ||
-            (data.gender === "FEMALE" && i.weightKg === 4))) ||
-        (data.event === "SHOT_PUT" &&
-          ((data.gender === "MALE" && i.weightKg === 7.26) ||
-            (data.gender === "FEMALE" && i.weightKg === 4))),
-    );
-    if (!hasCompetition) {
+    // Check for competition-weight implement (covers all 4 events)
+    if (data.event && data.gender) {
+      const eventCode = EVENT_CODE_MAP[data.event];
+      const genderCode = data.gender === "MALE" ? "M" : "F";
+      const compWeight =
+        COMPETITION_WEIGHTS[eventCode as keyof typeof COMPETITION_WEIGHTS]?.[
+          genderCode as "M" | "F"
+        ];
+
+      if (compWeight) {
+        const hasCompetition = data.implements.some(
+          (i) => i.weightKg === compWeight,
+        );
+        if (!hasCompetition) {
+          warnings.push(
+            `No competition-weight implement (${compWeight}kg) listed. Training will focus on available implements.`,
+          );
+        }
+      }
+    }
+
+    // Check for ascending implement order (FORBIDDEN in Bondarchuk methodology)
+    // Implements should be listed heaviest to lightest for proper descending sequencing
+    const weights = data.implements.map((i) => i.weightKg).filter((w) => w > 0);
+    if (weights.length >= 2) {
+      for (let i = 0; i < weights.length - 1; i++) {
+        if (weights[i] < weights[i + 1]) {
+          warnings.push(
+            "Implements should be listed heaviest to lightest for Bondarchuk sequencing. " +
+            "Light-to-heavy ordering causes performance decreases of 2-4m.",
+          );
+          break;
+        }
+      }
+    }
+  }
+
+  // Minimum program duration check
+  if (data.targetDate) {
+    const target = new Date(data.targetDate);
+    const now = new Date();
+    const weeksUntilTarget = (target.getTime() - now.getTime()) / (7 * 24 * 60 * 60 * 1000);
+    if (weeksUntilTarget > 0 && weeksUntilTarget < 4) {
       warnings.push(
-        "No competition-weight implement listed. Training will focus on available implements.",
+        "Target date is less than 4 weeks away. Minimum recommended program duration is 4 weeks for meaningful adaptation.",
       );
     }
   }

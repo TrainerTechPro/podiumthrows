@@ -5,6 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import UserAvatar from "@/components/user-avatar";
 import { CODE_EVENT_MAP, type EventCode } from "@/lib/throws/constants";
+import { useOnlineStatus } from "@/lib/pwa/online-status";
+import { useSyncQueue } from "@/hooks/useSyncQueue";
+import { PendingSyncBadge } from "@/components/pwa/PendingSyncBadge";
+import { useToast } from "@/components/ui/Toast";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,6 +43,8 @@ interface PracticeAttempt {
  avatarUrl?: string | null;
  user: { firstName: string; lastName: string };
  };
+ /** Set when attempt is queued offline and not yet synced */
+ _pendingId?: string;
 }
 
 interface PracticeSession {
@@ -114,9 +120,11 @@ interface LogAttemptPanelProps {
  athleteAttemptCount: number;
  onSave: (attempt: PracticeAttempt) => void;
  onCancel: () => void;
+ isOnline: boolean;
+ queueAttempt: (sessionId: string, payload: import("@/lib/pwa/sync-queue").AttemptPayload) => Promise<import("@/lib/pwa/sync-queue").QueuedAttempt>;
 }
 
-function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCancel }: LogAttemptPanelProps) {
+function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCancel, isOnline, queueAttempt: queueAttemptFn }: LogAttemptPanelProps) {
  const defaultEvent = athlete.throwsProfile?.event ?? "SHOT_PUT";
  const [event, setEvent] = useState(defaultEvent);
  const [implement, setImplement] = useState(() => getDefaultImplement(athlete.throwsProfile, defaultEvent));
@@ -174,6 +182,50 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  setSaving(true);
  setSaveError("");
 
+ const attemptPayload = {
+ athleteId: athlete.id,
+ event,
+ implement,
+ distance: distance ? parseFloat(distance) : undefined,
+ drillType: drillType || undefined,
+ coachNote: coachNote || undefined,
+ attemptNumber: athleteAttemptCount + 1,
+ };
+
+ // ── Offline path: queue to IndexedDB ──
+ if (!isOnline) {
+ try {
+ const queued = await queueAttemptFn(sessionId, attemptPayload);
+ // Create optimistic attempt for immediate UI feedback
+ const optimisticAttempt: PracticeAttempt = {
+ id: queued.id,
+ sessionId,
+ athleteId: athlete.id,
+ event,
+ implement,
+ distance: distance ? parseFloat(distance) : null,
+ drillType: drillType || null,
+ coachNote: coachNote || null,
+ videoUrl: null,
+ isPR: false,
+ attemptNumber: athleteAttemptCount + 1,
+ createdAt: new Date().toISOString(),
+ athlete: {
+ id: athlete.id,
+ avatarUrl: athlete.avatarUrl,
+ user: athlete.user,
+ },
+ _pendingId: queued.id,
+ };
+ onSave(optimisticAttempt);
+ } catch {
+ setSaveError("Failed to save offline");
+ setSaving(false);
+ }
+ return;
+ }
+
+ // ── Online path: normal fetch ──
  try {
  let videoUrl: string | undefined;
 
@@ -199,16 +251,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  const res = await fetch(`/api/throws/practice/${sessionId}/attempts`, {
  method: "POST",
  headers: { "Content-Type": "application/json" },
- body: JSON.stringify({
- athleteId: athlete.id,
- event,
- implement,
- distance: distance ? parseFloat(distance) : undefined,
- drillType: drillType || undefined,
- coachNote: coachNote || undefined,
- videoUrl,
- attemptNumber: athleteAttemptCount + 1,
- }),
+ body: JSON.stringify({ ...attemptPayload, videoUrl }),
  });
 
  const data = await res.json();
@@ -219,8 +262,34 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  setSaving(false);
  }
  } catch {
+ // Network error while "online" — fallback to queue
+ try {
+ const queued = await queueAttemptFn(sessionId, attemptPayload);
+ const optimisticAttempt: PracticeAttempt = {
+ id: queued.id,
+ sessionId,
+ athleteId: athlete.id,
+ event,
+ implement,
+ distance: distance ? parseFloat(distance) : null,
+ drillType: drillType || null,
+ coachNote: coachNote || null,
+ videoUrl: null,
+ isPR: false,
+ attemptNumber: athleteAttemptCount + 1,
+ createdAt: new Date().toISOString(),
+ athlete: {
+ id: athlete.id,
+ avatarUrl: athlete.avatarUrl,
+ user: athlete.user,
+ },
+ _pendingId: queued.id,
+ };
+ onSave(optimisticAttempt);
+ } catch {
  setSaveError("Failed to save attempt");
  setSaving(false);
+ }
  }
  }
 
@@ -356,6 +425,17 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
  Video <span className="font-normal text-[var(--color-text-3)]">(optional, max 10s)</span>
  </label>
+ {!isOnline ? (
+ <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[var(--color-bg-subtle)] border border-[var(--color-border)] text-xs text-[var(--color-text-3)]">
+ <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <line x1="1" y1="1" x2="23" y2="23" strokeWidth={2} strokeLinecap="round" />
+ <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" strokeWidth={2} strokeLinecap="round" />
+ <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" strokeWidth={2} strokeLinecap="round" />
+ </svg>
+ Video upload requires a connection
+ </div>
+ ) : (
+ <>
  <input
  ref={fileInputRef}
  type="file"
@@ -403,6 +483,8 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  </svg>
  <p className="text-xs text-amber-700 dark:text-amber-300">{videoError}</p>
  </div>
+ )}
+ </>
  )}
  </div>
 
@@ -517,9 +599,12 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  {attempt.coachNote}
  </p>
  )}
+ <div className="flex items-center gap-1.5">
  <p className="text-[10px] text-[var(--color-text-3)]">
- #{attempt.attemptNumber} · {formatTime(attempt.createdAt)}
+ #{attempt.attemptNumber} · {attempt._pendingId ? "just now" : formatTime(attempt.createdAt)}
  </p>
+ {attempt._pendingId && <PendingSyncBadge count={1} variant="inline" />}
+ </div>
  </div>
  {!sessionClosed && (
  <div className="flex-shrink-0">
@@ -567,6 +652,29 @@ export default function LiveSessionPage() {
  const [selectedAthlete, setSelectedAthlete] = useState<AthleteInfo | null>(null);
  const [closing, setClosing] = useState(false);
  const [confirmClose, setConfirmClose] = useState(false);
+ const { isOnline } = useOnlineStatus();
+ const { success: toastSuccess } = useToast();
+ const { pendingCount, isSyncing, queueAttempt } = useSyncQueue(
+ (results) => {
+ const synced = results.filter((r) => r.success).length;
+ if (synced > 0) {
+ toastSuccess("Synced", `${synced} attempt${synced > 1 ? "s" : ""} synced`);
+ // Replace optimistic attempts with server data
+ setSession((prev) => {
+ if (!prev) return prev;
+ const updated = prev.attempts.map((a) => {
+ if (!a._pendingId) return a;
+ const result = results.find((r) => r.queueId === a._pendingId && r.success);
+ if (result?.serverData) {
+ return { ...(result.serverData as PracticeAttempt), _pendingId: undefined };
+ }
+ return a;
+ });
+ return { ...prev, attempts: updated };
+ });
+ }
+ }
+ );
 
  const _fetchSession = useCallback(() => {
  fetch(`/api/throws/practice/${params.sessionId}`)
@@ -708,6 +816,8 @@ export default function LiveSessionPage() {
  athleteAttemptCount={attemptCountByAthlete[selectedAthlete.id] ?? 0}
  onSave={handleAttemptSaved}
  onCancel={() => setSelectedAthlete(null)}
+ isOnline={isOnline}
+ queueAttempt={queueAttempt}
  />
  )}
 
@@ -727,6 +837,9 @@ export default function LiveSessionPage() {
  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
  Live
  </span>
+ )}
+ {pendingCount > 0 && (
+ <PendingSyncBadge count={pendingCount} isSyncing={isSyncing} variant="header" />
  )}
  </div>
  <p className="text-sm text-[var(--color-text-2)] mt-0.5">

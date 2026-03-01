@@ -58,14 +58,15 @@ export async function GET() {
       });
     }
 
-    // Count completed sessions
-    const completedCount = await prisma.programSession.count({
-      where: { programId: program.id, status: "COMPLETED" },
-    });
-
-    const totalCount = await prisma.programSession.count({
-      where: { programId: program.id },
-    });
+    // Count completed sessions (parallel)
+    const [completedCount, totalCount] = await Promise.all([
+      prisma.programSession.count({
+        where: { programId: program.id, status: "COMPLETED" },
+      }),
+      prisma.programSession.count({
+        where: { programId: program.id },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,

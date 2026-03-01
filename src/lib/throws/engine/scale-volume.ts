@@ -32,7 +32,7 @@ function volumeRampMultiplier(
   currentWeeklyVolume: number | undefined,
   targetVolume: number,
 ): number {
-  if (!currentWeeklyVolume || currentWeeklyVolume <= 0) return 0.80;
+  if (!currentWeeklyVolume || currentWeeklyVolume <= 0) return 0.70;
   const ratio = currentWeeklyVolume / targetVolume;
   if (ratio >= 0.85) return 1.0;
   if (ratio >= 0.65) return 0.90;
@@ -83,7 +83,16 @@ export function scaleVolume(
   // Clamp to phase bounds (scaled by daysFactor)
   const min = Math.round(phaseConfig.throwsPerWeekMin * daysFactor * 0.8);
   const max = Math.round(phaseConfig.throwsPerWeekMax * daysFactor * 1.1);
-  const throwsPerWeek = Math.min(max, Math.max(min, scaledVolume));
+  let throwsPerWeek = Math.min(max, Math.max(min, scaledVolume));
+
+  // Absolute safety ceiling — no athlete should exceed 350 throws/week
+  const ABSOLUTE_WEEKLY_CEILING = 350;
+  throwsPerWeek = Math.min(ABSOLUTE_WEEKLY_CEILING, throwsPerWeek);
+
+  // Beginner guard — athletes with < 1 year experience capped at 200/week
+  if (config.yearsThowing < 1 && throwsPerWeek > 200) {
+    throwsPerWeek = 200;
+  }
 
   // Distribute across day types using WEEKLY_SCHEDULES proportions
   const throwsPerSession = distributeAcrossDayTypes(throwsPerWeek, phase);

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { GeneratingOverlay } from "@/components/throws/GeneratingOverlay";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -528,6 +529,8 @@ export function ProgramBuilderWizard({
 
   return (
     <>
+      <GeneratingOverlay isGenerating={generating} />
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-1">

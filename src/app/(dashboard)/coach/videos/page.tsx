@@ -1,11 +1,9 @@
 import { requireCoachSession, getCoachVideos, getCoachVideoStats } from "@/lib/data/coach";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { formatEventType } from "@/lib/utils";
-import { formatTimestamp } from "@/components/video/types";
 import { Video } from "lucide-react";
+import { VideoGrid } from "@/components/video/VideoGrid";
 
 export const metadata = { title: "Video Library — Podium Throws" };
 
@@ -157,91 +155,7 @@ export default async function VideoLibraryPage({
           }
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {videos.map((video) => (
-            <Link
-              key={video.id}
-              href={`/coach/videos/${video.id}`}
-              className="card group overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-video bg-surface-100 dark:bg-surface-800 overflow-hidden">
-                {video.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={video.thumbnailUrl}
-                    alt={video.title ?? "Video thumbnail"}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full bg-gradient-to-br from-surface-800 to-surface-900 text-surface-600">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="23 7 16 12 23 17 23 7" />
-                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-                    </svg>
-                  </div>
-                )}
-
-                {/* Duration badge */}
-                {video.durationSec && (
-                  <span className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded">
-                    {formatTimestamp(video.durationSec)}
-                  </span>
-                )}
-
-                {/* Play overlay */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                  <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-surface-900 ml-0.5">
-                      <polygon points="5 3 19 12 5 21" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="p-3">
-                <h3 className="text-sm font-semibold text-[var(--foreground)] truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                  {video.title ?? "Untitled Video"}
-                </h3>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {video.athleteName && (
-                    <span className="text-xs text-muted truncate">
-                      {video.athleteName}
-                    </span>
-                  )}
-                  {video.event && (
-                    <Badge variant="primary">
-                      {formatEventType(video.event)}
-                    </Badge>
-                  )}
-                  {video.category && (
-                    <Badge variant="neutral">
-                      {video.category.charAt(0).toUpperCase() + video.category.slice(1)}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 mt-2 text-sm text-surface-400">
-                  {video.annotationCount > 0 && (
-                    <span className="flex items-center gap-0.5">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 19l7-7 3 3-7 7-3-3z" />
-                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
-                      </svg>
-                      {video.annotationCount}
-                    </span>
-                  )}
-                  <span>
-                    {new Date(video.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <VideoGrid initialVideos={videos} />
       )}
     </div>
   );

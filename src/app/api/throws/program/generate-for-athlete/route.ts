@@ -13,6 +13,8 @@ import { generateProgram, validateOnboarding } from "@/lib/throws/engine";
 import type { OnboardingData, ProgramConfig } from "@/lib/throws/engine";
 import { classifyBand, EVENT_CODE_MAP, GENDER_CODE_MAP } from "@/lib/throws/constants";
 import type { EventCode, GenderCode } from "@/lib/throws/constants";
+import { validateGeneratedProgram } from "@/lib/throws/engine/schemas";
+import { auditGeneratedProgram, applyAdjustments } from "@/lib/throws/engine/validate-program-output";
 
 export async function POST(req: NextRequest) {
   try {
@@ -140,93 +142,120 @@ export async function POST(req: NextRequest) {
     };
 
     // Generate the program
-    const generated = generateProgram(programConfig);
+    let generated = generateProgram(programConfig);
 
-    // Save to database
-    const program = await prisma.trainingProgram.create({
-      data: {
-        athleteId: athleteProfile.id,
-        coachId,
-        event: onboardingData.event,
-        gender: onboardingData.gender,
-        status: "ACTIVE",
-        startDate,
-        targetDate: onboardingData.targetDate,
-        goalDistance: onboardingData.goalDistance,
-        startingPr: onboardingData.competitionPr,
-        daysPerWeek: programConfig.daysPerWeek,
-        sessionsPerDay: programConfig.sessionsPerDay,
-        includeLift: programConfig.includeLift,
-        adaptationGroup: programConfig.adaptationGroup,
-        sessionsToForm: programConfig.sessionsToForm,
-        recommendedMethod: programConfig.recommendedMethod,
-        currentWeekNumber: 1,
-        currentComplexNum: 1,
-        generationConfig: JSON.stringify(programConfig),
-      },
-    });
+    // Validate engine output before persisting
+    const engineValidation = validateGeneratedProgram(generated);
+    if (!engineValidation.valid) {
+      logger.error("Engine output validation failed", {
+        context: "throws/program/generate-for-athlete",
+        metadata: { errors: engineValidation.errors },
+      });
+      return NextResponse.json(
+        { success: false, error: "Program generation produced invalid output" },
+        { status: 500 },
+      );
+    }
 
-    // Save phases and sessions
-    for (const genPhase of generated.phases) {
-      const phase = await prisma.programPhase.create({
+    // Post-generation safety audit (ACWR, spike detection, absolute ceiling)
+    const audit = auditGeneratedProgram(generated);
+    if (!audit.safe) {
+      logger.info("Safety audit found violations, applying adjustments", {
+        context: "throws/program/generate-for-athlete",
+        metadata: { warnings: audit.warnings, adjustmentCount: audit.adjustments.length },
+      });
+      generated = applyAdjustments(generated, audit.adjustments);
+    }
+
+    // Save to database in a transaction (all-or-nothing)
+    const program = await prisma.$transaction(async (tx) => {
+      const prog = await tx.trainingProgram.create({
         data: {
-          programId: program.id,
-          phase: genPhase.phase,
-          phaseOrder: genPhase.phaseOrder,
-          startWeek: genPhase.startWeek,
-          endWeek: genPhase.endWeek,
-          durationWeeks: genPhase.durationWeeks,
-          throwsPerWeekTarget: genPhase.throwsPerWeekTarget,
-          strengthDaysTarget: genPhase.strengthDaysTarget,
-          cePercent: genPhase.cePercent,
-          sdPercent: genPhase.sdPercent,
-          spPercent: genPhase.spPercent,
-          gpPercent: genPhase.gpPercent,
-          lightPercent: genPhase.lightPercent,
-          compPercent: genPhase.compPercent,
-          heavyPercent: genPhase.heavyPercent,
-          exerciseComplex: JSON.stringify(genPhase.exerciseComplex),
-          status: genPhase.phaseOrder === 1 ? "ACTIVE" : "PLANNED",
+          athleteId: athleteProfile.id,
+          coachId,
+          event: onboardingData.event,
+          gender: onboardingData.gender,
+          status: "ACTIVE",
+          startDate,
+          targetDate: onboardingData.targetDate,
+          goalDistance: onboardingData.goalDistance,
+          startingPr: onboardingData.competitionPr,
+          daysPerWeek: programConfig.daysPerWeek,
+          sessionsPerDay: programConfig.sessionsPerDay,
+          includeLift: programConfig.includeLift,
+          adaptationGroup: programConfig.adaptationGroup,
+          sessionsToForm: programConfig.sessionsToForm,
+          recommendedMethod: programConfig.recommendedMethod,
+          currentWeekNumber: 1,
+          currentComplexNum: 1,
+          generationConfig: JSON.stringify(programConfig),
         },
       });
 
-      // Set current phase
-      if (genPhase.phaseOrder === 1) {
-        await prisma.trainingProgram.update({
-          where: { id: program.id },
-          data: { currentPhaseId: phase.id },
+      // Save phases and sessions
+      for (const genPhase of generated.phases) {
+        const phase = await tx.programPhase.create({
+          data: {
+            programId: prog.id,
+            phase: genPhase.phase,
+            phaseOrder: genPhase.phaseOrder,
+            startWeek: genPhase.startWeek,
+            endWeek: genPhase.endWeek,
+            durationWeeks: genPhase.durationWeeks,
+            throwsPerWeekTarget: genPhase.throwsPerWeekTarget,
+            strengthDaysTarget: genPhase.strengthDaysTarget,
+            cePercent: genPhase.cePercent,
+            sdPercent: genPhase.sdPercent,
+            spPercent: genPhase.spPercent,
+            gpPercent: genPhase.gpPercent,
+            lightPercent: genPhase.lightPercent,
+            compPercent: genPhase.compPercent,
+            heavyPercent: genPhase.heavyPercent,
+            exerciseComplex: JSON.stringify(genPhase.exerciseComplex),
+            status: genPhase.phaseOrder === 1 ? "ACTIVE" : "PLANNED",
+          },
         });
-      }
 
-      // Save sessions for this phase
-      for (const genWeek of genPhase.weeks) {
-        for (const genSession of genWeek.sessions) {
-          await prisma.programSession.create({
-            data: {
-              programId: program.id,
-              phaseId: phase.id,
-              weekNumber: genWeek.weekNumber,
-              dayOfWeek: genSession.dayOfWeek,
-              dayType: genSession.dayType,
-              sessionType: genSession.sessionType,
-              focusLabel: genSession.focusLabel,
-              throwsPrescription: JSON.stringify(genSession.throws),
-              strengthPrescription:
-                genSession.strength.length > 0
-                  ? JSON.stringify(genSession.strength)
-                  : null,
-              warmupPrescription:
-                genSession.warmup.length > 0
-                  ? JSON.stringify(genSession.warmup)
-                  : null,
-              totalThrowsTarget: genSession.totalThrowsTarget,
-              estimatedDuration: genSession.estimatedDuration,
-              status: "PLANNED",
-            },
+        // Set current phase
+        if (genPhase.phaseOrder === 1) {
+          await tx.trainingProgram.update({
+            where: { id: prog.id },
+            data: { currentPhaseId: phase.id },
           });
         }
+
+        // Save sessions for this phase
+        for (const genWeek of genPhase.weeks) {
+          for (const genSession of genWeek.sessions) {
+            await tx.programSession.create({
+              data: {
+                programId: prog.id,
+                phaseId: phase.id,
+                weekNumber: genWeek.weekNumber,
+                dayOfWeek: genSession.dayOfWeek,
+                dayType: genSession.dayType,
+                sessionType: genSession.sessionType,
+                focusLabel: genSession.focusLabel,
+                throwsPrescription: JSON.stringify(genSession.throws),
+                strengthPrescription:
+                  genSession.strength.length > 0
+                    ? JSON.stringify(genSession.strength)
+                    : null,
+                warmupPrescription:
+                  genSession.warmup.length > 0
+                    ? JSON.stringify(genSession.warmup)
+                    : null,
+                totalThrowsTarget: genSession.totalThrowsTarget,
+                estimatedDuration: genSession.estimatedDuration,
+                status: "PLANNED",
+              },
+            });
+          }
+        }
       }
-    }
+
+      return prog;
+    });
 
     logger.info("Program generated for athlete by coach", {
       context: "throws/program/generate-for-athlete",

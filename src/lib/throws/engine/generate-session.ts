@@ -3,8 +3,8 @@
 // Distributes throws by CE/SD/SP/GP ratios, assigns implements by phase,
 // adds strength if warranted, calculates loads from lifting PRs.
 
-import { PHASE_RATIOS, REST_INTERVALS, COMPETITION_WEIGHTS, PHASE_IMPLEMENT_DIST } from "../constants";
-import type { TrainingPhase } from "../constants";
+import { PHASE_RATIOS, REST_INTERVALS, COMPETITION_WEIGHTS, PHASE_IMPLEMENT_DIST, MIN_THROWS, CODE_EVENT_MAP } from "../constants";
+import type { TrainingPhase, EventCode } from "../constants";
 import { selectStrength } from "./select-strength";
 import type {
   GeneratedSession,
@@ -39,7 +39,17 @@ export function generateSession(config: SessionGenConfig): GeneratedSession {
   } = config;
 
   // Target throws: midpoint of min/max
-  const totalThrows = Math.round((throwsMin + throwsMax) / 2);
+  let totalThrows = Math.round((throwsMin + throwsMax) / 2);
+
+  // Enforce minimum throws floor for motor learning effectiveness
+  // A throwing session with fewer than MIN_THROWS is too few reps for useful adaptation
+  if (totalThrows > 0) {
+    const throwEvent = CODE_EVENT_MAP[programConfig.eventCode as EventCode];
+    const minFloor = throwEvent ? MIN_THROWS[throwEvent] : 8;
+    if (totalThrows < minFloor) {
+      totalThrows = minFloor;
+    }
+  }
 
   // Session type
   const hasStrength = includeLift && strengthLevel !== "None";

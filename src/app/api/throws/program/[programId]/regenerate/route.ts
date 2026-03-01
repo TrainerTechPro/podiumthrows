@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { canAccessProgram } from "@/lib/authorize";
 import { generateWeek } from "@/lib/throws/engine";
 import type {
   ProgramConfig,
@@ -45,13 +46,9 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify ownership
-    const athleteProfile = await prisma.athleteProfile.findUnique({
-      where: { userId: user.userId },
-      select: { id: true },
-    });
-
-    if (program.athleteId !== athleteProfile?.id) {
+    // Verify ownership (supports both athletes and their coaches)
+    const allowed = await canAccessProgram(user.userId, user.role as "COACH" | "ATHLETE", programId);
+    if (!allowed) {
       return NextResponse.json(
         { success: false, error: "Not authorized" },
         { status: 403 },
@@ -139,8 +136,24 @@ export async function POST(req: NextRequest, { params }: Params) {
     // Calculate program start date for scheduling
     const programStartDate = program.startDate;
 
-    // Regenerate sessions for remaining weeks
-    let totalGenerated = 0;
+    // Regenerate sessions for remaining weeks (batch insert)
+    const sessionsToCreate: {
+      programId: string;
+      phaseId: string;
+      weekNumber: number;
+      dayOfWeek: number;
+      dayType: string;
+      scheduledDate: string;
+      sessionType: string;
+      focusLabel: string;
+      throwsPrescription: string;
+      strengthPrescription: string;
+      warmupPrescription: string;
+      totalThrowsTarget: number;
+      estimatedDuration: number;
+      status: string;
+    }[] = [];
+
     for (
       let week = program.currentWeekNumber;
       week <= activePhase.endWeek;
@@ -172,28 +185,27 @@ export async function POST(req: NextRequest, { params }: Params) {
           scheduledDate.getDate() + (session.dayOfWeek - 1),
         );
 
-        await prisma.programSession.create({
-          data: {
-            programId,
-            phaseId: activePhase.id,
-            weekNumber: session.weekNumber,
-            dayOfWeek: session.dayOfWeek,
-            dayType: session.dayType,
-            scheduledDate: scheduledDate.toISOString().split("T")[0],
-            sessionType: session.sessionType,
-            focusLabel: session.focusLabel,
-            throwsPrescription: JSON.stringify(session.throws),
-            strengthPrescription: JSON.stringify(session.strength),
-            warmupPrescription: JSON.stringify(session.warmup),
-            totalThrowsTarget: session.totalThrowsTarget,
-            estimatedDuration: session.estimatedDuration,
-            status: "PLANNED",
-          },
+        sessionsToCreate.push({
+          programId,
+          phaseId: activePhase.id,
+          weekNumber: session.weekNumber,
+          dayOfWeek: session.dayOfWeek,
+          dayType: session.dayType,
+          scheduledDate: scheduledDate.toISOString().split("T")[0],
+          sessionType: session.sessionType,
+          focusLabel: session.focusLabel,
+          throwsPrescription: JSON.stringify(session.throws),
+          strengthPrescription: JSON.stringify(session.strength),
+          warmupPrescription: JSON.stringify(session.warmup),
+          totalThrowsTarget: session.totalThrowsTarget,
+          estimatedDuration: session.estimatedDuration,
+          status: "PLANNED",
         });
-
-        totalGenerated++;
       }
     }
+
+    await prisma.programSession.createMany({ data: sessionsToCreate });
+    const totalGenerated = sessionsToCreate.length;
 
     return NextResponse.json({
       success: true,

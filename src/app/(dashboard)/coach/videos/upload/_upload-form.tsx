@@ -299,8 +299,10 @@ export function UploadForm({ athleteOptions }: Props) {
     setProgress(0);
     setErrorMsg("");
 
+    let videoId: string | null = null;
+
     try {
-      // Request video + thumbnail URLs in parallel
+      // 1. Request presigned URLs for video + thumbnail in parallel
       const [urlRes, thumbRes] = await Promise.all([
         fetch("/api/coach/videos/upload-url", {
           method: "POST",
@@ -327,7 +329,7 @@ export function UploadForm({ athleteOptions }: Props) {
 
       const { uploadUrl, key, publicUrl, mode } = await urlRes.json();
 
-      // Upload thumbnail if we have one
+      // 2. Upload thumbnail (non-blocking, non-fatal)
       let thumbnailPublicUrl: string | undefined;
       if (thumbRes?.ok && thumbnailBlob) {
         try {
@@ -351,12 +353,43 @@ export function UploadForm({ athleteOptions }: Props) {
             if (thumbXhrOk) thumbnailPublicUrl = thumbPublicUrl;
           }
         } catch {
-          // Thumbnail upload is non-fatal
           console.warn("[Upload] Thumbnail upload failed — continuing without thumbnail");
         }
       }
 
-      // Upload video blob
+      // 3. Create DB record BEFORE uploading — status: "uploading"
+      //    This gives us a video ID to track and lets the UI show progress.
+      setPhase("creating");
+      const durationSec = needsTrim ? trimEnd - trimStart : videoDuration || undefined;
+
+      const createRes = await fetch("/api/coach/videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: publicUrl,
+          storageKey: key,
+          title: title.trim(),
+          description: description.trim() || undefined,
+          athleteId: athleteId || undefined,
+          event: event || undefined,
+          category: category || undefined,
+          durationSec,
+          fileSizeMb: trimmedBlob.size / (1024 * 1024),
+          thumbnailUrl: thumbnailPublicUrl,
+          status: "uploading",
+        }),
+      });
+
+      if (!createRes.ok) {
+        const data = await createRes.json();
+        throw new Error(data.error ?? "Failed to create video record");
+      }
+
+      const { video } = await createRes.json();
+      videoId = video.id;
+
+      // 4. Upload video blob directly to R2 (or local)
+      setPhase("uploading");
       abortRef.current = new AbortController();
 
       if (mode === "local") {
@@ -402,37 +435,27 @@ export function UploadForm({ athleteOptions }: Props) {
         });
       }
 
-      // Create video record
-      setPhase("creating");
-
-      const durationSec = needsTrim ? trimEnd - trimStart : videoDuration || undefined;
-
-      const createRes = await fetch("/api/coach/videos", {
-        method: "POST",
+      // 5. Upload complete → transition to "processing"
+      //    External services (Inngest, Trigger.dev, etc.) can pick up
+      //    videos with status "processing" for transcoding, thumbnail
+      //    generation, or other post-processing work.
+      await fetch(`/api/coach/videos/${videoId}/status`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: publicUrl,
-          storageKey: key,
-          title: title.trim(),
-          description: description.trim() || undefined,
-          athleteId: athleteId || undefined,
-          event: event || undefined,
-          category: category || undefined,
-          durationSec,
-          fileSizeMb: trimmedBlob.size / (1024 * 1024),
-          thumbnailUrl: thumbnailPublicUrl,
-        }),
+        body: JSON.stringify({ status: "processing" }),
       });
 
-      if (!createRes.ok) {
-        const data = await createRes.json();
-        throw new Error(data.error ?? "Failed to create video");
-      }
-
-      const { video } = await createRes.json();
       setPhase("done");
-      setTimeout(() => router.push(`/coach/videos/${video.id}`), 500);
+      setTimeout(() => router.push(`/coach/videos/${videoId}`), 500);
     } catch (err) {
+      // If we created a record, mark it as failed
+      if (videoId) {
+        fetch(`/api/coach/videos/${videoId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "failed" }),
+        }).catch(() => {/* best-effort */});
+      }
       setErrorMsg(err instanceof Error ? err.message : "Upload failed");
       setPhase("error");
     }

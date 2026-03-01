@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseAnalysisResponse } from "@/lib/throwflow/schemas";
 
 // GET /api/throwflow — list analyses for current coach
 export async function GET() {
@@ -204,7 +205,9 @@ async function runAnalysis(
         messages,
         max_tokens: 4000,
         temperature: 0.3,
+        response_format: { type: "json_object" },
       }),
+      signal: AbortSignal.timeout(60_000),
     });
 
     if (!response.ok) {
@@ -215,37 +218,39 @@ async function runAnalysis(
     const result = await response.json();
     const rawText = result.choices?.[0]?.message?.content || "";
 
-    // Parse the JSON response
-    let parsed;
-    try {
-      // Try to extract JSON from the response (handle markdown code blocks)
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No JSON found in response");
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch {
-      // If parsing fails, save the raw text and mark as completed with partial data
+    // Parse and validate AI response through Zod schemas
+    const parseResult = parseAnalysisResponse(rawText);
+
+    if (!parseResult.success) {
+      // Attempt partial save if some data was recovered
       await prisma.throwAnalysis.update({
         where: { id: analysisId },
         data: {
           status: "COMPLETED",
           rawAnalysis: rawText,
-          errorMessage: "AI response could not be parsed as structured data. Raw analysis saved.",
+          phaseScores: parseResult.partial?.phaseScores
+            ? JSON.stringify(parseResult.partial.phaseScores)
+            : null,
+          overallScore: parseResult.partial?.overallScore ?? null,
+          errorMessage: `AI response parsing: ${parseResult.error}. Raw analysis saved.`,
         },
       });
       return;
     }
 
-    // Update the analysis record with parsed results
+    const parsed = parseResult.data;
+
+    // Update the analysis record with validated results
     await prisma.throwAnalysis.update({
       where: { id: analysisId },
       data: {
         status: "COMPLETED",
-        phaseScores: JSON.stringify({ phases: parsed.phaseScores || [] }),
-        energyLeaks: JSON.stringify(parsed.energyLeaks || []),
-        releaseMetrics: JSON.stringify(parsed.releaseMetrics || {}),
-        overallScore: typeof parsed.overallScore === "number" ? parsed.overallScore : null,
-        issueCards: JSON.stringify(parsed.issueCards || []),
-        drillRecs: JSON.stringify(parsed.drillRecs || []),
+        phaseScores: JSON.stringify(parsed.phaseScores),
+        energyLeaks: JSON.stringify(parsed.energyLeaks),
+        releaseMetrics: JSON.stringify(parsed.releaseMetrics),
+        overallScore: parsed.overallScore,
+        issueCards: JSON.stringify(parsed.issueCards),
+        drillRecs: JSON.stringify(parsed.drillRecs),
         rawAnalysis: rawText,
       },
     });

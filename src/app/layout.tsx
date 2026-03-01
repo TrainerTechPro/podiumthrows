@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, DM_Sans } from "next/font/google";
 import { cookies } from "next/headers";
+import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -75,7 +76,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        <ServiceWorkerProvider>{children}</ServiceWorkerProvider>
+      </body>
     </html>
   );
 }

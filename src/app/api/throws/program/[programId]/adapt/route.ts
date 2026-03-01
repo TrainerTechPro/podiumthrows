@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { canAccessProgram } from "@/lib/authorize";
 import { checkAdaptation } from "@/lib/throws/engine";
 import type { AdaptationCheckParams } from "@/lib/throws/engine";
 
@@ -42,13 +43,9 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify ownership
-    const athleteProfile = await prisma.athleteProfile.findUnique({
-      where: { userId: user.userId },
-      select: { id: true },
-    });
-
-    if (program.athleteId !== athleteProfile?.id) {
+    // Verify ownership (supports both athletes and their coaches)
+    const allowed = await canAccessProgram(user.userId, user.role as "COACH" | "ATHLETE", programId);
+    if (!allowed) {
       return NextResponse.json(
         { success: false, error: "Not authorized" },
         { status: 403 },

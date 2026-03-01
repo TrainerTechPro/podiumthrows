@@ -687,6 +687,7 @@ model VideoUpload {
   @@index([event])
   @@index([category])
   @@index([createdAt])
+  @@index([coachId, createdAt])
 }
 
 /// AI-generated frame annotation (pose landmarks, joint angles) stored per timestamp.
@@ -1030,6 +1031,7 @@ model ThrowsAssignment {
 
   @@index([athleteId, assignedDate])
   @@index([sessionId])
+  @@index([athleteId, status])
 }
 
 /// Individual throw logged within a ThrowsBlock during an assignment.
@@ -1049,6 +1051,7 @@ model ThrowsBlockLog {
 
   @@index([assignmentId])
   @@index([blockId])
+  @@index([assignmentId, blockId])
 }
 
 // ─── LIVE PRACTICE LOGGING ──────────────────────────────────────────────────
@@ -1089,6 +1092,7 @@ model PracticeAttempt {
 
   @@index([sessionId])
   @@index([athleteId, event])
+  @@index([athleteId, createdAt])
 }
 
 // ─── THROWS PRs ──────────────────────────────────────────────────────────────
@@ -1126,6 +1130,7 @@ model ThrowsDrillPR {
 
   @@unique([athleteId, event, drillType, implement])
   @@index([athleteId])
+  @@index([athleteId, event])
 }
 
 // ─── THROWS ATHLETE PROFILING ───────────────────────────────────────────────
@@ -1321,6 +1326,7 @@ model ThrowAnalysis {
   @@index([coachId])
   @@index([athleteId])
   @@index([event])
+  @@index([coachId, createdAt])
 }
 
 // ─── VIDEO ANALYSIS PLATFORM ────────────────────────────────────────────────
@@ -1438,6 +1444,7 @@ model ThrowsProfile {
 
   @@index([enrolledBy])
   @@index([status])
+  @@index([enrolledBy, status])
 }
 
 /// Reference KPI table seeded from Bondarchuk Transfer of Training.
@@ -1782,6 +1789,8 @@ model ProgramSession {
   @@index([programId, weekNumber, dayOfWeek])
   @@index([scheduledDate])
   @@index([phaseId])
+  @@index([programId, status])
+  @@index([programId, phaseId, status])
 }
 
 /// Individual throw result logged against a prescribed session.
@@ -1799,6 +1808,7 @@ model ProgramThrowResult {
   createdAt DateTime @default(now())
 
   @@index([sessionId])
+  @@index([sessionId, createdAt])
 }
 
 /// Strength exercise result logged against a prescribed session.
@@ -1817,6 +1827,7 @@ model ProgramLiftResult {
   createdAt DateTime @default(now())
 
   @@index([sessionId])
+  @@index([sessionId, createdAt])
 }
 
 /// Best mark per implement for a session.
@@ -1891,6 +1902,7 @@ model AdaptationCheckpoint {
   createdAt DateTime @default(now())
 
   @@index([programId, checkDate])
+  @@index([programId, recommendation, applied])
 }
 
 // ─── LEAD CAPTURE ────────────────────────────────────────────────────────────
