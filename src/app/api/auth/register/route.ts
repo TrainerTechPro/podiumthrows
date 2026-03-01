@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { PLAN_LIMITS } from "@/lib/data/coach";
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +96,18 @@ export async function POST(request: NextRequest) {
           return NextResponse.json(
             { error: "Athletes must register via an invitation link from their coach" },
             { status: 400 }
+          );
+        }
+
+        // Enforce plan limit — prevents accepting invitations issued before a downgrade
+        const coach = await tx.coachProfile.findUnique({
+          where: { id: invitation.coachId },
+          select: { plan: true, _count: { select: { athletes: true } } },
+        });
+        if (coach && coach._count.athletes >= (PLAN_LIMITS[coach.plan] ?? 3)) {
+          return NextResponse.json(
+            { error: "Coach has reached their plan's athlete limit" },
+            { status: 403 }
           );
         }
 

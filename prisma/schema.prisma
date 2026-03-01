@@ -155,6 +155,8 @@ model CoachProfile {
   stripeCustomerId     String?          @unique
   stripeSubscriptionId String?          @unique
   currentPeriodEnd     DateTime?
+  paymentFailedAt      DateTime?
+  cancelAtPeriodEnd    Boolean          @default(false)
   preferences          String?          @default("{}")
   enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
   onboardingCompletedAt DateTime?       // null = not completed; timestamp = completed/dismissed

@@ -19,6 +19,9 @@ interface Subscription {
   plan: string;
   athleteCount: number;
   stripeCustomerId: string | null;
+  paymentFailedAt: string | null;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: string | null;
 }
 
 interface ActivityItem {
@@ -146,6 +149,9 @@ export default function CoachSettingsPage() {
               plan: cp.plan || "FREE",
               athleteCount: cp._count?.athletes || 0,
               stripeCustomerId: cp.stripeCustomerId || null,
+              paymentFailedAt: cp.paymentFailedAt || null,
+              cancelAtPeriodEnd: cp.cancelAtPeriodEnd || false,
+              currentPeriodEnd: cp.currentPeriodEnd || null,
             });
             try {
               const mods = cp.enabledModules ? JSON.parse(cp.enabledModules) : ["general", "throws"];
@@ -623,8 +629,26 @@ export default function CoachSettingsPage() {
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${planColors[subscription.plan] || planColors.FREE}`}>
                     {subscription.plan}
                   </span>
-                  <span className="text-sm text-[var(--color-text-2)]">Active</span>
+                  {subscription.plan === "FREE" ? (
+                    <span className="text-sm text-[var(--color-text-2)]">Free Plan</span>
+                  ) : subscription.paymentFailedAt ? (
+                    <span className="text-sm text-amber-500 font-medium">Past Due</span>
+                  ) : subscription.cancelAtPeriodEnd ? (
+                    <span className="text-sm text-amber-500 font-medium">Canceling</span>
+                  ) : (
+                    <span className="text-sm text-emerald-500 font-medium">Active</span>
+                  )}
                 </div>
+                {subscription.currentPeriodEnd && subscription.plan !== "FREE" && (
+                  <p className="text-sm text-[var(--color-text-2)] mt-1">
+                    {subscription.cancelAtPeriodEnd ? "Access until " : "Renews on "}
+                    {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                )}
               </div>
 
               {/* Athlete usage */}

@@ -131,6 +131,12 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     },
   });
 
+  // Revoke pending invitations that can no longer be honored
+  await prisma.invitation.updateMany({
+    where: { coachId: coach.id, status: "PENDING" },
+    data: { status: "REVOKED" },
+  });
+
   console.log(`[stripe/webhook] Coach ${coach.id} downgraded to FREE (subscription deleted)`);
 }
 
@@ -149,7 +155,11 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
   if (!coach) return;
 
-  // Log the failure. In production you might send an email here.
+  await prisma.coachProfile.update({
+    where: { id: coach.id },
+    data: { paymentFailedAt: new Date() },
+  });
+
   console.warn(
     `[stripe/webhook] Invoice payment failed for coach ${coach.id} (customer ${customerId})`
   );
@@ -182,6 +192,8 @@ async function updateCoachFromSubscription(
       plan: isActive ? planKey : "FREE",
       stripeSubscriptionId: subscription.id,
       currentPeriodEnd: isActive ? currentPeriodEnd : null,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      ...(isActive ? { paymentFailedAt: null } : {}),
     },
   });
 
