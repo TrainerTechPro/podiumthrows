@@ -1,12 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // bcryptjs uses Node.js crypto — must run in Node.js runtime, not edge
+  serverExternalPackages: ['bcryptjs'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2gb',
     },
-    // bcryptjs uses Node.js crypto — must run in Node.js runtime, not edge
-    serverComponentsExternalPackages: ['bcryptjs'],
-    instrumentationHook: true,
   },
   images: {
     formats: ['image/avif', 'image/webp'],
