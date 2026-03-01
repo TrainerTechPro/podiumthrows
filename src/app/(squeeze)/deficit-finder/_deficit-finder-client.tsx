@@ -232,6 +232,7 @@ export function DeficitFinderClient() {
   const [result, setResult] = useState<DeficitResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [emailSaved, setEmailSaved] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Form fields
@@ -274,7 +275,7 @@ export function DeficitFinderClient() {
       // Parse UTM params from URL
       const params = new URLSearchParams(window.location.search);
 
-      await fetch("/api/leads", {
+      const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -289,6 +290,11 @@ export function DeficitFinderClient() {
           utmCampaign: params.get("utm_campaign"),
         }),
       });
+
+      if (res.ok) {
+        const data = await res.json();
+        setLeadId(data.id ?? null);
+      }
 
       setEmailSaved(true);
     } catch {
@@ -664,7 +670,7 @@ export function DeficitFinderClient() {
                 Want to track deficits across your entire roster automatically?
               </p>
               <a
-                href="/register"
+                href={leadId ? `/register?leadId=${leadId}&plan=free` : "/register"}
                 className="inline-block font-heading font-bold text-sm px-6 py-3 transition-colors hover:brightness-110"
                 style={{
                   backgroundColor: "#f59e0b",

@@ -10,8 +10,14 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get("invite");
+  const leadId = searchParams.get("leadId");
+  const planParam = searchParams.get("plan"); // e.g. "pro" or "elite" from pricing / deficit-finder CTA
+  const intervalParam = searchParams.get("interval"); // "annual" or omit for monthly
 
-  const [step, setStep] = useState<"role" | "form">(inviteToken ? "form" : "role");
+  // If a plan is specified, the user is clearly a coach — skip role selection
+  const autoCoach = !!planParam && !inviteToken;
+
+  const [step, setStep] = useState<"role" | "form">(inviteToken || autoCoach ? "form" : "role");
   const [role, setRole] = useState<Role>(inviteToken ? "ATHLETE" : "COACH");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -63,6 +69,9 @@ export default function RegisterPage() {
           lastName,
           role,
           inviteToken: inviteToken || undefined,
+          leadId: leadId || undefined,
+          plan: planParam || undefined,
+          interval: intervalParam || undefined,
         }),
       });
 
@@ -148,7 +157,7 @@ export default function RegisterPage() {
   return (
     <div className="card p-8">
       <div className="flex items-center gap-2 mb-6">
-        {!inviteToken && (
+        {!inviteToken && !autoCoach && (
           <button
             onClick={() => setStep("role")}
             className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"

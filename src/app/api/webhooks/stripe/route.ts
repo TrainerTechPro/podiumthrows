@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { stripe, getPlanFromPriceId } from "@/lib/stripe";
 import type { PlanName } from "@/lib/stripe";
@@ -28,6 +29,21 @@ export async function POST(req: NextRequest) {
     const msg = err instanceof Error ? err.message : "Signature verification failed";
     console.error("[stripe/webhook] Signature error:", msg);
     return NextResponse.json({ error: msg }, { status: 400 });
+  }
+
+  /* ── Idempotency: skip already-processed events ── */
+  const existing = await prisma.stripeEvent.findUnique({ where: { id: event.id } });
+  if (existing) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+  try {
+    await prisma.stripeEvent.create({ data: { id: event.id, type: event.type } });
+  } catch (err) {
+    // P2002 = unique constraint violation (race between two concurrent deliveries)
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    throw err;
   }
 
   /* ── Route events ── */
@@ -94,6 +110,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       currentPeriodEnd,
     },
   });
+
+  /* ── Mark lead as converted (if deficit-finder funnel) ── */
+  const leadId = session.metadata?.leadId;
+  if (leadId) {
+    await prisma.lead.updateMany({
+      where: { id: leadId, convertedToUser: false },
+      data: { convertedToUser: true },
+    });
+  }
 
   console.log(`[stripe/webhook] Coach ${coachId} upgraded to ${planKey}`);
 }

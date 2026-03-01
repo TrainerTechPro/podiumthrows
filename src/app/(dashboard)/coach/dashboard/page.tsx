@@ -15,6 +15,7 @@ import {
   type TeamReadinessEntry,
 } from "@/lib/data/coach";
 import { OnboardingChecklist } from "./_onboarding-checklist";
+import { CheckoutTrigger } from "./_checkout-trigger";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -358,6 +359,9 @@ export default async function CoachDashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+      {/* Auto-initiate Stripe Checkout if ?checkout= param present */}
+      <CheckoutTrigger />
+
       {/* Onboarding Checklist — shown only for new coaches */}
       {!onboarding.isCompleted && (
         <OnboardingChecklist

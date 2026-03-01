@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, firstName, lastName, role, inviteToken } = body;
+    const { email, password, firstName, lastName, role, inviteToken, leadId, plan, interval } = body;
 
     // Validate required fields
     if (!email || !password || !firstName || !lastName || !role) {
@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
             firstName,
             lastName,
             plan: "FREE",
+            leadId: leadId || null,
           },
         });
       } else if (role === "ATHLETE") {
@@ -150,7 +151,12 @@ export async function POST(request: NextRequest) {
           email: user.email,
           role: user.role,
         },
-        redirectTo: user.role === "COACH" ? "/coach/dashboard" : "/athlete/onboarding",
+        redirectTo:
+          user.role === "COACH"
+            ? plan
+              ? `/coach/dashboard?checkout=${plan}${interval === "annual" ? "&interval=annual" : ""}`
+              : "/coach/dashboard"
+            : "/athlete/onboarding",
       },
       { status: 201 }
     );

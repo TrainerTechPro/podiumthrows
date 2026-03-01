@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { stripe, PLANS, getOrCreateStripeCustomer } from "@/lib/stripe";
-import type { PlanName } from "@/lib/stripe";
+import { stripe, PLANS, getOrCreateStripeCustomer, getPriceId } from "@/lib/stripe";
+import type { PlanName, BillingInterval } from "@/lib/stripe";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 if (!APP_URL && process.env.NODE_ENV === "production") {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    /* ── Validate plan param ── */
+    /* ── Validate plan + interval params ── */
     const body = await req.json().catch(() => ({}));
     const planKey = (body.plan as string)?.toUpperCase() as PlanName | undefined;
     if (!planKey || planKey === "FREE" || !PLANS[planKey]) {
@@ -28,10 +28,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const priceId = PLANS[planKey].priceId;
+    const interval: BillingInterval = body.interval === "annual" ? "annual" : "monthly";
+    const leadIdFromBody = (body.leadId as string) || null;
+
+    const priceId = getPriceId(planKey, interval);
     if (!priceId) {
       return NextResponse.json(
-        { error: `Stripe price ID for ${planKey} not configured.` },
+        { error: `Stripe price ID for ${planKey} (${interval}) not configured.` },
         { status: 500 }
       );
     }
@@ -45,6 +48,7 @@ export async function POST(req: NextRequest) {
         lastName: true,
         stripeCustomerId: true,
         plan: true,
+        leadId: true,
       },
     });
     if (!coach) {
@@ -66,15 +70,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    /* ── Resolve leadId: prefer body param, fall back to profile ── */
+    const resolvedLeadId = leadIdFromBody || coach.leadId || undefined;
+
     /* ── Create Checkout session ── */
+    const metadata: Record<string, string> = {
+      coachId: coach.id,
+      plan: planKey,
+    };
+    if (resolvedLeadId) metadata.leadId = resolvedLeadId;
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      metadata: { coachId: coach.id, plan: planKey },
-      subscription_data: { metadata: { coachId: coach.id, plan: planKey } },
-      success_url: `${baseUrl}/coach/settings?upgraded=1`,
-      cancel_url: `${baseUrl}/coach/settings`,
+      metadata,
+      subscription_data: { metadata },
+      success_url: `${baseUrl}/coach/onboarding/welcome?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/pricing`,
       allow_promotion_codes: true,
     });
 

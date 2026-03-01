@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 // ─── Billing toggle ───────────────────────────────────────────────────────────
@@ -161,13 +162,67 @@ const PLANS: Plan[] = [
   },
 ];
 
-export function PricingCards({ billing }: { billing: Billing }) {
+export function PricingCards({
+  billing,
+  isAuthenticated = false,
+  isCoach = false,
+  currentPlan = null,
+}: {
+  billing: Billing;
+  isAuthenticated?: boolean;
+  isCoach?: boolean;
+  currentPlan?: string | null;
+}) {
+  const router = useRouter();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  async function handleCheckout(planId: string) {
+    setCheckoutLoading(planId);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planId, interval: billing }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        router.push(data.url);
+      } else {
+        console.error("Checkout error:", data.error);
+        setCheckoutLoading(null);
+      }
+    } catch {
+      setCheckoutLoading(null);
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
       {PLANS.map((plan) => {
         const price =
           billing === "annual" ? plan.annualPrice : plan.monthlyPrice;
         const isFree = price === 0;
+        const isCurrentPlan = isCoach && currentPlan?.toUpperCase() === plan.id.toUpperCase();
+        const isPaid = plan.id !== "free";
+
+        // Determine CTA behavior:
+        // - Free plan: always → /register
+        // - Current plan: "Current Plan" badge (no link)
+        // - Authenticated coach on FREE: direct Stripe checkout
+        // - Unauthenticated: → /register?plan=X
+        let ctaLabel = plan.cta;
+        let ctaAction: "link" | "checkout" | "current" = "link";
+        let ctaHref = plan.ctaHref;
+
+        if (isCurrentPlan) {
+          ctaLabel = "Current Plan";
+          ctaAction = "current";
+        } else if (isPaid && isCoach) {
+          ctaLabel = `Upgrade to ${plan.name}`;
+          ctaAction = "checkout";
+        } else if (isPaid && !isAuthenticated) {
+          ctaHref = `/register?plan=${plan.id}${billing === "annual" ? "&interval=annual" : ""}`;
+        }
 
         return (
           <div
@@ -249,17 +304,54 @@ export function PricingCards({ billing }: { billing: Billing }) {
             </div>
 
             {/* CTA */}
-            <Link
-              href={plan.ctaHref}
-              className={`text-center py-3 rounded-xl text-sm font-semibold font-heading transition-colors flex items-center justify-center gap-2 ${
-                plan.highlight
-                  ? "bg-white text-primary-600 hover:bg-primary-50"
-                  : "btn-primary"
-              }`}
-            >
-              {plan.cta}
-              <ArrowRightIcon />
-            </Link>
+            {ctaAction === "current" ? (
+              <div
+                className={`text-center py-3 rounded-xl text-sm font-semibold font-heading flex items-center justify-center gap-2 ${
+                  plan.highlight
+                    ? "bg-white/20 text-white cursor-default"
+                    : "bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400 cursor-default"
+                }`}
+              >
+                {ctaLabel}
+              </div>
+            ) : ctaAction === "checkout" ? (
+              <button
+                onClick={() => handleCheckout(plan.id)}
+                disabled={checkoutLoading === plan.id}
+                className={`text-center py-3 rounded-xl text-sm font-semibold font-heading transition-colors flex items-center justify-center gap-2 ${
+                  plan.highlight
+                    ? "bg-white text-primary-600 hover:bg-primary-50"
+                    : "btn-primary"
+                }`}
+              >
+                {checkoutLoading === plan.id ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Redirecting…
+                  </span>
+                ) : (
+                  <>
+                    {ctaLabel}
+                    <ArrowRightIcon />
+                  </>
+                )}
+              </button>
+            ) : (
+              <Link
+                href={ctaHref}
+                className={`text-center py-3 rounded-xl text-sm font-semibold font-heading transition-colors flex items-center justify-center gap-2 ${
+                  plan.highlight
+                    ? "bg-white text-primary-600 hover:bg-primary-50"
+                    : "btn-primary"
+                }`}
+              >
+                {ctaLabel}
+                <ArrowRightIcon />
+              </Link>
+            )}
 
             {/* Features */}
             <ul className="space-y-3 flex-1">
@@ -477,7 +569,15 @@ export function FAQAccordion() {
 
 // ─── Stateful pricing page wrapper ───────────────────────────────────────────
 
-export function PricingPageClient() {
+export function PricingPageClient({
+  isAuthenticated = false,
+  isCoach = false,
+  currentPlan = null,
+}: {
+  isAuthenticated?: boolean;
+  isCoach?: boolean;
+  currentPlan?: string | null;
+}) {
   const [billing, setBilling] = useState<Billing>("monthly");
 
   return (
@@ -488,7 +588,12 @@ export function PricingPageClient() {
       </div>
 
       {/* Pricing cards */}
-      <PricingCards billing={billing} />
+      <PricingCards
+        billing={billing}
+        isAuthenticated={isAuthenticated}
+        isCoach={isCoach}
+        currentPlan={currentPlan}
+      />
     </>
   );
 }

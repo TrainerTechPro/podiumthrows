@@ -157,6 +157,7 @@ model CoachProfile {
   currentPeriodEnd     DateTime?
   paymentFailedAt      DateTime?
   cancelAtPeriodEnd    Boolean          @default(false)
+  leadId               String?          // ID of the Lead record that converted into this coach (deficit-finder funnel)
   preferences          String?          @default("{}")
   enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
   onboardingCompletedAt DateTime?       // null = not completed; timestamp = completed/dismissed
@@ -1914,4 +1915,16 @@ model Lead {
   @@index([email])
   @@index([source])
   @@index([createdAt])
+}
+
+// ─── STRIPE EVENT (webhook idempotency) ──────────────────────────────────────
+
+/// Stores processed Stripe webhook event IDs to prevent duplicate handling.
+/// Uses the Stripe event ID (evt_xxx) as the primary key — a natural idempotency key.
+model StripeEvent {
+  id          String   @id          // Stripe event ID — NOT auto-generated
+  type        String               // e.g. "checkout.session.completed"
+  processedAt DateTime @default(now())
+
+  @@index([type])
 }

@@ -40,6 +40,7 @@ const RECOMMENDATIONS: Record<string, string> = {
 };
 
 function buildDeficitEmail(
+  leadId: string,
   name: string | null,
   event: string | null,
   gender: string | null,
@@ -128,7 +129,7 @@ function buildDeficitEmail(
     <p style="color:#8a8278; font-size:14px; margin-bottom:16px;">
       Want to track deficits across your entire roster automatically?
     </p>
-    <a href="https://podiumthrows.com/register" style="display:inline-block; background:#f59e0b; color:#0d0c09; padding:14px 32px; font-weight:700; font-size:15px; text-decoration:none;">
+    <a href="https://podiumthrows.com/register?leadId=${leadId}" style="display:inline-block; background:#f59e0b; color:#0d0c09; padding:14px 32px; font-weight:700; font-size:15px; text-decoration:none;">
       Start Your Free Trial
     </a>
   </div>
@@ -179,7 +180,7 @@ export async function POST(request: Request) {
         from: FROM_EMAIL,
         to: lead.email,
         subject: `Your Deficit Analysis: ${deficitLabel}`,
-        html: buildDeficitEmail(lead.name, event, gender, deficitResult),
+        html: buildDeficitEmail(lead.id, lead.name, event, gender, deficitResult),
       }).catch((err) => {
         // Log but don't fail the request — the lead is already saved
         console.error("Resend email error:", err);

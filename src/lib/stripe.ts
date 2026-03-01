@@ -28,36 +28,62 @@ export const stripe = new Proxy({} as Stripe, {
   },
 });
 
+/* ── Billing types ─────────────────────────────────────────────────────────── */
+
+export type BillingInterval = "monthly" | "annual";
+
+/* ── Plan definitions ──────────────────────────────────────────────────────── */
+
 export const PLANS = {
   FREE: {
     name: "Free",
     maxAthletes: 3,
-    priceId: null,
+    monthlyPriceId: null as string | null,
+    annualPriceId: null as string | null,
     monthlyPrice: 0,
+    annualPrice: 0,
     description: "Get started with up to 3 athletes.",
   },
   PRO: {
     name: "Pro",
     maxAthletes: 25,
-    priceId: process.env.STRIPE_PRICE_PRO || null,
-    monthlyPrice: 49,
+    monthlyPriceId: process.env.STRIPE_PRICE_PRO || null,
+    annualPriceId: process.env.STRIPE_PRICE_PRO_ANNUAL || null,
+    monthlyPrice: 100,
+    annualPrice: 80,
     description: "For growing programs up to 25 athletes.",
   },
   ELITE: {
     name: "Elite",
     maxAthletes: Infinity,
-    priceId: process.env.STRIPE_PRICE_ELITE || null,
-    monthlyPrice: 99,
+    monthlyPriceId: process.env.STRIPE_PRICE_ELITE || null,
+    annualPriceId: process.env.STRIPE_PRICE_ELITE_ANNUAL || null,
+    monthlyPrice: 199,
+    annualPrice: 159,
     description: "Unlimited athletes, priority support.",
   },
 } as const;
 
 export type PlanName = keyof typeof PLANS;
 
+/* ── Price resolution helpers ──────────────────────────────────────────────── */
+
+/** Get the Stripe price ID for a plan + billing interval. */
+export function getPriceId(
+  plan: PlanName,
+  interval: BillingInterval = "monthly"
+): string | null {
+  const p = PLANS[plan];
+  return interval === "annual" ? p.annualPriceId : p.monthlyPriceId;
+}
+
 /** Resolve a Stripe price ID → plan name. Returns null if unrecognized. */
 export function getPlanFromPriceId(priceId: string): PlanName | null {
-  if (priceId === process.env.STRIPE_PRICE_PRO) return "PRO";
-  if (priceId === process.env.STRIPE_PRICE_ELITE) return "ELITE";
+  for (const [key, plan] of Object.entries(PLANS)) {
+    if (plan.monthlyPriceId === priceId || plan.annualPriceId === priceId) {
+      return key as PlanName;
+    }
+  }
   return null;
 }
 

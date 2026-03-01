@@ -3,6 +3,8 @@ import Link from "next/link";
 import MarketingNav from "@/components/marketing/Nav";
 import MarketingFooter from "@/components/marketing/Footer";
 import { PricingPageClient, FeatureMatrix, FAQAccordion } from "./_pricing-client";
+import { getSession } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Pricing — Podium Throws",
@@ -46,7 +48,20 @@ function ArrowRightIcon() {
   );
 }
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  // Resolve auth state so CTAs can be context-aware
+  const session = await getSession();
+  let currentPlan: string | null = null;
+  const isAuthenticated = !!session;
+  const isCoach = session?.role === "COACH";
+
+  if (isCoach) {
+    const coach = await prisma.coachProfile.findUnique({
+      where: { userId: session.userId },
+      select: { plan: true },
+    });
+    currentPlan = coach?.plan ?? null;
+  }
   return (
     <div className="min-h-screen font-body bg-[var(--background)] text-[var(--foreground)]">
       <MarketingNav />
@@ -70,7 +85,11 @@ export default function PricingPage() {
       {/* ── PRICING CARDS (client — needs billing toggle) ── */}
       <section className="py-4 pb-24 bg-surface-50 dark:bg-[#0a0a0a]" aria-label="Pricing plans">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <PricingPageClient />
+          <PricingPageClient
+            isAuthenticated={isAuthenticated}
+            isCoach={isCoach}
+            currentPlan={currentPlan}
+          />
         </div>
       </section>
 
