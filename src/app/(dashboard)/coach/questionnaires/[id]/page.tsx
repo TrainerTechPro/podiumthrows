@@ -270,11 +270,16 @@ export default async function QuestionnaireDetailPage({
           <h2 className="text-sm font-semibold text-[var(--foreground)]">
             Assignments ({assignments.length})
           </h2>
+          {/* TODO: Link completed rows to /coach/questionnaires/[id]/responses/[athleteId] when that route exists */}
           <div className="space-y-2">
             {assignments.map((a) => (
               <div
                 key={a.athleteId}
-                className="flex items-center justify-between text-sm"
+                className={`flex items-center justify-between text-sm rounded-lg px-3 py-2 -mx-3 transition-colors ${
+                  a.completedAt
+                    ? "hover:bg-[var(--color-surface-2)] cursor-default"
+                    : ""
+                }`}
               >
                 <span className="text-[var(--foreground)]">{a.athleteName}</span>
                 {a.completedAt ? (

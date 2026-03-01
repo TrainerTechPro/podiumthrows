@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
  TYPING_QUIZZES,
  type TypingQuizId,
@@ -26,6 +27,7 @@ export default function AthleteTypingQuizPage() {
  const [pendingScore, setPendingScore] = useState<Record<string, number> | null>(null);
  const [saving, setSaving] = useState(false);
  const [done, setDone] = useState(false);
+ const [submitError, setSubmitError] = useState("");
 
  useEffect(() => {
  fetch("/api/athletes")
@@ -84,6 +86,7 @@ export default function AthleteTypingQuizPage() {
  setCurrentQuestionIdx(0);
  } else {
  setSaving(true);
+ setSubmitError("");
  try {
  const res = await fetch("/api/throws/typing", {
  method: "POST",
@@ -95,7 +98,7 @@ export default function AthleteTypingQuizPage() {
  setDone(true);
  }
  } catch {
- // Allow retry
+ setSubmitError("Failed to save quiz results. Please try again.");
  }
  setSaving(false);
  }
@@ -178,6 +181,7 @@ export default function AthleteTypingQuizPage() {
  return (
  <div className="animate-fade-in space-y-6">
  {/* Header */}
+ <div className="flex items-start justify-between">
  <div>
  <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
  Athlete Typing Quiz
@@ -186,6 +190,19 @@ export default function AthleteTypingQuizPage() {
  Assessment {currentQuizIdx + 1} of {QUIZ_ORDER.length}: {quiz.title}
  </p>
  </div>
+ <Link
+ href="/athlete/throws/profile"
+ className="text-xs text-[var(--color-text-3)] hover:text-[var(--color-text-2)] transition-colors mt-1"
+ >
+ Exit Quiz
+ </Link>
+ </div>
+
+ {submitError && (
+ <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+ {submitError}
+ </div>
+ )}
 
  {/* Progress bar */}
  <div className="space-y-1">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // ── Constants (duplicated from server constants to avoid importing server code) ─
 const EVENTS = [
@@ -518,13 +519,21 @@ export default function OnboardingWizardPage() {
 
  {/* Navigation */}
  <div className="flex items-center justify-between mt-6">
+ {step === 0 ? (
+ <Link
+ href="/coach/my-program"
+ className="btn-secondary px-5 py-2.5"
+ >
+ Cancel
+ </Link>
+ ) : (
  <button
  onClick={prevStep}
- disabled={step === 0}
- className="btn-secondary px-5 py-2.5 disabled:opacity-40"
+ className="btn-secondary px-5 py-2.5"
  >
  Back
  </button>
+ )}
 
  {step < STEPS.length - 1 ? (
  <button onClick={nextStep} className="btn-primary px-6 py-2.5">

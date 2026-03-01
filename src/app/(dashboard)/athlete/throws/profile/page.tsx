@@ -91,8 +91,10 @@ export default function AthleteProfilePage() {
  notes: "",
  });
  const [saving, setSaving] = useState(false);
+ const [saveError, setSaveError] = useState("");
  const [prForm, setPrForm] = useState({ event: "SHOT_PUT", implement: "", distance: "" });
  const [savingPR, setSavingPR] = useState(false);
+ const [prError, setPrError] = useState("");
  const [podiumProfile, setPodiumProfile] = useState<Record<string, unknown> | null>(null);
 
  const loadProfile = useCallback(async (id: string) => {
@@ -139,6 +141,7 @@ export default function AthleteProfilePage() {
  async function handleCheckIn() {
  if (!athleteId) return;
  setSaving(true);
+ setSaveError("");
  try {
  await fetch("/api/throws/checkins", {
  method: "POST",
@@ -162,13 +165,16 @@ export default function AthleteProfilePage() {
  });
  setShowCheckIn(false);
  if (athleteId) loadProfile(athleteId);
- } catch { /* ignore */ }
+ } catch {
+ setSaveError("Failed to save check-in. Please try again.");
+ }
  setSaving(false);
  }
 
  async function handleRecordPR() {
  if (!prForm.implement || !prForm.distance) return;
  setSavingPR(true);
+ setPrError("");
  try {
  const res = await fetch("/api/throws/prs", {
  method: "POST",
@@ -186,7 +192,9 @@ export default function AthleteProfilePage() {
  setPrForm({ event: "SHOT_PUT", implement: "", distance: "" });
  if (athleteId) loadProfile(athleteId);
  }
- } catch { /* ignore */ }
+ } catch {
+ setPrError("Failed to save PR. Please try again.");
+ }
  setSavingPR(false);
  }
 
@@ -431,6 +439,9 @@ export default function AthleteProfilePage() {
  />
  </div>
  </div>
+ {prError && (
+ <p className="text-xs text-red-600 dark:text-red-400">{prError}</p>
+ )}
  <button
  onClick={handleRecordPR}
  disabled={savingPR || !prForm.implement || !prForm.distance}
@@ -526,6 +537,9 @@ export default function AthleteProfilePage() {
  </div>
  </div>
 
+ {saveError && (
+ <p className="text-xs text-red-600 dark:text-red-400">{saveError}</p>
+ )}
  <button onClick={handleCheckIn} disabled={saving} className="btn-primary w-full">
  {saving ? "Saving..." : "Submit Check-In"}
  </button>

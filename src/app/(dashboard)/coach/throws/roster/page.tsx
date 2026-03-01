@@ -119,6 +119,7 @@ export default function ThrowsRosterPage() {
  // Removal
  const [removingId, setRemovingId] = useState<string | null>(null);
  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+ const [removeError, setRemoveError] = useState("");
 
  // ── Data fetching ──────────────────────────────────────────────
 
@@ -193,6 +194,7 @@ export default function ThrowsRosterPage() {
 
  async function handleRemove(athleteId: string) {
  setRemovingId(athleteId);
+ setRemoveError("");
  try {
  await fetch(`/api/throws/podium-roster/${athleteId}`, {
  method: "PATCH",
@@ -201,7 +203,7 @@ export default function ThrowsRosterPage() {
  });
  fetchData();
  } catch {
- // silently ignore
+ setRemoveError("Failed to remove athlete. Please try again.");
  } finally {
  setRemovingId(null);
  setConfirmRemoveId(null);
@@ -311,6 +313,12 @@ export default function ThrowsRosterPage() {
  {/* ══════════════════════════════════════════════════════════ */}
  {activeTab === "podium" && (
  <div className="space-y-4">
+
+ {removeError && (
+ <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+ {removeError}
+ </div>
+ )}
 
  {/* Enroll button */}
  <div className="flex items-center justify-between">

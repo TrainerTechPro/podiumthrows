@@ -86,6 +86,10 @@ export default function MyProgramPage() {
  const [todaySessions, setTodaySessions] = useState<SessionData[]>([]);
  const [weekSessions, setWeekSessions] = useState<SessionData[]>([]);
  const [loading, setLoading] = useState(true);
+ const [fetchError, setFetchError] = useState("");
+ const [expandedPhaseId, setExpandedPhaseId] = useState<string | null>(null);
+ const [phaseSessions, setPhaseSessions] = useState<Record<string, SessionData[]>>({});
+ const [loadingPhase, setLoadingPhase] = useState<string | null>(null);
 
  useEffect(() => {
  async function load() {
@@ -111,7 +115,7 @@ export default function MyProgramPage() {
  }
  }
  } catch {
- // handle silently
+ setFetchError("Failed to load program. Please try again.");
  } finally {
  setLoading(false);
  }
@@ -119,10 +123,47 @@ export default function MyProgramPage() {
  load();
  }, []);
 
+ async function togglePhase(phaseId: string, programId: string) {
+ if (expandedPhaseId === phaseId) {
+ setExpandedPhaseId(null);
+ return;
+ }
+ setExpandedPhaseId(phaseId);
+ if (!phaseSessions[phaseId]) {
+ setLoadingPhase(phaseId);
+ try {
+ const res = await fetch(`/api/throws/program/${programId}/phase/${phaseId}/sessions`);
+ if (res.ok) {
+ const { data } = await res.json();
+ setPhaseSessions((prev) => ({ ...prev, [phaseId]: data?.sessions ?? [] }));
+ }
+ } catch {
+ // Phase sessions will just stay empty
+ } finally {
+ setLoadingPhase(null);
+ }
+ }
+ }
+
  if (loading) {
  return (
  <div className="flex items-center justify-center min-h-[60vh]">
  <div className="animate-pulse text-[var(--color-text-3)]">Loading program...</div>
+ </div>
+ );
+ }
+
+ // Error loading program
+ if (fetchError) {
+ return (
+ <div className="max-w-lg mx-auto px-4 py-16 text-center space-y-4">
+ <p className="text-sm text-red-600 dark:text-red-400">{fetchError}</p>
+ <button
+ onClick={() => window.location.reload()}
+ className="btn-secondary text-sm px-5 py-2"
+ >
+ Reload
+ </button>
  </div>
  );
  }
@@ -209,19 +250,24 @@ export default function MyProgramPage() {
  <div className="space-y-3">
  {program.phases.map((phase) => {
  const isCurrent = phase.id === program.currentPhaseId;
+ const isExpanded = expandedPhaseId === phase.id;
+ const sessions = phaseSessions[phase.id];
+ const isLoadingThis = loadingPhase === phase.id;
  return (
- <div
- key={phase.id}
- className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+ <div key={phase.id}>
+ <button
+ type="button"
+ onClick={() => togglePhase(phase.id, program.id)}
+ className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer hover:bg-[var(--color-surface-2)]/50 ${
  isCurrent
  ? "bg-[rgba(212,168,67,0.08)] ring-1 ring-[rgba(212,168,67,0.3)]"
  : ""
  }`}
  >
  <div
- className={`w-3 h-3 rounded-full ${PHASE_COLORS[phase.phase] ?? "bg-[var(--color-text-3)]"}`}
+ className={`w-3 h-3 rounded-full flex-shrink-0 ${PHASE_COLORS[phase.phase] ?? "bg-[var(--color-text-3)]"}`}
  />
- <div className="flex-1 min-w-0">
+ <div className="flex-1 min-w-0 text-left">
  <div className="flex items-center gap-2">
  <span className="text-sm font-medium text-[var(--color-text)]">
  {PHASE_LABELS[phase.phase] ?? phase.phase}
@@ -245,7 +291,7 @@ export default function MyProgramPage() {
  )}
  </div>
  <span
- className={`text-xs px-2 py-0.5 rounded-full ${
+ className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
  phase.status === "ACTIVE"
  ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
  : phase.status === "COMPLETED"
@@ -257,6 +303,43 @@ export default function MyProgramPage() {
  ? `${phase.throwsPerWeekTarget} throws/wk`
  : phase.status}
  </span>
+ <svg
+ className={`w-4 h-4 text-[var(--color-text-3)] transition-transform flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`}
+ fill="none"
+ viewBox="0 0 24 24"
+ stroke="currentColor"
+ >
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+ </svg>
+ </button>
+ {isExpanded && (
+ <div className="ml-6 pl-3 border-l-2 border-[var(--color-border)] mt-1 space-y-1">
+ {isLoadingThis ? (
+ <p className="text-xs text-[var(--color-text-3)] py-2">Loading sessions...</p>
+ ) : sessions && sessions.length > 0 ? (
+ sessions.map((s) => (
+ <Link
+ key={s.id}
+ href={`/coach/my-program/session/${s.id}`}
+ className="flex items-center gap-2 py-1.5 px-2 rounded-lg text-xs hover:bg-[var(--color-surface-2)]/50 transition-colors group"
+ >
+ <span className="text-[var(--color-text-2)] w-7">
+ {DAY_NAMES[s.dayOfWeek] ?? `D${s.dayOfWeek}`}
+ </span>
+ <span className="text-[var(--color-text)] flex-1">{s.focusLabel}</span>
+ <span className="text-[var(--color-text-3)]">{s.totalThrowsTarget}t</span>
+ <span className={`px-1.5 py-0.5 rounded ${STATUS_STYLES[s.status] ?? ""}`}>
+ {s.status === "COMPLETED" ? "\u2713" : s.status.replace("_", " ")}
+ </span>
+ </Link>
+ ))
+ ) : (
+ <p className="text-xs text-[var(--color-text-3)] py-2">
+ {phase._count.sessions} session{phase._count.sessions !== 1 ? "s" : ""} planned
+ </p>
+ )}
+ </div>
+ )}
  </div>
  );
  })}
