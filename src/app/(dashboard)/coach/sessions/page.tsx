@@ -9,10 +9,13 @@ import { SessionsTabs } from "./_sessions-tabs";
 
 export default async function SessionsPage() {
   const { coach } = await requireCoachSession();
-  const [sessions, plans] = await Promise.all([
+  const [sessionsResult, plansResult] = await Promise.allSettled([
     getCoachSessions(coach.id),
     getWorkoutPlans(coach.id),
   ]);
+
+  const sessions = sessionsResult.status === "fulfilled" ? sessionsResult.value : [];
+  const plans = plansResult.status === "fulfilled" ? plansResult.value : [];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

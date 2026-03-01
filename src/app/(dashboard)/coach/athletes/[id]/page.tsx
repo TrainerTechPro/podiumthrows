@@ -1054,8 +1054,8 @@ export default async function AthleteProfilePage({
     : "overview";
 
   // Always fetch latest assessment (needed for header badge)
-  // Fetch tab-specific data in parallel
-  const [acwr, recentPRs, sessions, throws, trend, goals, latestAssessment] = await Promise.all([
+  // Fetch tab-specific data in parallel, using allSettled for resilience
+  const results = await Promise.allSettled([
     tab === "overview"
       ? getAthleteACWR(athlete.id)
       : Promise.resolve(null as AthleteACWR),
@@ -1076,6 +1076,14 @@ export default async function AthleteProfilePage({
       : Promise.resolve([] as GoalItem[]),
     getLatestBondarchukAssessment(athlete.id),
   ]);
+
+  const acwr = results[0].status === "fulfilled" ? results[0].value as AthleteACWR : null as AthleteACWR;
+  const recentPRs = results[1].status === "fulfilled" ? results[1].value as ThrowLogItem[] : [] as ThrowLogItem[];
+  const sessions = results[2].status === "fulfilled" ? results[2].value as SessionItem[] : [] as SessionItem[];
+  const throws = results[3].status === "fulfilled" ? results[3].value as ThrowLogItem[] : [] as ThrowLogItem[];
+  const trend = results[4].status === "fulfilled" ? results[4].value as ReadinessTrendPoint[] : [] as ReadinessTrendPoint[];
+  const goals = results[5].status === "fulfilled" ? results[5].value as GoalItem[] : [] as GoalItem[];
+  const latestAssessment = results[6].status === "fulfilled" ? results[6].value : null;
 
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;

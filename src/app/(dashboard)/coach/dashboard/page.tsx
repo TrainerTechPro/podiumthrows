@@ -337,13 +337,24 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
 export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
-  const [stats, activity, flagged, readiness, onboarding] = await Promise.all([
-    getCoachStats(coach.id),
-    getRecentActivity(coach.id),
-    getFlaggedAthletes(coach.id),
-    getTeamReadinessTrends(coach.id),
-    getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
-  ]);
+  const [statsResult, activityResult, flaggedResult, readinessResult, onboardingResult] =
+    await Promise.allSettled([
+      getCoachStats(coach.id),
+      getRecentActivity(coach.id),
+      getFlaggedAthletes(coach.id),
+      getTeamReadinessTrends(coach.id),
+      getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
+    ]);
+
+  const stats: CoachStats = statsResult.status === "fulfilled"
+    ? statsResult.value
+    : { totalAthletes: 0, lowReadiness: 0, sessionsToday: 0, injured: 0, complianceRate: null };
+  const activity = activityResult.status === "fulfilled" ? activityResult.value : [];
+  const flagged = flaggedResult.status === "fulfilled" ? flaggedResult.value : [];
+  const readiness = readinessResult.status === "fulfilled" ? readinessResult.value : [];
+  const onboarding = onboardingResult.status === "fulfilled"
+    ? onboardingResult.value
+    : { isCompleted: true, completedAt: null, steps: [], completedCount: 0, totalSteps: 0 };
 
   const now = new Date();
   const hour = now.getHours();

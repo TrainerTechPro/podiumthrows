@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // bcryptjs uses Node.js crypto — must run in Node.js runtime, not edge
-  serverExternalPackages: ['bcryptjs'],
   experimental: {
+    // bcryptjs uses Node.js crypto — must run in Node.js runtime, not edge
+    serverComponentsExternalPackages: ['bcryptjs'],
     serverActions: {
       bodySizeLimit: '2gb',
     },
