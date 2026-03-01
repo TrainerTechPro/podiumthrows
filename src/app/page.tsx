@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -106,19 +107,6 @@ function ThrowingCircle() {
   );
 }
 
-// ─── Inline logo ─────────────────────────────────────────────────────────────
-
-function Logo() {
-  return (
-    <svg viewBox="0 0 36 36" fill="none" className="w-7 h-7" aria-hidden="true">
-      <circle cx="18" cy="18" r="16" stroke="#f59e0b" strokeWidth="1.75" />
-      <circle cx="18" cy="18" r="10" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2.5" />
-      <circle cx="18" cy="18" r="4.5" stroke="#f59e0b" strokeWidth="1.5" />
-      <circle cx="18" cy="18" r="1.75" fill="#f59e0b" />
-    </svg>
-  );
-}
-
 // ─── Benefit item ────────────────────────────────────────────────────────────
 
 const BENEFITS = [
@@ -128,7 +116,6 @@ const BENEFITS = [
   "Whether your current implement sequence is costing distance",
   "Instant results — no waiting, no fluff, no account required",
 ];
-
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
@@ -152,7 +139,13 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-6 sm:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group" aria-label="Podium Throws home">
             <div className="transition-transform duration-300 group-hover:scale-110">
-              <Logo />
+              <Image
+                src="/logo.png"
+                alt="Podium Throws"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
             </div>
             <span className="font-heading font-bold text-[15px] text-white tracking-tight">
               Podium Throws

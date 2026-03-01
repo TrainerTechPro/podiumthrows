@@ -1,21 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-
-function ThrowingCircle({ className = "w-8 h-8" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 36 36" fill="none" className={className} aria-hidden="true">
-      <circle cx="18" cy="18" r="16" stroke="#f59e0b" strokeWidth="1.75" />
-      <circle cx="18" cy="18" r="10" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2.5" />
-      <circle cx="18" cy="18" r="4.5" stroke="#f59e0b" strokeWidth="1.5" />
-      <circle cx="18" cy="18" r="1.75" fill="#f59e0b" />
-    </svg>
-  );
-}
-
 
 const NAV_LINKS = [
   { href: "/#features", label: "Features" },
@@ -52,7 +41,13 @@ export default function MarketingNav() {
       <div className="max-w-7xl mx-auto px-6 sm:px-8 h-[66px] flex items-center justify-between gap-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-          <ThrowingCircle />
+          <Image
+            src="/logo.png"
+            alt="Podium Throws"
+            width={32}
+            height={32}
+            className="w-8 h-8"
+          />
           <span className="font-heading font-bold text-[16px] text-white group-hover:text-primary-400 transition-colors tracking-tight">
             Podium Throws
           </span>

@@ -1,15 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-
-function ThrowingCircle() {
-  return (
-    <svg viewBox="0 0 36 36" fill="none" className="w-8 h-8 flex-shrink-0" aria-hidden="true">
-      <circle cx="18" cy="18" r="16" stroke="#f59e0b" strokeWidth="1.75" />
-      <circle cx="18" cy="18" r="10" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 2.5" />
-      <circle cx="18" cy="18" r="4.5" stroke="#f59e0b" strokeWidth="1.5" />
-      <circle cx="18" cy="18" r="1.75" fill="#f59e0b" />
-    </svg>
-  );
-}
 
 const FOOTER_COLS = [
   {
@@ -55,7 +45,13 @@ export default function MarketingFooter() {
           {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 group mb-5">
-              <ThrowingCircle />
+              <Image
+                src="/logo.png"
+                alt="Podium Throws"
+                width={32}
+                height={32}
+                className="w-8 h-8 flex-shrink-0"
+              />
               <span className="font-heading font-bold text-base text-white group-hover:text-primary-400 transition-colors">
                 Podium Throws
               </span>
