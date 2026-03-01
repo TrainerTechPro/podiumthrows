@@ -1,4 +1,4 @@
-import { requireCoachSession, getCoachVideos, getCoachVideoStats } from "@/lib/data/coach";
+import { requireCoachSession, getCoachVideos, getCoachVideoStats, type VideoStats } from "@/lib/data/coach";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -26,7 +26,7 @@ export default async function VideoLibraryPage({
     redirect("/login");
   }
 
-  const [videos, stats] = await Promise.all([
+  const [videosResult, statsResult] = await Promise.allSettled([
     getCoachVideos(coach.id, {
       event: searchParams.event,
       category: searchParams.category,
@@ -34,6 +34,11 @@ export default async function VideoLibraryPage({
     }),
     getCoachVideoStats(coach.id),
   ]);
+
+  const videos = videosResult.status === "fulfilled" ? videosResult.value : [];
+  const stats: VideoStats = statsResult.status === "fulfilled"
+    ? statsResult.value
+    : { total: 0, byEvent: {}, recentCount: 0 };
 
   const categories = [
     { label: "All", value: "" },

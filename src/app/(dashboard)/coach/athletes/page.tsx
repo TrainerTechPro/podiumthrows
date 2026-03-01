@@ -4,12 +4,20 @@ import {
   requireCoachSession,
   getAthleteRoster,
   PLAN_LIMITS,
+  type AthleteRosterItem,
 } from "@/lib/data/coach";
 import type { PlanName } from "@/lib/stripe";
 
 export default async function AthletesPage() {
   const { coach } = await requireCoachSession();
-  const roster = await getAthleteRoster(coach.id);
+
+  let roster: AthleteRosterItem[];
+  try {
+    roster = await getAthleteRoster(coach.id);
+  } catch {
+    roster = [];
+  }
+
   const planLimit = PLAN_LIMITS[coach.plan];
 
   // Sort: lowest readiness first (needs attention), no check-in last
