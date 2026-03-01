@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCoachSession } from "@/lib/data/coach";
+import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 
 /* ─── POST — Mark transcode as complete ─────────────────────────────────────── *
@@ -24,7 +24,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
@@ -99,7 +99,12 @@ export async function POST(
       gopInterval: gopInterval ?? 15,
       fps: fps ?? 60,
     });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]/transcode/complete] POST Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

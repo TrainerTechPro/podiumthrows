@@ -180,13 +180,33 @@ export type OnboardingStatus = {
 
 /* ─── Auth Helper ─────────────────────────────────────────────────────────── */
 
-/** Require authenticated coach session. Redirects to /login otherwise. */
+/** Require authenticated coach session. Redirects to /login otherwise.
+ *  Use in Server Components / Server Actions only (uses redirect()). */
 export async function requireCoachSession() {
   const session = await getSession();
   if (!session || session.role !== "COACH") redirect("/login");
 
   const coach = await fetchCoachByUserId(session.userId);
   if (!coach) redirect("/login");
+
+  return { session, coach };
+}
+
+/** Route-Handler-safe version: returns { session, coach } or throws
+ *  an AuthError (never calls redirect). Use this in API Route Handlers. */
+export class AuthError extends Error {
+  constructor(message = "Unauthorized") {
+    super(message);
+    this.name = "AuthError";
+  }
+}
+
+export async function requireCoachApi() {
+  const session = await getSession();
+  if (!session || session.role !== "COACH") throw new AuthError();
+
+  const coach = await fetchCoachByUserId(session.userId);
+  if (!coach) throw new AuthError();
 
   return { session, coach };
 }

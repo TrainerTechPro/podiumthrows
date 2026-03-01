@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCoachSession } from "@/lib/data/coach";
+import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { isR2Configured, saveFileLocally, MAX_IMAGE_SIZE_MB } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
-    await requireCoachSession();
+    await requireCoachApi();
 
     if (isR2Configured()) {
       return NextResponse.json(
@@ -32,7 +32,12 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const publicUrl = await saveFileLocally(key, buffer);
     return NextResponse.json({ publicUrl });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[upload-thumbnail-local] Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

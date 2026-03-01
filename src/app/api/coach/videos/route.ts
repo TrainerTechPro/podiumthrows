@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCoachSession, getCoachVideos } from "@/lib/data/coach";
+import { requireCoachApi, AuthError, getCoachVideos } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
@@ -7,7 +7,7 @@ const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
 
 export async function GET(req: NextRequest) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
     const url = new URL(req.url);
 
     const filters = {
@@ -19,14 +19,19 @@ export async function GET(req: NextRequest) {
 
     const videos = await getCoachVideos(coach.id, filters);
     return NextResponse.json({ videos });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos GET] Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
     const body = await req.json();
 
     const {
@@ -114,7 +119,12 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ video: { id: video.id } }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos POST] Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

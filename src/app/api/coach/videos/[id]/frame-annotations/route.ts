@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCoachSession } from "@/lib/data/coach";
+import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 
 /* ─── GET — Retrieve frame annotations for a video ───────────────────────── */
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
@@ -42,8 +42,13 @@ export async function GET(
     });
 
     return NextResponse.json({ frameAnnotations });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]/frame-annotations] GET Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -54,7 +59,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
@@ -110,8 +115,13 @@ export async function POST(
     });
 
     return NextResponse.json({ frameAnnotation }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]/frame-annotations] POST Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -122,7 +132,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
@@ -195,7 +205,12 @@ export async function PUT(
       success: true,
       count: results.length,
     });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]/frame-annotations] PUT Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

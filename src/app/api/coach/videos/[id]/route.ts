@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCoachSession, getVideoById } from "@/lib/data/coach";
+import { requireCoachApi, AuthError, getVideoById } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { deleteFile } from "@/lib/storage";
 
@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
     const video = await getVideoById(params.id, coach.id);
 
     if (!video) {
@@ -19,8 +19,13 @@ export async function GET(
     }
 
     return NextResponse.json({ video });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]] GET Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -29,7 +34,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
 
     // Verify ownership
     const existing = await prisma.videoUpload.findFirst({
@@ -85,8 +90,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]] PUT Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -95,7 +105,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
 
     const video = await prisma.videoUpload.findFirst({
       where: { id: params.id, coachId: coach.id },
@@ -119,7 +129,12 @@ export async function DELETE(
     await prisma.videoUpload.delete({ where: { id: params.id } });
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]] DELETE Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCoachSession } from "@/lib/data/coach";
+import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import {
   isR2Configured,
   isAllowedVideoType,
@@ -11,7 +11,7 @@ import {
 
 export async function POST(req: NextRequest) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
     const body = await req.json();
 
     const { fileName, contentType, fileSizeMb } = body as {
@@ -71,7 +71,12 @@ export async function POST(req: NextRequest) {
         publicUrl,
       });
     }
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[upload-url] Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

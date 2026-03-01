@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireCoachSession } from "@/lib/data/coach";
+import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 
 const VALID_ANNOTATION_TYPES = [
@@ -28,7 +28,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { coach } = await requireCoachSession();
+    const { coach } = await requireCoachApi();
 
     // Verify ownership
     const existing = await prisma.videoUpload.findFirst({
@@ -86,7 +86,12 @@ export async function PUT(
     });
 
     return NextResponse.json({ success: true, count: annotations.length });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    console.error("[videos/[id]/annotations] PUT Error:", err);
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
