@@ -12,6 +12,19 @@ import { snapToFrame } from "./types";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
+/**
+ * Frame-perfect mode: JogWheel operates on a pre-extracted ImageBitmap[]
+ * instead of a <video> element. Zero decode latency — array index lookup.
+ */
+type FrameMode = {
+  /** Total number of extracted frames */
+  totalFrames: number;
+  /** Current frame index (0-based) */
+  currentFrame: number;
+  /** Callback when the frame index changes */
+  onFrameChange: (index: number) => void;
+};
+
 type Props = {
   currentTime: number;
   duration: number;
@@ -29,6 +42,17 @@ type Props = {
    * When NOT provided, falls back to calling onSeek() on every move (original behavior).
    */
   videoRef?: React.RefObject<HTMLVideoElement | null>;
+  /**
+   * Frame-perfect mode: operates on pre-extracted ImageBitmap[] instead of <video>.
+   * When provided, overrides both videoRef and callback modes.
+   * Pixel drag maps to frame index changes with zero decode latency.
+   */
+  frameMode?: FrameMode;
+  /**
+   * When true, dragging right moves backward in time (film-strip mental model).
+   * When false (default), dragging right moves forward (timeline mental model).
+   */
+  invertScroll?: boolean;
   className?: string;
 };
 
@@ -48,6 +72,8 @@ export function JogWheel({
   sensitivity = 0.02,
   fps,
   videoRef,
+  frameMode,
+  invertScroll = false,
   className,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,10 +86,15 @@ export function JogWheel({
   const lastMoveTime = useRef(0);
   /** Track accumulated time imperatively during direct-DOM mode */
   const timeRef = useRef(currentTime);
+  /** Track accumulated frame index imperatively during frame mode */
+  const frameIndexRef = useRef(frameMode?.currentFrame ?? 0);
   /** Visual offset for tick strip (imperative, not React state in fast path) */
   const offsetRef = useRef(0);
   const [offset, setOffset] = useState(0);
   const [active, setActive] = useState(false);
+
+  /** Pixels per frame in frame mode (higher = slower/more precise scrubbing) */
+  const PIXELS_PER_FRAME = 5;
 
   // Keep timeRef in sync with prop when not dragging
   useEffect(() => {
@@ -72,8 +103,17 @@ export function JogWheel({
     }
   }, [currentTime]);
 
+  // Keep frameIndexRef in sync with prop when not dragging
+  useEffect(() => {
+    if (!isDragging.current && frameMode) {
+      frameIndexRef.current = frameMode.currentFrame;
+    }
+  }, [frameMode]);
+
+  /** Whether to use frame-perfect mode (highest priority) */
+  const useFrameMode = !!frameMode;
   /** Whether to use direct DOM mutation (zero-jitter fast path) */
-  const useDirectDOM = !!videoRef;
+  const useDirectDOM = !useFrameMode && !!videoRef;
 
   /* ── Direct DOM: seek video + update tick strip without React ──────── */
 
@@ -104,6 +144,30 @@ export function JogWheel({
     [duration, fps, videoRef]
   );
 
+  /* ── Frame mode: index into ImageBitmap[] (zero decode latency) ────── */
+
+  const seekFrameMode = useCallback(
+    (pixelDelta: number) => {
+      if (!frameMode) return;
+      const frameDelta = pixelDelta / PIXELS_PER_FRAME;
+      const raw = frameIndexRef.current + frameDelta;
+      const clamped = Math.max(0, Math.min(frameMode.totalFrames - 1, Math.round(raw)));
+      frameIndexRef.current = clamped;
+      frameMode.onFrameChange(clamped);
+
+      // Update tick strip directly
+      if (tickStripRef.current && frameMode.totalFrames > 1) {
+        const progress = clamped / (frameMode.totalFrames - 1);
+        const tickOffset = progress * TICK_COUNT * TICK_SPACING;
+        tickStripRef.current.style.transform = `translateX(${
+          -tickOffset + offsetRef.current * 0.05
+        }px)`;
+        tickStripRef.current.style.transition = "none";
+      }
+    },
+    [frameMode]
+  );
+
   /* ── Fallback: seek via React state (original behavior) ────────────── */
 
   const seekViaCallback = useCallback(
@@ -120,22 +184,28 @@ export function JogWheel({
 
   const seek = useCallback(
     (delta: number) => {
-      if (useDirectDOM) {
+      if (useFrameMode) {
+        // In frame mode, delta is raw pixel delta — not time delta
+        seekFrameMode(delta);
+      } else if (useDirectDOM) {
         seekDirect(delta);
       } else {
         seekViaCallback(delta);
       }
     },
-    [useDirectDOM, seekDirect, seekViaCallback]
+    [useFrameMode, useDirectDOM, seekFrameMode, seekDirect, seekViaCallback]
   );
 
-  /* ── Sync React state after momentum settles (direct DOM only) ─────── */
+  /* ── Sync React state after momentum settles ──────────────────────── */
 
   const syncReactState = useCallback(() => {
-    if (useDirectDOM) {
+    if (useFrameMode && frameMode) {
+      // Frame mode: final sync handled by onFrameChange during drag
+      frameMode.onFrameChange(Math.round(frameIndexRef.current));
+    } else if (useDirectDOM) {
       onSeek(timeRef.current);
     }
-  }, [useDirectDOM, onSeek]);
+  }, [useFrameMode, frameMode, useDirectDOM, onSeek]);
 
   /* ── Momentum animation loop ───────────────────────────────────────── */
 
@@ -147,22 +217,24 @@ export function JogWheel({
       return;
     }
 
-    // Convert pixel velocity to time delta
-    const timeDelta = velocityRef.current * sensitivity;
-    seek(timeDelta);
+    // In frame mode, pass raw pixel velocity; otherwise convert to time delta
+    const delta = useFrameMode
+      ? velocityRef.current
+      : velocityRef.current * sensitivity;
+    seek(delta);
 
     // Apply friction
     velocityRef.current *= FRICTION;
 
     // Visual offset
-    if (useDirectDOM) {
+    if (useDirectDOM || useFrameMode) {
       offsetRef.current += velocityRef.current;
     } else {
       setOffset((prev) => prev + velocityRef.current);
     }
 
     rafRef.current = requestAnimationFrame(animateMomentum);
-  }, [seek, sensitivity, syncReactState, useDirectDOM]);
+  }, [seek, sensitivity, syncReactState, useDirectDOM, useFrameMode]);
 
   /* ── Pointer start ─────────────────────────────────────────────────── */
 
@@ -173,15 +245,21 @@ export function JogWheel({
       velocityRef.current = 0;
       velocitySamples.current = [];
       lastMoveTime.current = performance.now();
-      timeRef.current = useDirectDOM
-        ? videoRef?.current?.currentTime ?? currentTime
-        : currentTime;
+
+      if (useFrameMode && frameMode) {
+        frameIndexRef.current = frameMode.currentFrame;
+      } else {
+        timeRef.current = useDirectDOM
+          ? videoRef?.current?.currentTime ?? currentTime
+          : currentTime;
+      }
+
       setActive(true);
 
       // Cancel any existing momentum animation
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     },
-    [currentTime, useDirectDOM, videoRef]
+    [currentTime, useDirectDOM, useFrameMode, frameMode, videoRef]
   );
 
   /* ── Pointer move ──────────────────────────────────────────────────── */
@@ -190,29 +268,32 @@ export function JogWheel({
     (clientX: number) => {
       if (!isDragging.current) return;
 
-      const dx = clientX - lastX.current;
+      const rawDx = clientX - lastX.current;
       const now = performance.now();
       const dt = now - lastMoveTime.current;
 
       lastX.current = clientX;
       lastMoveTime.current = now;
 
-      // Track velocity samples (keep last 5)
+      // Apply scroll direction — inverted flips the film-strip mental model
+      const dx = invertScroll ? -rawDx : rawDx;
+
+      // Track velocity samples (keep last 5) — uses effective dx so momentum inherits inversion
       velocitySamples.current.push({ dx, dt });
       if (velocitySamples.current.length > 5) velocitySamples.current.shift();
 
-      // Seek the video
-      const timeDelta = dx * sensitivity;
-      seek(timeDelta);
+      // In frame mode, pass raw pixel delta; otherwise convert to time delta
+      const delta = useFrameMode ? dx : dx * sensitivity;
+      seek(delta);
 
-      // Visual offset
-      if (useDirectDOM) {
+      // Visual offset tracks effective dx so ticks move with mental model
+      if (useDirectDOM || useFrameMode) {
         offsetRef.current += dx;
       } else {
         setOffset((prev) => prev + dx);
       }
     },
-    [seek, sensitivity, useDirectDOM]
+    [seek, sensitivity, useDirectDOM, useFrameMode, invertScroll]
   );
 
   /* ── Pointer end ───────────────────────────────────────────────────── */

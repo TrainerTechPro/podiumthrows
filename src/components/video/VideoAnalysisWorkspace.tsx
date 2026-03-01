@@ -13,8 +13,12 @@ import { useZoomPan, type ZoomPanState } from "./useZoomPan";
 import { ZoomableVideoContainer } from "./ZoomableVideoContainer";
 import { AnnotationCanvas } from "./AnnotationCanvas";
 import { JogWheel } from "./JogWheel";
+import { CanvasFrameRenderer } from "./CanvasFrameRenderer";
+import { useFrameExtractor } from "./useFrameExtractor";
 import {
   snapToFrame,
+  frameIndexToTime,
+  timeToFrameIndex,
   ANALYSIS_FPS,
   FRAME_STEP,
   PLAYBACK_SPEEDS,
@@ -95,6 +99,22 @@ export const VideoAnalysisWorkspace = forwardRef<
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+
+  // Frame-perfect mode
+  const [framePerfectMode, setFramePerfectMode] = useState(false);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+
+  const frameExtractor = useFrameExtractor({
+    maxDuration: 10,
+    resolution: "half",
+    fps: ANALYSIS_FPS,
+  });
+
+  /** Frame-perfect mode is active when frames are extracted and mode is on */
+  const framePerfectActive =
+    framePerfectMode &&
+    frameExtractor.frames.length > 0 &&
+    !frameExtractor.isExtracting;
 
   // Sync locks
   const [syncLock, setSyncLock] = useState(true);
@@ -224,10 +244,32 @@ export const VideoAnalysisWorkspace = forwardRef<
     seekTo: handleSeek,
   }), [handleSeek]);
 
+  /** Handle frame index changes from JogWheel in frame-perfect mode */
+  const handleFrameChange = useCallback(
+    (index: number) => {
+      setCurrentFrameIndex(index);
+      // Keep currentTime in sync for annotations, timestamps, etc.
+      const time = frameIndexToTime(index, ANALYSIS_FPS);
+      setCurrentTime(time);
+      onTimeUpdate?.(time);
+    },
+    [onTimeUpdate]
+  );
+
   /* ── Frame step ────────────────────────────────────────────────────── */
 
   const frameStep = useCallback(
     (dir: 1 | -1) => {
+      // Frame-perfect mode: step through frame array directly
+      if (framePerfectActive) {
+        const next = Math.max(
+          0,
+          Math.min(frameExtractor.totalFrames - 1, currentFrameIndex + dir)
+        );
+        handleFrameChange(next);
+        return;
+      }
+
       const vA = videoARef.current;
       if (!vA) return;
 
@@ -245,7 +287,15 @@ export const VideoAnalysisWorkspace = forwardRef<
       setCurrentTime(clamped);
       onTimeUpdate?.(clamped);
     },
-    [duration, syncLock, onTimeUpdate]
+    [
+      duration,
+      syncLock,
+      onTimeUpdate,
+      framePerfectActive,
+      frameExtractor.totalFrames,
+      currentFrameIndex,
+      handleFrameChange,
+    ]
   );
 
   /* ── Re-sync ───────────────────────────────────────────────────────── */
@@ -258,6 +308,40 @@ export const VideoAnalysisWorkspace = forwardRef<
       if (!vA.paused) vB.play();
     }
   }, []);
+
+  /* ── Frame-Perfect Mode toggle ─────────────────────────────────────── */
+
+  const toggleFramePerfect = useCallback(() => {
+    if (framePerfectMode) {
+      // Turning OFF — sync video to frame position and clean up
+      const time = frameIndexToTime(currentFrameIndex, ANALYSIS_FPS);
+      if (videoARef.current) videoARef.current.currentTime = time;
+      setCurrentTime(time);
+      onTimeUpdate?.(time);
+      setFramePerfectMode(false);
+    } else {
+      // Turning ON — start extraction
+      if (frameExtractor.frames.length === 0 && !frameExtractor.isExtracting) {
+        frameExtractor.extract(videoA.src);
+      }
+      // Pause video during frame-perfect mode
+      if (videoARef.current && !videoARef.current.paused) {
+        videoARef.current.pause();
+        if (videoBRef.current) videoBRef.current.pause();
+        setIsPlaying(false);
+      }
+      // Set initial frame index from current time
+      setCurrentFrameIndex(timeToFrameIndex(currentTime, ANALYSIS_FPS));
+      setFramePerfectMode(true);
+    }
+  }, [
+    framePerfectMode,
+    currentFrameIndex,
+    currentTime,
+    frameExtractor,
+    videoA.src,
+    onTimeUpdate,
+  ]);
 
   /* ── Keyboard shortcuts ────────────────────────────────────────────── */
 
@@ -298,6 +382,15 @@ export const VideoAnalysisWorkspace = forwardRef<
     return () => document.removeEventListener("click", h);
   }, [showSpeedMenu]);
 
+  /* ── Clean up frame extraction on unmount or video source change ───── */
+
+  useEffect(() => {
+    return () => {
+      frameExtractor.cleanup();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoA.src]);
+
   /* ── Video event handlers ──────────────────────────────────────────── */
 
   const handleVideoAPlay = useCallback(() => setIsPlaying(true), []);
@@ -319,7 +412,13 @@ export const VideoAnalysisWorkspace = forwardRef<
 
   /* ── Computed ───────────────────────────────────────────────────────── */
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progress = framePerfectActive
+    ? frameExtractor.totalFrames > 1
+      ? (currentFrameIndex / (frameExtractor.totalFrames - 1)) * 100
+      : 0
+    : duration > 0
+      ? (currentTime / duration) * 100
+      : 0;
   const hasVideoB = !!videoB && mode !== "single";
   const modeLabel = mode === "ghost" ? "Ghost" : mode === "split" ? "Split" : "Single";
 
@@ -332,11 +431,13 @@ export const VideoAnalysisWorkspace = forwardRef<
     videoArea = (
       <ZoomableVideoContainer zoomPan={zoomPanA} className="aspect-video bg-black rounded-xl overflow-hidden">
         <div className="relative w-full h-full">
+          {/* Hidden video element — kept mounted for metadata, audio, and fallback */}
           <video
             ref={videoARef}
             src={videoA.src}
             poster={videoA.poster}
             className="w-full h-full object-contain"
+            style={framePerfectActive ? { display: "none" } : undefined}
             playsInline
             preload="metadata"
             onLoadedMetadata={handleLoadedMetadata}
@@ -344,6 +445,58 @@ export const VideoAnalysisWorkspace = forwardRef<
             onPause={handleVideoAPause}
             onClick={togglePlay}
           />
+
+          {/* Frame-perfect canvas renderer */}
+          {framePerfectActive && (
+            <CanvasFrameRenderer
+              frames={frameExtractor.frames}
+              currentFrame={currentFrameIndex}
+              className="w-full h-full object-contain"
+            />
+          )}
+
+          {/* Extraction progress overlay */}
+          {framePerfectMode && frameExtractor.isExtracting && (
+            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 z-10">
+              <div className="text-xs font-medium text-primary-400 uppercase tracking-wider">
+                Extracting Frames…
+              </div>
+              <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-500 rounded-full transition-all duration-200"
+                  style={{ width: `${frameExtractor.progress}%` }}
+                />
+              </div>
+              <span className="text-[10px] text-surface-400 font-mono">
+                {frameExtractor.progress}%
+              </span>
+              <button
+                onClick={() => {
+                  frameExtractor.cancel();
+                  setFramePerfectMode(false);
+                }}
+                className="mt-1 text-[10px] text-surface-500 hover:text-white transition-colors underline"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {/* Extraction error overlay */}
+          {framePerfectMode && frameExtractor.error && (
+            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-2 z-10">
+              <span className="text-xs text-red-400">
+                Frame extraction failed: {frameExtractor.error}
+              </span>
+              <button
+                onClick={() => setFramePerfectMode(false)}
+                className="text-[10px] text-surface-400 hover:text-white transition-colors underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* Annotation canvas overlay */}
           <div
             className="absolute inset-0"
@@ -506,6 +659,31 @@ export const VideoAnalysisWorkspace = forwardRef<
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Frame-Perfect toggle (single mode only) */}
+            {mode === "single" && (
+              <button
+                onClick={toggleFramePerfect}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  framePerfectMode
+                    ? "bg-primary-500/20 text-primary-400"
+                    : "bg-surface-800 text-surface-500 hover:text-surface-300"
+                }`}
+                title={
+                  framePerfectMode
+                    ? "Switch back to normal video playback"
+                    : "Enable zero-jitter frame-by-frame scrubbing"
+                }
+                disabled={frameExtractor.isExtracting}
+              >
+                <FramePerfectIcon />
+                {frameExtractor.isExtracting
+                  ? `${frameExtractor.progress}%`
+                  : framePerfectMode
+                    ? "Frame-Perfect ON"
+                    : "Frame-Perfect"}
+              </button>
+            )}
+
             {/* Ghost opacity */}
             {mode === "ghost" && onGhostOpacityChange && (
               <label className="flex items-center gap-1.5 text-[10px] text-surface-400">
@@ -564,16 +742,29 @@ export const VideoAnalysisWorkspace = forwardRef<
             className="absolute top-1/2 -translate-y-1/2 left-0 h-1.5 bg-primary-500 rounded-full pointer-events-none"
             style={{ width: `${progress}%` }}
           />
-          <input
-            type="range"
-            min={0}
-            max={duration || 1}
-            step={FRAME_STEP}
-            value={currentTime}
-            onChange={(e) => handleSeek(parseFloat(e.target.value))}
-            className="relative w-full opacity-0 h-4 cursor-pointer"
-            aria-label="Scrub video"
-          />
+          {framePerfectActive ? (
+            <input
+              type="range"
+              min={0}
+              max={frameExtractor.totalFrames - 1 || 1}
+              step={1}
+              value={currentFrameIndex}
+              onChange={(e) => handleFrameChange(parseInt(e.target.value))}
+              className="relative w-full opacity-0 h-4 cursor-pointer"
+              aria-label="Scrub frames"
+            />
+          ) : (
+            <input
+              type="range"
+              min={0}
+              max={duration || 1}
+              step={FRAME_STEP}
+              value={currentTime}
+              onChange={(e) => handleSeek(parseFloat(e.target.value))}
+              className="relative w-full opacity-0 h-4 cursor-pointer"
+              aria-label="Scrub video"
+            />
+          )}
         </div>
 
         {/* Transport controls row */}
@@ -611,6 +802,13 @@ export const VideoAnalysisWorkspace = forwardRef<
             <span className="text-surface-600"> / </span>
             {formatTimestamp(duration)}
           </span>
+
+          {/* Frame counter (frame-perfect mode) */}
+          {framePerfectActive && (
+            <span className="font-mono text-[10px] tabular-nums text-primary-400/80">
+              F{currentFrameIndex + 1}/{frameExtractor.totalFrames}
+            </span>
+          )}
 
           <div className="flex-1" />
 
@@ -659,14 +857,23 @@ export const VideoAnalysisWorkspace = forwardRef<
           )}
         </div>
 
-        {/* JogWheel — zero-jitter with direct video ref */}
+        {/* JogWheel — zero-jitter with direct video ref or frame-perfect mode */}
         <JogWheel
           currentTime={currentTime}
           duration={duration}
           onSeek={handleSeek}
           sensitivity={0.02}
           fps={ANALYSIS_FPS}
-          videoRef={videoARef}
+          videoRef={framePerfectActive ? undefined : videoARef}
+          frameMode={
+            framePerfectActive
+              ? {
+                  totalFrames: frameExtractor.totalFrames,
+                  currentFrame: currentFrameIndex,
+                  onFrameChange: handleFrameChange,
+                }
+              : undefined
+          }
           className="mt-1"
         />
       </div>
@@ -735,6 +942,16 @@ function ReSyncIcon() {
       <polyline points="1 4 1 10 7 10" />
       <polyline points="23 20 23 14 17 14" />
       <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+    </svg>
+  );
+}
+
+function FramePerfectIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="2" />
+      <line x1="8" y1="2" x2="8" y2="22" />
+      <line x1="16" y1="2" x2="16" y2="22" />
     </svg>
   );
 }

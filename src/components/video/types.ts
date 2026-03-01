@@ -69,6 +69,18 @@ export function snapToFrame(rawTime: number, fps: number = ANALYSIS_FPS): number
   return Math.round(rawTime / step) * step;
 }
 
+/* ─── Frame ↔ Time Conversion ─────────────────────────────────────────────── */
+
+/** Convert a frame array index to a video time in seconds */
+export function frameIndexToTime(index: number, fps: number = ANALYSIS_FPS): number {
+  return index / fps;
+}
+
+/** Convert a video time in seconds to the nearest frame array index */
+export function timeToFrameIndex(time: number, fps: number = ANALYSIS_FPS): number {
+  return Math.round(time * fps);
+}
+
 /* ─── Speed Options ────────────────────────────────────────────────────────── */
 
 export const PLAYBACK_SPEEDS = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2];
