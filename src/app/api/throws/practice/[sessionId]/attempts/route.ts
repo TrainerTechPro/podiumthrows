@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 
 // POST /api/throws/practice/[sessionId]/attempts — log a new attempt
@@ -39,6 +40,12 @@ export async function POST(
         { success: false, error: "athleteId, event, and implement are required" },
         { status: 400 }
       );
+    }
+
+    // Verify coach owns this athlete
+    const authorized = await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId);
+    if (!authorized) {
+      return NextResponse.json({ success: false, error: "Not authorized to log attempts for this athlete" }, { status: 403 });
     }
 
     // Auto-detect PR: compare against existing ThrowsPR

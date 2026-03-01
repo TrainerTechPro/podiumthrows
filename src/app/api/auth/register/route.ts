@@ -134,7 +134,8 @@ export async function POST(request: NextRequest) {
     response.headers.set("Set-Cookie", setAuthCookie(token));
 
     return response;
-  } catch {
+  } catch (error) {
+    console.error("[register] Registration failed:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

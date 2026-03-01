@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getSession, SALT_ROUNDS } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function GET() {
@@ -26,7 +26,6 @@ export async function GET() {
             organization: true,
             avatarUrl: true,
             plan: true,
-            stripeCustomerId: true,
             enabledModules: true,
             _count: { select: { athletes: true } },
           },
@@ -82,7 +81,7 @@ export async function PATCH(request: NextRequest) {
       if (!valid) {
         return NextResponse.json({ success: false, error: "Current password is incorrect" }, { status: 400 });
       }
-      const hash = await bcrypt.hash(body.newPassword, 10);
+      const hash = await bcrypt.hash(body.newPassword, SALT_ROUNDS);
       await prisma.user.update({
         where: { id: session.userId },
         data: { passwordHash: hash },

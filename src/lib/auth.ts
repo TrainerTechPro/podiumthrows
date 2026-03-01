@@ -2,9 +2,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET environment variable must be set in production");
+}
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 const JWT_EXPIRES_IN_SECONDS = 7 * 24 * 60 * 60; // 7 days
-const SALT_ROUNDS = 12;
+export const SALT_ROUNDS = 12;
 
 export interface JWTPayload {
   userId: string;
