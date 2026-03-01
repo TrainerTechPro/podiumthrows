@@ -58,6 +58,13 @@ interface RawExercise {
 
 export async function POST() {
   try {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { success: false, error: "Seed endpoint disabled in production" },
+        { status: 403 }
+      );
+    }
+
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "COACH") {
       return NextResponse.json(

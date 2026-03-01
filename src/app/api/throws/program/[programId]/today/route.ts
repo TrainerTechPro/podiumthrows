@@ -26,6 +26,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       select: {
         id: true,
         athleteId: true,
+        coachId: true,
         currentWeekNumber: true,
         currentPhaseId: true,
         status: true,
@@ -40,16 +41,28 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     // Verify ownership
-    const athleteProfile = await prisma.athleteProfile.findUnique({
-      where: { userId: user.userId },
-      select: { id: true },
-    });
-
-    if (program.athleteId !== athleteProfile?.id) {
-      return NextResponse.json(
-        { success: false, error: "Not authorized" },
-        { status: 403 },
-      );
+    if (user.role === "ATHLETE") {
+      const athleteProfile = await prisma.athleteProfile.findUnique({
+        where: { userId: user.userId },
+        select: { id: true },
+      });
+      if (!athleteProfile || program.athleteId !== athleteProfile.id) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden" },
+          { status: 403 },
+        );
+      }
+    } else if (user.role === "COACH") {
+      const coachProfile = await prisma.coachProfile.findUnique({
+        where: { userId: user.userId },
+        select: { id: true },
+      });
+      if (!coachProfile || program.coachId !== coachProfile.id) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden" },
+          { status: 403 },
+        );
+      }
     }
 
     // Today's day of week (1=Mon, 7=Sun)

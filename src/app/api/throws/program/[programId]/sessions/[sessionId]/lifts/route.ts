@@ -38,19 +38,38 @@ export async function POST(req: NextRequest, { params }: Params) {
     // Verify ownership
     const program = await prisma.trainingProgram.findUnique({
       where: { id: programId },
-      select: { athleteId: true },
+      select: { athleteId: true, coachId: true },
     });
 
-    const athleteProfile = await prisma.athleteProfile.findUnique({
-      where: { userId: user.userId },
-      select: { id: true },
-    });
-
-    if (program?.athleteId !== athleteProfile?.id) {
+    if (!program) {
       return NextResponse.json(
-        { success: false, error: "Not authorized" },
-        { status: 403 },
+        { success: false, error: "Program not found" },
+        { status: 404 },
       );
+    }
+
+    if (user.role === "ATHLETE") {
+      const athleteProfile = await prisma.athleteProfile.findUnique({
+        where: { userId: user.userId },
+        select: { id: true },
+      });
+      if (!athleteProfile || program.athleteId !== athleteProfile.id) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden" },
+          { status: 403 },
+        );
+      }
+    } else if (user.role === "COACH") {
+      const coachProfile = await prisma.coachProfile.findUnique({
+        where: { userId: user.userId },
+        select: { id: true },
+      });
+      if (!coachProfile || program.coachId !== coachProfile.id) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden" },
+          { status: 403 },
+        );
+      }
     }
 
     // Accept single lift or array of lifts
