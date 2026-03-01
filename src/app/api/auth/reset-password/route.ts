@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
-import { resetTokens } from "@/lib/resetTokenStore";
+import { getToken, deleteToken } from "@/lib/resetTokenStore";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 attempts per minute per IP
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rl = checkRateLimit(`reset-password:${ip}`, 5, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+      );
+    }
+
     const body = await request.json();
     const { token, password } = body;
 
@@ -22,10 +33,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate token
-    const tokenData = resetTokens.get(token);
-    if (!tokenData || tokenData.expiresAt < new Date()) {
-      resetTokens.delete(token);
+    // Validate token (checks expiry and usedAt)
+    const tokenData = await getToken(token);
+    if (!tokenData) {
       return NextResponse.json(
         { error: "Invalid or expired reset token" },
         { status: 400 }
@@ -39,13 +49,14 @@ export async function POST(request: NextRequest) {
       data: { passwordHash },
     });
 
-    // Invalidate token
-    resetTokens.delete(token);
+    // Mark token as consumed
+    await deleteToken(token);
 
     return NextResponse.json({
       message: "Password has been reset successfully. You can now log in.",
     });
-  } catch {
+  } catch (error) {
+    console.error("[reset-password] Error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

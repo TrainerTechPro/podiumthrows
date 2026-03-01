@@ -771,13 +771,13 @@ model Invitation {
 // ─── AUTH UTILITIES ─────────────────────────────────────────────────────────
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
   expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([token])
   @@index([userId])
