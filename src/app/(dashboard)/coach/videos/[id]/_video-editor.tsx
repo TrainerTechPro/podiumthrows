@@ -410,6 +410,7 @@ export function VideoEditor({ video, athletes }: Props) {
                 src: video.url,
                 poster: video.thumbnailUrl ?? undefined,
                 title: video.title ?? undefined,
+                transcodedUrl: video.transcodedUrl ?? undefined,
               }}
               videoB={
                 compareVideo

@@ -34,6 +34,13 @@ export const CanvasFrameRenderer = forwardRef<CanvasFrameRendererHandle, Props>(
       getCanvas: () => canvasRef.current,
     }), []);
 
+    /* ── Compute aspect ratio from frames ──────────────────────────────── */
+
+    const firstFrame = frames.length > 0 ? frames[0] : null;
+    const frameW = width ?? (firstFrame?.width ?? 0);
+    const frameH = height ?? (firstFrame?.height ?? 0);
+    const aspectRatio = frameW > 0 && frameH > 0 ? `${frameW} / ${frameH}` : undefined;
+
     /* ── Draw current frame to canvas ──────────────────────────────────── */
 
     const drawFrame = useCallback(
@@ -48,7 +55,7 @@ export const CanvasFrameRenderer = forwardRef<CanvasFrameRendererHandle, Props>(
         const bitmap = frames[safeIndex];
         if (!bitmap) return;
 
-        // Set canvas dimensions from bitmap if not explicitly provided
+        // Set canvas internal resolution from bitmap if not explicitly provided
         const w = width ?? bitmap.width;
         const h = height ?? bitmap.height;
 
@@ -77,12 +84,26 @@ export const CanvasFrameRenderer = forwardRef<CanvasFrameRendererHandle, Props>(
       }
     }, [frames, drawFrame]);
 
+    /*
+     * CSS `object-contain` does NOT work on <canvas> elements — it only
+     * applies to replaced elements like <img> and <video>. To achieve the
+     * same letterboxing effect we wrap the canvas in a flex-centered
+     * container and use CSS `aspect-ratio` to size the canvas correctly.
+     * The canvas scales via `max-w-full max-h-full` while maintaining its
+     * intrinsic aspect ratio, producing proper letterboxing for both
+     * landscape and portrait source video.
+     */
     return (
-      <canvas
-        ref={canvasRef}
-        className={`w-full h-full object-contain ${className ?? ""}`}
-        style={{ imageRendering: "auto" }}
-      />
+      <div className={`flex items-center justify-center w-full h-full ${className ?? ""}`}>
+        <canvas
+          ref={canvasRef}
+          className="max-w-full max-h-full"
+          style={{
+            imageRendering: "auto",
+            aspectRatio,
+          }}
+        />
+      </div>
     );
   }
 );

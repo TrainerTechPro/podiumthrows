@@ -33,6 +33,8 @@ type VideoSource = {
   src: string;
   poster?: string;
   title?: string;
+  /** GOP-15 transcoded MP4 — preferred for frame extraction (faster seeking) */
+  transcodedUrl?: string;
 };
 
 type Props = {
@@ -322,7 +324,9 @@ export const VideoAnalysisWorkspace = forwardRef<
     } else {
       // Turning ON — start extraction
       if (frameExtractor.frames.length === 0 && !frameExtractor.isExtracting) {
-        frameExtractor.extract(videoA.src);
+        // Prefer transcoded MP4 (GOP-15, faster seeking) over original source
+        const extractionSrc = videoA.transcodedUrl ?? videoA.src;
+        frameExtractor.extract(extractionSrc);
       }
       // Pause video during frame-perfect mode
       if (videoARef.current && !videoARef.current.paused) {
@@ -340,6 +344,7 @@ export const VideoAnalysisWorkspace = forwardRef<
     currentTime,
     frameExtractor,
     videoA.src,
+    videoA.transcodedUrl,
     onTimeUpdate,
   ]);
 

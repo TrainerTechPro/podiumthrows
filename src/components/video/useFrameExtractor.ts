@@ -54,6 +54,65 @@ function resolutionScale(res: Resolution): number {
   }
 }
 
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+
+/** Check if a URL is cross-origin relative to the current page */
+function isCrossOrigin(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+/** Wait for a video event with a timeout */
+function waitForEvent(
+  video: HTMLVideoElement,
+  eventName: string,
+  timeoutMs: number,
+  errorMsg: string
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        video.removeEventListener(eventName, handler);
+        reject(new Error(errorMsg));
+      }
+    }, timeoutMs);
+
+    function handler() {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        video.removeEventListener(eventName, handler);
+        resolve();
+      }
+    }
+
+    video.addEventListener(eventName, handler);
+  });
+}
+
+/**
+ * Ensure R2 CORS is configured (one-time server-side operation).
+ * Called automatically before extraction for cross-origin videos.
+ * Idempotent — safe to call multiple times.
+ */
+async function ensureCors(): Promise<void> {
+  try {
+    const res = await fetch("/api/admin/ensure-cors", { method: "POST" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      console.warn("[useFrameExtractor] CORS setup returned", res.status, data);
+    }
+  } catch (err) {
+    console.warn("[useFrameExtractor] CORS setup request failed:", err);
+  }
+}
+
 /* ─── Hook ────────────────────────────────────────────────────────────────── */
 
 export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
@@ -110,37 +169,48 @@ export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
       setError(null);
       setProgress(0);
 
-      const video = document.createElement("video");
-      video.muted = true;
-      video.playsInline = true;
-      video.crossOrigin = "anonymous";
-      video.preload = "auto";
-      videoRef.current = video;
-
-      const tempCanvas = document.createElement("canvas");
-      const tempCtx = tempCanvas.getContext("2d", {
-        willReadFrequently: true,
-      });
-
-      if (!tempCtx) {
-        setError("Could not create canvas context");
-        setIsExtracting(false);
-        return;
-      }
-
       const runExtraction = async () => {
+        // If cross-origin, ensure R2 CORS is configured first
+        const crossOrigin = isCrossOrigin(videoUrl);
+        if (crossOrigin) {
+          await ensureCors();
+        }
+
+        const video = document.createElement("video");
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = "auto";
+        videoRef.current = video;
+
+        // Only set crossOrigin for cross-origin URLs — setting it on same-origin
+        // URLs is fine but unnecessary. For cross-origin, it's REQUIRED so that
+        // drawImage() doesn't taint the canvas and createImageBitmap() works.
+        if (crossOrigin) {
+          video.crossOrigin = "anonymous";
+        }
+
+        const tempCanvas = document.createElement("canvas");
+        const tempCtx = tempCanvas.getContext("2d", {
+          willReadFrequently: true,
+        });
+
+        if (!tempCtx) {
+          setError("Could not create canvas context");
+          setIsExtracting(false);
+          return;
+        }
+
         try {
-          // Wait for metadata
+          // Wait for metadata (with timeout)
           video.src = videoUrl;
           video.load();
 
-          await new Promise<void>((resolve, reject) => {
-            video.onloadedmetadata = () => resolve();
-            video.onerror = () =>
-              reject(new Error("Failed to load video metadata"));
-            // Timeout after 15 seconds
-            setTimeout(() => reject(new Error("Video metadata timeout")), 15000);
-          });
+          await waitForEvent(video, "loadedmetadata", 15000, "Video metadata timeout");
+
+          // Also wait for enough data to be buffered for seeking
+          if (video.readyState < 2) {
+            await waitForEvent(video, "loadeddata", 15000, "Video data load timeout");
+          }
 
           const srcW = video.videoWidth;
           const srcH = video.videoHeight;
@@ -173,11 +243,9 @@ export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
 
             const targetTime = i * frameDuration;
 
-            // Seek to exact time
+            // Seek to exact time with timeout (5s per frame seek)
             video.currentTime = targetTime;
-            await new Promise<void>((resolve) => {
-              video.onseeked = () => resolve();
-            });
+            await waitForEvent(video, "seeked", 5000, `Seek stalled at frame ${i}/${numFrames} (t=${targetTime.toFixed(3)}s)`);
 
             // Draw to temp canvas at extraction resolution
             tempCtx.drawImage(video, 0, 0, cW, cH);
@@ -199,14 +267,29 @@ export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
           setIsExtracting(false);
           forceUpdate((n) => n + 1);
         } catch (err) {
-          const msg =
+          let msg =
             err instanceof Error ? err.message : "Frame extraction failed";
+
+          // Provide helpful CORS error message
+          if (
+            crossOrigin &&
+            (msg.includes("tainted") ||
+              msg.includes("SecurityError") ||
+              msg.includes("Failed to load video"))
+          ) {
+            msg =
+              "Cross-origin video blocked (CORS). The R2 bucket may need CORS configuration. " +
+              "Try refreshing and retrying — CORS was just configured automatically.";
+          }
+
           setError(msg);
           setIsExtracting(false);
         } finally {
           // Clean up hidden video element
-          video.src = "";
-          video.load();
+          if (video) {
+            video.src = "";
+            video.load();
+          }
           videoRef.current = null;
         }
       };

@@ -1914,6 +1914,10 @@ export type VideoDetail = {
   url: string;
   storageKey: string | null;
   thumbnailUrl: string | null;
+  /** GOP-15 transcoded MP4 — preferred for frame extraction (faster seeking) */
+  transcodedUrl: string | null;
+  /** "pending" | "processing" | "completed" | "failed" */
+  transcodeStatus: string | null;
   event: string | null;
   category: string | null;
   status: string;
@@ -2020,6 +2024,8 @@ export async function getVideoById(
     url: video.url,
     storageKey: video.storageKey,
     thumbnailUrl: video.thumbnailUrl,
+    transcodedUrl: video.transcodedUrl ?? null,
+    transcodeStatus: video.transcodeStatus ?? null,
     event: (video.event as string) ?? null,
     category: video.category,
     status: video.status,
