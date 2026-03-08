@@ -2144,19 +2144,25 @@ export async function getOnboardingStatus(
           })
         )?.onboardingCompletedAt ?? null;
 
+  const TOTAL_STEPS = 5;
+
   if (onboardingCompletedAt) {
     return {
       isCompleted: true,
       completedAt: onboardingCompletedAt.toISOString(),
       steps: [],
-      completedCount: 4,
-      totalSteps: 4,
+      completedCount: TOTAL_STEPS,
+      totalSteps: TOTAL_STEPS,
     };
   }
 
   // Derive step completion from actual data
-  const [athleteCount, pendingInviteCount, throwsProfileCount, profileWithPb, programCount, sessionCount] =
+  const [coachProfile, athleteCount, pendingInviteCount, throwsProfileCount, profileWithPb, programCount, sessionCount] =
     await Promise.all([
+      prisma.coachProfile.findUnique({
+        where: { id: coachId },
+        select: { bio: true, organization: true, avatarUrl: true },
+      }),
       prisma.athleteProfile.count({ where: { coachId } }),
       prisma.invitation.count({ where: { coachId, status: "PENDING" } }),
       prisma.throwsProfile.count({ where: { enrolledBy: coachId } }),
@@ -2167,12 +2173,22 @@ export async function getOnboardingStatus(
       prisma.throwsSession.count({ where: { coachId } }),
     ]);
 
+  const hasProfile = !!(coachProfile?.bio || coachProfile?.organization || coachProfile?.avatarUrl);
   const hasAthlete = athleteCount > 0 || pendingInviteCount > 0;
   const hasThrowsProfile = throwsProfileCount > 0;
   const hasAssessment = profileWithPb > 0;
   const hasProgram = programCount > 0 || sessionCount > 0;
 
   const steps: OnboardingStep[] = [
+    {
+      key: "profile",
+      label: "Complete your coach profile",
+      description: "Add your bio, organization, or photo so athletes know who you are",
+      completed: hasProfile,
+      href: "/coach/settings",
+      ctaLabel: "Edit Profile",
+      requiresPrevious: false,
+    },
     {
       key: "invite",
       label: "Invite your first athlete",
@@ -2213,8 +2229,29 @@ export async function getOnboardingStatus(
 
   const completedCount = steps.filter((s) => s.completed).length;
 
+  // Auto-persist completion when all steps are done organically
+  if (completedCount === steps.length) {
+    // Fire-and-forget — don't block the render on this write
+    prisma.coachProfile
+      .update({
+        where: { id: coachId },
+        data: { onboardingCompletedAt: new Date() },
+      })
+      .catch(() => {
+        // Silently ignore — next load will retry
+      });
+
+    return {
+      isCompleted: true,
+      completedAt: new Date().toISOString(),
+      steps: [],
+      completedCount,
+      totalSteps: steps.length,
+    };
+  }
+
   return {
-    isCompleted: completedCount === steps.length,
+    isCompleted: false,
     completedAt: null,
     steps,
     completedCount,

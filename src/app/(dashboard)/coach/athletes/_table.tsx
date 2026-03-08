@@ -158,8 +158,8 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       searchable
       searchPlaceholder="Search by name…"
       pageSize={25}
-      emptyTitle="No athletes yet"
-      emptyDescription="Invite athletes to your roster to get started."
+      emptyTitle="No athletes on your roster"
+      emptyDescription="Send an invite to get your first athlete set up. They'll appear here once they accept."
     />
   );
 }

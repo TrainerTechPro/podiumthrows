@@ -56,6 +56,8 @@ function ArrowRightIcon() {
 }
 
 export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClientProps) {
+  const isPaid = planName !== "Free";
+
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       {/* ── Success Banner ── */}
@@ -73,7 +75,9 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
           </svg>
         </div>
         <h1 className="text-display-md font-heading font-bold text-[var(--foreground)]">
-          Welcome to Podium Throws {planName}!
+          {isPaid
+            ? `Welcome to Podium Throws ${planName}!`
+            : "Welcome to Podium Throws!"}
         </h1>
         <p className="text-surface-500 dark:text-surface-400 text-lg">
           Great to have you, {firstName}. Your account is ready to go.

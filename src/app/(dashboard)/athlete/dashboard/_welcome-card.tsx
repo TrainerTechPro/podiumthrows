@@ -45,14 +45,20 @@ function ArrowRightIcon() {
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
+const DISMISS_KEY = "podium-athlete-welcome-dismissed";
+
 export function WelcomeCard({ firstName, guide }: WelcomeCardProps) {
   const router = useRouter();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(DISMISS_KEY) === "true";
+  });
 
   if (dismissed || !guide.showGuide) return null;
 
   function handleDismiss() {
     setDismissed(true);
+    try { localStorage.setItem(DISMISS_KEY, "true"); } catch {}
   }
 
   const pct = (guide.completedCount / guide.totalSteps) * 100;

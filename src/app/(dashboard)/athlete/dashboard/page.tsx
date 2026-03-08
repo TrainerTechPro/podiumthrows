@@ -294,9 +294,22 @@ export default async function AthleteDashboardPage() {
           </div>
           <div className="card py-1">
             {upcoming.length === 0 ? (
-              <p className="text-sm text-muted py-8 text-center">
-                No sessions scheduled.
-              </p>
+              <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
+                <div className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-400 dark:text-surface-500" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <div className="max-w-[220px]">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">No upcoming sessions</p>
+                  <p className="text-xs text-muted mt-1">
+                    Your coach hasn&apos;t scheduled any sessions yet. Check back soon!
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="space-y-0.5">
                 {upcoming.map((s) => (
@@ -322,9 +335,19 @@ export default async function AthleteDashboardPage() {
           </div>
           <div className="card py-1">
             {recentPRs.length === 0 ? (
-              <p className="text-sm text-muted py-8 text-center">
-                No personal bests recorded yet.
-              </p>
+              <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
+                <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500" aria-hidden="true">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                </div>
+                <div className="max-w-[220px]">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">No personal bests yet</p>
+                  <p className="text-xs text-muted mt-1">
+                    Once you log throws, your best marks will appear here.
+                  </p>
+                </div>
+              </div>
             ) : (
               <div>
                 {recentPRs.map((pr) => (

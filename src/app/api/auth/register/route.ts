@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
           user.role === "COACH"
             ? plan
               ? `/coach/dashboard?checkout=${plan}${interval === "annual" ? "&interval=annual" : ""}`
-              : "/coach/dashboard"
+              : "/coach/onboarding/welcome"
             : "/athlete/onboarding",
       },
       { status: 201 }

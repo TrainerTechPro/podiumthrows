@@ -16,6 +16,8 @@ import {
 } from "@/lib/data/coach";
 import { OnboardingChecklist } from "./_onboarding-checklist";
 import { CheckoutTrigger } from "./_checkout-trigger";
+import { UpgradeBanner } from "./_upgrade-banner";
+import { FirstVisitHints } from "./_first-visit-hints";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -165,9 +167,19 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
     <div className="space-y-1">
       {items.length === 0 && (
-        <p className="text-sm text-muted py-4 text-center">
-          No activity in the last 48 hours.
-        </p>
+        <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
+          <div className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-400 dark:text-surface-500" aria-hidden="true">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <div className="max-w-[200px]">
+            <p className="text-sm font-semibold text-[var(--foreground)]">No recent activity</p>
+            <p className="text-xs text-muted mt-1">
+              Check-ins, sessions, and PRs from your athletes will show up here.
+            </p>
+          </div>
+        </div>
       )}
       {items.map((item) => (
         <Link
@@ -384,6 +396,14 @@ export default async function CoachDashboardPage() {
         />
       )}
 
+      {/* Upgrade nudge for free coaches near their athlete limit */}
+      {coach.plan === "FREE" && stats.totalAthletes >= 2 && (
+        <UpgradeBanner
+          athleteCount={stats.totalAthletes}
+          planLimit={planLimit}
+        />
+      )}
+
       {/* Header */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -438,9 +458,20 @@ export default async function CoachDashboardPage() {
           </h2>
           <div className="card py-1">
             {flagged.length === 0 ? (
-              <p className="text-sm text-muted py-4 text-center">
-                All athletes are in good shape.
-              </p>
+              <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
+                <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                </div>
+                <div className="max-w-[200px]">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">All clear</p>
+                  <p className="text-xs text-muted mt-1">
+                    No athletes flagged for low readiness, injuries, or missed sessions.
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="space-y-0.5">
                 {flagged.map((a) => (
@@ -454,6 +485,9 @@ export default async function CoachDashboardPage() {
 
       {/* Team Readiness */}
       <ReadinessWidget entries={readiness} />
+
+      {/* First-visit contextual hints */}
+      <FirstVisitHints />
     </div>
   );
 }
