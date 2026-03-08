@@ -22,8 +22,8 @@ export function middleware(request: NextRequest) {
   // Parse JWT to get role (lightweight check — no DB call)
   const payload = token ? verifyToken(token) : null;
 
-  // Redirect authenticated users away from auth pages
-  if (payload && AUTH_PATHS.some((p) => pathname.startsWith(p))) {
+  // Redirect authenticated users away from auth pages and landing page
+  if (payload && (pathname === "/" || AUTH_PATHS.some((p) => pathname.startsWith(p)))) {
     const dashboardUrl =
       payload.role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard";
     return NextResponse.redirect(new URL(dashboardUrl, request.url));
