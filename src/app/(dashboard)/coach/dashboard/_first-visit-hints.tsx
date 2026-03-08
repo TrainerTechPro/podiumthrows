@@ -77,13 +77,13 @@ export function FirstVisitHints() {
         onClick={handleDismiss}
       />
 
-      {/* Floating hint card */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto w-full max-w-md px-4">
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl shadow-xl p-5 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Floating hint card — safe-area-aware for mobile browser chrome */}
+      <div className="absolute bottom-0 sm:bottom-6 left-0 sm:left-1/2 sm:-translate-x-1/2 pointer-events-auto w-full sm:max-w-md sm:px-4 pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="bg-[var(--card-bg)] border-t sm:border border-[var(--card-border)] sm:rounded-2xl shadow-xl p-5 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
           {/* Step indicator */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="16" x2="12" y2="12" />
@@ -96,7 +96,7 @@ export function FirstVisitHints() {
             </div>
             <button
               onClick={handleDismiss}
-              className="text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+              className="text-sm text-muted hover:text-[var(--foreground)] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               Skip tour
             </button>
@@ -119,7 +119,7 @@ export function FirstVisitHints() {
                 <div
                   key={i}
                   className={cn(
-                    "w-2 h-2 rounded-full transition-colors",
+                    "w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-full transition-colors",
                     i === currentIdx
                       ? "bg-primary-500"
                       : i < currentIdx
@@ -131,7 +131,7 @@ export function FirstVisitHints() {
             </div>
             <button
               onClick={handleNext}
-              className="text-sm font-semibold text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              className="text-sm font-semibold text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors min-h-[44px] px-3 flex items-center"
             >
               {currentIdx < HINTS.length - 1 ? "Next" : "Got it"}
             </button>

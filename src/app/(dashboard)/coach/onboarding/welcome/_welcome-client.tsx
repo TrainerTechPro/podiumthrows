@@ -59,11 +59,11 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
   const isPaid = planName !== "Free";
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-8 px-4 sm:px-0">
       {/* ── Success Banner ── */}
       <div className="text-center space-y-3 pt-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-500/10 mb-2">
-          <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8 text-primary-500" aria-hidden="true">
+        <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary-500/10 mb-2">
+          <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7 sm:w-8 sm:h-8 text-primary-500" aria-hidden="true">
             <path
               d="M9 12l2 2 4-4"
               stroke="currentColor"
@@ -74,12 +74,12 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
           </svg>
         </div>
-        <h1 className="text-display-md font-heading font-bold text-[var(--foreground)]">
+        <h1 className="text-2xl sm:text-display-md font-heading font-bold text-[var(--foreground)]">
           {isPaid
             ? `Welcome to Podium Throws ${planName}!`
             : "Welcome to Podium Throws!"}
         </h1>
-        <p className="text-surface-500 dark:text-surface-400 text-lg">
+        <p className="text-surface-500 dark:text-surface-400 text-base sm:text-lg">
           Great to have you, {firstName}. Your account is ready to go.
         </p>
       </div>
@@ -160,10 +160,10 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
         <h2 className="text-sm font-heading font-semibold text-muted uppercase tracking-wider">
           Next Steps
         </h2>
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Link
             href="/coach/invitations"
-            className="card p-5 group hover:border-primary-500/40 transition-colors"
+            className="card p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden="true">
@@ -189,7 +189,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
 
           <Link
             href="/coach/throws"
-            className="card p-5 group hover:border-primary-500/40 transition-colors"
+            className="card p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden="true">
@@ -215,7 +215,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
 
           <Link
             href="/coach/dashboard"
-            className="card p-5 group hover:border-primary-500/40 transition-colors"
+            className="card p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden="true">

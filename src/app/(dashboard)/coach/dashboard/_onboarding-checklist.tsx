@@ -75,10 +75,13 @@ function InlineInviteButton({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [inviteLink, setInviteLink] = useState("");
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [canShare, setCanShare] = useState(false);
 
   const atLimit = planLimit !== Infinity && athleteCount >= planLimit;
+  const success = !!inviteLink;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,8 +97,10 @@ function InlineInviteButton({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to send invitation");
-      setSuccess(true);
+      const token = data.data?.token;
+      setInviteLink(`${window.location.origin}/register?invite=${token}`);
       setEmail("");
+      setCanShare(typeof navigator !== "undefined" && !!navigator.share);
       // Refresh to update onboarding status
       setTimeout(() => router.refresh(), 1500);
     } catch (err) {
@@ -105,10 +110,38 @@ function InlineInviteButton({
     }
   }
 
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+    } catch {
+      const el = document.createElement("input");
+      el.value = inviteLink;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function shareLink() {
+    try {
+      await navigator.share({
+        title: "Join my team on Podium Throws",
+        text: "I've invited you to join my coaching roster.",
+        url: inviteLink,
+      });
+    } catch {
+      copyLink();
+    }
+  }
+
   function handleOpen() {
-    setSuccess(false);
+    setInviteLink("");
     setError("");
     setEmail("");
+    setCopied(false);
     modal.onOpen();
   }
 
@@ -148,6 +181,7 @@ function InlineInviteButton({
                   handleSubmit({ preventDefault: () => {} } as React.FormEvent);
                 }}
                 loading={loading}
+                className="min-h-[44px]"
               >
                 Send Invitation
               </Button>
@@ -156,33 +190,56 @@ function InlineInviteButton({
         }
       >
         {success ? (
-          <div className="text-center py-4 space-y-2">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mx-auto">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+          <div className="space-y-4 py-1">
+            <div className="text-center py-2">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mx-auto mb-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-[var(--foreground)]">Invitation sent!</p>
+              <p className="text-xs text-muted mt-1">You can also share the link directly.</p>
             </div>
-            <p className="text-sm font-medium text-[var(--foreground)]">Invitation sent!</p>
-            <p className="text-xs text-muted">Your athlete will receive an email with a registration link.</p>
+
+            <div className="space-y-2">
+              {canShare && (
+                <button
+                  onClick={shareLink}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary-500 text-white font-semibold text-sm py-3 hover:bg-primary-600 active:bg-primary-700 transition-colors min-h-[48px]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                  Share Invite Link
+                </button>
+              )}
+              <button
+                onClick={copyLink}
+                className={`w-full flex items-center justify-center gap-2 rounded-xl font-semibold text-sm py-3 transition-all min-h-[48px] border ${
+                  copied
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                    : "bg-[var(--surface)] text-[var(--foreground)] border-[var(--border)] hover:bg-[var(--surface-raised)] active:bg-[var(--surface-hover)]"
+                }`}
+              >
+                {copied ? "Copied!" : "Copy Invite Link"}
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="invite-email" className="label">
-                Athlete&apos;s Email
-              </label>
-              <Input
-                id="invite-email"
-                type="email"
-                placeholder="athlete@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
-            )}
+            <p className="text-sm text-muted">
+              Enter their email. They&apos;ll get a link to join your roster.
+            </p>
+            <Input
+              label="Athlete email"
+              type="email"
+              placeholder="athlete@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              error={error}
+            />
           </form>
         )}
       </Modal>
@@ -264,30 +321,36 @@ export function OnboardingChecklist({
             <div
               key={step.key}
               className={cn(
-                "flex items-center gap-4 rounded-xl px-4 py-3 transition-colors",
+                "flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-xl px-4 py-3 transition-colors",
                 isCurrent && "bg-primary-50 dark:bg-primary-500/5 border border-primary-200 dark:border-primary-500/20",
                 step.completed && "opacity-80",
                 locked && "opacity-50",
               )}
             >
-              <CheckCircle done={step.completed} locked={locked} />
+              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                <CheckCircle done={step.completed} locked={locked} />
+                <div className="flex-1 min-w-0">
+                  <p className={cn(
+                    "text-sm font-semibold",
+                    step.completed
+                      ? "text-surface-500 dark:text-surface-400 line-through"
+                      : "text-[var(--foreground)]",
+                  )}>
+                    {step.label}
+                  </p>
+                  <p className="text-xs text-muted mt-0.5 hidden sm:block">{step.description}</p>
+                </div>
 
-              <div className="flex-1 min-w-0">
-                <p className={cn(
-                  "text-sm font-semibold",
-                  step.completed
-                    ? "text-surface-500 dark:text-surface-400 line-through"
-                    : "text-[var(--foreground)]",
-                )}>
-                  {step.label}
-                </p>
-                <p className="text-xs text-muted mt-0.5">{step.description}</p>
+                {/* Done badge — inline on mobile */}
+                {step.completed && (
+                  <span className="text-xs font-medium text-primary-600 dark:text-primary-400 sm:hidden shrink-0">Done</span>
+                )}
               </div>
 
-              {/* CTA */}
-              <div className="shrink-0">
+              {/* CTA — stacks below on mobile, inline on desktop */}
+              <div className="shrink-0 pl-10 sm:pl-0">
                 {step.completed ? (
-                  <span className="text-xs font-medium text-primary-600 dark:text-primary-400">Done</span>
+                  <span className="text-xs font-medium text-primary-600 dark:text-primary-400 hidden sm:inline">Done</span>
                 ) : step.key === "invite" && !locked ? (
                   <InlineInviteButton
                     athleteCount={athleteCount}

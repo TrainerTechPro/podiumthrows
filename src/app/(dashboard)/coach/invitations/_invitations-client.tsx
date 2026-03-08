@@ -169,31 +169,36 @@ export function InvitationsClient({ initialInvitations }: Props) {
                   <Badge variant="warning">Pending</Badge>
                 </div>
 
-                {/* Copy link row */}
-                <div className="flex items-center gap-2 pl-12">
-                  <div className="flex-1 min-w-0 rounded-md bg-[var(--surface)] border border-[var(--border)] px-3 py-1.5 overflow-hidden">
-                    <span className="text-xs font-mono text-muted truncate block">
-                      {buildInviteLink(inv.token)}
-                    </span>
-                  </div>
+                {/* Actions row — stacks on mobile */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pl-0 sm:pl-12">
                   <button
                     onClick={() => copyLink(inv)}
                     aria-label={copiedId === inv.id ? "Link copied" : `Copy invite link for ${inv.email}`}
-                    className={`shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold transition-all border ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition-all border min-h-[44px] sm:min-h-0 ${
                       copiedId === inv.id
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                        : "bg-[var(--surface)] text-[var(--foreground)] border-[var(--border)] hover:bg-[var(--surface-raised)]"
+                        : "bg-[var(--surface)] text-[var(--foreground)] border-[var(--border)] hover:bg-[var(--surface-raised)] active:bg-[var(--surface-hover)]"
                     }`}
                   >
-                    {copiedId === inv.id ? "Copied!" : "Copy Link"}
+                    {copiedId === inv.id ? (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                        Copy Link
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => revokeInvitation(inv)}
                     disabled={revokingId === inv.id}
                     aria-label={`Revoke invitation for ${inv.email}`}
-                    className="shrink-0 px-3 py-1.5 rounded-md text-xs font-semibold transition-all border bg-[var(--surface)] text-muted border-[var(--border)] hover:text-red-600 hover:border-red-500/30 hover:bg-red-500/5 disabled:opacity-50"
+                    className="px-3 py-2.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition-all border bg-[var(--surface)] text-muted border-[var(--border)] hover:text-red-600 hover:border-red-500/30 hover:bg-red-500/5 active:bg-red-500/10 disabled:opacity-50 min-h-[44px] sm:min-h-0"
                   >
-                    {revokingId === inv.id ? "Revoking…" : "Revoke"}
+                    {revokingId === inv.id ? "Revoking..." : "Revoke"}
                   </button>
                 </div>
               </div>
