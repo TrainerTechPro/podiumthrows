@@ -1,7 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { getTeamGoals } from "@/lib/data/coach";
 import type { EventType } from "@prisma/client";
+
+/* ─── GET — fetch all goals across the coach's roster ────────────────────── */
+
+export async function GET() {
+  try {
+    const session = await getSession();
+    if (!session || session.role !== "COACH") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const coach = await prisma.coachProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
+    });
+    if (!coach) {
+      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+    }
+
+    const goals = await getTeamGoals(coach.id);
+    return NextResponse.json({ goals });
+  } catch (err) {
+    console.error("[GET /api/coach/goals]", err);
+    return NextResponse.json({ error: "Failed to fetch goals." }, { status: 500 });
+  }
+}
 
 /* ─── POST — coach creates a goal for one of their athletes ──────────────── */
 
