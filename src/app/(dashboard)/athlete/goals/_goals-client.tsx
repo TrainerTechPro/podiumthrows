@@ -242,15 +242,101 @@ function UpdateProgressInline({ goal, onUpdate }: UpdateProgressProps) {
   );
 }
 
+/* ─── Adjust Deadline Inline ────────────────────────────────────────────── */
+
+interface AdjustDeadlineProps {
+  goal: GoalItem;
+  onUpdateDeadline: (id: string, deadline: string | null) => Promise<void>;
+}
+
+function AdjustDeadlineInline({ goal, onUpdateDeadline }: AdjustDeadlineProps) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(goal.deadline ? goal.deadline.split("T")[0] : "");
+  const [isPending, startTransition] = useTransition();
+
+  function handleSave() {
+    startTransition(async () => {
+      await onUpdateDeadline(goal.id, value || null);
+      setEditing(false);
+    });
+  }
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className="text-xs text-muted hover:text-primary-500 transition-colors"
+        title="Adjust deadline"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline -mt-px mr-0.5">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+        Edit
+      </button>
+    );
+  }
+
+  // Re-project completion based on new deadline
+  const newDeadline = value ? new Date(value + "T00:00:00") : null;
+  const daysUntilDeadline = newDeadline ? Math.ceil((newDeadline.getTime() - Date.now()) / 86_400_000) : null;
+  const remaining = goal.targetValue - goal.currentValue;
+  const rateNeeded = daysUntilDeadline && daysUntilDeadline > 0 && remaining > 0
+    ? (remaining / daysUntilDeadline)
+    : null;
+
+  return (
+    <div className="flex flex-col gap-1.5 mt-1">
+      <div className="flex items-center gap-2">
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="input input-sm text-sm w-36"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave();
+            if (e.key === "Escape") setEditing(false);
+          }}
+        />
+        <button
+          onClick={handleSave}
+          disabled={isPending}
+          className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline disabled:opacity-50"
+        >
+          {isPending ? "Saving…" : "Save"}
+        </button>
+        <button
+          onClick={() => { setEditing(false); setValue(goal.deadline ? goal.deadline.split("T")[0] : ""); }}
+          className="text-xs text-muted hover:text-[var(--foreground)]"
+        >
+          Cancel
+        </button>
+      </div>
+      {rateNeeded !== null && daysUntilDeadline !== null && (
+        <p className="text-[10px] text-muted">
+          {daysUntilDeadline} days left — need ~{rateNeeded.toFixed(2)} {goal.unit}/day to hit target
+        </p>
+      )}
+      {daysUntilDeadline !== null && daysUntilDeadline <= 0 && value && (
+        <p className="text-[10px] text-danger-500 font-medium">
+          This date is in the past
+        </p>
+      )}
+    </div>
+  );
+}
+
 /* ─── Goal Card ──────────────────────────────────────────────────────────── */
 
 interface GoalCardProps {
   goal: GoalItem;
   onUpdateProgress: (id: string, value: number) => Promise<void>;
+  onUpdateDeadline: (id: string, deadline: string | null) => Promise<void>;
   onAbandon: (id: string) => void;
 }
 
-function GoalCard({ goal, onUpdateProgress, onAbandon }: GoalCardProps) {
+function GoalCard({ goal, onUpdateProgress, onUpdateDeadline, onAbandon }: GoalCardProps) {
   const overdue = isOverdue(goal.deadline);
   const isActive = goal.status === "ACTIVE";
   const isCompleted = goal.status === "COMPLETED";
@@ -309,6 +395,9 @@ function GoalCard({ goal, onUpdateProgress, onAbandon }: GoalCardProps) {
             <span>
               On track for {formatProjectedDate(goal.projectedCompletionDate)}
             </span>
+          )}
+          {isActive && (
+            <AdjustDeadlineInline goal={goal} onUpdateDeadline={onUpdateDeadline} />
           )}
         </div>
 
@@ -416,6 +505,29 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     }
   }, []);
 
+  /* ── Update deadline ── */
+  const handleUpdateDeadline = useCallback(async (id: string, deadline: string | null) => {
+    try {
+      const res = await fetch(`/api/athlete/goals/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deadline: deadline ?? "" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setGoals((prev) =>
+          prev.map((g) =>
+            g.id === id
+              ? { ...g, deadline: data.goal.deadline }
+              : g
+          )
+        );
+      }
+    } catch {
+      // Silent fail
+    }
+  }, []);
+
   /* ── Abandon goal ── */
   const handleAbandon = useCallback(async (id: string) => {
     try {
@@ -495,6 +607,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
                 key={goal.id}
                 goal={goal}
                 onUpdateProgress={handleUpdateProgress}
+                onUpdateDeadline={handleUpdateDeadline}
                 onAbandon={handleAbandonRequest}
               />
             ))}
@@ -514,6 +627,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
                 key={goal.id}
                 goal={goal}
                 onUpdateProgress={handleUpdateProgress}
+                onUpdateDeadline={handleUpdateDeadline}
                 onAbandon={handleAbandonRequest}
               />
             ))}
@@ -533,6 +647,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
                 key={goal.id}
                 goal={goal}
                 onUpdateProgress={handleUpdateProgress}
+                onUpdateDeadline={handleUpdateDeadline}
                 onAbandon={handleAbandonRequest}
               />
             ))}

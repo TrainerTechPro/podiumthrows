@@ -13,6 +13,7 @@ import {
   getAthleteRecentPRs,
 } from "@/lib/data/coach";
 import { WelcomeCard } from "./_welcome-card";
+import { VolumeWidget } from "./_volume-widget";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -275,6 +276,24 @@ export default async function AthleteDashboardPage() {
           label="Active Goals"
           color={stats.activeGoalsCount > 0 ? "text-primary-500" : "text-[var(--foreground)]"}
         />
+      </div>
+
+      {/* Training Volume */}
+      <VolumeWidget />
+
+      {/* Quick Links */}
+      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        <Link
+          href="/athlete/assessments"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-primary-50 dark:hover:bg-primary-500/10 border border-surface-200 dark:border-surface-700 hover:border-primary-300 dark:hover:border-primary-500/30 transition-all"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500 shrink-0">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+            <rect x="9" y="3" width="6" height="4" rx="1" />
+            <path d="M9 14l2 2 4-4" />
+          </svg>
+          Testing History
+        </Link>
       </div>
 
       {/* Two-column body */}

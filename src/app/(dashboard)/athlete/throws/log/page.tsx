@@ -435,6 +435,20 @@ export default function ThrowsLogPage() {
  setDrills((prev) => prev.filter((d) => d.id !== id));
  }
 
+ // Bondarchuk sequence validation: check if drills are in descending weight order
+ const sequenceWarning = (() => {
+  const weights = drills
+   .map((d) => parseFloat(d.implementWeight))
+   .filter((w) => !isNaN(w) && w > 0);
+  if (weights.length < 2) return null;
+  for (let i = 1; i < weights.length; i++) {
+   if (weights[i] > weights[i - 1]) {
+    return `Ascending weight detected (${weights[i - 1]}kg \u2192 ${weights[i]}kg). Bondarchuk methodology requires heavy \u2192 light sequencing. Light before heavy can decrease performance by 2\u20134 meters.`;
+   }
+  }
+  return null;
+ })();
+
  async function handleSave() {
  setSaving(true);
  const drillLogs = drills
@@ -634,6 +648,20 @@ export default function ThrowsLogPage() {
  Add Another Drill
  </button>
 
+ {/* Bondarchuk sequence warning */}
+ {sequenceWarning && (
+ <div className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+ <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+ </svg>
+ <div>
+ <p className="text-xs font-bold text-amber-800 dark:text-amber-300">Bondarchuk Sequence Warning</p>
+ <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">{sequenceWarning}</p>
+ <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1">Reorder your drills heaviest → lightest for optimal transfer.</p>
+ </div>
+ </div>
+ )}
+
  <button
  onClick={() => setStep(3)}
  className="w-full btn-primary py-3 text-sm font-semibold"
@@ -710,6 +738,16 @@ export default function ThrowsLogPage() {
  className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)] resize-none"
  />
  </div>
+
+ {/* Bondarchuk sequence warning in review */}
+ {sequenceWarning && (
+ <div className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+ <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+ </svg>
+ <p className="text-xs text-amber-700 dark:text-amber-400">{sequenceWarning}</p>
+ </div>
+ )}
 
  <button
  onClick={handleSave}
