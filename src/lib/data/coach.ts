@@ -614,6 +614,83 @@ export async function getAthleteGoals(athleteId: string): Promise<GoalItem[]> {
   });
 }
 
+/* ─── Team-Wide Goal Item (extends GoalItem with athlete info) ───────────── */
+
+export type TeamGoalItem = GoalItem & {
+  athleteId: string;
+  athleteFirstName: string;
+  athleteLastName: string;
+};
+
+export async function getTeamGoals(coachId: string): Promise<TeamGoalItem[]> {
+  const goals = await prisma.goal.findMany({
+    where: {
+      athlete: { coachId },
+    },
+    orderBy: [{ status: "asc" }, { deadline: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      targetValue: true,
+      currentValue: true,
+      startingValue: true,
+      unit: true,
+      event: true,
+      deadline: true,
+      status: true,
+      createdAt: true,
+      athleteId: true,
+      athlete: {
+        select: { firstName: true, lastName: true },
+      },
+    },
+  });
+
+  const now = Date.now();
+
+  return goals.map((g) => {
+    const baseline = g.startingValue ?? 0;
+    const range = g.targetValue - baseline;
+    const gained = g.currentValue - baseline;
+    const progressPct =
+      range > 0 ? Math.min(100, Math.max(0, Math.round((gained / range) * 100))) : 0;
+
+    let projectedCompletionDate: string | null = null;
+    const daysElapsed = (now - g.createdAt.getTime()) / 86_400_000;
+    const remaining = g.targetValue - g.currentValue;
+    if (
+      g.startingValue !== null &&
+      daysElapsed > 0 &&
+      gained > 0 &&
+      remaining > 0
+    ) {
+      const ratePerDay = gained / daysElapsed;
+      const daysToCompletion = remaining / ratePerDay;
+      projectedCompletionDate = new Date(now + daysToCompletion * 86_400_000).toISOString();
+    }
+
+    return {
+      id: g.id,
+      title: g.title,
+      description: g.description,
+      targetValue: g.targetValue,
+      currentValue: g.currentValue,
+      startingValue: g.startingValue,
+      unit: g.unit,
+      event: g.event as string | null,
+      deadline: g.deadline?.toISOString() ?? null,
+      status: g.status as string,
+      progressPct,
+      createdAt: g.createdAt.toISOString(),
+      projectedCompletionDate,
+      athleteId: g.athleteId,
+      athleteFirstName: g.athlete.firstName,
+      athleteLastName: g.athlete.lastName,
+    };
+  });
+}
+
 export async function getAthleteRecentPRs(athleteId: string, limit = 5): Promise<ThrowLogItem[]> {
   const prs = await prisma.throwLog.findMany({
     where: { athleteId, isPersonalBest: true },
