@@ -124,6 +124,7 @@ function ReadyVideoCard({ video }: { video: VideoCardData }) {
           <img
             src={video.thumbnailUrl}
             alt={video.title ?? "Video thumbnail"}
+            loading="lazy"
             className="w-full h-full object-cover"
           />
         ) : (

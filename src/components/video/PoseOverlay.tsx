@@ -8,6 +8,7 @@ import {
   THROWS_ANGLES,
   calculateAngle,
 } from "./usePoseDetection";
+import { POSE_COLORS } from "@/lib/design-tokens";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -28,8 +29,8 @@ type Props = {
 
 /* ─── Constants ───────────────────────────────────────────────────────────── */
 
-const DEFAULT_COLOR = "#00ff88";
-const DEFAULT_JOINT_COLOR = "#ffffff";
+const DEFAULT_COLOR = POSE_COLORS.skeleton;
+const DEFAULT_JOINT_COLOR = POSE_COLORS.joint;
 const DEFAULT_LINE_WIDTH = 2.5;
 const DEFAULT_VISIBILITY = 0.5;
 const JOINT_RADIUS = 4;
@@ -147,7 +148,7 @@ export function PoseOverlay({
         const endAngle = Math.atan2(cy - by, cx - bx);
 
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.strokeStyle = POSE_COLORS.angleArc;
         ctx.arc(bx, by, ANGLE_ARC_RADIUS, startAngle, endAngle);
         ctx.stroke();
 
@@ -163,7 +164,7 @@ export function PoseOverlay({
         const pillW = metrics.width + 8;
         const pillH = 16;
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+        ctx.fillStyle = POSE_COLORS.labelBg;
         ctx.beginPath();
         ctx.roundRect(
           labelX - pillW / 2,
@@ -175,7 +176,7 @@ export function PoseOverlay({
         ctx.fill();
 
         // Label text
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = POSE_COLORS.labelText;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(`${label} ${text}`, labelX, labelY);

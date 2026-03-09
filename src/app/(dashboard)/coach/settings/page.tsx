@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useToast } from "@/components/toast";
 import { useAccessibility } from "@/components/accessibility-provider";
-import ProfilePictureEditor from "@/components/profile-picture-editor";
+import dynamic from "next/dynamic";
+
+const ProfilePictureEditor = dynamic(
+  () => import("@/components/profile-picture-editor"),
+  { ssr: false }
+);
 
 interface Profile {
   firstName: string;

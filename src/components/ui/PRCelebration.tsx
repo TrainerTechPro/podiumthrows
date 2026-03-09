@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { formatEventType } from "@/lib/utils";
+import { CONFETTI_COLORS, BRAND } from "@/lib/design-tokens";
 
 interface PRCelebrationProps {
   show: boolean;
@@ -21,17 +22,6 @@ function seededRandom(seed: number) {
 }
 
 const CONFETTI_COUNT = 36;
-const COLORS = [
-  "#f59e0b", // amber-400
-  "#fbbf24", // amber-300
-  "#f97316", // orange-500
-  "#ef4444", // red-500
-  "#10b981", // emerald-500
-  "#3b82f6", // blue-500
-  "#8b5cf6", // violet-500
-  "#ec4899", // pink-500
-  "#ffffff",
-];
 
 export function PRCelebration({
   show,
@@ -60,7 +50,7 @@ export function PRCelebration({
     const delay = rand() * 1.2;
     const duration = 1.8 + rand() * 1.5;
     const size = 6 + rand() * 8;
-    const color = COLORS[Math.floor(rand() * COLORS.length)];
+    const color = CONFETTI_COLORS[Math.floor(rand() * CONFETTI_COLORS.length)];
     const rotate = rand() * 360;
     const isRect = rand() > 0.5;
     return { i, left, delay, duration, size, color, rotate, isRect };
@@ -123,7 +113,7 @@ export function PRCelebration({
             style={{
               animation: "prBadgeIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
               maxWidth: "320px",
-              border: "2px solid #f59e0b",
+              border: `2px solid ${BRAND.primary}`,
             }}
           >
             <span style={{ fontSize: "3rem", lineHeight: 1 }}>🏆</span>

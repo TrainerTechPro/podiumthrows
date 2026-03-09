@@ -26,6 +26,7 @@ import {
   type DeficitType,
   type DeficitLevel,
 } from "@/lib/throws/podium-profile";
+import { EVENT_COLORS, RATIO_STATUS_COLORS, FALLBACK_GRAY } from "@/lib/design-tokens";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -90,12 +91,7 @@ const EVENT_LABELS: Record<string, string> = {
   JT: "Javelin",
 };
 
-const EVENT_COLORS: Record<string, string> = {
-  SP: "#D4915A",
-  DT: "#6A9FD8",
-  HT: "#5BB88A",
-  JT: "#D46A6A",
-};
+// EVENT_COLORS imported from @/lib/design-tokens
 
 // ── Ratio Bar ──────────────────────────────────────────────────────────────
 
@@ -153,14 +149,8 @@ function RatioBar({
             style={{
               width: `${Math.min(pct, 100)}%`,
               backgroundColor: status
-                ? status === "above"
-                  ? "#10b981"
-                  : status === "within"
-                  ? "#3b82f6"
-                  : status === "below"
-                  ? "#f59e0b"
-                  : "#ef4444"
-                : "#9ca3af",
+                ? RATIO_STATUS_COLORS[status] ?? RATIO_STATUS_COLORS.far
+                : FALLBACK_GRAY,
             }}
           />
         )}

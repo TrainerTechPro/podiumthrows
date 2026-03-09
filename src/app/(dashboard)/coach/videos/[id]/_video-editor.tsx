@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import type { VideoDetail } from "@/lib/data/coach";
 import { AnnotationToolbar } from "@/components/video/AnnotationToolbar";
 import { AnnotationTimeline } from "@/components/video/AnnotationTimeline";
@@ -12,7 +13,11 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import type { Annotation, AnnotationTool } from "@/components/video/types";
-import { ImmersiveVideoOverlay } from "@/components/video/ImmersiveVideoOverlay";
+
+const ImmersiveVideoOverlay = dynamic(
+  () => import("@/components/video/ImmersiveVideoOverlay").then((m) => m.ImmersiveVideoOverlay),
+  { ssr: false }
+);
 import {
   VideoAnalysisWorkspace,
   type VideoAnalysisWorkspaceHandle,
@@ -613,20 +618,22 @@ export function VideoEditor({ video, athletes }: Props) {
         variant="danger"
       />
 
-      {/* ── Immersive Video Overlay ──────────────────────────────────── */}
-      <ImmersiveVideoOverlay
-        open={showImmersive}
-        onClose={() => setShowImmersive(false)}
-        videoSrc={video.url}
-        poster={video.thumbnailUrl ?? undefined}
-        title={video.title ?? "Untitled Video"}
-        annotations={annotations}
-        onAnnotationsChange={setAnnotations}
-        isEditing={isEditing}
-        onSave={saveAnnotations}
-        isSaving={isSaving}
-        initialTime={currentTime}
-      />
+      {/* ── Immersive Video Overlay (lazy-loaded) ─────────────────── */}
+      {showImmersive && (
+        <ImmersiveVideoOverlay
+          open
+          onClose={() => setShowImmersive(false)}
+          videoSrc={video.url}
+          poster={video.thumbnailUrl ?? undefined}
+          title={video.title ?? "Untitled Video"}
+          annotations={annotations}
+          onAnnotationsChange={setAnnotations}
+          isEditing={isEditing}
+          onSave={saveAnnotations}
+          isSaving={isSaving}
+          initialTime={currentTime}
+        />
+      )}
     </div>
   );
 }

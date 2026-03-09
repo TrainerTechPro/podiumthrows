@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,11 +17,20 @@ export default function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
 
+  const rafRef = useRef(0);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 40);
+      });
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -34,7 +43,7 @@ export default function MarketingNav() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-[#0d0c09]/95 backdrop-blur-md border-b border-[#2a2720]"
+          ? "bg-surface-950/95 backdrop-blur-md border-b border-surface-800"
           : "bg-transparent"
       }`}
     >
@@ -62,7 +71,7 @@ export default function MarketingNav() {
               className={`font-body text-sm transition-colors hover:text-white ${
                 link.href === "/pricing" && isOnPricing
                   ? "text-white"
-                  : "text-[#8a8278]"
+                  : "text-surface-400"
               }`}
             >
               {link.label}
@@ -74,13 +83,13 @@ export default function MarketingNav() {
         <div className="hidden md:flex items-center gap-1">
           <Link
             href="/login"
-            className="font-body text-sm text-[#8a8278] hover:text-white transition-colors px-4 py-2"
+            className="font-body text-sm text-surface-400 hover:text-white transition-colors px-4 py-2"
           >
             Sign In
           </Link>
           <Link
             href="/register"
-            className="bg-primary-500 text-[#0d0c09] text-sm px-5 py-2 font-heading font-bold hover:bg-primary-400 transition-colors"
+            className="bg-primary-500 text-surface-950 text-sm px-5 py-2 font-heading font-bold hover:bg-primary-400 transition-colors"
           >
             Start Free
           </Link>
@@ -89,7 +98,7 @@ export default function MarketingNav() {
         {/* Mobile toggle */}
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          className="md:hidden p-3 text-[#8a8278] hover:text-white transition-colors"
+          className="md:hidden p-3 text-surface-400 hover:text-white transition-colors"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
         >
@@ -99,12 +108,12 @@ export default function MarketingNav() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden bg-[#0d0c09] border-t border-[#2a2720] px-6 pt-4 pb-6 flex flex-col gap-1">
+        <div className="md:hidden bg-surface-950 border-t border-surface-800 px-6 pt-4 pb-6 flex flex-col gap-1">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="font-body text-[#8a8278] hover:text-white transition-colors py-3 border-b border-[#1a1814] last:border-0"
+              className="font-body text-surface-400 hover:text-white transition-colors py-3 border-b border-surface-900 last:border-0"
             >
               {link.label}
             </Link>
@@ -112,13 +121,13 @@ export default function MarketingNav() {
           <div className="flex flex-col gap-2 pt-4">
             <Link
               href="/login"
-              className="font-body text-center text-[#8a8278] py-3 border border-[#2a2720] hover:text-white hover:border-[#3a3730] transition-colors"
+              className="font-body text-center text-surface-400 py-3 border border-surface-800 hover:text-white hover:border-surface-700 transition-colors"
             >
               Sign In
             </Link>
             <Link
               href="/register"
-              className="bg-primary-500 text-[#0d0c09] text-center py-3 font-heading font-bold hover:bg-primary-400 transition-colors"
+              className="bg-primary-500 text-surface-950 text-center py-3 font-heading font-bold hover:bg-primary-400 transition-colors"
             >
               Start Free Trial
             </Link>

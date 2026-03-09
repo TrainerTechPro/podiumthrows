@@ -10,15 +10,23 @@ export function LikertInput({
   error,
   disabled,
 }: BlockInputProps<LikertBlock>) {
+  const errorId = error ? `likert-error-${block.id}` : undefined;
+
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
+    <fieldset className="space-y-2" aria-describedby={errorId}>
+      {block.label && (
+        <legend className="sr-only">{block.label}</legend>
+      )}
+
+      <div role="radiogroup" aria-label={block.label || "Rate"} className="flex flex-wrap gap-2">
         {block.scale.map((label) => {
           const selected = value === label;
           return (
             <button
               key={label}
               type="button"
+              role="radio"
+              aria-checked={selected}
               onClick={() => !disabled && onChange(label)}
               disabled={disabled}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -33,8 +41,8 @@ export function LikertInput({
         })}
       </div>
       {error && (
-        <p className="text-xs text-danger-500 dark:text-danger-400">{error}</p>
+        <p id={errorId} className="text-xs text-danger-500 dark:text-danger-400" role="alert">{error}</p>
       )}
-    </div>
+    </fieldset>
   );
 }

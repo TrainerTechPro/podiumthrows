@@ -38,14 +38,7 @@ export type AnnotationTool =
 
 /* ─── Preset Colors ────────────────────────────────────────────────────────── */
 
-export const ANNOTATION_COLORS = [
-  "#ef4444", // red
-  "#3b82f6", // blue
-  "#22c55e", // green
-  "#eab308", // yellow
-  "#ffffff", // white
-  "#f97316", // orange
-];
+export { ANNOTATION_PRESET_COLORS as ANNOTATION_COLORS } from "@/lib/design-tokens";
 
 export const STROKE_WIDTHS = [
   { label: "Thin", value: 2 },

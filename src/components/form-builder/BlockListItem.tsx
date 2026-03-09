@@ -107,8 +107,8 @@ export function BlockListItem({
             onMoveUp();
           }}
           disabled={isFirst}
-          className="p-1 text-muted hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
-          title="Move up"
+          className="p-1.5 text-muted hover:text-[var(--foreground)] disabled:opacity-30 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+          aria-label="Move up"
         >
           <svg
             width="12"
@@ -128,8 +128,8 @@ export function BlockListItem({
             onMoveDown();
           }}
           disabled={isLast}
-          className="p-1 text-muted hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
-          title="Move down"
+          className="p-1.5 text-muted hover:text-[var(--foreground)] disabled:opacity-30 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+          aria-label="Move down"
         >
           <svg
             width="12"
@@ -148,8 +148,8 @@ export function BlockListItem({
             e.stopPropagation();
             onDuplicate();
           }}
-          className="p-1 text-muted hover:text-[var(--foreground)] transition-colors"
-          title="Duplicate"
+          className="p-1.5 text-muted hover:text-[var(--foreground)] transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+          aria-label="Duplicate"
         >
           <svg
             width="12"
@@ -169,8 +169,8 @@ export function BlockListItem({
             e.stopPropagation();
             onRemove();
           }}
-          className="p-1 text-muted hover:text-red-500 transition-colors"
-          title="Delete"
+          className="p-1.5 text-muted hover:text-red-500 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+          aria-label="Delete"
         >
           <svg
             width="12"

@@ -4,20 +4,29 @@ import type { YesNoBlock } from "@/lib/forms/types";
 import type { BlockInputProps } from "./types";
 
 export function YesNoInput({
+  block,
   value,
   onChange,
   error,
   disabled,
 }: BlockInputProps<YesNoBlock>) {
+  const errorId = error ? `yn-error-${block.id}` : undefined;
+
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
+    <fieldset className="space-y-2" aria-describedby={errorId}>
+      {block.label && (
+        <legend className="sr-only">{block.label}</legend>
+      )}
+
+      <div role="radiogroup" aria-label={block.label || "Yes or No"} className="flex gap-2">
         {(["Yes", "No"] as const).map((opt) => {
           const selected = value === opt;
           return (
             <button
               key={opt}
               type="button"
+              role="radio"
+              aria-checked={selected}
               onClick={() => !disabled && onChange(opt)}
               disabled={disabled}
               className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -34,8 +43,8 @@ export function YesNoInput({
         })}
       </div>
       {error && (
-        <p className="text-xs text-danger-500 dark:text-danger-400">{error}</p>
+        <p id={errorId} className="text-xs text-danger-500 dark:text-danger-400" role="alert">{error}</p>
       )}
-    </div>
+    </fieldset>
   );
 }

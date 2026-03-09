@@ -442,51 +442,108 @@ function MatrixCell({ val }: { val: boolean | string }) {
   );
 }
 
+function MobileMatrixValue({ val, plan }: { val: boolean | string; plan: string }) {
+  if (typeof val === "boolean") {
+    return val ? (
+      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-500/15 text-primary-500">
+        <svg viewBox="0 0 12 12" fill="currentColor" className="w-3 h-3" aria-label="Included">
+          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+        </svg>
+      </span>
+    ) : (
+      <span className="text-surface-400 dark:text-surface-600 text-lg leading-none">—</span>
+    );
+  }
+  return (
+    <span className="text-sm font-medium text-surface-700 dark:text-surface-300">{val}</span>
+  );
+}
+
 export function FeatureMatrix() {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-surface-200 dark:border-surface-800">
-      <table className="w-full min-w-[640px]">
-        <thead>
-          <tr className="bg-surface-50 dark:bg-surface-900/80 border-b border-surface-200 dark:border-surface-800">
-            <th className="py-4 px-5 text-left text-sm font-heading font-semibold text-surface-600 dark:text-surface-400 w-1/2">
-              Feature
-            </th>
-            {["Free", "Pro", "Elite"].map((plan) => (
-              <th
-                key={plan}
-                className={`py-4 px-4 text-center text-sm font-heading font-bold w-[calc(50%/3)] ${
-                  plan === "Pro" ? "text-primary-500" : "text-surface-900 dark:text-white"
-                }`}
-              >
-                {plan}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white dark:bg-surface-950 divide-y divide-surface-100 dark:divide-surface-800">
-          {MATRIX_ROWS.flatMap((group) => [
-            <tr key={`cat-${group.category}`} className="bg-surface-50/80 dark:bg-surface-900/40">
-              <td
-                colSpan={4}
-                className="py-2.5 px-5 text-xs font-heading font-bold text-surface-500 uppercase tracking-widest"
-              >
+    <>
+      {/* Mobile: stacked card layout */}
+      <div className="sm:hidden space-y-4">
+        {MATRIX_ROWS.map((group) => (
+          <div key={group.category} className="rounded-xl border border-surface-200 dark:border-surface-800 overflow-hidden">
+            <div className="bg-surface-50/80 dark:bg-surface-900/40 py-2.5 px-4">
+              <span className="text-xs font-heading font-bold text-surface-500 uppercase tracking-widest">
                 {group.category}
-              </td>
-            </tr>,
-            ...group.rows.map((row) => (
-              <tr key={`${group.category}-${row.feature}`} className="hover:bg-surface-50/50 dark:hover:bg-surface-900/20 transition-colors">
-                <td className="py-3 px-5 text-sm text-surface-700 dark:text-surface-300">
-                  {row.feature}
+              </span>
+            </div>
+            <div className="bg-white dark:bg-surface-950 divide-y divide-surface-100 dark:divide-surface-800">
+              {group.rows.map((row) => (
+                <div key={row.feature} className="px-4 py-3">
+                  <p className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                    {row.feature}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["Free", "Pro", "Elite"] as const).map((plan) => {
+                      const val = plan === "Free" ? row.free : plan === "Pro" ? row.pro : row.elite;
+                      return (
+                        <div key={plan} className="flex flex-col items-center gap-1">
+                          <span className={`text-[10px] font-heading font-bold uppercase tracking-wide ${
+                            plan === "Pro" ? "text-primary-500" : "text-surface-500 dark:text-surface-400"
+                          }`}>
+                            {plan}
+                          </span>
+                          <MobileMatrixValue val={val} plan={plan} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table layout */}
+      <div className="hidden sm:block overflow-x-auto rounded-2xl border border-surface-200 dark:border-surface-800">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-surface-50 dark:bg-surface-900/80 border-b border-surface-200 dark:border-surface-800">
+              <th className="py-4 px-5 text-left text-sm font-heading font-semibold text-surface-600 dark:text-surface-400 w-1/2">
+                Feature
+              </th>
+              {["Free", "Pro", "Elite"].map((plan) => (
+                <th
+                  key={plan}
+                  className={`py-4 px-4 text-center text-sm font-heading font-bold w-[calc(50%/3)] ${
+                    plan === "Pro" ? "text-primary-500" : "text-surface-900 dark:text-white"
+                  }`}
+                >
+                  {plan}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-surface-950 divide-y divide-surface-100 dark:divide-surface-800">
+            {MATRIX_ROWS.flatMap((group) => [
+              <tr key={`cat-${group.category}`} className="bg-surface-50/80 dark:bg-surface-900/40">
+                <td
+                  colSpan={4}
+                  className="py-2.5 px-5 text-xs font-heading font-bold text-surface-500 uppercase tracking-widest"
+                >
+                  {group.category}
                 </td>
-                <MatrixCell val={row.free} />
-                <MatrixCell val={row.pro} />
-                <MatrixCell val={row.elite} />
-              </tr>
-            )),
-          ])}
-        </tbody>
-      </table>
-    </div>
+              </tr>,
+              ...group.rows.map((row) => (
+                <tr key={`${group.category}-${row.feature}`} className="hover:bg-surface-50/50 dark:hover:bg-surface-900/20 transition-colors">
+                  <td className="py-3 px-5 text-sm text-surface-700 dark:text-surface-300">
+                    {row.feature}
+                  </td>
+                  <MatrixCell val={row.free} />
+                  <MatrixCell val={row.pro} />
+                  <MatrixCell val={row.elite} />
+                </tr>
+              )),
+            ])}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

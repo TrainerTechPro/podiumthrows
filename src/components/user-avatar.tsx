@@ -55,7 +55,7 @@ const UserAvatar = memo(function UserAvatar({
   return (
     <div
       className={`${base} flex items-center justify-center font-semibold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 ${text}`}
-      style={bgColor ? { backgroundColor: bgColor, color: "#fff" } : undefined}
+      style={bgColor ? { backgroundColor: bgColor, color: "white" } : undefined}
       aria-label={`${firstName} ${lastName}`}
     >
       {initials || "?"}

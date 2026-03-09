@@ -22,6 +22,7 @@ import {
   type Annotation,
   type AnnotationTool,
 } from "./types";
+import { ANNOTATION_PRESET_COLORS, POSE_COLORS } from "@/lib/design-tokens";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -70,7 +71,7 @@ export function ImmersiveVideoOverlay({
   const [undoStack, setUndoStack] = useState<Annotation[][]>([]);
   const [redoStack, setRedoStack] = useState<Annotation[][]>([]);
   const [activeTool, setActiveTool] = useState<AnnotationTool>("select");
-  const [activeColor, setActiveColor] = useState("#ef4444");
+  const [activeColor, setActiveColor] = useState<string>(ANNOTATION_PRESET_COLORS[0]);
   const [activeStrokeWidth, setActiveStrokeWidth] = useState(4);
 
   /* ── Voice narration state ──────────────────────────────────────── */
@@ -506,8 +507,8 @@ export function ImmersiveVideoOverlay({
             <PoseOverlay
               pose={poseDetection.pose}
               showAngles={showAngles}
-              color="#00ff88"
-              jointColor="#ffffff"
+              color={POSE_COLORS.skeleton}
+              jointColor={POSE_COLORS.joint}
               lineWidth={2.5}
             />
           )}
@@ -569,7 +570,7 @@ export function ImmersiveVideoOverlay({
         {/* Narration recording indicator */}
         {narrationBlob && (
           <div className="absolute top-3 left-3 z-40 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-success-500" strokeWidth="2">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
             </svg>
             <span className="text-[10px] text-green-400 font-medium">Narration recorded</span>

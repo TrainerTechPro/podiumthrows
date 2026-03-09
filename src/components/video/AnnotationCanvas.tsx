@@ -16,6 +16,7 @@ import {
   generateAnnotationId,
   DEFAULT_ANNOTATION_DURATION,
 } from "./types";
+import { ANNOTATION_PRESET_COLORS, CANVAS_OVERLAY } from "@/lib/design-tokens";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -44,7 +45,7 @@ export function AnnotationCanvas({
   currentTime,
   isEditing = false,
   activeTool = "select",
-  activeColor = "#ef4444",
+  activeColor = ANNOTATION_PRESET_COLORS[0],
   activeStrokeWidth = 4,
   onAnnotationAdd,
   className,
@@ -577,7 +578,7 @@ function drawText(
   // Background
   const metrics = ctx.measureText(ann.text);
   const pad = 4;
-  ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+  ctx.fillStyle = CANVAS_OVERLAY.textBg;
   ctx.fillRect(
     x - pad,
     y - pad,

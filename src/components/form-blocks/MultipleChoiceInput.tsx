@@ -23,14 +23,26 @@ export function MultipleChoiceInput({
     onChange(next);
   }
 
+  const errorId = error ? `mc-error-${block.id}` : undefined;
+  const hintId = block.minSelections ? `mc-hint-${block.id}` : undefined;
+
   return (
-    <div className="space-y-2">
+    <fieldset
+      className="space-y-2"
+      aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}
+    >
+      {block.label && (
+        <legend className="sr-only">{block.label}</legend>
+      )}
+
       {options.map((opt) => {
         const checked = current.includes(opt.value);
         return (
           <button
             key={opt.id}
             type="button"
+            role="checkbox"
+            aria-checked={checked}
             onClick={() => toggle(opt.value)}
             disabled={disabled}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -45,6 +57,7 @@ export function MultipleChoiceInput({
                   ? "border-primary-500 bg-primary-500 text-white"
                   : "border-[var(--card-border)]"
               }`}
+              aria-hidden="true"
             >
               {checked && (
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -52,21 +65,21 @@ export function MultipleChoiceInput({
                 </svg>
               )}
             </span>
-            {opt.label}
+            <span className="min-w-0 break-words">{opt.label}</span>
           </button>
         );
       })}
 
       {block.minSelections && (
-        <p className="text-[10px] text-muted">
+        <p id={hintId} className="text-[10px] text-muted">
           Select at least {block.minSelections}
           {block.maxSelections ? `, at most ${block.maxSelections}` : ""}
         </p>
       )}
 
       {error && (
-        <p className="text-xs text-danger-500 dark:text-danger-400">{error}</p>
+        <p id={errorId} className="text-xs text-danger-500 dark:text-danger-400" role="alert">{error}</p>
       )}
-    </div>
+    </fieldset>
   );
 }

@@ -112,6 +112,7 @@ export function PhotoUploadInput({
           <img
             src={url}
             alt="Uploaded"
+            loading="lazy"
             className="mx-auto max-h-48 rounded-lg object-contain"
           />
           <div className="flex justify-center gap-3">

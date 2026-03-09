@@ -103,18 +103,19 @@ export function RestTimer({
         {!done && (
           <button
             onClick={running ? pause : start}
+            aria-label={running ? "Pause rest timer" : remaining < seconds ? "Resume rest timer" : "Start rest timer"}
             className="text-xs text-primary-500 hover:underline"
           >
             {running ? "Pause" : remaining < seconds ? "Resume" : "Start"}
           </button>
         )}
         {(running || remaining < seconds) && !done && (
-          <button onClick={reset} className="text-xs text-muted hover:underline">
+          <button onClick={reset} aria-label="Reset rest timer" className="text-xs text-muted hover:underline">
             Reset
           </button>
         )}
         {done && (
-          <button onClick={reset} className="text-xs text-primary-500 hover:underline">
+          <button onClick={reset} aria-label="Restart rest timer" className="text-xs text-primary-500 hover:underline">
             Restart
           </button>
         )}
@@ -187,6 +188,7 @@ export function RestTimer({
           <>
             <button
               onClick={running ? pause : start}
+              aria-label={running ? "Pause rest timer" : remaining < seconds ? "Resume rest timer" : "Start rest timer"}
               className={cn(
                 "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors",
                 running
@@ -199,6 +201,7 @@ export function RestTimer({
             {(running || remaining < seconds) && (
               <button
                 onClick={reset}
+                aria-label="Reset rest timer"
                 className="px-3 py-1.5 rounded-lg text-sm text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
               >
                 Reset
@@ -208,6 +211,7 @@ export function RestTimer({
         ) : (
           <button
             onClick={reset}
+            aria-label="Restart rest timer"
             className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors"
           >
             Restart

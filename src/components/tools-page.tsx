@@ -3061,7 +3061,7 @@ export default function ToolsPage({ isCoach: _isCoach = false }: ToolsPageProps)
   const [activeTab, setActiveTab] = useState("strength");
 
   return (
-    <div className="min-h-screen bg-[#f5f3ef] dark:bg-[#0e0d0c]">
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
         {/* Header */}
         <div className="mb-6">

@@ -2,6 +2,7 @@
 
 import { InputHTMLAttributes, useId } from "react";
 import { cn } from "@/lib/utils";
+import { getRpeHex } from "@/lib/design-tokens";
 
 export interface RPESliderProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "min" | "max" | "value" | "onChange"> {
   value: number;
@@ -25,15 +26,7 @@ const RPE_LABELS: Record<number, { short: string; desc: string }> = {
 };
 
 /** Interpolate hex color: green (8-10) → amber (5-7) → red (1-4) */
-function getRpeColor(rpe: number): string {
-  if (rpe >= 8) return "#22c55e";  // success green
-  if (rpe >= 7) return "#84cc16";  // lime
-  if (rpe >= 6) return "#eab308";  // yellow
-  if (rpe >= 5) return "#f59e0b";  // amber (primary brand)
-  if (rpe >= 4) return "#f97316";  // orange
-  if (rpe >= 3) return "#ef4444";  // red
-  return "#dc2626";               // dark red
-}
+const getRpeColor = getRpeHex;
 
 /** Background gradient for the filled portion of the track */
 function getTrackGradient(rpe: number): string {

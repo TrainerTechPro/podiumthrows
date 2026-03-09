@@ -1,5 +1,6 @@
 import { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { SCORE_FILL } from "@/lib/design-tokens";
 
 export type ScoreVariant = "circle" | "pill" | "badge";
 
@@ -20,21 +21,21 @@ function getScoreColor(score: number) {
     text:   "text-success-700 dark:text-success-400",
     bg:     "bg-success-50   dark:bg-success-500/15",
     ring:   "ring-success-500",
-    fill:   "#22c55e", // success-500
+    fill:   SCORE_FILL.success,
     track:  "stroke-success-100 dark:stroke-success-500/20",
   };
   if (score >= 5) return {
     text:   "text-warning-700 dark:text-warning-400",
     bg:     "bg-warning-50   dark:bg-warning-500/15",
     ring:   "ring-warning-500",
-    fill:   "#f59e0b", // warning-500
+    fill:   SCORE_FILL.warning,
     track:  "stroke-warning-100 dark:stroke-warning-500/20",
   };
   return {
     text:   "text-danger-700  dark:text-danger-400",
     bg:     "bg-danger-50     dark:bg-danger-500/15",
     ring:   "ring-danger-500",
-    fill:   "#ef4444", // danger-500
+    fill:   SCORE_FILL.danger,
     track:  "stroke-danger-100 dark:stroke-danger-500/20",
   };
 }

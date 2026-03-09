@@ -15,14 +15,7 @@ type Props = {
 
 /* ─── Type-to-color map ───────────────────────────────────────────────────── */
 
-const TYPE_COLORS: Record<string, string> = {
-  line: "#3b82f6",
-  arrow: "#f97316",
-  circle: "#22c55e",
-  angle: "#a855f7",
-  freehand: "#ef4444",
-  text: "#eab308",
-};
+import { ANNOTATION_TYPE_COLORS as TYPE_COLORS } from "@/lib/design-tokens";
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 

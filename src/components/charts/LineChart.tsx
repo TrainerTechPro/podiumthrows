@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { CHART_DEFAULT_COLOR } from "@/lib/design-tokens";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -85,7 +86,7 @@ export function LineChart({
   height = 200,
   yMin: yMinProp,
   yMax: yMaxProp,
-  color = "#f59e0b",
+  color = CHART_DEFAULT_COLOR,
   showArea = true,
   showDots = true,
   gridLines = 4,
