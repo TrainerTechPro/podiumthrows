@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     const invitation = await prisma.invitation.create({
       data: {
         coachId: coach.id,
-        email,
+        ...(email ? { email } : {}),
         token,
         status: "PENDING",
         expiresAt,
