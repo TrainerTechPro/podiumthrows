@@ -21,7 +21,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "remotion:preview": "remotion studio",
+    "remotion:render": "remotion render OnboardingDemo out/onboarding-demo.mp4"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.997.0",
@@ -48,6 +50,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@remotion/cli": "^4.0.434",
+    "@remotion/google-fonts": "^4.0.434",
+    "@remotion/transitions": "^4.0.434",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.5.2",
@@ -64,6 +69,7 @@
     "jsdom": "^25.0.1",
     "postcss": "^8",
     "prettier": "^3.8.1",
+    "remotion": "^4.0.434",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",

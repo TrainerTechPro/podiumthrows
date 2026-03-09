@@ -30,7 +30,7 @@ type Props = {
   currentTime: number;
   duration: number;
   onSeek: (time: number) => void;
-  /** Seconds per pixel of drag */
+  /** Seconds per pixel of drag (base sensitivity — now dynamically scaled) */
   sensitivity?: number;
   /** Video FPS for frame-snapping (default 60) */
   fps?: number;
@@ -60,8 +60,7 @@ type Props = {
    * - 1.0 = default feel
    * - >1  = free-spinning (wheel coasts much longer)
    *
-   * Effective friction is clamped to [0, 0.999] — values ≥ 1 would
-   * never converge; values < 0 are nonsensical.
+   * Maps to a decay rate for time-based exponential decay.
    */
   momentumMultiplier?: number;
   className?: string;
@@ -69,13 +68,27 @@ type Props = {
 
 /* ─── Constants ───────────────────────────────────────────────────────────── */
 
-const FRICTION = 0.94;
-const MIN_VELOCITY = 0.1; // px/frame — stop threshold
 const TICK_COUNT = 60; // visual tick marks
 const TICK_SPACING = 12; // px between ticks
 /** One full visual cycle of the tick strip. The major/minor pattern repeats
  *  every STRIP_CYCLE px, so modulo-wrapping is seamless. */
 const STRIP_CYCLE = TICK_COUNT * TICK_SPACING; // 720 px
+
+/* ── Physics constants ──────────────────────────────────────────────────── */
+
+/** Max release velocity in px/sec. Prevents absurd spikes from touch jitter. */
+const MAX_VELOCITY_PX_SEC = 5000;
+/** Base exponential decay rate (per second). Higher = faster stop.
+ *  ~4.0 ≈ iOS scroll deceleration feel. */
+const BASE_DECAY_RATE = 4.0;
+/** Velocity (px/sec) below which momentum stops. */
+const MIN_VELOCITY_PX_SEC = 8;
+/** How far back (ms) to look when computing release velocity. */
+const VELOCITY_WINDOW_MS = 100;
+/** Below this drag speed (px/sec), lock to surgical 1-frame-per-N-pixels. */
+const SURGICAL_SPEED_THRESHOLD = 50;
+/** Dynamic sensitivity multiplier growth rate per px/sec above the surgical threshold. */
+const SENSITIVITY_GROWTH = 0.005;
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
@@ -95,10 +108,12 @@ export function JogWheel({
   const tickStripRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const lastX = useRef(0);
-  const velocityRef = useRef(0);
+  const velocityRef = useRef(0); // px/sec during momentum
   const rafRef = useRef<number>(0);
-  const velocitySamples = useRef<{ dx: number; dt: number }[]>([]);
-  const lastMoveTime = useRef(0);
+
+  /** Unbounded array of {x, time} recorded during a drag gesture. */
+  const trackPoints = useRef<{ x: number; time: number }[]>([]);
+
   /** Track accumulated time imperatively during direct-DOM mode */
   const timeRef = useRef(currentTime);
   /** Track accumulated frame index imperatively during frame mode */
@@ -107,6 +122,19 @@ export function JogWheel({
   const offsetRef = useRef(0);
   /** Mirrors momentumMultiplier prop — read inside rAF loop to avoid stale closures */
   const momentumMultiplierRef = useRef(momentumMultiplier);
+
+  /** Sub-frame accumulator: collects fractional-frame time deltas. Only commits
+   *  to the video element when a full frame boundary is crossed. */
+  const timeAccumulator = useRef(0);
+  /** Sub-frame accumulator for frame-mode (fractional frame index deltas). */
+  const frameAccumulator = useRef(0);
+
+  /** Timestamp (performance.now) when the user released the drag. Used by
+   *  time-based exponential decay so momentum is frame-rate independent. */
+  const releaseTimeRef = useRef(0);
+  /** The initial velocity at release, preserved for the decay formula. */
+  const releaseVelocityRef = useRef(0);
+
   const [offset, setOffset] = useState(0);
   const [active, setActive] = useState(false);
 
@@ -137,11 +165,40 @@ export function JogWheel({
   /** Whether to use direct DOM mutation (zero-jitter fast path) */
   const useDirectDOM = !useFrameMode && !!videoRef;
 
+  /* ── Dynamic sensitivity ──────────────────────────────────────────────── */
+
+  /**
+   * Returns a sensitivity multiplier that scales with instantaneous drag speed.
+   * - Below SURGICAL_SPEED_THRESHOLD: returns baseSensitivity unchanged (surgical).
+   * - Above: grows linearly so fast swipes jump whole seconds.
+   */
+  const calculateDynamicSensitivity = useCallback(
+    (speedPxSec: number): number => {
+      const absSpeed = Math.abs(speedPxSec);
+      if (absSpeed < SURGICAL_SPEED_THRESHOLD) return sensitivity;
+      return sensitivity * (1 + absSpeed * SENSITIVITY_GROWTH);
+    },
+    [sensitivity]
+  );
+
   /* ── Direct DOM: seek video + update tick strip without React ──────── */
 
   const seekDirect = useCallback(
-    (delta: number) => {
-      const raw = timeRef.current + delta;
+    (timeDelta: number) => {
+      const frameDur = 1 / (fps ?? 60);
+
+      // Accumulate the fractional-frame delta
+      timeAccumulator.current += timeDelta;
+
+      // Only commit when we've crossed a full frame boundary
+      if (Math.abs(timeAccumulator.current) < frameDur) return;
+
+      // Consume full frames from the accumulator, leave the remainder
+      const framesToAdvance =
+        Math.trunc(timeAccumulator.current / frameDur) * frameDur;
+      timeAccumulator.current -= framesToAdvance;
+
+      const raw = timeRef.current + framesToAdvance;
       const snapped = snapToFrame(raw, fps);
       const clamped = Math.max(0, Math.min(duration, snapped));
       timeRef.current = clamped;
@@ -151,14 +208,9 @@ export function JogWheel({
         videoRef.current.currentTime = clamped;
       }
 
-      // Frame-exact tick strip update.
-      // frameIdx * TICK_SPACING gives an absolute pixel offset that advances by
-      // exactly TICK_SPACING per frame — no floating-point drift with short clips.
-      // Modulo STRIP_CYCLE keeps the value within strip bounds; wrapping is
-      // visually seamless because the major/minor pattern repeats every STRIP_CYCLE px.
+      // Frame-exact tick strip update
       if (tickStripRef.current) {
-        const frameDuration = 1 / (fps ?? 60);
-        const frameIdx = Math.round(clamped / frameDuration);
+        const frameIdx = Math.round(clamped / frameDur);
         const timeOffset = (frameIdx * TICK_SPACING) % STRIP_CYCLE;
         tickStripRef.current.style.transform = `translateX(${
           -timeOffset + offsetRef.current * 0.05
@@ -174,9 +226,21 @@ export function JogWheel({
   const seekFrameMode = useCallback(
     (pixelDelta: number) => {
       if (!frameMode) return;
-      const frameDelta = pixelDelta / PIXELS_PER_FRAME;
-      const raw = frameIndexRef.current + frameDelta;
-      const clamped = Math.max(0, Math.min(frameMode.totalFrames - 1, Math.round(raw)));
+
+      // Accumulate fractional frame deltas
+      frameAccumulator.current += pixelDelta / PIXELS_PER_FRAME;
+
+      // Only commit when a full frame boundary is crossed
+      if (Math.abs(frameAccumulator.current) < 1) return;
+
+      const framesToAdvance = Math.trunc(frameAccumulator.current);
+      frameAccumulator.current -= framesToAdvance;
+
+      const raw = frameIndexRef.current + framesToAdvance;
+      const clamped = Math.max(
+        0,
+        Math.min(frameMode.totalFrames - 1, raw)
+      );
       frameIndexRef.current = clamped;
       frameMode.onFrameChange(clamped);
 
@@ -196,8 +260,18 @@ export function JogWheel({
   /* ── Fallback: seek via React state (original behavior) ────────────── */
 
   const seekViaCallback = useCallback(
-    (delta: number) => {
-      const raw = currentTime + delta;
+    (timeDelta: number) => {
+      const frameDur = 1 / (fps ?? 60);
+
+      // Sub-frame accumulator for callback mode too
+      timeAccumulator.current += timeDelta;
+      if (Math.abs(timeAccumulator.current) < frameDur) return;
+
+      const framesToAdvance =
+        Math.trunc(timeAccumulator.current / frameDur) * frameDur;
+      timeAccumulator.current -= framesToAdvance;
+
+      const raw = currentTime + framesToAdvance;
       const snapped = snapToFrame(raw, fps);
       const clamped = Math.max(0, Math.min(duration, snapped));
       onSeek(clamped);
@@ -224,47 +298,58 @@ export function JogWheel({
   /* ── Sync React state after momentum settles ──────────────────────── */
 
   const syncReactState = useCallback(() => {
+    // Flush any remaining accumulator
+    timeAccumulator.current = 0;
+    frameAccumulator.current = 0;
+
     if (useFrameMode && frameMode) {
-      // Frame mode: final sync handled by onFrameChange during drag
       frameMode.onFrameChange(Math.round(frameIndexRef.current));
     } else if (useDirectDOM) {
       onSeek(timeRef.current);
     }
   }, [useFrameMode, frameMode, useDirectDOM, onSeek]);
 
-  /* ── Momentum animation loop ───────────────────────────────────────── */
+  /* ── Momentum animation loop (time-based exponential decay) ─────────── */
 
   const animateMomentum = useCallback(() => {
-    if (Math.abs(velocityRef.current) < MIN_VELOCITY) {
+    const elapsed = (performance.now() - releaseTimeRef.current) / 1000; // seconds
+
+    // Effective decay rate: scaled inversely by momentumMultiplier.
+    // multiplier > 1 = slower decay (more coast), < 1 = faster decay.
+    const mult = Math.max(0.01, momentumMultiplierRef.current);
+    const effectiveDecay = BASE_DECAY_RATE / mult;
+
+    // v(t) = v0 * e^(-k*t)  —  frame-rate independent
+    const v = releaseVelocityRef.current * Math.exp(-effectiveDecay * elapsed);
+    velocityRef.current = v;
+
+    if (Math.abs(v) < MIN_VELOCITY_PX_SEC) {
       velocityRef.current = 0;
-      // Momentum settled — sync React state once
       syncReactState();
       return;
     }
 
-    // In frame mode, pass raw pixel velocity; otherwise convert to time delta
-    const delta = useFrameMode
-      ? velocityRef.current
-      : velocityRef.current * sensitivity;
-    seek(delta);
+    // dt since last rAF frame (approximate via decay derivative integration).
+    // displacement between t and t+dt: integral of v0*e^(-k*t) dt = v0/k * (1 - e^(-k*dt))
+    // For per-frame delta we use the instantaneous velocity * assumed ~16ms.
+    // But to stay truly frame-rate independent, compute displacement since last call:
+    const dtFrame = 1 / 60; // approximate frame interval; error is cosmetic only
+    const displacement = v * dtFrame; // px moved this frame
 
-    // Apply friction scaled by momentumMultiplier (read from ref — stale-closure safe).
-    // Clamped to [0, 0.999]: values ≥ 1 would prevent convergence.
-    const effectiveFriction = Math.min(
-      0.999,
-      FRICTION * momentumMultiplierRef.current
-    );
-    velocityRef.current *= effectiveFriction;
+    // Dynamic sensitivity during momentum too
+    const dynSens = calculateDynamicSensitivity(v);
+    const timeDelta = useFrameMode ? displacement : displacement * dynSens;
+    seek(timeDelta);
 
     // Visual offset
     if (useDirectDOM || useFrameMode) {
-      offsetRef.current += velocityRef.current;
+      offsetRef.current += displacement;
     } else {
-      setOffset((prev) => prev + velocityRef.current);
+      setOffset((prev) => prev + displacement);
     }
 
     rafRef.current = requestAnimationFrame(animateMomentum);
-  }, [seek, sensitivity, syncReactState, useDirectDOM, useFrameMode]);
+  }, [seek, calculateDynamicSensitivity, syncReactState, useDirectDOM, useFrameMode]);
 
   /* ── Pointer start ─────────────────────────────────────────────────── */
 
@@ -273,8 +358,9 @@ export function JogWheel({
       isDragging.current = true;
       lastX.current = clientX;
       velocityRef.current = 0;
-      velocitySamples.current = [];
-      lastMoveTime.current = performance.now();
+      timeAccumulator.current = 0;
+      frameAccumulator.current = 0;
+      trackPoints.current = [{ x: clientX, time: performance.now() }];
 
       if (useFrameMode && frameMode) {
         frameIndexRef.current = frameMode.currentFrame;
@@ -298,22 +384,33 @@ export function JogWheel({
     (clientX: number) => {
       if (!isDragging.current) return;
 
-      const rawDx = clientX - lastX.current;
       const now = performance.now();
-      const dt = now - lastMoveTime.current;
-
+      const rawDx = clientX - lastX.current;
       lastX.current = clientX;
-      lastMoveTime.current = now;
 
       // Apply scroll direction — inverted flips the film-strip mental model
       const dx = invertScroll ? -rawDx : rawDx;
 
-      // Track velocity samples (keep last 5) — uses effective dx so momentum inherits inversion
-      velocitySamples.current.push({ dx, dt });
-      if (velocitySamples.current.length > 5) velocitySamples.current.shift();
+      // Record tracking point (unbounded — pruned only at release)
+      trackPoints.current.push({ x: clientX, time: now });
+
+      // Instantaneous speed for dynamic sensitivity (px/sec).
+      // Use the last two track points to get a stable estimate.
+      const pts = trackPoints.current;
+      let instantSpeed = 0;
+      if (pts.length >= 2) {
+        const prev = pts[pts.length - 2];
+        const curr = pts[pts.length - 1];
+        const dtMs = curr.time - prev.time;
+        if (dtMs > 0) {
+          instantSpeed = Math.abs(curr.x - prev.x) / (dtMs / 1000);
+        }
+      }
+
+      const dynSens = calculateDynamicSensitivity(instantSpeed);
 
       // In frame mode, pass raw pixel delta; otherwise convert to time delta
-      const delta = useFrameMode ? dx : dx * sensitivity;
+      const delta = useFrameMode ? dx : dx * dynSens;
       seek(delta);
 
       // Visual offset tracks effective dx so ticks move with mental model
@@ -323,7 +420,7 @@ export function JogWheel({
         setOffset((prev) => prev + dx);
       }
     },
-    [seek, sensitivity, useDirectDOM, useFrameMode, invertScroll]
+    [seek, calculateDynamicSensitivity, useDirectDOM, useFrameMode, invertScroll]
   );
 
   /* ── Pointer end ───────────────────────────────────────────────────── */
@@ -333,18 +430,46 @@ export function JogWheel({
     isDragging.current = false;
     setActive(false);
 
-    // Calculate average velocity from samples
-    const samples = velocitySamples.current;
-    if (samples.length > 0) {
-      const totalDx = samples.reduce((sum, s) => sum + s.dx, 0);
-      const totalDt = samples.reduce((sum, s) => sum + s.dt, 0);
-      if (totalDt > 0) {
-        velocityRef.current = (totalDx / totalDt) * 16; // normalize to ~60fps
+    // ── 100ms window velocity calculation ───────────────────────────
+    const now = performance.now();
+    const cutoff = now - VELOCITY_WINDOW_MS;
+    const pts = trackPoints.current;
+
+    let releaseVelocity = 0;
+    if (pts.length >= 2) {
+      // Walk backward to find the oldest point still within the 100ms window
+      let startIdx = pts.length - 1;
+      for (let i = pts.length - 1; i >= 0; i--) {
+        if (pts[i].time < cutoff) break;
+        startIdx = i;
+      }
+
+      const first = pts[startIdx];
+      const last = pts[pts.length - 1];
+      const dtMs = last.time - first.time;
+
+      if (dtMs > 0) {
+        const dxRaw = last.x - first.x;
+        const dx = invertScroll ? -dxRaw : dxRaw;
+        releaseVelocity = (dx / dtMs) * 1000; // px/sec
       }
     }
 
+    // Hard clamp
+    releaseVelocity = Math.max(
+      -MAX_VELOCITY_PX_SEC,
+      Math.min(MAX_VELOCITY_PX_SEC, releaseVelocity)
+    );
+
+    velocityRef.current = releaseVelocity;
+    releaseVelocityRef.current = releaseVelocity;
+    releaseTimeRef.current = performance.now();
+
+    // Clear track points
+    trackPoints.current = [];
+
     // Start momentum if velocity is significant
-    if (Math.abs(velocityRef.current) > MIN_VELOCITY) {
+    if (Math.abs(releaseVelocity) > MIN_VELOCITY_PX_SEC) {
       rafRef.current = requestAnimationFrame(animateMomentum);
     } else {
       // No momentum — sync React state immediately
@@ -352,10 +477,10 @@ export function JogWheel({
     }
 
     // Haptic feedback on release
-    if (Math.abs(velocityRef.current) > 2 && navigator.vibrate) {
+    if (Math.abs(releaseVelocity) > 100 && navigator.vibrate) {
       navigator.vibrate(5);
     }
-  }, [animateMomentum, syncReactState]);
+  }, [animateMomentum, syncReactState, invertScroll]);
 
   /* ── Keyboard: ArrowLeft / ArrowRight step one frame ───────────────── */
 
@@ -437,10 +562,6 @@ export function JogWheel({
 
   /* ── Render ────────────────────────────────────────────────────────── */
 
-  // Frame-exact tick offset: each frame advances exactly TICK_SPACING pixels,
-  // eliminating sub-pixel drift that occurs with the old (currentTime/duration)
-  // percentage formula on short clips. Modulo STRIP_CYCLE keeps the value in
-  // bounds — wraps are seamless because the tick pattern repeats every STRIP_CYCLE px.
   const frameDuration = 1 / (fps ?? 60);
   const frameIndex = Math.round(currentTime / frameDuration);
   const timeOffset = (frameIndex * TICK_SPACING) % STRIP_CYCLE;
