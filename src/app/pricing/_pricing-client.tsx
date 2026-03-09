@@ -442,7 +442,7 @@ function MatrixCell({ val }: { val: boolean | string }) {
   );
 }
 
-function MobileMatrixValue({ val, plan }: { val: boolean | string; plan: string }) {
+function MobileMatrixValue({ val }: { val: boolean | string }) {
   if (typeof val === "boolean") {
     return val ? (
       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-500/15 text-primary-500">
@@ -487,7 +487,7 @@ export function FeatureMatrix() {
                           }`}>
                             {plan}
                           </span>
-                          <MobileMatrixValue val={val} plan={plan} />
+                          <MobileMatrixValue val={val} />
                         </div>
                       );
                     })}
