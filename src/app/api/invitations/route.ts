@@ -78,34 +78,41 @@ export async function POST(req: NextRequest) {
 
     /* ── Validate body ── */
     const body = await req.json().catch(() => ({}));
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json({ error: "A valid email address is required." }, { status: 400 });
-    }
+    const mode = body.mode === "link" ? "link" : "email";
+    const email =
+      mode === "email" && typeof body.email === "string"
+        ? body.email.trim().toLowerCase()
+        : null;
 
-    /* ── Check if athlete already exists for this coach ── */
-    const existingAthlete = await prisma.athleteProfile.findFirst({
-      where: {
-        coachId: coach.id,
-        user: { email },
-      },
-    });
-    if (existingAthlete) {
-      return NextResponse.json(
-        { error: "An athlete with this email is already on your roster." },
-        { status: 409 }
-      );
-    }
+    if (mode === "email") {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return NextResponse.json({ error: "A valid email address is required." }, { status: 400 });
+      }
 
-    /* ── Revoke any pending invitations to this email from this coach ── */
-    await prisma.invitation.updateMany({
-      where: {
-        coachId: coach.id,
-        email,
-        status: "PENDING",
-      },
-      data: { status: "REVOKED" },
-    });
+      /* ── Check if athlete already exists for this coach ── */
+      const existingAthlete = await prisma.athleteProfile.findFirst({
+        where: {
+          coachId: coach.id,
+          user: { email },
+        },
+      });
+      if (existingAthlete) {
+        return NextResponse.json(
+          { error: "An athlete with this email is already on your roster." },
+          { status: 409 }
+        );
+      }
+
+      /* ── Revoke any pending invitations to this email from this coach ── */
+      await prisma.invitation.updateMany({
+        where: {
+          coachId: coach.id,
+          email,
+          status: "PENDING",
+        },
+        data: { status: "REVOKED" },
+      });
+    }
 
     /* ── Create invitation ── */
     const token = randomBytes(32).toString("hex");
@@ -129,9 +136,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    /* ── Send email ── */
-    const coachName = `${coach.firstName} ${coach.lastName}`;
-    await sendInvitationEmail(email, coachName, token);
+    /* ── Send email (only for email invites) ── */
+    if (mode === "email" && email) {
+      const coachName = `${coach.firstName} ${coach.lastName}`;
+      await sendInvitationEmail(email, coachName, token);
+    }
 
     return NextResponse.json({ ok: true, data: invitation });
   } catch (err) {

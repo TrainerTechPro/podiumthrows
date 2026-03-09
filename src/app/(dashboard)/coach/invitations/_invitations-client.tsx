@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 export interface InvitationRow {
   id: string;
-  email: string;
+  email: string | null;
   token: string;
   status: string;
   expiresAt: string;
@@ -78,7 +78,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
   }
 
   async function revokeInvitation(inv: InvitationRow) {
-    if (!confirm(`Revoke invitation to ${inv.email}? The link will no longer work.`)) return;
+    if (!confirm(`Revoke invitation${inv.email ? ` to ${inv.email}` : ""}? The link will no longer work.`)) return;
     setRevokingId(inv.id);
     try {
       const res = await fetch(`/api/invitations/${inv.id}`, { method: "PATCH" });
@@ -114,7 +114,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
           </svg>
         }
         title="No invitations sent yet"
-        description="Invite athletes by email. They'll receive a link to create their account and join your roster."
+        description="Invite athletes by email or shareable link. They'll create their account and join your roster automatically."
       />
     );
   }
@@ -137,30 +137,27 @@ export function InvitationsClient({ initialInvitations }: Props) {
                 role="listitem"
                 className="card px-4 py-3 space-y-3"
               >
-                {/* Top row: icon + email + badge + actions */}
+                {/* Top row: icon + email/label + badge + actions */}
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-9 h-9 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0"
+                    className={`w-9 h-9 rounded-full ${inv.email ? "bg-amber-500/10" : "bg-primary-500/10"} flex items-center justify-center shrink-0`}
                     aria-hidden="true"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#f59e0b"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
+                    {inv.email ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-[var(--foreground)] truncate">
-                      {inv.email}
+                      {inv.email ?? "Link invite"}
                     </p>
                     <p className="text-xs text-muted">
                       Sent {formatDate(inv.createdAt)} · Expires {formatDate(inv.expiresAt)}
@@ -173,7 +170,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pl-0 sm:pl-12">
                   <button
                     onClick={() => copyLink(inv)}
-                    aria-label={copiedId === inv.id ? "Link copied" : `Copy invite link for ${inv.email}`}
+                    aria-label={copiedId === inv.id ? "Link copied" : `Copy invite link${inv.email ? ` for ${inv.email}` : ""}`}
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition-all border min-h-[44px] sm:min-h-0 ${
                       copiedId === inv.id
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
@@ -195,7 +192,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
                   <button
                     onClick={() => revokeInvitation(inv)}
                     disabled={revokingId === inv.id}
-                    aria-label={`Revoke invitation for ${inv.email}`}
+                    aria-label={`Revoke invitation${inv.email ? ` for ${inv.email}` : ""}`}
                     className="px-3 py-2.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition-all border bg-[var(--surface)] text-muted border-[var(--border)] hover:text-red-600 hover:border-red-500/30 hover:bg-red-500/5 active:bg-red-500/10 disabled:opacity-50 min-h-[44px] sm:min-h-0"
                   >
                     {revokingId === inv.id ? "Revoking..." : "Revoke"}
@@ -233,24 +230,20 @@ export function InvitationsClient({ initialInvitations }: Props) {
                     className="w-9 h-9 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center shrink-0"
                     aria-hidden="true"
                   >
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-muted"
-                      aria-hidden="true"
-                    >
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
+                    {inv.email ? (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted" aria-hidden="true">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    ) : (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted" aria-hidden="true">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[var(--foreground)] truncate">{inv.email}</p>
+                    <p className="font-medium text-[var(--foreground)] truncate">{inv.email ?? "Link invite"}</p>
                     <p className="text-xs text-muted">Sent {formatDate(inv.createdAt)}</p>
                   </div>
                   <Badge variant={config.variant}>{config.label}</Badge>

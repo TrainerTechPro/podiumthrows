@@ -758,7 +758,7 @@ model Invitation {
   id        String           @id @default(cuid())
   coachId   String
   coach     CoachProfile     @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  email     String
+  email     String?          // null for link-only invites (coach shares link manually)
   token     String           @unique @default(cuid())
   status    InvitationStatus @default(PENDING)
   expiresAt DateTime
