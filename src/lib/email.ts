@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 if (!APP_URL && process.env.NODE_ENV === "production") {
-  throw new Error("NEXT_PUBLIC_APP_URL must be set in production");
+  console.warn("[email] NEXT_PUBLIC_APP_URL is not set — email links will use fallback URL");
 }
 const baseUrl = APP_URL || "http://localhost:3000";
 const FROM_EMAIL = process.env.SMTP_FROM || "Podium Throws <noreply@podiumthrows.com>";

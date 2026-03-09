@@ -3,7 +3,6 @@ import { randomBytes } from "crypto";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { PLAN_LIMITS } from "@/lib/data/coach";
-import { sendInvitationEmail } from "@/lib/email";
 
 /* ── GET — list all invitations for the authenticated coach ── */
 export async function GET() {
@@ -140,6 +139,7 @@ export async function POST(req: NextRequest) {
     let emailSent = false;
     if (mode === "email" && email) {
       try {
+        const { sendInvitationEmail } = await import("@/lib/email");
         const coachName = `${coach.firstName} ${coach.lastName}`;
         await sendInvitationEmail(email, coachName, token);
         emailSent = true;
@@ -152,6 +152,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, data: invitation, emailSent });
   } catch (err) {
     console.error("[POST /api/invitations]", err);
-    return NextResponse.json({ error: "Failed to send invitation." }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: `Failed to create invitation: ${message}` }, { status: 500 });
   }
 }
