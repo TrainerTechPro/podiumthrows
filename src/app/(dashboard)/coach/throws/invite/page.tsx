@@ -5,7 +5,7 @@ import Link from "next/link";
 
 interface InvitationRow {
   id: string;
-  email: string;
+  email: string | null;
   token: string;
   status: string;
   expiresAt: string;
@@ -18,6 +18,7 @@ export default function ThrowsInvitePage() {
   const [inviteLink, setInviteLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
   const [recentInvites, setRecentInvites] = useState<InvitationRow[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -39,6 +40,7 @@ export default function ThrowsInvitePage() {
     setError("");
     setInviteLink("");
     setCopied(false);
+    setEmailSent(false);
     setLoading(true);
 
     try {
@@ -55,6 +57,7 @@ export default function ThrowsInvitePage() {
       const token = data.data?.token;
       const link = `${window.location.origin}/register?invite=${token}`;
       setInviteLink(link);
+      setEmailSent(!!data.emailSent);
       const newInv: InvitationRow = data.data;
       setRecentInvites((prev) => [newInv, ...prev.slice(0, 9)]);
       setEmail("");
@@ -251,7 +254,9 @@ export default function ThrowsInvitePage() {
             </button>
           </div>
           <p className="text-xs text-emerald-600 dark:text-emerald-500">
-            Email sent automatically. The link expires in 7 days.
+            {emailSent
+              ? "Email sent automatically. The link expires in 7 days."
+              : "Share this link with your athlete. It expires in 7 days."}
           </p>
         </div>
       )}
@@ -297,11 +302,11 @@ export default function ThrowsInvitePage() {
                     className="w-9 h-9 rounded-full bg-amber-500/10 flex items-center justify-center text-xs font-bold text-amber-700 dark:text-amber-400 shrink-0"
                     aria-hidden="true"
                   >
-                    {inv.email[0].toUpperCase()}
+                    {inv.email ? inv.email[0].toUpperCase() : "L"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                      {inv.email}
+                      {inv.email ?? "Link invite"}
                     </p>
                     <span
                       className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
@@ -321,7 +326,7 @@ export default function ThrowsInvitePage() {
                       aria-label={
                         copiedId === inv.id
                           ? "Link copied"
-                          : `Copy invite link for ${inv.email}`
+                          : `Copy invite link${inv.email ? ` for ${inv.email}` : ""}`
                       }
                       className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 px-2 py-1 rounded hover:bg-amber-500/10 transition-colors"
                     >

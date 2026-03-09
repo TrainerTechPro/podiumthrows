@@ -137,12 +137,19 @@ export async function POST(req: NextRequest) {
     });
 
     /* ── Send email (only for email invites) ── */
+    let emailSent = false;
     if (mode === "email" && email) {
-      const coachName = `${coach.firstName} ${coach.lastName}`;
-      await sendInvitationEmail(email, coachName, token);
+      try {
+        const coachName = `${coach.firstName} ${coach.lastName}`;
+        await sendInvitationEmail(email, coachName, token);
+        emailSent = true;
+      } catch (emailErr) {
+        console.error("[POST /api/invitations] Email send failed:", emailErr);
+        // Invitation was already created — don't fail the whole request
+      }
     }
 
-    return NextResponse.json({ ok: true, data: invitation });
+    return NextResponse.json({ ok: true, data: invitation, emailSent });
   } catch (err) {
     console.error("[POST /api/invitations]", err);
     return NextResponse.json({ error: "Failed to send invitation." }, { status: 500 });
