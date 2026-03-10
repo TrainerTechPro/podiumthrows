@@ -66,47 +66,99 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
     setUploading(true);
     setProgress(0);
 
-    const fd = new FormData();
-    fd.append("video", file);
-    fd.append("event", event);
-    fd.append("implement", implement);
-    fd.append("distance", distance);
-    fd.append("thrownAt", thrownAt);
-    if (notes.trim()) fd.append("notes", notes.trim());
+    try {
+      // Step 1: Get upload URL from server
+      const urlRes = await fetch("/api/codex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          step: "upload-url",
+          fileName: file.name || "video.mp4",
+          contentType: file.type || "video/mp4",
+          fileSizeMb: file.size / (1024 * 1024),
+        }),
+      });
+      const urlData = await urlRes.json();
+      if (!urlRes.ok) throw new Error(urlData.error || "Failed to get upload URL");
 
-    // Use XHR for upload progress
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/codex");
+      const videoUrl = urlData.publicUrl as string;
 
-    xhr.upload.onprogress = (ev) => {
-      if (ev.lengthComputable) setProgress(Math.round((ev.loaded / ev.total) * 100));
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        setFile(null);
-        setImplement("");
-        setDistance("");
-        setNotes("");
-        if (fileRef.current) fileRef.current.value = "";
-        onSuccess();
+      // Step 2: Upload video
+      if (urlData.mode === "r2") {
+        // Direct upload to R2 via presigned URL — bypasses Vercel body limit
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", urlData.uploadUrl);
+          xhr.upload.onprogress = (ev) => {
+            if (ev.lengthComputable) setProgress(Math.round((ev.loaded / ev.total) * 100));
+          };
+          xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed (${xhr.status})`)));
+          xhr.onerror = () => reject(new Error("Network error — check your connection"));
+          xhr.send(file);
+        });
       } else {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          setError(data.error || "Upload failed");
-        } catch {
-          setError("Upload failed");
-        }
+        // Local dev: upload via FormData to the API
+        const fd = new FormData();
+        fd.append("video", file);
+        fd.append("event", event);
+        fd.append("implement", implement);
+        fd.append("distance", distance);
+        fd.append("thrownAt", thrownAt);
+        if (notes.trim()) fd.append("notes", notes.trim());
+
+        const localRes = await new Promise<Response>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/api/codex");
+          xhr.upload.onprogress = (ev) => {
+            if (ev.lengthComputable) setProgress(Math.round((ev.loaded / ev.total) * 100));
+          };
+          xhr.onload = () => resolve(new Response(xhr.responseText, { status: xhr.status }));
+          xhr.onerror = () => reject(new Error("Network error"));
+          xhr.send(fd);
+        });
+
+        const localData = await localRes.json();
+        if (!localRes.ok) throw new Error(localData.error || "Upload failed");
+
+        // Local upload already created the DB entry — done
+        resetForm();
+        onSuccess();
+        return;
       }
-      setUploading(false);
-    };
 
-    xhr.onerror = () => {
-      setError("Network error — check your connection");
-      setUploading(false);
-    };
+      // Step 3: Confirm and save metadata (R2 mode only)
+      const confirmRes = await fetch("/api/codex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          step: "confirm",
+          event,
+          implement,
+          distance: parseFloat(distance),
+          videoUrl,
+          fileSize: file.size,
+          notes: notes.trim() || null,
+          thrownAt,
+        }),
+      });
+      const confirmData = await confirmRes.json();
+      if (!confirmRes.ok) throw new Error(confirmData.error || "Failed to save entry");
 
-    xhr.send(fd);
+      resetForm();
+      onSuccess();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function resetForm() {
+    setFile(null);
+    setImplement("");
+    setDistance("");
+    setNotes("");
+    if (fileRef.current) fileRef.current.value = "";
   }
 
   return (
@@ -181,7 +233,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           ref={fileRef}
           id="codex-video"
           type="file"
-          accept="video/*"
+          accept="video/*,.mp4,.mov,.webm,.m4v,.3gp"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="input file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary-500/10 file:text-primary-600 dark:file:text-primary-400 file:font-medium file:text-sm file:cursor-pointer"
           required
