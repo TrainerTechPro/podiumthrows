@@ -214,12 +214,12 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Athlete filter */}
         <select
           value={filterAthlete}
           onChange={(e) => setFilterAthlete(e.target.value)}
-          className="input text-sm h-8 w-auto"
+          className="input text-sm py-1.5 min-w-[140px]"
         >
           <option value="">All Athletes</option>
           {athletes.map((a) => (
@@ -228,12 +228,12 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
         </select>
 
         {/* Event filter */}
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {EVENTS.map((ev) => (
             <button
               key={ev.value}
               onClick={() => setFilterEvent(ev.value)}
-              className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+              className={`text-xs font-semibold px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors ${
                 filterEvent === ev.value
                   ? "bg-primary-500/15 text-primary-600 dark:text-primary-400"
                   : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
@@ -244,7 +244,7 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
           ))}
         </div>
 
-        <span className="text-xs text-muted ml-auto">
+        <span className="text-xs text-muted ml-auto whitespace-nowrap">
           {filtered.length} session{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
