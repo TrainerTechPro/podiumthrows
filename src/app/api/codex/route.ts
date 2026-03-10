@@ -76,6 +76,10 @@ export async function POST(request: NextRequest) {
       return handleUploadUrl(body, user.userId);
     }
 
+    if (step === "thumbnail-url") {
+      return handleThumbnailUrl(body, user.userId);
+    }
+
     if (step === "confirm") {
       return handleConfirm(body, user.userId);
     }
@@ -137,6 +141,26 @@ async function handleUploadUrl(
   }
 }
 
+/* ── Step 1b: Generate presigned URL for thumbnail image ── */
+async function handleThumbnailUrl(
+  body: Record<string, unknown>,
+  userId: string
+) {
+  const contentType = (body.contentType as string) || "image/jpeg";
+  const fileKey = `codex/${userId}/thumb_${randomUUID()}.jpg`;
+
+  if (isR2Configured()) {
+    const { uploadUrl, publicUrl } = await getPresignedUploadUrl(
+      fileKey,
+      contentType
+    );
+    return NextResponse.json({ mode: "r2", uploadUrl, key: fileKey, publicUrl });
+  } else {
+    const publicUrl = getPublicUrl(fileKey);
+    return NextResponse.json({ mode: "local", key: fileKey, publicUrl });
+  }
+}
+
 /* ── Step 2: Confirm upload and save metadata ── */
 async function handleConfirm(
   body: Record<string, unknown>,
@@ -147,6 +171,7 @@ async function handleConfirm(
   const distanceStr = body.distance as string | number | undefined;
   const videoUrl = body.videoUrl as string | undefined;
   const fileSize = (body.fileSize as number) || 0;
+  const thumbnailUrl = (body.thumbnailUrl as string) || null;
   const notes = (body.notes as string)?.trim() || null;
   const thrownAtStr = body.thrownAt as string | undefined;
 
@@ -175,6 +200,7 @@ async function handleConfirm(
       implement,
       distance,
       videoUrl,
+      thumbnailUrl,
       fileSize,
       notes,
       thrownAt,
@@ -193,6 +219,7 @@ async function handleLocalUpload(request: NextRequest, userId: string) {
   const event = formData.get("event") as string | null;
   const implement = formData.get("implement") as string | null;
   const distanceStr = formData.get("distance") as string | null;
+  const thumbnailBlob = formData.get("thumbnail") as File | null;
   const notes = (formData.get("notes") as string | null)?.trim() || null;
   const thrownAtStr = formData.get("thrownAt") as string | null;
 
@@ -221,6 +248,16 @@ async function handleLocalUpload(request: NextRequest, userId: string) {
     ? (await uploadSingleFile(fileKey, videoBuffer, mimeType), getPublicUrl(fileKey))
     : await saveFileLocally(fileKey, videoBuffer);
 
+  // Upload thumbnail if provided
+  let thumbnailUrl: string | null = null;
+  if (thumbnailBlob) {
+    const thumbBuffer = Buffer.from(await thumbnailBlob.arrayBuffer());
+    const thumbKey = `codex/${userId}/thumb_${randomUUID()}.jpg`;
+    thumbnailUrl = isR2Configured()
+      ? (await uploadSingleFile(thumbKey, thumbBuffer, "image/jpeg"), getPublicUrl(thumbKey))
+      : await saveFileLocally(thumbKey, thumbBuffer);
+  }
+
   const thrownAt = thrownAtStr ? new Date(thrownAtStr) : new Date();
 
   const entry = await prisma.codexEntry.create({
@@ -230,6 +267,7 @@ async function handleLocalUpload(request: NextRequest, userId: string) {
       implement,
       distance,
       videoUrl,
+      thumbnailUrl,
       fileSize: videoBlob.size,
       notes,
       thrownAt,

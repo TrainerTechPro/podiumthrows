@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
@@ -11,6 +11,7 @@ interface CodexEntry {
   implement: string;
   distance: number;
   videoUrl: string;
+  thumbnailUrl: string | null;
   notes: string | null;
   thrownAt: string;
   createdAt: string;
@@ -45,6 +46,120 @@ function formatDate(iso: string) {
   }).format(new Date(iso));
 }
 
+/* ─── Thumbnail Capture ────────────────────────────────────────────────────── */
+
+function ThumbnailCapture({
+  file,
+  onCapture,
+  thumbnailBlob,
+}: {
+  file: File;
+  onCapture: (blob: Blob) => void;
+  thumbnailBlob: Blob | null;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [thumbPreview, setThumbPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setObjectUrl(url);
+    setVideoReady(false);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  // Show existing thumbnail preview
+  useEffect(() => {
+    if (thumbnailBlob) {
+      const url = URL.createObjectURL(thumbnailBlob);
+      setThumbPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setThumbPreview(null);
+    }
+  }, [thumbnailBlob]);
+
+  const captureFrame = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) onCapture(blob);
+      },
+      "image/jpeg",
+      0.85
+    );
+  }, [onCapture]);
+
+  return (
+    <div className="space-y-2">
+      <label className="label">Select Thumbnail</label>
+      <div className="flex gap-3 items-start">
+        {/* Video scrubber */}
+        <div className="flex-1 space-y-2">
+          <div className="relative bg-surface-950 rounded-lg overflow-hidden" style={{ maxHeight: 200 }}>
+            {objectUrl && (
+              <video
+                ref={videoRef}
+                src={objectUrl}
+                className="w-full h-full object-contain"
+                style={{ maxHeight: 200 }}
+                muted
+                playsInline
+                preload="auto"
+                onLoadedData={() => setVideoReady(true)}
+              />
+            )}
+          </div>
+          {videoReady && videoRef.current && (
+            <input
+              type="range"
+              min={0}
+              max={videoRef.current.duration || 0}
+              step={0.05}
+              defaultValue={0}
+              onChange={(e) => {
+                if (videoRef.current) {
+                  videoRef.current.currentTime = parseFloat(e.target.value);
+                }
+              }}
+              className="w-full accent-primary-500 h-1.5 cursor-pointer"
+            />
+          )}
+          <button
+            type="button"
+            onClick={captureFrame}
+            disabled={!videoReady}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors disabled:opacity-40"
+          >
+            Capture Frame
+          </button>
+        </div>
+
+        {/* Thumbnail preview */}
+        {thumbPreview && (
+          <div className="shrink-0">
+            <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Thumbnail</p>
+            <img
+              src={thumbPreview}
+              alt="Captured thumbnail"
+              className="w-20 h-20 object-cover rounded-lg border border-[var(--card-border)]"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Upload Form ──────────────────────────────────────────────────────────── */
 
 function UploadForm({ onSuccess }: { onSuccess: () => void }) {
@@ -54,10 +169,39 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
   const [notes, setNotes] = useState("");
   const [thrownAt, setThrownAt] = useState(new Date().toISOString().split("T")[0]);
   const [file, setFile] = useState<File | null>(null);
+  const [thumbnailBlob, setThumbnailBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  async function uploadThumbnailToR2(blob: Blob): Promise<string | null> {
+    try {
+      // Get presigned URL for thumbnail
+      const urlRes = await fetch("/api/codex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ step: "thumbnail-url", contentType: "image/jpeg" }),
+      });
+      const urlData = await urlRes.json();
+      if (!urlRes.ok) return null;
+
+      if (urlData.mode === "r2") {
+        // Upload to R2
+        const putRes = await fetch(urlData.uploadUrl, {
+          method: "PUT",
+          body: blob,
+        });
+        if (!putRes.ok) return null;
+        return urlData.publicUrl as string;
+      } else {
+        // Local: upload via separate endpoint or skip
+        return null;
+      }
+    } catch {
+      return null;
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,6 +240,31 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           xhr.onerror = () => reject(new Error("Network error — check your connection"));
           xhr.send(file);
         });
+
+        // Step 2b: Upload thumbnail if captured
+        let thumbnailUrl: string | null = null;
+        if (thumbnailBlob) {
+          thumbnailUrl = await uploadThumbnailToR2(thumbnailBlob);
+        }
+
+        // Step 3: Confirm and save metadata (R2 mode only)
+        const confirmRes = await fetch("/api/codex", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            step: "confirm",
+            event,
+            implement,
+            distance: parseFloat(distance),
+            videoUrl,
+            thumbnailUrl,
+            fileSize: file.size,
+            notes: notes.trim() || null,
+            thrownAt,
+          }),
+        });
+        const confirmData = await confirmRes.json();
+        if (!confirmRes.ok) throw new Error(confirmData.error || "Failed to save entry");
       } else {
         // Local dev: upload via FormData to the API
         const fd = new FormData();
@@ -105,6 +274,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
         fd.append("distance", distance);
         fd.append("thrownAt", thrownAt);
         if (notes.trim()) fd.append("notes", notes.trim());
+        if (thumbnailBlob) fd.append("thumbnail", thumbnailBlob, "thumbnail.jpg");
 
         const localRes = await new Promise<Response>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -119,30 +289,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
 
         const localData = await localRes.json();
         if (!localRes.ok) throw new Error(localData.error || "Upload failed");
-
-        // Local upload already created the DB entry — done
-        resetForm();
-        onSuccess();
-        return;
       }
-
-      // Step 3: Confirm and save metadata (R2 mode only)
-      const confirmRes = await fetch("/api/codex", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          step: "confirm",
-          event,
-          implement,
-          distance: parseFloat(distance),
-          videoUrl,
-          fileSize: file.size,
-          notes: notes.trim() || null,
-          thrownAt,
-        }),
-      });
-      const confirmData = await confirmRes.json();
-      if (!confirmRes.ok) throw new Error(confirmData.error || "Failed to save entry");
 
       resetForm();
       onSuccess();
@@ -155,6 +302,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
 
   function resetForm() {
     setFile(null);
+    setThumbnailBlob(null);
     setImplement("");
     setDistance("");
     setNotes("");
@@ -234,11 +382,23 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           id="codex-video"
           type="file"
           accept="video/*,.mp4,.mov,.webm,.m4v,.3gp"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null);
+            setThumbnailBlob(null);
+          }}
           className="input file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary-500/10 file:text-primary-600 dark:file:text-primary-400 file:font-medium file:text-sm file:cursor-pointer"
           required
         />
       </div>
+
+      {/* Thumbnail capture */}
+      {file && (
+        <ThumbnailCapture
+          file={file}
+          onCapture={setThumbnailBlob}
+          thumbnailBlob={thumbnailBlob}
+        />
+      )}
 
       {/* Notes */}
       <div>
@@ -310,24 +470,45 @@ function CodexGrid({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {entries.map((entry) => (
         <div key={entry.id} className="card overflow-hidden group">
-          {/* Video */}
+          {/* Video — portrait-friendly container */}
           <div
-            className="relative aspect-video bg-surface-950 cursor-pointer"
+            className="relative bg-surface-950 cursor-pointer"
+            style={{ minHeight: 180, maxHeight: 360 }}
             onClick={() => setPlayingId(playingId === entry.id ? null : entry.id)}
           >
             {playingId === entry.id ? (
               <video
                 src={entry.videoUrl}
                 className="w-full h-full object-contain"
+                style={{ maxHeight: 360 }}
                 controls
                 autoPlay
                 playsInline
               />
+            ) : entry.thumbnailUrl ? (
+              /* Show captured thumbnail */
+              <div className="relative">
+                <img
+                  src={entry.thumbnailUrl}
+                  alt={`${entry.distance}m ${entry.implement}`}
+                  className="w-full object-contain"
+                  style={{ maxHeight: 360 }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <div className="w-12 h-12 rounded-full bg-white/90 dark:bg-surface-800/90 flex items-center justify-center shadow-lg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-surface-900 dark:text-surface-100 ml-0.5" aria-hidden="true">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
+              /* Fallback: video element as preview */
+              <div className="relative">
                 <video
                   src={entry.videoUrl}
-                  className="w-full h-full object-contain"
+                  className="w-full object-contain"
+                  style={{ maxHeight: 360 }}
                   muted
                   playsInline
                   preload="metadata"

@@ -1942,8 +1942,9 @@ model CodexEntry {
   event     EventType
   implement String    // e.g. "7.26kg", "2kg"
   distance  Float     // meters
-  videoUrl  String    // R2 URL or local path
-  fileSize  Int       @default(0) // bytes
+  videoUrl     String    // R2 URL or local path
+  thumbnailUrl String?   // captured frame thumbnail
+  fileSize     Int       @default(0) // bytes
   notes     String?
   thrownAt  DateTime  @default(now())
   createdAt DateTime  @default(now())
