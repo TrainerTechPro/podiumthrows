@@ -1263,13 +1263,29 @@ model AthleteThrowsSession {
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   date      String // YYYY-MM-DD
+  focus     String? // e.g. "Technique", "Power", "Speed", "Volume", "Competition Sim"
   notes     String?
+
+  // Pre-session readiness (quick check, 1-5 scale)
+  sleepQuality  Int? // 1-5
+  sorenessLevel Int? // 1-5  (1=none, 5=severe)
+  energyLevel   Int? // 1-5
+
+  // Post-session feedback
+  sessionRpe      Int?    // 1-10
+  sessionFeeling  String? // GREAT, GOOD, OK, POOR, BAD
+  techniqueRating Int?    // 1-5
+  mentalFocus     Int?    // 1-5
+  bestPart        String? // What went well
+  improvementArea String? // What needs work
+
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
   drillLogs AthleteDrillLog[]
 
   @@index([athleteId, date])
+  @@index([athleteId, event])
 }
 
 /// Individual drill entry within an AthleteThrowsSession.

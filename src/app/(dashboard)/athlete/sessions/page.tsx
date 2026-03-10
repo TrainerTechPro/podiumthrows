@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components";
 import { requireAthleteSession, getAthleteSessionHistory } from "@/lib/data/athlete";
+import prisma from "@/lib/prisma";
+import { SelfLoggedSessions } from "./_self-logged-sessions";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -76,14 +78,8 @@ function SessionRow({
       <Badge variant={cfg.variant}>{cfg.label}</Badge>
 
       <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         className="text-muted group-hover:text-primary-500 transition-colors shrink-0"
       >
         <polyline points="9 18 15 12 9 6" />
@@ -98,6 +94,16 @@ export default async function AthleteSessionsPage() {
   const { athlete } = await requireAthleteSession();
   const sessions = await getAthleteSessionHistory(athlete.id, 50);
 
+  // Fetch self-logged sessions
+  const selfLogged = await prisma.athleteThrowsSession.findMany({
+    where: { athleteId: athlete.id },
+    orderBy: { date: "desc" },
+    take: 50,
+    include: {
+      drillLogs: { orderBy: { createdAt: "asc" } },
+    },
+  });
+
   const upcoming = sessions.filter(
     (s) => s.status === "SCHEDULED" || s.status === "IN_PROGRESS"
   );
@@ -107,15 +113,20 @@ export default async function AthleteSessionsPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">My Sessions</h1>
-        <p className="text-sm text-muted mt-0.5">
-          {sessions.length} session{sessions.length !== 1 ? "s" : ""} total
-        </p>
+      {/* Header with Log Session CTA */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">My Sessions</h1>
+          <p className="text-sm text-muted mt-0.5">
+            {sessions.length + selfLogged.length} session{sessions.length + selfLogged.length !== 1 ? "s" : ""} total
+          </p>
+        </div>
+        <Link href="/athlete/log-session" className="btn-primary whitespace-nowrap">
+          + Log Session
+        </Link>
       </div>
 
-      {/* Upcoming */}
+      {/* Upcoming (coach-assigned) */}
       {upcoming.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
@@ -129,10 +140,20 @@ export default async function AthleteSessionsPage() {
         </section>
       )}
 
-      {/* Past */}
+      {/* Self-logged sessions */}
+      {selfLogged.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+            My Logged Sessions
+          </h2>
+          <SelfLoggedSessions sessions={JSON.parse(JSON.stringify(selfLogged))} />
+        </section>
+      )}
+
+      {/* Past (coach-assigned) */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Past Sessions
+          Coach-Assigned Sessions
         </h2>
         {past.length === 0 ? (
           <div className="card">

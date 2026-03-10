@@ -21,6 +21,7 @@ import {
   Award,
   Bell,
   BookOpen,
+  PenLine,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -196,6 +197,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
       { label: "Dashboard", href: "/coach/dashboard", icon: <LayoutDashboard {...iconSize} /> },
       { label: "Athletes", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
       { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} /> },
+      { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
       { label: "Throw Logs", href: "/coach/throws", icon: <Target {...iconSize} /> },
       { label: "Throws Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
       { label: "Drills", href: "/coach/throws/drills", icon: <Zap {...iconSize} /> },
@@ -236,7 +238,8 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: "My Dashboard", href: "/athlete/dashboard", icon: <LayoutDashboard {...iconSize} /> },
-      { label: "My Sessions", href: "/athlete/sessions", icon: <Calendar {...iconSize} /> },
+      { label: "Log Session", href: "/athlete/log-session", icon: <PenLine {...iconSize} /> },
+      { label: "My Sessions", href: "/athlete/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/athlete/sessions"] },
       { label: "Throw History", href: "/athlete/throws", icon: <Target {...iconSize} /> },
       { label: "Throws Codex", href: "/athlete/codex", icon: <BookOpen {...iconSize} /> },
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
