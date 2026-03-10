@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
@@ -27,6 +27,13 @@ const EVENTS = [
   { value: "JAVELIN", label: "Javelin" },
 ];
 
+const EVENT_DOT: Record<string, string> = {
+  SHOT_PUT: "bg-blue-500",
+  DISCUS: "bg-purple-500",
+  HAMMER: "bg-red-500",
+  JAVELIN: "bg-green-500",
+};
+
 const EVENT_COLORS: Record<string, string> = {
   SHOT_PUT: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   DISCUS: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
@@ -46,118 +53,11 @@ function formatDate(iso: string) {
   }).format(new Date(iso));
 }
 
-/* ─── Thumbnail Capture ────────────────────────────────────────────────────── */
-
-function ThumbnailCapture({
-  file,
-  onCapture,
-  thumbnailBlob,
-}: {
-  file: File;
-  onCapture: (blob: Blob) => void;
-  thumbnailBlob: Blob | null;
-}) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoReady, setVideoReady] = useState(false);
-  const [objectUrl, setObjectUrl] = useState<string | null>(null);
-  const [thumbPreview, setThumbPreview] = useState<string | null>(null);
-
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setObjectUrl(url);
-    setVideoReady(false);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-
-  // Show existing thumbnail preview
-  useEffect(() => {
-    if (thumbnailBlob) {
-      const url = URL.createObjectURL(thumbnailBlob);
-      setThumbPreview(url);
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setThumbPreview(null);
-    }
-  }, [thumbnailBlob]);
-
-  const captureFrame = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
-    canvas.toBlob(
-      (blob) => {
-        if (blob) onCapture(blob);
-      },
-      "image/jpeg",
-      0.85
-    );
-  }, [onCapture]);
-
-  return (
-    <div className="space-y-2">
-      <label className="label">Select Thumbnail</label>
-      <div className="flex gap-3 items-start">
-        {/* Video scrubber */}
-        <div className="flex-1 space-y-2">
-          <div className="relative bg-surface-950 rounded-lg overflow-hidden" style={{ maxHeight: 200 }}>
-            {objectUrl && (
-              <video
-                ref={videoRef}
-                src={objectUrl}
-                className="w-full h-full object-contain"
-                style={{ maxHeight: 200 }}
-                muted
-                playsInline
-                preload="auto"
-                onLoadedData={() => setVideoReady(true)}
-              />
-            )}
-          </div>
-          {videoReady && videoRef.current && (
-            <input
-              type="range"
-              min={0}
-              max={videoRef.current.duration || 0}
-              step={0.05}
-              defaultValue={0}
-              onChange={(e) => {
-                if (videoRef.current) {
-                  videoRef.current.currentTime = parseFloat(e.target.value);
-                }
-              }}
-              className="w-full accent-primary-500 h-1.5 cursor-pointer"
-            />
-          )}
-          <button
-            type="button"
-            onClick={captureFrame}
-            disabled={!videoReady}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors disabled:opacity-40"
-          >
-            Capture Frame
-          </button>
-        </div>
-
-        {/* Thumbnail preview */}
-        {thumbPreview && (
-          <div className="shrink-0">
-            <p className="text-[10px] text-muted uppercase tracking-wider mb-1">Thumbnail</p>
-            <img
-              src={thumbPreview}
-              alt="Captured thumbnail"
-              className="w-20 h-20 object-cover rounded-lg border border-[var(--card-border)]"
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function formatDateShort(iso: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(iso));
 }
 
 /* ─── Upload Form ──────────────────────────────────────────────────────────── */
@@ -169,39 +69,10 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
   const [notes, setNotes] = useState("");
   const [thrownAt, setThrownAt] = useState(new Date().toISOString().split("T")[0]);
   const [file, setFile] = useState<File | null>(null);
-  const [thumbnailBlob, setThumbnailBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-
-  async function uploadThumbnailToR2(blob: Blob): Promise<string | null> {
-    try {
-      // Get presigned URL for thumbnail
-      const urlRes = await fetch("/api/codex", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ step: "thumbnail-url", contentType: "image/jpeg" }),
-      });
-      const urlData = await urlRes.json();
-      if (!urlRes.ok) return null;
-
-      if (urlData.mode === "r2") {
-        // Upload to R2
-        const putRes = await fetch(urlData.uploadUrl, {
-          method: "PUT",
-          body: blob,
-        });
-        if (!putRes.ok) return null;
-        return urlData.publicUrl as string;
-      } else {
-        // Local: upload via separate endpoint or skip
-        return null;
-      }
-    } catch {
-      return null;
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -229,7 +100,6 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
 
       // Step 2: Upload video
       if (urlData.mode === "r2") {
-        // Direct upload to R2 via presigned URL — bypasses Vercel body limit
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("PUT", urlData.uploadUrl);
@@ -241,13 +111,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           xhr.send(file);
         });
 
-        // Step 2b: Upload thumbnail if captured
-        let thumbnailUrl: string | null = null;
-        if (thumbnailBlob) {
-          thumbnailUrl = await uploadThumbnailToR2(thumbnailBlob);
-        }
-
-        // Step 3: Confirm and save metadata (R2 mode only)
+        // Step 3: Confirm and save metadata
         const confirmRes = await fetch("/api/codex", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -257,7 +121,6 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
             implement,
             distance: parseFloat(distance),
             videoUrl,
-            thumbnailUrl,
             fileSize: file.size,
             notes: notes.trim() || null,
             thrownAt,
@@ -266,7 +129,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
         const confirmData = await confirmRes.json();
         if (!confirmRes.ok) throw new Error(confirmData.error || "Failed to save entry");
       } else {
-        // Local dev: upload via FormData to the API
+        // Local dev: upload via FormData
         const fd = new FormData();
         fd.append("video", file);
         fd.append("event", event);
@@ -274,7 +137,6 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
         fd.append("distance", distance);
         fd.append("thrownAt", thrownAt);
         if (notes.trim()) fd.append("notes", notes.trim());
-        if (thumbnailBlob) fd.append("thumbnail", thumbnailBlob, "thumbnail.jpg");
 
         const localRes = await new Promise<Response>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -302,7 +164,6 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
 
   function resetForm() {
     setFile(null);
-    setThumbnailBlob(null);
     setImplement("");
     setDistance("");
     setNotes("");
@@ -316,65 +177,26 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {/* Event */}
         <div>
           <label htmlFor="codex-event" className="label">Event</label>
-          <select
-            id="codex-event"
-            value={event}
-            onChange={(e) => setEvent(e.target.value)}
-            className="input"
-          >
-            {EVENTS.map((ev) => (
-              <option key={ev.value} value={ev.value}>{ev.label}</option>
-            ))}
+          <select id="codex-event" value={event} onChange={(e) => setEvent(e.target.value)} className="input">
+            {EVENTS.map((ev) => <option key={ev.value} value={ev.value}>{ev.label}</option>)}
           </select>
         </div>
-
-        {/* Implement */}
         <div>
           <label htmlFor="codex-implement" className="label">Implement</label>
-          <input
-            id="codex-implement"
-            type="text"
-            value={implement}
-            onChange={(e) => setImplement(e.target.value)}
-            className="input"
-            placeholder="7.26kg"
-            required
-          />
+          <input id="codex-implement" type="text" value={implement} onChange={(e) => setImplement(e.target.value)} className="input" placeholder="7.26kg" required />
         </div>
-
-        {/* Distance */}
         <div>
           <label htmlFor="codex-distance" className="label">Distance (m)</label>
-          <input
-            id="codex-distance"
-            type="number"
-            step="0.01"
-            min="0"
-            value={distance}
-            onChange={(e) => setDistance(e.target.value)}
-            className="input"
-            placeholder="18.50"
-            required
-          />
+          <input id="codex-distance" type="number" step="0.01" min="0" value={distance} onChange={(e) => setDistance(e.target.value)} className="input" placeholder="18.50" required />
         </div>
-
-        {/* Date */}
         <div>
           <label htmlFor="codex-date" className="label">Date</label>
-          <input
-            id="codex-date"
-            type="date"
-            value={thrownAt}
-            onChange={(e) => setThrownAt(e.target.value)}
-            className="input"
-          />
+          <input id="codex-date" type="date" value={thrownAt} onChange={(e) => setThrownAt(e.target.value)} className="input" />
         </div>
       </div>
 
-      {/* Video file */}
       <div>
         <label htmlFor="codex-video" className="label">Video</label>
         <input
@@ -382,188 +204,184 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           id="codex-video"
           type="file"
           accept="video/*,.mp4,.mov,.webm,.m4v,.3gp"
-          onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null);
-            setThumbnailBlob(null);
-          }}
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="input file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary-500/10 file:text-primary-600 dark:file:text-primary-400 file:font-medium file:text-sm file:cursor-pointer"
           required
         />
       </div>
 
-      {/* Thumbnail capture */}
-      {file && (
-        <ThumbnailCapture
-          file={file}
-          onCapture={setThumbnailBlob}
-          thumbnailBlob={thumbnailBlob}
-        />
-      )}
-
-      {/* Notes */}
       <div>
         <label htmlFor="codex-notes" className="label">Notes (optional)</label>
-        <input
-          id="codex-notes"
-          type="text"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="input"
-          placeholder="Felt smooth, good hip rotation..."
-        />
+        <input id="codex-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="input" placeholder="Felt smooth, good hip rotation..." />
       </div>
 
-      {error && (
-        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
 
-      {/* Upload progress */}
       {uploading && (
         <div className="space-y-1">
           <div className="h-1.5 rounded-full bg-surface-200 dark:bg-surface-800 overflow-hidden">
-            <div
-              className="h-full bg-primary-500 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-primary-500 transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
           <p className="text-xs text-muted text-right">{progress}%</p>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={uploading || !file || !implement || !distance}
-        className="btn-primary w-full sm:w-auto"
-      >
+      <button type="submit" disabled={uploading || !file || !implement || !distance} className="btn-primary w-full sm:w-auto">
         {uploading ? "Uploading..." : "Upload Throw"}
       </button>
     </form>
   );
 }
 
-/* ─── Codex Grid ───────────────────────────────────────────────────────────── */
+/* ─── Expanded Video Player ─────────────────────────────────────────────────── */
 
-function CodexGrid({
+function VideoPlayer({ entry, onDelete }: { entry: CodexEntry; onDelete: () => void }) {
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!confirm("Delete this throw? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/codex/${entry.id}`, { method: "DELETE" });
+      if (res.ok) onDelete();
+    } catch {
+      alert("Failed to delete");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="px-4 pb-4 pt-1 space-y-3 animate-in slide-in-from-top-2 duration-200">
+      <div className="bg-surface-950 rounded-xl overflow-hidden max-w-2xl">
+        <video
+          src={entry.videoUrl}
+          className="w-full max-h-[70vh] object-contain"
+          controls
+          autoPlay
+          playsInline
+        />
+      </div>
+      {entry.notes && (
+        <p className="text-sm text-muted leading-relaxed max-w-2xl">{entry.notes}</p>
+      )}
+      <button
+        onClick={handleDelete}
+        disabled={deleting}
+        className="text-xs text-muted hover:text-danger-500 transition-colors"
+      >
+        {deleting ? "Deleting..." : "Delete throw"}
+      </button>
+    </div>
+  );
+}
+
+/* ─── Codex List ───────────────────────────────────────────────────────────── */
+
+function CodexList({
   entries,
   onDelete,
 }: {
   entries: CodexEntry[];
   onDelete: (id: string) => void;
 }) {
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this throw? This cannot be undone.")) return;
-    setDeletingId(id);
-    try {
-      const res = await fetch(`/api/codex/${id}`, { method: "DELETE" });
-      if (res.ok) onDelete(id);
-    } catch {
-      alert("Failed to delete");
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {entries.map((entry) => (
-        <div key={entry.id} className="card overflow-hidden group">
-          {/* Video — portrait-friendly container */}
-          <div
-            className="relative bg-surface-950 cursor-pointer"
-            style={{ minHeight: 180, maxHeight: 360 }}
-            onClick={() => setPlayingId(playingId === entry.id ? null : entry.id)}
-          >
-            {playingId === entry.id ? (
-              <video
-                src={entry.videoUrl}
-                className="w-full h-full object-contain"
-                style={{ maxHeight: 360 }}
-                controls
-                autoPlay
-                playsInline
-              />
-            ) : entry.thumbnailUrl ? (
-              /* Show captured thumbnail */
-              <div className="relative">
-                <img
-                  src={entry.thumbnailUrl}
-                  alt={`${entry.distance}m ${entry.implement}`}
-                  className="w-full object-contain"
-                  style={{ maxHeight: 360 }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <div className="w-12 h-12 rounded-full bg-white/90 dark:bg-surface-800/90 flex items-center justify-center shadow-lg">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-surface-900 dark:text-surface-100 ml-0.5" aria-hidden="true">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Fallback: video element as preview */
-              <div className="relative">
-                <video
-                  src={entry.videoUrl}
-                  className="w-full object-contain"
-                  style={{ maxHeight: 360 }}
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <div className="w-12 h-12 rounded-full bg-white/90 dark:bg-surface-800/90 flex items-center justify-center shadow-lg">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-surface-900 dark:text-surface-100 ml-0.5" aria-hidden="true">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+    <div className="card overflow-hidden divide-y divide-[var(--card-border)]">
+      {/* Desktop header */}
+      <div className="hidden sm:grid sm:grid-cols-[1fr_100px_90px_100px] gap-4 px-4 py-2.5 bg-surface-50 dark:bg-surface-900/50">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted">Event</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">Distance</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">Weight</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">Date</span>
+      </div>
 
-          {/* Meta */}
-          <div className="p-4 space-y-3">
-            {/* Top row: distance + implement */}
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="font-heading font-bold text-xl text-[var(--foreground)] tabular-nums">
-                {entry.distance.toFixed(2)}m
-              </span>
-              <span className="font-heading text-sm font-semibold text-muted tabular-nums">
-                {entry.implement}
-              </span>
-            </div>
-
-            {/* Event + date */}
-            <div className="flex items-center justify-between gap-2">
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${EVENT_COLORS[entry.event] ?? ""}`}>
-                {eventLabel(entry.event)}
-              </span>
-              <span className="text-xs text-muted">
-                {formatDate(entry.thrownAt)}
-              </span>
-            </div>
-
-            {/* Notes */}
-            {entry.notes && (
-              <p className="text-xs text-muted leading-relaxed line-clamp-2">
-                {entry.notes}
-              </p>
-            )}
-
-            {/* Delete */}
+      {entries.map((entry) => {
+        const isExpanded = expandedId === entry.id;
+        return (
+          <div key={entry.id}>
+            {/* Row */}
             <button
-              onClick={() => handleDelete(entry.id)}
-              disabled={deletingId === entry.id}
-              className="text-[11px] text-muted hover:text-danger-500 transition-colors opacity-0 group-hover:opacity-100"
+              type="button"
+              onClick={() => setExpandedId(isExpanded ? null : entry.id)}
+              className={`w-full text-left transition-colors ${
+                isExpanded
+                  ? "bg-surface-50 dark:bg-surface-900/40"
+                  : "hover:bg-surface-50/60 dark:hover:bg-surface-900/20"
+              }`}
             >
-              {deletingId === entry.id ? "Deleting..." : "Delete"}
+              {/* Desktop row */}
+              <div className="hidden sm:grid sm:grid-cols-[1fr_100px_90px_100px] gap-4 px-4 py-3 items-center">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[entry.event] ?? "bg-surface-400"}`} />
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${EVENT_COLORS[entry.event] ?? ""}`}>
+                    {eventLabel(entry.event)}
+                  </span>
+                  {entry.notes && (
+                    <span className="text-xs text-muted truncate">{entry.notes}</span>
+                  )}
+                </div>
+                <span className="font-heading font-bold text-sm text-[var(--foreground)] tabular-nums text-right">
+                  {entry.distance.toFixed(2)}m
+                </span>
+                <span className="text-sm text-muted tabular-nums text-right font-medium">
+                  {entry.implement}
+                </span>
+                <div className="flex items-center justify-end gap-2">
+                  <span className="text-xs text-muted">{formatDate(entry.thrownAt)}</span>
+                  <svg
+                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                    aria-hidden="true"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Mobile row */}
+              <div className="sm:hidden px-4 py-3 flex items-center gap-3">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[entry.event] ?? "bg-surface-400"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-heading font-bold text-sm text-[var(--foreground)] tabular-nums">
+                      {entry.distance.toFixed(2)}m
+                    </span>
+                    <span className="text-xs text-muted font-medium tabular-nums">{entry.implement}</span>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${EVENT_COLORS[entry.event] ?? ""}`}>
+                      {eventLabel(entry.event)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-muted">{formatDateShort(entry.thrownAt)}</span>
+                    {entry.notes && (
+                      <span className="text-[11px] text-muted truncate">{entry.notes}</span>
+                    )}
+                  </div>
+                </div>
+                <svg
+                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                  aria-hidden="true"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </div>
             </button>
+
+            {/* Expanded video player */}
+            {isExpanded && (
+              <VideoPlayer
+                entry={entry}
+                onDelete={() => onDelete(entry.id)}
+              />
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -577,6 +395,7 @@ export function CodexView() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [filterEvent, setFilterEvent] = useState("");
   const [showUpload, setShowUpload] = useState(false);
+  const [search, setSearch] = useState("");
 
   function fetchEntries() {
     setLoading(true);
@@ -604,17 +423,31 @@ export function CodexView() {
       setSortOrder((o) => (o === "desc" ? "asc" : "desc"));
     } else {
       setSortField(field);
-      setSortOrder(field === "distance" ? "desc" : "desc");
+      setSortOrder("desc");
     }
   }
 
-  // Collect unique implements for weight filter summary
+  // Client-side search over notes, implement, distance
+  const filtered = search.trim()
+    ? entries.filter((e) => {
+        const q = search.toLowerCase();
+        return (
+          e.implement.toLowerCase().includes(q) ||
+          e.distance.toFixed(2).includes(q) ||
+          (e.notes && e.notes.toLowerCase().includes(q)) ||
+          eventLabel(e.event).toLowerCase().includes(q)
+        );
+      })
+    : entries;
+
+  // Stats
   const uniqueImplements = [...new Set(entries.map((e) => e.implement))].sort(
     (a, b) => parseFloat(b) - parseFloat(a)
   );
+  const bestThrow = entries.length > 0 ? Math.max(...entries.map((e) => e.distance)) : 0;
 
   return (
-    <div className="space-y-6 animate-spring-up">
+    <div className="space-y-5 animate-spring-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -622,7 +455,9 @@ export function CodexView() {
             Throws Codex
           </h1>
           <p className="text-sm text-muted mt-0.5">
-            Your personal throw video archive — sortable by date, weight, or distance
+            {entries.length} throw{entries.length !== 1 ? "s" : ""} logged
+            {bestThrow > 0 && <> &middot; best: {bestThrow.toFixed(2)}m</>}
+            {uniqueImplements.length > 0 && <> &middot; {uniqueImplements.join(", ")}</>}
           </p>
         </div>
         <button
@@ -643,97 +478,100 @@ export function CodexView() {
         />
       )}
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        {/* Event filter */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            onClick={() => setFilterEvent("")}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-              !filterEvent
-                ? "bg-primary-500/15 text-primary-600 dark:text-primary-400"
-                : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
-            }`}
-          >
-            All
-          </button>
-          {EVENTS.map((ev) => (
+      {/* Controls bar */}
+      {entries.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Search */}
+          <div className="relative w-full sm:w-56">
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search throws..."
+              className="input pl-9 text-sm h-8"
+            />
+          </div>
+
+          {/* Event filter pills */}
+          <div className="flex items-center gap-1 flex-wrap">
             <button
-              key={ev.value}
-              onClick={() => setFilterEvent(filterEvent === ev.value ? "" : ev.value)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                filterEvent === ev.value
+              onClick={() => setFilterEvent("")}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                !filterEvent
                   ? "bg-primary-500/15 text-primary-600 dark:text-primary-400"
                   : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
               }`}
             >
-              {ev.label}
+              All
             </button>
-          ))}
-        </div>
+            {EVENTS.map((ev) => (
+              <button
+                key={ev.value}
+                onClick={() => setFilterEvent(filterEvent === ev.value ? "" : ev.value)}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1.5 ${
+                  filterEvent === ev.value
+                    ? "bg-primary-500/15 text-primary-600 dark:text-primary-400"
+                    : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${EVENT_DOT[ev.value]}`} />
+                {ev.label}
+              </button>
+            ))}
+          </div>
 
-        {/* Sort controls */}
-        <div className="flex items-center gap-1.5 sm:ml-auto">
-          <span className="text-xs text-muted mr-1">Sort:</span>
-          {([
-            ["thrownAt", "Date"],
-            ["implement", "Weight"],
-            ["distance", "Distance"],
-          ] as [SortField, string][]).map(([field, label]) => (
-            <button
-              key={field}
-              onClick={() => toggleSort(field)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${
-                sortField === field
-                  ? "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)]"
-                  : "text-muted hover:text-[var(--foreground)]"
-              }`}
-            >
-              {label}
-              {sortField === field && (
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={sortOrder === "asc" ? "rotate-180" : ""}
-                  aria-hidden="true"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Stats bar */}
-      {entries.length > 0 && (
-        <div className="flex items-center gap-4 text-xs text-muted">
-          <span>{entries.length} throw{entries.length !== 1 ? "s" : ""}</span>
-          {uniqueImplements.length > 0 && (
-            <span className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-surface-400" aria-hidden="true" />
-              {uniqueImplements.join(", ")}
-            </span>
-          )}
+          {/* Sort controls */}
+          <div className="flex items-center gap-1 sm:ml-auto">
+            <span className="text-xs text-muted mr-0.5">Sort:</span>
+            {([
+              ["thrownAt", "Date"],
+              ["implement", "Weight"],
+              ["distance", "Distance"],
+            ] as [SortField, string][]).map(([field, label]) => (
+              <button
+                key={field}
+                onClick={() => toggleSort(field)}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 ${
+                  sortField === field
+                    ? "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)]"
+                    : "text-muted hover:text-[var(--foreground)]"
+                }`}
+              >
+                {label}
+                {sortField === field && (
+                  <svg
+                    width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                    className={sortOrder === "asc" ? "rotate-180" : ""}
+                    aria-hidden="true"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Grid */}
+      {/* List */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="card overflow-hidden">
-              <div className="aspect-video shimmer" />
-              <div className="p-4 space-y-3">
-                <div className="shimmer h-6 w-24 rounded" />
-                <div className="shimmer h-4 w-32 rounded" />
-              </div>
+        <div className="card overflow-hidden divide-y divide-[var(--card-border)]">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="px-4 py-3 flex items-center gap-4">
+              <div className="shimmer w-2 h-2 rounded-full" />
+              <div className="shimmer h-4 w-16 rounded" />
+              <div className="shimmer h-4 w-12 rounded" />
+              <div className="shimmer h-4 w-14 rounded ml-auto" />
             </div>
           ))}
         </div>
@@ -753,9 +591,16 @@ export function CodexView() {
             </button>
           }
         />
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-sm text-muted">No throws match &ldquo;{search}&rdquo;</p>
+          <button onClick={() => setSearch("")} className="text-xs text-primary-600 dark:text-primary-400 mt-2 hover:underline">
+            Clear search
+          </button>
+        </div>
       ) : (
-        <CodexGrid
-          entries={entries}
+        <CodexList
+          entries={filtered}
           onDelete={(id) => setEntries((prev) => prev.filter((e) => e.id !== id))}
         />
       )}
