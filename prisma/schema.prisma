@@ -135,6 +135,7 @@ model User {
   coachProfile        CoachProfile?
   athleteProfile      AthleteProfile?
   passwordResetTokens PasswordResetToken[]
+  codexEntries        CodexEntry[]
 
   @@index([email])
   @@index([role])
@@ -1932,6 +1933,27 @@ model Lead {
 // ─── STRIPE EVENT (webhook idempotency) ──────────────────────────────────────
 
 /// Stores processed Stripe webhook event IDs to prevent duplicate handling.
+// ─── THROWS CODEX ────────────────────────────────────────────────────────────
+
+model CodexEntry {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     EventType
+  implement String    // e.g. "7.26kg", "2kg"
+  distance  Float     // meters
+  videoUrl  String    // R2 URL or local path
+  fileSize  Int       @default(0) // bytes
+  notes     String?
+  thrownAt  DateTime  @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, thrownAt])
+  @@index([userId, event])
+  @@index([implement])
+}
+
 /// Uses the Stripe event ID (evt_xxx) as the primary key — a natural idempotency key.
 model StripeEvent {
   id          String   @id          // Stripe event ID — NOT auto-generated

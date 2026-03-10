@@ -20,6 +20,7 @@ import {
   Settings,
   Award,
   Bell,
+  BookOpen,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -196,6 +197,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
       { label: "Athletes", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
       { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} /> },
       { label: "Throw Logs", href: "/coach/throws", icon: <Target {...iconSize} /> },
+      { label: "Throws Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
       { label: "Drills", href: "/coach/throws/drills", icon: <Zap {...iconSize} /> },
     ],
   },
@@ -236,6 +238,7 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
       { label: "My Dashboard", href: "/athlete/dashboard", icon: <LayoutDashboard {...iconSize} /> },
       { label: "My Sessions", href: "/athlete/sessions", icon: <Calendar {...iconSize} /> },
       { label: "Throw History", href: "/athlete/throws", icon: <Target {...iconSize} /> },
+      { label: "Throws Codex", href: "/athlete/codex", icon: <BookOpen {...iconSize} /> },
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
       { label: "Questionnaires", href: "/athlete/questionnaires", icon: <ClipboardList {...iconSize} /> },
       { label: "My Videos", href: "/athlete/videos", icon: <Video {...iconSize} /> },
