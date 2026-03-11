@@ -145,6 +145,15 @@ export interface ProgramConfig {
   // Deficit analysis (from podium-profile.ts)
   deficitPrimary?: string;
   deficitSecondary?: string;
+
+  // Gap 1: Evolving personal correlations
+  personalCorrelations?: PersonalCorrelation[];
+
+  // Gap 3: Adaptive waves — historical session data
+  trainingHistory?: TrainingHistory;
+
+  // Gap 4: Elite taper
+  competitionImportance?: CompetitionImportance;
 }
 
 // ── Generated Output Types ──────────────────────────────────────────
@@ -243,6 +252,10 @@ export interface ThrowPrescription {
   repsPerSet: number;
   restSeconds: number;
   notes?: string;
+
+  // Gap 2: PAP contrast interleaving
+  papRestSeconds?: number;  // PAP-specific rest before this block
+  contrastGroup?: number;   // group ID for UI display
 }
 
 // ── Strength Prescription ───────────────────────────────────────────
@@ -300,6 +313,7 @@ export interface ExerciseSelectionParams {
   deficitSecondary?: string;
   transferType?: string;
   previousComplexExercises?: string[]; // for freshness weighting on rotation
+  personalCorrelations?: PersonalCorrelation[]; // Gap 1: blended correlations
 }
 
 export interface RankedExercise {
@@ -334,6 +348,15 @@ export interface AdaptationCheckParams {
   recentReadinessScores: number[];
   recentSorenessScores: number[];
   strengthResults?: Array<{ exerciseName: string; weight: number; date: string }>;
+
+  // Gap 5: Feedback loop enrichment
+  historicalMarks?: number[];
+  historicalSessionCounts?: number[];
+  complexHistory?: ComplexHistory[];
+  currentComplexExercises?: string[];
+  prescribedThrowsTotal?: number;
+  actualThrowsTotal?: number;
+  rpeValues?: number[];
 }
 
 export interface AdaptationAssessment {
@@ -351,6 +374,15 @@ export interface AdaptationAssessment {
     phase: string;
     label: string;
   };
+
+  // Gap 5: Feedback loop enrichment
+  predictedMark?: number;
+  actualVsPredicted?: number;
+  complexEffectiveness?: number;
+  deficitAttribution?: DeficitAttribution[];
+  volumeAdjustment?: VolumeAdjustment;
+  exerciseSwapSuggestions?: string[];
+  feedbackConfidence?: number;
 }
 
 // ── Phase Generation Config ─────────────────────────────────────────
@@ -361,6 +393,12 @@ export interface PhaseGenConfig {
   startWeek: number;
   durationWeeks: number;
   programConfig: ProgramConfig;
+
+  // Gap 3: Adaptive waves
+  trainingHistory?: TrainingHistory;
+
+  // Gap 4: Elite taper
+  taperConfig?: TaperConfig;
 }
 
 // ── Week Generation Config ──────────────────────────────────────────
@@ -408,4 +446,137 @@ export interface ValidationResult {
   valid: boolean;
   errors: Record<string, string>;
   warnings: string[];
+}
+
+// ── Gap 1: Personal Correlations ───────────────────────────────────
+
+export interface PersonalCorrelation {
+  exercise: string;
+  personalR: number;
+  dataPoints: number;
+  confidence: number;
+  populationR: number;
+  blendedR: number;
+}
+
+export interface SessionExerciseRecord {
+  sessionId: string;
+  scheduledDate: string;
+  exercises: string[];
+  bestMark: number;
+  throwCount: number;
+}
+
+// ── Gap 2: Contrast Patterns (PAP) ────────────────────────────────
+
+export type ContrastPattern = "HEAVY_LIGHT" | "WAVE" | "COMP_HEAVY";
+
+export interface ContrastConfig {
+  pattern?: ContrastPattern;
+  restMinutes?: number;
+  minSetsPerImplement?: number;
+}
+
+// ── Gap 3: Adaptive Waves ─────────────────────────────────────────
+
+export interface TrainingHistory {
+  sessions: HistoricalSession[];
+  adaptationGroup: number;
+  phasesCompleted: number;
+}
+
+export interface HistoricalSession {
+  date: string;
+  totalThrows: number;
+  bestMark?: number;
+  rpe?: number;
+  phase: TrainingPhase;
+  weekInPhase: number;
+}
+
+export interface WeekMultiplier {
+  weekIndex: number;
+  volumeMultiplier: number;
+  rationale: string;
+}
+
+// ── Gap 4: Elite Taper ────────────────────────────────────────────
+
+export type CompetitionImportance = "A_MEET" | "B_MEET" | "C_MEET";
+
+export interface TaperConfig {
+  daysUntilMeet: number;
+  adaptationGroup: number;
+  competitionImportance: CompetitionImportance;
+  peakVolume: number;
+  totalTaperWeeks: number;
+}
+
+export interface TaperPlan {
+  weekMultipliers: WeekMultiplier[];
+  dailyMultipliers: number[];
+  taperDuration: number;
+  decayConstant: number;
+  ceIntensityFloor: number;
+  rationale: string;
+}
+
+// ── Gap 5: Feedback Loop ──────────────────────────────────────────
+
+export type TrendDirection = "STABLE" | "RISING" | "FALLING";
+export type DeficitType = "STRENGTH" | "TECHNICAL" | "RECOVERY" | "VOLUME" | "EXERCISE_SELECTION";
+
+export interface FeedbackAnalysis {
+  predictedMark: number;
+  actualMark: number;
+  deviation: number;
+  markVariance: number;
+  volumeAdherence: number;
+  rpeTrend: TrendDirection;
+  readinessTrend: TrendDirection;
+  sorenessTrend: TrendDirection;
+}
+
+export interface ComplexHistory {
+  complexId: string;
+  exercises: string[];
+  sessionsUsed: number;
+  startMark: number;
+  endMark: number;
+  avgRpe: number;
+  avgAdherence: number;
+}
+
+export interface ComplexScore {
+  complexId: string;
+  effectiveness: number;
+  markImprovement: number;
+  rank: number;
+}
+
+export interface VolumeAdjustment {
+  multiplier: number; // 0.80-1.10
+  reason: string;
+  category: "OVERTRAINING" | "UNDERTRAINING" | "EFFICIENCY" | "DELOAD" | "MAINTAIN";
+}
+
+export interface DeficitAttribution {
+  type: DeficitType;
+  confidence: number;
+  evidence: string;
+  suggestedAction: string;
+}
+
+export interface LogFitResult {
+  a: number;
+  b: number;
+  rSquared: number;
+  predictedMark: number;
+}
+
+export interface FeedbackLoopResult {
+  feedback: FeedbackAnalysis;
+  complexScore?: ComplexScore[];
+  volumeAdjustment: VolumeAdjustment;
+  deficits: DeficitAttribution[];
 }

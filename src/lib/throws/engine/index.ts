@@ -44,6 +44,35 @@ export type {
   WeekGenConfig,
   SessionGenConfig,
   ComplexRotationParams,
+
+  // Gap 1: Personal correlations
+  PersonalCorrelation,
+  SessionExerciseRecord,
+
+  // Gap 2: Contrast patterns
+  ContrastPattern,
+  ContrastConfig,
+
+  // Gap 3: Adaptive waves
+  TrainingHistory,
+  HistoricalSession,
+  WeekMultiplier,
+
+  // Gap 4: Elite taper
+  CompetitionImportance,
+  TaperConfig,
+  TaperPlan,
+
+  // Gap 5: Feedback loop
+  FeedbackAnalysis,
+  ComplexHistory,
+  ComplexScore,
+  VolumeAdjustment,
+  DeficitAttribution,
+  LogFitResult,
+  FeedbackLoopResult,
+  TrendDirection,
+  DeficitType,
 } from "./types";
 
 // ── Core Generation ──────────────────────────────────────────────────
@@ -75,3 +104,40 @@ export {
 
 // ── Validation ───────────────────────────────────────────────────────
 export { validateOnboarding } from "./onboarding-validator";
+
+// ── Gap 1: Personal Correlations ────────────────────────────────────
+export {
+  computePersonalCorrelations,
+  confidenceRamp,
+  blendCorrelation,
+} from "./personal-correlations";
+
+// ── Gap 2: Contrast Patterns (PAP) ─────────────────────────────────
+export {
+  applyContrastPattern,
+  selectPattern,
+} from "./contrast-patterns";
+
+// ── Gap 3: Adaptive Waves ──────────────────────────────────────────
+export {
+  computeAdaptiveWave,
+  detectSupercompensationTiming,
+  estimateFatigueDecay,
+} from "./adaptive-waves";
+
+// ── Gap 4: Elite Taper ─────────────────────────────────────────────
+export {
+  computeTaper,
+  computeTaperDayMultiplier,
+} from "./elite-taper";
+
+// ── Gap 5: Feedback Loop ───────────────────────────────────────────
+export {
+  fitLogarithmicGrowth,
+  analyzeFeedback,
+  scoreComplexEffectiveness,
+  computeVolumeAdjustment,
+  attributeDeficit,
+  runFeedbackLoop,
+  generateComplexId,
+} from "./feedback-loop";

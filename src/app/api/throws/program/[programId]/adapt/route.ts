@@ -123,6 +123,40 @@ export async function POST(req: NextRequest, { params }: Params) {
       },
     });
 
+    // ── Gap 5: Fetch additional data for feedback loop ──────────────
+    // All historical marks (not just last 15)
+    const allThrows = await prisma.programThrowResult.findMany({
+      where: {
+        session: { programId },
+        distance: { gt: 0 },
+      },
+      orderBy: { createdAt: "asc" },
+      select: { distance: true },
+    });
+    const historicalMarks = allThrows
+      .map((t) => t.distance)
+      .filter((d): d is number => d != null);
+
+    // Prescribed vs actual throws volume
+    const completedSessions = await prisma.programSession.findMany({
+      where: {
+        programId,
+        status: "COMPLETED",
+      },
+      select: { totalThrowsTarget: true, actualThrows: true, rpe: true },
+    });
+    const prescribedThrowsTotal = completedSessions.reduce(
+      (sum, s) => sum + (s.totalThrowsTarget ?? 0),
+      0,
+    );
+    const actualThrowsTotal = completedSessions.reduce(
+      (sum, s) => sum + (s.actualThrows ?? 0),
+      0,
+    );
+    const rpeValues = completedSessions
+      .filter((s) => s.rpe != null)
+      .map((s) => s.rpe as number);
+
     // Build params for the adaptation checker
     const checkParams: AdaptationCheckParams = {
       programId,
@@ -134,6 +168,11 @@ export async function POST(req: NextRequest, { params }: Params) {
       recentReadinessScores,
       recentSorenessScores,
       strengthResults: strengthResults.length > 0 ? strengthResults : undefined,
+      // Gap 5: Feedback loop enrichment data
+      historicalMarks: historicalMarks.length >= 5 ? historicalMarks : undefined,
+      prescribedThrowsTotal: prescribedThrowsTotal > 0 ? prescribedThrowsTotal : undefined,
+      actualThrowsTotal: actualThrowsTotal > 0 ? actualThrowsTotal : undefined,
+      rpeValues: rpeValues.length >= 3 ? rpeValues : undefined,
     };
 
     // Check for previous "in form" assessments
@@ -161,6 +200,18 @@ export async function POST(req: NextRequest, { params }: Params) {
     // Run the adaptation engine
     const assessment = checkAdaptation(checkParams);
 
+    // Build feedbackData JSON for Gap 5 extensibility
+    const feedbackData = assessment.predictedMark != null
+      ? JSON.stringify({
+          predictedMark: assessment.predictedMark,
+          actualVsPredicted: assessment.actualVsPredicted,
+          complexEffectiveness: assessment.complexEffectiveness,
+          deficitAttribution: assessment.deficitAttribution,
+          volumeAdjustment: assessment.volumeAdjustment,
+          feedbackConfidence: assessment.feedbackConfidence,
+        })
+      : undefined;
+
     // Save checkpoint
     const checkpoint = await prisma.adaptationCheckpoint.create({
       data: {
@@ -178,6 +229,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         recommendation: assessment.recommendation,
         reasoning: assessment.reasoning,
         applied: false,
+        feedbackData,
       },
     });
 

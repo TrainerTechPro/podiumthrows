@@ -3,6 +3,7 @@
 // program adjustments per the Bondarchuk adaptation decision tree.
 
 import { linearSlope } from "../profile-utils";
+import { runFeedbackLoop } from "./feedback-loop";
 import type {
   AdaptationCheckParams,
   AdaptationAssessment,
@@ -204,7 +205,7 @@ export function checkAdaptation(
       `readiness: ${avgReadiness.toFixed(0)}, sessions in complex: ${sessionsInComplex}/${sessionsToForm}.`;
   }
 
-  return {
+  const baseAssessment: AdaptationAssessment = {
     recommendation,
     reasoning,
     markTrend,
@@ -216,6 +217,53 @@ export function checkAdaptation(
     strengthTrend,
     adaptationProgress,
   };
+
+  // ── Gap 5: Feedback loop enrichment ─────────────────────────────────
+  // Only runs if sufficient historical marks are provided
+  if (params.historicalMarks && params.historicalMarks.length >= 5) {
+    const feedbackResult = runFeedbackLoop({
+      marks: params.historicalMarks,
+      prescribedThrows: params.prescribedThrowsTotal,
+      actualThrows: params.actualThrowsTotal,
+      rpeValues: params.rpeValues,
+      readinessScores: recentReadinessScores,
+      sorenessScores: recentSorenessScores,
+      complexHistories: params.complexHistory,
+      strengthPlateau: strengthTrend === "DECLINING" || strengthTrend === "STABLE",
+    });
+
+    // Enrich assessment with feedback data
+    baseAssessment.predictedMark = feedbackResult.feedback.predictedMark;
+    baseAssessment.actualVsPredicted = feedbackResult.feedback.deviation;
+    baseAssessment.deficitAttribution = feedbackResult.deficits;
+    baseAssessment.volumeAdjustment = feedbackResult.volumeAdjustment;
+    baseAssessment.feedbackConfidence = feedbackResult.feedback.markVariance < 0.08 ? 0.8 : 0.5;
+
+    if (feedbackResult.complexScore && feedbackResult.complexScore.length > 0) {
+      baseAssessment.complexEffectiveness = feedbackResult.complexScore[0].effectiveness;
+    }
+
+    // Safety overrides: feedback can push toward DELOAD or REDUCE_VOLUME
+    // but never toward more volume (conservative safety net)
+    if (
+      feedbackResult.volumeAdjustment.category === "OVERTRAINING" ||
+      feedbackResult.volumeAdjustment.category === "DELOAD"
+    ) {
+      if (
+        baseAssessment.recommendation !== "DELOAD" &&
+        baseAssessment.recommendation !== "REDUCE_VOLUME"
+      ) {
+        baseAssessment.recommendation =
+          feedbackResult.volumeAdjustment.category === "DELOAD"
+            ? "DELOAD"
+            : "REDUCE_VOLUME";
+        baseAssessment.reasoning +=
+          ` [Feedback override: ${feedbackResult.volumeAdjustment.reason}]`;
+      }
+    }
+  }
+
+  return baseAssessment;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────

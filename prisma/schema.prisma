@@ -2051,6 +2051,9 @@ model AdaptationCheckpoint {
   reasoning      String
   applied        Boolean @default(false)
 
+  // Gap 5: Feedback loop data (JSON blob for extensibility)
+  feedbackData String? // JSON: FeedbackLoopResult
+
   createdAt DateTime @default(now())
 
   @@index([programId, checkDate])

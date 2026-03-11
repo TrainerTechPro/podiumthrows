@@ -6,6 +6,7 @@
 import { PHASE_RATIOS, REST_INTERVALS, COMPETITION_WEIGHTS, PHASE_IMPLEMENT_DIST, MIN_THROWS, CODE_EVENT_MAP } from "../constants";
 import type { TrainingPhase, EventCode } from "../constants";
 import { selectStrength } from "./select-strength";
+import { applyContrastPattern } from "./contrast-patterns";
 import type {
   GeneratedSession,
   ThrowPrescription,
@@ -233,6 +234,16 @@ function generateThrows(
   // ── 4b. SD unknown: exercises without a specific implement ───────
   if (sdUnknownThrows > 0 && sdUnknown.length > 0) {
     buildSdPrescriptions(sdUnknown, sdUnknownThrows, restIntervals.SD, prescriptions);
+  }
+
+  // ── Gap 2: Apply PAP contrast pattern to SD blocks ──────────────
+  // Only reorders WITHIN the SD block; CE stays first, SP stays last.
+  const sdPrescriptions = prescriptions.filter((p) => p.category === "SD");
+  if (sdPrescriptions.length > 0) {
+    const cePrescriptions = prescriptions.filter((p) => p.category === "CE");
+    const interleavedSd = applyContrastPattern(sdPrescriptions, phase);
+    prescriptions.length = 0;
+    prescriptions.push(...cePrescriptions, ...interleavedSd);
   }
 
   // ── 5. SP throws: specific preparatory drills (last) ─────────────

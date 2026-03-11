@@ -10,6 +10,7 @@ import type {
   ExerciseComplexEntry,
   ExerciseSelectionParams,
   ImplementEntry,
+  PersonalCorrelation,
 } from "./types";
 
 // ── Configuration ───────────────────────────────────────────────────
@@ -63,6 +64,7 @@ export function selectExercises(
     deficitSecondary,
     transferType,
     previousComplexExercises,
+    personalCorrelations,
   } = params;
 
   const complex: ExerciseComplexEntry[] = [];
@@ -93,6 +95,7 @@ export function selectExercises(
     previousSet,
     availableImplements,
     transferType,
+    personalCorrelations,
   );
 
   // Pick top SD exercises
@@ -118,6 +121,8 @@ export function selectExercises(
     secondaryBoost,
     previousSet,
     availableImplements,
+    undefined,
+    personalCorrelations,
   );
 
   const spTarget = COMPLEX_TARGETS.SP;
@@ -163,6 +168,7 @@ function scoreExercises(
   previousExercises: Set<string>,
   availableImplements: ImplementEntry[],
   transferType?: string,
+  personalCorrelations?: PersonalCorrelation[],
 ): ScoredExercise[] {
   const ownedWeights = new Set(availableImplements.map((i) => i.weightKg));
   const transferBias = TRANSFER_BIAS[transferType ?? "balanced"] ?? "balanced";
@@ -179,7 +185,15 @@ function scoreExercises(
       }
     }
 
-    let score = ex.absCorrelation;
+    // Use blended personal correlation if available (Gap 1)
+    let effectiveCorrelation = ex.absCorrelation;
+    if (personalCorrelations) {
+      const personal = personalCorrelations.find(
+        (p) => p.exercise.toLowerCase() === ex.exercise.toLowerCase(),
+      );
+      if (personal) effectiveCorrelation = Math.abs(personal.blendedR);
+    }
+    let score = effectiveCorrelation;
 
     // Apply deficit boost
     score *= deficitBoost[classification];

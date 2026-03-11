@@ -62,13 +62,42 @@ export function generateProgram(config: ProgramConfig): GeneratedProgram {
   let currentWeek = 1;
 
   for (const planned of phaseplan) {
-    const phase = generatePhase({
+    // Build phase generation config with optional advanced features
+    const phaseGenConfig: import("./types").PhaseGenConfig = {
       phase: planned.phase,
       phaseOrder: planned.order,
       startWeek: currentWeek,
       durationWeeks: planned.weeks,
       programConfig: config,
-    });
+      // Gap 3: Thread training history for adaptive waves
+      trainingHistory: config.trainingHistory,
+    };
+
+    // Gap 4: Construct taper config for COMPETITION phase
+    if (planned.phase === "COMPETITION" && config.targetDate) {
+      const startDateObj = new Date(config.startDate);
+      const weekStartDate = new Date(
+        startDateObj.getTime() + (currentWeek - 1) * 7 * 24 * 60 * 60 * 1000,
+      );
+      const targetDateObj = new Date(config.targetDate);
+      const daysUntilMeet = Math.max(
+        1,
+        Math.round(
+          (targetDateObj.getTime() - weekStartDate.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
+      );
+
+      phaseGenConfig.taperConfig = {
+        daysUntilMeet,
+        adaptationGroup: config.adaptationGroup,
+        competitionImportance: config.competitionImportance ?? "A_MEET",
+        peakVolume: 0, // Not used in current taper computation
+        totalTaperWeeks: planned.weeks,
+      };
+    }
+
+    const phase = generatePhase(phaseGenConfig);
     phases.push(phase);
     currentWeek += planned.weeks;
   }

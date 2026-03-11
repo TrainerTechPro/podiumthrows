@@ -7,6 +7,8 @@ import type { TrainingPhase } from "../constants";
 import { selectExercises } from "./select-exercises";
 import { scaleVolume } from "./scale-volume";
 import { generateWeek } from "./generate-week";
+import { computeAdaptiveWave } from "./adaptive-waves";
+import { computeTaper } from "./elite-taper";
 import type {
   GeneratedPhase,
   PhaseGenConfig,
@@ -44,6 +46,7 @@ export function generatePhase(config: PhaseGenConfig): GeneratedPhase {
       deficitPrimary: programConfig.deficitPrimary,
       deficitSecondary: programConfig.deficitSecondary,
       transferType: programConfig.transferType,
+      personalCorrelations: programConfig.personalCorrelations,
     },
     phase,
   );
@@ -57,8 +60,23 @@ export function generatePhase(config: PhaseGenConfig): GeneratedPhase {
   for (let w = 0; w < durationWeeks; w++) {
     const weekNumber = startWeek + w;
 
-    // Progressive overload: ramp volume within the phase
-    const progressFactor = getProgressFactor(w, durationWeeks, phase);
+    // Progressive overload: taper → adaptive wave → fixed ramp fallback chain
+    let progressFactor: number;
+
+    if (phase === "COMPETITION" && config.taperConfig) {
+      // Gap 4: Exponential decay taper
+      const taperPlan = computeTaper(config.taperConfig);
+      progressFactor = taperPlan.weekMultipliers[w]?.volumeMultiplier
+        ?? getProgressFactor(w, durationWeeks, phase);
+    } else {
+      // Gap 3: Adaptive waves (data-driven) or fixed ramp fallback
+      const adaptiveWave = config.trainingHistory
+        ? computeAdaptiveWave(config.trainingHistory, phase, durationWeeks)
+        : null;
+      progressFactor = adaptiveWave?.[w]?.volumeMultiplier
+        ?? getProgressFactor(w, durationWeeks, phase);
+    }
+
     const weeklyThrowsTarget = Math.round(
       volumeTargets.throwsPerWeek * progressFactor,
     );

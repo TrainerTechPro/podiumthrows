@@ -463,17 +463,18 @@ export function computeRecommendedMethod(
 // ── Taper Plan ────────────────────────────────────────────────────────
 
 export function generateTaperPlan(daysOut: number): { daysOut: number; volumeMultiplier: number } | null {
-  if (daysOut > 7) return null;
-  const TAPER = [
-    { daysOut: 7, volumeMultiplier: 0.70 },
-    { daysOut: 5, volumeMultiplier: 0.50 },
-    { daysOut: 3, volumeMultiplier: 0.30 },
-    { daysOut: 1, volumeMultiplier: 0.10 },
-  ];
-  for (const t of TAPER) {
-    if (daysOut >= t.daysOut) return t;
-  }
-  return { daysOut: 0, volumeMultiplier: 0.10 };
+  if (daysOut > 21) return null;
+
+  // Exponential decay model (Mujika & Padilla) with backward-compatible defaults
+  // Group 2 (moderate), A_MEET importance, k=0.15, duration=14d
+  const k = 0.15;
+  const duration = 14;
+  if (daysOut > duration) return { daysOut, volumeMultiplier: 1.0 };
+  const elapsed = duration - daysOut;
+  const rawMultiplier = Math.exp(-k * elapsed);
+  const multiplier = Math.max(0.10, Math.min(1.0, rawMultiplier));
+
+  return { daysOut, volumeMultiplier: Math.round(multiplier * 100) / 100 };
 }
 
 // ── Date Helpers ──────────────────────────────────────────────────────
