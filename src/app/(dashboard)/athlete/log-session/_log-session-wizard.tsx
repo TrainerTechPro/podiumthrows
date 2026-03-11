@@ -158,7 +158,17 @@ function StepIndicator({ current, steps }: { current: Step; steps: Step[] }) {
 
 /* ─── Main Wizard ──────────────────────────────────────────────────────────── */
 
-export function LogSessionWizard() {
+interface WizardProps {
+  /** API endpoint for saving (e.g. "/api/athlete/log-session" or "/api/coach/log-session") */
+  apiEndpoint?: string;
+  /** Where to navigate after "View Sessions" (e.g. "/athlete/sessions" or "/coach/my-training") */
+  sessionsPath?: string;
+}
+
+export function LogSessionWizard({
+  apiEndpoint = "/api/athlete/log-session",
+  sessionsPath = "/athlete/sessions",
+}: WizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("event");
 
@@ -226,7 +236,7 @@ export function LogSessionWizard() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/athlete/log-session", {
+      const res = await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -672,7 +682,7 @@ export function LogSessionWizard() {
         <div className="flex gap-3 justify-center">
           <button
             type="button"
-            onClick={() => router.push("/athlete/sessions")}
+            onClick={() => router.push(sessionsPath)}
             className="btn-secondary"
           >
             View Sessions

@@ -184,6 +184,9 @@ model CoachProfile {
   generatedPrograms TrainingProgram[]
   drillVideos       DrillVideo[]
 
+  // Coach self-training
+  selfLoggedSessions CoachThrowsSession[]
+
   // Utility relations (from TrainingTracker)
   voiceNotes   VoiceNote[]
   activityLogs ActivityLog[]
@@ -1299,6 +1302,51 @@ model AthleteDrillLog {
   bestMark        Float? // meters
   notes           String?
   createdAt       DateTime             @default(now())
+
+  @@index([sessionId])
+}
+
+/// Coach self-logged training session (mirrors AthleteThrowsSession).
+model CoachThrowsSession {
+  id        String       @id @default(cuid())
+  coachId   String
+  coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  date      String // YYYY-MM-DD
+  focus     String?
+  notes     String?
+
+  sleepQuality  Int?
+  sorenessLevel Int?
+  energyLevel   Int?
+
+  sessionRpe      Int?
+  sessionFeeling  String?
+  techniqueRating Int?
+  mentalFocus     Int?
+  bestPart        String?
+  improvementArea String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  drillLogs CoachDrillLog[]
+
+  @@index([coachId, date])
+  @@index([coachId, event])
+}
+
+/// Individual drill entry within a CoachThrowsSession.
+model CoachDrillLog {
+  id              String              @id @default(cuid())
+  sessionId       String
+  session         CoachThrowsSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  drillType       String
+  implementWeight Float?
+  throwCount      Int                 @default(0)
+  bestMark        Float?
+  notes           String?
+  createdAt       DateTime            @default(now())
 
   @@index([sessionId])
 }

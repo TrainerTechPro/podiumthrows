@@ -220,6 +220,13 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: "My Training",
+    items: [
+      { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
+      { label: "My Training Log", href: "/coach/my-training", icon: <Target {...iconSize} /> },
+    ],
+  },
+  {
     title: "Alerts",
     items: [
       { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
