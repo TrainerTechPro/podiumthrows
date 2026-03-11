@@ -84,7 +84,7 @@ export interface SchedulePreferences {
 }
 
 export interface ExperienceData {
-  yearsThowing: number;
+  yearsThrowing: number;
   currentWeeklyVolume?: number; // approximate throws/week currently
   currentPhase?: TrainingPhase;
 }
@@ -102,8 +102,8 @@ export interface TypingSnapshot {
 
 /** Full input to the program generation engine. */
 export interface ProgramConfig {
-  // Athlete identity
-  athleteId: string;
+  // Athlete identity (optional for coach self-programs)
+  athleteId?: string;
   coachId?: string;
   event: ThrowEvent;
   eventCode: EventCode;
@@ -139,7 +139,7 @@ export interface ProgramConfig {
   liftingPrs: LiftingPrs;
 
   // Experience scaling
-  yearsThowing: number;
+  yearsThrowing: number;
   currentWeeklyVolume?: number;
 
   // Deficit analysis (from podium-profile.ts)

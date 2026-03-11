@@ -1801,11 +1801,14 @@ model ExerciseLibrary {
 
 /// Top-level container for a generated Bondarchuk training program (macrocycle).
 model TrainingProgram {
-  id        String         @id @default(cuid())
-  athleteId String
-  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  id        String          @id @default(cuid())
+  athleteId String?
+  athlete   AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   coachId   String?
-  coach     CoachProfile?  @relation(fields: [coachId], references: [id])
+  coach     CoachProfile?   @relation(fields: [coachId], references: [id])
+
+  // Coach self-program flag
+  isCoachSelfProgram Boolean @default(false)
 
   // Classification
   event  String // HAMMER (future: SHOT_PUT, DISCUS, JAVELIN)
@@ -1815,8 +1818,16 @@ model TrainingProgram {
   // Goal
   startDate    String // YYYY-MM-DD
   targetDate   String // YYYY-MM-DD
-  goalDistance Float // meters target
+  goalDistance  Float // meters target
   startingPr   Float // competition PR at program creation
+
+  // Coach program enrichments
+  shortTermGoalLabel   String?
+  longTermGoalLabel    String?
+  longTermGoalDistance  Float?
+  longTermGoalDate     String? // YYYY-MM-DD
+  competitionCalendar  String? // JSON: [{name, date, event, priority}]
+  mobilityNotes        String? // JSON: {regions: [{area, severity, notes}]}
 
   // Schedule preferences
   daysPerWeek    Int     @default(4) // 2-5
@@ -1844,7 +1855,6 @@ model TrainingProgram {
   sessions              ProgramSession[]
   adaptationCheckpoints AdaptationCheckpoint[]
 
-  @@index([athleteId, status])
   @@index([coachId])
 }
 

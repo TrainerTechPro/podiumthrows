@@ -132,8 +132,8 @@ export function validateOnboarding(
   if (!data.experience) {
     errors.experience = "Experience data is required";
   } else {
-    if (data.experience.yearsThowing < 0) {
-      errors.yearsThowing = "Years throwing cannot be negative";
+    if (data.experience.yearsThrowing < 0) {
+      errors.yearsThrowing = "Years throwing cannot be negative";
     }
   }
 

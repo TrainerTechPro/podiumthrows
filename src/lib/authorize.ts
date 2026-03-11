@@ -83,6 +83,7 @@ export async function canAccessSession(
  * Check if a user can access a specific training program.
  * - Athletes can only see programs assigned to them
  * - Coaches can see programs for athletes they coach
+ * - Coaches can access their own self-programs
  */
 export async function canAccessProgram(
   userId: string,
@@ -93,22 +94,35 @@ export async function canAccessProgram(
     where: { id: programId },
     select: {
       athleteId: true,
+      coachId: true,
+      isCoachSelfProgram: true,
       athlete: { select: { coachId: true, userId: true } },
     },
   });
   if (!program) return false;
 
-  if (role === "ATHLETE") {
+  // Athlete program: athlete owns it
+  if (role === "ATHLETE" && program.athlete) {
     return program.athlete.userId === userId;
   }
 
+  // Coach access — single profile lookup for all coach branches
   if (role === "COACH") {
     const coachProfile = await prisma.coachProfile.findFirst({
       where: { userId },
       select: { id: true },
     });
     if (!coachProfile) return false;
-    return program.athlete.coachId === coachProfile.id;
+
+    // Coach self-program: coach owns it directly
+    if (program.isCoachSelfProgram) {
+      return coachProfile.id === program.coachId;
+    }
+
+    // Athlete program: coach manages the athlete
+    if (program.athlete) {
+      return program.athlete.coachId === coachProfile.id;
+    }
   }
 
   return false;

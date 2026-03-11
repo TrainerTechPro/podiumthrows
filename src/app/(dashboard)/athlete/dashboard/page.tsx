@@ -14,6 +14,7 @@ import {
 } from "@/lib/data/coach";
 import { WelcomeCard } from "./_welcome-card";
 import { VolumeWidget } from "./_volume-widget";
+import { ReadinessWidget } from "./_readiness-widget";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -40,40 +41,6 @@ function formatScheduledDate(iso: string): string {
   if (date.toDateString() === today.toDateString()) return "Today";
   if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
   return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-}
-
-/* ─── Readiness Ring ─────────────────────────────────────────────────────── */
-
-function ReadinessRing({ score }: { score: number }) {
-  const pct = score / 10;
-  const r = 36;
-  const circ = 2 * Math.PI * r;
-  const dash = circ * pct;
-  const color =
-    score >= 8 ? "#10b981" : score >= 5 ? "#f59e0b" : "#ef4444";
-
-  return (
-    <div className="relative w-24 h-24 shrink-0">
-      <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
-        <circle cx="48" cy="48" r={r} fill="none" stroke="currentColor" strokeWidth="8" className="text-surface-200 dark:text-surface-700" />
-        <circle
-          cx="48" cy="48" r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${circ}`}
-          className="transition-all duration-700"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold tabular-nums font-heading" style={{ color }}>
-          {score.toFixed(1)}
-        </span>
-        <span className="text-[10px] text-muted uppercase tracking-wide">Readiness</span>
-      </div>
-    </div>
-  );
 }
 
 /* ─── Stat Card ──────────────────────────────────────────────────────────── */
@@ -227,40 +194,9 @@ export default async function AthleteDashboardPage() {
       )}
 
       {/* Top row: Readiness widget + stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Readiness widget */}
-        <div className="card px-5 py-4 flex items-center gap-4 sm:col-span-2 lg:col-span-1">
-          {stats.latestReadiness ? (
-            <>
-              <ReadinessRing score={stats.latestReadiness.overallScore} />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[var(--foreground)]">
-                  {stats.latestReadiness.overallScore >= 8
-                    ? "Feeling great"
-                    : stats.latestReadiness.overallScore >= 5
-                    ? "Moderate readiness"
-                    : "Low readiness"}
-                </p>
-                <p className="text-xs text-muted mt-0.5">
-                  {formatRelativeDate(stats.latestReadiness.date)}
-                </p>
-                {stats.latestReadiness.injuryStatus === "ACTIVE" && (
-                  <Badge variant="danger" className="mt-1.5">Injured</Badge>
-                )}
-                {stats.latestReadiness.injuryStatus === "MONITORING" && (
-                  <Badge variant="warning" className="mt-1.5">Watch</Badge>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="flex-1">
-              <p className="text-sm font-medium text-muted">No check-in yet</p>
-              <Link href="/athlete/wellness" className="text-xs text-primary-500 hover:underline mt-0.5 inline-block">
-                Submit today&apos;s check-in →
-              </Link>
-            </div>
-          )}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Readiness widget — tap to expand breakdown */}
+        <ReadinessWidget data={stats.latestReadiness} />
 
         <StatCard
           value={stats.totalSessionsAllTime}
@@ -281,11 +217,21 @@ export default async function AthleteDashboardPage() {
       {/* Training Volume */}
       <VolumeWidget />
 
-      {/* Quick Links */}
+      {/* Quick Actions */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         <Link
+          href="/athlete/log-session"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold bg-primary-500 text-white hover:bg-primary-600 transition-colors shadow-sm"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Log Session
+        </Link>
+        <Link
           href="/athlete/assessments"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-primary-50 dark:hover:bg-primary-500/10 border border-surface-200 dark:border-surface-700 hover:border-primary-300 dark:hover:border-primary-500/30 transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 border border-surface-200 dark:border-surface-700 transition-all"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500 shrink-0">
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
@@ -293,6 +239,15 @@ export default async function AthleteDashboardPage() {
             <path d="M9 14l2 2 4-4" />
           </svg>
           Testing History
+        </Link>
+        <Link
+          href="/athlete/wellness"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 border border-surface-200 dark:border-surface-700 transition-all"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500 shrink-0">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          Wellness Check-in
         </Link>
       </div>
 

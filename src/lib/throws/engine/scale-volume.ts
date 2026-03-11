@@ -16,11 +16,11 @@ const ADAPTATION_MULTIPLIERS: Record<number, number> = {
 };
 
 /** Experience-based volume scaling */
-function experienceMultiplier(yearsThowing: number): number {
-  if (yearsThowing < 1) return 0.65;
-  if (yearsThowing < 2) return 0.75;
-  if (yearsThowing < 3) return 0.85;
-  if (yearsThowing < 5) return 0.95;
+function experienceMultiplier(yearsThrowing: number): number {
+  if (yearsThrowing < 1) return 0.65;
+  if (yearsThrowing < 2) return 0.75;
+  if (yearsThrowing < 3) return 0.85;
+  if (yearsThrowing < 5) return 0.95;
   return 1.0; // 5+ years, full volume
 }
 
@@ -70,7 +70,7 @@ export function scaleVolume(
 
   // Apply scaling multipliers
   const adaptMult = ADAPTATION_MULTIPLIERS[config.adaptationGroup] ?? 1.0;
-  const expMult = experienceMultiplier(config.yearsThowing);
+  const expMult = experienceMultiplier(config.yearsThrowing);
   const rampMult = volumeRampMultiplier(config.currentWeeklyVolume, baseVolume);
 
   // Days-per-week scaling: fewer days = less total volume
@@ -90,7 +90,7 @@ export function scaleVolume(
   throwsPerWeek = Math.min(ABSOLUTE_WEEKLY_CEILING, throwsPerWeek);
 
   // Beginner guard — athletes with < 1 year experience capped at 200/week
-  if (config.yearsThowing < 1 && throwsPerWeek > 200) {
+  if (config.yearsThrowing < 1 && throwsPerWeek > 200) {
     throwsPerWeek = 200;
   }
 

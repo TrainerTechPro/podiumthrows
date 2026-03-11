@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge, ProgressBar } from "@/components";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { LineChart, type LineChartDataPoint } from "@/components/charts/LineChart";
 import {
   requireCoachSession,
@@ -300,9 +301,7 @@ function OverviewTab({
               )}
             </div>
           ) : (
-            <p className="text-xs text-muted">
-              No assessment completed yet.
-            </p>
+            <p className="text-xs text-muted">No assessment yet</p>
           )}
           <Link
             href={`/coach/throws/assessment/${athlete.id}`}
@@ -342,9 +341,17 @@ function OverviewTab({
             </Link>
           </div>
           {recentPRs.length === 0 ? (
-            <p className="text-sm text-muted py-4 text-center">
-              No personal bests recorded yet.
-            </p>
+            <EmptyState
+              compact
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="7" />
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                </svg>
+              }
+              title="No personal bests yet"
+              description="PRs will appear here once throw marks are logged."
+            />
           ) : (
             <div className="space-y-0.5">
               {recentPRs.map((pr) => (
@@ -399,8 +406,20 @@ function TrainingTab({ sessions }: { sessions: SessionItem[] }) {
       </div>
 
       {sessions.length === 0 ? (
-        <div className="card p-12 text-center">
-          <p className="text-sm text-muted">No training sessions yet.</p>
+        <div className="card">
+          <EmptyState
+            compact
+            icon={
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            }
+            title="No training sessions yet"
+            description="Prescribe a session to get started."
+          />
         </div>
       ) : (
         <div className="card divide-y divide-[var(--card-border)]">
@@ -497,8 +516,19 @@ function ThrowsTab({ throws }: { throws: ThrowLogItem[] }) {
         </div>
 
         {throws.length === 0 ? (
-          <div className="card p-12 text-center">
-            <p className="text-sm text-muted">No throw logs recorded yet.</p>
+          <div className="card">
+            <EmptyState
+              compact
+              icon={
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="6" />
+                  <circle cx="12" cy="12" r="2" />
+                </svg>
+              }
+              title="No throw logs yet"
+              description="Throws will appear here once sessions are completed."
+            />
           </div>
         ) : (
           <div className="card overflow-hidden">
@@ -733,8 +763,17 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           </div>
         </div>
       ) : (
-        <div className="card p-12 text-center">
-          <p className="text-sm text-muted">No readiness check-ins recorded yet.</p>
+        <div className="card">
+          <EmptyState
+            compact
+            icon={
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            }
+            title="No readiness check-ins yet"
+            description="Once this athlete submits wellness check-ins, their readiness data will appear here."
+          />
         </div>
       )}
 
@@ -934,8 +973,17 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           </div>
         </>
       ) : (
-        <div className="card p-12 text-center">
-          <p className="text-sm text-muted">No wellness data recorded yet.</p>
+        <div className="card">
+          <EmptyState
+            compact
+            icon={
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            }
+            title="No wellness data yet"
+            description="Wellness trends will populate once check-ins are submitted."
+          />
         </div>
       )}
     </div>
@@ -999,8 +1047,21 @@ function GoalsTab({ goals }: { goals: GoalItem[] }) {
   return (
     <div className="pt-6 space-y-6">
       {goals.length === 0 ? (
-        <div className="card p-12 text-center">
-          <p className="text-sm text-muted">No goals set yet.</p>
+        <div className="card">
+          <EmptyState
+            compact
+            icon={
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="22" y1="12" x2="18" y2="12" />
+                <line x1="6" y1="12" x2="2" y2="12" />
+                <line x1="12" y1="6" x2="12" y2="2" />
+                <line x1="12" y1="22" x2="12" y2="18" />
+              </svg>
+            }
+            title="No goals set yet"
+            description="Set performance targets to track progress over time."
+          />
         </div>
       ) : (
         <>

@@ -81,7 +81,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const programConfig: ProgramConfig = {
-      athleteId: program.athleteId,
+      athleteId: program.athleteId ?? undefined,
       event: (generationConfig.event as ProgramConfig["event"]) ?? "HAMMER",
       eventCode: (generationConfig.eventCode as ProgramConfig["eventCode"]) ?? "HT",
       gender: (generationConfig.gender as ProgramConfig["gender"]) ?? "MALE",
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       liftingPrs: (generationConfig.liftingPrs as ProgramConfig["liftingPrs"]) ?? {
         bodyWeightKg: 90,
       },
-      yearsThowing: (generationConfig.yearsThowing as number) ?? 3,
+      yearsThrowing: (generationConfig.yearsThrowing as number) ?? (generationConfig.yearsThowing as number) ?? 3,
       deficitPrimary: (generationConfig.deficitPrimary as string) ?? undefined,
       deficitSecondary: (generationConfig.deficitSecondary as string) ?? undefined,
     };

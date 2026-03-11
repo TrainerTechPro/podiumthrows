@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge } from "@/components";
+import prisma from "@/lib/prisma";
 import {
   requireCoachSession,
   getCoachStats,
@@ -349,13 +350,31 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
 export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
-  const [statsResult, activityResult, flaggedResult, readinessResult, onboardingResult] =
+  // Get athlete IDs on this coach's roster
+  const rosterAthletes = await prisma.athleteProfile.findMany({
+    where: { coachId: coach.id },
+    select: { id: true },
+  });
+  const rosterIds = rosterAthletes.map((a) => a.id);
+
+  const [statsResult, activityResult, flaggedResult, readinessResult, onboardingResult, recentAthleteLogsResult] =
     await Promise.allSettled([
       getCoachStats(coach.id),
       getRecentActivity(coach.id),
       getFlaggedAthletes(coach.id),
       getTeamReadinessTrends(coach.id),
       getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
+      rosterIds.length > 0
+        ? prisma.athleteThrowsSession.findMany({
+            where: { athleteId: { in: rosterIds } },
+            orderBy: { createdAt: "desc" },
+            take: 5,
+            include: {
+              athlete: { select: { firstName: true, lastName: true, avatarUrl: true } },
+              drillLogs: { select: { throwCount: true, bestMark: true } },
+            },
+          })
+        : Promise.resolve([]),
     ]);
 
   const stats: CoachStats = statsResult.status === "fulfilled"
@@ -367,6 +386,9 @@ export default async function CoachDashboardPage() {
   const onboarding = onboardingResult.status === "fulfilled"
     ? onboardingResult.value
     : { isCompleted: true, completedAt: null, steps: [], completedCount: 0, totalSteps: 0 };
+  const recentAthleteLogs = recentAthleteLogsResult.status === "fulfilled"
+    ? recentAthleteLogsResult.value
+    : [];
 
   const now = new Date();
   const hour = now.getHours();
@@ -482,6 +504,63 @@ export default async function CoachDashboardPage() {
           </div>
         </section>
       </div>
+
+      {/* Recent Athlete Logs */}
+      {recentAthleteLogs.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+              Recent Athlete Logs
+              <span className="ml-2 text-xs font-normal normal-case text-surface-400">
+                self-logged sessions
+              </span>
+            </h2>
+            <Link
+              href="/coach/athlete-logs"
+              className="text-xs text-primary-500 hover:underline"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="card p-0 overflow-hidden divide-y divide-[var(--card-border)]">
+            {recentAthleteLogs.map((log) => {
+              const totalThrows = log.drillLogs.reduce((s, d) => s + d.throwCount, 0);
+              const bestMarks = log.drillLogs
+                .map((d) => d.bestMark)
+                .filter((n): n is number => n !== null && n > 0);
+              const best = bestMarks.length > 0 ? Math.max(...bestMarks) : null;
+
+              return (
+                <Link
+                  key={log.id}
+                  href="/coach/athlete-logs"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+                >
+                  <Avatar
+                    name={`${log.athlete.firstName} ${log.athlete.lastName}`}
+                    src={log.athlete.avatarUrl}
+                    size="sm"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                      {log.athlete.firstName} {log.athlete.lastName}
+                    </p>
+                    <p className="text-xs text-muted truncate">
+                      {formatEventName(log.event)}
+                      {log.focus && <> &middot; {log.focus}</>}
+                      {totalThrows > 0 && <> &middot; {totalThrows} throws</>}
+                      {best && <> &middot; {best.toFixed(2)}m</>}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted shrink-0 tabular-nums">
+                    {formatRelativeTime(log.createdAt.toISOString())}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Team Readiness */}
       <ReadinessWidget entries={readiness} />

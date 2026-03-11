@@ -47,6 +47,12 @@ export type AthleteStats = {
     overallScore: number;
     injuryStatus: string;
     date: string;
+    sleepQuality: number;
+    soreness: number;
+    energyMood: number;
+    stressLevel: number;
+    sleepHours: number;
+    hydration: string;
   } | null;
   activeGoalsCount: number;
   personalBests: {
@@ -220,7 +226,17 @@ export async function getAthleteStats(athleteId: string): Promise<AthleteStats> 
       prisma.readinessCheckIn.findFirst({
         where: { athleteId },
         orderBy: { date: "desc" },
-        select: { overallScore: true, injuryStatus: true, date: true },
+        select: {
+          overallScore: true,
+          injuryStatus: true,
+          date: true,
+          sleepQuality: true,
+          soreness: true,
+          energyMood: true,
+          stressLevel: true,
+          sleepHours: true,
+          hydration: true,
+        },
       }),
 
       prisma.goal.count({
@@ -246,6 +262,12 @@ export async function getAthleteStats(athleteId: string): Promise<AthleteStats> 
           overallScore: latestCheckIn.overallScore,
           injuryStatus: latestCheckIn.injuryStatus as string,
           date: latestCheckIn.date.toISOString(),
+          sleepQuality: latestCheckIn.sleepQuality,
+          soreness: latestCheckIn.soreness,
+          energyMood: latestCheckIn.energyMood,
+          stressLevel: latestCheckIn.stressLevel,
+          sleepHours: latestCheckIn.sleepHours,
+          hydration: latestCheckIn.hydration as string,
         }
       : null,
     activeGoalsCount: activeGoals,

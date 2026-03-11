@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       transferType: onboardingData.typing?.transferType,
 
       // Experience
-      yearsThowing: onboardingData.experience.yearsThowing,
+      yearsThrowing: onboardingData.experience.yearsThrowing,
       currentWeeklyVolume: onboardingData.experience.currentWeeklyVolume,
 
       // Equipment

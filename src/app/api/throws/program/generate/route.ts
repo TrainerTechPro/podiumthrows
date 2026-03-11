@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       transferType: body.typing?.transferType,
 
       // Experience
-      yearsThowing: body.experience.yearsThowing,
+      yearsThrowing: body.experience.yearsThrowing,
       currentWeeklyVolume: body.experience.currentWeeklyVolume,
 
       // Equipment

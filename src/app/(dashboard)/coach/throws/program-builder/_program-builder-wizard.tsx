@@ -221,7 +221,7 @@ interface FormState {
   ohpKg: string;
   deadliftKg: string;
   bodyWeightKg: string;
-  yearsThowing: string;
+  yearsThrowing: string;
   currentWeeklyVolume: string;
   currentPhase: string;
   hasTyping: boolean;
@@ -262,7 +262,7 @@ const DEFAULT_FORM: FormState = {
   ohpKg: "",
   deadliftKg: "",
   bodyWeightKg: "",
-  yearsThowing: "",
+  yearsThrowing: "",
   currentWeeklyVolume: "",
   currentPhase: "",
   hasTyping: false,
@@ -379,8 +379,8 @@ export function ProgramBuilderWizard({
     }
 
     if (s === 4) {
-      if (!form.yearsThowing || parseFloat(form.yearsThowing) < 0)
-        errs.yearsThowing = "Enter years of throwing experience";
+      if (!form.yearsThrowing || parseFloat(form.yearsThrowing) < 0)
+        errs.yearsThrowing = "Enter years of throwing experience";
       if (!form.bodyWeightKg || parseFloat(form.bodyWeightKg) <= 0)
         errs.bodyWeightKg = "Enter body weight";
     }
@@ -449,7 +449,7 @@ export function ProgramBuilderWizard({
             includeLift: form.includeLift,
           },
           experience: {
-            yearsThowing: parseFloat(form.yearsThowing),
+            yearsThrowing: parseFloat(form.yearsThrowing),
             currentWeeklyVolume: form.currentWeeklyVolume
               ? parseInt(form.currentWeeklyVolume)
               : undefined,
@@ -1474,12 +1474,12 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
               min="0"
               className="input w-full"
               placeholder="e.g. 3"
-              value={form.yearsThowing}
-              onChange={(e) => update("yearsThowing", e.target.value)}
+              value={form.yearsThrowing}
+              onChange={(e) => update("yearsThrowing", e.target.value)}
             />
-            {errors.yearsThowing && (
+            {errors.yearsThrowing && (
               <p className="text-red-500 text-xs mt-1">
-                {errors.yearsThowing}
+                {errors.yearsThrowing}
               </p>
             )}
           </div>
@@ -1593,7 +1593,7 @@ function StepReview({
         />
         <ReviewRow
           label="Experience"
-          value={`${form.yearsThowing} year${parseFloat(form.yearsThowing) !== 1 ? "s" : ""}${form.currentWeeklyVolume ? `, ~${form.currentWeeklyVolume} throws/week` : ""}`}
+          value={`${form.yearsThrowing} year${parseFloat(form.yearsThrowing) !== 1 ? "s" : ""}${form.currentWeeklyVolume ? `, ~${form.currentWeeklyVolume} throws/week` : ""}`}
         />
         <ReviewRow label="Body Weight" value={`${form.bodyWeightKg}kg`} />
         {form.hasTyping && (
