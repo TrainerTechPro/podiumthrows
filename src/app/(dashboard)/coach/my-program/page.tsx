@@ -219,29 +219,28 @@ export default function MyProgramPage() {
   const totalWeeks = program.phases.reduce((sum, p) => Math.max(sum, p.endWeek), 0);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10 space-y-6">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-10 space-y-4 sm:space-y-6">
       {/* Success banner */}
       {justGenerated && (
-        <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30 rounded-xl animate-fade-in">
-          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-            Program generated successfully! Your training plan is ready.
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30 rounded-xl animate-fade-in">
+          <p className="text-xs sm:text-sm font-medium text-emerald-800 dark:text-emerald-300">
+            Program generated! Your training plan is ready.
           </p>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-title font-heading text-[var(--foreground)]">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-title font-heading text-[var(--foreground)] truncate">
             My Program
           </h1>
-          <p className="text-body text-muted">
-            {EVENT_LABELS[program.event] ?? program.event} &middot; Week{" "}
-            {program.currentWeekNumber} of {totalWeeks}
+          <p className="text-xs sm:text-body text-muted">
+            {EVENT_LABELS[program.event] ?? program.event} · Wk {program.currentWeekNumber}/{totalWeeks}
           </p>
         </div>
         <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shrink-0 ${
             program.status === "ACTIVE"
               ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
               : "bg-[var(--muted-bg)] text-muted"
@@ -253,7 +252,7 @@ export default function MyProgramPage() {
 
       {/* Tabs */}
       <Tabs defaultTab="overview">
-        <TabList variant="boxed" className="mb-6">
+        <TabList variant="boxed" className="mb-4 sm:mb-6">
           <TabTrigger id="overview" variant="boxed">Overview</TabTrigger>
           <TabTrigger id="analytics" variant="boxed">Analytics</TabTrigger>
           <TabTrigger id="analysis" variant="boxed">Analysis</TabTrigger>
