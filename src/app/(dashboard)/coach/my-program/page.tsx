@@ -89,73 +89,72 @@ export default function MyProgramPage() {
     setFetchError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/throws/program", { signal });
+      const res = await fetch("/api/coach/my-program", { signal });
       if (!res.ok) {
-        // Check for coach-specific program if athlete endpoint returns 404
-        const coachRes = await fetch("/api/coach/my-program/analytics", { signal });
-        if (!coachRes.ok) {
-          // No program for either role — show empty state
-          setProgram(null);
-          setLoading(false);
-          return;
-        }
+        setProgram(null);
+        setLoading(false);
+        return;
       }
 
       let json;
       try { json = await res.json(); } catch { json = { data: null }; }
       const data = json?.data;
 
-      if (data) {
-        setProgram(data);
+      if (!data) {
+        setProgram(null);
+        setLoading(false);
+        return;
+      }
 
-        // Extract reasoning cards from generation config
+      setProgram(data);
+
+      // Extract reasoning cards from generation config
+      try {
+        const config = JSON.parse(data.generationConfig || "{}");
+        if (Array.isArray(config.reasoningCards)) {
+          setReasoningCards(config.reasoningCards);
+        }
+      } catch { /* invalid JSON — non-critical */ }
+
+      // Fetch today, week sessions, and analytics in parallel
+      // These are supplementary — failures should not block the page
+      const results = await Promise.allSettled([
+        fetch(`/api/throws/program/${data.id}/today`, { signal }),
+        fetch(`/api/throws/program/${data.id}/week`, { signal }),
+        fetch("/api/coach/my-program/analytics", { signal }),
+      ]);
+
+      const [todayResult, weekResult, analyticsResult] = results;
+
+      if (todayResult.status === "fulfilled" && todayResult.value.ok) {
         try {
-          const config = JSON.parse(data.generationConfig || "{}");
-          if (Array.isArray(config.reasoningCards)) {
-            setReasoningCards(config.reasoningCards);
+          const td = await todayResult.value.json();
+          setTodaySessions(td.data?.sessions ?? []);
+        } catch { /* non-JSON response */ }
+      }
+      if (weekResult.status === "fulfilled" && weekResult.value.ok) {
+        try {
+          const wk = await weekResult.value.json();
+          setWeekSessions(wk.data?.sessions ?? []);
+        } catch { /* non-JSON response */ }
+      }
+      if (analyticsResult.status === "fulfilled" && analyticsResult.value.ok) {
+        try {
+          const analytics = await analyticsResult.value.json();
+          if (analytics.data) setAnalyticsData(analytics.data as Record<string, unknown>);
+          if (analytics.data?.adaptationProgress) {
+            setAdaptationProgress(analytics.data.adaptationProgress);
           }
-        } catch { /* invalid JSON — non-critical */ }
-
-        // Fetch today, week sessions, and analytics in parallel
-        // These are supplementary — failures should not block the page
-        const results = await Promise.allSettled([
-          fetch(`/api/throws/program/${data.id}/today`, { signal }),
-          fetch(`/api/throws/program/${data.id}/week`, { signal }),
-          fetch("/api/coach/my-program/analytics", { signal }),
-        ]);
-
-        const [todayResult, weekResult, analyticsResult] = results;
-
-        if (todayResult.status === "fulfilled" && todayResult.value.ok) {
-          try {
-            const td = await todayResult.value.json();
-            setTodaySessions(td.data?.sessions ?? []);
-          } catch { /* non-JSON response */ }
-        }
-        if (weekResult.status === "fulfilled" && weekResult.value.ok) {
-          try {
-            const wk = await weekResult.value.json();
-            setWeekSessions(wk.data?.sessions ?? []);
-          } catch { /* non-JSON response */ }
-        }
-        if (analyticsResult.status === "fulfilled" && analyticsResult.value.ok) {
-          try {
-            const analytics = await analyticsResult.value.json();
-            if (analytics.data) setAnalyticsData(analytics.data as Record<string, unknown>);
-            if (analytics.data?.adaptationProgress) {
-              setAdaptationProgress(analytics.data.adaptationProgress);
+          // Extract best mark for goal progress
+          const marks = analytics.data?.weeklyData?.marks as number[] | undefined;
+          if (marks && marks.length > 0) {
+            const positiveMarks = marks.filter((m: number) => m > 0);
+            if (positiveMarks.length > 0) {
+              const best = Math.max(...positiveMarks);
+              if (Number.isFinite(best) && best > 0) setCurrentPr(best);
             }
-            // Extract best mark for goal progress
-            const marks = analytics.data?.weeklyData?.marks as number[] | undefined;
-            if (marks && marks.length > 0) {
-              const positiveMarks = marks.filter((m: number) => m > 0);
-              if (positiveMarks.length > 0) {
-                const best = Math.max(...positiveMarks);
-                if (Number.isFinite(best) && best > 0) setCurrentPr(best);
-              }
-            }
-          } catch { /* non-JSON response */ }
-        }
+          }
+        } catch { /* non-JSON response */ }
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
