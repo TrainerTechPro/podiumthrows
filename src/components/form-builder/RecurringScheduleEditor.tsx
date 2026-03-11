@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { localToday } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Input } from "@/components/ui/Input";
@@ -55,7 +56,7 @@ export function RecurringScheduleEditor({
       timeOfDay: "08:00",
       athleteIds: [],
       assignToAll: true,
-      startDate: new Date().toISOString().split("T")[0],
+      startDate: localToday(),
       endDate: "",
       isActive: true,
     }

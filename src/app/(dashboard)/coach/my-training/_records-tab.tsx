@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { localToday } from "@/lib/utils";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -188,7 +189,7 @@ function TestingForm({
   saving: boolean;
 }) {
   const [form, setForm] = useState({
-    testDate: new Date().toISOString().split("T")[0],
+    testDate: localToday(),
     event: "",
     competitionMark: "",
     heavyImplMark: "",

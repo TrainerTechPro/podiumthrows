@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { localToday } from "@/lib/utils";
 import {
  LineChart,
  Line,
@@ -1409,7 +1410,7 @@ function DrillPRPanel({
  const [drillType, setDrillType] = useState("STANDING");
  const [implement, setImplement] = useState("");
  const [distance, setDistance] = useState("");
- const [achievedAt, setAchievedAt] = useState(new Date().toISOString().split("T")[0]);
+ const [achievedAt, setAchievedAt] = useState(localToday());
  const [notes, setNotes] = useState("");
  const [saving, setSaving] = useState(false);
 
@@ -1933,7 +1934,7 @@ function ManageComplexForm({
  });
  const [customExercise, setCustomExercise] = useState("");
  const [event, setEvent] = useState(currentComplex?.event || primaryEvent || "SHOT_PUT");
- const [startDate] = useState(new Date().toISOString().split("T")[0]);
+ const [startDate] = useState(localToday());
  const [saving, setSaving] = useState(false);
 
  function toggleExercise(name: string) {

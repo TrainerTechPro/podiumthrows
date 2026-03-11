@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, localToday } from "@/lib/utils";
 import type { AthleteProfileFull } from "@/lib/data/athlete";
 
 const EVENTS = [
@@ -145,7 +145,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
             type="date"
             value={dateOfBirth}
             onChange={(e) => setDateOfBirth(e.target.value)}
-            max={new Date().toISOString().split("T")[0]}
+            max={localToday()}
             className="input w-full sm:w-52"
           />
         </div>

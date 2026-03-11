@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
  LineChart,
@@ -408,7 +409,7 @@ export default function ThrowsLogPage() {
 
  // Log state
  const [selectedEvent, setSelectedEvent] = useState("");
- const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+ const [date, setDate] = useState(localToday());
  const [drills, setDrills] = useState<DrillRow[]>([newDrill("STANDING")]);
  const [sessionNotes, setSessionNotes] = useState("");
  const [saving, setSaving] = useState(false);
@@ -417,7 +418,7 @@ export default function ThrowsLogPage() {
  function resetForm() {
  setStep(1);
  setSelectedEvent("");
- setDate(new Date().toISOString().split("T")[0]);
+ setDate(localToday());
  setDrills([newDrill("STANDING")]);
  setSessionNotes("");
  setSaved(false);

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, localToday } from "@/lib/utils";
 import { Avatar, Button, ProgressBar } from "@/components";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
@@ -468,7 +468,7 @@ export function OnboardingWizard({
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                max={new Date().toISOString().split("T")[0]}
+                max={localToday()}
                 className="input w-full"
               />
             </div>

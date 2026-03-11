@@ -110,6 +110,13 @@
       transition-all duration-150;
   }
 
+  /* Fix native date/time picker icons & popup in dark mode */
+  .dark input[type="date"],
+  .dark input[type="time"],
+  .dark input[type="datetime-local"] {
+    color-scheme: dark;
+  }
+
   .label {
     @apply block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5;
   }

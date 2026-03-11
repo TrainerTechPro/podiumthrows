@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { localToday } from "@/lib/utils";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -181,7 +182,7 @@ export function LogSessionWizard({
   // Step 1: Event + Focus
   const [event, setEvent] = useState("");
   const [focus, setFocus] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(localToday());
 
   // Step 2: Readiness
   const [sleepQuality, setSleepQuality] = useState<number | null>(null);
@@ -774,7 +775,7 @@ export function LogSessionWizard({
               setStep("event");
               setEvent("");
               setFocus("");
-              setDate(new Date().toISOString().split("T")[0]);
+              setDate(localToday());
               setSleepQuality(null);
               setSorenessLevel(null);
               setEnergyLevel(null);

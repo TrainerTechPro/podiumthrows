@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { localToday } from "@/lib/utils";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ const EVENT_DISPLAY: Record<string, { label: string; emoji: string }> = {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string): string {
- const today = new Date().toISOString().split("T")[0];
+ const today = localToday();
  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
  if (dateStr === today) return "Today";
  if (dateStr === yesterday) return "Yesterday";
@@ -177,7 +178,7 @@ interface LogSessionFormProps {
 
 function LogSessionForm({ athleteId, onLogged, onCancel }: LogSessionFormProps) {
  const [event, setEvent] = useState("SHOT_PUT");
- const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+ const [date, setDate] = useState(localToday());
  const [implement, setImplement] = useState("");
  const [customImplement, setCustomImplement] = useState("");
  const [throws, setThrows] = useState<string[]>(["", "", "", "", "", ""]);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { localToday } from "@/lib/utils";
 import { EVENTS, SELF_FEELING_OPTIONS, parseEvents, type SelfFeeling } from "@/lib/throws/constants";
 import type { ThrowingBlockConfig, StrengthBlockConfig, WarmupCooldownConfig } from "@/lib/throws/validation";
 
@@ -153,7 +154,7 @@ export default function AthleteThrowsPage() {
  }
  };
 
- const today = new Date().toISOString().split("T")[0];
+ const today = localToday();
  const todaySessions = assignments.filter(
  (a) => a.assignedDate === today && a.status !== "COMPLETED" && a.status !== "SKIPPED"
  );

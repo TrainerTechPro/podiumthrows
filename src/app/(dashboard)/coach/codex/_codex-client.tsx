@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
@@ -67,7 +68,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
   const [implement, setImplement] = useState("");
   const [distance, setDistance] = useState("");
   const [notes, setNotes] = useState("");
-  const [thrownAt, setThrownAt] = useState(new Date().toISOString().split("T")[0]);
+  const [thrownAt, setThrownAt] = useState(localToday());
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
