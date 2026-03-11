@@ -110,11 +110,39 @@
       transition-all duration-150;
   }
 
-  /* Fix native date/time picker icons & popup in dark mode */
+  /* ── Normalize native date/time inputs to match .input ────────────── */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 2.625rem; /* match py-2.5 + text-sm line-height */
+    line-height: 1.25rem;
+  }
+
   .dark input[type="date"],
   .dark input[type="time"],
   .dark input[type="datetime-local"] {
     color-scheme: dark;
+  }
+
+  /* Calendar / clock picker icon — match text color */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+  }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.5;
+  }
+
+  /* Remove inner padding/pseudo-elements Safari adds on iOS */
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
   }
 
   .label {
