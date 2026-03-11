@@ -172,6 +172,12 @@ export function LogSessionWizard({
   const router = useRouter();
   const [step, setStep] = useState<Step>("event");
 
+  function handleClose() {
+    if (step === "done" || confirm("Discard this session?")) {
+      router.push(sessionsPath);
+    }
+  }
+
   // Step 1: Event + Focus
   const [event, setEvent] = useState("");
   const [focus, setFocus] = useState("");
@@ -196,6 +202,14 @@ export function LogSessionWizard({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Response data for done step
+  const [responsePRs, setResponsePRs] = useState<
+    { event: string; implement: string; distance: number; previousBest?: number }[]
+  >([]);
+  const [responseWarnings, setResponseWarnings] = useState<
+    { type: string; message: string; severity: string }[]
+  >([]);
 
   function addDrill() {
     setDrills((prev) => [
@@ -270,6 +284,10 @@ export function LogSessionWizard({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save session");
 
+      // Capture PR and warning data from response
+      if (data.prs?.length) setResponsePRs(data.prs);
+      if (data.warnings?.length) setResponseWarnings(data.warnings);
+
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -278,10 +296,26 @@ export function LogSessionWizard({
     }
   }
 
+  /* ── Close button (shared across steps) ── */
+  const closeButton = step !== "done" && (
+    <button
+      type="button"
+      onClick={handleClose}
+      className="absolute top-0 right-0 p-2 text-muted hover:text-[var(--foreground)] transition-colors"
+      aria-label="Close"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  );
+
   /* ── STEP: Event Selection ── */
   if (step === "event") {
     return (
-      <div className="max-w-lg mx-auto space-y-6 animate-spring-up">
+      <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
+        {closeButton}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={STEP_ORDER} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
@@ -358,7 +392,8 @@ export function LogSessionWizard({
   /* ── STEP: Readiness Check ── */
   if (step === "readiness") {
     return (
-      <div className="max-w-lg mx-auto space-y-6 animate-spring-up">
+      <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
+        {closeButton}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={STEP_ORDER} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
@@ -410,7 +445,8 @@ export function LogSessionWizard({
     const eventDrills = DRILLS_BY_EVENT[event] || [];
 
     return (
-      <div className="max-w-2xl mx-auto space-y-5 animate-spring-up">
+      <div className="relative max-w-2xl mx-auto space-y-5 animate-spring-up">
+        {closeButton}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={STEP_ORDER} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
@@ -536,7 +572,8 @@ export function LogSessionWizard({
   /* ── STEP: Post-Session Feedback ── */
   if (step === "feedback") {
     return (
-      <div className="max-w-lg mx-auto space-y-6 animate-spring-up">
+      <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
+        {closeButton}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={STEP_ORDER} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
@@ -679,6 +716,49 @@ export function LogSessionWizard({
           </p>
         </div>
 
+        {/* PR celebrations */}
+        {responsePRs.length > 0 && (
+          <div className="space-y-2 w-full max-w-sm">
+            {responsePRs.map((pr, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-amber-500 shrink-0">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                    New PR! {pr.distance.toFixed(2)}m
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    {pr.implement}
+                    {pr.previousBest != null && <> (was {pr.previousBest.toFixed(2)}m)</>}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Bondarchuk warnings */}
+        {responseWarnings.length > 0 && (
+          <div className="space-y-2 w-full max-w-sm">
+            {responseWarnings.map((w, i) => (
+              <div
+                key={i}
+                className="flex gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-500 shrink-0 mt-0.5">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                  <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <p className="text-xs text-amber-800 dark:text-amber-300 text-left">{w.message}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-3 justify-center">
           <button
             type="button"
@@ -706,6 +786,8 @@ export function LogSessionWizard({
               setBestPart("");
               setImprovementArea("");
               setSessionNotes("");
+              setResponsePRs([]);
+              setResponseWarnings([]);
             }}
             className="btn-primary"
           >

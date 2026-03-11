@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { checkAndSetCoachPR } from "@/lib/coach-throws";
+import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
 
 /* ── GET — list coach's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -130,7 +132,56 @@ export async function POST(request: NextRequest) {
       include: { drillLogs: true },
     });
 
-    return NextResponse.json({ ok: true, data: created }, { status: 201 });
+    // PR detection: check each drill with implementWeight + bestMark > 0
+    type PRResult = { event: string; implement: string; distance: number; previousBest?: number };
+    const prs: PRResult[] = [];
+    for (const dl of created.drillLogs) {
+      if (dl.implementWeight && dl.bestMark && dl.bestMark > 0) {
+        const result = await checkAndSetCoachPR(
+          coach.id,
+          event,
+          dl.implementWeight,
+          dl.bestMark,
+          new Date(date),
+          created.id,
+          dl.drillType,
+        );
+        if (result.isPersonalBest) {
+          prs.push({
+            event,
+            implement: `${dl.implementWeight}kg`,
+            distance: dl.bestMark,
+            previousBest: result.previousBest,
+          });
+        }
+      }
+    }
+
+    // Bondarchuk validation (competitive mode only)
+    let warnings: BondarchukWarning[] = [];
+    const coachProfile = await prisma.coachProfile.findUnique({
+      where: { id: coach.id },
+      select: { preferences: true },
+    });
+    const prefs = JSON.parse(coachProfile?.preferences || "{}");
+    if (prefs.myTraining?.mode === "competitive") {
+      const throwingBlock: BlockInput = {
+        name: "Throws",
+        blockType: "throwing",
+        exercises: (drills || [])
+          .filter((d: { implementWeight?: number }) => d.implementWeight)
+          .map((d: { drillType: string; implementWeight?: number }) => ({
+            name: d.drillType,
+            implementKg: d.implementWeight,
+          })),
+      };
+      if (throwingBlock.exercises.length > 1) {
+        const result = validateImplementSequence([throwingBlock]);
+        warnings = result.warnings;
+      }
+    }
+
+    return NextResponse.json({ ok: true, data: created, prs, warnings }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/coach/log-session]", err);
     const message = err instanceof Error ? err.message : "Unknown error";

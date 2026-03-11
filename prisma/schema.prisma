@@ -185,7 +185,10 @@ model CoachProfile {
   drillVideos       DrillVideo[]
 
   // Coach self-training
-  selfLoggedSessions CoachThrowsSession[]
+  selfLoggedSessions   CoachThrowsSession[]
+  coachPRs             CoachPR[]
+  coachTyping          CoachTyping?
+  coachTestingRecords  CoachTestingRecord[]
 
   // Utility relations (from TrainingTracker)
   voiceNotes   VoiceNote[]
@@ -1349,6 +1352,90 @@ model CoachDrillLog {
   createdAt       DateTime            @default(now())
 
   @@index([sessionId])
+}
+
+// ─── COACH PERSONAL TRAINING INSIGHTS ────────────────────────────────────────
+
+/// Per (event, implementWeight) PR tracking for coach self-training.
+model CoachPR {
+  id              String       @id @default(cuid())
+  coachId         String
+  coach           CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  event           String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  implement       String // e.g. "7.26kg"
+  distance        Float
+  achievedAt      DateTime     @default(now())
+  sessionId       String?
+  drillType       String?
+  source          String?      @default("session") // "session" | "manual"
+
+  @@unique([coachId, event, implement])
+  @@index([coachId])
+}
+
+/// Bondarchuk typing quiz results for a coach (mirrors athlete ThrowsTyping).
+model CoachTyping {
+  id                String       @id @default(cuid())
+  coachId           String       @unique
+  coach             CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  // Raw quiz responses (JSON arrays of score objects)
+  adaptationSpeedResponses String? @db.Text
+  transferTypeResponses    String? @db.Text
+  selfFeelingResponses     String? @db.Text
+  lightImplResponses       String? @db.Text
+  recoveryResponses        String? @db.Text
+
+  // Computed classification
+  adaptationGroup    Int?    // 1, 2, or 3
+  adaptationLabel    String?
+  adaptationConf     Int?    // confidence 0-100
+  transferType       String? // "heavy-dominant" | "competition-dominant" | "balanced"
+  transferLabel      String?
+  transferConf       Int?
+  selfFeelingAccuracy String? // "accurate" | "moderate" | "poor"
+  selfFeelingLabel   String?
+  selfFeelingConf    Int?
+  lightImplResponse  String? // "normal-87pct" | "tolerant-13pct"
+  lightImplLabel     String?
+  lightImplConf      Int?
+  recoveryProfile    String? // "fast" | "standard" | "slow"
+  recoveryLabel      String?
+  recoveryConf       Int?
+  recommendedMethod  String?
+  methodReason       String? @db.Text
+  complexDuration    String?
+  sessionsToForm     Int?
+
+  completedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Strength / implement testing log for coach self-training.
+model CoachTestingRecord {
+  id              String       @id @default(cuid())
+  coachId         String
+  coach           CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  testDate        String // YYYY-MM-DD
+  event           String? // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  competitionMark Float?
+  heavyImplMark   Float?
+  heavyImplKg     Float?
+  lightImplMark   Float?
+  lightImplKg     Float?
+  squatKg         Float?
+  benchKg         Float?
+  snatchKg        Float?
+  cleanKg         Float?
+  ohpKg           Float?
+  rdlKg           Float?
+  bodyWeightKg    Float?
+  notes           String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId, testDate])
 }
 
 // ─── THROWFLOW — AI BIOMECHANICAL ANALYSIS ──────────────────────────────────

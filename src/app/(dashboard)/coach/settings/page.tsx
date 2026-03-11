@@ -53,6 +53,11 @@ type TabId = "profile" | "billing" | "invitations" | "activity" | "preferences";
 interface CoachPreferences {
   globalDefaultPage?: string;
   workspaceDefaults?: Record<string, string>;
+  myTraining?: {
+    mode?: "competitive" | "recreational";
+    primaryEvent?: string;
+    gender?: "male" | "female";
+  };
 }
 
 const PLAN_LIMITS: Record<string, number> = {
@@ -826,7 +831,16 @@ export default function CoachSettingsPage() {
             <div className="card">
               <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Sent Invitations</h2>
               {invitations.length === 0 ? (
-                <p className="text-sm text-[var(--color-text-2)]">No invitations sent yet.</p>
+                <div className="flex flex-col items-center text-center py-8 gap-2">
+                  <div className="text-surface-300 dark:text-surface-600">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">No invitations sent</p>
+                  <p className="text-xs text-muted max-w-[220px]">Invite athletes from the Athletes page to grow your roster.</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {invitations.map((inv) => (
@@ -881,7 +895,15 @@ export default function CoachSettingsPage() {
             <div className="card">
               <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Recent Activity</h2>
               {activities.length === 0 ? (
-                <p className="text-sm text-[var(--color-text-2)]">No activity recorded yet.</p>
+                <div className="flex flex-col items-center text-center py-8 gap-2">
+                  <div className="text-surface-300 dark:text-surface-600">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">No activity yet</p>
+                  <p className="text-xs text-muted max-w-[220px]">Account actions like sign-ins and athlete changes will appear here.</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {activities.map((act) => (
@@ -996,6 +1018,106 @@ export default function CoachSettingsPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* My Training */}
+            <div className="card">
+              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-1">My Training</h2>
+              <p className="text-sm text-[var(--color-text-2)] mb-5">
+                Configure your personal training preferences for the My Training section.
+              </p>
+
+              <div className="space-y-5">
+                {/* Training Mode */}
+                <div>
+                  <p className="label mb-3">Training Mode</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {([
+                      { value: "competitive", label: "Competitive", desc: "Full Bondarchuk validation, sequencing rules enforced" },
+                      { value: "recreational", label: "Recreational", desc: "No sequencing warnings, casual training focus" },
+                    ] as const).map((mode) => (
+                      <label
+                        key={mode.value}
+                        className={`flex items-start gap-2.5 p-3 rounded-xl cursor-pointer transition-colors ${
+                          (preferences.myTraining?.mode ?? "recreational") === mode.value
+                            ? "bg-[rgba(212,168,67,0.08)] border border-[var(--color-gold)]/30"
+                            : "border border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="trainingMode"
+                          value={mode.value}
+                          checked={(preferences.myTraining?.mode ?? "recreational") === mode.value}
+                          onChange={() =>
+                            handleSavePreferences({
+                              myTraining: { ...preferences.myTraining, mode: mode.value },
+                            })
+                          }
+                          className="mt-0.5"
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-[var(--color-text)]">{mode.label}</p>
+                          <p className="text-xs text-[var(--color-text-3)]">{mode.desc}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Primary Event */}
+                <div>
+                  <label className="label">Primary Event</label>
+                  <select
+                    value={preferences.myTraining?.primaryEvent ?? ""}
+                    onChange={(e) =>
+                      handleSavePreferences({
+                        myTraining: { ...preferences.myTraining, primaryEvent: e.target.value || undefined },
+                      })
+                    }
+                    className="input max-w-xs"
+                  >
+                    <option value="">Not set</option>
+                    <option value="SHOT_PUT">Shot Put</option>
+                    <option value="DISCUS">Discus</option>
+                    <option value="HAMMER">Hammer</option>
+                    <option value="JAVELIN">Javelin</option>
+                  </select>
+                </div>
+
+                {/* Gender */}
+                <div>
+                  <p className="label mb-3">Gender (for competition weight calculations)</p>
+                  <div className="flex gap-3">
+                    {([
+                      { value: "male", label: "Male" },
+                      { value: "female", label: "Female" },
+                    ] as const).map((g) => (
+                      <label
+                        key={g.value}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-colors ${
+                          (preferences.myTraining?.gender ?? "male") === g.value
+                            ? "bg-[rgba(212,168,67,0.08)] border border-[var(--color-gold)]/30"
+                            : "border border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="trainingGender"
+                          value={g.value}
+                          checked={(preferences.myTraining?.gender ?? "male") === g.value}
+                          onChange={() =>
+                            handleSavePreferences({
+                              myTraining: { ...preferences.myTraining, gender: g.value },
+                            })
+                          }
+                        />
+                        <span className="text-sm font-medium text-[var(--color-text)]">{g.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

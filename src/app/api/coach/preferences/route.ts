@@ -13,6 +13,11 @@ export interface CoachPreferences {
   globalDefaultPage?: string;
   workspaceDefaults?: Record<string, string>;
   dashboardLayout?: { widgets: { id: string; visible: boolean; order: number }[] };
+  myTraining?: {
+    mode?: "competitive" | "recreational";
+    primaryEvent?: string;
+    gender?: "male" | "female";
+  };
 }
 
 function parsePreferences(raw: string | null): CoachPreferences {
@@ -71,6 +76,9 @@ export async function PUT(request: NextRequest) {
         ? { workspaceDefaults: { ...current.workspaceDefaults, ...body.workspaceDefaults } }
         : {}),
       ...(body.dashboardLayout !== undefined ? { dashboardLayout: body.dashboardLayout } : {}),
+      ...(body.myTraining !== undefined
+        ? { myTraining: { ...current.myTraining, ...body.myTraining } }
+        : {}),
     };
 
     await prisma.coachProfile.update({

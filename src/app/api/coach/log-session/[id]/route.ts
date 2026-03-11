@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { recalculateCoachPRs } from "@/lib/coach-throws";
 
 /* ── GET — single coach session detail ── */
 export async function GET(
@@ -58,14 +59,33 @@ export async function DELETE(
 
     const entry = await prisma.coachThrowsSession.findUnique({
       where: { id: params.id },
-      select: { coachId: true },
+      select: {
+        coachId: true,
+        event: true,
+        drillLogs: { select: { implementWeight: true } },
+      },
     });
 
     if (!entry || entry.coachId !== coach.id) {
       return NextResponse.json({ error: "Not found or unauthorized" }, { status: 404 });
     }
 
+    // Collect affected implements before deletion
+    const affectedImplements = [
+      ...new Set(
+        entry.drillLogs
+          .map((dl) => dl.implementWeight)
+          .filter((w): w is number => w != null)
+      ),
+    ];
+
     await prisma.coachThrowsSession.delete({ where: { id: params.id } });
+
+    // Recalculate PRs for affected (event, implement) pairs
+    if (affectedImplements.length > 0) {
+      await recalculateCoachPRs(coach.id, entry.event, affectedImplements);
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[DELETE /api/coach/log-session/[id]]", err);
