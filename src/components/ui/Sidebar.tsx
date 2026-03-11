@@ -222,6 +222,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
   {
     title: "My Training",
     items: [
+      { label: "My Program", href: "/coach/my-program", icon: <Zap {...iconSize} />, matchPaths: ["/coach/my-program"] },
       { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
       { label: "My Training Log", href: "/coach/my-training", icon: <Target {...iconSize} /> },
     ],
