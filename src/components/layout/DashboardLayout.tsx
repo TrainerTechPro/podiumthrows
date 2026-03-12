@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, ReactNode, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useRef, useEffect, ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Sun, Moon, Menu, X } from "lucide-react";
+import { Sun, Moon, Menu, X, LogOut } from "lucide-react";
 import {
   Sidebar,
   COACH_NAV_SECTIONS,
@@ -136,6 +136,63 @@ function SidebarFooter({ user }: { user: DashboardUser }) {
   );
 }
 
+/* ─── User menu (avatar + logout dropdown) ────────────────────────────── */
+
+function UserMenu({ user }: { user: DashboardUser }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  // Close on click outside
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch { /* proceed anyway */ }
+    router.push("/login");
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        aria-label="User menu"
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        <Avatar name={user.name} src={user.avatarUrl} size="sm" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1.5 w-48 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] shadow-lg py-1 z-50">
+          <div className="px-3 py-2 border-b border-[var(--card-border)]">
+            <p className="text-sm font-medium text-[var(--foreground)] truncate">{user.name}</p>
+            <p className="text-xs text-muted truncate">{user.email}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+          >
+            <LogOut size={16} strokeWidth={2} aria-hidden="true" />
+            Log out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Top bar ────────────────────────────────────────────────────────────── */
 
 function TopBar({
@@ -179,10 +236,8 @@ function TopBar({
       {/* Theme toggle */}
       <ThemeToggle />
 
-      {/* User avatar (mobile) */}
-      <div className="lg:hidden">
-        <Avatar name={user.name} src={user.avatarUrl} size="sm" />
-      </div>
+      {/* User menu */}
+      <UserMenu user={user} />
     </header>
   );
 }
