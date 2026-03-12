@@ -23,7 +23,7 @@ export default function SessionDetailPage() {
   const loadSession = useCallback(async () => {
     if (!sessionId) return;
     try {
-      const progRes = await fetch("/api/throws/program");
+      const progRes = await fetch("/api/coach/my-program");
       if (!progRes.ok) {
         dispatch({ type: "SET_ERROR", payload: "Could not load program" });
         return;
