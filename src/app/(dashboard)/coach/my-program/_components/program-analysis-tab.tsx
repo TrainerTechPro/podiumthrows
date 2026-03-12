@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import ExerciseCorrelationTable from "./exercise-correlation-table";
 import VolumeMarkOverlay from "./volume-mark-overlay";
 import PhaseComparisonPanel from "./phase-comparison-panel";
+import AdaptationIntelligencePanel from "./adaptation-intelligence-panel";
 
 interface ProgramAnalysisTabProps {
   programId?: string;
@@ -54,6 +55,7 @@ async function safeFetchJson(url: string, signal?: AbortSignal): Promise<{ ok: b
 }
 
 export default function ProgramAnalysisTab({
+  programId,
   phases,
   analyticsData: prefetchedAnalytics,
 }: ProgramAnalysisTabProps) {
@@ -212,6 +214,13 @@ export default function ProgramAnalysisTab({
         </p>
         <PhaseComparisonPanel phases={phaseStats} />
       </section>
+
+      {/* Adaptation Intelligence */}
+      {programId && (
+        <section>
+          <AdaptationIntelligencePanel programId={programId} />
+        </section>
+      )}
     </div>
   );
 }

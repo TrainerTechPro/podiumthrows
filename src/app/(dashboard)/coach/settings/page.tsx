@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useToast } from "@/components/toast";
 import { useAccessibility } from "@/components/accessibility-provider";
 import dynamic from "next/dynamic";
@@ -438,6 +439,12 @@ export default function CoachSettingsPage() {
               {tab.label}
             </button>
           ))}
+          <Link
+            href="/coach/settings/autoregulation"
+            className="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap text-center text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+          >
+            Autoregulation
+          </Link>
         </div>
 
         {/* Profile Tab */}

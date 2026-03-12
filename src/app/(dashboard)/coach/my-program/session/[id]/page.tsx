@@ -146,6 +146,51 @@ export default function SessionDetailPage() {
   }
 
   function handleAdvanceBlock() {
+    // Trigger intra-eval when completing block 1 (index 0)
+    if (state.currentBlockIndex === 0 && state.session) {
+      const blockBestMark = computed.currentBlockBest;
+      if (blockBestMark == null || blockBestMark <= 0) {
+        // No mark recorded — skip evaluation
+        dispatch({
+          type: "INTRA_EVAL_RESULT",
+          payload: { suggestion: null, applied: false },
+        });
+      } else {
+        dispatch({ type: "INTRA_EVAL_START" });
+        fetch(
+          `/api/throws/session/${state.session.id}/intra-evaluate`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              blockNumber: 1,
+              blockBestMark,
+            }),
+          },
+        )
+          .then((res) => {
+            if (!res.ok) throw new Error("intra-eval failed");
+            return res.json();
+          })
+          .then((json) => {
+            const data = json?.data;
+            dispatch({
+              type: "INTRA_EVAL_RESULT",
+              payload: {
+                suggestion: data?.suggestion ?? null,
+                applied: data?.applied ?? false,
+              },
+            });
+          })
+          .catch(() => {
+            dispatch({
+              type: "INTRA_EVAL_RESULT",
+              payload: { suggestion: null, applied: false },
+            });
+          });
+      }
+    }
+
     dispatch({ type: "ADVANCE_BLOCK" });
   }
 
@@ -249,6 +294,7 @@ export default function SessionDetailPage() {
       {/* Sticky progress header */}
       <SessionProgressHeader
         state={state}
+        dispatch={dispatch}
         totalThrowsLogged={computed.totalThrowsLogged}
         totalThrowBlocks={computed.totalThrowBlocks}
         overallProgress={computed.overallProgress}

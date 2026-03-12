@@ -108,6 +108,22 @@ export interface LiftEntry {
 
 export type WorkflowPhase = "warmup" | "throws" | "strength" | "complete" | "summary";
 
+// ── Intra-eval types ──────────────────────────────────────────────────
+
+export type IntraEvalStatus = "idle" | "evaluating" | "suggestion_pending" | "applied" | "none";
+
+export interface IntraEvalSuggestion {
+  id: string;
+  reasoning: string;
+  suggestedChange: Record<string, unknown>;
+  autoApplied: boolean;
+}
+
+export interface IntraEvalState {
+  status: IntraEvalStatus;
+  suggestion: IntraEvalSuggestion | null;
+}
+
 // ── State ─────────────────────────────────────────────────────────────
 
 export interface SessionState {
@@ -148,6 +164,9 @@ export interface SessionState {
   // UI flags
   showCompletionSheet: boolean;
   submitting: boolean;
+
+  // Intra-session evaluation
+  intraEval: IntraEvalState;
 }
 
 // ── Actions ───────────────────────────────────────────────────────────
@@ -174,7 +193,10 @@ export type SessionAction =
   | { type: "SET_MODIFICATION_NOTES"; payload: string }
   | { type: "SHOW_COMPLETION_SHEET"; payload: boolean }
   | { type: "SET_SUBMITTING"; payload: boolean }
-  | { type: "SESSION_COMPLETED" };
+  | { type: "SESSION_COMPLETED" }
+  | { type: "INTRA_EVAL_START" }
+  | { type: "INTRA_EVAL_RESULT"; payload: { suggestion: IntraEvalSuggestion | null; applied: boolean } }
+  | { type: "INTRA_EVAL_DISMISS" };
 
 // ── Initial State ────────────────────────────────────────────────────
 
@@ -198,6 +220,7 @@ export const initialState: SessionState = {
   modificationNotes: "",
   showCompletionSheet: false,
   submitting: false,
+  intraEval: { status: "idle", suggestion: null },
 };
 
 // ── Reducer ───────────────────────────────────────────────────────────
@@ -364,6 +387,23 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
 
     case "SESSION_COMPLETED":
       return { ...state, currentPhase: "summary", showCompletionSheet: false, submitting: false };
+
+    case "INTRA_EVAL_START":
+      return { ...state, intraEval: { status: "evaluating", suggestion: null } };
+
+    case "INTRA_EVAL_RESULT": {
+      const { suggestion, applied } = action.payload;
+      if (applied && suggestion) {
+        return { ...state, intraEval: { status: "applied", suggestion } };
+      }
+      if (suggestion) {
+        return { ...state, intraEval: { status: "suggestion_pending", suggestion } };
+      }
+      return { ...state, intraEval: { status: "none", suggestion: null } };
+    }
+
+    case "INTRA_EVAL_DISMISS":
+      return { ...state, intraEval: { status: "idle", suggestion: null } };
 
     default:
       return state;
