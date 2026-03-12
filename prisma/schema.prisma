@@ -2120,9 +2120,13 @@ model AutoregulationSettings {
   coachId   String
   athleteId String? // null = coach-global default; non-null = athlete override
 
-  weekToWeek      String @default("SUGGEST") // AUTO | SUGGEST | OFF
-  blockToBlock    String @default("SUGGEST") // AUTO | SUGGEST | OFF
-  programToProgram String @default("SUGGEST") // AUTO | SUGGEST | OFF
+  mode             String @default("NOTIFY") // OFF | NOTIFY | AUTO | APPROVAL_REQUIRED
+  timescalesJson   String @default("{\"intraSession\":true,\"sessionToSession\":true,\"weekToWeek\":true,\"blockToBlock\":true,\"programToProgram\":true}")
+
+  // Legacy per-timescale mode columns (kept for resolve-settings compatibility)
+  weekToWeek       String @default("SUGGEST")
+  blockToBlock     String @default("SUGGEST")
+  programToProgram String @default("SUGGEST")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
