@@ -32,7 +32,12 @@ export function verifyTokenEdge(token: string): JWTPayload | null {
     // Honour expiry
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
 
-    return payload as JWTPayload;
+    return {
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+      ...(payload.isAdmin ? { isAdmin: true } : {}),
+    } as JWTPayload;
   } catch {
     return null;
   }

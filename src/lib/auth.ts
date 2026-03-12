@@ -13,6 +13,7 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: "COACH" | "ATHLETE";
+  isAdmin?: boolean;
 }
 
 export async function hashPassword(password: string): Promise<string> {

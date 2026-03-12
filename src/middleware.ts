@@ -36,8 +36,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Role-based route protection
-  if (payload) {
+  // Role-based route protection (admins bypass)
+  if (payload && !payload.isAdmin) {
     // Coach trying to access athlete routes
     if (pathname.startsWith("/athlete") && payload.role !== "ATHLETE") {
       return NextResponse.redirect(new URL("/coach/dashboard", request.url));

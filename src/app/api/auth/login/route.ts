@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
+      select: { id: true, email: true, role: true, passwordHash: true, isAdmin: true },
     });
 
     if (!user) {
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      ...(user.isAdmin ? { isAdmin: true } : {}),
     });
 
     const response = NextResponse.json({

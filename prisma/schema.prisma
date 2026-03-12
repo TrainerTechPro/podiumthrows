@@ -129,6 +129,7 @@ model User {
   email        String   @unique
   passwordHash String
   role         UserRole
+  isAdmin      Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
