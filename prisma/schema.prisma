@@ -2071,6 +2071,66 @@ model AdaptationCheckpoint {
   @@index([programId, recommendation, applied])
 }
 
+// ─── AUTOREGULATION ──────────────────────────────────────────────────────────
+
+/// A coach-reviewable suggestion produced by the autoregulation engine.
+/// Created at week-to-week, block-to-block, and program-to-program boundaries.
+model AutoregulationSuggestion {
+  id           String    @id @default(cuid())
+  programId    String
+  athleteId    String?
+  checkpointId String?   // FK to AdaptationCheckpoint (block-to-block only)
+
+  timescale       String // WEEK_TO_WEEK | BLOCK_TO_BLOCK | PROGRAM_TO_PROGRAM
+  status          String    @default("PENDING") // PENDING | APPROVED | REJECTED | AUTO_APPROVED
+  suggestedChange String    // JSON
+  reasoning       String
+
+  expiresAt    DateTime
+  autoApproveAt DateTime? // set for AUTO mode; cron auto-approves at this time
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([programId])
+  @@index([athleteId])
+  @@index([status, autoApproveAt])
+}
+
+/// Carries forward program-level context when a program completes.
+/// Consumed by the next program's generation to personalise starting complex/phase.
+model ProgramCarryforward {
+  id                     String  @id @default(cuid())
+  completedProgramId     String  @unique
+  athleteId              String
+  coachId                String?
+  previousProgramContext String  // JSON: PreviousProgramContext
+  consumed               Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([athleteId])
+  @@index([coachId])
+}
+
+/// Per-coach (optionally per-athlete) autoregulation preferences.
+/// Controls whether the engine runs in AUTO, SUGGEST, or OFF mode per timescale.
+model AutoregulationSettings {
+  id        String  @id @default(cuid())
+  coachId   String
+  athleteId String? // null = coach-global default; non-null = athlete override
+
+  weekToWeek      String @default("SUGGEST") // AUTO | SUGGEST | OFF
+  blockToBlock    String @default("SUGGEST") // AUTO | SUGGEST | OFF
+  programToProgram String @default("SUGGEST") // AUTO | SUGGEST | OFF
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([coachId, athleteId])
+  @@index([coachId])
+}
+
 // ─── LEAD CAPTURE ────────────────────────────────────────────────────────────
 
 /// Captured from squeeze pages and lead magnets.

@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { canAccessProgram } from "@/lib/authorize";
 import { checkAdaptation } from "@/lib/throws/engine";
 import type { AdaptationCheckParams } from "@/lib/throws/engine";
+import { triggerBlockToBlock } from "@/lib/throws/autoregulation/triggers/block-to-block";
 
 interface Params {
   params: Promise<{ programId: string }>;
@@ -212,7 +213,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         })
       : undefined;
 
-    // Save checkpoint
+    // Save checkpoint (include program relation for autoregulation trigger)
     const checkpoint = await prisma.adaptationCheckpoint.create({
       data: {
         programId,
@@ -231,7 +232,15 @@ export async function POST(req: NextRequest, { params }: Params) {
         applied: false,
         feedbackData,
       },
+      include: { program: true },
     });
+
+    // Fire block-to-block autoregulation trigger (non-blocking)
+    try {
+      await triggerBlockToBlock(checkpoint, prisma);
+    } catch (err) {
+      console.error("[autoregulation] block-to-block trigger failed:", err);
+    }
 
     return NextResponse.json({
       success: true,
