@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import HeroMask from "@/components/marketing/hero-mask";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SQUEEZE PAGE — podiumthrows.com
@@ -69,17 +70,12 @@ export default function HomePage() {
       <section className="flex-1 flex items-center relative" aria-label="Hero">
         <div className="max-w-[1200px] mx-auto px-6 sm:px-10 w-full py-20 sm:py-28 lg:py-36">
 
-          {/* Oversized stat as background texture */}
+          {/* Interactive athlete silhouette — hover to reveal discus thrower */}
           <div
-            className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none select-none hidden lg:block"
-            aria-hidden="true"
+            className="absolute right-0 top-1/2 -translate-y-1/2 hidden lg:block"
+            style={{ width: "clamp(22rem, 36vw, 32rem)", height: "clamp(28rem, 45vw, 40rem)" }}
           >
-            <span
-              className="font-heading font-black text-[#e8e4dc]/[0.02] leading-none block"
-              style={{ fontSize: "clamp(18rem, 30vw, 28rem)", letterSpacing: "-0.04em" }}
-            >
-              2–4
-            </span>
+            <HeroMask />
           </div>
 
           <div className="relative max-w-3xl">
