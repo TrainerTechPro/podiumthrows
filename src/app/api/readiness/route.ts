@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, ReadinessCheckInSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,7 +26,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const parsed = await parseBody(req, ReadinessCheckInSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       sleepQuality,
       sleepHours,
@@ -37,18 +39,7 @@ export async function POST(req: NextRequest) {
       injuryStatus,
       injuryNotes,
       notes,
-    } = body as Record<string, unknown>;
-
-    const fields = { sleepQuality, sleepHours, soreness, stressLevel, energyMood };
-    for (const [key, val] of Object.entries(fields)) {
-      if (typeof val !== "number" || val < 1 || (key !== "sleepHours" && val > 10)) {
-        return NextResponse.json({ error: `Invalid value for ${key}.` }, { status: 400 });
-      }
-    }
-
-    if (!["POOR", "ADEQUATE", "GOOD"].includes(hydration as string)) {
-      return NextResponse.json({ error: "Invalid hydration value." }, { status: 400 });
-    }
+    } = parsed;
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
@@ -65,15 +56,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const sleepHoursScore = Math.min(10, Math.max(1, ((sleepHours as number) - 4) * 2));
+    const sleepHoursScore = Math.min(10, Math.max(1, (sleepHours - 4) * 2));
     const hydrationScore = hydration === "GOOD" ? 9 : hydration === "ADEQUATE" ? 6 : 3;
     const overallScore =
       Math.round(
-        ((sleepQuality as number) * 0.15 +
+        (sleepQuality * 0.15 +
           sleepHoursScore * 0.1 +
-          (soreness as number) * 0.25 +
-          (stressLevel as number) * 0.2 +
-          (energyMood as number) * 0.2 +
+          soreness * 0.25 +
+          stressLevel * 0.2 +
+          energyMood * 0.2 +
           hydrationScore * 0.1) *
           10
       ) / 10;
@@ -82,19 +73,16 @@ export async function POST(req: NextRequest) {
       data: {
         athleteId: athlete.id,
         overallScore,
-        sleepQuality: sleepQuality as number,
-        sleepHours: sleepHours as number,
-        soreness: soreness as number,
-        sorenessArea: typeof sorenessArea === "string" ? sorenessArea : null,
-        stressLevel: stressLevel as number,
-        energyMood: energyMood as number,
+        sleepQuality,
+        sleepHours,
+        soreness,
+        sorenessArea: sorenessArea?.trim() || null,
+        stressLevel,
+        energyMood,
         hydration: hydration as never,
-        injuryStatus:
-          (["NONE", "MONITORING", "ACTIVE"].includes(injuryStatus as string)
-            ? injuryStatus
-            : "NONE") as never,
-        injuryNotes: typeof injuryNotes === "string" ? injuryNotes.trim() || null : null,
-        notes: typeof notes === "string" ? notes.trim() || null : null,
+        injuryStatus: injuryStatus as never,
+        injuryNotes: injuryNotes?.trim() || null,
+        notes: notes?.trim() || null,
       },
       select: { id: true, overallScore: true, date: true },
     });

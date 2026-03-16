@@ -4,18 +4,19 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { calculateFormScores } from "@/lib/forms/scoring-engine";
 import type { FormBlock, ScoringConfig } from "@/lib/forms/types";
+import { validateAllAnswers } from "@/lib/forms/validation";
 import { parseBody, QuestionnaireSubmissionSchema } from "@/lib/api-schemas";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { athlete } = await requireAthleteSession();
     const questionnaire = await getQuestionnaireForFill(params.id, athlete.id);
 
     if (!questionnaire) {
-      return NextResponse.json({ error: "Questionnaire not found or not assigned" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Questionnaire not found or not assigned" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ questionnaire });
@@ -24,10 +25,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { athlete } = await requireAthleteSession();
 
@@ -62,10 +60,7 @@ export async function POST(
     });
 
     if (!questionnaire || questionnaire.status !== "published") {
-      return NextResponse.json(
-        { error: "Questionnaire not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(req, QuestionnaireSubmissionSchema);
@@ -86,19 +81,16 @@ export async function POST(
 
       const answersRecord = answers as Record<string, unknown>;
 
-      // Validate required blocks (skip layout-only types)
-      const LAYOUT_TYPES = new Set(["welcome_screen", "thank_you_screen", "section_header"]);
-      for (const block of blocks) {
-        if (LAYOUT_TYPES.has(block.type)) continue;
-        if ((block as { required?: boolean }).required) {
-          const val = answersRecord[block.id];
-          if (val === undefined || val === null || val === "") {
-            return NextResponse.json(
-              { error: `Required field "${block.label}" must be answered` },
-              { status: 400 }
-            );
-          }
-        }
+      // Server-side re-validation: required checks + type-specific validation
+      // (email format, number ranges, scale bounds, option membership, etc.)
+      // validateAnswer already skips layout blocks, so pass all block IDs
+      const allBlockIds = blocks.map((b) => b.id);
+      const validationErrors = validateAllAnswers(blocks, answersRecord, allBlockIds);
+      if (validationErrors.length > 0) {
+        return NextResponse.json(
+          { error: "Validation failed", fieldErrors: validationErrors },
+          { status: 400 }
+        );
       }
 
       // Enrich answers with block metadata for historical record
@@ -118,10 +110,7 @@ export async function POST(
 
       // Calculate scores if enabled
       let scores: unknown = null;
-      if (
-        questionnaire.scoringEnabled &&
-        questionnaire.scoringRules
-      ) {
+      if (questionnaire.scoringEnabled && questionnaire.scoringRules) {
         const scoringConfig = questionnaire.scoringRules as unknown as ScoringConfig;
         scores = calculateFormScores(answersRecord, blocks, scoringConfig);
       }
@@ -154,10 +143,7 @@ export async function POST(
 
     // ── Legacy question-based form submission ─────────────────────────────
     if (!Array.isArray(answers)) {
-      return NextResponse.json(
-        { error: "Answers must be an array" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Answers must be an array" }, { status: 400 });
     }
 
     const questions = questionnaire.questions as Array<{
@@ -167,14 +153,17 @@ export async function POST(
       required?: boolean;
     }>;
 
-    const answerMap = new Map(
-      answers.map((a: { questionId: string }) => [a.questionId, a])
-    );
+    const answerMap = new Map(answers.map((a: { questionId: string }) => [a.questionId, a]));
 
     for (const q of questions) {
       if (q.required) {
         const answer = answerMap.get(q.id) as { answer?: unknown } | undefined;
-        if (!answer || answer.answer === undefined || answer.answer === null || answer.answer === "") {
+        if (
+          !answer ||
+          answer.answer === undefined ||
+          answer.answer === null ||
+          answer.answer === ""
+        ) {
           return NextResponse.json(
             { error: `Required question "${q.text}" must be answered` },
             { status: 400 }
