@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { calculateFormScores } from "@/lib/forms/scoring-engine";
 import type { FormBlock, ScoringConfig } from "@/lib/forms/types";
+import { parseBody, QuestionnaireSubmissionSchema } from "@/lib/api-schemas";
 
 export async function GET(
   _req: NextRequest,
@@ -67,8 +68,9 @@ export async function POST(
       );
     }
 
-    const body = await req.json();
-    const { answers, durationSeconds } = body;
+    const parsed = await parseBody(req, QuestionnaireSubmissionSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { answers, durationSeconds } = parsed;
 
     const blocks = questionnaire.blocks as FormBlock[] | null;
     const hasBlocks = blocks && blocks.length > 0;

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { verifyPassword, signToken, setAuthCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { parseBody, LoginSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,15 +17,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { email, password } = body;
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, LoginSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { email, password } = parsed;
 
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },

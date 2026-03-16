@@ -5,6 +5,7 @@ import { sendPasswordResetEmail } from "@/lib/email";
 import { storeToken } from "@/lib/resetTokenStore";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { parseBody, ForgotPasswordSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,15 +19,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { email } = body;
-
-    if (!email) {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, ForgotPasswordSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { email } = parsed;
 
     // Always return success to prevent email enumeration
     const successResponse = NextResponse.json({

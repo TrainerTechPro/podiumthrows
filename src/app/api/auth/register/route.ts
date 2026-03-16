@@ -4,6 +4,7 @@ import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
+import { parseBody, RegisterSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,30 +18,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { email, password, firstName, lastName, role, inviteToken, leadId, plan, interval } = body;
-
-    // Validate required fields
-    if (!email || !password || !firstName || !lastName || !role) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 }
-      );
-    }
-
-    if (!["COACH", "ATHLETE"].includes(role)) {
-      return NextResponse.json(
-        { error: "Role must be COACH or ATHLETE" },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, RegisterSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { email, password, firstName, lastName, role, inviteToken, leadId, plan, interval } = parsed;
 
     const normalizedEmail = email.toLowerCase().trim();
 

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession, SALT_ROUNDS } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limit";
+import { PasswordChangeSchema, CoachProfileUpdateSchema } from "@/lib/api-schemas";
 
 export async function GET() {
   try {
@@ -70,10 +71,31 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON body" },
+        { status: 400 },
+      );
+    }
 
     // Password change
-    if (body.currentPassword && body.newPassword) {
+    if (body.currentPassword || body.newPassword) {
+      const result = PasswordChangeSchema.safeParse(body);
+      if (!result.success) {
+        const fieldErrors = result.error.issues.map((i) => ({
+          field: i.path.join(".") || "_body",
+          message: i.message,
+        }));
+        return NextResponse.json(
+          { success: false, error: "Validation failed", fieldErrors },
+          { status: 400 },
+        );
+      }
+      const { currentPassword, newPassword } = result.data;
+
       // Rate limit password changes: 5 per minute per user
       const rl = await rateLimit(`change-password:${session.userId}`, { maxAttempts: 5, windowMs: 60_000 });
       if (!rl.success) {
@@ -90,11 +112,11 @@ export async function PATCH(request: NextRequest) {
       if (!user) {
         return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
       }
-      const valid = await bcrypt.compare(body.currentPassword, user.passwordHash);
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!valid) {
         return NextResponse.json({ success: false, error: "Current password is incorrect" }, { status: 400 });
       }
-      const hash = await bcrypt.hash(body.newPassword, SALT_ROUNDS);
+      const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
       await prisma.user.update({
         where: { id: session.userId },
         data: { passwordHash: hash },
@@ -104,11 +126,23 @@ export async function PATCH(request: NextRequest) {
 
     // Profile update (coach)
     if (session.role === "COACH") {
+      const result = CoachProfileUpdateSchema.safeParse(body);
+      if (!result.success) {
+        const fieldErrors = result.error.issues.map((i) => ({
+          field: i.path.join(".") || "_body",
+          message: i.message,
+        }));
+        return NextResponse.json(
+          { success: false, error: "Validation failed", fieldErrors },
+          { status: 400 },
+        );
+      }
+      const profileData = result.data;
       const updateData: Record<string, string> = {};
-      if (body.firstName !== undefined) updateData.firstName = body.firstName;
-      if (body.lastName !== undefined) updateData.lastName = body.lastName;
-      if (body.bio !== undefined) updateData.bio = body.bio;
-      if (body.organization !== undefined) updateData.organization = body.organization;
+      if (profileData.firstName !== undefined) updateData.firstName = profileData.firstName;
+      if (profileData.lastName !== undefined) updateData.lastName = profileData.lastName;
+      if (profileData.bio !== undefined) updateData.bio = profileData.bio;
+      if (profileData.organization !== undefined) updateData.organization = profileData.organization;
 
       if (Object.keys(updateData).length > 0) {
         await prisma.coachProfile.update({

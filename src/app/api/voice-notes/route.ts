@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessSession } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, VoiceNoteCreateSchema } from "@/lib/api-schemas";
 
 export async function GET(request: NextRequest) {
   try {
@@ -91,23 +92,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { audioData, duration, sessionId, transcription } = body;
-
-    if (!audioData || !duration) {
-      return NextResponse.json(
-        { success: false, error: "audioData and duration are required" },
-        { status: 400 }
-      );
-    }
-
-    // Limit audio to ~5MB base64 (~3.75MB decoded)
-    if (typeof audioData === "string" && audioData.length > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { success: false, error: "Audio data exceeds 5MB limit" },
-        { status: 413 }
-      );
-    }
+    const parsed = await parseBody(request, VoiceNoteCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { audioData, duration, sessionId, transcription } = parsed;
 
     let coachId: string | null = null;
     let athleteId: string | null = null;

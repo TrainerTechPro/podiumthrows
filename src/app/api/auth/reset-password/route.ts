@@ -4,6 +4,7 @@ import { hashPassword } from "@/lib/auth";
 import { getToken, deleteToken } from "@/lib/resetTokenStore";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { parseBody, ResetPasswordSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,22 +18,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { token, password } = body;
-
-    if (!token || !password) {
-      return NextResponse.json(
-        { error: "Token and new password are required" },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, ResetPasswordSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { token, password } = parsed;
 
     // Validate token (checks expiry and usedAt)
     const tokenData = await getToken(token);
