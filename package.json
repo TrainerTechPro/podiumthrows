@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "build:check": "npm run typecheck && npm run lint && npm run test",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -63,6 +64,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@remotion/cli": "^4.0.434",
     "@remotion/google-fonts": "^4.0.434",
     "@remotion/transitions": "^4.0.434",
