@@ -6,6 +6,8 @@ import { PricingPageClient, FeatureMatrix, FAQAccordion } from "./_pricing-clien
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+export const revalidate = 3600; // ISR: regenerate every hour
+
 export const metadata: Metadata = {
   title: "Pricing — Podium Throws",
   description:

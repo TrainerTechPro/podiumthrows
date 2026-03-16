@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+export const revalidate = 86400; // ISR: regenerate daily
+
 export const metadata: Metadata = {
   title: "Terms of Service — Podium Throws",
 };

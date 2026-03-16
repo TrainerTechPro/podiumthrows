@@ -10,6 +10,8 @@ import HeroMaskReveal from "@/components/marketing/HeroMaskReveal";
    No pricing. No feature lists. No distractions.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+export const revalidate = 3600; // ISR: regenerate every hour
+
 export const metadata: Metadata = {
   title: "Find Your Thrower's Hidden Deficit — Podium Throws",
   description:
