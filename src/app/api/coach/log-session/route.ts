@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { checkAndSetCoachPR } from "@/lib/coach-throws";
 import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: sessions });
   } catch (err) {
-    console.error("[GET /api/coach/log-session]", err);
+    logger.error("GET /api/coach/log-session", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
   }
 }
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: created, prs, warnings }, { status: 201 });
   } catch (err) {
-    console.error("[POST /api/coach/log-session]", err);
+    logger.error("POST /api/coach/log-session", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: `Failed: ${message}` }, { status: 500 });
   }

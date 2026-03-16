@@ -47,7 +47,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     try {
       await triggerProgramToProgram(completedProgram, prisma);
     } catch (err) {
-      console.error("[autoregulation] program-to-program trigger failed:", err);
+      logger.error("autoregulation program-to-program trigger failed", { context: "api", error: err });
     }
 
     return NextResponse.json({

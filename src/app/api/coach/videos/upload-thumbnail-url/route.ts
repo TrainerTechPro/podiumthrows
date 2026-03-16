@@ -6,6 +6,7 @@ import {
   getPresignedUploadUrl,
   getPublicUrl,
 } from "@/lib/storage";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[upload-thumbnail-url] Error:", err);
+    logger.error("upload-thumbnail-url Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

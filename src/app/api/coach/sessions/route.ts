@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ─── POST — assign plan to athletes as training sessions ────────────────── */
 
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("[POST /api/coach/sessions]", err);
+    logger.error("POST /api/coach/sessions", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to assign sessions." }, { status: 500 });
   }
 }

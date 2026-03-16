@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { storeToken } from "@/lib/resetTokenStore";
 import { rateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,12 +51,12 @@ export async function POST(request: NextRequest) {
     try {
       await sendPasswordResetEmail(user.email, token);
     } catch (emailError) {
-      console.error("Failed to send reset email:", emailError);
+      logger.error("Failed to send reset email", { context: "api", error: emailError });
     }
 
     return successResponse;
   } catch (error) {
-    console.error("[forgot-password] Error:", error);
+    logger.error("forgot-password Error", { context: "api", error });
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

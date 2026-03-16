@@ -8,6 +8,7 @@ import {
   getPublicUrl,
   MAX_VIDEO_SIZE_MB,
 } from "@/lib/storage";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[upload-url] Error:", err);
+    logger.error("upload-url Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

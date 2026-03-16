@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 /* ─── POST — Video Processing Webhook ─────────────────────────────────────── *
  *
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
       status: "ready",
     });
   } catch (err) {
-    console.error("[video-processing webhook] Error:", err);
+    logger.error("video-processing webhook Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import {
   COMPETITION_WEIGHTS,
   EVENT_CODE_MAP,
@@ -44,7 +45,7 @@ export async function GET() {
       dateOfBirth: athlete.dateOfBirth?.toISOString() ?? null,
     });
   } catch (err) {
-    console.error("[GET /api/athlete/profile]", err);
+    logger.error("GET /api/athlete/profile", { context: "api", error: err });
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
@@ -157,7 +158,7 @@ export async function PATCH(req: NextRequest) {
       dateOfBirth: updated.dateOfBirth?.toISOString() ?? null,
     });
   } catch (err) {
-    console.error("[PATCH /api/athlete/profile]", err);
+    logger.error("PATCH /api/athlete/profile", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to update profile." }, { status: 500 });
   }
 }

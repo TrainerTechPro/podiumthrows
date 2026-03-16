@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError, getVideoById } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { deleteFile } from "@/lib/storage";
+import { logger } from "@/lib/logger";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
@@ -23,7 +24,7 @@ export async function GET(
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos/[id]] GET Error:", err);
+    logger.error("videos/[id] GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
@@ -94,7 +95,7 @@ export async function PUT(
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos/[id]] PUT Error:", err);
+    logger.error("videos/[id] PUT Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
@@ -122,7 +123,7 @@ export async function DELETE(
         await deleteFile(video.storageKey);
       } catch {
         // Log but don't fail if storage deletion fails
-        console.error("Failed to delete video file from storage");
+        logger.error("Failed to delete video file from storage", { context: "api" });
       }
     }
 
@@ -133,7 +134,7 @@ export async function DELETE(
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos/[id]] DELETE Error:", err);
+    logger.error("videos/[id] DELETE Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

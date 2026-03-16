@@ -30,6 +30,7 @@
     "@aws-sdk/s3-request-presigner": "^3.997.0",
     "@mediapipe/tasks-vision": "^0.10.32",
     "@prisma/client": "^5.22.0",
+    "@sentry/nextjs": "^10.43.0",
     "@types/bcryptjs": "^2.4.6",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",

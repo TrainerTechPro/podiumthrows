@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── PATCH — revoke a pending invitation ── */
 export async function PATCH(
@@ -43,7 +44,7 @@ export async function PATCH(
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[PATCH /api/invitations/[id]]", err);
+    logger.error("PATCH /api/invitations/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to revoke invitation." }, { status: 500 });
   }
 }

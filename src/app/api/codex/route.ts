@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import {
   isR2Configured,
   getPresignedUploadUrl,
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: entries });
   } catch (err) {
-    console.error("[GET /api/codex]", err);
+    logger.error("GET /api/codex", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch codex entries" }, { status: 500 });
   }
 }
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Invalid step" }, { status: 400 });
   } catch (err) {
-    console.error("[POST /api/codex]", err);
+    logger.error("POST /api/codex", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: `Failed: ${message}` }, { status: 500 });
   }

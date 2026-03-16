@@ -239,7 +239,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     try {
       await triggerBlockToBlock(checkpoint, prisma);
     } catch (err) {
-      console.error("[autoregulation] block-to-block trigger failed:", err);
+      logger.error("autoregulation block-to-block trigger failed", { context: "api", error: err });
     }
 
     return NextResponse.json({

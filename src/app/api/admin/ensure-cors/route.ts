@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { configureR2Cors, isR2Configured } from "@/lib/r2";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/admin/ensure-cors
@@ -25,7 +26,7 @@ export async function POST() {
     await configureR2Cors();
     return NextResponse.json({ status: "ok" });
   } catch (err) {
-    console.error("[ensure-cors] Failed to configure R2 CORS:", err);
+    logger.error("ensure-cors Failed to configure R2 CORS", { context: "api", error: err });
     return NextResponse.json(
       { error: "Failed to configure CORS", detail: String(err) },
       { status: 500 }

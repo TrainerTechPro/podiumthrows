@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("[POST /api/readiness]", err);
+    logger.error("POST /api/readiness", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to save check-in." }, { status: 500 });
   }
 }

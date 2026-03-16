@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -24,7 +25,7 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, data: records });
   } catch (err) {
-    console.error("[GET /api/coach/my-training/testing]", err);
+    logger.error("GET /api/coach/my-training/testing", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch testing records" }, { status: 500 });
   }
 }
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: record }, { status: 201 });
   } catch (err) {
-    console.error("[POST /api/coach/my-training/testing]", err);
+    logger.error("POST /api/coach/my-training/testing", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to create testing record" }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 /* ─── GET — testing records & Bondarchuk assessments for athlete ────────────── */
 
@@ -79,7 +80,7 @@ export async function GET() {
       })),
     });
   } catch (err) {
-    console.error("[GET /api/athlete/assessments]", err);
+    logger.error("GET /api/athlete/assessments", { context: "api", error: err });
     return NextResponse.json(
       { error: "Failed to fetch assessments." },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 const MAX_DATA_URL_SIZE = 4 * 1024 * 1024; // 4MB base64
 
@@ -38,7 +39,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true, avatarUrl: updated.avatarUrl });
   } catch (err) {
-    console.error("[PUT /api/coach/profile-picture]", err);
+    logger.error("PUT /api/coach/profile-picture", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to update profile picture" }, { status: 500 });
   }
 }
@@ -59,7 +60,7 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[DELETE /api/coach/profile-picture]", err);
+    logger.error("DELETE /api/coach/profile-picture", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to remove profile picture" }, { status: 500 });
   }
 }

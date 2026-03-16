@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── GET — single session detail ── */
 export async function GET(
@@ -42,7 +43,7 @@ export async function GET(
 
     return NextResponse.json({ ok: true, data: entry });
   } catch (err) {
-    console.error("[GET /api/athlete/log-session/[id]]", err);
+    logger.error("GET /api/athlete/log-session/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch session" }, { status: 500 });
   }
 }
@@ -78,7 +79,7 @@ export async function DELETE(
     await prisma.athleteThrowsSession.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[DELETE /api/athlete/log-session/[id]]", err);
+    logger.error("DELETE /api/athlete/log-session/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

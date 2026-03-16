@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 type RouteContext = { params: { id: string } };
 
@@ -58,7 +59,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
   } catch (err) {
-    console.error("[PATCH /api/coach/notifications/[id]]", err);
+    logger.error("PATCH /api/coach/notifications/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to update notification." }, { status: 500 });
   }
 }

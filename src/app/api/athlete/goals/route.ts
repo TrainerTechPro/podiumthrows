@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import type { EventType } from "@prisma/client";
 
 /* ─── GET — list athlete's own goals ──────────────────────────────────────── */
@@ -76,7 +77,7 @@ export async function GET() {
 
     return NextResponse.json({ goals: data });
   } catch (err) {
-    console.error("[GET /api/athlete/goals]", err);
+    logger.error("GET /api/athlete/goals", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch goals." }, { status: 500 });
   }
 }
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("[POST /api/athlete/goals]", err);
+    logger.error("POST /api/athlete/goals", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to create goal." }, { status: 500 });
   }
 }

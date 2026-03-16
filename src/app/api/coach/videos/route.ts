@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError, getCoachVideos } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos GET] Error:", err);
+    logger.error("videos GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
@@ -135,7 +136,7 @@ export async function POST(req: NextRequest) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos POST] Error:", err);
+    logger.error("videos POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

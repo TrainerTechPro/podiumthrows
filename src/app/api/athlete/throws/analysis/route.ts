@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -281,7 +282,7 @@ export async function GET() {
       implementDistribution,
     });
   } catch (err) {
-    console.error("[GET /api/athlete/throws/analysis]", err);
+    logger.error("GET /api/athlete/throws/analysis", { context: "api", error: err });
     return NextResponse.json(
       { error: "Failed to fetch analysis data." },
       { status: 500 }

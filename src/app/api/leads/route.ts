@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -183,13 +184,13 @@ export async function POST(request: Request) {
         html: buildDeficitEmail(lead.id, lead.name, event, gender, deficitResult),
       }).catch((err) => {
         // Log but don't fail the request — the lead is already saved
-        console.error("Resend email error:", err);
+        logger.error("Resend email error", { context: "api", error: err });
       });
     }
 
     return NextResponse.json({ success: true, id: lead.id }, { status: 201 });
   } catch (error) {
-    console.error("Lead capture error:", error);
+    logger.error("Lead capture error", { context: "api", error });
     return NextResponse.json(
       { error: "Failed to save lead" },
       { status: 500 }

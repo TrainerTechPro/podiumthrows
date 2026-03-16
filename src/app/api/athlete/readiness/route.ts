@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { awardStreakAchievements, awardFirstCheckInAchievement } from "@/lib/achievements";
 import { notifyCoachLowReadiness } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
 
 /* ─── POST — submit readiness check-in ───────────────────────────────────── */
 
@@ -108,9 +109,9 @@ export async function POST(req: NextRequest) {
     // Update streak + fire achievement/notification side effects
     const newStreak = await updateAthleteStreak(athlete.id);
     if (newStreak > 0) {
-      void awardStreakAchievements(athlete.id, newStreak).catch(console.error);
+      void awardStreakAchievements(athlete.id, newStreak).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
     }
-    void awardFirstCheckInAchievement(athlete.id).catch(console.error);
+    void awardFirstCheckInAchievement(athlete.id).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
 
     if (overallScore <= 4 && athlete.coachId) {
       const athleteName = `${athlete.firstName} ${athlete.lastName}`;
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
         athlete.id,
         athleteName,
         overallScore
-      ).catch(console.error);
+      ).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
     }
 
     return NextResponse.json(
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("[POST /api/athlete/readiness]", err);
+    logger.error("POST /api/athlete/readiness", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to save check-in." }, { status: 500 });
   }
 }

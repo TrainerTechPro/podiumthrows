@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import {
   scoreAdaptationSpeed,
   scoreTransferType,
@@ -31,7 +32,7 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, data: typing });
   } catch (err) {
-    console.error("[GET /api/coach/my-training/typing]", err);
+    logger.error("GET /api/coach/my-training/typing", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch typing" }, { status: 500 });
   }
 }
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: typing }, { status: 201 });
   } catch (err) {
-    console.error("[POST /api/coach/my-training/typing]", err);
+    logger.error("POST /api/coach/my-training/typing", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to save typing" }, { status: 500 });
   }
 }

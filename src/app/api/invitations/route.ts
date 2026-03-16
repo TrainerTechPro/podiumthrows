@@ -3,6 +3,7 @@ import { randomBytes } from "crypto";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { PLAN_LIMITS } from "@/lib/data/coach";
+import { logger } from "@/lib/logger";
 
 /* ── GET — list all invitations for the authenticated coach ── */
 export async function GET() {
@@ -36,7 +37,7 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, data: invitations });
   } catch (err) {
-    console.error("[GET /api/invitations]", err);
+    logger.error("GET /api/invitations", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch invitations." }, { status: 500 });
   }
 }
@@ -144,14 +145,14 @@ export async function POST(req: NextRequest) {
         await sendInvitationEmail(email, coachName, token);
         emailSent = true;
       } catch (emailErr) {
-        console.error("[POST /api/invitations] Email send failed:", emailErr);
+        logger.error("POST /api/invitations Email send failed", { context: "api", error: emailErr });
         // Invitation was already created — don't fail the whole request
       }
     }
 
     return NextResponse.json({ ok: true, data: invitation, emailSent });
   } catch (err) {
-    console.error("[POST /api/invitations]", err);
+    logger.error("POST /api/invitations", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: `Failed to create invitation: ${message}` }, { status: 500 });
   }

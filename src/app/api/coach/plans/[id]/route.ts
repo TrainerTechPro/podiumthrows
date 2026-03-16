@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_BLOCK_TYPES = ["throwing", "strength", "warmup", "cooldown"];
@@ -106,7 +107,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (err) {
-    console.error("[PATCH /api/coach/plans/[id]]", err);
+    logger.error("PATCH /api/coach/plans/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to update plan." }, { status: 500 });
   }
 }
@@ -156,7 +157,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[DELETE /api/coach/plans/[id]]", err);
+    logger.error("DELETE /api/coach/plans/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to delete plan." }, { status: 500 });
   }
 }
