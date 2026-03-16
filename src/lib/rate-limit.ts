@@ -1,22 +1,47 @@
-/**
- * Rate limiter for auth endpoints.
- *
- * SERVERLESS NOTE: This uses in-memory storage which resets on cold starts.
- * It still provides protection within warm instances and is sufficient for
- * low-to-moderate traffic. For production at scale, swap the store below
- * with a Redis/Upstash-backed implementation.
- *
- * Upgrade path:
- *   1. Install @upstash/ratelimit and @upstash/redis
- *   2. Implement RateLimitStore using Upstash Ratelimit
- *   3. Replace `store` below with the Redis-backed instance
- */
+// src/lib/rate-limit.ts
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-interface RateLimitStore {
-  increment(key: string, windowMs: number): { count: number; resetIn: number };
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
+
+const USE_UPSTASH = Boolean(
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+);
+
+// ---------------------------------------------------------------------------
+// Upstash backend (production)
+// ---------------------------------------------------------------------------
+
+let redis: Redis | null = null;
+const upstashLimiters = new Map<string, Ratelimit>();
+
+function getUpstashLimiter(maxAttempts: number, windowMs: number): Ratelimit {
+  const key = `${maxAttempts}:${windowMs}`;
+  let limiter = upstashLimiters.get(key);
+  if (!limiter) {
+    if (!redis) {
+      redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL!,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      });
+    }
+    limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(maxAttempts, `${Math.ceil(windowMs / 1000)} s`),
+      prefix: "podium-rl",
+    });
+    upstashLimiters.set(key, limiter);
+  }
+  return limiter;
 }
 
-class InMemoryStore implements RateLimitStore {
+// ---------------------------------------------------------------------------
+// In-memory fallback (local dev / missing env vars)
+// ---------------------------------------------------------------------------
+
+class InMemoryStore {
   private attempts = new Map<string, { count: number; resetAt: number }>();
   private lastCleanup = Date.now();
   private readonly CLEANUP_INTERVAL = 60_000;
@@ -45,22 +70,43 @@ class InMemoryStore implements RateLimitStore {
   }
 }
 
-const store: RateLimitStore = new InMemoryStore();
+const memoryStore = new InMemoryStore();
 
-export function checkRateLimit(
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+interface RateLimitOptions {
+  maxAttempts: number;
+  windowMs: number;
+}
+
+interface RateLimitResult {
+  success: boolean;
+  remaining: number;
+  retryAfter: number;
+}
+
+export async function rateLimit(
   identifier: string,
-  maxAttempts: number = 5,
-  windowMs: number = 15 * 60 * 1000
-): { allowed: boolean; remaining: number; resetIn: number } {
-  const { count, resetIn } = store.increment(identifier, windowMs);
-
-  if (count > maxAttempts) {
-    return { allowed: false, remaining: 0, resetIn };
+  { maxAttempts, windowMs }: RateLimitOptions
+): Promise<RateLimitResult> {
+  if (USE_UPSTASH) {
+    const limiter = getUpstashLimiter(maxAttempts, windowMs);
+    const { success, remaining, reset } = await limiter.limit(identifier);
+    return {
+      success,
+      remaining,
+      retryAfter: success ? 0 : Math.max(0, reset - Date.now()),
+    };
   }
 
+  // In-memory fallback
+  const { count, resetIn } = memoryStore.increment(identifier, windowMs);
+  const allowed = count <= maxAttempts;
   return {
-    allowed: true,
-    remaining: maxAttempts - count,
-    resetIn,
+    success: allowed,
+    remaining: allowed ? maxAttempts - count : 0,
+    retryAfter: allowed ? 0 : resetIn,
   };
 }
