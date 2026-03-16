@@ -5,6 +5,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { parseBody, RegisterSchema } from "@/lib/api-schemas";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +21,8 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, RegisterSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { email, password, firstName, lastName, role, inviteToken, leadId, plan, interval } = parsed;
+    const { email, password, firstName, lastName, role, inviteToken, leadId, plan, interval } =
+      parsed;
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -44,10 +46,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!invitation || invitation.status !== "PENDING" || invitation.expiresAt < new Date()) {
-        return NextResponse.json(
-          { error: "Invalid or expired invitation" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 400 });
       }
     }
 
@@ -145,12 +144,16 @@ export async function POST(request: NextRequest) {
     response.headers.append("Set-Cookie", setAuthCookie(token));
     response.headers.append("Set-Cookie", setCsrfCookie());
 
+    void logAudit({
+      userId: user.id,
+      action: "REGISTER_SUCCESS",
+      metadata: { role: user.role, email: user.email },
+      ...auditRequestInfo(request),
+    });
+
     return response;
   } catch (error) {
     logger.error("register Registration failed", { context: "api", error });
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

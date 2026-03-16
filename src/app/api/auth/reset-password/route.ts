@@ -5,6 +5,7 @@ import { getToken, deleteToken } from "@/lib/resetTokenStore";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseBody, ResetPasswordSchema } from "@/lib/api-schemas";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,10 +26,7 @@ export async function POST(request: NextRequest) {
     // Validate token (checks expiry and usedAt)
     const tokenData = await getToken(token);
     if (!tokenData) {
-      return NextResponse.json(
-        { error: "Invalid or expired reset token" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid or expired reset token" }, { status: 400 });
     }
 
     // Update password
@@ -41,14 +39,17 @@ export async function POST(request: NextRequest) {
     // Mark token as consumed
     await deleteToken(token);
 
+    void logAudit({
+      userId: tokenData.userId,
+      action: "PASSWORD_RESET_COMPLETED",
+      ...auditRequestInfo(request),
+    });
+
     return NextResponse.json({
       message: "Password has been reset successfully. You can now log in.",
     });
   } catch (error) {
     logger.error("reset-password Error", { context: "api", error });
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

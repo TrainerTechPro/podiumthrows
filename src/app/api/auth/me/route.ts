@@ -4,6 +4,7 @@ import { getSession, SALT_ROUNDS } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limit";
 import { PasswordChangeSchema, CoachProfileUpdateSchema } from "@/lib/api-schemas";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -57,10 +58,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, user });
   } catch {
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }
 
@@ -75,10 +73,7 @@ export async function PATCH(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { success: false, error: "Invalid JSON body" },
-        { status: 400 },
-      );
+      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
     }
 
     // Password change
@@ -91,13 +86,16 @@ export async function PATCH(request: NextRequest) {
         }));
         return NextResponse.json(
           { success: false, error: "Validation failed", fieldErrors },
-          { status: 400 },
+          { status: 400 }
         );
       }
       const { currentPassword, newPassword } = result.data;
 
       // Rate limit password changes: 5 per minute per user
-      const rl = await rateLimit(`change-password:${session.userId}`, { maxAttempts: 5, windowMs: 60_000 });
+      const rl = await rateLimit(`change-password:${session.userId}`, {
+        maxAttempts: 5,
+        windowMs: 60_000,
+      });
       if (!rl.success) {
         return NextResponse.json(
           { success: false, error: "Too many requests. Please try again later." },
@@ -114,13 +112,23 @@ export async function PATCH(request: NextRequest) {
       }
       const valid = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!valid) {
-        return NextResponse.json({ success: false, error: "Current password is incorrect" }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: "Current password is incorrect" },
+          { status: 400 }
+        );
       }
       const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
       await prisma.user.update({
         where: { id: session.userId },
         data: { passwordHash: hash },
       });
+
+      void logAudit({
+        userId: session.userId,
+        action: "PASSWORD_CHANGED",
+        ...auditRequestInfo(request),
+      });
+
       return NextResponse.json({ success: true });
     }
 
@@ -134,7 +142,7 @@ export async function PATCH(request: NextRequest) {
         }));
         return NextResponse.json(
           { success: false, error: "Validation failed", fieldErrors },
-          { status: 400 },
+          { status: 400 }
         );
       }
       const profileData = result.data;
@@ -142,7 +150,8 @@ export async function PATCH(request: NextRequest) {
       if (profileData.firstName !== undefined) updateData.firstName = profileData.firstName;
       if (profileData.lastName !== undefined) updateData.lastName = profileData.lastName;
       if (profileData.bio !== undefined) updateData.bio = profileData.bio;
-      if (profileData.organization !== undefined) updateData.organization = profileData.organization;
+      if (profileData.organization !== undefined)
+        updateData.organization = profileData.organization;
 
       if (Object.keys(updateData).length > 0) {
         await prisma.coachProfile.update({

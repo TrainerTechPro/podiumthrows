@@ -2192,3 +2192,19 @@ model StripeEvent {
 
   @@index([type])
 }
+
+/// Security audit trail for sensitive actions (login, password changes, role changes, etc.)
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // e.g. "LOGIN_SUCCESS", "LOGIN_FAILED", "PASSWORD_RESET"
+  resource  String?  // e.g. "athlete:abc123", "invitation:xyz"
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}

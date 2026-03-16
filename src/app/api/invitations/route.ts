@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 /* ── GET — list all invitations for the authenticated coach ── */
 export async function GET() {
@@ -80,9 +81,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const mode = body.mode === "link" ? "link" : "email";
     const email =
-      mode === "email" && typeof body.email === "string"
-        ? body.email.trim().toLowerCase()
-        : null;
+      mode === "email" && typeof body.email === "string" ? body.email.trim().toLowerCase() : null;
 
     if (mode === "email") {
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -145,10 +144,21 @@ export async function POST(req: NextRequest) {
         await sendInvitationEmail(email, coachName, token);
         emailSent = true;
       } catch (emailErr) {
-        logger.error("POST /api/invitations Email send failed", { context: "api", error: emailErr });
+        logger.error("POST /api/invitations Email send failed", {
+          context: "api",
+          error: emailErr,
+        });
         // Invitation was already created — don't fail the whole request
       }
     }
+
+    void logAudit({
+      userId: session.userId,
+      action: "ATHLETE_INVITED",
+      resource: `invitation:${invitation.id}`,
+      metadata: { mode, email: email || undefined, coachId: coach.id },
+      ...auditRequestInfo(req),
+    });
 
     return NextResponse.json({ ok: true, data: invitation, emailSent });
   } catch (err) {

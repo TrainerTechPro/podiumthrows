@@ -6,6 +6,7 @@ import { storeToken } from "@/lib/resetTokenStore";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseBody, ForgotPasswordSchema } from "@/lib/api-schemas";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +37,13 @@ export async function POST(request: NextRequest) {
       return successResponse;
     }
 
+    void logAudit({
+      userId: user.id,
+      action: "PASSWORD_RESET_REQUESTED",
+      metadata: { email: user.email },
+      ...auditRequestInfo(request),
+    });
+
     // Generate reset token
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -52,9 +60,6 @@ export async function POST(request: NextRequest) {
     return successResponse;
   } catch (error) {
     logger.error("forgot-password Error", { context: "api", error });
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }
