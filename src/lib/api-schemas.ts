@@ -75,20 +75,32 @@ export const VoiceNoteCreateSchema = z.object({
 
 export const ThrowsAssignmentCreateSchema = z.object({
   sessionId: z.string().min(1, "Session ID is required"),
-  athleteIds: z
-    .array(z.string())
-    .min(1, "At least one athlete is required"),
+  athleteIds: z.array(z.string()).min(1, "At least one athlete is required"),
   assignedDate: z.string().min(1, "Assigned date is required"),
 });
 
 // ── Questionnaire Submission ────────────────────────────────────────────
 
 export const QuestionnaireSubmissionSchema = z.object({
-  answers: z.unknown().refine(
-    (v) => v !== undefined && v !== null,
-    "Answers are required",
-  ),
+  answers: z.unknown().refine((v) => v !== undefined && v !== null, "Answers are required"),
   durationSeconds: z.number().optional().nullable(),
+});
+
+// ── Readiness Check-In ─────────────────────────────────────────────────
+
+export const ReadinessCheckInSchema = z.object({
+  sleepQuality: z.number().min(1, "Must be at least 1").max(10, "Must be at most 10"),
+  sleepHours: z.number().min(1, "Must be at least 1").max(24, "Must be at most 24"),
+  soreness: z.number().min(1, "Must be at least 1").max(10, "Must be at most 10"),
+  sorenessArea: z.string().nullable().optional(),
+  stressLevel: z.number().min(1, "Must be at least 1").max(10, "Must be at most 10"),
+  energyMood: z.number().min(1, "Must be at least 1").max(10, "Must be at most 10"),
+  hydration: z.enum(["POOR", "ADEQUATE", "GOOD"], {
+    message: "Must be POOR, ADEQUATE, or GOOD",
+  }),
+  injuryStatus: z.enum(["NONE", "MONITORING", "ACTIVE"]).catch("NONE"),
+  injuryNotes: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 // ── Athlete Schemas (for future use) ────────────────────────────────────
@@ -139,16 +151,13 @@ export const ThrowsSessionCreateSchema = z.object({
  */
 export async function parseBody<T>(
   request: Request,
-  schema: z.ZodType<T>,
+  schema: z.ZodType<T>
 ): Promise<T | NextResponse> {
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const result = schema.safeParse(body);
@@ -157,10 +166,7 @@ export async function parseBody<T>(
       field: issue.path.join(".") || "_body",
       message: issue.message,
     }));
-    return NextResponse.json(
-      { error: "Validation failed", fieldErrors },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Validation failed", fieldErrors }, { status: 400 });
   }
 
   return result.data;
