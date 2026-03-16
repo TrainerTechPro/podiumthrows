@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import HeroMaskReveal from "@/components/marketing/HeroMaskReveal";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SQUEEZE PAGE — podiumthrows.com
@@ -42,7 +43,7 @@ export default function HomePage() {
     <div className="font-body min-h-screen flex flex-col bg-[#08080a] text-[#e8e4dc] selection:bg-primary-500/30 selection:text-white">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="w-full relative z-10">
+      <header className="w-full absolute top-0 left-0 right-0 z-20">
         <div className="max-w-[1200px] mx-auto px-6 sm:px-10 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group" aria-label="Podium Throws home">
             <Image
@@ -58,7 +59,7 @@ export default function HomePage() {
           </Link>
           <Link
             href="/login"
-            className="text-[13px] font-medium text-[#555048] hover:text-[#e8e4dc] transition-colors duration-300"
+            className="text-[13px] font-medium text-[#e8e4dc]/50 hover:text-[#e8e4dc] transition-colors duration-300"
           >
             Sign In
           </Link>
@@ -66,66 +67,49 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="flex-1 flex items-center relative" aria-label="Hero">
-        <div className="max-w-[1200px] mx-auto px-6 sm:px-10 w-full py-20 sm:py-28 lg:py-36">
-
-          {/* Oversized stat as background texture */}
-          <div
-            className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none select-none hidden lg:block"
-            aria-hidden="true"
+      <HeroMaskReveal
+        baseImage="/images/hero-stadium.jpg"
+        revealImage="/images/hero-athlete.jpg"
+        baseAlt="Track and field stadium at dusk"
+        revealAlt="Throws athlete mid-release"
+      >
+        <div className="relative max-w-3xl pt-20">
+          <p className="font-heading text-[11px] uppercase tracking-[0.3em] text-primary-500 mb-10 sm:mb-14">
+            Free diagnostic
+          </p>
+          <h1
+            className="font-heading font-black leading-[0.88] tracking-[-0.035em] mb-8"
+            style={{ fontSize: "clamp(2.8rem, 8vw, 5.5rem)" }}
           >
-            <span
-              className="font-heading font-black text-[#e8e4dc]/[0.02] leading-none block"
-              style={{ fontSize: "clamp(18rem, 30vw, 28rem)", letterSpacing: "-0.04em" }}
+            Your thrower is leaving
+            <br />
+            <span className="text-primary-500">2–4&nbsp;meters</span>
+            <br />
+            on the table.
+          </h1>
+          <div className="w-16 h-[2px] bg-primary-500/40 mb-8" aria-hidden="true" />
+          <p className="hidden sm:block text-[17px] sm:text-lg leading-[1.7] text-[#7a746b] max-w-md mb-14">
+            Strength deficit, technique gap, or wrong implement sequence?
+            Find out in 60 seconds — with a corrective recommendation.
+          </p>
+          <p className="sm:hidden text-[15px] leading-[1.7] text-[#7a746b] mb-10">
+            Find out in 60 seconds — with a corrective recommendation.
+          </p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-5">
+            <Link
+              href="/deficit-finder"
+              className="group relative font-heading font-bold text-[15px] px-10 py-4 bg-primary-500 text-[#08080a] transition-all duration-300 hover:bg-primary-400 active:scale-[0.97] text-center sm:text-left"
             >
-              2–4
+              <span className="relative z-10">Find the Deficit</span>
+            </Link>
+            <span className="text-[12px] text-[#444039] leading-relaxed self-center text-center sm:text-left">
+              No account needed<br className="sm:hidden" />
+              <span className="hidden sm:inline">&ensp;/&ensp;</span>
+              Based on Bondarchuk research
             </span>
           </div>
-
-          <div className="relative max-w-3xl">
-            {/* Label */}
-            <p className="font-heading text-[11px] uppercase tracking-[0.3em] text-primary-500 mb-10 sm:mb-14">
-              Free diagnostic
-            </p>
-
-            {/* Headline */}
-            <h1
-              className="font-heading font-black leading-[0.88] tracking-[-0.035em] mb-8"
-              style={{ fontSize: "clamp(2.8rem, 8vw, 5.5rem)" }}
-            >
-              Your thrower is leaving
-              <br />
-              <span className="text-primary-500">2–4&nbsp;meters</span>
-              <br />
-              on the table.
-            </h1>
-
-            {/* Divider */}
-            <div className="w-16 h-[2px] bg-primary-500/40 mb-8" aria-hidden="true" />
-
-            {/* Subhead */}
-            <p className="text-[17px] sm:text-lg leading-[1.7] text-[#7a746b] max-w-md mb-14">
-              Strength deficit, technique gap, or wrong implement sequence?
-              Find out in 60 seconds — with a corrective recommendation.
-            </p>
-
-            {/* CTA */}
-            <div className="flex flex-col sm:flex-row items-start gap-5">
-              <Link
-                href="/deficit-finder"
-                className="group relative font-heading font-bold text-[15px] px-10 py-4 bg-primary-500 text-[#08080a] transition-all duration-300 hover:bg-primary-400 active:scale-[0.97]"
-              >
-                <span className="relative z-10">Find the Deficit</span>
-              </Link>
-              <span className="text-[12px] text-[#444039] leading-relaxed self-center">
-                No account needed<br className="sm:hidden" />
-                <span className="hidden sm:inline">&ensp;/&ensp;</span>
-                Based on Bondarchuk research
-              </span>
-            </div>
-          </div>
         </div>
-      </section>
+      </HeroMaskReveal>
 
       {/* ── What you learn ─────────────────────────────────────────────────── */}
       <section aria-label="What you learn">
