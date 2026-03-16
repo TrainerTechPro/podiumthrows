@@ -41,7 +41,15 @@ export async function getSession(): Promise<JWTPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth-token")?.value;
   if (!token) return null;
-  return verifyToken(token);
+
+  const payload = verifyToken(token);
+  if (!payload) return null;
+
+  // Reject blacklisted tokens (logged-out sessions)
+  const { isBlacklisted } = await import("@/lib/token-blacklist");
+  if (await isBlacklisted(token)) return null;
+
+  return payload;
 }
 
 export function setAuthCookie(token: string): string {

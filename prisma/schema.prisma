@@ -2208,3 +2208,13 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
 }
+
+/// Blacklisted JWT tokens — checked on every authenticated request to enforce logout invalidation.
+model TokenBlacklist {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique /// SHA-256 hash of the raw JWT
+  expiresAt DateTime /// mirrors the JWT exp claim — used for cleanup
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
