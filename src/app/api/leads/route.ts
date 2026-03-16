@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, LeadCaptureSchema } from "@/lib/api-schemas";
+import { Prisma } from "@prisma/client";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -148,15 +150,9 @@ function buildDeficitEmail(
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, name, source, event, gender, deficitResult, utmSource, utmMedium, utmCampaign } = body;
-
-    if (!email || typeof email !== "string" || !email.includes("@")) {
-      return NextResponse.json(
-        { error: "Valid email is required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, LeadCaptureSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { email, name, source, event, gender, deficitResult, utmSource, utmMedium, utmCampaign } = parsed;
 
     const lead = await prisma.lead.create({
       data: {
@@ -165,7 +161,9 @@ export async function POST(request: Request) {
         source: source || "deficit-finder",
         event: event || null,
         gender: gender || null,
-        deficitResult: deficitResult || null,
+        deficitResult: deficitResult
+          ? (deficitResult as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
         utmSource: utmSource || null,
         utmMedium: utmMedium || null,
         utmCampaign: utmCampaign || null,
@@ -181,7 +179,7 @@ export async function POST(request: Request) {
         from: FROM_EMAIL,
         to: lead.email,
         subject: `Your Deficit Analysis: ${deficitLabel}`,
-        html: buildDeficitEmail(lead.id, lead.name, event, gender, deficitResult),
+        html: buildDeficitEmail(lead.id, lead.name, event ?? null, gender ?? null, deficitResult ?? null),
       }).catch((err) => {
         // Log but don't fail the request — the lead is already saved
         logger.error("Resend email error", { context: "api", error: err });

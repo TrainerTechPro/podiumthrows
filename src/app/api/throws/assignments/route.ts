@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, ThrowsAssignmentCreateSchema } from "@/lib/api-schemas";
 
 // POST /api/throws/assignments — assign a throws session to athletes
 export async function POST(req: NextRequest) {
@@ -12,15 +13,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
     }
 
-    const body = await req.json();
-    const { sessionId, athleteIds, assignedDate } = body;
-
-    if (!sessionId || !athleteIds?.length || !assignedDate) {
-      return NextResponse.json(
-        { success: false, error: "Session ID, at least one athlete, and a date are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, ThrowsAssignmentCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { sessionId, athleteIds, assignedDate } = parsed;
 
     // Verify the session belongs to this coach
     const coach = await prisma.coachProfile.findUnique({
