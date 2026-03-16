@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 import {
   motion,
@@ -57,6 +57,10 @@ export default function HeroMaskReveal({
   const parallaxBaseY = useSpring(useMotionValue(0), PARALLAX_SPRING);
   const parallaxRevealX = useSpring(useMotionValue(0), PARALLAX_SPRING);
   const parallaxRevealY = useSpring(useMotionValue(0), PARALLAX_SPRING);
+
+  const [inputMode, setInputMode] = useState<"mouse" | "touch" | "gyro" | "auto">("mouse");
+  const [gyroAvailable, setGyroAvailable] = useState(false);
+  const touchActiveRef = useRef(false);
 
   useEffect(() => {
     if (shouldReduceMotion) return;
@@ -128,6 +132,156 @@ export default function HeroMaskReveal({
     parallaxRevealY.set(0);
   }, [shouldReduceMotion, maskOpacity, parallaxBaseX, parallaxBaseY, parallaxRevealX, parallaxRevealY]);
 
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (shouldReduceMotion) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      touchActiveRef.current = true;
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      rawX.set(x);
+      rawY.set(y);
+      maskOpacity.set(1);
+
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const px = ((x - cx) / cx) * 10;
+      const py = ((y - cy) / cy) * 10;
+      parallaxBaseX.set(px);
+      parallaxBaseY.set(py);
+      parallaxRevealX.set(-px * 2);
+      parallaxRevealY.set(-py * 2);
+    },
+    [shouldReduceMotion, rawX, rawY, maskOpacity, parallaxBaseX, parallaxBaseY, parallaxRevealX, parallaxRevealY]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    touchActiveRef.current = false;
+  }, []);
+
+  // Gyroscope setup for mobile devices
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+    if (typeof window === "undefined") return;
+
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (!isMobile) return;
+
+    setInputMode("auto");
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if (touchActiveRef.current) return;
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const beta = e.beta ?? 0;
+      const gamma = e.gamma ?? 0;
+
+      const clampedBeta = Math.max(-15, Math.min(15, beta - 45));
+      const clampedGamma = Math.max(-15, Math.min(15, gamma));
+
+      const x = ((clampedGamma + 15) / 30) * rect.width;
+      const y = ((clampedBeta + 15) / 30) * rect.height;
+
+      rawX.set(x);
+      rawY.set(y);
+      maskOpacity.set(1);
+
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const px = ((x - cx) / cx) * 10;
+      const py = ((y - cy) / cy) * 10;
+      parallaxBaseX.set(px);
+      parallaxBaseY.set(py);
+      parallaxRevealX.set(-px * 2);
+      parallaxRevealY.set(-py * 2);
+    };
+
+    const requestGyro = async () => {
+      try {
+        if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
+          const permission = await (DeviceOrientationEvent as any).requestPermission();
+          if (permission !== "granted") {
+            setGyroAvailable(false);
+            return;
+          }
+        }
+        setGyroAvailable(true);
+        setInputMode("gyro");
+        window.addEventListener("deviceorientation", handleOrientation);
+      } catch {
+        setGyroAvailable(false);
+      }
+    };
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
+      const tapHandler = () => {
+        requestGyro();
+        document.removeEventListener("touchstart", tapHandler);
+      };
+      document.addEventListener("touchstart", tapHandler, { once: true });
+      return () => {
+        document.removeEventListener("touchstart", tapHandler);
+        window.removeEventListener("deviceorientation", handleOrientation);
+      };
+    } else {
+      requestGyro();
+      return () => {
+        window.removeEventListener("deviceorientation", handleOrientation);
+      };
+    }
+  }, [shouldReduceMotion, rawX, rawY, maskOpacity, parallaxBaseX, parallaxBaseY, parallaxRevealX, parallaxRevealY]);
+
+  // Auto-animation fallback (Lissajous figure-8) for mobile
+  useEffect(() => {
+    if (shouldReduceMotion) return;
+    if (typeof window === "undefined") return;
+
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (!isMobile) return;
+
+    let rafId: number;
+    const startTime = performance.now();
+
+    const animate = () => {
+      if (touchActiveRef.current || (gyroAvailable && inputMode === "gyro")) {
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) {
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+
+      const t = (performance.now() - startTime) / 1000;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const ax = rect.width * 0.25;
+      const ay = rect.height * 0.2;
+
+      const x = cx + ax * Math.sin(t * 0.3);
+      const y = cy + ay * Math.sin(t * 0.5);
+
+      rawX.set(x);
+      rawY.set(y);
+      maskOpacity.set(0.7);
+
+      const midRadius = (minRadius + maxRadius) / 2;
+      targetRadius.set(minRadius + (midRadius - minRadius) * (0.5 + 0.5 * Math.sin(t * 0.4)));
+
+      rafId = requestAnimationFrame(animate);
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [shouldReduceMotion, gyroAvailable, inputMode, rawX, rawY, maskOpacity, targetRadius, minRadius, maxRadius]);
+
   if (shouldReduceMotion) {
     return (
       <section
@@ -171,6 +325,8 @@ export default function HeroMaskReveal({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <motion.div
         className="absolute inset-[-20px]"
