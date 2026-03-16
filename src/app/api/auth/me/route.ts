@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession, SALT_ROUNDS } from "@/lib/auth";
 import bcrypt from "bcryptjs";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET() {
   try {
@@ -73,6 +74,15 @@ export async function PATCH(request: NextRequest) {
 
     // Password change
     if (body.currentPassword && body.newPassword) {
+      // Rate limit password changes: 5 per minute per user
+      const rl = await rateLimit(`change-password:${session.userId}`, { maxAttempts: 5, windowMs: 60_000 });
+      if (!rl.success) {
+        return NextResponse.json(
+          { success: false, error: "Too many requests. Please try again later." },
+          { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
+        );
+      }
+
       const user = await prisma.user.findUnique({
         where: { id: session.userId },
         select: { passwordHash: true },
