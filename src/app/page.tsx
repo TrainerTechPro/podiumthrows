@@ -70,8 +70,8 @@ export default function HomePage() {
       <HeroMaskReveal
         baseImage="/images/hero-stadium.jpg"
         revealImage="/images/hero-athlete.jpg"
-        baseAlt="Track and field stadium at dusk"
-        revealAlt="Throws athlete mid-release"
+        baseAlt="Indoor shot put competition venue"
+        revealAlt="Discus thrower mid-release at competition"
       >
         <div className="relative max-w-3xl pt-20">
           <p className="font-heading text-[11px] uppercase tracking-[0.3em] text-primary-500 mb-10 sm:mb-14">
