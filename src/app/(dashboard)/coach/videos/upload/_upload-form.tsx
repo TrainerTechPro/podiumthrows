@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { formatEventType } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -306,7 +307,7 @@ export function UploadForm({ athleteOptions }: Props) {
       const [urlRes, thumbRes] = await Promise.all([
         fetch("/api/coach/videos/upload-url", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             fileName: file.name,
             contentType: file.type || "video/mp4",
@@ -316,7 +317,7 @@ export function UploadForm({ athleteOptions }: Props) {
         thumbnailBlob
           ? fetch("/api/coach/videos/upload-thumbnail-url", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", ...csrfHeaders() },
               body: JSON.stringify({ fileName: "thumbnail.jpg", contentType: "image/jpeg" }),
             })
           : Promise.resolve(null),
@@ -340,7 +341,7 @@ export function UploadForm({ athleteOptions }: Props) {
             const fd = new FormData();
             fd.append("file", thumbnailBlob, "thumbnail.jpg");
             fd.append("key", thumbKey);
-            await fetch("/api/coach/videos/upload-thumbnail-local", { method: "POST", body: fd });
+            await fetch("/api/coach/videos/upload-thumbnail-local", { method: "POST", headers: csrfHeaders(), body: fd });
             thumbnailPublicUrl = thumbPublicUrl;
           } else {
             const thumbXhrOk = await new Promise<boolean>((resolve) => {
@@ -364,7 +365,7 @@ export function UploadForm({ athleteOptions }: Props) {
 
       const createRes = await fetch("/api/coach/videos", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           url: publicUrl,
           storageKey: key,
@@ -441,7 +442,7 @@ export function UploadForm({ athleteOptions }: Props) {
       //    generation, or other post-processing work.
       await fetch(`/api/coach/videos/${videoId}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ status: "processing" }),
       });
 
@@ -452,7 +453,7 @@ export function UploadForm({ athleteOptions }: Props) {
       if (videoId) {
         fetch(`/api/coach/videos/${videoId}/status`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ status: "failed" }),
         }).catch(() => {/* best-effort */});
       }

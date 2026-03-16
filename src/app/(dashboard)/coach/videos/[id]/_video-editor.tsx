@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { VideoDetail } from "@/lib/data/coach";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { AnnotationToolbar } from "@/components/video/AnnotationToolbar";
 import { AnnotationTimeline } from "@/components/video/AnnotationTimeline";
 import { AnnotationList } from "@/components/video/AnnotationList";
@@ -173,7 +174,7 @@ export function VideoEditor({ video, athletes }: Props) {
     try {
       const res = await fetch(`/api/coach/videos/${video.id}/annotations`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ annotations }),
       });
       if (!res.ok) throw new Error("Failed to save");
@@ -195,7 +196,7 @@ export function VideoEditor({ video, athletes }: Props) {
     try {
       const res = await fetch(`/api/coach/videos/${video.id}/share`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ athleteIds: Array.from(selectedAthleteIds) }),
       });
       if (!res.ok) throw new Error("Failed to share");
@@ -218,6 +219,7 @@ export function VideoEditor({ video, athletes }: Props) {
     try {
       const res = await fetch(`/api/coach/videos/${video.id}`, {
         method: "DELETE",
+        headers: csrfHeaders(),
       });
       if (!res.ok) throw new Error("Failed to delete");
       router.push("/coach/videos");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components";
 import { Button } from "@/components/ui/Button";
@@ -78,6 +79,7 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
     try {
       const res = await fetch(`/api/coach/throws/drills/${deletingDrill.id}`, {
         method: "DELETE",
+        headers: csrfHeaders(),
       });
       if (res.ok) {
         router.refresh();

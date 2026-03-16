@@ -6,6 +6,7 @@ import { Badge, DataTable, Button, ConfirmDialog, useToast } from "@/components"
 import type { Column } from "@/components";
 import type { ExerciseItem } from "@/lib/data/coach";
 import { ExerciseModal } from "./_exercise-modal";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -119,7 +120,7 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/coach/exercises/${deleteTarget.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/coach/exercises/${deleteTarget.id}`, { method: "DELETE", headers: csrfHeaders() });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toastError("Delete failed", data.error ?? "Failed to delete exercise.");

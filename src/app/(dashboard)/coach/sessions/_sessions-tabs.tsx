@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { csrfHeaders } from "@/lib/csrf-client";
 import {
   Tabs, TabList, TabTrigger, TabPanel,
   DataTable, Badge, Avatar, Button, ConfirmDialog, EmptyState,
@@ -108,7 +109,7 @@ export function SessionsTabs({
   async function handleClone(planId: string) {
     setCloneLoading(planId);
     try {
-      const res = await fetch(`/api/coach/plans/${planId}/clone`, { method: "POST" });
+      const res = await fetch(`/api/coach/plans/${planId}/clone`, { method: "POST", headers: csrfHeaders() });
       if (res.ok) {
         toastSuccess("Plan cloned", "A copy has been added to your plans.");
         router.refresh();
@@ -124,7 +125,7 @@ export function SessionsTabs({
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/coach/plans/${deleteTarget.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/coach/plans/${deleteTarget.id}`, { method: "DELETE", headers: csrfHeaders() });
       if (res.ok) {
         setDeleteTarget(null);
         router.refresh();

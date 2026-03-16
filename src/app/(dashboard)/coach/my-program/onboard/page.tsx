@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 // ── Constants ──────────────────────────────────────────────────────────
 const EVENTS = [
@@ -352,7 +353,7 @@ export default function OnboardingWizardPage() {
 
       const res = await fetch("/api/coach/my-program/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify(payload),
       });
 

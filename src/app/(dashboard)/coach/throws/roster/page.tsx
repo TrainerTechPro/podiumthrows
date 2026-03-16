@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import UserAvatar from "@/components/user-avatar";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { type EventCode, type GenderCode } from "@/lib/throws/constants";
 import {
  DEFICIT_TYPE_LABELS,
@@ -165,7 +166,7 @@ export default function ThrowsRosterPage() {
  try {
  const res = await fetch("/api/throws/podium-roster", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId: enrollForm.athleteId,
  event: enrollForm.event,
@@ -198,7 +199,7 @@ export default function ThrowsRosterPage() {
  try {
  await fetch(`/api/throws/podium-roster/${athleteId}`, {
  method: "PATCH",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ status: "inactive" }),
  });
  fetchData();

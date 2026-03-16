@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 interface SaveResumeBarProps {
   questionnaireId: string;
@@ -29,7 +30,7 @@ export function SaveResumeBar({
         `/api/athlete/questionnaires/${questionnaireId}/draft`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ draftAnswers: answers }),
         }
       );

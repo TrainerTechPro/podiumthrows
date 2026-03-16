@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 // ─── Billing toggle ───────────────────────────────────────────────────────────
 
@@ -181,7 +182,7 @@ export function PricingCards({
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ plan: planId, interval: billing }),
       });
       const data = await res.json();

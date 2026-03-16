@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /**
  * Reads `?checkout=pro` or `?checkout=elite` from the URL and
@@ -36,7 +37,7 @@ export function CheckoutTrigger() {
       try {
         const res = await fetch("/api/stripe/checkout", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ plan, interval }),
         });
         const data = await res.json();

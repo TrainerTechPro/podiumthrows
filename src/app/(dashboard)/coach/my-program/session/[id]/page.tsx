@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useSessionReducer, type ThrowEntry, type LiftEntry } from "@/components/session/use-session-reducer";
 import { SessionProgressHeader } from "@/components/session/session-progress-header";
 import { WarmupChecklist } from "@/components/session/warmup-checklist";
@@ -62,7 +63,7 @@ export default function SessionDetailPage() {
           `/api/throws/program/${state.session.programId}/sessions/${state.session.id}/throws`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({
               throwNumber: entry.throwNumber,
               implement: entry.implement,
@@ -95,7 +96,7 @@ export default function SessionDetailPage() {
           `/api/throws/program/${state.session.programId}/sessions/${state.session.id}/lifts`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({
               exerciseName: entry.exerciseName,
               exerciseId: entry.exerciseId,
@@ -161,7 +162,7 @@ export default function SessionDetailPage() {
           `/api/throws/session/${state.session.id}/intra-evaluate`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({
               blockNumber: 1,
               blockBestMark,
@@ -217,7 +218,7 @@ export default function SessionDetailPage() {
           `/api/throws/program/${state.session.programId}/sessions/${state.session.id}/best-marks`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({ marks }),
           },
         ).catch(() => {});
@@ -228,7 +229,7 @@ export default function SessionDetailPage() {
         `/api/throws/program/${state.session.programId}/sessions/${state.session.id}/complete`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             actualThrows: computed.totalThrowsLogged || undefined,
             bestMark: computed.overallBest || undefined,

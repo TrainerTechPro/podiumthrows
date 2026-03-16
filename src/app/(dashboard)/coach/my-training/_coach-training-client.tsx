@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -81,7 +82,7 @@ function SessionDetail({ session, onDelete }: { session: CoachSession; onDelete:
     if (!confirm("Delete this session?")) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/coach/log-session/${session.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/coach/log-session/${session.id}`, { method: "DELETE", headers: csrfHeaders() });
       if (res.ok) onDelete();
     } catch {
       alert("Failed to delete");

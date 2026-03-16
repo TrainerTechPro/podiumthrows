@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -156,7 +157,7 @@ export default function PendingSuggestions({ programId }: PendingSuggestionsProp
         `/api/throws/program/${programId}/suggestions/${suggestionId}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ action: "APPROVE" }),
         },
       );
@@ -186,7 +187,7 @@ export default function PendingSuggestions({ programId }: PendingSuggestionsProp
         `/api/throws/program/${programId}/suggestions/${suggestionId}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             action: "REJECT",
             rejectionReason: rejectionReason.trim() || undefined,

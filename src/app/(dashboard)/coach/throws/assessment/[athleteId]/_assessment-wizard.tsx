@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components";
 
@@ -207,7 +208,7 @@ export function AssessmentWizard({
 
         const res = await fetch("/api/coach/throws/assessment", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             athleteId,
             athleteType: selectedType,

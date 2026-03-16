@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { localToday } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -253,7 +254,7 @@ export function LogSessionWizard({
     try {
       const res = await fetch(apiEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           event,
           date,

@@ -17,6 +17,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import {
   DEFICIT_TYPE_LABELS,
   DEFICIT_LEVEL_LABELS,
@@ -302,7 +303,7 @@ export default function PodiumThrowsPanel({
         `/api/throws/podium-roster/${athleteId}/testing`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify(payload),
         }
       );

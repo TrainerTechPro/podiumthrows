@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import UserAvatar from "@/components/user-avatar";
@@ -236,7 +237,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  fd.append("sessionId", sessionId);
  const uploadRes = await fetch("/api/throws/practice/video-upload", {
  method: "POST",
- headers: videoDuration !== null ? { "x-video-duration": String(videoDuration) } : {},
+ headers: videoDuration !== null ? { "x-video-duration": String(videoDuration), ...csrfHeaders() } : { ...csrfHeaders() },
  body: fd,
  });
  const uploadData = await uploadRes.json();
@@ -250,7 +251,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
 
  const res = await fetch(`/api/throws/practice/${sessionId}/attempts`, {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ ...attemptPayload, videoUrl }),
  });
 
@@ -730,7 +731,7 @@ export default function LiveSessionPage() {
  try {
  await fetch(`/api/throws/practice/${params.sessionId}`, {
  method: "PATCH",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ status: "CLOSED" }),
  });
  setSession((s) => s ? { ...s, status: "CLOSED" } : s);
@@ -755,7 +756,7 @@ export default function LiveSessionPage() {
  : prev
  );
  // Confirm on server
- fetch(`/api/throws/practice/${params.sessionId}/attempts/${attemptId}`, { method: "DELETE" });
+ fetch(`/api/throws/practice/${params.sessionId}/attempts/${attemptId}`, { method: "DELETE", headers: csrfHeaders() });
  }
 
  if (loading) {

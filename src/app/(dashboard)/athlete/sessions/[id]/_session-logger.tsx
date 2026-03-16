@@ -3,6 +3,7 @@
 import { useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, RestTimer } from "@/components";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { PRCelebration } from "@/components/ui/PRCelebration";
 import type {
   SessionWithPrescription,
@@ -82,7 +83,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
       try {
         const res = await fetch(`/api/athlete/sessions/${session.id}/log`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             exerciseName: exercise.exerciseName,
             sets: values.sets,

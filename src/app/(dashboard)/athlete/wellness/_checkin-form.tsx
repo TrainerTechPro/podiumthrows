@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Slider Field ───────────────────────────────────────────────────────── */
 
@@ -86,7 +87,7 @@ export function CheckInForm() {
       try {
         const res = await fetch("/api/athlete/readiness", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             sleepQuality,
             sleepHours,

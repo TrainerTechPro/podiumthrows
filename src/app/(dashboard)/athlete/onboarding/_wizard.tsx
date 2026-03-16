@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cn, localToday } from "@/lib/utils";
 import { Avatar, Button, ProgressBar } from "@/components";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
@@ -192,7 +193,7 @@ export function OnboardingWizard({
 
         const res = await fetch("/api/athlete/profile", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify(payload),
         });
 

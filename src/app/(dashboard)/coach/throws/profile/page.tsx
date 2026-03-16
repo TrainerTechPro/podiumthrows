@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useSearchParams } from "next/navigation";
 import { localToday } from "@/lib/utils";
 import {
@@ -185,7 +186,7 @@ function CheckInForm({
  try {
  const res = await fetch("/api/throws/checkins", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId,
  date: todayISO(),
@@ -465,7 +466,7 @@ export default function AthleteProfilePage() {
  try {
  const res = await fetch("/api/throws/typing/assign", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId: selectedAthleteId }),
  });
  const data = await res.json();
@@ -1420,7 +1421,7 @@ function DrillPRPanel({
  try {
  const res = await fetch("/api/throws/drill-prs", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId, event, drillType, implement,
  distance: parseFloat(distance), achievedAt,
@@ -1696,7 +1697,7 @@ function TestingMetricsPanel({
  try {
  const res = await fetch("/api/throws/testing", {
  method: "PATCH",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId, benchmarks: payload }),
  });
  const data = await res.json();
@@ -1848,7 +1849,7 @@ function RecordPRForm({
  try {
  const res = await fetch("/api/throws/prs", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId,
  event,
@@ -1956,7 +1957,7 @@ function ManageComplexForm({
  try {
  const res = await fetch("/api/throws/complexes", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId, startDate, exercises: selectedExercises, event }),
  });
  const data = await res.json();
@@ -2090,7 +2091,7 @@ function AddCompetitionForm({
  try {
  await fetch("/api/throws/competitions", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId, name, date, event, priority }),
  });
  onSaved();
@@ -2173,7 +2174,7 @@ function AthleteBioEditForm({
  try {
  const res = await fetch("/api/throws/athlete-bio", {
  method: "PATCH",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId, gender: gender || null, sport: sport || null, height: height || null, weight: weight || null }),
  });
  const data = await res.json();
@@ -2268,7 +2269,7 @@ function CompetitionsPanel({
  try {
  const res = await fetch("/api/throws/competitions", {
  method: "PATCH",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ id, result: resultInput, resultBy: "COACH" }),
  });
  const data = await res.json();
@@ -2408,7 +2409,7 @@ function TypingOverrideForm({
  try {
  const res = await fetch("/api/throws/typing", {
  method: "PATCH",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId,
  adaptationGroup: adaptationGroup || undefined,

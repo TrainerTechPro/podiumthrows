@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { localToday } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -64,7 +65,7 @@ export function RecordsTab({
     try {
       const res = await fetch("/api/coach/my-training/testing", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify(formData),
       });
       const data = await res.json();
@@ -82,7 +83,7 @@ export function RecordsTab({
   async function handleDeleteRecord(id: string) {
     if (!confirm("Delete this testing record?")) return;
     try {
-      const res = await fetch(`/api/coach/my-training/testing/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/coach/my-training/testing/${id}`, { method: "DELETE", headers: csrfHeaders() });
       if (res.ok) {
         setRecords((prev) => prev.filter((r) => r.id !== id));
       }

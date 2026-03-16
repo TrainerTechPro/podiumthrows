@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { IMPLEMENT_PRESETS, VALID_EVENTS } from "@/lib/throws";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -80,7 +81,7 @@ export function ThrowLogForm({
       try {
         const res = await fetch("/api/athlete/throws", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             event,
             implementKg: implNum,

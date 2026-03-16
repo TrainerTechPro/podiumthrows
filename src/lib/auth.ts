@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { generateCsrfToken, csrfCookieString, clearCsrfCookieString } from "@/lib/csrf";
 
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
   throw new Error("JWT_SECRET environment variable must be set in production");
@@ -47,8 +48,19 @@ export function setAuthCookie(token: string): string {
   return `auth-token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
 }
 
+/** Build a Set-Cookie string for a fresh CSRF token (rotated on login/register). */
+export function setCsrfCookie(): string {
+  const csrfToken = generateCsrfToken();
+  return csrfCookieString(csrfToken, process.env.NODE_ENV === "production");
+}
+
 export function clearAuthCookie(): string {
   return "auth-token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
+}
+
+/** Build a Set-Cookie string that clears the CSRF cookie. */
+export function clearCsrfCookie(): string {
+  return clearCsrfCookieString();
 }
 
 export async function getCurrentUser(): Promise<JWTPayload | null> {

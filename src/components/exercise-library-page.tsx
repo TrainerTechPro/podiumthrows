@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/components/toast";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 // ─── Types ──────────────────────────────────────────────────────────
 interface ExerciseListItem {
@@ -149,7 +150,7 @@ export default function ExerciseLibraryPage({ isCoach }: Props) {
   async function handleSeed() {
     setSeeding(true);
     try {
-      const res = await fetch("/api/exercise-library/seed", { method: "POST" });
+      const res = await fetch("/api/exercise-library/seed", { method: "POST", headers: csrfHeaders() });
       const data = await res.json();
       if (data.success) {
         toast(data.data.message, "success");
@@ -510,7 +511,7 @@ function ExerciseDetailModal({
     try {
       const res = await fetch(`/api/exercise-library/${detail.id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ videoUrl: videoUrl || null }),
       });
       const data = await res.json();

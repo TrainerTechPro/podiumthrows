@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ export default function AutoregulationSettingsPage() {
     try {
       const res = await fetch("/api/coach/autoregulation-settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ targetType: "COACH_SELF", ...coachSelf }),
       });
       if (!res.ok) throw new Error("save failed");
@@ -167,7 +168,7 @@ export default function AutoregulationSettingsPage() {
     try {
       const res = await fetch("/api/coach/autoregulation-settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           targetType: "ATHLETES",
           athletes: athletes.map((a) => ({
@@ -193,7 +194,7 @@ export default function AutoregulationSettingsPage() {
     try {
       await fetch("/api/coach/autoregulation-settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ targetType: "ATHLETE", athleteId, mode: null }),
       });
       setAthletes((prev) =>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useToast } from "@/components/toast";
 import { useAccessibility } from "@/components/accessibility-provider";
 import dynamic from "next/dynamic";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 const ProfilePictureEditor = dynamic(
   () => import("@/components/profile-picture-editor"),
@@ -201,7 +202,7 @@ export default function CoachSettingsPage() {
     try {
       const res = await fetch("/api/coach/preferences", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify(patch),
       });
       const data = await res.json();
@@ -229,7 +230,7 @@ export default function CoachSettingsPage() {
   async function handleSaveCoachProfilePicture(dataUrl: string) {
     const res = await fetch("/api/coach/profile-picture", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...csrfHeaders() },
       body: JSON.stringify({ avatarUrl: dataUrl }),
     });
     const data = await res.json();
@@ -242,7 +243,7 @@ export default function CoachSettingsPage() {
   }
 
   async function handleRemoveCoachProfilePicture() {
-    const res = await fetch("/api/coach/profile-picture", { method: "DELETE" });
+    const res = await fetch("/api/coach/profile-picture", { method: "DELETE", headers: csrfHeaders() });
     const data = await res.json();
     if (data.success) {
       setProfile((p) => ({ ...p, avatarUrl: "" }));
@@ -259,7 +260,7 @@ export default function CoachSettingsPage() {
     try {
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           firstName: profile.firstName,
           lastName: profile.lastName,
@@ -297,7 +298,7 @@ export default function CoachSettingsPage() {
     try {
       const res = await fetch("/api/auth/me", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword,
@@ -327,7 +328,7 @@ export default function CoachSettingsPage() {
     try {
       const res = await fetch("/api/invitations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify(inviteForm),
       });
       const data = await res.json();
@@ -351,7 +352,7 @@ export default function CoachSettingsPage() {
   async function handleManageBilling() {
     setPortalLoading(true);
     try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const res = await fetch("/api/stripe/portal", { method: "POST", headers: csrfHeaders() });
       const data = await res.json();
       if (data.success && data.data?.url) {
         window.location.href = data.data.url;

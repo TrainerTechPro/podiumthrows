@@ -1,17 +1,46 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyTokenEdge as verifyToken } from "@/lib/auth-edge";
+import {
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+  generateCsrfToken,
+} from "@/lib/csrf";
 
 const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/pricing"];
 const AUTH_PATHS = ["/login", "/register"];
+
+const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("auth-token")?.value;
 
-  // Allow API routes, static files, and Next.js internals
+  // ── API routes: CSRF validation then pass through ──────────────────
+  if (pathname.startsWith("/api/")) {
+    if (STATE_CHANGING_METHODS.has(request.method)) {
+      // Skip CSRF for webhook & cron routes (they use their own auth)
+      const skipCsrf =
+        pathname.startsWith("/api/webhooks/") ||
+        pathname.startsWith("/api/cron/");
+
+      if (!skipCsrf) {
+        const csrfCookie = request.cookies.get(CSRF_COOKIE_NAME)?.value;
+        const csrfHeader = request.headers.get(CSRF_HEADER_NAME);
+
+        if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+          return NextResponse.json(
+            { error: "Invalid CSRF token" },
+            { status: 403 }
+          );
+        }
+      }
+    }
+    return NextResponse.next();
+  }
+
+  // ── Static files and Next.js internals ─────────────────────────────
   if (
-    pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon") ||
     pathname.includes(".")
@@ -19,37 +48,48 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Parse JWT to get role (lightweight check — no DB call)
+  // ── Auth routing logic ─────────────────────────────────────────────
   const payload = token ? verifyToken(token) : null;
+  let response: NextResponse;
 
   // Redirect authenticated users away from auth pages and landing page
   if (payload && (pathname === "/" || AUTH_PATHS.some((p) => pathname.startsWith(p)))) {
     const dashboardUrl =
       payload.role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard";
-    return NextResponse.redirect(new URL(dashboardUrl, request.url));
+    response = NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
-
   // Redirect unauthenticated users to login
-  if (!payload && pathname !== "/" && !PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  else if (!payload && pathname !== "/" && !PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    response = NextResponse.redirect(loginUrl);
   }
-
   // Role-based route protection (admins bypass)
-  if (payload && !payload.isAdmin) {
-    // Coach trying to access athlete routes
+  else if (payload && !payload.isAdmin) {
     if (pathname.startsWith("/athlete") && payload.role !== "ATHLETE") {
-      return NextResponse.redirect(new URL("/coach/dashboard", request.url));
+      response = NextResponse.redirect(new URL("/coach/dashboard", request.url));
+    } else if (pathname.startsWith("/coach") && payload.role !== "COACH") {
+      response = NextResponse.redirect(new URL("/athlete/dashboard", request.url));
+    } else {
+      response = NextResponse.next();
     }
-
-    // Athlete trying to access coach routes
-    if (pathname.startsWith("/coach") && payload.role !== "COACH") {
-      return NextResponse.redirect(new URL("/athlete/dashboard", request.url));
-    }
+  } else {
+    response = NextResponse.next();
   }
 
-  return NextResponse.next();
+  // ── Set CSRF cookie on page responses if not already present ───────
+  if (!request.cookies.has(CSRF_COOKIE_NAME)) {
+    const csrfToken = generateCsrfToken();
+    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
+      httpOnly: false,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60,
+    });
+  }
+
+  return response;
 }
 
 export const config = {

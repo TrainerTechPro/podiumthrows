@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import type { TeamGoalItem, AthletePickerItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -508,7 +509,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
         try {
           const res = await fetch("/api/coach/goals", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({
               athleteId: form.athleteId,
               title: form.title,
@@ -543,7 +544,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
     try {
       const res = await fetch(`/api/coach/goals/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ currentValue }),
       });
       const data = await res.json();
@@ -581,7 +582,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
     try {
       const res = await fetch(`/api/coach/goals/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ status: "ABANDONED" }),
       });
       if (res.ok) {

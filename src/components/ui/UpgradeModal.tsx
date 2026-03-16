@@ -6,6 +6,7 @@ import { PLANS } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
 import type { PlanName } from "@/lib/stripe";
 import { Check } from "lucide-react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ── Feature lists per plan ──────────────────────────────────────────────── */
 
@@ -119,7 +120,7 @@ export function UpgradeModal({
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ plan: planKey }),
       });
       const data = await res.json();

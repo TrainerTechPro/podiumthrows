@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import { ANALYSIS_FPS } from "./types";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -103,7 +104,7 @@ function waitForEvent(
  */
 async function ensureCors(): Promise<void> {
   try {
-    const res = await fetch("/api/admin/ensure-cors", { method: "POST" });
+    const res = await fetch("/api/admin/ensure-cors", { method: "POST", headers: csrfHeaders() });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       console.warn("[useFrameExtractor] CORS setup returned", res.status, data);

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { localToday } from "@/lib/utils";
 import { EVENTS, SELF_FEELING_OPTIONS, parseEvents, type SelfFeeling } from "@/lib/throws/constants";
+import { csrfHeaders } from "@/lib/csrf-client";
 import type { ThrowingBlockConfig, StrengthBlockConfig, WarmupCooldownConfig } from "@/lib/throws/validation";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -109,7 +110,7 @@ export default function AthleteThrowsPage() {
  const handleStartSession = async (assignmentId: string) => {
  const res = await fetch(`/api/throws/assignments/${assignmentId}`, {
  method: "PUT",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ action: "start" }),
  });
  const data = await res.json();
@@ -124,7 +125,7 @@ export default function AthleteThrowsPage() {
  const handleSkipSession = async (assignmentId: string, reason: string) => {
  const res = await fetch(`/api/throws/assignments/${assignmentId}`, {
  method: "PUT",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ action: "skip", skipReason: reason }),
  });
  const data = await res.json();
@@ -143,7 +144,7 @@ export default function AthleteThrowsPage() {
  ) => {
  const res = await fetch(`/api/throws/assignments/${assignmentId}`, {
  method: "PUT",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ action: "complete", rpe, selfFeeling, feedbackNotes }),
  });
  const data = await res.json();
@@ -423,7 +424,7 @@ function SessionCard({
  if (throwsWithDistance.length > 0) {
  await fetch("/api/throws/logs", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  assignmentId: assignment.id,
  blockId,
@@ -447,7 +448,7 @@ function SessionCard({
  if (bestThrow > 0) {
  const prRes = await fetch("/api/throws/prs", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  event: assignment.session.event,
  implement: config.implementWeight,

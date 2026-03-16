@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
+import { hashPassword, signToken, setAuthCookie, setCsrfCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
@@ -142,7 +142,8 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
 
-    response.headers.set("Set-Cookie", setAuthCookie(token));
+    response.headers.append("Set-Cookie", setAuthCookie(token));
+    response.headers.append("Set-Cookie", setCsrfCookie());
 
     return response;
   } catch (error) {

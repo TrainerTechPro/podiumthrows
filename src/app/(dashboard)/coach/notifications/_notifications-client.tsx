@@ -4,6 +4,7 @@ import { useState, useCallback, useTransition } from "react";
 import { Badge, Button, EmptyState } from "@/components";
 import type { NotificationItem } from "@/lib/data/coach";
 import Link from "next/link";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -165,7 +166,7 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
       try {
         await fetch(`/api/coach/notifications/${id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ read }),
         });
         setNotifications((prev) =>
@@ -183,7 +184,7 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
       try {
         await fetch("/api/coach/notifications", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ markAll: true, read: true }),
         });
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));

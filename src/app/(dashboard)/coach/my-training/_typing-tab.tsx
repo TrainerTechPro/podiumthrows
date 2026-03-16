@@ -6,6 +6,7 @@ import {
   type QuizQuestion,
   type QuizOption,
 } from "@/lib/throws/profile-constants";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -91,7 +92,7 @@ function QuizRunner({ onComplete }: { onComplete: (data: CoachTypingData) => voi
     try {
       const res = await fetch("/api/coach/my-training/typing", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           adaptationSpeedResponses: finalResponses.adaptationSpeed,
           transferTypeResponses: finalResponses.transferType,

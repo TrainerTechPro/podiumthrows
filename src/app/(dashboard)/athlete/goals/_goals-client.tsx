@@ -5,6 +5,7 @@ import { Badge, Button, EmptyState, Modal, ProgressBar, useConfirm } from "@/com
 import { Input } from "@/components/ui/Input";
 import type { GoalItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -440,7 +441,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       try {
         const res = await fetch("/api/athlete/goals", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             title: form.title,
             targetValue: parseFloat(form.targetValue),
@@ -472,7 +473,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     try {
       const res = await fetch(`/api/athlete/goals/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ currentValue }),
       });
       const data = await res.json();
@@ -510,7 +511,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     try {
       const res = await fetch(`/api/athlete/goals/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ deadline: deadline ?? "" }),
       });
       const data = await res.json();
@@ -533,7 +534,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
     try {
       const res = await fetch(`/api/athlete/goals/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ status: "ABANDONED" }),
       });
       if (res.ok) {
