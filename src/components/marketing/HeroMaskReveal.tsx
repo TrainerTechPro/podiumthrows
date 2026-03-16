@@ -11,6 +11,11 @@ import {
   useReducedMotion,
 } from "framer-motion";
 
+// iOS extends DeviceOrientationEvent with a permission API
+interface DeviceOrientationEventiOS extends DeviceOrientationEvent {
+  requestPermission?: () => Promise<"granted" | "denied">;
+}
+
 interface HeroMaskRevealProps {
   baseImage: string;
   revealImage: string;
@@ -201,10 +206,12 @@ export default function HeroMaskReveal({
       parallaxRevealY.set(-py * 2);
     };
 
+    const DOE = DeviceOrientationEvent as unknown as DeviceOrientationEventiOS;
+
     const requestGyro = async () => {
       try {
-        if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
-          const permission = await (DeviceOrientationEvent as any).requestPermission();
+        if (typeof DOE.requestPermission === "function") {
+          const permission = await DOE.requestPermission!();
           if (permission !== "granted") {
             setGyroAvailable(false);
             return;
@@ -218,7 +225,7 @@ export default function HeroMaskReveal({
       }
     };
 
-    if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
+    if (typeof DOE.requestPermission === "function") {
       const tapHandler = () => {
         requestGyro();
         document.removeEventListener("touchstart", tapHandler);
