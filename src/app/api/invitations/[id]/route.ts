@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 /* ── PATCH — revoke a pending invitation ── */
-export async function PATCH(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
@@ -40,6 +38,14 @@ export async function PATCH(
     await prisma.invitation.update({
       where: { id: params.id },
       data: { status: "REVOKED" },
+    });
+
+    void logAudit({
+      userId: session.userId,
+      action: "INVITATION_REVOKED",
+      resource: `invitation:${params.id}`,
+      metadata: { email: invitation.email, coachId: coach.id },
+      ...auditRequestInfo(req),
     });
 
     return NextResponse.json({ ok: true });

@@ -4,6 +4,7 @@ import { verifyPassword, signToken, setAuthCookie, setCsrfCookie } from "@/lib/a
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseBody, LoginSchema } from "@/lib/api-schemas";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,19 +27,26 @@ export async function POST(request: NextRequest) {
       select: { id: true, email: true, role: true, passwordHash: true, isAdmin: true },
     });
 
+    const reqInfo = auditRequestInfo(request);
+
     if (!user) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
+      void logAudit({
+        action: "LOGIN_FAILED",
+        metadata: { email: email.toLowerCase().trim(), reason: "user_not_found" },
+        ...reqInfo,
+      });
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
     const passwordValid = await verifyPassword(password, user.passwordHash);
     if (!passwordValid) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
+      void logAudit({
+        userId: user.id,
+        action: "LOGIN_FAILED",
+        metadata: { email: user.email, reason: "wrong_password" },
+        ...reqInfo,
+      });
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
     const token = signToken({
@@ -60,12 +68,16 @@ export async function POST(request: NextRequest) {
     response.headers.append("Set-Cookie", setAuthCookie(token));
     response.headers.append("Set-Cookie", setCsrfCookie());
 
+    void logAudit({
+      userId: user.id,
+      action: "LOGIN_SUCCESS",
+      metadata: { role: user.role },
+      ...reqInfo,
+    });
+
     return response;
   } catch (e) {
     logger.error("login error", { context: "api", error: e });
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }
