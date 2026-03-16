@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -81,7 +82,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
     if (!confirm(`Revoke invitation${inv.email ? ` to ${inv.email}` : ""}? The link will no longer work.`)) return;
     setRevokingId(inv.id);
     try {
-      const res = await fetch(`/api/invitations/${inv.id}`, { method: "PATCH" });
+      const res = await fetch(`/api/invitations/${inv.id}`, { method: "PATCH", headers: csrfHeaders() });
       if (!res.ok) throw new Error("Failed to revoke");
       setInvitations((prev) =>
         prev.map((i) => (i.id === inv.id ? { ...i, status: "REVOKED" } : i))

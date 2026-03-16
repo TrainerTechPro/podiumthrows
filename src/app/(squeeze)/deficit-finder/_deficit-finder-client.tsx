@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, type FormEvent } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -277,7 +278,7 @@ export function DeficitFinderClient() {
 
       const res = await fetch("/api/leads", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           email,
           name: name || null,

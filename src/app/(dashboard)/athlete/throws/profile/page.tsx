@@ -6,6 +6,7 @@ import {
  EVENTS,
  type ThrowEvent,
 } from "@/lib/throws/constants";
+import { csrfHeaders } from "@/lib/csrf-client";
 import {
  SELF_FEELING_SCALE,
  SLEEP_QUALITY_SCALE,
@@ -145,7 +146,7 @@ export default function AthleteProfilePage() {
  try {
  await fetch("/api/throws/checkins", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId,
  date: todayISO(),
@@ -178,7 +179,7 @@ export default function AthleteProfilePage() {
  try {
  const res = await fetch("/api/throws/prs", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  event: prForm.event,
  implement: prForm.implement,

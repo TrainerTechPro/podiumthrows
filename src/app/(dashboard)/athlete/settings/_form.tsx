@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cn, localToday } from "@/lib/utils";
 import type { AthleteProfileFull } from "@/lib/data/athlete";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 const EVENTS = [
   { value: "SHOT_PUT", label: "Shot Put" },
@@ -53,7 +54,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
       try {
         const res = await fetch("/api/athlete/profile", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             firstName: firstName.trim(),
             lastName: lastName.trim(),

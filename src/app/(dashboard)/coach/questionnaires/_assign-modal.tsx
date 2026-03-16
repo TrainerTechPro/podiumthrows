@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 type Props = {
   open: boolean;
@@ -49,7 +50,7 @@ export function AssignModal({
         `/api/coach/questionnaires/${questionnaireId}/assign`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ athleteIds: Array.from(selected) }),
         }
       );

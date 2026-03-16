@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/toast";
 import {
@@ -265,7 +266,7 @@ export default function ThrowsSessionBuilder() {
  try {
  const res = await fetch("/api/throws/sessions", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  name: sessionName,
  sessionType,

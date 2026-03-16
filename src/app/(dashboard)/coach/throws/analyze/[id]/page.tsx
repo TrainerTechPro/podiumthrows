@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -117,7 +118,7 @@ export default function ThrowFlowResultPage() {
  if (!confirm("Delete this analysis? This cannot be undone.")) return;
  setDeleting(true);
  try {
- await fetch(`/api/throwflow/${params.id}`, { method: "DELETE" });
+ await fetch(`/api/throwflow/${params.id}`, { method: "DELETE", headers: csrfHeaders() });
  router.push("/coach/throws/analyze/history");
  } catch {
  setDeleting(false);

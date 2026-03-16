@@ -5,6 +5,7 @@ import { useToast } from "@/components/toast";
 import DrillVideoUpload from "@/components/drill-video-upload";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Video } from "lucide-react";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 interface DrillVideo {
  id: string;
@@ -103,7 +104,7 @@ export default function CoachDrillVideosPage() {
  if (!confirm("Delete this drill video? This cannot be undone.")) return;
  setDeletingId(id);
  try {
- const res = await fetch(`/api/drill-videos/${id}`, { method: "DELETE" });
+ const res = await fetch(`/api/drill-videos/${id}`, { method: "DELETE", headers: csrfHeaders() });
  const data = await res.json();
  if (data.success) {
  setVideos((vs) => vs.filter((v) => v.id !== id));

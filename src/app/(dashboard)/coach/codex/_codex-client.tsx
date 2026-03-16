@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -86,7 +87,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
       // Step 1: Get upload URL from server
       const urlRes = await fetch("/api/codex", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           step: "upload-url",
           fileName: file.name || "video.mp4",
@@ -115,7 +116,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
         // Step 3: Confirm and save metadata
         const confirmRes = await fetch("/api/codex", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             step: "confirm",
             event,
@@ -243,7 +244,7 @@ function VideoPlayer({ entry, onDelete }: { entry: CodexEntry; onDelete: () => v
     if (!confirm("Delete this throw? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/codex/${entry.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/codex/${entry.id}`, { method: "DELETE", headers: csrfHeaders() });
       if (res.ok) onDelete();
     } catch {
       alert("Failed to delete");

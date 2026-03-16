@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { Input } from "@/components/ui/Input";
 import type { RecurrenceFrequency } from "@/lib/forms/types";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 interface Athlete {
   id: string;
@@ -91,7 +92,7 @@ export function RecurringScheduleEditor({
         `/api/coach/questionnaires/${questionnaireId}/schedule`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             ...schedule,
             endDate: schedule.endDate || undefined,
@@ -118,7 +119,7 @@ export function RecurringScheduleEditor({
     try {
       await fetch(
         `/api/coach/questionnaires/${questionnaireId}/schedule`,
-        { method: "DELETE" }
+        { method: "DELETE", headers: csrfHeaders() }
       );
       onSaved();
     } catch {

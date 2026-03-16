@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { Sun, Moon, Menu, X, LogOut } from "lucide-react";
 import {
   Sidebar,
@@ -155,7 +156,7 @@ function UserMenu({ user }: { user: DashboardUser }) {
 
   async function handleLogout() {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/logout", { method: "POST", headers: csrfHeaders() });
     } catch { /* proceed anyway */ }
     router.push("/login");
   }

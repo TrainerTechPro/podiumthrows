@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, type Dispatch } from "react";
 import Link from "next/link";
 import type { SessionState, SessionAction } from "./use-session-reducer";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 interface SessionProgressHeaderProps {
   state: SessionState;
@@ -173,7 +174,7 @@ function IntraEvalBanner({
           `/api/throws/program/${programId}/suggestions/${suggestion.id}`,
           {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({ action: "APPROVE" }),
           },
         );

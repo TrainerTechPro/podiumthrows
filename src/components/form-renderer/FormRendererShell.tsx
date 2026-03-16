@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { csrfHeaders } from "@/lib/csrf-client";
 import type {
   FormBlock,
   FormDisplayMode,
@@ -139,7 +140,7 @@ export function FormRendererShell({
         `/api/athlete/questionnaires/${questionnaireId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify(payload),
         }
       );

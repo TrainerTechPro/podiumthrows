@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { StepBasics, type BasicsData } from "./_step-basics";
 import { StepBlocks, type BlockData } from "./_step-blocks";
 import { StepExercises } from "./_step-exercises";
@@ -73,7 +74,7 @@ export function SessionWizard({
         // 1. Create the plan
         const planRes = await fetch("/api/coach/plans", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             name: basics.name.trim(),
             description: basics.description.trim() || undefined,
@@ -110,7 +111,7 @@ export function SessionWizard({
         if (selectedAthletes.length > 0 && scheduledDate) {
           const assignRes = await fetch("/api/coach/sessions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({
               planId: plan.id,
               athleteIds: selectedAthletes,

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AssignModal } from "../_assign-modal";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 type Props = {
   questionnaireId: string;
@@ -37,6 +38,7 @@ export function QuestionnaireActions({
     try {
       const res = await fetch(`/api/coach/questionnaires/${questionnaireId}`, {
         method: "DELETE",
+        headers: csrfHeaders(),
       });
       if (res.ok) {
         router.push("/coach/questionnaires");
@@ -54,7 +56,7 @@ export function QuestionnaireActions({
     try {
       const res = await fetch(
         `/api/coach/questionnaires/${questionnaireId}/clone`,
-        { method: "POST" }
+        { method: "POST", headers: csrfHeaders() }
       );
       if (res.ok) {
         const data = await res.json();
@@ -73,7 +75,7 @@ export function QuestionnaireActions({
     try {
       const res = await fetch(`/api/coach/questionnaires/${questionnaireId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ status: "archived" }),
       });
       if (res.ok) {
@@ -91,7 +93,7 @@ export function QuestionnaireActions({
     try {
       const res = await fetch(`/api/coach/questionnaires/${questionnaireId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ status: "draft" }),
       });
       if (res.ok) router.refresh();

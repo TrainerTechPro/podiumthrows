@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { localToday } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -220,7 +221,7 @@ function LogSessionForm({ athleteId, onLogged, onCancel }: LogSessionFormProps) 
 
  const sessionRes = await fetch("/api/throws/athlete-sessions", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId,
  event,
@@ -239,7 +240,7 @@ function LogSessionForm({ athleteId, onLogged, onCancel }: LogSessionFormProps) 
  if (bestMark && effectiveImplement) {
  const prRes = await fetch("/api/throws/prs", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  event,
  implement: effectiveImplement,

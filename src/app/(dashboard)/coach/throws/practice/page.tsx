@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -60,7 +61,7 @@ export default function PracticeSessionsPage() {
  try {
  const res = await fetch("/api/throws/practice", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ name: formName.trim(), date: today, notes: formNotes || undefined }),
  });
  const data = await res.json();

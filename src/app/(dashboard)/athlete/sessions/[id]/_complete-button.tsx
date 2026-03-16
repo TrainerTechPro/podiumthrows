@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CompletionSummary, type SessionSummary } from "./_completion-summary";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
   const router = useRouter();
@@ -19,7 +20,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
       try {
         const res = await fetch(`/api/athlete/sessions/${sessionId}/complete`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ rpe, notes: notes.trim() || undefined }),
         });
 

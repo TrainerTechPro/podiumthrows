@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { csrfHeaders } from "@/lib/csrf-client";
 import {
  LineChart,
  Line,
@@ -470,7 +471,7 @@ export default function ThrowsLogPage() {
  try {
  const res = await fetch("/api/throws/athlete-sessions", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId, event: selectedEvent, date, notes: sessionNotes || null, drillLogs }),
  });
  const data = await res.json();

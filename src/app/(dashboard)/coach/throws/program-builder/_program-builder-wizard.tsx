@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import Link from "next/link";
 import { GeneratingOverlay } from "@/components/throws/GeneratingOverlay";
 
@@ -469,7 +470,7 @@ export function ProgramBuilderWizard({
         // Sandbox mode: preview only, no DB save
         const res = await fetch("/api/throws/program/preview", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ onboardingData: payload.onboardingData }),
         });
 
@@ -486,7 +487,7 @@ export function ProgramBuilderWizard({
         // Real mode: generate and save to DB
         const res = await fetch("/api/throws/program/generate-for-athlete", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify(payload),
         });
 

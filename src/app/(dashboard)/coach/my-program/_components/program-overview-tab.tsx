@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import ReasoningCard from "./reasoning-card";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 interface PhaseData {
   id: string;
@@ -202,7 +203,7 @@ export default function ProgramOverviewTab({
         `/api/throws/program/${program.id}/sessions/${sessionId}/reschedule`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ dayOfWeek: newDay }),
         },
       );

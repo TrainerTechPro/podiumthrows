@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { Input } from "@/components";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 interface ProfileFormProps {
   initial: {
@@ -31,7 +32,7 @@ export function ProfileForm({ initial }: ProfileFormProps) {
     try {
       const res = await fetch("/api/coach/settings", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ firstName, lastName, bio: bio || null, organization: organization || null }),
       });
 
@@ -122,7 +123,7 @@ export function UpgradeButton({ plan }: { plan: "PRO" | "ELITE" }) {
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ plan }),
       });
       if (!res.ok) throw new Error("Could not start checkout.");
@@ -154,7 +155,7 @@ export function PortalButton({ hasStripe }: { hasStripe: boolean }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const res = await fetch("/api/stripe/portal", { method: "POST", headers: csrfHeaders() });
       if (!res.ok) throw new Error("Could not open billing portal.");
       const { url } = await res.json();
       window.location.href = url;

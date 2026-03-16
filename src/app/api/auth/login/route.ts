@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyPassword, signToken, setAuthCookie } from "@/lib/auth";
+import { verifyPassword, signToken, setAuthCookie, setCsrfCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseBody, LoginSchema } from "@/lib/api-schemas";
@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
       redirectTo: user.role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard",
     });
 
-    response.headers.set("Set-Cookie", setAuthCookie(token));
+    response.headers.append("Set-Cookie", setAuthCookie(token));
+    response.headers.append("Set-Cookie", setCsrfCookie());
 
     return response;
   } catch (e) {

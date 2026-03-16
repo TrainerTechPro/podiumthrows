@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -153,7 +154,7 @@ export default function ThrowFlowAnalyzePage() {
 
  const res = await fetch("/api/throwflow", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  event,
  drillType,

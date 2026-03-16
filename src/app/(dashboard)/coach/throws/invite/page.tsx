@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import Link from "next/link";
 
 interface InvitationRow {
@@ -46,7 +47,7 @@ export default function ThrowsInvitePage() {
     try {
       const res = await fetch("/api/invitations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json();

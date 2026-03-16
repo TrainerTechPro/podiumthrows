@@ -8,6 +8,7 @@ import {
  type TypingQuizId,
  type QuizQuestion,
 } from "@/lib/throws/profile-constants";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 const QUIZ_ORDER: TypingQuizId[] = [
  "adaptationSpeed",
@@ -90,7 +91,7 @@ export default function AthleteTypingQuizPage() {
  try {
  const res = await fetch("/api/throws/typing", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId, quizResponses: updated }),
  });
  const data = await res.json();

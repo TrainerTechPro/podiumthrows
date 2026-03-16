@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
  TYPING_QUIZZES,
@@ -65,7 +66,7 @@ export default function TypingQuizPage() {
  try {
  const res = await fetch("/api/throws/typing", {
  method: "POST",
- headers: { "Content-Type": "application/json" },
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId,
  quizResponses: updated,

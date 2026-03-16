@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ProgressBar, Button, Input, Modal, UpgradeModal, useModal } from "@/components";
 import type { OnboardingStatus } from "@/lib/data/coach";
 import type { PlanName } from "@/lib/stripe";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Props ──────────────────────────────────────────────────────────────── */
 
@@ -101,7 +102,7 @@ function InlineInviteButton({
 
       const res = await fetch("/api/invitations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify(body),
       });
       const data = await res.json();
@@ -369,7 +370,7 @@ export function OnboardingChecklist({
     try {
       await fetch("/api/coach/onboarding", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ action: "dismiss" }),
       });
       router.refresh();

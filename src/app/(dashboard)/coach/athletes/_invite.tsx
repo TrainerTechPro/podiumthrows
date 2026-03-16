@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Input, Modal, UpgradeModal, useModal } from "@/components";
 import { cn } from "@/lib/utils";
 import type { PlanName } from "@/lib/stripe";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 type InviteMode = "email" | "link";
 
@@ -56,7 +57,7 @@ export function InviteAthleteButton({
 
       const res = await fetch("/api/invitations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify(body),
       });
       const data = await res.json();
