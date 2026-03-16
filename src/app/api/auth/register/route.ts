@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 
 export async function POST(request: NextRequest) {
   try {
     // Rate limit: 3 attempts per minute per IP
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const rl = checkRateLimit(`register:${ip}`, 3, 60_000);
-    if (!rl.allowed) {
+    const rl = await rateLimit(`register:${ip}`, { maxAttempts: 3, windowMs: 60_000 });
+    if (!rl.success) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
-        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
       );
     }
 
