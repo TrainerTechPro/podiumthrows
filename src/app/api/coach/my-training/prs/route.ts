@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: prs });
   } catch (err) {
-    console.error("[GET /api/coach/my-training/prs]", err);
+    logger.error("GET /api/coach/my-training/prs", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch PRs" }, { status: 500 });
   }
 }

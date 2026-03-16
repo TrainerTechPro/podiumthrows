@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
 import { getToken, deleteToken } from "@/lib/resetTokenStore";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       message: "Password has been reset successfully. You can now log in.",
     });
   } catch (error) {
-    console.error("[reset-password] Error:", error);
+    logger.error("reset-password Error", { context: "api", error });
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

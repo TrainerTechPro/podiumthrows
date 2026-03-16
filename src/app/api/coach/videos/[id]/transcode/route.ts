@@ -6,6 +6,7 @@ import {
   getPresignedUploadUrl,
   getPresignedDownloadUrl,
 } from "@/lib/r2";
+import { logger } from "@/lib/logger";
 
 /* ─── FFmpeg Transcode Spec ───────────────────────────────────────────────────
  *
@@ -133,7 +134,7 @@ export async function POST(
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos/[id]/transcode] POST Error:", err);
+    logger.error("videos/[id]/transcode POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
@@ -174,7 +175,7 @@ export async function GET(
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos/[id]/transcode] GET Error:", err);
+    logger.error("videos/[id]/transcode GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ─── GET — return coach profile ─────────────────────────────────────────── */
 
@@ -29,7 +30,7 @@ export async function GET() {
 
     return NextResponse.json(coach);
   } catch (err) {
-    console.error("[GET /api/coach/settings]", err);
+    logger.error("GET /api/coach/settings", { context: "api", error: err });
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
@@ -72,7 +73,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(updated);
   } catch (err) {
-    console.error("[PATCH /api/coach/settings]", err);
+    logger.error("PATCH /api/coach/settings", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to update profile." }, { status: 500 });
   }
 }

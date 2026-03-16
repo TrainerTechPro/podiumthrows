@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ─── PATCH — mark session as completed ──────────────────────────────────── */
 
@@ -108,7 +109,7 @@ export async function PATCH(
       },
     });
   } catch (err) {
-    console.error("[PATCH /api/athlete/sessions/[id]/complete]", err);
+    logger.error("PATCH /api/athlete/sessions/[id]/complete", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to complete session." }, { status: 500 });
   }
 }

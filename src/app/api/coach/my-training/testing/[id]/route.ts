@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function DELETE(
   _request: NextRequest,
@@ -32,7 +33,7 @@ export async function DELETE(
     await prisma.coachTestingRecord.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[DELETE /api/coach/my-training/testing/[id]]", err);
+    logger.error("DELETE /api/coach/my-training/testing/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

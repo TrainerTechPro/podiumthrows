@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { stripe, PLANS, getOrCreateStripeCustomer, getPriceId } from "@/lib/stripe";
 import type { PlanName, BillingInterval } from "@/lib/stripe";
+import { logger } from "@/lib/logger";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 if (!APP_URL && process.env.NODE_ENV === "production") {
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (err) {
-    console.error("[POST /api/stripe/checkout]", err);
+    logger.error("POST /api/stripe/checkout", { context: "api", error: err });
     return NextResponse.json(
       { error: "Could not create checkout session." },
       { status: 500 }

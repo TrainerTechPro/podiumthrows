@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── DELETE — remove a codex entry ── */
 export async function DELETE(
@@ -30,7 +31,7 @@ export async function DELETE(
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[DELETE /api/codex/:id]", err);
+    logger.error("DELETE /api/codex/:id", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to delete entry" }, { status: 500 });
   }
 }

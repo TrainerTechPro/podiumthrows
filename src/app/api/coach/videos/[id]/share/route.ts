@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   req: NextRequest,
@@ -60,7 +61,7 @@ export async function POST(
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.error("[videos/[id]/share] POST Error:", err);
+    logger.error("videos/[id]/share POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }

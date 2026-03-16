@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ─── GET — list coach notifications ─────────────────────────────────────── */
 
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
       unreadCount,
     });
   } catch (err) {
-    console.error("[GET /api/coach/notifications]", err);
+    logger.error("GET /api/coach/notifications", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch notifications." }, { status: 500 });
   }
 }
@@ -110,7 +111,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[PATCH /api/coach/notifications]", err);
+    logger.error("PATCH /api/coach/notifications", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to update notifications." }, { status: 500 });
   }
 }

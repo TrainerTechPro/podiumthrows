@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { validateWeightDifferential } from "@/lib/bondarchuk";
 
 export async function GET() {
@@ -114,7 +115,7 @@ export async function GET() {
       differentialWarnings,
     });
   } catch (err) {
-    console.error("[GET /api/coach/my-training/analysis]", err);
+    logger.error("GET /api/coach/my-training/analysis", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch analysis" }, { status: 500 });
   }
 }

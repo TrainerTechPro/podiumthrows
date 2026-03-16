@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { isValidEvent, checkAndSetPR } from "@/lib/throws";
 import { awardPRAchievement } from "@/lib/achievements";
 import { notifyCoachPR } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
 
 /* ─── POST — log an exercise set for a session ────────────────────────────── */
 
@@ -133,7 +134,7 @@ export async function POST(
       // Fire-and-forget: award achievement + notify coach on new PR
       if (isPersonalBest) {
         const athleteName = `${athlete.firstName} ${athlete.lastName}`;
-        void awardPRAchievement(athlete.id, event).catch(console.error);
+        void awardPRAchievement(athlete.id, event).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
         if (athlete.coachId) {
           void notifyCoachPR(
             athlete.coachId,
@@ -141,7 +142,7 @@ export async function POST(
             athleteName,
             event,
             distance as number
-          ).catch(console.error);
+          ).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
         }
       }
     }
@@ -162,7 +163,7 @@ export async function POST(
       { status: 201 }
     );
   } catch (err) {
-    console.error("[POST /api/athlete/sessions/[id]/log]", err);
+    logger.error("POST /api/athlete/sessions/[id]/log", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to log exercise." }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { hashPassword, signToken, setAuthCookie } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { PLAN_LIMITS } from "@/lib/data/coach";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[register] Registration failed:", error);
+    logger.error("register Registration failed", { context: "api", error });
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

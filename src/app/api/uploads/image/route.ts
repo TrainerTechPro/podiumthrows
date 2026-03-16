@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import {
   isR2Configured,
   uploadSingleFile,
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, url: localUrl });
     }
   } catch (error) {
-    console.error("[POST /api/uploads/image]", error);
+    logger.error("POST /api/uploads/image", { context: "api", error });
     return NextResponse.json({ success: false, error: "Upload failed" }, { status: 500 });
   }
 }

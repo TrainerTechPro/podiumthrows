@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { stripe, getPlanFromPriceId } from "@/lib/stripe";
 import type { PlanName } from "@/lib/stripe";
+import { logger } from "@/lib/logger";
 
 /* ── Disable body parsing so we get the raw bytes for signature verification ── */
 export const dynamic = "force-dynamic";
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    console.error("[stripe/webhook] STRIPE_WEBHOOK_SECRET not set");
+    logger.error("stripe/webhook STRIPE_WEBHOOK_SECRET not set", { context: "api" });
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
   }
   if (!sig) {
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Signature verification failed";
-    console.error("[stripe/webhook] Signature error:", msg);
+    logger.error("stripe/webhook Signature error", { context: "api", error: err });
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
         break;
     }
   } catch (err) {
-    console.error(`[stripe/webhook] Error handling ${event.type}:`, err);
+    logger.error(`stripe/webhook Error handling ${event.type}`, { context: "api", error: err });
     return NextResponse.json({ error: "Webhook handler error" }, { status: 500 });
   }
 

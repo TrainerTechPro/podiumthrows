@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── GET — coach views self-logged sessions for their athletes ── */
 export async function GET(request: NextRequest) {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: sessions });
   } catch (err) {
-    console.error("[GET /api/coach/athlete-sessions]", err);
+    logger.error("GET /api/coach/athlete-sessions", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
   }
 }

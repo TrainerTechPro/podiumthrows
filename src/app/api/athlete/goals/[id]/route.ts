@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 type RouteContext = { params: { id: string } };
 
@@ -105,7 +106,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
   } catch (err) {
-    console.error("[PATCH /api/athlete/goals/[id]]", err);
+    logger.error("PATCH /api/athlete/goals/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to update goal." }, { status: 500 });
   }
 }
@@ -142,7 +143,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[DELETE /api/athlete/goals/[id]]", err);
+    logger.error("DELETE /api/athlete/goals/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to delete goal." }, { status: 500 });
   }
 }

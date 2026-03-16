@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: NextRequest,
@@ -85,7 +86,7 @@ export async function GET(
       }))
     );
   } catch (err) {
-    console.error("[GET /api/readiness/:athleteId]", err);
+    logger.error("GET /api/readiness/:athleteId", { context: "api", error: err });
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

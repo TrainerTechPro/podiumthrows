@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
+import { logger } from "@/lib/logger";
 
 export async function POST() {
   try {
@@ -39,7 +40,7 @@ export async function POST() {
 
     return NextResponse.json({ url: portalSession.url });
   } catch (err) {
-    console.error("[POST /api/stripe/portal]", err);
+    logger.error("POST /api/stripe/portal", { context: "api", error: err });
     return NextResponse.json({ error: "Could not create billing portal session." }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ─── POST — clone a workout plan ────────────────────────────────────────── */
 
@@ -76,7 +77,7 @@ export async function POST(
 
     return NextResponse.json(clone, { status: 201 });
   } catch (err) {
-    console.error("[POST /api/coach/plans/[id]/clone]", err);
+    logger.error("POST /api/coach/plans/[id]/clone", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to clone plan." }, { status: 500 });
   }
 }

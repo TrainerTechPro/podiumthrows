@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 const VALID_CATEGORIES = ["CE", "SDE", "SPE", "GPE"];
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
@@ -78,7 +79,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (err) {
-    console.error("[PATCH /api/coach/exercises/[id]]", err);
+    logger.error("PATCH /api/coach/exercises/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to update exercise." }, { status: 500 });
   }
 }
@@ -121,7 +122,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[DELETE /api/coach/exercises/[id]]", err);
+    logger.error("DELETE /api/coach/exercises/[id]", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to delete exercise." }, { status: 500 });
   }
 }

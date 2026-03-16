@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_BLOCK_TYPES = ["throwing", "strength", "warmup", "cooldown"];
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(plan, { status: 201 });
   } catch (err) {
-    console.error("[POST /api/coach/plans]", err);
+    logger.error("POST /api/coach/plans", { context: "api", error: err });
     return NextResponse.json({ error: "Failed to create workout plan." }, { status: 500 });
   }
 }

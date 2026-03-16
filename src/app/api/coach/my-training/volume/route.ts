@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -138,7 +139,7 @@ export async function GET() {
       distanceTrends,
     });
   } catch (err) {
-    console.error("[GET /api/coach/my-training/volume]", err);
+    logger.error("GET /api/coach/my-training/volume", { context: "api", error: err });
     return NextResponse.json(
       { error: "Failed to fetch training volume." },
       { status: 500 }

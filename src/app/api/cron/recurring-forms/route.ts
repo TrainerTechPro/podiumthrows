@@ -5,6 +5,7 @@ import {
   calculateNextRunDate,
 } from "@/lib/forms/recurring-scheduler";
 import type { RecurrenceFrequency } from "@/lib/forms/types";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/cron/recurring-forms
@@ -155,7 +156,7 @@ export async function GET(req: NextRequest) {
       timestamp: now.toISOString(),
     });
   } catch (err) {
-    console.error("Recurring forms cron error:", err);
+    logger.error("Recurring forms cron error", { context: "api", error: err });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
