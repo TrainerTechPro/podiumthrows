@@ -8,22 +8,41 @@ import {
   type WeeklyDigestData,
 } from "./email-templates";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.ethereal.email",
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER || "",
-    pass: process.env.SMTP_PASS || "",
-  },
-});
+// Use Resend SMTP relay if RESEND_API_KEY is set (preferred),
+// otherwise fall back to custom SMTP credentials.
+const hasResend = Boolean(process.env.RESEND_API_KEY);
+
+const transporter = nodemailer.createTransport(
+  hasResend
+    ? {
+        host: "smtp.resend.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: "resend",
+          pass: process.env.RESEND_API_KEY!,
+        },
+      }
+    : {
+        host: process.env.SMTP_HOST || "smtp.ethereal.email",
+        port: parseInt(process.env.SMTP_PORT || "587"),
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER || "",
+          pass: process.env.SMTP_PASS || "",
+        },
+      }
+);
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 if (!APP_URL && process.env.NODE_ENV === "production") {
   console.warn("[email] NEXT_PUBLIC_APP_URL is not set — email links will use fallback URL");
 }
 const baseUrl = APP_URL || "http://localhost:3000";
-const FROM_EMAIL = process.env.SMTP_FROM || "Podium Throws <noreply@podiumthrows.com>";
+const FROM_EMAIL =
+  process.env.RESEND_FROM ||
+  process.env.SMTP_FROM ||
+  "Podium Throws <noreply@podiumthrows.com>";
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
