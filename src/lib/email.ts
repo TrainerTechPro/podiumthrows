@@ -1,4 +1,12 @@
 import nodemailer from "nodemailer";
+import {
+  wrapEmailHtml,
+  welcomeCoachBody,
+  welcomeAthleteBody,
+  athleteJoinedBody,
+  weeklyDigestBody,
+  type WeeklyDigestData,
+} from "./email-templates";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.ethereal.email",
@@ -68,5 +76,48 @@ export async function sendInvitationEmail(
         </p>
       </div>
     `,
+  });
+}
+
+export async function sendWelcomeEmail(
+  to: string,
+  name: string,
+  role: "COACH" | "ATHLETE",
+  coachName?: string
+): Promise<void> {
+  const body =
+    role === "COACH"
+      ? welcomeCoachBody(name, baseUrl)
+      : welcomeAthleteBody(name, coachName || "your coach", baseUrl);
+
+  await transporter.sendMail({
+    from: FROM_EMAIL,
+    to,
+    subject: "Welcome to Podium Throws!",
+    html: wrapEmailHtml(body, baseUrl),
+  });
+}
+
+export async function sendAthleteJoinedEmail(
+  coachEmail: string,
+  athleteName: string
+): Promise<void> {
+  await transporter.sendMail({
+    from: FROM_EMAIL,
+    to: coachEmail,
+    subject: `${athleteName} joined your roster`,
+    html: wrapEmailHtml(athleteJoinedBody(athleteName, baseUrl), baseUrl),
+  });
+}
+
+export async function sendWeeklyDigestEmail(
+  coachEmail: string,
+  data: WeeklyDigestData
+): Promise<void> {
+  await transporter.sendMail({
+    from: FROM_EMAIL,
+    to: coachEmail,
+    subject: `Your weekly summary — ${data.sessionsCompleted} sessions, ${data.newPRs.length} PRs`,
+    html: wrapEmailHtml(weeklyDigestBody(data, baseUrl), baseUrl),
   });
 }

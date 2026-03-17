@@ -34,6 +34,11 @@ prisma/schema.prisma         — database schema
 prisma/seed.ts               — test data seeder
 ```
 
+### Database Migrations
+- **Local dev:** `npm run db:migrate` — creates and applies migrations via `prisma migrate dev`
+- **Production (build):** `prisma migrate deploy` — applies pending migrations only, never creates new ones
+- **Do NOT use `prisma db push`** in production — it can silently drop data
+
 ### Test Accounts (after db:seed)
 - Coach: coach@example.com / coach123
 - Athlete 1: athlete1@example.com / athlete123

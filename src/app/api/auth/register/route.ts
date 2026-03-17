@@ -6,6 +6,7 @@ import { PLAN_LIMITS } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { parseBody, RegisterSchema } from "@/lib/api-schemas";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
+import { sendWelcomeEmail, sendAthleteJoinedEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     if (role === "ATHLETE" && inviteToken) {
       invitation = await prisma.invitation.findUnique({
         where: { token: inviteToken },
-        include: { coach: true },
+        include: { coach: { include: { user: { select: { email: true } } } } },
       });
 
       if (!invitation || invitation.status !== "PENDING" || invitation.expiresAt < new Date()) {
@@ -150,6 +151,22 @@ export async function POST(request: NextRequest) {
       metadata: { role: user.role, email: user.email },
       ...auditRequestInfo(request),
     });
+
+    // Fire-and-forget emails — never block the response
+    if (role === "COACH") {
+      sendWelcomeEmail(normalizedEmail, firstName, "COACH").catch((err) =>
+        logger.error("Failed to send coach welcome email", { context: "api", error: err })
+      );
+    } else if (role === "ATHLETE" && invitation) {
+      const coachName = `${invitation.coach.firstName} ${invitation.coach.lastName}`;
+      sendWelcomeEmail(normalizedEmail, firstName, "ATHLETE", coachName).catch((err) =>
+        logger.error("Failed to send athlete welcome email", { context: "api", error: err })
+      );
+      sendAthleteJoinedEmail(invitation.coach.user.email, `${firstName} ${lastName}`).catch(
+        (err) =>
+          logger.error("Failed to send athlete-joined email", { context: "api", error: err })
+      );
+    }
 
     return response;
   } catch (error) {

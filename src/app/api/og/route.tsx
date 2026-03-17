@@ -6,8 +6,10 @@ export const runtime = "edge";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const title = searchParams.get("title") || "Podium Throws";
-  const subtitle =
-    searchParams.get("subtitle") || "Elite Throws Coaching Platform";
+  const description =
+    searchParams.get("description") ||
+    searchParams.get("subtitle") ||
+    "Elite Throws Coaching Platform";
 
   return new ImageResponse(
     (
@@ -23,18 +25,6 @@ export async function GET(req: NextRequest) {
           position: "relative",
         }}
       >
-        {/* Subtle grid pattern */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0.05,
-            backgroundImage:
-              "linear-gradient(rgba(245,158,11,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.3) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-
         {/* Amber accent line */}
         <div
           style={{
@@ -74,7 +64,7 @@ export async function GET(req: NextRequest) {
               letterSpacing: "0.02em",
             }}
           >
-            {subtitle}
+            {description}
           </div>
         </div>
 
@@ -91,6 +81,10 @@ export async function GET(req: NextRequest) {
         />
       </div>
     ),
-    { width: 1200, height: 630 }
+    {
+      width: 1200,
+      height: 630,
+      headers: { "Cache-Control": "public, max-age=86400" },
+    }
   );
 }

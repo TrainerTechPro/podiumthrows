@@ -277,6 +277,7 @@ model AthleteProfile {
 
   @@index([coachId])
   @@index([userId])
+  @@index([coachId, createdAt])
 }
 
 // ─── EXERCISES ──────────────────────────────────────────────────────────────
@@ -838,6 +839,7 @@ model VoiceNote {
   @@index([sessionId])
   @@index([coachId])
   @@index([athleteId])
+  @@index([createdAt])
 }
 
 // ─── ACTIVITY LOG ────────────────────────────────────────────────────────────
@@ -1020,6 +1022,8 @@ model ThrowsSession {
   assignments ThrowsAssignment[]
 
   @@index([coachId])
+  @@index([createdAt])
+  @@index([coachId, createdAt])
 }
 
 /// A block (throwing, strength, warmup, etc.) within a ThrowsSession.
@@ -1065,6 +1069,7 @@ model ThrowsAssignment {
   @@index([athleteId, assignedDate])
   @@index([sessionId])
   @@index([athleteId, status])
+  @@index([athleteId, createdAt])
 }
 
 /// Individual throw logged within a ThrowsBlock during an assignment.
@@ -1085,6 +1090,7 @@ model ThrowsBlockLog {
   @@index([assignmentId])
   @@index([blockId])
   @@index([assignmentId, blockId])
+  @@index([createdAt])
 }
 
 // ─── LIVE PRACTICE LOGGING ──────────────────────────────────────────────────
@@ -1882,6 +1888,7 @@ model TrainingProgram {
   adaptationCheckpoints AdaptationCheckpoint[]
 
   @@index([coachId])
+  @@index([athleteId, status])
 }
 
 /// A mesocycle/phase within the macrocycle.
