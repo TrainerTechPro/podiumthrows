@@ -5,6 +5,7 @@ import Link from "next/link";
 import { localToday } from "@/lib/utils";
 import { EVENTS, SELF_FEELING_OPTIONS, parseEvents, type SelfFeeling } from "@/lib/throws/constants";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { CommentThread } from "@/components/comment-thread";
 import type { ThrowingBlockConfig, StrengthBlockConfig, WarmupCooldownConfig } from "@/lib/throws/validation";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -539,6 +540,13 @@ function SessionCard({
  <span>Feeling: {assignment.selfFeeling.toLowerCase().replace("_", " ")}</span>
  )}
  </div>
+ )}
+ {(isCompleted || isSkipped) && (
+ <CommentThread
+  targetField="throwsAssignmentId"
+  targetId={assignment.id}
+  compact
+ />
  )}
  </div>
  );

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useParams, useRouter } from "next/navigation";
+import { CommentThread } from "@/components/comment-thread";
 import Link from "next/link";
 import UserAvatar from "@/components/user-avatar";
 import { CODE_EVENT_MAP, type EventCode } from "@/lib/throws/constants";
@@ -235,6 +236,8 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  const fd = new FormData();
  fd.append("video", videoFile);
  fd.append("sessionId", sessionId);
+ fd.append("athleteId", athlete.id);
+ fd.append("event", event);
  const uploadRes = await fetch("/api/throws/practice/video-upload", {
  method: "POST",
  headers: videoDuration !== null ? { "x-video-duration": String(videoDuration), ...csrfHeaders() } : { ...csrfHeaders() },
@@ -599,6 +602,13 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  <p className="text-xs text-[var(--color-text-2)] italic line-clamp-2">
  {attempt.coachNote}
  </p>
+ )}
+ {!attempt._pendingId && (
+ <CommentThread
+  targetField="practiceAttemptId"
+  targetId={attempt.id}
+  compact
+ />
  )}
  <div className="flex items-center gap-1.5">
  <p className="text-[10px] text-[var(--color-text-3)]">
