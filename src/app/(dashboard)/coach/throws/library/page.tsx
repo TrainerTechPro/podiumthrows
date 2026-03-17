@@ -200,7 +200,8 @@ export default function ThrowsLibraryPage() {
  }, 0);
 
  return (
- <div key={session.id} className="card !p-4 space-y-3 hover:shadow-md transition-shadow">
+ <div key={session.id} className="card !p-4 space-y-3 hover:shadow-md transition-shadow cursor-pointer">
+ <Link href={`/coach/throws/library/${session.id}`} className="block space-y-3">
  <div>
  <h3 className="font-semibold text-[var(--color-text)]">{session.name}</h3>
  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -238,6 +239,7 @@ export default function ThrowsLibraryPage() {
  {session.estimatedDuration && <span>~{session.estimatedDuration} min</span>}
  <span>{session.assignments.length}x assigned</span>
  </div>
+ </Link>
  <div className="flex items-center justify-between">
  <span className="text-xs text-[var(--color-text-3)]">
  Created {new Date(session.createdAt).toLocaleDateString()}
