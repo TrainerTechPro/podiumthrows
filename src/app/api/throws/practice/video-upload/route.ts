@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getCurrentUser } from "@/lib/auth";
 import { isR2Configured, uploadSingleFile, getPublicUrl, saveFileLocally } from "@/lib/r2";
+import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
@@ -43,6 +44,8 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("video") as File | null;
     const sessionId = formData.get("sessionId") as string | null;
+    const athleteId = formData.get("athleteId") as string | null;
+    const eventRaw = formData.get("event") as string | null;
 
     if (!file) {
       return NextResponse.json({ success: false, error: "No video file provided" }, { status: 400 });
@@ -68,15 +71,44 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    let url: string;
     if (isR2Configured()) {
       await uploadSingleFile(key, buffer, file.type);
-      const url = getPublicUrl(key);
-      return NextResponse.json({ success: true, url });
+      url = getPublicUrl(key);
     } else {
       // Dev fallback — save to public/uploads/
-      const localUrl = await saveFileLocally(key, buffer);
-      return NextResponse.json({ success: true, url: localUrl });
+      url = await saveFileLocally(key, buffer);
     }
+
+    // Also create a VideoUpload record so practice videos appear in the video library
+    try {
+      const coach = await prisma.coachProfile.findUnique({
+        where: { userId: currentUser.userId },
+        select: { id: true },
+      });
+      if (coach) {
+        const validEvents = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
+        await prisma.videoUpload.create({
+          data: {
+            coachId: coach.id,
+            athleteId: athleteId || undefined,
+            url,
+            storageKey: key,
+            title: `Practice Attempt${sessionId ? ` — Session` : ""}`,
+            event: validEvents.includes(eventRaw ?? "") ? (eventRaw as never) : undefined,
+            category: "training",
+            status: "ready",
+            fileSizeMb: file.size / (1024 * 1024),
+            durationSec: durationHeader ? parseFloat(durationHeader) : undefined,
+          },
+        });
+      }
+    } catch (err) {
+      // Non-fatal — video is uploaded, just not indexed in library
+      logger.error("Failed to create VideoUpload record for practice attempt", { context: "throws/practice/video-upload", error: err });
+    }
+
+    return NextResponse.json({ success: true, url });
   } catch (error) {
     logger.error("POST /api/throws/practice/video-upload error", { context: "throws/practice/video-upload", error: error });
     return NextResponse.json({ success: false, error: "Upload failed" }, { status: 500 });

@@ -30,6 +30,7 @@ export function ThrowLogForm({
   const [event, setEvent] = useState<string>(athleteEvents[0] ?? "SHOT_PUT");
   const [implementKg, setImplementKg] = useState<string>("");
   const [distance, setDistance] = useState<string>("");
+  const [distanceUnit, setDistanceUnit] = useState<"meters" | "feet">("meters");
   const [isCompetition, setIsCompetition] = useState(false);
   const [rpe, setRpe] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
@@ -39,6 +40,7 @@ export function ThrowLogForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{
     distance: number;
+    distanceUnit: "meters" | "feet";
     event: string;
     implementWeight: number;
     isPersonalBest: boolean;
@@ -77,6 +79,10 @@ export function ThrowLogForm({
       return;
     }
 
+    // Convert feet to meters if needed (DB stores meters)
+    const distMeters =
+      distanceUnit === "feet" ? distNum * 0.3048 : distNum;
+
     startTransition(async () => {
       try {
         const res = await fetch("/api/athlete/throws", {
@@ -85,7 +91,7 @@ export function ThrowLogForm({
           body: JSON.stringify({
             event,
             implementKg: implNum,
-            distance: distNum,
+            distance: distMeters,
             isCompetition,
             rpe: rpe ?? undefined,
             notes: notes.trim() || undefined,
@@ -101,6 +107,7 @@ export function ThrowLogForm({
         const data = await res.json();
         setSuccess({
           distance: distNum,
+          distanceUnit,
           event,
           implementWeight: implNum,
           isPersonalBest: data.isPersonalBest,
@@ -124,7 +131,7 @@ export function ThrowLogForm({
               New Personal Best!
             </h3>
             <p className="text-3xl font-bold tabular-nums text-[var(--foreground)] mt-2">
-              {success.distance.toFixed(2)}m
+              {success.distance.toFixed(2)}{success.distanceUnit === "meters" ? "m" : "ft"}
             </p>
             <p className="text-sm text-muted mt-1">
               {formatEventName(success.event)} · {success.implementWeight}kg
@@ -150,7 +157,7 @@ export function ThrowLogForm({
               Throw Logged
             </h3>
             <p className="text-2xl font-bold tabular-nums text-[var(--foreground)] mt-2">
-              {success.distance.toFixed(2)}m
+              {success.distance.toFixed(2)}{success.distanceUnit === "meters" ? "m" : "ft"}
             </p>
             <p className="text-sm text-muted mt-1">
               {formatEventName(success.event)} · {success.implementWeight}kg
@@ -241,14 +248,32 @@ export function ThrowLogForm({
 
       {/* Distance */}
       <div>
-        <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-          Distance (meters)
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm font-medium text-[var(--foreground)]">
+            Distance
+          </label>
+          <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
+            {(["meters", "feet"] as const).map((unit) => (
+              <button
+                key={unit}
+                type="button"
+                onClick={() => setDistanceUnit(unit)}
+                className={`px-3 py-1 text-xs font-medium transition-colors ${
+                  distanceUnit === unit
+                    ? "bg-primary-500 text-white"
+                    : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+                }`}
+              >
+                {unit === "meters" ? "m" : "ft"}
+              </button>
+            ))}
+          </div>
+        </div>
         <input
           type="number"
           step="0.01"
           min="0"
-          placeholder="e.g., 18.45"
+          placeholder={distanceUnit === "meters" ? "e.g., 18.45" : "e.g., 60.53"}
           value={distance}
           onChange={(e) => setDistance(e.target.value)}
           className="input w-full text-lg font-semibold tabular-nums"

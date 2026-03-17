@@ -235,6 +235,8 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  const fd = new FormData();
  fd.append("video", videoFile);
  fd.append("sessionId", sessionId);
+ fd.append("athleteId", athlete.id);
+ fd.append("event", event);
  const uploadRes = await fetch("/api/throws/practice/video-upload", {
  method: "POST",
  headers: videoDuration !== null ? { "x-video-duration": String(videoDuration), ...csrfHeaders() } : { ...csrfHeaders() },
