@@ -219,6 +219,29 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Also create a VideoUpload record so drill videos appear in the main video library
+    try {
+      const validEvents = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
+      const videoUrl = filePath.startsWith("http") ? filePath : `/api/drill-videos/serve?id=${drillVideo.id}`;
+      await prisma.videoUpload.create({
+        data: {
+          coachId: resolvedCoachId,
+          athleteId: resolvedAthleteId,
+          url: videoUrl,
+          storageKey: fileKey,
+          title: title ?? `Drill — ${drillType}`,
+          event: validEvents.includes(event ?? "") ? (event as never) : undefined,
+          category: "drill",
+          status: "ready",
+          fileSizeMb: videoBlob.size / (1024 * 1024),
+          durationSec: Math.min(duration, MAX_DURATION),
+        },
+      });
+    } catch (err) {
+      // Non-fatal — drill video is saved, just not indexed in main library
+      logger.error("Failed to create VideoUpload record for drill video", { context: "drill-videos", error: err });
+    }
+
     return NextResponse.json({ success: true, data: drillVideo }, { status: 201 });
   } catch (error) {
     logger.error("Upload drill video error", { context: "drill-videos", error: error });
