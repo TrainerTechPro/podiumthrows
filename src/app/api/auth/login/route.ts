@@ -5,6 +5,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseBody, LoginSchema } from "@/lib/api-schemas";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
+import { signMfaSessionToken } from "@/lib/mfa";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +25,14 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
-      select: { id: true, email: true, role: true, passwordHash: true, isAdmin: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        passwordHash: true,
+        isAdmin: true,
+        coachProfile: { select: { mfaEnabled: true } },
+      },
     });
 
     const reqInfo = auditRequestInfo(request);
@@ -47,6 +55,20 @@ export async function POST(request: NextRequest) {
         ...reqInfo,
       });
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    }
+
+    // MFA check — coaches with MFA enabled get a short-lived token instead of full JWT
+    if (user.role === "COACH" && user.coachProfile?.mfaEnabled) {
+      const mfaSessionToken = signMfaSessionToken(user.id);
+
+      void logAudit({
+        userId: user.id,
+        action: "MFA_REQUIRED",
+        metadata: { email: user.email },
+        ...reqInfo,
+      });
+
+      return NextResponse.json({ requiresMfa: true, mfaSessionToken });
     }
 
     const token = signToken({

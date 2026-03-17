@@ -164,6 +164,11 @@ model CoachProfile {
   enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
   onboardingCompletedAt DateTime?       // null = not completed; timestamp = completed/dismissed
 
+  // MFA (multi-factor authentication)
+  mfaSecret        String?   // AES-256-GCM encrypted TOTP secret
+  mfaEnabled       Boolean   @default(false)
+  mfaBackupCodes   String[]  // bcrypt-hashed one-time backup codes
+
   // Core relations (existing PT models)
   athletes       AthleteProfile[]
   exercises      Exercise[]

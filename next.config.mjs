@@ -1,4 +1,22 @@
+/**
+ * Bundle size baseline (2026-03-16) — run `npm run analyze` to regenerate
+ *
+ *   Shared JS (all routes):  199 kB
+ *   Middleware:                85.9 kB
+ *   Heaviest pages (first load JS):
+ *     /coach/throws/profile       349 kB
+ *     /athlete/throws/log         317 kB
+ *     /athlete/throws/analysis    315 kB
+ *     /coach/dashboard            263 kB
+ *     /coach/invitations          262 kB
+ */
+
+import bundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -62,7 +80,7 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withBundleAnalyzer(nextConfig), {
   // Sentry build-time options
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
