@@ -31,6 +31,28 @@ export const ResetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+// ── MFA Schemas ────────────────────────────────────────────────────────
+
+export const MfaVerifySetupSchema = z.object({
+  token: z.string().length(6, "Code must be exactly 6 digits").regex(/^\d{6}$/, "Code must be 6 digits"),
+  encryptedSecret: z.string().min(1, "Secret is required"),
+});
+
+export const MfaVerifySchema = z.object({
+  mfaSessionToken: z.string().min(1, "MFA session token is required"),
+  token: z.string().length(6, "Code must be exactly 6 digits").regex(/^\d{6}$/, "Code must be 6 digits"),
+});
+
+export const MfaDisableSchema = z.object({
+  password: z.string().min(1, "Password is required"),
+  token: z.string().length(6, "Code must be exactly 6 digits").regex(/^\d{6}$/, "Code must be 6 digits"),
+});
+
+export const MfaBackupSchema = z.object({
+  mfaSessionToken: z.string().min(1, "MFA session token is required"),
+  code: z.string().min(1, "Backup code is required"),
+});
+
 // ── Profile Schemas ─────────────────────────────────────────────────────
 
 export const PasswordChangeSchema = z.object({

@@ -41,6 +41,14 @@ export default function LoginPage() {
         return;
       }
 
+      // MFA required — redirect to MFA verification page
+      if (data.requiresMfa) {
+        const params = new URLSearchParams({ token: data.mfaSessionToken });
+        if (redirect) params.set("redirect", redirect);
+        router.push(`/login/mfa?${params.toString()}`);
+        return;
+      }
+
       router.push(redirect || data.redirectTo);
     } catch {
       setError("Network error. Please try again.");
