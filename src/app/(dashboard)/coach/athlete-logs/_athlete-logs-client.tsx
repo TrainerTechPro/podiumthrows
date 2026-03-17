@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -285,9 +286,13 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[session.event] ?? "bg-surface-400"}`} />
-                      <p className="text-sm font-semibold text-[var(--foreground)] truncate">
+                      <Link
+                        href={`/coach/athletes/${session.athlete.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-sm font-semibold text-[var(--foreground)] hover:text-primary-500 truncate transition-colors"
+                      >
                         {session.athlete.firstName} {session.athlete.lastName}
-                      </p>
+                      </Link>
                       <span className="text-xs text-muted">
                         {EVENT_LABELS[session.event] ?? session.event}
                       </span>
