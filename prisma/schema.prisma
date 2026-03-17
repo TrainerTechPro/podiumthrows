@@ -448,6 +448,31 @@ model ThrowLog {
   @@index([isPersonalBest])
 }
 
+// ─── THROW / SESSION COMMENTS ────────────────────────────────────────────────
+
+/// Threaded comments between coach and athlete on throws or sessions.
+model ThrowComment {
+  id        String  @id @default(cuid())
+  authorId  String  // userId of the author (coach or athlete)
+  authorRole String // "COACH" or "ATHLETE"
+
+  // Polymorphic target — exactly one should be set
+  throwLogId         String?
+  practiceAttemptId   String?
+  trainingSessionId   String?
+  throwsAssignmentId  String?
+
+  body      String  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([throwLogId, createdAt])
+  @@index([practiceAttemptId, createdAt])
+  @@index([trainingSessionId, createdAt])
+  @@index([throwsAssignmentId, createdAt])
+  @@index([authorId])
+}
+
 // ─── BONDARCHUK ASSESSMENT ──────────────────────────────────────────────────
 
 model BondarchukAssessment {
