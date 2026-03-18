@@ -127,7 +127,8 @@ enum BondarchukAthleteType {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String
+  passwordHash String?   // null for unclaimed placeholder users
+  claimedAt    DateTime? // null = coach-created placeholder, set when athlete claims
   role         UserRole
   isAdmin      Boolean  @default(false)
   createdAt    DateTime @default(now())
@@ -163,6 +164,7 @@ model CoachProfile {
   preferences          String?          @default("{}")
   enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
   onboardingCompletedAt DateTime?       // null = not completed; timestamp = completed/dismissed
+  events        EventType[] @default([]) // coach's own throwing events for self-training
 
   // MFA (multi-factor authentication)
   mfaSecret        String?   // AES-256-GCM encrypted TOTP secret
@@ -276,6 +278,7 @@ model AthleteProfile {
   injuries         Injury[]
   riskAssessments  RiskAssessment[]
   smartGoals       AthleteGoal[]
+  invitations      Invitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -802,6 +805,9 @@ model Invitation {
   status    InvitationStatus @default(PENDING)
   expiresAt DateTime
 
+  athleteProfileId String?
+  athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1321,6 +1327,8 @@ model AthleteThrowsSession {
   mentalFocus     Int?    // 1-5
   bestPart        String? // What went well
   improvementArea String? // What needs work
+
+  loggedByCoach Boolean @default(false)
 
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt

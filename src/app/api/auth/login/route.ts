@@ -46,6 +46,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
+    // Unclaimed placeholder accounts have no password — reject login
+    if (!user.passwordHash) {
+      void logAudit({
+        userId: user.id,
+        action: "LOGIN_FAILED",
+        metadata: { email: user.email, reason: "unclaimed_account" },
+        ...reqInfo,
+      });
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    }
+
     const passwordValid = await verifyPassword(password, user.passwordHash);
     if (!passwordValid) {
       void logAudit({
