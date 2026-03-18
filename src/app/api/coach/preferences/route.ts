@@ -18,6 +18,7 @@ export interface CoachPreferences {
     primaryEvent?: string;
     gender?: "male" | "female";
   };
+  lastTeamId?: string | null;
 }
 
 function parsePreferences(raw: string | null): CoachPreferences {
@@ -79,6 +80,7 @@ export async function PUT(request: NextRequest) {
       ...(body.myTraining !== undefined
         ? { myTraining: { ...current.myTraining, ...body.myTraining } }
         : {}),
+      ...(body.lastTeamId !== undefined ? { lastTeamId: body.lastTeamId } : {}),
     };
 
     await prisma.coachProfile.update({

@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
 }
 
 /* ── GET — list all athletes on coach's roster with claim status ── */
-export async function GET() {
+/* Optional query param: ?teamId=<id> to filter by team, ?teamId=unassigned for athletes in no team */
+export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
@@ -95,8 +96,19 @@ export async function GET() {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
+    const teamId = request.nextUrl.searchParams.get("teamId");
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let where: any = { coachId: coach.id };
+
+    if (teamId === "unassigned") {
+      where = { coachId: coach.id, teamMemberships: { none: {} } };
+    } else if (teamId) {
+      where = { coachId: coach.id, teamMemberships: { some: { teamId } } };
+    }
+
     const athletes = await prisma.athleteProfile.findMany({
-      where: { coachId: coach.id },
+      where,
       include: {
         user: {
           select: { email: true, claimedAt: true },

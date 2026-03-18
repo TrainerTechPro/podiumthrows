@@ -28,6 +28,7 @@ import {
   ListChecks,
   Clapperboard,
   BarChart3,
+  UsersRound,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -202,6 +203,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Dashboard", href: "/coach/dashboard", icon: <LayoutDashboard {...iconSize} /> },
       { label: "Athletes", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
+      { label: "Teams", href: "/coach/teams", icon: <UsersRound {...iconSize} /> },
       { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/coach/sessions"] },
       { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
     ],

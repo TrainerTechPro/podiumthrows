@@ -115,6 +115,11 @@ export default function ThrowsRosterPage() {
  const [loading, setLoading] = useState(true);
  const [activeTab, setActiveTab] = useState<"podium" | "all">("podium");
 
+ // Team filter
+ const [teams, setTeams] = useState<{ id: string; name: string; memberCount: number }[]>([]);
+ const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+ const [teamsLoaded, setTeamsLoaded] = useState(false);
+
  // Enrollment form
  const [enrollOpen, setEnrollOpen] = useState(false);
  const [enrollDistUnit, setEnrollDistUnit] = useState<"meters" | "feet">("meters");
@@ -148,32 +153,64 @@ export default function ThrowsRosterPage() {
 
  // ── Data fetching ──────────────────────────────────────────────
 
- const fetchData = useCallback(() => {
+ const fetchData = useCallback((teamId?: string) => {
+ const teamParam = teamId !== undefined ? teamId : selectedTeamId;
+ const qs = teamParam ? `?teamId=${teamParam}` : "";
  setLoading(true);
  Promise.all([
  fetch("/api/throws/podium-roster").then((r) => r.json()),
  fetch("/api/athletes").then((r) => r.json()),
- fetch("/api/coach/athletes").then((r) => r.json()),
+ fetch(`/api/coach/athletes${qs}`).then((r) => r.json()),
  ])
  .then(([podiumData, athletesData, rosterData]) => {
- if (podiumData.success) setPodiumAthletes(podiumData.data);
+ // rosterData is already filtered by teamId via the API
+ if (rosterData.ok) setRosterAthletes(rosterData.data);
+ const filteredIds = new Set(
+ (rosterData.data ?? []).map((a: { id: string }) => a.id)
+ );
+
+ // Client-side filter podium and allAthletes to match team selection
+ if (podiumData.success) {
+ const podium = teamParam
+ ? podiumData.data.filter((p: { athleteId: string }) => filteredIds.has(p.athleteId))
+ : podiumData.data;
+ setPodiumAthletes(podium);
+ }
  if (athletesData.success) {
- const list = Array.isArray(athletesData.data)
+ let list = Array.isArray(athletesData.data)
  ? athletesData.data
  : athletesData.data
  ? [athletesData.data]
  : [];
+ if (teamParam) list = list.filter((a: { id: string }) => filteredIds.has(a.id));
  setAllAthletes(list);
  }
- if (rosterData.ok) setRosterAthletes(rosterData.data);
  setLoading(false);
  })
  .catch(() => setLoading(false));
+ }, [selectedTeamId]);
+
+ // Load teams and saved preference on mount
+ useEffect(() => {
+ Promise.all([
+ fetch("/api/coach/teams").then((r) => r.json()),
+ fetch("/api/coach/preferences").then((r) => r.json()),
+ ]).then(([teamsData, prefsData]) => {
+ if (teamsData.ok) setTeams(teamsData.data);
+ // NOTE: preferences API returns { success: true } not { ok: true }
+ const lastTeam = prefsData?.success ? prefsData.data?.lastTeamId : null;
+ const teamIds = new Set((teamsData.data ?? []).map((t: { id: string }) => t.id));
+ if (lastTeam && teamIds.has(lastTeam)) {
+ setSelectedTeamId(lastTeam);
+ }
+ setTeamsLoaded(true);
+ }).catch(() => setTeamsLoaded(true));
  }, []);
 
+ // Fetch roster data after teams are loaded (so we respect the saved filter)
  useEffect(() => {
- fetchData();
- }, [fetchData]);
+ if (teamsLoaded) fetchData();
+ }, [teamsLoaded, fetchData]);
 
  // ── Derived state ──────────────────────────────────────────────
 
@@ -258,6 +295,14 @@ export default function ThrowsRosterPage() {
  });
  const data = await res.json();
  if (!res.ok) throw new Error(data.error || "Failed to add athlete");
+ // Auto-assign to selected team if one is active
+ if (selectedTeamId && selectedTeamId !== "unassigned" && data.data?.id) {
+ await fetch(`/api/coach/teams/${selectedTeamId}/members`, {
+ method: "POST",
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
+ body: JSON.stringify({ athleteIds: [data.data.id] }),
+ }).catch(() => {});
+ }
  setShowAddForm(false);
  setNewFirstName("");
  setNewLastName("");
@@ -286,6 +331,19 @@ export default function ThrowsRosterPage() {
  } catch (err) {
  console.error("Failed to create invite:", err);
  }
+ }
+
+ // ── Team Filter ─────────────────────────────────────────────────
+
+ function handleTeamChange(teamId: string) {
+ setSelectedTeamId(teamId);
+ // Persist to preferences (fire-and-forget)
+ fetch("/api/coach/preferences", {
+ method: "PUT",
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
+ body: JSON.stringify({ lastTeamId: teamId || null }),
+ }).catch(() => {});
+ fetchData(teamId);
  }
 
  // ── Loading skeleton ───────────────────────────────────────────
@@ -340,6 +398,23 @@ export default function ThrowsRosterPage() {
  </button>
  </div>
  </div>
+
+ {/* ── Team Filter ─────────────────────────────────────────── */}
+ {teams.length > 0 && (
+ <select
+ value={selectedTeamId}
+ onChange={(e) => handleTeamChange(e.target.value)}
+ className="w-full sm:w-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ >
+ <option value="">All Athletes</option>
+ {teams.map((t) => (
+ <option key={t.id} value={t.id}>
+ {t.name} ({t.memberCount})
+ </option>
+ ))}
+ <option value="unassigned">Unassigned</option>
+ </select>
+ )}
 
  {/* ── Stats Strip ──────────────────────────────────────────── */}
  <div className="space-y-3">
