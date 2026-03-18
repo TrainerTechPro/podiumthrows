@@ -22,6 +22,12 @@ import {
   Bell,
   BookOpen,
   PenLine,
+  Radio,
+  Wrench,
+  UserCircle,
+  ListChecks,
+  Clapperboard,
+  BarChart3,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -196,11 +202,21 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Dashboard", href: "/coach/dashboard", icon: <LayoutDashboard {...iconSize} /> },
       { label: "Athletes", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
-      { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} /> },
+      { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/coach/sessions"] },
       { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
-      { label: "Throw Logs", href: "/coach/throws", icon: <Target {...iconSize} /> },
+    ],
+  },
+  {
+    title: "Throws",
+    items: [
+      { label: "Throws Dashboard", href: "/coach/throws", icon: <Target {...iconSize} /> },
+      { label: "Roster", href: "/coach/throws/roster", icon: <Users {...iconSize} /> },
+      { label: "Live Practice", href: "/coach/throws/practice", icon: <Radio {...iconSize} />, matchPaths: ["/coach/throws/practice"] },
+      { label: "Build Program", href: "/coach/throws/program-builder", icon: <Zap {...iconSize} /> },
+      { label: "Session Builder", href: "/coach/throws/builder", icon: <FileText {...iconSize} /> },
+      { label: "Video Analysis", href: "/coach/throws/analyze", icon: <Clapperboard {...iconSize} />, matchPaths: ["/coach/throws/analyze"] },
+      { label: "Drills", href: "/coach/throws/drills", icon: <ListChecks {...iconSize} /> },
       { label: "Throws Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
-      { label: "Drills", href: "/coach/throws/drills", icon: <Zap {...iconSize} /> },
     ],
   },
   {
@@ -208,15 +224,16 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Workout Plans", href: "/coach/plans", icon: <FileText {...iconSize} /> },
       { label: "Exercises", href: "/coach/exercises", icon: <Dumbbell {...iconSize} /> },
-      { label: "Video Library", href: "/coach/videos", icon: <Video {...iconSize} /> },
+      { label: "Video Library", href: "/coach/videos", icon: <Video {...iconSize} />, matchPaths: ["/coach/videos"] },
     ],
   },
   {
     title: "Insights",
     items: [
       { label: "Wellness", href: "/coach/wellness", icon: <Heart {...iconSize} /> },
-      { label: "Questionnaires", href: "/coach/questionnaires", icon: <ClipboardList {...iconSize} /> },
+      { label: "Questionnaires", href: "/coach/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/coach/questionnaires"] },
       { label: "Goals", href: "/coach/goals", icon: <Crosshair {...iconSize} /> },
+      { label: "Tools", href: "/coach/tools", icon: <Wrench {...iconSize} /> },
     ],
   },
   {
@@ -228,16 +245,11 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Alerts",
-    items: [
-      { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
-    ],
-  },
-  {
     title: "Admin",
     items: [
+      { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
       { label: "Invitations", href: "/coach/invitations", icon: <Mail {...iconSize} /> },
-      { label: "Settings", href: "/coach/settings", icon: <Settings {...iconSize} /> },
+      { label: "Settings", href: "/coach/settings", icon: <Settings {...iconSize} />, matchPaths: ["/coach/settings"] },
     ],
   },
 ];
@@ -248,16 +260,24 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
       { label: "My Dashboard", href: "/athlete/dashboard", icon: <LayoutDashboard {...iconSize} /> },
       { label: "Log Session", href: "/athlete/log-session", icon: <PenLine {...iconSize} /> },
       { label: "My Sessions", href: "/athlete/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/athlete/sessions"] },
-      { label: "Throw History", href: "/athlete/throws", icon: <Target {...iconSize} /> },
+      { label: "Throw History", href: "/athlete/throws", icon: <Target {...iconSize} />, matchPaths: ["/athlete/throws"] },
       { label: "Throws Codex", href: "/athlete/codex", icon: <BookOpen {...iconSize} /> },
+    ],
+  },
+  {
+    title: "Insights",
+    items: [
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
-      { label: "Questionnaires", href: "/athlete/questionnaires", icon: <ClipboardList {...iconSize} /> },
-      { label: "My Videos", href: "/athlete/videos", icon: <Video {...iconSize} /> },
+      { label: "Assessments", href: "/athlete/assessments", icon: <BarChart3 {...iconSize} /> },
+      { label: "Questionnaires", href: "/athlete/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/athlete/questionnaires"] },
+      { label: "My Videos", href: "/athlete/videos", icon: <Video {...iconSize} />, matchPaths: ["/athlete/videos"] },
+      { label: "Tools", href: "/athlete/tools", icon: <Wrench {...iconSize} /> },
     ],
   },
   {
     title: "My Profile",
     items: [
+      { label: "Profile", href: "/athlete/profile", icon: <UserCircle {...iconSize} /> },
       { label: "Goals", href: "/athlete/goals", icon: <Crosshair {...iconSize} /> },
       { label: "Achievements", href: "/athlete/achievements", icon: <Award {...iconSize} /> },
       { label: "Settings", href: "/athlete/settings", icon: <Settings {...iconSize} /> },
