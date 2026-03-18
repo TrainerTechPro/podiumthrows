@@ -206,6 +206,7 @@ export function LogSessionWizard({
 
   // Step 3: Drills
   const [drills, setDrills] = useState<DrillEntry[]>([]);
+  const [distanceUnit, setDistanceUnit] = useState<"meters" | "feet">("meters");
 
   // Step 4: Post-session feedback
   const [sessionRpe, setSessionRpe] = useState<number | null>(null);
@@ -289,15 +290,19 @@ export function LogSessionWizard({
               }),
           drills: drills
             .filter((d) => d.drillType)
-            .map((d) => ({
-              drillType: d.drillType,
-              implementWeight: d.implementWeight
-                ? parseFloat(d.implementWeight)
-                : undefined,
-              throwCount: parseInt(d.throwCount, 10) || 0,
-              bestMark: d.bestMark ? parseFloat(d.bestMark) : undefined,
-              notes: d.notes.trim() || undefined,
-            })),
+            .map((d) => {
+              const raw = d.bestMark ? parseFloat(d.bestMark) : undefined;
+              const best = raw && distanceUnit === "feet" ? raw * 0.3048 : raw;
+              return {
+                drillType: d.drillType,
+                implementWeight: d.implementWeight
+                  ? parseFloat(d.implementWeight)
+                  : undefined,
+                throwCount: parseInt(d.throwCount, 10) || 0,
+                bestMark: best,
+                notes: d.notes.trim() || undefined,
+              };
+            }),
         }),
       });
 
@@ -537,7 +542,25 @@ export function LogSessionWizard({
               {/* Best distance */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">Best Distance (m, optional)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="label mb-0">Best Distance (optional)</label>
+                    <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
+                      {(["meters", "feet"] as const).map((unit) => (
+                        <button
+                          key={unit}
+                          type="button"
+                          onClick={() => setDistanceUnit(unit)}
+                          className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+                            distanceUnit === unit
+                              ? "bg-primary-500 text-white"
+                              : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+                          }`}
+                        >
+                          {unit === "meters" ? "m" : "ft"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <input
                     type="number"
                     step="0.01"
@@ -545,7 +568,7 @@ export function LogSessionWizard({
                     value={drill.bestMark}
                     onChange={(e) => updateDrill(drill.id, "bestMark", e.target.value)}
                     className="input"
-                    placeholder="18.50"
+                    placeholder={distanceUnit === "meters" ? "18.50" : "60.70"}
                   />
                 </div>
                 <div>

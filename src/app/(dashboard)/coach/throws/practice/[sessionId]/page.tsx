@@ -131,6 +131,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  const [event, setEvent] = useState(defaultEvent);
  const [implement, setImplement] = useState(() => getDefaultImplement(athlete.throwsProfile, defaultEvent));
  const [distance, setDistance] = useState("");
+ const [distanceUnit, setDistanceUnit] = useState<"meters" | "feet">("meters");
  const [drillType, setDrillType] = useState("");
  const [coachNote, setCoachNote] = useState("");
  const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -145,7 +146,8 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  (pr) => pr.event === event && pr.implement === implement
  );
 
- const distanceNum = parseFloat(distance);
+ const distanceRaw = parseFloat(distance);
+ const distanceNum = !isNaN(distanceRaw) && distanceUnit === "feet" ? distanceRaw * 0.3048 : distanceRaw;
  const wouldBePR = !isNaN(distanceNum) && distance !== "" &&
  (existingPR === undefined || distanceNum > existingPR.distance);
 
@@ -188,7 +190,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  athleteId: athlete.id,
  event,
  implement,
- distance: distance ? parseFloat(distance) : undefined,
+ distance: distance ? distanceNum : undefined,
  drillType: drillType || undefined,
  coachNote: coachNote || undefined,
  attemptNumber: athleteAttemptCount + 1,
@@ -205,7 +207,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  athleteId: athlete.id,
  event,
  implement,
- distance: distance ? parseFloat(distance) : null,
+ distance: distance ? distanceNum : null,
  drillType: drillType || null,
  coachNote: coachNote || null,
  videoUrl: null,
@@ -275,7 +277,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  athleteId: athlete.id,
  event,
  implement,
- distance: distance ? parseFloat(distance) : null,
+ distance: distance ? distanceNum : null,
  drillType: drillType || null,
  coachNote: coachNote || null,
  videoUrl: null,
@@ -362,9 +364,18 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
 
  {/* Distance */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
- Distance <span className="font-normal text-[var(--color-text-3)]">(meters)</span>
- </label>
+ <div className="flex items-center justify-between mb-1">
+ <label className="block text-xs font-medium text-[var(--color-text-2)]">Distance</label>
+ <div className="flex rounded-lg overflow-hidden border border-[var(--color-border)]">
+ {(["meters", "feet"] as const).map((unit) => (
+ <button key={unit} type="button" onClick={() => setDistanceUnit(unit)}
+ className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+ distanceUnit === unit ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+ }`}
+ >{unit === "meters" ? "m" : "ft"}</button>
+ ))}
+ </div>
+ </div>
  <div className="relative">
  <input
  type="number"
@@ -372,7 +383,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  min="0"
  value={distance}
  onChange={(e) => setDistance(e.target.value)}
- placeholder="e.g. 18.45"
+ placeholder={distanceUnit === "meters" ? "e.g. 18.45" : "e.g. 60.53"}
  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 pr-10 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  />
  {wouldBePR && (

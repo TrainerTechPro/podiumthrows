@@ -203,6 +203,7 @@ interface FormState {
   selectedAthleteId: string;
   event: ThrowEvent | "";
   gender: Gender | "";
+  distanceUnit: "meters" | "feet";
   competitionPr: string;
   goalDistance: string;
   targetDate: string;
@@ -235,6 +236,7 @@ const DEFAULT_FORM: FormState = {
   selectedAthleteId: "",
   event: "",
   gender: "",
+  distanceUnit: "meters",
   competitionPr: "",
   goalDistance: "",
   targetDate: "",
@@ -414,13 +416,15 @@ export function ProgramBuilderWizard({
       const gen = form.gender as Gender;
       const implType = IMPLEMENT_TYPE_MAP[ev];
 
+      const toM = (v: number) => form.distanceUnit === "feet" ? v * 0.3048 : v;
+
       const payload = {
         athleteId: form.selectedAthleteId,
         onboardingData: {
           event: ev,
           gender: gen,
-          competitionPr: parseFloat(form.competitionPr),
-          goalDistance: parseFloat(form.goalDistance),
+          competitionPr: toM(parseFloat(form.competitionPr)),
+          goalDistance: toM(parseFloat(form.goalDistance)),
           targetDate: form.targetDate,
           implements: form.selectedImplements.map((wKg) => ({
             weightKg: wKg,
@@ -785,6 +789,20 @@ export function ProgramBuilderWizard({
 
 // ── Step Components ─────────────────────────────────────────────────────
 
+function UnitToggle({ value, onChange }: { value: "meters" | "feet"; onChange: (v: "meters" | "feet") => void }) {
+  return (
+    <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
+      {(["meters", "feet"] as const).map((unit) => (
+        <button key={unit} type="button" onClick={() => onChange(unit)}
+          className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+            value === unit ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+          }`}
+        >{unit === "meters" ? "m" : "ft"}</button>
+      ))}
+    </div>
+  );
+}
+
 interface StepProps {
   form: FormState;
   update: (field: keyof FormState, value: FormState[keyof FormState]) => void;
@@ -1020,16 +1038,17 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
       </div>
 
       <div>
-        <label className="label" htmlFor="pr">
-          Athlete&apos;s Competition PR (meters)
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="label mb-0" htmlFor="pr">Athlete&apos;s Competition PR</label>
+          <UnitToggle value={form.distanceUnit} onChange={(v) => update("distanceUnit", v)} />
+        </div>
         <input
           id="pr"
           type="number"
           step="0.01"
           min="0"
           className="input w-full"
-          placeholder="e.g. 55.20"
+          placeholder={form.distanceUnit === "meters" ? "e.g. 55.20" : "e.g. 181.10"}
           value={form.competitionPr}
           onChange={(e) => update("competitionPr", e.target.value)}
         />
@@ -1048,16 +1067,17 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
     <div className="space-y-6">
       {/* Goal */}
       <div>
-        <label className="label" htmlFor="goalDist">
-          Goal Distance (meters)
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="label mb-0" htmlFor="goalDist">Goal Distance</label>
+          <UnitToggle value={form.distanceUnit} onChange={(v) => update("distanceUnit", v)} />
+        </div>
         <input
           id="goalDist"
           type="number"
           step="0.01"
           min="0"
           className="input w-full"
-          placeholder="e.g. 65.00"
+          placeholder={form.distanceUnit === "meters" ? "e.g. 65.00" : "e.g. 213.25"}
           value={form.goalDistance}
           onChange={(e) => update("goalDistance", e.target.value)}
         />

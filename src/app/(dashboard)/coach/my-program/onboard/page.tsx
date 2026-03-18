@@ -155,6 +155,7 @@ interface MobilityRegion {
 interface FormState {
   event: ThrowEvent | "";
   gender: Gender | "";
+  distanceUnit: "meters" | "feet";
   competitionPr: string;
   shortTermGoal: string;
   goalDistance: string;
@@ -192,7 +193,7 @@ interface FormState {
 }
 
 const DEFAULT_FORM: FormState = {
-  event: "", gender: "", competitionPr: "",
+  event: "", gender: "", distanceUnit: "meters", competitionPr: "",
   shortTermGoal: "", goalDistance: "", targetDate: "",
   longTermGoal: "", longTermDistance: "", longTermDate: "",
   competitions: [{ name: "", date: "", event: "", priority: "A" }],
@@ -311,15 +312,17 @@ export default function OnboardingWizardPage() {
       const gen = form.gender as Gender;
       const implType = IMPLEMENT_TYPE_MAP[ev];
 
+      const toM = (v: number) => form.distanceUnit === "feet" ? v * 0.3048 : v;
+
       const payload = {
         event: ev,
         gender: gen,
-        competitionPr: parseFloat(form.competitionPr),
-        goalDistance: parseFloat(form.goalDistance),
+        competitionPr: toM(parseFloat(form.competitionPr)),
+        goalDistance: toM(parseFloat(form.goalDistance)),
         targetDate: form.targetDate,
         shortTermGoal: form.shortTermGoal || undefined,
         longTermGoal: form.longTermGoal || undefined,
-        longTermDistance: form.longTermDistance ? parseFloat(form.longTermDistance) : undefined,
+        longTermDistance: form.longTermDistance ? toM(parseFloat(form.longTermDistance)) : undefined,
         longTermDate: form.longTermDate || undefined,
         competitions: form.competitions.filter((c) => c.name && c.date),
         mobilityRegions: form.mobilityRegions.filter((r) => r.severity !== "none"),
@@ -495,6 +498,20 @@ export default function OnboardingWizardPage() {
 
 // ── Step Components ─────────────────────────────────────────────────
 
+function UnitToggle({ value, onChange }: { value: "meters" | "feet"; onChange: (v: "meters" | "feet") => void }) {
+  return (
+    <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
+      {(["meters", "feet"] as const).map((unit) => (
+        <button key={unit} type="button" onClick={() => onChange(unit)}
+          className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+            value === unit ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+          }`}
+        >{unit === "meters" ? "m" : "ft"}</button>
+      ))}
+    </div>
+  );
+}
+
 interface StepProps {
   form: FormState;
   update: (field: keyof FormState, value: FormState[keyof FormState]) => void;
@@ -536,8 +553,11 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
         {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
       </div>
       <div>
-        <label className="label" htmlFor="pr">Competition PR (meters)</label>
-        <input id="pr" type="number" step="0.01" min="0" className="input w-full" placeholder="e.g. 55.20"
+        <div className="flex items-center justify-between mb-1">
+          <label className="label mb-0" htmlFor="pr">Competition PR</label>
+          <UnitToggle value={form.distanceUnit} onChange={(v) => update("distanceUnit", v)} />
+        </div>
+        <input id="pr" type="number" step="0.01" min="0" className="input w-full" placeholder={form.distanceUnit === "meters" ? "e.g. 55.20" : "e.g. 181.10"}
           value={form.competitionPr} onChange={(e) => update("competitionPr", e.target.value)} />
         {errors.competitionPr && <p className="text-red-500 text-xs mt-1">{errors.competitionPr}</p>}
       </div>
@@ -554,11 +574,14 @@ function StepShortTermGoal({ form, update, errors = {} }: StepProps) {
           value={form.shortTermGoal} onChange={(e) => update("shortTermGoal", e.target.value)} />
       </div>
       <div>
-        <label className="label" htmlFor="goalDist">Goal Distance (meters)</label>
-        <input id="goalDist" type="number" step="0.01" min="0" className="input w-full" placeholder="e.g. 18.00"
+        <div className="flex items-center justify-between mb-1">
+          <label className="label mb-0" htmlFor="goalDist">Goal Distance</label>
+          <UnitToggle value={form.distanceUnit} onChange={(v) => update("distanceUnit", v)} />
+        </div>
+        <input id="goalDist" type="number" step="0.01" min="0" className="input w-full" placeholder={form.distanceUnit === "meters" ? "e.g. 18.00" : "e.g. 59.06"}
           value={form.goalDistance} onChange={(e) => update("goalDistance", e.target.value)} />
         {form.competitionPr && form.goalDistance && (
-          <p className="text-caption text-muted mt-1">+{(parseFloat(form.goalDistance) - parseFloat(form.competitionPr)).toFixed(2)}m improvement target</p>
+          <p className="text-caption text-muted mt-1">+{(parseFloat(form.goalDistance) - parseFloat(form.competitionPr)).toFixed(2)}{form.distanceUnit === "feet" ? "ft" : "m"} improvement target</p>
         )}
         {errors.goalDistance && <p className="text-red-500 text-xs mt-1">{errors.goalDistance}</p>}
       </div>
@@ -586,8 +609,11 @@ function StepLongTermGoal({ form, update }: StepProps) {
           value={form.longTermGoal} onChange={(e) => update("longTermGoal", e.target.value)} />
       </div>
       <div>
-        <label className="label" htmlFor="ltDist">Long-Term Goal Distance (meters)</label>
-        <input id="ltDist" type="number" step="0.01" min="0" className="input w-full" placeholder="e.g. 20.00"
+        <div className="flex items-center justify-between mb-1">
+          <label className="label mb-0" htmlFor="ltDist">Long-Term Goal Distance</label>
+          <UnitToggle value={form.distanceUnit} onChange={(v) => update("distanceUnit", v)} />
+        </div>
+        <input id="ltDist" type="number" step="0.01" min="0" className="input w-full" placeholder={form.distanceUnit === "meters" ? "e.g. 20.00" : "e.g. 65.62"}
           value={form.longTermDistance} onChange={(e) => update("longTermDistance", e.target.value)} />
       </div>
       <div>
@@ -894,10 +920,10 @@ function StepReview({ form, implementOptions }: { form: FormState; implementOpti
       <h3 className="text-section font-heading text-[var(--foreground)]">Review Your Setup</h3>
       <div className="divide-y divide-[var(--card-border)]">
         <ReviewRow label="Event" value={`${eventLabel} (${form.gender})`} />
-        <ReviewRow label="Competition PR" value={`${form.competitionPr}m`} />
-        {form.shortTermGoal && <ReviewRow label="Short-Term Goal" value={`${form.shortTermGoal} — ${form.goalDistance}m by ${form.targetDate}`} />}
-        {!form.shortTermGoal && <ReviewRow label="Goal" value={`${form.goalDistance}m by ${form.targetDate}`} />}
-        {form.longTermGoal && <ReviewRow label="Long-Term Goal" value={`${form.longTermGoal} — ${form.longTermDistance}m`} />}
+        <ReviewRow label="Competition PR" value={`${form.competitionPr}${form.distanceUnit === "feet" ? "ft" : "m"}`} />
+        {form.shortTermGoal && <ReviewRow label="Short-Term Goal" value={`${form.shortTermGoal} — ${form.goalDistance}${form.distanceUnit === "feet" ? "ft" : "m"} by ${form.targetDate}`} />}
+        {!form.shortTermGoal && <ReviewRow label="Goal" value={`${form.goalDistance}${form.distanceUnit === "feet" ? "ft" : "m"} by ${form.targetDate}`} />}
+        {form.longTermGoal && <ReviewRow label="Long-Term Goal" value={`${form.longTermGoal} — ${form.longTermDistance}${form.distanceUnit === "feet" ? "ft" : "m"}`} />}
         <ReviewRow label="Implements" value={selectedImpls.map((i) => i.label).join(", ")} />
         <ReviewRow label="Schedule" value={`${form.daysPerWeek} days/week, ${form.sessionsPerDay} session/day${form.includeLift ? " + lifting" : ""}`} />
         <ReviewRow label="Experience" value={`${form.yearsThrowing} years${form.currentWeeklyVolume ? `, ~${form.currentWeeklyVolume} throws/week` : ""}`} />

@@ -117,6 +117,7 @@ export default function ThrowsRosterPage() {
 
  // Enrollment form
  const [enrollOpen, setEnrollOpen] = useState(false);
+ const [enrollDistUnit, setEnrollDistUnit] = useState<"meters" | "feet">("meters");
  const [enrollForm, setEnrollForm] = useState({
  athleteId: "",
  event: "" as EventCode | "",
@@ -197,7 +198,7 @@ export default function ThrowsRosterPage() {
  event: enrollForm.event,
  gender: enrollForm.gender,
  competitionPb: enrollForm.competitionPb
- ? parseFloat(enrollForm.competitionPb)
+ ? (enrollDistUnit === "feet" ? parseFloat(enrollForm.competitionPb) * 0.3048 : parseFloat(enrollForm.competitionPb))
  : undefined,
  }),
  });
@@ -629,15 +630,26 @@ export default function ThrowsRosterPage() {
 
  {/* Competition PB (optional) */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <div className="flex items-center justify-between mb-1">
+ <label className="block text-xs font-medium text-[var(--color-text-2)]">
  Competition PB{" "}
- <span className="text-[var(--color-text-3)] font-normal">(meters, optional)</span>
+ <span className="text-[var(--color-text-3)] font-normal">(optional)</span>
  </label>
+ <div className="flex rounded-lg overflow-hidden border border-[var(--color-border)]">
+ {(["meters", "feet"] as const).map((unit) => (
+ <button key={unit} type="button" onClick={() => setEnrollDistUnit(unit)}
+ className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+ enrollDistUnit === unit ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+ }`}
+ >{unit === "meters" ? "m" : "ft"}</button>
+ ))}
+ </div>
+ </div>
  <input
  type="number"
  step="0.01"
  min="0"
- placeholder="e.g. 18.45"
+ placeholder={enrollDistUnit === "meters" ? "e.g. 18.45" : "e.g. 60.53"}
  value={enrollForm.competitionPb}
  onChange={(e) =>
  setEnrollForm((f) => ({
