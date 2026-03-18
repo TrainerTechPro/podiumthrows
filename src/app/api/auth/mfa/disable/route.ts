@@ -61,6 +61,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
+    if (!user.passwordHash) {
+      return NextResponse.json({ error: "Account not activated" }, { status: 403 });
+    }
     const passwordValid = await verifyPassword(password, user.passwordHash);
     if (!passwordValid) {
       return NextResponse.json(
