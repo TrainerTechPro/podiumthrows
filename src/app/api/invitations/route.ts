@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
     const mode = body.mode === "link" ? "link" : "email";
     const email =
       mode === "email" && typeof body.email === "string" ? body.email.trim().toLowerCase() : null;
+    const athleteProfileId =
+      typeof body.athleteProfileId === "string" ? body.athleteProfileId : undefined;
 
     if (mode === "email") {
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -121,6 +123,7 @@ export async function POST(req: NextRequest) {
       data: {
         coachId: coach.id,
         ...(email ? { email } : {}),
+        ...(athleteProfileId ? { athleteProfileId } : {}),
         token,
         status: "PENDING",
         expiresAt,

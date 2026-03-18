@@ -18,7 +18,16 @@ import {
 interface CoachAthlete {
  id: string;
  profilePictureUrl?: string | null;
- user: { firstName: string; lastName: string; email: string };
+ user: { firstName: string; lastName: string; email: string; claimedAt?: string | null };
+}
+
+interface RosterAthlete {
+ id: string;
+ firstName: string;
+ lastName: string;
+ events: string[];
+ avatarUrl?: string | null;
+ user: { email: string; claimedAt: string | null };
 }
 
 interface ThrowsProfileRow {
@@ -122,6 +131,20 @@ export default function ThrowsRosterPage() {
  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
  const [removeError, setRemoveError] = useState("");
 
+ // Add Athlete form
+ const [showAddForm, setShowAddForm] = useState(false);
+ const [newFirstName, setNewFirstName] = useState("");
+ const [newLastName, setNewLastName] = useState("");
+ const [newEvents, setNewEvents] = useState<string[]>([]);
+ const [addLoading, setAddLoading] = useState(false);
+ const [addError, setAddError] = useState("");
+
+ // Roster athletes (with claim status)
+ const [rosterAthletes, setRosterAthletes] = useState<RosterAthlete[]>([]);
+
+ // Invite
+ const [inviteCopied, setInviteCopied] = useState<string | null>(null);
+
  // ── Data fetching ──────────────────────────────────────────────
 
  const fetchData = useCallback(() => {
@@ -129,8 +152,9 @@ export default function ThrowsRosterPage() {
  Promise.all([
  fetch("/api/throws/podium-roster").then((r) => r.json()),
  fetch("/api/athletes").then((r) => r.json()),
+ fetch("/api/coach/athletes").then((r) => r.json()),
  ])
- .then(([podiumData, athletesData]) => {
+ .then(([podiumData, athletesData, rosterData]) => {
  if (podiumData.success) setPodiumAthletes(podiumData.data);
  if (athletesData.success) {
  const list = Array.isArray(athletesData.data)
@@ -140,6 +164,7 @@ export default function ThrowsRosterPage() {
  : [];
  setAllAthletes(list);
  }
+ if (rosterData.ok) setRosterAthletes(rosterData.data);
  setLoading(false);
  })
  .catch(() => setLoading(false));
@@ -211,6 +236,57 @@ export default function ThrowsRosterPage() {
  }
  }
 
+ // ── Add Athlete ─────────────────────────────────────────────────
+
+ function toggleNewEvent(ev: string) {
+ setNewEvents((prev) =>
+ prev.includes(ev) ? prev.filter((e) => e !== ev) : [...prev, ev]
+ );
+ }
+
+ async function handleAddAthlete(e: React.FormEvent) {
+ e.preventDefault();
+ if (!newFirstName.trim() || !newLastName.trim() || newEvents.length === 0) return;
+ setAddLoading(true);
+ setAddError("");
+ try {
+ const res = await fetch("/api/coach/athletes", {
+ method: "POST",
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
+ body: JSON.stringify({ firstName: newFirstName, lastName: newLastName, events: newEvents }),
+ });
+ const data = await res.json();
+ if (!res.ok) throw new Error(data.error || "Failed to add athlete");
+ setShowAddForm(false);
+ setNewFirstName("");
+ setNewLastName("");
+ setNewEvents([]);
+ fetchData();
+ } catch (err: unknown) {
+ setAddError(err instanceof Error ? err.message : "Failed to add athlete");
+ } finally {
+ setAddLoading(false);
+ }
+ }
+
+ async function handleInvite(athleteId: string) {
+ try {
+ const res = await fetch("/api/invitations", {
+ method: "POST",
+ headers: { "Content-Type": "application/json", ...csrfHeaders() },
+ body: JSON.stringify({ mode: "link", athleteProfileId: athleteId }),
+ });
+ const data = await res.json();
+ if (!res.ok) throw new Error(data.error);
+ const link = `${window.location.origin}/register?invite=${data.data.token}`;
+ await navigator.clipboard.writeText(link);
+ setInviteCopied(athleteId);
+ setTimeout(() => setInviteCopied(null), 3000);
+ } catch (err) {
+ console.error("Failed to create invite:", err);
+ }
+ }
+
  // ── Loading skeleton ───────────────────────────────────────────
 
  if (loading) {
@@ -252,6 +328,15 @@ export default function ThrowsRosterPage() {
  >
  Dashboard
  </Link>
+ <button
+ onClick={() => { setShowAddForm(true); setAddError(""); }}
+ className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
+ >
+ <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+ </svg>
+ Add Athlete
+ </button>
  </div>
  </div>
 
@@ -281,6 +366,95 @@ export default function ThrowsRosterPage() {
  ))}
  </div>
  </div>
+
+ {/* ── Add Athlete Form ─────────────────────────────────────── */}
+ {showAddForm && (
+ <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
+ <div className="flex items-center justify-between">
+ <h3 className="font-semibold text-[var(--color-text)] text-sm">
+ Add Athlete to Roster
+ </h3>
+ <button
+ onClick={() => setShowAddForm(false)}
+ className="p-1 text-[var(--color-text-3)] hover:text-[var(--color-text-2)] rounded-lg"
+ >
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+ </div>
+ <p className="text-xs text-[var(--color-text-3)]">
+ Create a placeholder profile. The athlete can claim it later via an invite link.
+ </p>
+ <form onSubmit={handleAddAthlete} className="space-y-3">
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">First Name</label>
+ <input
+ type="text"
+ value={newFirstName}
+ onChange={(e) => setNewFirstName(e.target.value)}
+ required
+ placeholder="Marcus"
+ className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ />
+ </div>
+ <div>
+ <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Last Name</label>
+ <input
+ type="text"
+ value={newLastName}
+ onChange={(e) => setNewLastName(e.target.value)}
+ required
+ placeholder="Petrov"
+ className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ />
+ </div>
+ </div>
+ <div>
+ <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Events</label>
+ <div className="flex flex-wrap gap-2">
+ {(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const).map((ev) => (
+ <button
+ key={ev}
+ type="button"
+ onClick={() => toggleNewEvent(ev)}
+ className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+ newEvents.includes(ev)
+ ? "bg-[rgba(212,168,67,0.15)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]"
+ : "bg-[var(--color-bg-subtle)] text-[var(--color-text-3)] hover:text-[var(--color-text-2)]"
+ }`}
+ >
+ {ev === "SHOT_PUT" ? "Shot Put" : ev === "DISCUS" ? "Discus" : ev === "HAMMER" ? "Hammer" : "Javelin"}
+ </button>
+ ))}
+ </div>
+ </div>
+ {addError && (
+ <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>
+ )}
+ <div className="flex gap-2 pt-1">
+ <button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary text-sm px-4 py-2">
+ Cancel
+ </button>
+ <button
+ type="submit"
+ disabled={addLoading || !newFirstName.trim() || !newLastName.trim() || newEvents.length === 0}
+ className="btn-primary text-sm px-4 py-2 flex items-center gap-1.5 disabled:opacity-60"
+ >
+ {addLoading ? (
+ <>
+ <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+ Adding…
+ </>
+ ) : (
+ "Add Athlete"
+ )}
+ </button>
+ </div>
+ </form>
+ </div>
+ )}
 
  {/* ── Tabs ─────────────────────────────────────────────────── */}
  <div className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-xl p-1 w-fit">
@@ -705,6 +879,9 @@ export default function ThrowsRosterPage() {
  const profileRow = podiumAthletes.find(
  (p) => p.athleteId === athlete.id
  );
+ // Check claim status from roster data
+ const rosterMatch = rosterAthletes.find((r) => r.id === athlete.id);
+ const isClaimed = rosterMatch?.user?.claimedAt != null;
  return (
  <div
  key={athlete.id}
@@ -717,11 +894,18 @@ export default function ThrowsRosterPage() {
  size="md"
  />
  <div className="min-w-0 flex-1">
+ <div className="flex items-center gap-2">
  <p className="font-semibold text-[var(--color-text)] text-sm">
  {athlete.user.firstName} {athlete.user.lastName}
  </p>
+ {!isClaimed && rosterMatch && (
+ <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 flex-shrink-0">
+ Not yet claimed
+ </span>
+ )}
+ </div>
  <p className="text-xs text-[var(--color-text-3)]">
- {athlete.user.email}
+ {isClaimed || !rosterMatch ? athlete.user.email : "Pending invite"}
  </p>
  </div>
 
@@ -757,6 +941,28 @@ export default function ThrowsRosterPage() {
  )}
 
  <div className="flex gap-2 flex-shrink-0 ml-auto sm:ml-0">
+ {!isClaimed && rosterMatch && (
+ <button
+ onClick={() => handleInvite(athlete.id)}
+ className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap flex items-center gap-1"
+ >
+ {inviteCopied === athlete.id ? (
+ <>
+ <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+ </svg>
+ Copied!
+ </>
+ ) : (
+ <>
+ <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+ </svg>
+ Invite
+ </>
+ )}
+ </button>
+ )}
  <Link
  href={`/coach/throws/profile?athleteId=${athlete.id}`}
  className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"

@@ -94,8 +94,6 @@ interface DrillEntry {
 
 type Step = "event" | "readiness" | "drills" | "feedback" | "done";
 
-const STEP_ORDER: Step[] = ["event", "readiness", "drills", "feedback", "done"];
-
 /* ─── Scale Selector ───────────────────────────────────────────────────────── */
 
 function ScaleSelector({
@@ -165,14 +163,30 @@ interface WizardProps {
   apiEndpoint?: string;
   /** Where to navigate after "View Sessions" (e.g. "/athlete/sessions" or "/coach/my-training") */
   sessionsPath?: string;
+  /** Only show these events (empty/undefined = show all) */
+  allowedEvents?: string[];
+  /** Limited mode: skip readiness & feedback steps (for coach logging on behalf of athlete) */
+  limitedMode?: boolean;
 }
 
 export function LogSessionWizard({
   apiEndpoint = "/api/athlete/log-session",
   sessionsPath = "/athlete/sessions",
+  allowedEvents,
+  limitedMode = false,
 }: WizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("event");
+
+  // Dynamic step order based on limitedMode
+  const steps: Step[] = limitedMode
+    ? ["event", "drills", "done"]
+    : ["event", "readiness", "drills", "feedback", "done"];
+
+  // Filter events based on allowedEvents prop
+  const filteredEvents = allowedEvents?.length
+    ? EVENTS.filter((e) => allowedEvents.includes(e.value))
+    : EVENTS;
 
   function handleClose() {
     if (step === "done" || confirm("Discard this session?")) {
@@ -181,7 +195,7 @@ export function LogSessionWizard({
   }
 
   // Step 1: Event + Focus
-  const [event, setEvent] = useState("");
+  const [event, setEvent] = useState(filteredEvents.length === 1 ? filteredEvents[0].value : "");
   const [focus, setFocus] = useState("");
   const [date, setDate] = useState(localToday());
 
@@ -238,13 +252,13 @@ export function LogSessionWizard({
   }
 
   function nextStep() {
-    const idx = STEP_ORDER.indexOf(step);
-    if (idx < STEP_ORDER.length - 1) setStep(STEP_ORDER[idx + 1]);
+    const idx = steps.indexOf(step);
+    if (idx < steps.length - 1) setStep(steps[idx + 1]);
   }
 
   function prevStep() {
-    const idx = STEP_ORDER.indexOf(step);
-    if (idx > 0) setStep(STEP_ORDER[idx - 1]);
+    const idx = steps.indexOf(step);
+    if (idx > 0) setStep(steps[idx - 1]);
   }
 
   async function handleSubmit() {
@@ -260,15 +274,19 @@ export function LogSessionWizard({
           date,
           focus: focus || undefined,
           notes: sessionNotes.trim() || undefined,
-          sleepQuality,
-          sorenessLevel,
-          energyLevel,
-          sessionRpe,
-          sessionFeeling: sessionFeeling || undefined,
-          techniqueRating,
-          mentalFocus,
-          bestPart: bestPart.trim() || undefined,
-          improvementArea: improvementArea.trim() || undefined,
+          ...(limitedMode
+            ? {}
+            : {
+                sleepQuality,
+                sorenessLevel,
+                energyLevel,
+                sessionRpe,
+                sessionFeeling: sessionFeeling || undefined,
+                techniqueRating,
+                mentalFocus,
+                bestPart: bestPart.trim() || undefined,
+                improvementArea: improvementArea.trim() || undefined,
+              }),
           drills: drills
             .filter((d) => d.drillType)
             .map((d) => ({
@@ -319,7 +337,7 @@ export function LogSessionWizard({
       <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
         {closeButton}
         <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={STEP_ORDER} />
+          <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
             What are you throwing today?
           </h2>
@@ -327,7 +345,7 @@ export function LogSessionWizard({
 
         {/* Event buttons */}
         <div className="grid grid-cols-2 gap-3">
-          {EVENTS.map((ev) => (
+          {filteredEvents.map((ev) => (
             <button
               key={ev.value}
               type="button"
@@ -397,7 +415,7 @@ export function LogSessionWizard({
       <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
         {closeButton}
         <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={STEP_ORDER} />
+          <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
             Quick readiness check
           </h2>
@@ -450,7 +468,7 @@ export function LogSessionWizard({
       <div className="relative max-w-2xl mx-auto space-y-5 animate-spring-up">
         {closeButton}
         <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={STEP_ORDER} />
+          <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
             Log your drills
           </h2>
@@ -554,17 +572,21 @@ export function LogSessionWizard({
           + Add Drill
         </button>
 
+        {error && (
+          <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
+        )}
+
         <div className="flex gap-3">
           <button type="button" onClick={prevStep} className="btn-secondary flex-1">
             Back
           </button>
           <button
             type="button"
-            onClick={nextStep}
-            disabled={drills.length === 0 || !drills.some((d) => d.drillType)}
+            onClick={limitedMode ? handleSubmit : nextStep}
+            disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
             className="btn-primary flex-1"
           >
-            Next
+            {limitedMode ? (submitting ? "Saving..." : "Save Session") : "Next"}
           </button>
         </div>
       </div>
@@ -577,7 +599,7 @@ export function LogSessionWizard({
       <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
         {closeButton}
         <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={STEP_ORDER} />
+          <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
             Session review
           </h2>
