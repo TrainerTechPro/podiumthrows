@@ -95,6 +95,7 @@ export async function PUT(
           ...(improvementArea !== undefined && { improvementArea }),
           ...(drills && {
             drillLogs: {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               create: drills.map((d: any) => ({
                 drillType: d.drillType,
                 implementWeight: d.implementWeight ?? null,

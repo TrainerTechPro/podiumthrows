@@ -266,6 +266,7 @@ export function LogSessionWizard({
         setImprovementArea(s.improvementArea || "");
         if (s.drillLogs?.length) {
           setDrills(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             s.drillLogs.map((d: any) => ({
               id: d.id || crypto.randomUUID(),
               drillType: d.drillType || "",
