@@ -12,6 +12,7 @@ import {
   ATHLETE_NAV_SECTIONS,
   NavSection,
 } from "@/components/ui/Sidebar";
+import { CommandPalette } from "@/components/ui/CommandPalette";
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -290,6 +291,9 @@ export function DashboardLayout({
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
+
+        {/* Cmd+K command palette */}
+        <CommandPalette sections={sections} />
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

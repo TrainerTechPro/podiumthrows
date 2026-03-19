@@ -28,6 +28,7 @@ import {
   Clapperboard,
   BarChart3,
   UsersRound,
+  UserPlus,
   ChevronRight,
 } from "lucide-react";
 
@@ -267,75 +268,74 @@ const iconSize = { size: 20, strokeWidth: 1.75, "aria-hidden": true as const };
 export const COACH_NAV_SECTIONS: NavSection[] = [
   {
     items: [
+      // ── Dashboard (standalone) ──
       { label: "Dashboard", href: "/coach/dashboard", icon: <LayoutDashboard {...iconSize} /> },
 
-      // ── Athletes (consolidated) ──
+      // ── Athletes ──
       {
         label: "Athletes",
         href: "/coach/athletes",
         icon: <Users {...iconSize} />,
-        matchPaths: ["/coach/athletes", "/coach/teams", "/coach/athlete-logs", "/coach/invitations"],
+        matchPaths: ["/coach/athletes", "/coach/invitations", "/coach/teams", "/coach/wellness"],
         children: [
           { label: "Roster", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
+          { label: "Invitations", href: "/coach/invitations", icon: <UserPlus {...iconSize} /> },
           { label: "Teams", href: "/coach/teams", icon: <UsersRound {...iconSize} /> },
-          { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
-        ],
-      },
-
-      // ── Throws (consolidated) ──
-      {
-        label: "Throws",
-        href: "/coach/throws",
-        icon: <Target {...iconSize} />,
-        matchPaths: ["/coach/throws", "/coach/codex"],
-        children: [
-          { label: "Live Practice", href: "/coach/throws/practice", icon: <Radio {...iconSize} />, matchPaths: ["/coach/throws/practice"] },
-          { label: "Roster", href: "/coach/throws/roster", icon: <Users {...iconSize} /> },
-          { label: "Drills", href: "/coach/throws/drills", icon: <ListChecks {...iconSize} /> },
-          { label: "Video Analysis", href: "/coach/throws/analyze", icon: <Clapperboard {...iconSize} />, matchPaths: ["/coach/throws/analyze"] },
-          { label: "Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
-        ],
-      },
-
-      // ── Programming (consolidated) ──
-      {
-        label: "Programming",
-        href: "/coach/throws/builder",
-        icon: <Zap {...iconSize} />,
-        matchPaths: ["/coach/throws/builder", "/coach/throws/program-builder", "/coach/throws/library", "/coach/exercises", "/coach/plans", "/coach/sessions", "/coach/videos"],
-        children: [
-          { label: "Session Builder", href: "/coach/throws/builder", icon: <FileText {...iconSize} /> },
-          { label: "Program Builder", href: "/coach/throws/program-builder", icon: <Zap {...iconSize} /> },
-          { label: "Exercises", href: "/coach/exercises", icon: <Dumbbell {...iconSize} /> },
-          { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/coach/sessions"] },
-          { label: "Videos", href: "/coach/videos", icon: <Video {...iconSize} />, matchPaths: ["/coach/videos"] },
-        ],
-      },
-
-      // ── My Training (consolidated) ──
-      {
-        label: "My Training",
-        href: "/coach/my-training",
-        icon: <Dumbbell {...iconSize} />,
-        matchPaths: ["/coach/my-training", "/coach/log-session", "/coach/my-program", "/coach/my-lifting", "/coach/my-throws"],
-        children: [
-          { label: "Training Log", href: "/coach/my-training", icon: <Target {...iconSize} /> },
-          { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
-          { label: "My Program", href: "/coach/my-program", icon: <Zap {...iconSize} />, matchPaths: ["/coach/my-program"] },
-          { label: "My Lifting", href: "/coach/my-lifting", icon: <Dumbbell {...iconSize} />, matchPaths: ["/coach/my-lifting"] },
-        ],
-      },
-
-      // ── Insights (consolidated) ──
-      {
-        label: "Insights",
-        href: "/coach/wellness",
-        icon: <BarChart3 {...iconSize} />,
-        matchPaths: ["/coach/wellness", "/coach/questionnaires", "/coach/goals", "/coach/tools"],
-        children: [
           { label: "Wellness", href: "/coach/wellness", icon: <Heart {...iconSize} /> },
-          { label: "Questionnaires", href: "/coach/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/coach/questionnaires"] },
+        ],
+      },
+
+      // ── Training ──
+      {
+        label: "Training",
+        href: "/coach/throws",
+        icon: <Dumbbell {...iconSize} />,
+        matchPaths: [
+          "/coach/throws", "/coach/sessions", "/coach/log-session",
+          "/coach/exercises", "/coach/plans",
+          "/coach/my-training", "/coach/my-lifting", "/coach/my-throws", "/coach/my-program",
+        ],
+        children: [
+          { label: "Throws Hub", href: "/coach/throws", icon: <Target {...iconSize} />, matchPaths: ["/coach/throws"] },
+          { label: "Live Practice", href: "/coach/throws/practice", icon: <Radio {...iconSize} />, matchPaths: ["/coach/throws/practice"] },
+          { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/coach/sessions"] },
+          { label: "Session Builder", href: "/coach/throws/builder", icon: <FileText {...iconSize} /> },
+          { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
+          { label: "Exercises", href: "/coach/exercises", icon: <Dumbbell {...iconSize} /> },
+          { label: "Programs", href: "/coach/plans", icon: <ListChecks {...iconSize} /> },
+          { label: "Program Builder", href: "/coach/throws/program-builder", icon: <Zap {...iconSize} /> },
+          { label: "My Training", href: "/coach/my-training", icon: <Target {...iconSize} />, matchPaths: ["/coach/my-training"] },
+          { label: "My Lifting", href: "/coach/my-lifting", icon: <Dumbbell {...iconSize} />, matchPaths: ["/coach/my-lifting"] },
+          { label: "My Throws", href: "/coach/my-throws", icon: <Target {...iconSize} /> },
+          { label: "My Program", href: "/coach/my-program", icon: <Zap {...iconSize} />, matchPaths: ["/coach/my-program"] },
+        ],
+      },
+
+      // ── Analyze ──
+      {
+        label: "Analyze",
+        href: "/coach/throws/analyze",
+        icon: <BarChart3 {...iconSize} />,
+        matchPaths: ["/coach/throws/analyze", "/coach/throws/profile", "/coach/athlete-logs", "/coach/goals", "/coach/questionnaires"],
+        children: [
+          { label: "Video Analysis", href: "/coach/throws/analyze", icon: <Clapperboard {...iconSize} />, matchPaths: ["/coach/throws/analyze"] },
+          { label: "Throws Profile", href: "/coach/throws/profile", icon: <UserCircle {...iconSize} />, matchPaths: ["/coach/throws/profile"] },
+          { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
           { label: "Goals", href: "/coach/goals", icon: <Crosshair {...iconSize} /> },
+          { label: "Questionnaires", href: "/coach/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/coach/questionnaires"] },
+        ],
+      },
+
+      // ── Library ──
+      {
+        label: "Library",
+        href: "/coach/codex",
+        icon: <BookOpen {...iconSize} />,
+        matchPaths: ["/coach/videos", "/coach/throws/drills", "/coach/drill-videos", "/coach/codex", "/coach/tools"],
+        children: [
+          { label: "Videos", href: "/coach/videos", icon: <Video {...iconSize} />, matchPaths: ["/coach/videos"] },
+          { label: "Drill Videos", href: "/coach/throws/drills", icon: <Clapperboard {...iconSize} /> },
+          { label: "Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
           { label: "Tools", href: "/coach/tools", icon: <Wrench {...iconSize} /> },
         ],
       },
