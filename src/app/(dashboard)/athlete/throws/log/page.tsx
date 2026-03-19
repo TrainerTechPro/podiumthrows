@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -592,10 +593,12 @@ function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string |
 // ── Main Page ──────────────────────────────────────────────────────────
 
 export default function ThrowsLogPage() {
+ const searchParams = useSearchParams();
  const [tab, setTab] = useState<"log" | "trends" | "sessions">("log");
  const [step, setStep] = useState<1 | 2 | 3>(1);
  const [athleteId, setAthleteId] = useState<string | null>(null);
  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+ const [editLoaded, setEditLoaded] = useState(false);
 
  // Past drills for smart suggestions
  const [pastDrills, setPastDrills] = useState<string[]>([]);
@@ -607,6 +610,16 @@ export default function ThrowsLogPage() {
  .then((d) => { if (d.success) setAthleteId(d.data.athleteProfile?.id ?? null); })
  .catch(() => {});
  }, []);
+
+ // Handle ?edit=sessionId from navigation
+ useEffect(() => {
+   const editId = searchParams.get("edit");
+   if (editId && !editLoaded) {
+     setEditLoaded(true);
+     loadSessionForEdit(editId);
+   }
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [searchParams, editLoaded]);
 
  // Log state
  const [selectedEvent, setSelectedEvent] = useState("");

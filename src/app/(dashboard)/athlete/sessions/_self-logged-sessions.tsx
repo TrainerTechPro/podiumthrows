@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatImplementWeight } from "@/lib/throws";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
@@ -209,8 +210,19 @@ function SessionDetail({ session }: { session: SelfLoggedSession }) {
 
 /* ─── Main Component ───────────────────────────────────────────────────────── */
 
-export function SelfLoggedSessions({ sessions }: { sessions: SelfLoggedSession[] }) {
+export function SelfLoggedSessions({
+  sessions,
+  onEdit,
+}: {
+  sessions: SelfLoggedSession[];
+  onEdit?: (sessionId: string) => void;
+}) {
+  const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const handleEdit = onEdit ?? ((id: string) => {
+    router.push(`/athlete/throws/log?edit=${id}`);
+  });
 
   if (sessions.length === 0) return null;
 
@@ -263,15 +275,29 @@ export function SelfLoggedSessions({ sessions }: { sessions: SelfLoggedSession[]
                   </p>
                 </div>
 
-                {/* Chevron */}
-                <svg
-                  width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
-                  aria-hidden="true"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
+                <div className="flex items-center gap-1.5">
+                  {/* Edit button */}
+                  <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleEdit(session.id); }}
+                      className="w-7 h-7 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 flex items-center justify-center text-muted hover:text-primary-500 transition-colors"
+                      aria-label="Edit session"
+                      title="Edit session"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  {/* Chevron */}
+                  <svg
+                    width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                    aria-hidden="true"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
               </div>
             </button>
 
