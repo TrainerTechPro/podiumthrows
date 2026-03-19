@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Circle, Minus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types (serialized from server) ────────────────────────────────────── */
 
@@ -109,7 +110,7 @@ export function WeekGrid({ program }: { program: Program }) {
     try {
       const res = await fetch("/api/lifting/workouts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           programId: program.id,
           weekNumber,

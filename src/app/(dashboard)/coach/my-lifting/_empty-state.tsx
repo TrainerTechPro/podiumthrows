@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { TISSUE_REMODELING_TEMPLATE } from "@/lib/lifting-templates/tissue-remodeling";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 export function LiftingEmptyState() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export function LiftingEmptyState() {
     try {
       const res = await fetch("/api/lifting/programs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           name: TISSUE_REMODELING_TEMPLATE.name,
           goals: TISSUE_REMODELING_TEMPLATE.goals,
