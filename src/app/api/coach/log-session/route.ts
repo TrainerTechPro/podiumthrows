@@ -147,6 +147,9 @@ export async function POST(request: NextRequest) {
     const prs: PRResult[] = [];
     for (const dl of created.drillLogs) {
       if (dl.implementWeight && dl.bestMark && dl.bestMark > 0) {
+        const implementLabel = dl.implementWeightOriginal
+          ? `${dl.implementWeightOriginal}${dl.implementWeightUnit ?? "kg"}`
+          : undefined;
         const result = await checkAndSetCoachPR(
           coach.id,
           event,
@@ -155,6 +158,7 @@ export async function POST(request: NextRequest) {
           new Date(date),
           created.id,
           dl.drillType,
+          implementLabel,
         );
         if (result.isPersonalBest) {
           prs.push({

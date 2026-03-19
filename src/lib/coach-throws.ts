@@ -21,8 +21,10 @@ export async function checkAndSetCoachPR(
   date: Date = new Date(),
   sessionId?: string,
   drillType?: string,
+  implementLabel?: string,
 ): Promise<{ isPersonalBest: boolean; previousBest?: number }> {
-  const implement = `${implementWeight}kg`;
+  // Use provided label (e.g. "14lbs") or fall back to rounded kg
+  const implement = implementLabel || `${parseFloat(implementWeight.toFixed(2))}kg`;
 
   const existing = await prisma.coachPR.findUnique({
     where: {
@@ -72,7 +74,7 @@ export async function recalculateCoachPRs(
   affectedImplements: number[],
 ): Promise<void> {
   for (const weight of affectedImplements) {
-    const implement = `${weight}kg`;
+    const implement = `${parseFloat(weight.toFixed(2))}kg`;
 
     // Find the best remaining drill log for this event + implement
     const best = await prisma.coachDrillLog.findFirst({

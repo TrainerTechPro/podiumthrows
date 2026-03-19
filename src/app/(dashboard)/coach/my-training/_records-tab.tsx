@@ -4,6 +4,15 @@ import { useState } from "react";
 import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+/** Clean up implement strings like "6.3503007320989564kg" → "6.35kg" */
+function cleanImplement(impl: string): string {
+  const match = impl.match(/^([\d.]+)(kg|lbs)$/);
+  if (!match) return impl;
+  const num = parseFloat(match[1]);
+  const unit = match[2];
+  return `${parseFloat(num.toFixed(2))}${unit}`;
+}
+
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
 interface CoachPR {
@@ -124,7 +133,7 @@ export function RecordsTab({
                         .sort((a, b) => parseFloat(b.implement) - parseFloat(a.implement))
                         .map((pr) => (
                           <tr key={pr.id} className="border-b border-[var(--card-border)] last:border-0">
-                            <td className="py-1.5 text-[var(--foreground)] font-semibold tabular-nums">{pr.implement}</td>
+                            <td className="py-1.5 text-[var(--foreground)] font-semibold tabular-nums">{cleanImplement(pr.implement)}</td>
                             <td className="py-1.5 text-right tabular-nums font-semibold text-primary-600 dark:text-primary-400">
                               {pr.distance.toFixed(2)}m
                             </td>
