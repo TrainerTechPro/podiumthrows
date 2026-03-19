@@ -82,6 +82,9 @@ export async function POST(request: NextRequest) {
       drills: {
         drillType: string;
         implementWeight?: number;
+        implementWeightUnit?: string;
+        implementWeightOriginal?: number;
+        wireLength?: string;
         throwCount: number;
         bestMark?: number;
         notes?: string;
@@ -117,12 +120,18 @@ export async function POST(request: NextRequest) {
             (d: {
               drillType: string;
               implementWeight?: number;
+              implementWeightUnit?: string;
+              implementWeightOriginal?: number;
+              wireLength?: string;
               throwCount: number;
               bestMark?: number;
               notes?: string;
             }) => ({
               drillType: d.drillType,
               implementWeight: d.implementWeight ?? null,
+              implementWeightUnit: d.implementWeightUnit ?? "kg",
+              implementWeightOriginal: d.implementWeightOriginal ?? null,
+              wireLength: d.wireLength ?? null,
               throwCount: d.throwCount || 0,
               bestMark: d.bestMark ?? null,
               notes: d.notes?.trim() || null,
@@ -150,7 +159,9 @@ export async function POST(request: NextRequest) {
         if (result.isPersonalBest) {
           prs.push({
             event,
-            implement: `${dl.implementWeight}kg`,
+            implement: dl.implementWeightOriginal
+              ? `${dl.implementWeightOriginal}${dl.implementWeightUnit ?? "kg"}`
+              : `${dl.implementWeight}kg`,
             distance: dl.bestMark,
             previousBest: result.previousBest,
           });

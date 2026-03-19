@@ -173,6 +173,8 @@ interface WizardProps {
   allowedEvents?: string[];
   /** Limited mode: skip readiness & feedback steps (for coach logging on behalf of athlete) */
   limitedMode?: boolean;
+  /** If set, load session data and use PUT to update instead of POST */
+  editSessionId?: string;
 }
 
 export function LogSessionWizard({
@@ -180,9 +182,12 @@ export function LogSessionWizard({
   sessionsPath = "/athlete/sessions",
   allowedEvents,
   limitedMode = false,
+  editSessionId,
 }: WizardProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("event");
+  const [isEditing, setIsEditing] = useState(!!editSessionId);
+  const [editLoading, setEditLoading] = useState(!!editSessionId);
 
   // Dynamic step order based on limitedMode
   const steps: Step[] = limitedMode
@@ -237,6 +242,47 @@ export function LogSessionWizard({
     { type: string; message: string; severity: string }[]
   >([]);
 
+  // Load existing session data when editing
+  useEffect(() => {
+    if (!editSessionId) return;
+    setEditLoading(true);
+    fetch(`${apiEndpoint}/${editSessionId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.ok || !data.data) return;
+        const s = data.data;
+        setEvent(s.event || "");
+        setDate(s.date || localToday());
+        setFocus(s.focus || "");
+        setSessionNotes(s.notes || "");
+        setSleepQuality(s.sleepQuality ?? null);
+        setSorenessLevel(s.sorenessLevel ?? null);
+        setEnergyLevel(s.energyLevel ?? null);
+        setSessionRpe(s.sessionRpe ?? null);
+        setSessionFeeling(s.sessionFeeling || "");
+        setTechniqueRating(s.techniqueRating ?? null);
+        setMentalFocus(s.mentalFocus ?? null);
+        setBestPart(s.bestPart || "");
+        setImprovementArea(s.improvementArea || "");
+        if (s.drillLogs?.length) {
+          setDrills(
+            s.drillLogs.map((d: any) => ({
+              id: d.id || crypto.randomUUID(),
+              drillType: d.drillType || "",
+              implementWeight: d.implementWeightOriginal != null ? String(d.implementWeightOriginal) : d.implementWeight != null ? String(d.implementWeight) : "",
+              implementUnit: (d.implementWeightUnit === "lbs" ? "lbs" : "kg") as "kg" | "lbs",
+              wireLength: d.wireLength || "FULL",
+              throwCount: d.throwCount != null ? String(d.throwCount) : "",
+              bestMark: d.bestMark != null ? String(d.bestMark) : "",
+              notes: d.notes || "",
+            }))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setEditLoading(false));
+  }, [editSessionId, apiEndpoint]);
+
   useEffect(() => {
     if (!event) { setPastDrills([]); return; }
     fetch(`/api/throws/past-drills?event=${event}`)
@@ -286,8 +332,9 @@ export function LogSessionWizard({
     setSubmitting(true);
 
     try {
-      const res = await fetch(apiEndpoint, {
-        method: "POST",
+      const url = isEditing ? `${apiEndpoint}/${editSessionId}` : apiEndpoint;
+      const res = await fetch(url, {
+        method: isEditing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           event,
@@ -359,6 +406,16 @@ export function LogSessionWizard({
     </button>
   );
 
+  /* ── Loading state for edit mode ── */
+  if (editLoading) {
+    return (
+      <div className="max-w-lg mx-auto py-20 text-center space-y-4 animate-spring-up">
+        <div className="w-10 h-10 mx-auto border-3 border-surface-300 dark:border-surface-700 border-t-primary-500 rounded-full animate-spin" />
+        <p className="text-sm text-muted">Loading session...</p>
+      </div>
+    );
+  }
+
   /* ── STEP: Event Selection ── */
   if (step === "event") {
     return (
@@ -367,7 +424,7 @@ export function LogSessionWizard({
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
-            What are you throwing today?
+            {isEditing ? "Edit session" : "What are you throwing today?"}
           </h2>
         </div>
 
@@ -690,7 +747,7 @@ export function LogSessionWizard({
             disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
             className="btn-primary flex-1"
           >
-            {limitedMode ? (submitting ? "Saving..." : "Save Session") : "Next"}
+            {limitedMode ? (submitting ? "Saving..." : isEditing ? "Update Session" : "Save Session") : "Next"}
           </button>
         </div>
       </div>
@@ -807,7 +864,7 @@ export function LogSessionWizard({
             disabled={submitting}
             className="btn-primary flex-1"
           >
-            {submitting ? "Saving..." : "Save Session"}
+            {submitting ? "Saving..." : isEditing ? "Update Session" : "Save Session"}
           </button>
         </div>
       </div>
@@ -836,7 +893,7 @@ export function LogSessionWizard({
 
         <div>
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
-            Session logged
+            {isEditing ? "Session Updated!" : "Session logged"}
           </h2>
           <p className="text-sm text-muted mt-1">
             {eventName} &middot; {drills.filter((d) => d.drillType).length} drill{drills.filter((d) => d.drillType).length !== 1 ? "s" : ""} &middot; {totalThrows} throws
@@ -899,6 +956,7 @@ export function LogSessionWizard({
             type="button"
             onClick={() => {
               // Reset everything
+              setIsEditing(false);
               setStep("event");
               setEvent("");
               setFocus("");

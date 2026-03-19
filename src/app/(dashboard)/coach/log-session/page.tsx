@@ -3,7 +3,11 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { LogSessionWizard } from "../../athlete/log-session/_log-session-wizard";
 
-export default async function CoachLogSessionPage() {
+export default async function CoachLogSessionPage({
+  searchParams,
+}: {
+  searchParams: { edit?: string };
+}) {
   const session = await getSession();
   if (!session || session.role !== "COACH") redirect("/login");
 
@@ -18,6 +22,7 @@ export default async function CoachLogSessionPage() {
         apiEndpoint="/api/coach/log-session"
         sessionsPath="/coach/my-training"
         allowedEvents={coach?.events ?? []}
+        editSessionId={searchParams.edit}
       />
     </div>
   );
