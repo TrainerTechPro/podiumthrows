@@ -16,7 +16,6 @@ import {
   Heart,
   ClipboardList,
   Crosshair,
-  Mail,
   Settings,
   Award,
   Bell,
