@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,8 @@ import {
   Clapperboard,
   BarChart3,
   UsersRound,
+  ChevronRight,
+  Library,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -40,6 +42,8 @@ export interface NavItem {
   badge?: string | number;
   /** Items that also count as "active" for this link */
   matchPaths?: string[];
+  /** Collapsible sub-items */
+  children?: NavItem[];
 }
 
 export interface NavSection {
@@ -61,30 +65,100 @@ export interface SidebarProps {
 
 /* ─── Nav Item ───────────────────────────────────────────────────────────── */
 
-function SidebarNavItem({ item }: { item: NavItem }) {
-  const pathname = usePathname();
-  const isActive =
+function isItemActive(item: NavItem, pathname: string): boolean {
+  return (
     pathname === item.href ||
     pathname.startsWith(item.href + "/") ||
-    item.matchPaths?.some(
+    !!item.matchPaths?.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
-    );
+    )
+  );
+}
 
+function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) {
+  const pathname = usePathname();
+  const isActive = isItemActive(item, pathname);
+  const hasChildren = item.children && item.children.length > 0;
+
+  // Auto-expand if any child is active
+  const childActive = hasChildren && item.children!.some((c) => isItemActive(c, pathname));
+  const [expanded, setExpanded] = useState(childActive || isActive);
+
+  const isParentActive = isActive || childActive;
+
+  // Parent with children: render as a collapsible button
+  if (hasChildren) {
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+            isParentActive
+              ? "text-primary-700 dark:text-primary-300"
+              : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100"
+          )}
+        >
+          <span
+            className={cn(
+              "w-5 h-5 shrink-0 transition-colors",
+              isParentActive
+                ? "text-primary-600 dark:text-primary-400"
+                : "text-surface-400 dark:text-surface-500 group-hover:text-surface-600 dark:group-hover:text-surface-300"
+            )}
+          >
+            {item.icon}
+          </span>
+          <span className="flex-1 truncate text-left">{item.label}</span>
+          {item.badge !== undefined && (
+            <span className={cn(
+              "px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums",
+              isParentActive
+                ? "bg-primary-200 dark:bg-primary-500/30 text-primary-700 dark:text-primary-300"
+                : "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300"
+            )}>
+              {item.badge}
+            </span>
+          )}
+          <ChevronRight
+            size={14}
+            className={cn(
+              "shrink-0 transition-transform duration-200 text-surface-400",
+              expanded && "rotate-90"
+            )}
+          />
+        </button>
+        {expanded && (
+          <ul className="mt-0.5 ml-4 pl-3 border-l border-surface-200 dark:border-surface-700 space-y-0.5">
+            {item.children!.map((child) => (
+              <li key={child.href}>
+                <SidebarNavItem item={child} depth={depth + 1} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
+
+  // Leaf item: render as a link
   return (
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-150 group",
+        "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 group",
+        depth > 0 ? "px-3 py-2" : "px-3 py-2.5",
         isActive
           ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
           : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100"
       )}
       aria-current={isActive ? "page" : undefined}
     >
-      {/* Icon */}
       <span
         className={cn(
           "w-5 h-5 shrink-0 transition-colors",
+          depth > 0 && "w-4 h-4",
           isActive
             ? "text-primary-600 dark:text-primary-400 icon-active"
             : "text-surface-400 dark:text-surface-500 group-hover:text-surface-600 dark:group-hover:text-surface-300"
@@ -92,11 +166,7 @@ function SidebarNavItem({ item }: { item: NavItem }) {
       >
         {item.icon}
       </span>
-
-      {/* Label */}
       <span className="flex-1 truncate">{item.label}</span>
-
-      {/* Badge */}
       {item.badge !== undefined && (
         <span
           className={cn(
@@ -109,8 +179,6 @@ function SidebarNavItem({ item }: { item: NavItem }) {
           {item.badge}
         </span>
       )}
-
-      {/* Active indicator */}
       {isActive && (
         <span className="ml-1 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
       )}
@@ -202,56 +270,83 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: "Dashboard", href: "/coach/dashboard", icon: <LayoutDashboard {...iconSize} /> },
-      { label: "Athletes", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
-      { label: "Teams", href: "/coach/teams", icon: <UsersRound {...iconSize} /> },
-      { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/coach/sessions"] },
-      { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
+
+      // ── Athletes (consolidated) ──
+      {
+        label: "Athletes",
+        href: "/coach/athletes",
+        icon: <Users {...iconSize} />,
+        matchPaths: ["/coach/athletes", "/coach/teams", "/coach/athlete-logs", "/coach/invitations"],
+        children: [
+          { label: "Roster", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
+          { label: "Teams", href: "/coach/teams", icon: <UsersRound {...iconSize} /> },
+          { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
+          { label: "Invitations", href: "/coach/invitations", icon: <Mail {...iconSize} /> },
+        ],
+      },
+
+      // ── Throws (consolidated) ──
+      {
+        label: "Throws",
+        href: "/coach/throws",
+        icon: <Target {...iconSize} />,
+        matchPaths: ["/coach/throws", "/coach/codex"],
+        children: [
+          { label: "Live Practice", href: "/coach/throws/practice", icon: <Radio {...iconSize} />, matchPaths: ["/coach/throws/practice"] },
+          { label: "Roster", href: "/coach/throws/roster", icon: <Users {...iconSize} /> },
+          { label: "Drills", href: "/coach/throws/drills", icon: <ListChecks {...iconSize} /> },
+          { label: "Video Analysis", href: "/coach/throws/analyze", icon: <Clapperboard {...iconSize} />, matchPaths: ["/coach/throws/analyze"] },
+          { label: "Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
+        ],
+      },
+
+      // ── Programming (consolidated) ──
+      {
+        label: "Programming",
+        href: "/coach/throws/builder",
+        icon: <Zap {...iconSize} />,
+        matchPaths: ["/coach/throws/builder", "/coach/throws/program-builder", "/coach/throws/library", "/coach/exercises", "/coach/plans", "/coach/sessions", "/coach/videos"],
+        children: [
+          { label: "Session Builder", href: "/coach/throws/builder", icon: <FileText {...iconSize} /> },
+          { label: "Program Builder", href: "/coach/throws/program-builder", icon: <Zap {...iconSize} /> },
+          { label: "Exercises", href: "/coach/exercises", icon: <Dumbbell {...iconSize} /> },
+          { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/coach/sessions"] },
+          { label: "Videos", href: "/coach/videos", icon: <Video {...iconSize} />, matchPaths: ["/coach/videos"] },
+        ],
+      },
+
+      // ── My Training (consolidated) ──
+      {
+        label: "My Training",
+        href: "/coach/my-training",
+        icon: <Dumbbell {...iconSize} />,
+        matchPaths: ["/coach/my-training", "/coach/log-session", "/coach/my-program", "/coach/my-lifting", "/coach/my-throws"],
+        children: [
+          { label: "Training Log", href: "/coach/my-training", icon: <Target {...iconSize} /> },
+          { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
+          { label: "My Program", href: "/coach/my-program", icon: <Zap {...iconSize} />, matchPaths: ["/coach/my-program"] },
+          { label: "My Lifting", href: "/coach/my-lifting", icon: <Dumbbell {...iconSize} />, matchPaths: ["/coach/my-lifting"] },
+        ],
+      },
+
+      // ── Insights (consolidated) ──
+      {
+        label: "Insights",
+        href: "/coach/wellness",
+        icon: <BarChart3 {...iconSize} />,
+        matchPaths: ["/coach/wellness", "/coach/questionnaires", "/coach/goals", "/coach/tools"],
+        children: [
+          { label: "Wellness", href: "/coach/wellness", icon: <Heart {...iconSize} /> },
+          { label: "Questionnaires", href: "/coach/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/coach/questionnaires"] },
+          { label: "Goals", href: "/coach/goals", icon: <Crosshair {...iconSize} /> },
+          { label: "Tools", href: "/coach/tools", icon: <Wrench {...iconSize} /> },
+        ],
+      },
     ],
   },
   {
-    title: "Throws",
-    items: [
-      { label: "Throws Dashboard", href: "/coach/throws", icon: <Target {...iconSize} /> },
-      { label: "Roster", href: "/coach/throws/roster", icon: <Users {...iconSize} /> },
-      { label: "Live Practice", href: "/coach/throws/practice", icon: <Radio {...iconSize} />, matchPaths: ["/coach/throws/practice"] },
-      { label: "Build Program", href: "/coach/throws/program-builder", icon: <Zap {...iconSize} /> },
-      { label: "Session Builder", href: "/coach/throws/builder", icon: <FileText {...iconSize} /> },
-      { label: "Video Analysis", href: "/coach/throws/analyze", icon: <Clapperboard {...iconSize} />, matchPaths: ["/coach/throws/analyze"] },
-      { label: "Drills", href: "/coach/throws/drills", icon: <ListChecks {...iconSize} /> },
-      { label: "Throws Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
-    ],
-  },
-  {
-    title: "Programs",
-    items: [
-      { label: "Workout Plans", href: "/coach/plans", icon: <FileText {...iconSize} /> },
-      { label: "Exercises", href: "/coach/exercises", icon: <Dumbbell {...iconSize} /> },
-      { label: "Video Library", href: "/coach/videos", icon: <Video {...iconSize} />, matchPaths: ["/coach/videos"] },
-    ],
-  },
-  {
-    title: "Insights",
-    items: [
-      { label: "Wellness", href: "/coach/wellness", icon: <Heart {...iconSize} /> },
-      { label: "Questionnaires", href: "/coach/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/coach/questionnaires"] },
-      { label: "Goals", href: "/coach/goals", icon: <Crosshair {...iconSize} /> },
-      { label: "Tools", href: "/coach/tools", icon: <Wrench {...iconSize} /> },
-    ],
-  },
-  {
-    title: "My Training",
-    items: [
-      { label: "My Program", href: "/coach/my-program", icon: <Zap {...iconSize} />, matchPaths: ["/coach/my-program"] },
-      { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
-      { label: "My Training Log", href: "/coach/my-training", icon: <Target {...iconSize} /> },
-      { label: "My Lifting", href: "/coach/my-lifting", icon: <Dumbbell {...iconSize} />, matchPaths: ["/coach/my-lifting"] },
-    ],
-  },
-  {
-    title: "Admin",
     items: [
       { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
-      { label: "Invitations", href: "/coach/invitations", icon: <Mail {...iconSize} /> },
       { label: "Settings", href: "/coach/settings", icon: <Settings {...iconSize} />, matchPaths: ["/coach/settings"] },
     ],
   },
