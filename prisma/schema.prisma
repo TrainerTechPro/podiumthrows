@@ -268,7 +268,7 @@ model AthleteProfile {
   videoAnnotations         VideoAnnotation[]
   mobilityAssessments      MobilityAssessment[]
   drillVideos              DrillVideo[]
-  throwsProfile            ThrowsProfile?
+  throwsProfiles           ThrowsProfile[]
   throwsTestingRecords     ThrowsTestingRecord[]
   throwsCompetitionResults ThrowsCompetitionResult[]
   throwsInjuries           ThrowsInjury[]
@@ -1732,7 +1732,7 @@ model VideoAnnotation {
 /// with status = 'active'. Soft-delete: status = 'inactive'.
 model ThrowsProfile {
   id         String         @id @default(cuid())
-  athleteId  String         @unique
+  athleteId  String
   athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   enrolledBy String // coachId who enrolled the athlete
   coach      CoachProfile   @relation("ThrowsProfileCoach", fields: [enrolledBy], references: [id])
@@ -1778,6 +1778,8 @@ model ThrowsProfile {
   competitionResults ThrowsCompetitionResult[]
   throwsInjuries     ThrowsInjury[]
 
+  @@unique([athleteId, event])
+  @@index([athleteId])
   @@index([enrolledBy])
   @@index([status])
   @@index([enrolledBy, status])

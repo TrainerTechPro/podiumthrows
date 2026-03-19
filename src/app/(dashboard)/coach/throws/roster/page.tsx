@@ -26,8 +26,10 @@ interface RosterAthlete {
  firstName: string;
  lastName: string;
  events: string[];
+ gender: string;
  avatarUrl?: string | null;
  user: { email: string; claimedAt: string | null };
+ throwsPRs?: { event: string; implement: string; distance: number }[];
 }
 
 interface ThrowsProfileRow {
@@ -125,10 +127,11 @@ export default function ThrowsRosterPage() {
  const [enrollDistUnit, setEnrollDistUnit] = useState<"meters" | "feet">("meters");
  const [enrollForm, setEnrollForm] = useState({
  athleteId: "",
- event: "" as EventCode | "",
+ events: [] as EventCode[],
  gender: "" as GenderCode | "",
  competitionPb: "",
  });
+ const [autoImported, setAutoImported] = useState(false);
  const [saving, setSaving] = useState(false);
  const [saveError, setSaveError] = useState("");
 
@@ -221,9 +224,42 @@ export default function ThrowsRosterPage() {
 
  // ── Enrollment ─────────────────────────────────────────────────
 
+ function handleEnrollAthleteChange(athleteId: string) {
+ const roster = rosterAthletes.find((r) => r.id === athleteId);
+ if (roster && roster.user?.claimedAt) {
+ // Auto-import: map EventType → EventCode, gender → GenderCode
+ const eventMap: Record<string, EventCode> = { SHOT_PUT: "SP", DISCUS: "DT", HAMMER: "HT", JAVELIN: "JT" };
+ const genderMap: Record<string, GenderCode> = { MALE: "M", FEMALE: "F" };
+ const mappedEvents = roster.events
+ .map((e) => eventMap[e])
+ .filter((e): e is EventCode => !!e);
+ const mappedGender = genderMap[roster.gender] || "";
+ // Best competition PR (highest distance)
+ const bestPr = roster.throwsPRs?.sort((a, b) => b.distance - a.distance)?.[0];
+ setEnrollForm({
+ athleteId,
+ events: mappedEvents,
+ gender: mappedGender as GenderCode | "",
+ competitionPb: bestPr ? String(bestPr.distance) : "",
+ });
+ setAutoImported(true);
+ if (bestPr) setEnrollDistUnit("meters"); // PRs are stored in meters
+ } else {
+ setEnrollForm((f) => ({ ...f, athleteId, events: [], gender: "", competitionPb: "" }));
+ setAutoImported(false);
+ }
+ }
+
+ function toggleEnrollEvent(ev: EventCode) {
+ setEnrollForm((f) => ({
+ ...f,
+ events: f.events.includes(ev) ? f.events.filter((e) => e !== ev) : [...f.events, ev],
+ }));
+ }
+
  async function handleEnroll(e: React.FormEvent) {
  e.preventDefault();
- if (!enrollForm.athleteId || !enrollForm.event || !enrollForm.gender) return;
+ if (!enrollForm.athleteId || enrollForm.events.length === 0 || !enrollForm.gender) return;
  setSaving(true);
  setSaveError("");
  try {
@@ -232,7 +268,7 @@ export default function ThrowsRosterPage() {
  headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({
  athleteId: enrollForm.athleteId,
- event: enrollForm.event,
+ events: enrollForm.events,
  gender: enrollForm.gender,
  competitionPb: enrollForm.competitionPb
  ? (enrollDistUnit === "feet" ? parseFloat(enrollForm.competitionPb) * 0.3048 : parseFloat(enrollForm.competitionPb))
@@ -242,7 +278,8 @@ export default function ThrowsRosterPage() {
  const data = await res.json();
  if (data.success) {
  setEnrollOpen(false);
- setEnrollForm({ athleteId: "", event: "", gender: "", competitionPb: "" });
+ setEnrollForm({ athleteId: "", events: [], gender: "", competitionPb: "" });
+ setAutoImported(false);
  fetchData();
  } else {
  setSaveError(data.error || "Enrollment failed");
@@ -639,9 +676,7 @@ export default function ThrowsRosterPage() {
  </label>
  <select
  value={enrollForm.athleteId}
- onChange={(e) =>
- setEnrollForm((f) => ({ ...f, athleteId: e.target.value }))
- }
+ onChange={(e) => handleEnrollAthleteChange(e.target.value)}
  required
  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  >
@@ -652,32 +687,34 @@ export default function ThrowsRosterPage() {
  </option>
  ))}
  </select>
+ {autoImported && (
+ <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">
+ Auto-filled from athlete profile
+ </p>
+ )}
  </div>
 
- <div className="grid grid-cols-2 gap-3">
- {/* Event */}
+ {/* Events (multi-toggle) */}
  <div>
  <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
- Event
+ Events
  </label>
- <select
- value={enrollForm.event}
- onChange={(e) =>
- setEnrollForm((f) => ({
- ...f,
- event: e.target.value as EventCode,
- }))
- }
- required
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
- >
- <option value="">Select event…</option>
+ <div className="flex flex-wrap gap-2">
  {(["SP", "DT", "HT", "JT"] as EventCode[]).map((code) => (
- <option key={code} value={code}>
+ <button
+ key={code}
+ type="button"
+ onClick={() => toggleEnrollEvent(code)}
+ className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+ enrollForm.events.includes(code)
+ ? "bg-[rgba(212,168,67,0.15)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]"
+ : "bg-[var(--color-bg-subtle)] text-[var(--color-text-3)] hover:text-[var(--color-text-2)]"
+ }`}
+ >
  {EVENT_LABELS[code]}
- </option>
+ </button>
  ))}
- </select>
+ </div>
  </div>
 
  {/* Gender */}
@@ -700,7 +737,6 @@ export default function ThrowsRosterPage() {
  <option value="M">Male</option>
  <option value="F">Female</option>
  </select>
- </div>
  </div>
 
  {/* Competition PB (optional) */}
@@ -1059,10 +1095,7 @@ export default function ThrowsRosterPage() {
  {!enrolled && (
  <button
  onClick={() => {
- setEnrollForm((f) => ({
- ...f,
- athleteId: athlete.id,
- }));
+ handleEnrollAthleteChange(athlete.id);
  setActiveTab("podium");
  setEnrollOpen(true);
  }}

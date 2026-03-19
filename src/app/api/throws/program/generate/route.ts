@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const athleteProfile = await prisma.athleteProfile.findUnique({
       where: { userId: user.userId },
       include: {
-        throwsProfile: true,
+        throwsProfiles: true,
         throwsTyping: true,
         equipmentInventory: true,
       },
@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
       liftingPrs: body.liftingPrs,
 
       // Deficit analysis from ThrowsProfile
-      deficitPrimary: athleteProfile.throwsProfile?.deficitPrimary ?? undefined,
-      deficitSecondary: athleteProfile.throwsProfile?.deficitSecondary ?? undefined,
+      deficitPrimary: athleteProfile.throwsProfiles?.[0]?.deficitPrimary ?? undefined,
+      deficitSecondary: athleteProfile.throwsProfiles?.[0]?.deficitSecondary ?? undefined,
     };
 
     // Look up coach ID if current user is a coach

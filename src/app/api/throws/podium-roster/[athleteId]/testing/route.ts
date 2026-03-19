@@ -93,8 +93,8 @@ export async function POST(
       );
     }
 
-    const profile = await prisma.throwsProfile.findUnique({
-      where: { athleteId },
+    const profile = await prisma.throwsProfile.findFirst({
+      where: { athleteId, status: "active" },
     });
     if (!profile) {
       return NextResponse.json(
@@ -310,7 +310,7 @@ export async function POST(
 
     if (Object.keys(profileUpdate).length > 0) {
       await prisma.throwsProfile.update({
-        where: { athleteId },
+        where: { id: profile.id },
         data: profileUpdate as Prisma.ThrowsProfileUpdateInput,
       });
     }

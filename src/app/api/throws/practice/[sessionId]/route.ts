@@ -31,7 +31,8 @@ export async function GET(
                 id: true,
                 avatarUrl: true,
                 user: { select: { id: true, email: true } },
-                throwsProfile: {
+                throwsProfiles: {
+                  where: { status: "active" },
                   select: {
                     event: true,
                     competitionPb: true,

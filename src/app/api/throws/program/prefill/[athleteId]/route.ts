@@ -45,7 +45,7 @@ export async function GET(
 
     // Fetch all data sources in parallel
     const [throwsProfile, throwsTyping, equipmentInventory] = await Promise.all([
-      prisma.throwsProfile.findUnique({ where: { athleteId } }),
+      prisma.throwsProfile.findFirst({ where: { athleteId, status: "active" } }),
       prisma.throwsTyping.findUnique({ where: { athleteId } }),
       prisma.equipmentInventory.findUnique({ where: { athleteId } }),
     ]);

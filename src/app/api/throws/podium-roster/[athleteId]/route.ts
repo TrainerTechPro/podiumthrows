@@ -47,8 +47,8 @@ export async function GET(
       );
     }
 
-    const profile = await prisma.throwsProfile.findUnique({
-      where: { athleteId },
+    const profiles = await prisma.throwsProfile.findMany({
+      where: { athleteId, status: "active" },
       include: {
         athlete: {
           select: {
@@ -66,14 +66,15 @@ export async function GET(
       },
     });
 
-    if (!profile) {
+    if (profiles.length === 0) {
       return NextResponse.json(
         { success: false, error: "Athlete is not enrolled in Podium Throws" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: profile });
+    // Return first profile as `data` for backward compat, plus full array
+    return NextResponse.json({ success: true, data: profiles[0], profiles });
   } catch (error) {
     logger.error("Get podium profile error", { context: "throws/podium-roster", error: error });
     return NextResponse.json(
@@ -113,9 +114,25 @@ export async function PATCH(
       );
     }
 
-    const profile = await prisma.throwsProfile.findUnique({
-      where: { athleteId },
-    });
+    const body = await request.json();
+
+    // ── Status change (remove = set inactive for ALL profiles) ─────
+    if (body.status === "inactive") {
+      await prisma.throwsProfile.updateMany({
+        where: { athleteId },
+        data: { status: "inactive", inactiveAt: new Date() },
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    // For other updates, find the specific profile (by event if provided, else first active)
+    const profile = body.event
+      ? await prisma.throwsProfile.findUnique({
+          where: { athleteId_event: { athleteId, event: body.event } },
+        })
+      : await prisma.throwsProfile.findFirst({
+          where: { athleteId, status: "active" },
+        });
     if (!profile) {
       return NextResponse.json(
         { success: false, error: "Profile not found" },
@@ -123,14 +140,7 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
     const updateData: Record<string, unknown> = {};
-
-    // ── Status change (remove = set inactive) ──────────────────────
-    if (body.status === "inactive") {
-      updateData.status = "inactive";
-      updateData.inactiveAt = new Date();
-    }
 
     // ── Competition PB → recompute distance band ───────────────────
     if (body.competitionPb != null) {
@@ -210,7 +220,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.throwsProfile.update({
-      where: { athleteId },
+      where: { id: profile.id },
       data: updateData as Prisma.ThrowsProfileUpdateInput,
     });
 

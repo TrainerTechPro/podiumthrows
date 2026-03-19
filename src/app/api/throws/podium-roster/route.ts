@@ -97,11 +97,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { athleteId, event, gender, competitionPb } = body;
+    const { athleteId, gender, competitionPb } = body;
+    // Accept both single `event` and array `events`
+    const events: string[] = Array.isArray(body.events)
+      ? body.events
+      : body.event
+        ? [body.event]
+        : [];
 
-    if (!athleteId || !event || !gender) {
+    if (!athleteId || events.length === 0 || !gender) {
       return NextResponse.json(
-        { success: false, error: "athleteId, event, and gender are required" },
+        { success: false, error: "athleteId, event(s), and gender are required" },
         { status: 400 }
       );
     }
@@ -124,35 +130,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Compute distance band if competition PB is provided
-    const currentDistanceBand =
-      competitionPb != null && competitionPb > 0
-        ? computeDistanceBand(
-            event as EventCode,
-            gender as GenderCode,
-            competitionPb
-          )
-        : null;
-
     // Sync adaptation profile from existing ThrowsTyping if present
     const typing = await prisma.throwsTyping.findUnique({
       where: { athleteId },
     });
     const adaptationFields = typing ? syncAdaptationFromTyping(typing) : {};
 
-    // Upsert: reactivate if previously removed
-    const existing = await prisma.throwsProfile.findUnique({
-      where: { athleteId },
-    });
+    // Upsert one ThrowsProfile per event
+    const profiles = [];
+    for (const event of events) {
+      const currentDistanceBand =
+        competitionPb != null && competitionPb > 0
+          ? computeDistanceBand(
+              event as EventCode,
+              gender as GenderCode,
+              competitionPb
+            )
+          : null;
 
-    let profile;
-    if (existing) {
-      profile = await prisma.throwsProfile.update({
-        where: { athleteId },
-        data: {
+      const profile = await prisma.throwsProfile.upsert({
+        where: { athleteId_event: { athleteId, event } },
+        update: {
           status: "active",
           enrolledBy: coach.id,
-          event,
           gender,
           enrolledAt: new Date(),
           inactiveAt: null,
@@ -162,10 +162,7 @@ export async function POST(request: NextRequest) {
           ...(currentDistanceBand ? { currentDistanceBand } : {}),
           ...adaptationFields,
         },
-      });
-    } else {
-      profile = await prisma.throwsProfile.create({
-        data: {
+        create: {
           athleteId,
           enrolledBy: coach.id,
           event,
@@ -178,11 +175,12 @@ export async function POST(request: NextRequest) {
           ...adaptationFields,
         },
       });
+      profiles.push(profile);
     }
 
     return NextResponse.json(
-      { success: true, data: profile },
-      { status: existing ? 200 : 201 }
+      { success: true, data: profiles.length === 1 ? profiles[0] : profiles },
+      { status: 201 }
     );
   } catch (error) {
     logger.error("Enroll podium throws error", { context: "throws/podium-roster", error: error });

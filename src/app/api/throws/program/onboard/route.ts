@@ -21,7 +21,7 @@ export async function GET() {
       where: { userId: user.userId },
       include: {
         throwsTyping: true,
-        throwsProfile: true,
+        throwsProfiles: true,
         equipmentInventory: true,
       },
     });
@@ -37,7 +37,7 @@ export async function GET() {
     const prefill: Record<string, unknown> = {};
 
     // From ThrowsProfile
-    const tp = athleteProfile.throwsProfile;
+    const tp = athleteProfile.throwsProfiles?.[0];
     if (tp) {
       prefill.event = tp.event || undefined;
       prefill.gender = tp.gender || undefined;

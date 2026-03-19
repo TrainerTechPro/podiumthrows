@@ -113,6 +113,10 @@ export async function GET(request: NextRequest) {
         user: {
           select: { email: true, claimedAt: true },
         },
+        throwsPRs: {
+          where: { source: "COMPETITION" },
+          orderBy: { distance: "desc" },
+        },
       },
       orderBy: { firstName: "asc" },
     });
