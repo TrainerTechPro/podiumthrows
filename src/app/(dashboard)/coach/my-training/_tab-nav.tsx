@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 
 const TABS = [
   { id: "sessions", label: "Sessions" },
-  { id: "insights", label: "Insights" },
   { id: "records", label: "Records" },
+  { id: "insights", label: "Insights" },
   { id: "typing", label: "My Typing" },
 ] as const;
 
