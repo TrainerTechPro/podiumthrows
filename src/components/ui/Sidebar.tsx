@@ -280,7 +280,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           { label: "Roster", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
           { label: "Teams", href: "/coach/teams", icon: <UsersRound {...iconSize} /> },
           { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
-          { label: "Invitations", href: "/coach/invitations", icon: <Mail {...iconSize} /> },
         ],
       },
 
