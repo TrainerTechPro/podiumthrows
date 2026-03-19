@@ -275,16 +275,16 @@ export function SelfLoggedSessions({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  {/* Edit button */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Edit button — sized for mobile tap targets */}
                   <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); handleEdit(session.id); }}
-                      className="w-7 h-7 rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 flex items-center justify-center text-muted hover:text-primary-500 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleEdit(session.id); }}
+                      className="w-9 h-9 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-muted hover:text-primary-500 hover:bg-primary-500/10 active:scale-95 transition-all"
                       aria-label="Edit session"
                       title="Edit session"
                     >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
