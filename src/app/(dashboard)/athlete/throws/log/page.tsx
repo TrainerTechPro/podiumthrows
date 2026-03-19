@@ -88,7 +88,7 @@ function ImplementPicker({ event, value, onChange, onUnitReset }: { event: strin
  key={w}
  type="button"
  onClick={() => { onChange(String(w)); onUnitReset?.(); }}
- className={`px-2 py-0.5 text-[10px] font-bold rounded-full border transition-colors ${
+ className={`px-2.5 py-1.5 text-xs sm:px-2 sm:py-0.5 sm:text-[10px] font-bold rounded-full border transition-colors ${
  value === String(w)
  ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]"
  : "border-[var(--color-border-strong)] text-[var(--color-text-2)] hover:border-[var(--color-gold)]"
@@ -138,7 +138,7 @@ function DrillCard({
  key={dt}
  type="button"
  onClick={() => update({ drillType: dt })}
- className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
+ className={`px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold rounded-lg transition-colors ${
  drill.drillType === dt
  ? "bg-[var(--color-gold)] text-white"
  : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
@@ -151,7 +151,7 @@ function DrillCard({
  <button
  type="button"
  onClick={() => setShowAllDrills(true)}
- className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-dashed border-[var(--color-border-strong)] text-[var(--color-text-3)] hover:text-[var(--color-gold-dark)] hover:border-[var(--color-gold)] transition-colors"
+ className="px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold rounded-lg border border-dashed border-[var(--color-border-strong)] text-[var(--color-text-3)] hover:text-[var(--color-gold-dark)] hover:border-[var(--color-gold)] transition-colors"
  >
  + New Drill
  </button>
@@ -172,7 +172,7 @@ function DrillCard({
  <button
  type="button"
  onClick={onRemove}
- className="text-[var(--color-text-3)] hover:text-red-500 transition-colors ml-2"
+ className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-text-3)] hover:text-red-500 transition-colors ml-2"
  aria-label="Remove drill"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +182,7 @@ function DrillCard({
  )}
  </div>
 
- <div className="grid grid-cols-2 gap-3">
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  {/* Implement weight */}
  <div className="space-y-1">
  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)]">
@@ -201,7 +201,7 @@ function DrillCard({
  <button
  type="button"
  onClick={() => update({ implementUnit: drill.implementUnit === "kg" ? "lbs" : "kg" })}
- className="shrink-0 px-1.5 py-1 text-[10px] font-bold border border-[var(--color-border-strong)] rounded text-[var(--color-text-2)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold-dark)] transition-colors"
+ className="shrink-0 px-2 py-1.5 text-xs sm:px-1.5 sm:py-1 sm:text-[10px] font-bold border border-[var(--color-border-strong)] rounded text-[var(--color-text-2)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold-dark)] transition-colors"
  >
  {drill.implementUnit}
  </button>
@@ -238,7 +238,7 @@ function DrillCard({
  key={wl.value}
  type="button"
  onClick={() => update({ wireLength: wl.value })}
- className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors ${
+ className={`px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[10px] font-bold rounded-lg transition-colors ${
  drill.wireLength === wl.value
  ? "bg-purple-600 text-white"
  : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
@@ -256,7 +256,7 @@ function DrillCard({
  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)] shrink-0">
  Throws
  </label>
- <div className="flex items-center gap-2">
+ <div className="flex items-center gap-3 sm:gap-2">
  <button
  type="button"
  onClick={() => update({ throwCount: Math.max(0, drill.throwCount - 1) })}
@@ -747,7 +747,7 @@ export default function ThrowsLogPage() {
  const eventMeta = THROW_EVENTS.find((e) => e.value === selectedEvent);
 
  const tabCls = (t: "log" | "trends" | "sessions") =>
- `px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+ `px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors ${
  tab === t
  ? "bg-orange-500 text-white"
  : "text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)]"
@@ -769,19 +769,19 @@ export default function ThrowsLogPage() {
  {/* Tab switcher */}
  <div className="flex gap-1 bg-[var(--color-bg-subtle)] rounded-xl p-1">
  <button onClick={() => setTab("log")} className={tabCls("log")}>
- <svg className="w-4 h-4 inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-4 h-4 hidden sm:inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
  </svg>
  Log Session
  </button>
  <button onClick={() => setTab("trends")} className={tabCls("trends")}>
- <svg className="w-4 h-4 inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-4 h-4 hidden sm:inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
  </svg>
  Trends
  </button>
  <button onClick={() => setTab("sessions")} className={tabCls("sessions")}>
- <svg className="w-4 h-4 inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-4 h-4 hidden sm:inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
  </svg>
  Sessions
@@ -823,13 +823,13 @@ export default function ThrowsLogPage() {
  <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-2)] mb-3">
  Select Event
  </p>
- <div className="grid grid-cols-2 gap-3">
+ <div className="grid grid-cols-2 gap-2 sm:gap-3">
  {THROW_EVENTS.map((ev) => (
  <button
  key={ev.value}
  type="button"
  onClick={() => setSelectedEvent(ev.value)}
- className={`relative rounded-xl p-4 text-left transition-all border-2 ${
+ className={`relative rounded-xl p-3 sm:p-4 text-left transition-all border-2 ${
  selectedEvent === ev.value
  ? "border-transparent shadow-lg scale-[1.02]"
  : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
@@ -881,7 +881,7 @@ export default function ThrowsLogPage() {
  {/* Event badge + back */}
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <button onClick={() => setStep(1)} className="text-[var(--color-text-3)] hover:text-[var(--color-text-2)] transition-colors">
+ <button onClick={() => setStep(1)} className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--color-text-3)] hover:text-[var(--color-text-2)] transition-colors">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
  </svg>

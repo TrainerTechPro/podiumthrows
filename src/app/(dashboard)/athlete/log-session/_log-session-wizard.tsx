@@ -349,7 +349,7 @@ export function LogSessionWizard({
     <button
       type="button"
       onClick={handleClose}
-      className="absolute top-0 right-0 p-2 text-muted hover:text-[var(--foreground)] transition-colors"
+      className="absolute top-0 right-0 p-3 text-muted hover:text-[var(--foreground)] transition-colors"
       aria-label="Close"
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -378,7 +378,7 @@ export function LogSessionWizard({
               key={ev.value}
               type="button"
               onClick={() => setEvent(ev.value)}
-              className={`card p-5 text-center transition-all ${
+              className={`card p-4 sm:p-5 text-center transition-all ${
                 event === ev.value
                   ? "ring-2 ring-primary-500 bg-primary-500/5"
                   : "hover:bg-surface-50 dark:hover:bg-surface-900"
@@ -520,7 +520,7 @@ export function LogSessionWizard({
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Drill type */}
                 <div className="col-span-2">
                   <label className="label">Drill</label>
@@ -531,7 +531,7 @@ export function LogSessionWizard({
                           key={dt}
                           type="button"
                           onClick={() => updateDrill(drill.id, "drillType", dt)}
-                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
+                          className={`px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold rounded-lg transition-colors ${
                             drill.drillType === dt
                               ? "bg-primary-500 text-white"
                               : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
@@ -578,7 +578,7 @@ export function LogSessionWizard({
                 {/* Implement weight */}
                 <div>
                   <label className="label">Weight</label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2 sm:gap-1">
                     <input
                       type="text"
                       value={drill.implementWeight}
@@ -589,7 +589,7 @@ export function LogSessionWizard({
                     <button
                       type="button"
                       onClick={() => updateDrill(drill.id, "implementUnit", drill.implementUnit === "kg" ? "lbs" : "kg")}
-                      className="shrink-0 px-1.5 py-1 text-[10px] font-bold border border-[var(--card-border)] rounded text-muted hover:border-primary-400 hover:text-primary-500 transition-colors"
+                      className="shrink-0 px-2 py-1.5 text-xs sm:px-1.5 sm:py-1 sm:text-[10px] font-bold border border-[var(--card-border)] rounded text-muted hover:border-primary-400 hover:text-primary-500 transition-colors"
                     >
                       {drill.implementUnit}
                     </button>
@@ -607,7 +607,7 @@ export function LogSessionWizard({
                         key={wl.value}
                         type="button"
                         onClick={() => updateDrill(drill.id, "wireLength", wl.value)}
-                        className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-colors ${
+                        className={`px-3 py-2 text-xs sm:px-2 sm:py-1 sm:text-[10px] font-bold rounded-lg transition-colors ${
                           drill.wireLength === wl.value
                             ? "bg-purple-600 text-white"
                             : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
@@ -723,7 +723,7 @@ export function LogSessionWizard({
           {/* Feeling */}
           <div>
             <label className="label">How did it feel?</label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {FEELING_OPTIONS.map((f) => (
                 <button
                   key={f.value}
@@ -742,7 +742,7 @@ export function LogSessionWizard({
           </div>
 
           {/* Technique + Mental */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="label mb-0">Technique</label>

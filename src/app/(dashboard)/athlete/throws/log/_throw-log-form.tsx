@@ -210,7 +210,7 @@ export function ThrowLogForm({
                 setEvent(ev);
                 setImplementKg(""); // Reset implement when event changes
               }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 sm:py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 event === ev
                   ? "bg-primary-500 text-white"
                   : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
@@ -224,7 +224,7 @@ export function ThrowLogForm({
 
       {/* Implement Weight */}
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 mb-2">
           <label className="text-sm font-medium text-[var(--foreground)]">
             Implement Weight ({implementUnit})
           </label>
@@ -252,7 +252,7 @@ export function ThrowLogForm({
                 key={w}
                 type="button"
                 onClick={() => { setImplementKg(String(w)); setImplementUnit("kg"); }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium tabular-nums transition-colors ${
+                className={`px-3 py-2 sm:py-1.5 rounded-lg text-sm font-medium tabular-nums transition-colors ${
                   implementKg === String(w) && implementUnit === "kg"
                     ? "bg-primary-500 text-white"
                     : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
@@ -286,7 +286,7 @@ export function ThrowLogForm({
                 key={wl.value}
                 type="button"
                 onClick={() => setWireLength(wl.value)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-2 sm:py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   wireLength === wl.value
                     ? "bg-purple-600 text-white"
                     : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
