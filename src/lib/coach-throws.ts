@@ -65,8 +65,9 @@ export async function checkAndSetCoachPR(
 }
 
 /**
- * Recalculate PRs for a coach after deleting a session.
+ * Recalculate PRs for a coach after editing/deleting a session.
  * Scans all remaining CoachDrillLog entries for affected (event, implement) pairs.
+ * Uses implementWeightOriginal/Unit when available for correct display labels.
  */
 export async function recalculateCoachPRs(
   coachId: string,
@@ -74,8 +75,6 @@ export async function recalculateCoachPRs(
   affectedImplements: number[],
 ): Promise<void> {
   for (const weight of affectedImplements) {
-    const implement = `${parseFloat(weight.toFixed(2))}kg`;
-
     // Find the best remaining drill log for this event + implement
     const best = await prisma.coachDrillLog.findFirst({
       where: {
@@ -88,9 +87,37 @@ export async function recalculateCoachPRs(
         bestMark: true,
         drillType: true,
         sessionId: true,
+        implementWeightUnit: true,
+        implementWeightOriginal: true,
         session: { select: { date: true } },
       },
     });
+
+    // Build the implement label from original unit if available
+    const implement = best?.implementWeightOriginal
+      ? `${best.implementWeightOriginal}${best.implementWeightUnit ?? "kg"}`
+      : `${parseFloat(weight.toFixed(2))}kg`;
+
+    // Delete ALL existing PRs for this coach/event/weight (any label variant)
+    // This cleans up stale labels like "6.35kg" when it should be "14lbs"
+    const existingPRs = await prisma.coachPR.findMany({
+      where: { coachId, event },
+      select: { id: true, implement: true },
+    });
+    // Find PRs whose implement string represents the same weight (within rounding)
+    for (const pr of existingPRs) {
+      const prNum = parseFloat(pr.implement);
+      if (!isNaN(prNum)) {
+        // Convert to kg for comparison: "14lbs" → 6.35, "6.35kg" → 6.35
+        const prKg = pr.implement.endsWith("lbs") ? prNum / 2.20462 : prNum;
+        if (Math.abs(prKg - weight) < 0.01) {
+          // Same implement weight, possibly different label — delete it
+          if (pr.implement !== implement) {
+            await prisma.coachPR.delete({ where: { id: pr.id } });
+          }
+        }
+      }
+    }
 
     if (best && best.bestMark) {
       await prisma.coachPR.upsert({
@@ -114,7 +141,7 @@ export async function recalculateCoachPRs(
         },
       });
     } else {
-      // No remaining data — delete the PR record
+      // No remaining data — delete all PR records for this weight
       await prisma.coachPR.deleteMany({
         where: { coachId, event, implement },
       });
