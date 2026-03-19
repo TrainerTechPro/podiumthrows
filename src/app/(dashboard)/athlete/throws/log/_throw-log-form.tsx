@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { IMPLEMENT_PRESETS, VALID_EVENTS } from "@/lib/throws";
+import { IMPLEMENT_PRESETS, VALID_EVENTS, WIRE_LENGTH_OPTIONS, LBS_TO_KG } from "@/lib/throws";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -31,6 +31,8 @@ export function ThrowLogForm({
   const [implementKg, setImplementKg] = useState<string>("");
   const [distance, setDistance] = useState<string>("");
   const [distanceUnit, setDistanceUnit] = useState<"meters" | "feet">("meters");
+  const [implementUnit, setImplementUnit] = useState<"kg" | "lbs">("kg");
+  const [wireLength, setWireLength] = useState("FULL");
   const [isCompetition, setIsCompetition] = useState(false);
   const [rpe, setRpe] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
@@ -43,6 +45,7 @@ export function ThrowLogForm({
     distanceUnit: "meters" | "feet";
     event: string;
     implementWeight: number;
+    implementUnit: "kg" | "lbs";
     isPersonalBest: boolean;
   } | null>(null);
 
@@ -56,6 +59,7 @@ export function ThrowLogForm({
     setNotes("");
     setIsCompetition(false);
     setShowOptional(false);
+    setWireLength("FULL");
     setSuccess(null);
     setError(null);
   }
@@ -64,7 +68,9 @@ export function ThrowLogForm({
     setError(null);
 
     const distNum = parseFloat(distance);
-    const implNum = parseFloat(implementKg);
+    const implNum = implementUnit === "lbs"
+      ? parseFloat(implementKg) * LBS_TO_KG
+      : parseFloat(implementKg);
 
     if (!event || !VALID_EVENTS.includes(event as never)) {
       setError("Please select an event.");
@@ -95,6 +101,7 @@ export function ThrowLogForm({
             isCompetition,
             rpe: rpe ?? undefined,
             notes: notes.trim() || undefined,
+            wireLength: event === "HAMMER" ? wireLength : undefined,
           }),
         });
 
@@ -109,7 +116,8 @@ export function ThrowLogForm({
           distance: distNum,
           distanceUnit,
           event,
-          implementWeight: implNum,
+          implementWeight: parseFloat(implementKg),
+          implementUnit,
           isPersonalBest: data.isPersonalBest,
         });
 
@@ -134,7 +142,7 @@ export function ThrowLogForm({
               {success.distance.toFixed(2)}{success.distanceUnit === "meters" ? "m" : "ft"}
             </p>
             <p className="text-sm text-muted mt-1">
-              {formatEventName(success.event)} · {success.implementWeight}kg
+              {formatEventName(success.event)} · {success.implementWeight}{success.implementUnit}
             </p>
           </div>
         ) : (
@@ -160,7 +168,7 @@ export function ThrowLogForm({
               {success.distance.toFixed(2)}{success.distanceUnit === "meters" ? "m" : "ft"}
             </p>
             <p className="text-sm text-muted mt-1">
-              {formatEventName(success.event)} · {success.implementWeight}kg
+              {formatEventName(success.event)} · {success.implementWeight}{success.implementUnit}
             </p>
           </div>
         )}
@@ -214,18 +222,36 @@ export function ThrowLogForm({
 
       {/* Implement Weight */}
       <div>
-        <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-          Implement Weight (kg)
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm font-medium text-[var(--foreground)]">
+            Implement Weight ({implementUnit})
+          </label>
+          <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
+            {(["kg", "lbs"] as const).map((unit) => (
+              <button
+                key={unit}
+                type="button"
+                onClick={() => setImplementUnit(unit)}
+                className={`px-3 py-1 text-xs font-medium transition-colors ${
+                  implementUnit === unit
+                    ? "bg-primary-500 text-white"
+                    : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+                }`}
+              >
+                {unit}
+              </button>
+            ))}
+          </div>
+        </div>
         {presets.length > 0 && (
           <div className="flex gap-2 flex-wrap mb-2">
             {presets.map((w) => (
               <button
                 key={w}
                 type="button"
-                onClick={() => setImplementKg(String(w))}
+                onClick={() => { setImplementKg(String(w)); setImplementUnit("kg"); }}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium tabular-nums transition-colors ${
-                  implementKg === String(w)
+                  implementKg === String(w) && implementUnit === "kg"
                     ? "bg-primary-500 text-white"
                     : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
                 }`}
@@ -239,12 +265,37 @@ export function ThrowLogForm({
           type="number"
           step="0.01"
           min="0"
-          placeholder="Enter weight in kg"
+          placeholder={`Enter weight in ${implementUnit}`}
           value={implementKg}
           onChange={(e) => setImplementKg(e.target.value)}
           className="input w-full"
         />
       </div>
+
+      {/* Wire Length (Hammer only) */}
+      {event === "HAMMER" && (
+        <div>
+          <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
+            Wire Length
+          </label>
+          <div className="flex gap-2">
+            {WIRE_LENGTH_OPTIONS.map((wl) => (
+              <button
+                key={wl.value}
+                type="button"
+                onClick={() => setWireLength(wl.value)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  wireLength === wl.value
+                    ? "bg-purple-600 text-white"
+                    : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+                }`}
+              >
+                {wl.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Distance */}
       <div>

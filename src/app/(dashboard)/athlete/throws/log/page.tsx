@@ -5,6 +5,7 @@ import Link from "next/link";
 import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { WIRE_LENGTH_OPTIONS, LBS_TO_KG } from "@/lib/throws";
 import {
  LineChart,
  Line,
@@ -54,13 +55,14 @@ interface DrillRow {
  drillType: string;
  implementWeight: string;
  implementUnit: "kg" | "lbs";
+ wireLength: string; // FULL | THREE_QUARTER | HALF — hammer only
  throwCount: number;
  bestMark: string;
  notes: string;
 }
 
-function newDrill(drillType = "STANDING"): DrillRow {
- return { id: crypto.randomUUID(), drillType, implementWeight: "", implementUnit: "kg", throwCount: 0, bestMark: "", notes: "" };
+function newDrill(drillType = "FULL_THROW"): DrillRow {
+ return { id: crypto.randomUUID(), drillType, implementWeight: "", implementUnit: "kg", wireLength: "FULL", throwCount: 0, bestMark: "", notes: "" };
 }
 
 // ── Trend types ────────────────────────────────────────────────────────
@@ -76,7 +78,7 @@ function fmtDate(d: string) {
 
 // ── Implement weight quick-pick buttons ────────────────────────────────
 
-function ImplementPicker({ event, value, onChange }: { event: string; value: string; onChange: (v: string) => void }) {
+function ImplementPicker({ event, value, onChange, onUnitReset }: { event: string; value: string; onChange: (v: string) => void; onUnitReset?: () => void }) {
  const weights = EVENT_IMPLEMENTS[event] ?? [];
  return (
  <div className="flex flex-wrap gap-1 mt-1">
@@ -84,7 +86,7 @@ function ImplementPicker({ event, value, onChange }: { event: string; value: str
  <button
  key={w}
  type="button"
- onClick={() => onChange(String(w))}
+ onClick={() => { onChange(String(w)); onUnitReset?.(); }}
  className={`px-2 py-0.5 text-[10px] font-bold rounded-full border transition-colors ${
  value === String(w)
  ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]"
@@ -103,24 +105,57 @@ function ImplementPicker({ event, value, onChange }: { event: string; value: str
 function DrillCard({
  drill,
  event,
+ pastDrills,
  onChange,
  onRemove,
  canRemove,
 }: {
  drill: DrillRow;
  event: string;
+ pastDrills: string[];
  onChange: (updated: DrillRow) => void;
  onRemove: () => void;
  canRemove: boolean;
 }) {
  function update(patch: Partial<DrillRow>) { onChange({ ...drill, ...patch }); }
 
- const _drillMeta = DRILL_TYPES.find((d) => d.value === drill.drillType);
+ const [showAllDrills, setShowAllDrills] = useState(false);
+ const hasPastDrills = pastDrills.length > 0;
+ const isHammer = event === "HAMMER";
 
  return (
  <div className="card !p-4 space-y-3">
- {/* Header */}
+ {/* Drill type selector */}
  <div className="flex items-center justify-between">
+ <div className="flex-1">
+ {hasPastDrills && !showAllDrills ? (
+ <div className="flex flex-wrap gap-1.5">
+ {pastDrills.map((dt) => {
+ const meta = DRILL_TYPES.find((d) => d.value === dt);
+ return (
+ <button
+ key={dt}
+ type="button"
+ onClick={() => update({ drillType: dt })}
+ className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
+ drill.drillType === dt
+ ? "bg-[var(--color-gold)] text-white"
+ : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ }`}
+ >
+ {meta?.short ?? dt}
+ </button>
+ );
+ })}
+ <button
+ type="button"
+ onClick={() => setShowAllDrills(true)}
+ className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-dashed border-[var(--color-border-strong)] text-[var(--color-text-3)] hover:text-[var(--color-gold-dark)] hover:border-[var(--color-gold)] transition-colors"
+ >
+ + New Drill
+ </button>
+ </div>
+ ) : (
  <select
  value={drill.drillType}
  onChange={(e) => update({ drillType: e.target.value })}
@@ -130,11 +165,13 @@ function DrillCard({
  <option key={dt.value} value={dt.value}>{dt.label}</option>
  ))}
  </select>
+ )}
+ </div>
  {canRemove && (
  <button
  type="button"
  onClick={onRemove}
- className="text-[var(--color-text-3)] hover:text-red-500 transition-colors"
+ className="text-[var(--color-text-3)] hover:text-red-500 transition-colors ml-2"
  aria-label="Remove drill"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +205,7 @@ function DrillCard({
  {drill.implementUnit}
  </button>
  </div>
- <ImplementPicker event={event} value={drill.implementWeight} onChange={(v) => update({ implementWeight: v })} />
+ <ImplementPicker event={event} value={drill.implementWeight} onChange={(v) => update({ implementWeight: v })} onUnitReset={() => update({ implementUnit: "kg" })} />
  </div>
 
  {/* Best mark */}
@@ -187,6 +224,31 @@ function DrillCard({
  />
  </div>
  </div>
+
+ {/* Hammer wire length */}
+ {isHammer && (
+ <div className="flex items-center gap-2">
+ <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)] shrink-0">
+ Wire
+ </label>
+ <div className="flex gap-1">
+ {WIRE_LENGTH_OPTIONS.map((wl) => (
+ <button
+ key={wl.value}
+ type="button"
+ onClick={() => update({ wireLength: wl.value })}
+ className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors ${
+ drill.wireLength === wl.value
+ ? "bg-purple-600 text-white"
+ : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ }`}
+ >
+ {wl.label}
+ </button>
+ ))}
+ </div>
+ </div>
+ )}
 
  {/* Throw count stepper */}
  <div className="flex items-center gap-3">
@@ -400,6 +462,9 @@ export default function ThrowsLogPage() {
  const [step, setStep] = useState<1 | 2 | 3>(1);
  const [athleteId, setAthleteId] = useState<string | null>(null);
 
+ // Past drills for smart suggestions
+ const [pastDrills, setPastDrills] = useState<string[]>([]);
+
  // Fetch own athleteId once on mount
  useEffect(() => {
  fetch("/api/auth/me")
@@ -411,16 +476,25 @@ export default function ThrowsLogPage() {
  // Log state
  const [selectedEvent, setSelectedEvent] = useState("");
  const [date, setDate] = useState(localToday());
- const [drills, setDrills] = useState<DrillRow[]>([newDrill("STANDING")]);
+ const [drills, setDrills] = useState<DrillRow[]>([newDrill()]);
  const [sessionNotes, setSessionNotes] = useState("");
  const [saving, setSaving] = useState(false);
  const [saved, setSaved] = useState(false);
+
+ // Fetch past drills when event changes
+ useEffect(() => {
+ if (!selectedEvent) { setPastDrills([]); return; }
+ fetch(`/api/throws/past-drills?event=${selectedEvent}`)
+ .then((r) => r.json())
+ .then((d) => { if (d.success) setPastDrills(d.data); })
+ .catch(() => {});
+ }, [selectedEvent]);
 
  function resetForm() {
  setStep(1);
  setSelectedEvent("");
  setDate(localToday());
- setDrills([newDrill("STANDING")]);
+ setDrills([newDrill()]);
  setSessionNotes("");
  setSaved(false);
  }
@@ -457,11 +531,12 @@ export default function ThrowsLogPage() {
  .filter((d) => d.throwCount > 0 || d.bestMark)
  .map((d) => {
  const implKg = d.implementUnit === "lbs" && d.implementWeight
- ? parseFloat(d.implementWeight) / 2.20462
+ ? parseFloat(d.implementWeight) * LBS_TO_KG
  : parseFloat(d.implementWeight) || null;
  return {
  drillType: d.drillType,
  implementWeight: implKg,
+ wireLength: selectedEvent === "HAMMER" ? d.wireLength : null,
  throwCount: d.throwCount,
  bestMark: d.bestMark ? parseFloat(d.bestMark) : null,
  notes: d.notes || null,
@@ -632,6 +707,7 @@ export default function ThrowsLogPage() {
  key={drill.id}
  drill={drill}
  event={selectedEvent}
+ pastDrills={pastDrills}
  onChange={(updated) => updateDrill(drill.id, updated)}
  onRemove={() => removeDrill(drill.id)}
  canRemove={drills.length > 1}
@@ -709,7 +785,7 @@ export default function ThrowsLogPage() {
  <div>
  <p className="text-sm font-semibold text-[var(--color-text)]">{meta?.label}</p>
  <p className="text-xs text-[var(--color-text-2)]">
- {drill.implementWeight ? `${drill.implementWeight}${drill.implementUnit}` : "No implement"} · {drill.throwCount} throw{drill.throwCount !== 1 ? "s" : ""}
+ {drill.implementWeight ? `${drill.implementWeight}${drill.implementUnit}` : "No implement"}{selectedEvent === "HAMMER" && drill.wireLength !== "FULL" ? ` (${WIRE_LENGTH_OPTIONS.find((w) => w.value === drill.wireLength)?.label ?? ""} wire)` : ""} · {drill.throwCount} throw{drill.throwCount !== 1 ? "s" : ""}
  </p>
  </div>
  {drill.bestMark && (

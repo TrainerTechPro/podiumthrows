@@ -448,6 +448,7 @@ model ThrowLog {
   isCompetition   Boolean          @default(false)
   rpe             Float? // 1-10 per-throw RPE
   attemptNumber   Int? // ordering within a session
+  wireLength      String? // FULL | THREE_QUARTER | HALF — hammer only
   notes           String?
   videoUrl        String?
 
@@ -1354,6 +1355,7 @@ model AthleteDrillLog {
   session         AthleteThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   drillType       String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
   implementWeight Float? // kg
+  wireLength      String? // FULL | THREE_QUARTER | HALF — hammer only
   throwCount      Int                  @default(0)
   bestMark        Float? // meters
   notes           String?
@@ -1399,6 +1401,7 @@ model CoachDrillLog {
   session         CoachThrowsSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   drillType       String
   implementWeight Float?
+  wireLength      String? // FULL | THREE_QUARTER | HALF — hammer only
   throwCount      Int                 @default(0)
   bestMark        Float?
   notes           String?

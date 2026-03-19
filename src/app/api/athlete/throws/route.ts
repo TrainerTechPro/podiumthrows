@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { event, implementKg, distance, isCompetition, rpe, notes, attemptNumber } =
+    const { event, implementKg, distance, isCompetition, rpe, notes, attemptNumber, wireLength } =
       body as Record<string, unknown>;
 
     // Validate required fields
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
         isCompetition: isCompetition === true,
         rpe: typeof rpe === "number" && rpe >= 1 && rpe <= 10 ? rpe : null,
         attemptNumber: typeof attemptNumber === "number" ? attemptNumber : null,
+        wireLength: typeof wireLength === "string" && ["FULL", "THREE_QUARTER", "HALF"].includes(wireLength) ? wireLength : null,
         notes: typeof notes === "string" ? notes.trim() || null : null,
       },
       select: {

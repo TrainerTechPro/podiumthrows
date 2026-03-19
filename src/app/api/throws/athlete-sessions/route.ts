@@ -67,12 +67,14 @@ export async function POST(request: NextRequest) {
               create: (drillLogs as Array<{
                 drillType: string;
                 implementWeight?: number | null;
+                wireLength?: string | null;
                 throwCount?: number;
                 bestMark?: number | null;
                 notes?: string | null;
               }>).map((d) => ({
                 drillType: d.drillType,
                 implementWeight: d.implementWeight ?? null,
+                wireLength: d.wireLength ?? null,
                 throwCount: d.throwCount ?? 0,
                 bestMark: d.bestMark ?? null,
                 notes: d.notes ?? null,

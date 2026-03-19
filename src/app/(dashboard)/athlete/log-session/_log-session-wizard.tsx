@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/throws";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -25,6 +26,7 @@ const FOCUS_OPTIONS = [
 
 const DRILLS_BY_EVENT: Record<string, string[]> = {
   SHOT_PUT: [
+    "Full Throw",
     "Standing Throw",
     "Power Position",
     "Half Turn",
@@ -38,11 +40,11 @@ const DRILLS_BY_EVENT: Record<string, string[]> = {
     "Other",
   ],
   DISCUS: [
+    "Full Throw",
     "Standing Throw",
     "Power Position",
     "Half Turn",
     "South African Drill",
-    "Full Throw",
     "Wind-up Drill",
     "1.5 Turn",
     "Bowling Drill",
@@ -56,11 +58,13 @@ const DRILLS_BY_EVENT: Record<string, string[]> = {
     "2 Turns",
     "3 Turns",
     "Full Throw (4 Turns)",
+    "Full Throw (3 Turns)",
     "Power Throw",
     "Drill Throws",
     "Other",
   ],
   JAVELIN: [
+    "Full Throw",
     "Standing Throw",
     "3-Step Approach",
     "5-Step Approach",
@@ -87,6 +91,8 @@ interface DrillEntry {
   id: string;
   drillType: string;
   implementWeight: string;
+  implementUnit: "kg" | "lbs";
+  wireLength: string;
   throwCount: string;
   bestMark: string;
   notes: string;
@@ -217,6 +223,9 @@ export function LogSessionWizard({
   const [improvementArea, setImprovementArea] = useState("");
   const [sessionNotes, setSessionNotes] = useState("");
 
+  const [pastDrills, setPastDrills] = useState<string[]>([]);
+  const [showAllDrills, setShowAllDrills] = useState<Record<string, boolean>>({});
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -228,13 +237,23 @@ export function LogSessionWizard({
     { type: string; message: string; severity: string }[]
   >([]);
 
+  useEffect(() => {
+    if (!event) { setPastDrills([]); return; }
+    fetch(`/api/throws/past-drills?event=${event}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setPastDrills(d.data); })
+      .catch(() => {});
+  }, [event]);
+
   function addDrill() {
     setDrills((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
-        drillType: "",
+        drillType: DEFAULT_DRILL_BY_EVENT[event] || "",
         implementWeight: "",
+        implementUnit: "kg" as const,
+        wireLength: "FULL",
         throwCount: "",
         bestMark: "",
         notes: "",
@@ -293,11 +312,13 @@ export function LogSessionWizard({
             .map((d) => {
               const raw = d.bestMark ? parseFloat(d.bestMark) : undefined;
               const best = raw && distanceUnit === "feet" ? raw * 0.3048 : raw;
+              const implWeight = d.implementWeight
+                ? (d.implementUnit === "lbs" ? parseFloat(d.implementWeight) * LBS_TO_KG : parseFloat(d.implementWeight))
+                : undefined;
               return {
                 drillType: d.drillType,
-                implementWeight: d.implementWeight
-                  ? parseFloat(d.implementWeight)
-                  : undefined,
+                implementWeight: implWeight,
+                wireLength: event === "HAMMER" ? d.wireLength : undefined,
                 throwCount: parseInt(d.throwCount, 10) || 0,
                 bestMark: best,
                 notes: d.notes.trim() || undefined,
@@ -501,16 +522,42 @@ export function LogSessionWizard({
                 {/* Drill type */}
                 <div className="col-span-2">
                   <label className="label">Drill</label>
-                  <select
-                    value={drill.drillType}
-                    onChange={(e) => updateDrill(drill.id, "drillType", e.target.value)}
-                    className="input"
-                  >
-                    <option value="">Select drill...</option>
-                    {eventDrills.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                  {pastDrills.length > 0 && !showAllDrills[drill.id] ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {pastDrills.map((dt) => (
+                        <button
+                          key={dt}
+                          type="button"
+                          onClick={() => updateDrill(drill.id, "drillType", dt)}
+                          className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-colors ${
+                            drill.drillType === dt
+                              ? "bg-primary-500 text-white"
+                              : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+                          }`}
+                        >
+                          {dt}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setShowAllDrills((prev) => ({ ...prev, [drill.id]: true }))}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-dashed border-surface-300 dark:border-surface-700 text-muted hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-400 transition-colors"
+                      >
+                        + New Drill
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={drill.drillType}
+                      onChange={(e) => updateDrill(drill.id, "drillType", e.target.value)}
+                      className="input"
+                    >
+                      <option value="">Select drill...</option>
+                      {eventDrills.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {/* Reps / throw count */}
@@ -528,16 +575,48 @@ export function LogSessionWizard({
 
                 {/* Implement weight */}
                 <div>
-                  <label className="label">Weight (kg)</label>
-                  <input
-                    type="text"
-                    value={drill.implementWeight}
-                    onChange={(e) => updateDrill(drill.id, "implementWeight", e.target.value)}
-                    className="input"
-                    placeholder="7.26"
-                  />
+                  <label className="label">Weight</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={drill.implementWeight}
+                      onChange={(e) => updateDrill(drill.id, "implementWeight", e.target.value)}
+                      className="input flex-1"
+                      placeholder="7.26"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateDrill(drill.id, "implementUnit", drill.implementUnit === "kg" ? "lbs" : "kg")}
+                      className="shrink-0 px-1.5 py-1 text-[10px] font-bold border border-[var(--card-border)] rounded text-muted hover:border-primary-400 hover:text-primary-500 transition-colors"
+                    >
+                      {drill.implementUnit}
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {/* Wire length (hammer only) */}
+              {event === "HAMMER" && (
+                <div>
+                  <label className="label">Wire</label>
+                  <div className="flex gap-1.5">
+                    {WIRE_LENGTH_OPTIONS.map((wl) => (
+                      <button
+                        key={wl.value}
+                        type="button"
+                        onClick={() => updateDrill(drill.id, "wireLength", wl.value)}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-colors ${
+                          drill.wireLength === wl.value
+                            ? "bg-purple-600 text-white"
+                            : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+                        }`}
+                      >
+                        {wl.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Best distance */}
               <div className="grid grid-cols-2 gap-3">

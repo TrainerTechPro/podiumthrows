@@ -47,6 +47,30 @@ export const IMPLEMENT_PRESETS: Record<
   },
 };
 
+/* ─── Wire Length (Hammer only) ──────────────────────────────────────────── */
+
+export const WIRE_LENGTH_OPTIONS = [
+  { value: "FULL", label: "Full" },
+  { value: "THREE_QUARTER", label: "¾" },
+  { value: "HALF", label: "½" },
+] as const;
+
+export type WireLength = (typeof WIRE_LENGTH_OPTIONS)[number]["value"];
+
+/* ─── Default drill per event ────────────────────────────────────────────── */
+
+export const DEFAULT_DRILL_BY_EVENT: Record<string, string> = {
+  SHOT_PUT: "Full Throw",
+  DISCUS: "Full Throw",
+  HAMMER: "Full Throw (4 Turns)",
+  JAVELIN: "Full Throw",
+};
+
+/* ─── Unit conversion ────────────────────────────────────────────────────── */
+
+export const LBS_TO_KG = 1 / 2.20462;
+export const KG_TO_LBS = 2.20462;
+
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 export function isValidEvent(event: unknown): event is string {
