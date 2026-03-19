@@ -30,7 +30,6 @@ import {
   BarChart3,
   UsersRound,
   ChevronRight,
-  Library,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
