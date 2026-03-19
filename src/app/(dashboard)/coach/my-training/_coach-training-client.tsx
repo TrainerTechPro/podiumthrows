@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { formatImplementWeight } from "@/lib/throws";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -10,6 +11,8 @@ interface DrillLog {
   id: string;
   drillType: string;
   implementWeight: number | null;
+  implementWeightUnit?: string | null;
+  implementWeightOriginal?: number | null;
   throwCount: number;
   bestMark: number | null;
   notes: string | null;
@@ -155,7 +158,7 @@ function SessionDetail({ session, onDelete }: { session: CoachSession; onDelete:
                 <tr key={d.id} className="border-b border-[var(--card-border)] last:border-0">
                   <td className="py-1.5 text-[var(--foreground)] font-medium">{d.drillType}</td>
                   <td className="py-1.5 text-right tabular-nums text-muted">{d.throwCount}</td>
-                  <td className="py-1.5 text-right tabular-nums text-muted">{d.implementWeight ? `${d.implementWeight}kg` : "--"}</td>
+                  <td className="py-1.5 text-right tabular-nums text-muted">{d.implementWeight ? formatImplementWeight(d.implementWeight, d.implementWeightUnit, d.implementWeightOriginal) : "--"}</td>
                   <td className="py-1.5 text-right tabular-nums text-muted">{d.bestMark ? `${d.bestMark.toFixed(2)}m` : "--"}</td>
                 </tr>
               ))}

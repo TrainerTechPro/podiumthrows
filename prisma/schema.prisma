@@ -441,7 +441,9 @@ model ThrowLog {
   sessionId       String?
   session         TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   event           EventType
-  implementWeight Float // kg
+  implementWeight         Float // kg (always stored in kg for calculations)
+  implementWeightUnit     String   @default("kg") // "kg" | "lbs" — what the user entered
+  implementWeightOriginal Float? // original value the user typed (e.g. 14 for 14lbs)
   distance        Float // meters
   date            DateTime         @default(now())
   isPersonalBest  Boolean          @default(false)
@@ -1353,13 +1355,15 @@ model AthleteDrillLog {
   id              String               @id @default(cuid())
   sessionId       String
   session         AthleteThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  drillType       String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
-  implementWeight Float? // kg
-  wireLength      String? // FULL | THREE_QUARTER | HALF — hammer only
-  throwCount      Int                  @default(0)
-  bestMark        Float? // meters
-  notes           String?
-  createdAt       DateTime             @default(now())
+  drillType                String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
+  implementWeight          Float? // kg (always stored in kg for calculations)
+  implementWeightUnit      String   @default("kg") // "kg" | "lbs"
+  implementWeightOriginal  Float? // original value the user typed
+  wireLength               String? // FULL | THREE_QUARTER | HALF — hammer only
+  throwCount               Int                  @default(0)
+  bestMark                 Float? // meters
+  notes                    String?
+  createdAt                DateTime             @default(now())
 
   @@index([sessionId])
 }
@@ -1396,16 +1400,18 @@ model CoachThrowsSession {
 
 /// Individual drill entry within a CoachThrowsSession.
 model CoachDrillLog {
-  id              String              @id @default(cuid())
-  sessionId       String
-  session         CoachThrowsSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  drillType       String
-  implementWeight Float?
-  wireLength      String? // FULL | THREE_QUARTER | HALF — hammer only
-  throwCount      Int                 @default(0)
-  bestMark        Float?
-  notes           String?
-  createdAt       DateTime            @default(now())
+  id                       String              @id @default(cuid())
+  sessionId                String
+  session                  CoachThrowsSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  drillType                String
+  implementWeight          Float?
+  implementWeightUnit      String   @default("kg") // "kg" | "lbs"
+  implementWeightOriginal  Float? // original value the user typed
+  wireLength               String? // FULL | THREE_QUARTER | HALF — hammer only
+  throwCount               Int                 @default(0)
+  bestMark                 Float?
+  notes                    String?
+  createdAt                DateTime            @default(now())
 
   @@index([sessionId])
 }

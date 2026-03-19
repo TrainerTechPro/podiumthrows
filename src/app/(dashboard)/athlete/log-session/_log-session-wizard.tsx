@@ -318,6 +318,8 @@ export function LogSessionWizard({
               return {
                 drillType: d.drillType,
                 implementWeight: implWeight,
+                implementWeightUnit: d.implementUnit,
+                implementWeightOriginal: d.implementWeight ? parseFloat(d.implementWeight) : undefined,
                 wireLength: event === "HAMMER" ? d.wireLength : undefined,
                 throwCount: parseInt(d.throwCount, 10) || 0,
                 bestMark: best,

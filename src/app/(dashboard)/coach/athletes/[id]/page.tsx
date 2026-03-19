@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { formatImplementWeight } from "@/lib/throws";
 import { Avatar, Badge, ProgressBar } from "@/components";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LineChart, type LineChartDataPoint } from "@/components/charts/LineChart";
@@ -367,7 +368,7 @@ function OverviewTab({
                       {pr.distance.toFixed(2)}m
                     </p>
                     <p className="text-xs text-muted">
-                      {formatEventName(pr.event)} · {pr.implementWeight}kg
+                      {formatEventName(pr.event)} · {formatImplementWeight(pr.implementWeight)}
                     </p>
                   </div>
                   <p className="text-xs text-muted tabular-nums shrink-0">
@@ -570,7 +571,7 @@ function ThrowsTab({ throws }: { throws: ThrowLogItem[] }) {
                         {formatEventName(t.event)}
                       </td>
                       <td className="hidden sm:table-cell px-5 py-3 text-right text-sm tabular-nums text-muted">
-                        {t.implementWeight}kg
+                        {formatImplementWeight(t.implementWeight)}
                       </td>
                       <td className="px-5 py-3 text-right">
                         <span className={cn(

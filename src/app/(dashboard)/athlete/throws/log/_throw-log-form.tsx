@@ -97,6 +97,8 @@ export function ThrowLogForm({
           body: JSON.stringify({
             event,
             implementKg: implNum,
+            implementWeightUnit: implementUnit,
+            implementWeightOriginal: parseFloat(implementKg),
             distance: distMeters,
             isCompetition,
             rpe: rpe ?? undefined,

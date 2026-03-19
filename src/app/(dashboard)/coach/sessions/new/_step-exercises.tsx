@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { validateImplementSequence, validateCrossBlockSequence } from "@/lib/bondarchuk";
 import type { BlockData, BlockExerciseData } from "./_step-blocks";
 import type { ExerciseItem } from "@/lib/data/coach";
+import { formatImplementWeight } from "@/lib/throws";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -238,7 +239,7 @@ export function StepExercises({
                           <span className="text-xs text-muted">{formatEventName(exercise.event)}</span>
                         )}
                         {exercise.implementWeight && (
-                          <span className="text-xs text-muted tabular-nums">{exercise.implementWeight}kg</span>
+                          <span className="text-xs text-muted tabular-nums">{formatImplementWeight(exercise.implementWeight)}</span>
                         )}
                       </div>
                     </div>

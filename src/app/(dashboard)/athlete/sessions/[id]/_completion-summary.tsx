@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components";
+import { formatImplementWeight } from "@/lib/throws";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -136,7 +137,7 @@ export function CompletionSummary({
               {summary.bestThrow.distance.toFixed(2)}m
             </p>
             <p className="text-xs text-muted">
-              {formatEventName(summary.bestThrow.event)} ({summary.bestThrow.implementWeight}kg)
+              {formatEventName(summary.bestThrow.event)} ({formatImplementWeight(summary.bestThrow.implementWeight)})
             </p>
           </div>
         )}

@@ -7,6 +7,7 @@ import type { Column } from "@/components";
 import type { ExerciseItem } from "@/lib/data/coach";
 import { ExerciseModal } from "./_exercise-modal";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { formatImplementWeight } from "@/lib/throws";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -82,7 +83,7 @@ function EquipmentCell({ row }: { row: ExerciseItem }) {
 
 function WeightCell({ row }: { row: ExerciseItem }) {
   if (row.implementWeight == null) return <span className="text-muted text-sm">—</span>;
-  return <span className="text-sm tabular-nums font-medium">{row.implementWeight}kg</span>;
+  return <span className="text-sm tabular-nums font-medium">{formatImplementWeight(row.implementWeight)}</span>;
 }
 
 /* ─── Main Component ──────────────────────────────────────────────────────── */

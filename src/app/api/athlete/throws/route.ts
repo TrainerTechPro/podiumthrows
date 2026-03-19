@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { event, implementKg, distance, isCompetition, rpe, notes, attemptNumber, wireLength } =
+    const { event, implementKg, distance, isCompetition, rpe, notes, attemptNumber, wireLength, implementWeightUnit, implementWeightOriginal } =
       body as Record<string, unknown>;
 
     // Validate required fields
@@ -62,6 +62,8 @@ export async function POST(req: NextRequest) {
         sessionId: null,
         event: event as never,
         implementWeight: implementKg,
+        implementWeightUnit: typeof implementWeightUnit === "string" && ["kg", "lbs"].includes(implementWeightUnit) ? implementWeightUnit : "kg",
+        implementWeightOriginal: typeof implementWeightOriginal === "number" ? implementWeightOriginal : null,
         distance,
         isPersonalBest,
         isCompetition: isCompetition === true,

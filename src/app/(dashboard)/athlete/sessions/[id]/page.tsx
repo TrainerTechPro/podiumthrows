@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components";
+import { formatImplementWeight } from "@/lib/throws";
 import {
   requireAthleteSession,
   getSessionWithPrescription,
@@ -147,7 +148,7 @@ function ThrowLogTable({ throws }: { throws: ThrowItem[] }) {
                 )}
               </td>
               <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                {t.implementWeight}kg
+                {formatImplementWeight(t.implementWeight)}
               </td>
               <td className="py-2.5 pr-4 text-right tabular-nums font-semibold text-[var(--foreground)]">
                 {t.distance.toFixed(2)}m

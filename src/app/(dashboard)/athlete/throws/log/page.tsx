@@ -5,7 +5,7 @@ import Link from "next/link";
 import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
-import { WIRE_LENGTH_OPTIONS, LBS_TO_KG } from "@/lib/throws";
+import { WIRE_LENGTH_OPTIONS, LBS_TO_KG, formatImplementWeight } from "@/lib/throws";
 import {
  LineChart,
  Line,
@@ -455,12 +455,147 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  );
 }
 
+// ── Sessions View ──────────────────────────────────────────────────────
+
+function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string | null; onEdit: (sessionId: string) => void; onLogSession: () => void }) {
+ const [sessions, setSessions] = useState<Array<{
+   id: string;
+   event: string;
+   date: string;
+   notes?: string | null;
+   drillLogs: Array<{
+     throwCount: number;
+     implementWeight?: number | null;
+     implementWeightUnit?: string | null;
+     implementWeightOriginal?: number | null;
+     drillType: string;
+     bestMark?: number | null;
+   }>;
+ }>>([]);
+ const [loading, setLoading] = useState(true);
+
+ useEffect(() => {
+   if (!athleteId) return;
+   fetch(`/api/throws/athlete-sessions?athleteId=${athleteId}`)
+     .then((r) => r.json())
+     .then((d) => { if (d.success) setSessions(d.data); })
+     .catch(() => {})
+     .finally(() => setLoading(false));
+ }, [athleteId]);
+
+ if (loading) return (
+   <div className="space-y-3">
+     {[1,2,3].map((i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
+   </div>
+ );
+
+ if (sessions.length === 0) return (
+   <div className="card">
+     <EmptyState
+       title="No sessions yet"
+       description="Log your first throws session to see it here"
+       action={<button className="btn-primary" onClick={onLogSession}>Log a Session</button>}
+     />
+   </div>
+ );
+
+ return (
+   <div className="space-y-3">
+     {sessions.map((session) => {
+       const eventMeta = THROW_EVENTS.find((e) => e.value === session.event);
+       const totalThrows = session.drillLogs.reduce((s, d) => s + (d.throwCount || 0), 0);
+       const drillCount = session.drillLogs.length;
+       const topMark = session.drillLogs.reduce((best, d) => {
+         const m = d.bestMark ?? 0;
+         return m > best ? m : best;
+       }, 0);
+       const dateStr = new Date(session.date + "T00:00:00").toLocaleDateString("en-US", {
+         weekday: "short",
+         month: "short",
+         day: "numeric",
+       });
+
+       return (
+         <div key={session.id} className="card !p-4">
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-3 min-w-0">
+               <span
+                 className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                 style={{ backgroundColor: eventMeta?.color ?? "#666", opacity: 0.9 }}
+               >
+                 <span className="text-white">{eventMeta?.icon}</span>
+               </span>
+               <div className="min-w-0">
+                 <p className="text-sm font-bold text-[var(--color-text)] truncate">
+                   {eventMeta?.label ?? session.event}
+                 </p>
+                 <p className="text-xs text-[var(--color-text-2)]">
+                   {dateStr}
+                 </p>
+               </div>
+             </div>
+
+             <div className="flex items-center gap-3">
+               <div className="text-right">
+                 <p className="text-xs text-[var(--color-text-2)]">
+                   {drillCount} drill{drillCount !== 1 ? "s" : ""} &middot; {totalThrows} throw{totalThrows !== 1 ? "s" : ""}
+                 </p>
+                 {topMark > 0 && (
+                   <p className="text-sm font-bold font-mono text-orange-600 dark:text-orange-400">
+                     {topMark.toFixed(2)}m
+                   </p>
+                 )}
+               </div>
+
+               <button
+                 type="button"
+                 onClick={() => onEdit(session.id)}
+                 className="shrink-0 w-8 h-8 rounded-lg bg-[var(--color-bg-subtle)] hover:bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-2)] hover:text-[var(--color-gold-dark)] transition-colors"
+                 aria-label="Edit session"
+                 title="Edit session"
+               >
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                 </svg>
+               </button>
+             </div>
+           </div>
+
+           {/* Drill breakdown */}
+           {session.drillLogs.length > 0 && (
+             <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex flex-wrap gap-2">
+               {session.drillLogs.map((d, i) => {
+                 const drillMeta = DRILL_TYPES.find((dt) => dt.value === d.drillType);
+                 const weightStr = formatImplementWeight(
+                   d.implementWeight ?? null,
+                   d.implementWeightUnit,
+                   d.implementWeightOriginal
+                 );
+                 return (
+                   <span
+                     key={i}
+                     className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+                   >
+                     {drillMeta?.short ?? d.drillType} {weightStr !== "\u2014" ? `(${weightStr})` : ""} &times;{d.throwCount}
+                   </span>
+                 );
+               })}
+             </div>
+           )}
+         </div>
+       );
+     })}
+   </div>
+ );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────
 
 export default function ThrowsLogPage() {
- const [tab, setTab] = useState<"log" | "trends">("log");
+ const [tab, setTab] = useState<"log" | "trends" | "sessions">("log");
  const [step, setStep] = useState<1 | 2 | 3>(1);
  const [athleteId, setAthleteId] = useState<string | null>(null);
+ const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
 
  // Past drills for smart suggestions
  const [pastDrills, setPastDrills] = useState<string[]>([]);
@@ -497,6 +632,41 @@ export default function ThrowsLogPage() {
  setDrills([newDrill()]);
  setSessionNotes("");
  setSaved(false);
+ setEditingSessionId(null);
+ }
+
+ async function loadSessionForEdit(sessionId: string) {
+   try {
+     const res = await fetch(`/api/throws/athlete-sessions/${sessionId}`);
+     const data = await res.json();
+     if (!data.success) return;
+     const session = data.data;
+
+     setEditingSessionId(sessionId);
+     setSelectedEvent(session.event);
+     setDate(session.date);
+     setSessionNotes(session.notes || "");
+     setDrills(
+       session.drillLogs.map((d: { drillType: string; implementWeightOriginal?: number | null; implementWeight?: number | null; implementWeightUnit?: string | null; wireLength?: string | null; throwCount?: number; bestMark?: number | null; notes?: string | null }) => ({
+         id: crypto.randomUUID(),
+         drillType: d.drillType,
+         implementWeight: d.implementWeightOriginal
+           ? String(d.implementWeightOriginal)
+           : d.implementWeight
+             ? String(d.implementWeight)
+             : "",
+         implementUnit: (d.implementWeightUnit || "kg") as "kg" | "lbs",
+         wireLength: d.wireLength || "FULL",
+         throwCount: d.throwCount || 0,
+         bestMark: d.bestMark ? String(d.bestMark) : "",
+         notes: d.notes || "",
+       }))
+     );
+     setStep(2);
+     setTab("log");
+   } catch {
+     /* ignore */
+   }
  }
 
  function addDrill() {
@@ -536,6 +706,8 @@ export default function ThrowsLogPage() {
  return {
  drillType: d.drillType,
  implementWeight: implKg,
+ implementWeightUnit: d.implementUnit,
+ implementWeightOriginal: d.implementWeight ? parseFloat(d.implementWeight) : null,
  wireLength: selectedEvent === "HAMMER" ? d.wireLength : null,
  throwCount: d.throwCount,
  bestMark: d.bestMark ? parseFloat(d.bestMark) : null,
@@ -544,8 +716,12 @@ export default function ThrowsLogPage() {
  });
 
  try {
- const res = await fetch("/api/throws/athlete-sessions", {
- method: "POST",
+ const url = editingSessionId
+   ? `/api/throws/athlete-sessions/${editingSessionId}`
+   : "/api/throws/athlete-sessions";
+ const method = editingSessionId ? "PUT" : "POST";
+ const res = await fetch(url, {
+ method,
  headers: { "Content-Type": "application/json", ...csrfHeaders() },
  body: JSON.stringify({ athleteId, event: selectedEvent, date, notes: sessionNotes || null, drillLogs }),
  });
@@ -557,7 +733,7 @@ export default function ThrowsLogPage() {
 
  const eventMeta = THROW_EVENTS.find((e) => e.value === selectedEvent);
 
- const tabCls = (t: "log" | "trends") =>
+ const tabCls = (t: "log" | "trends" | "sessions") =>
  `px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
  tab === t
  ? "bg-orange-500 text-white"
@@ -591,6 +767,12 @@ export default function ThrowsLogPage() {
  </svg>
  Trends
  </button>
+ <button onClick={() => setTab("sessions")} className={tabCls("sessions")}>
+ <svg className="w-4 h-4 inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+ </svg>
+ Sessions
+ </button>
  </div>
 
  {/* ── LOG TAB ──────────────────────────────────────────────── */}
@@ -605,9 +787,9 @@ export default function ThrowsLogPage() {
  </svg>
  </div>
  <div>
- <p className="text-lg font-bold text-[var(--color-text)]">Session Logged!</p>
+ <p className="text-lg font-bold text-[var(--color-text)]">{editingSessionId ? "Session Updated!" : "Session Logged!"}</p>
  <p className="text-sm text-[var(--color-text-2)] mt-1">
- Your {eventMeta?.label} session on {new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} has been saved.
+ Your {eventMeta?.label} session on {new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} has been {editingSessionId ? "updated" : "saved"}.
  </p>
  </div>
  <div className="flex gap-3">
@@ -833,7 +1015,7 @@ export default function ThrowsLogPage() {
  className="w-full py-3.5 rounded-xl text-white text-sm font-bold transition-colors disabled:opacity-60"
  style={{ backgroundColor: eventMeta?.color }}
  >
- {saving ? "Saving..." : "Save Session"}
+ {saving ? "Saving..." : editingSessionId ? "Update Session" : "Save Session"}
  </button>
  </div>
  )}
@@ -844,6 +1026,15 @@ export default function ThrowsLogPage() {
 
  {/* ── TRENDS TAB ────────────────────────────────────────────── */}
  {tab === "trends" && <TrendsView athleteId={athleteId} onLogSession={() => setTab("log")} />}
+
+ {/* ── SESSIONS TAB ──────────────────────────────────────────── */}
+ {tab === "sessions" && (
+ <SessionsView
+   athleteId={athleteId}
+   onEdit={loadSessionForEdit}
+   onLogSession={() => setTab("log")}
+ />
+ )}
  </div>
  );
 }

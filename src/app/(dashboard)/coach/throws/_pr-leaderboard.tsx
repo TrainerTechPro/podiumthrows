@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Avatar, Badge } from "@/components";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { formatImplementWeight } from "@/lib/throws";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -78,7 +79,7 @@ const columns: Column<PRRow>[] = [
     key: "implementWeight",
     header: "Weight",
     cell: (row) => (
-      <span className="text-muted text-xs">{row.implementWeight}kg</span>
+      <span className="text-muted text-xs">{formatImplementWeight(row.implementWeight)}</span>
     ),
     hideOnMobile: true,
   },

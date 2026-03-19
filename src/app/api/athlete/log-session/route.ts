@@ -95,6 +95,8 @@ export async function POST(request: NextRequest) {
       drills: {
         drillType: string;
         implementWeight?: number;
+        implementWeightUnit?: string;
+        implementWeightOriginal?: number;
         wireLength?: string;
         throwCount: number;
         bestMark?: number;
@@ -135,6 +137,8 @@ export async function POST(request: NextRequest) {
               d: {
                 drillType: string;
                 implementWeight?: number;
+                implementWeightUnit?: string;
+                implementWeightOriginal?: number;
                 wireLength?: string;
                 throwCount: number;
                 bestMark?: number;
@@ -143,6 +147,8 @@ export async function POST(request: NextRequest) {
             ) => ({
               drillType: d.drillType,
               implementWeight: d.implementWeight ?? null,
+              implementWeightUnit: d.implementWeightUnit ?? "kg",
+              implementWeightOriginal: d.implementWeightOriginal ?? null,
               wireLength: d.wireLength ?? null,
               throwCount: d.throwCount || 0,
               bestMark: d.bestMark ?? null,

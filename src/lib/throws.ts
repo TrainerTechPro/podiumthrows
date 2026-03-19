@@ -71,6 +71,33 @@ export const DEFAULT_DRILL_BY_EVENT: Record<string, string> = {
 export const LBS_TO_KG = 1 / 2.20462;
 export const KG_TO_LBS = 2.20462;
 
+/* ─── Weight Display ─────────────────────────────────────────────────────── */
+
+/**
+ * Formats an implement weight for display using the original unit.
+ * Falls back to kg if no original value/unit stored (legacy data).
+ *
+ * Examples:
+ *   formatImplementWeight(6.35, "lbs", 14)  → "14lbs"
+ *   formatImplementWeight(7.26, "kg", 7.26) → "7.26kg"
+ *   formatImplementWeight(7.26)             → "7.26kg"  (legacy)
+ *   formatImplementWeight(null)             → "—"
+ */
+export function formatImplementWeight(
+  weightKg: number | null | undefined,
+  unit?: string | null,
+  original?: number | null,
+): string {
+  if (weightKg == null) return "—";
+  if (original != null && unit) {
+    // Strip trailing zeros for cleaner display (14.00 → 14, 4.50 → 4.5)
+    const display = parseFloat(original.toFixed(2));
+    return `${display}${unit}`;
+  }
+  const display = parseFloat(weightKg.toFixed(2));
+  return `${display}kg`;
+}
+
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 export function isValidEvent(event: unknown): event is string {

@@ -67,6 +67,8 @@ export async function POST(request: NextRequest) {
               create: (drillLogs as Array<{
                 drillType: string;
                 implementWeight?: number | null;
+                implementWeightUnit?: string | null;
+                implementWeightOriginal?: number | null;
                 wireLength?: string | null;
                 throwCount?: number;
                 bestMark?: number | null;
@@ -74,6 +76,8 @@ export async function POST(request: NextRequest) {
               }>).map((d) => ({
                 drillType: d.drillType,
                 implementWeight: d.implementWeight ?? null,
+                implementWeightUnit: d.implementWeightUnit ?? "kg",
+                implementWeightOriginal: d.implementWeightOriginal ?? null,
                 wireLength: d.wireLength ?? null,
                 throwCount: d.throwCount ?? 0,
                 bestMark: d.bestMark ?? null,

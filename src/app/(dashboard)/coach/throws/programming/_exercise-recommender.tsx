@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Badge } from "@/components";
 import { Select } from "@/components/ui/Select";
+import { formatImplementWeight } from "@/lib/throws";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -262,7 +263,7 @@ export function ExerciseRecommender({
                               )}
                               {ex.implementWeight && (
                                 <span className="text-[10px] text-muted">
-                                  {ex.implementWeight}kg
+                                  {formatImplementWeight(ex.implementWeight)}
                                 </span>
                               )}
                               {ex.equipment && (

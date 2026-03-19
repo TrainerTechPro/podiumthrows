@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { formatImplementWeight } from "@/lib/throws";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -25,6 +26,8 @@ interface ThrowsDrillLog {
  id: string;
  drillType: string;
  implementWeight: number | null;
+ implementWeightUnit?: string | null;
+ implementWeightOriginal?: number | null;
  throwCount: number | null;
  bestMark: number | null;
  notes: string | null;
@@ -474,7 +477,7 @@ function RecentSessions({ sessions }: { sessions: AthleteThrowsSession[] }) {
  </p>
  {bestLog.implementWeight && (
  <p className="text-xs text-[var(--color-text-3)] dark:text-[var(--color-text-2)]">
- {bestLog.implementWeight}kg
+ {formatImplementWeight(bestLog.implementWeight, bestLog.implementWeightUnit, bestLog.implementWeightOriginal)}
  </p>
  )}
  </div>
