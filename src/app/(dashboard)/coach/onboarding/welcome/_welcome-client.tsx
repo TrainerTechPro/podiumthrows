@@ -162,7 +162,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Link
-            href="/coach/invitations"
+            href="/coach/athletes?tab=invitations"
             className="card p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">

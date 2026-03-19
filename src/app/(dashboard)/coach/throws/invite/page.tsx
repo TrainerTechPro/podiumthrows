@@ -269,7 +269,7 @@ export default function ThrowsInvitePage() {
             Recent Invites
           </h2>
           <Link
-            href="/coach/invitations"
+            href="/coach/athletes?tab=invitations"
             className="text-xs text-amber-600 dark:text-amber-400 hover:underline"
           >
             View all invitations
