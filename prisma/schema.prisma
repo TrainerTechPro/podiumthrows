@@ -198,6 +198,10 @@ model CoachProfile {
   coachTyping          CoachTyping?
   coachTestingRecords  CoachTestingRecord[]
 
+  // Coach lifting program
+  liftingPrograms    LiftingProgram[]
+  liftingWorkoutLogs LiftingWorkoutLog[]
+
   // Utility relations (from TrainingTracker)
   voiceNotes   VoiceNote[]
   activityLogs ActivityLog[]
@@ -271,6 +275,10 @@ model AthleteProfile {
   practiceAttempts         PracticeAttempt[]
   trainingPrograms         TrainingProgram[]
   equipmentInventory       EquipmentInventory?
+
+  // Lifting program
+  liftingPrograms    LiftingProgram[]
+  liftingWorkoutLogs LiftingWorkoutLog[]
 
   // Utility relations (from TrainingTracker)
   voiceNotes       VoiceNote[]
@@ -1397,6 +1405,128 @@ model CoachDrillLog {
   createdAt       DateTime            @default(now())
 
   @@index([sessionId])
+}
+
+// ─── COACH LIFTING PROGRAM ──────────────────────────────────────────────────
+
+model LiftingProgram {
+  id              String          @id @default(cuid())
+  coachId         String
+  coach           CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId       String?
+  athlete         AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  name            String
+  goals           String?         // JSON array
+  workoutsPerWeek Int
+  totalWeeks      Int
+  rpeTargets      String?         // JSON array
+  status          String          @default("ACTIVE")
+  startDate       String?
+  completedDate   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  phases      LiftingProgramPhase[]
+  workoutLogs LiftingWorkoutLog[]
+
+  @@index([coachId])
+  @@index([athleteId])
+  @@index([status])
+}
+
+model LiftingProgramPhase {
+  id        String         @id @default(cuid())
+  programId String
+  program   LiftingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  name      String
+  method    String
+  startWeek Int
+  endWeek   Int
+  order     Int
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  exercises   LiftingProgramExercise[]
+  workoutLogs LiftingWorkoutLog[]
+
+  @@unique([programId, order])
+  @@index([programId])
+}
+
+model LiftingProgramExercise {
+  id                  String              @id @default(cuid())
+  phaseId             String
+  phase               LiftingProgramPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  name                String
+  order               Int
+  prescribedSets      Int                 @default(1)
+  prescribedReps      String?
+  prescribedDuration  String?
+  prescribedLoad      String?
+  isIsometric         Boolean             @default(false)
+  durationProgression String?             // JSON array
+  setsProgression     String?             // JSON array
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  exerciseLogs LiftingExerciseLog[]
+
+  @@unique([phaseId, order])
+  @@index([phaseId])
+}
+
+model LiftingWorkoutLog {
+  id              String               @id @default(cuid())
+  programId       String
+  program         LiftingProgram       @relation(fields: [programId], references: [id], onDelete: Cascade)
+  phaseId         String?
+  phase           LiftingProgramPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  coachId         String
+  coach           CoachProfile         @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId       String?
+  athlete         AthleteProfile?      @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  weekNumber      Int
+  workoutNumber   Int
+  targetRpe       String?
+  actualRpe       Float?
+  date            String
+  status          String               @default("IN_PROGRESS")
+  notes           String?
+  durationMinutes Int?
+  completedAt     DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  exerciseLogs LiftingExerciseLog[]
+
+  @@unique([programId, weekNumber, workoutNumber, coachId])
+  @@index([coachId, date])
+  @@index([athleteId, date])
+}
+
+model LiftingExerciseLog {
+  id                String                  @id @default(cuid())
+  workoutLogId      String
+  workoutLog        LiftingWorkoutLog       @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  programExerciseId String?
+  programExercise   LiftingProgramExercise? @relation(fields: [programExerciseId], references: [id], onDelete: SetNull)
+  exerciseName      String
+  order             Int
+  sets              Int?
+  reps              Int?
+  load              Float?
+  loadUnit          String                  @default("lbs")
+  duration          Int?
+  isSkipped         Boolean                 @default(false)
+  isAdded           Boolean                 @default(false)
+  isModified        Boolean                 @default(false)
+  previousLoad      Float?
+  notes             String?
+  createdAt         DateTime                @default(now())
+
+  @@index([workoutLogId, order])
+  @@index([exerciseName, createdAt])
 }
 
 // ─── COACH PERSONAL TRAINING INSIGHTS ────────────────────────────────────────
