@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge } from "@/components";
 import {
@@ -9,7 +10,6 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
 import prisma from "@/lib/prisma";
@@ -22,14 +22,24 @@ import {
   getOnboardingStatus,
   PLAN_LIMITS,
   type ActivityItem,
-  type FlaggedAthlete,
   type CoachStats,
   type TeamReadinessEntry,
 } from "@/lib/data/coach";
+import { getCoachingActions } from "@/lib/data/coaching-actions";
+import { getRecentTeamPRs, getTeamLoadOverview, getUpcomingCompetitions } from "@/lib/data/dashboard-intel";
 import { OnboardingChecklist } from "./_onboarding-checklist";
 import { CheckoutTrigger } from "./_checkout-trigger";
 import { UpgradeBanner } from "./_upgrade-banner";
 import { FirstVisitHints } from "./_first-visit-hints";
+import { ModeSelector } from "./_mode-selector";
+import type { DashboardMode, DashboardDepth } from "./_mode-selector";
+import { ActionCards } from "./_action-cards";
+import { PRBoard } from "./_pr-board";
+import { LoadOverview } from "./_load-overview";
+import { CompetitionCountdown } from "./_competition-countdown";
+import { PeakingStatus } from "./_peaking-status";
+import { AdaptationProgress } from "./_adaptation-progress";
+import type { AdaptationRow } from "./_adaptation-progress";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -82,6 +92,19 @@ function StatBar({ stats }: { stats: CoachStats }) {
           </span>
           {" 30-day compliance"}
         </span>
+      )}
+
+      {stats.throwsThisWeek > 0 && (
+        <span>
+          <span className="font-semibold tabular-nums text-[var(--foreground)]">{stats.throwsThisWeek}</span>
+          {" throws this week"}
+        </span>
+      )}
+
+      {stats.prsThisWeek > 0 && (
+        <Badge variant="primary">
+          {stats.prsThisWeek} PR{stats.prsThisWeek !== 1 ? "s" : ""} this week
+        </Badge>
       )}
 
       {stats.lowReadiness > 0 && (
@@ -211,59 +234,6 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
   );
 }
 
-/* ─── Flagged Athletes ───────────────────────────────────────────────────── */
-
-function FlaggedCard({ athlete }: { athlete: FlaggedAthlete }) {
-  const reasonLabel =
-    athlete.reason === "injured"
-      ? "Injury Active"
-      : athlete.reason === "low_readiness"
-      ? `Readiness ${athlete.score?.toFixed(1)}`
-      : `No check-in ${athlete.daysSinceCheckin}d`;
-
-  const badgeVariant: "danger" | "warning" | "neutral" =
-    athlete.reason === "injured"
-      ? "danger"
-      : athlete.reason === "low_readiness"
-      ? "warning"
-      : "neutral";
-
-  const borderColor =
-    athlete.reason === "injured"
-      ? "border-l-red-500"
-      : athlete.reason === "low_readiness"
-      ? "border-l-amber-500"
-      : "border-l-surface-400 dark:border-l-surface-500";
-
-  return (
-    <Link
-      href={`/coach/athletes/${athlete.id}`}
-      className={cn(
-        "shrink-0 w-60 flex items-center gap-3 p-3 rounded-xl",
-        "bg-[var(--card-bg)] border border-[var(--card-border)]",
-        "border-l-[3px]", borderColor,
-        "hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-      )}
-    >
-      <Avatar
-        name={`${athlete.firstName} ${athlete.lastName}`}
-        src={athlete.avatarUrl}
-        size="sm"
-      />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[var(--foreground)] truncate">
-          {athlete.firstName} {athlete.lastName}
-        </p>
-        <div className="mt-1">
-          <Badge variant={badgeVariant}>
-            {reasonLabel}
-          </Badge>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 /* ─── Team Readiness Widget ─────────────────────────────────────────────── */
 
 function TrendIcon({ trend }: { trend: TeamReadinessEntry["trend"] }) {
@@ -355,6 +325,11 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
 export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
+  // Read mode/depth preferences from cookies
+  const cookieStore = cookies();
+  const mode = (cookieStore.get("dashboard-mode")?.value ?? "training") as DashboardMode;
+  const depth = (cookieStore.get("dashboard-depth")?.value ?? "standard") as DashboardDepth;
+
   // Get athlete IDs on this coach's roster
   const rosterAthletes = await prisma.athleteProfile.findMany({
     where: { coachId: coach.id },
@@ -362,25 +337,27 @@ export default async function CoachDashboardPage() {
   });
   const rosterIds = rosterAthletes.map((a) => a.id);
 
-  const [statsResult, activityResult, flaggedResult, readinessResult, onboardingResult, recentAthleteLogsResult] =
-    await Promise.allSettled([
-      getCoachStats(coach.id),
-      getRecentActivity(coach.id),
-      getFlaggedAthletes(coach.id),
-      getTeamReadinessTrends(coach.id),
-      getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
-      rosterIds.length > 0
-        ? prisma.athleteThrowsSession.findMany({
-            where: { athleteId: { in: rosterIds } },
-            orderBy: { createdAt: "desc" },
-            take: 5,
-            include: {
-              athlete: { select: { firstName: true, lastName: true, avatarUrl: true } },
-              drillLogs: { select: { throwCount: true, bestMark: true } },
-            },
-          })
-        : Promise.resolve([]),
-    ]);
+  const [
+    statsResult,
+    activityResult,
+    flaggedResult,
+    readinessResult,
+    onboardingResult,
+    actionsResult,
+    prsResult,
+    loadResult,
+    competitionsResult,
+  ] = await Promise.allSettled([
+    getCoachStats(coach.id),
+    getRecentActivity(coach.id, 20, true),
+    getFlaggedAthletes(coach.id),
+    getTeamReadinessTrends(coach.id),
+    getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
+    getCoachingActions(coach.id),
+    getRecentTeamPRs(coach.id),
+    getTeamLoadOverview(coach.id),
+    mode === "competition" ? getUpcomingCompetitions(coach.id) : Promise.resolve([]),
+  ]);
 
   const stats: CoachStats = statsResult.status === "fulfilled"
     ? statsResult.value
@@ -391,9 +368,53 @@ export default async function CoachDashboardPage() {
   const onboarding = onboardingResult.status === "fulfilled"
     ? onboardingResult.value
     : { isCompleted: true, completedAt: null, steps: [], completedCount: 0, totalSteps: 0 };
-  const recentAthleteLogs = recentAthleteLogsResult.status === "fulfilled"
-    ? recentAthleteLogsResult.value
-    : [];
+  const coachingActions = actionsResult.status === "fulfilled" ? actionsResult.value : [];
+  const teamPRs = prsResult.status === "fulfilled" ? prsResult.value : [];
+  const teamLoad = loadResult.status === "fulfilled" ? loadResult.value : [];
+  const competitions = competitionsResult.status === "fulfilled" ? competitionsResult.value : [];
+
+  // Adaptation progress — Training Block + Advanced depth only
+  let adaptationRows: AdaptationRow[] = [];
+  if (mode === "training" && depth === "advanced") {
+    try {
+      const checkpoints = await prisma.adaptationCheckpoint.findMany({
+        where: {
+          program: { coachId: coach.id, athleteId: { not: null } },
+          applied: false,
+        },
+        include: {
+          program: {
+            select: {
+              athleteId: true,
+              athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const seen = new Set<string>();
+      for (const cp of checkpoints) {
+        const aid = cp.program.athleteId;
+        if (!aid || seen.has(aid)) continue;
+        seen.add(aid);
+        const athlete = cp.program.athlete!;
+        adaptationRows.push({
+          athleteId: aid,
+          athleteName: `${athlete.firstName} ${athlete.lastName}`,
+          avatarUrl: athlete.avatarUrl,
+          complexNumber: cp.complexNumber,
+          sessionsInComplex: cp.weekNumber,
+          sessionsToForm: null,
+          markSlope: cp.markSlope,
+          markTrend: cp.markTrend,
+          recommendation: cp.recommendation,
+        });
+      }
+    } catch (err) {
+      console.error("[dashboard] Adaptation checkpoint query failed:", err);
+    }
+  }
 
   const now = new Date();
   const hour = now.getHours();
@@ -431,6 +452,8 @@ export default async function CoachDashboardPage() {
         />
       )}
 
+      {/* ═══ ZONE 1: TRIAGE ═══ */}
+
       {/* Persistent injury alert bar */}
       {(() => {
         const injured = flagged.filter((a) => a.reason === "injured");
@@ -457,13 +480,13 @@ export default async function CoachDashboardPage() {
               href="/coach/athletes"
               className="text-xs font-medium text-red-600 dark:text-red-400 hover:underline shrink-0"
             >
-              {injured.length === 1 ? "View profile →" : "View all →"}
+              {injured.length === 1 ? "View profile \u2192" : "View all \u2192"}
             </Link>
           </div>
         );
       })()}
 
-      {/* Header */}
+      {/* Header: greeting + mode selector */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -472,48 +495,29 @@ export default async function CoachDashboardPage() {
             </h1>
             <p className="text-sm text-muted mt-0.5">{today}</p>
           </div>
-          <Link
-            href="/coach/athletes"
-            className="btn-primary text-sm py-1.5 px-3"
-          >
-            + Invite Athlete
-          </Link>
+          <ModeSelector mode={mode} depth={depth} />
         </div>
         <StatBar stats={stats} />
       </div>
 
-      {/* Needs Attention — full-width above grid */}
-      {flagged.length > 0 ? (
-        <section>
-          <h2 className="text-sm font-bold text-[var(--foreground)]">
-            Needs Attention
-            <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold align-middle">
-              {flagged.length}
-            </span>
-          </h2>
-          <div className="mt-3 flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-            {flagged.map((a) => (
-              <FlaggedCard key={a.id} athlete={a} />
-            ))}
-          </div>
-        </section>
-      ) : (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20">
-          <CheckCircle2 size={16} strokeWidth={1.75} className="text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-            All athletes healthy
-          </span>
-        </div>
+      {/* Coaching Action Cards */}
+      <ActionCards actions={coachingActions} depth={depth} />
+
+      {/* ═══ ZONE 2: TEAM PULSE ═══ */}
+
+      {/* Competition Countdown — only in competition prep mode */}
+      {mode === "competition" && competitions.length > 0 && (
+        <CompetitionCountdown competitions={competitions} />
       )}
 
-      {/* Two-column body */}
+      {/* Two-column: Activity Feed + Readiness */}
       <div className="grid lg:grid-cols-5 gap-6">
         {/* Activity Feed — timeline, left column */}
         <section className="lg:col-span-3 space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
             Recent Activity
             <span className="ml-2 text-xs font-normal normal-case text-surface-400">
-              last 48 hours
+              notable events
             </span>
           </h2>
           <ActivityFeed items={activity} />
@@ -535,61 +539,20 @@ export default async function CoachDashboardPage() {
         </div>
       </div>
 
-      {/* Recent Athlete Logs */}
-      {recentAthleteLogs.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-              Recent Athlete Logs
-              <span className="ml-2 text-xs font-normal normal-case text-surface-400">
-                self-logged sessions
-              </span>
-            </h2>
-            <Link
-              href="/coach/athlete-logs"
-              className="text-xs text-primary-500 hover:underline"
-            >
-              View all
-            </Link>
-          </div>
-          <div className="card p-0 overflow-hidden divide-y divide-[var(--card-border)]">
-            {recentAthleteLogs.map((log) => {
-              const totalThrows = log.drillLogs.reduce((s, d) => s + d.throwCount, 0);
-              const bestMarks = log.drillLogs
-                .map((d) => d.bestMark)
-                .filter((n): n is number => n !== null && n > 0);
-              const best = bestMarks.length > 0 ? Math.max(...bestMarks) : null;
+      {/* ═══ ZONE 3: INTEL ═══ */}
 
-              return (
-                <Link
-                  key={log.id}
-                  href="/coach/athlete-logs"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-                >
-                  <Avatar
-                    name={`${log.athlete.firstName} ${log.athlete.lastName}`}
-                    src={log.athlete.avatarUrl}
-                    size="sm"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                      {log.athlete.firstName} {log.athlete.lastName}
-                    </p>
-                    <p className="text-xs text-muted truncate">
-                      {formatEventName(log.event)}
-                      {log.focus && <> &middot; {log.focus}</>}
-                      {totalThrows > 0 && <> &middot; {totalThrows} throws</>}
-                      {best && <> &middot; {best.toFixed(2)}m</>}
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted shrink-0 tabular-nums">
-                    {formatRelativeTime(log.createdAt.toISOString())}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
+      {/* PR Board */}
+      <PRBoard prs={teamPRs} />
+
+      {/* Training Load Overview */}
+      <LoadOverview entries={teamLoad} depth={depth} />
+
+      {/* Context section — mode-dependent */}
+      {mode === "training" && depth === "advanced" && adaptationRows.length > 0 && (
+        <AdaptationProgress rows={adaptationRows} />
+      )}
+      {mode === "competition" && (
+        <PeakingStatus competitions={competitions} readiness={readiness} />
       )}
 
       {/* First-visit contextual hints */}
