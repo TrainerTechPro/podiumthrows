@@ -219,6 +219,12 @@ Two components handle numeric animation — choose based on the use case:
 - **Toast animation**: Slides up from bottom on mobile (full-width), slides in from top-right on desktop. Progress bar at bottom shows auto-dismiss countdown.
 - **Legacy compat**: `useToast()` from `src/components/toast.tsx` also supports `toast(message, "celebration")`.
 
+### Progress Bars
+- `<ProgressBar>` auto-animates: fill starts at 0% and grows to target over 800ms with a gradient shimmer sweep, triggered by IntersectionObserver on viewport entry. No extra props needed — `animate` defaults to `true`.
+- **Value changes after entrance** animate smoothly with 300ms ease-out (e.g. upload progress ticking up).
+- Pass `animate={false}` only for bars that must render at their target instantly (rare).
+- Respects `prefers-reduced-motion`.
+
 ### Loading States
 - **DashboardWidget**: Pass `loading={true}` to show shimmer skeletons, then `loading={false}` to fade in real content with slide-up transition.
 - **Skeleton → content pattern**: When data loads asynchronously in a widget, always transition from skeleton to content with a fade+slide, not a hard swap.
