@@ -13,14 +13,15 @@ export { ToastProvider } from "@/components/ui/Toast";
 export function useToast() {
   const ctx = useNewToast();
 
-  function toast(message: string, type: "success" | "info" | "warning" | "error" = "success") {
+  function toast(message: string, type: "success" | "info" | "warning" | "error" | "celebration" = "success") {
     switch (type) {
-      case "success": ctx.success(message); break;
-      case "error":   ctx.error(message);   break;
-      case "warning": ctx.warning(message); break;
-      case "info":    ctx.info(message);    break;
+      case "success":     ctx.success(message); break;
+      case "error":       ctx.error(message);   break;
+      case "warning":     ctx.warning(message); break;
+      case "info":        ctx.info(message);    break;
+      case "celebration": ctx.celebration(message); break;
     }
   }
 
-  return { toast };
+  return { toast, celebration: ctx.celebration };
 }

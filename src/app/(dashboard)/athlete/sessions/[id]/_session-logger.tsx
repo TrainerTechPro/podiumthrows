@@ -3,8 +3,10 @@
 import { useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, RestTimer } from "@/components";
+import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { PRCelebration } from "@/components/ui/PRCelebration";
+import { formatEventType } from "@/lib/utils";
 import type {
   SessionWithPrescription,
   PrescribedBlock,
@@ -33,6 +35,7 @@ const TYPE_BADGE: Record<string, "danger" | "warning" | "success" | "neutral"> =
 
 export function SessionLogger({ session }: { session: SessionWithPrescription }) {
   const router = useRouter();
+  const { celebration } = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [loggedExercises, setLoggedExercises] = useState<Map<string, LoggedSet>>(
@@ -126,6 +129,11 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
             show: true,
             event: data.throwLog.event ?? undefined,
             distance: data.throwLog.distance ?? undefined,
+          });
+          // Also fire a celebration toast (persists after overlay dismissal)
+          celebration("New Personal Best!", {
+            description: data.throwLog.event ? formatEventType(data.throwLog.event) : undefined,
+            highlight: data.throwLog.distance ? `${data.throwLog.distance.toFixed(2)}m` : undefined,
           });
         }
 

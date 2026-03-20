@@ -7,6 +7,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/throws";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
+import { useToast } from "@/components/ui/Toast";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -187,6 +188,7 @@ export function LogSessionWizard({
   editSessionId,
 }: WizardProps) {
   const router = useRouter();
+  const { celebration } = useToast();
   const [step, setStep] = useState<Step>("event");
   const [isEditing, setIsEditing] = useState(!!editSessionId);
   const [editLoading, setEditLoading] = useState(!!editSessionId);
@@ -383,7 +385,16 @@ export function LogSessionWizard({
       if (!res.ok) throw new Error(data.error || "Failed to save session");
 
       // Capture PR and warning data from response
-      if (data.prs?.length) setResponsePRs(data.prs);
+      if (data.prs?.length) {
+        setResponsePRs(data.prs);
+        // Fire celebration toasts for each PR
+        for (const pr of data.prs) {
+          celebration("New Personal Best!", {
+            description: pr.implement,
+            highlight: `${pr.distance.toFixed(2)}m`,
+          });
+        }
+      }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
 
       setStep("done");
