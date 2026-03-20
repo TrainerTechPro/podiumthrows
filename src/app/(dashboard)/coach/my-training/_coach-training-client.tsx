@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { formatImplementWeight } from "@/lib/throws";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -82,7 +83,6 @@ function SessionDetail({ session, onDelete }: { session: CoachSession; onDelete:
   const sessionBest = bestDists.length > 0 ? Math.max(...bestDists) : null;
 
   async function handleDelete() {
-    if (!confirm("Delete this session?")) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/coach/log-session/${session.id}`, { method: "DELETE", headers: csrfHeaders() });
@@ -175,10 +175,20 @@ function SessionDetail({ session, onDelete }: { session: CoachSession; onDelete:
         </div>
       )}
 
+      {/* Mobile: slide to delete */}
+      <div className="sm:hidden">
+        <SlideToConfirm
+          label={deleting ? "Deleting..." : "Slide to Delete Session"}
+          onConfirm={handleDelete}
+          disabled={deleting}
+          variant="destructive"
+        />
+      </div>
+      {/* Desktop: text button with confirm dialog */}
       <button
-        onClick={handleDelete}
+        onClick={() => { if (confirm("Delete this session?")) handleDelete(); }}
         disabled={deleting}
-        className="text-xs text-muted hover:text-danger-500 transition-colors"
+        className="hidden sm:inline text-xs text-muted hover:text-danger-500 transition-colors"
       >
         {deleting ? "Deleting..." : "Delete session"}
       </button>

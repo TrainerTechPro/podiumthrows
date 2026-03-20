@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { formatImplementWeight } from "@/lib/throws";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -110,7 +111,6 @@ function SessionDetail({
   );
 
   async function handleDelete() {
-    if (!confirm("Delete this session?")) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/coach/log-session/${session.id}`, { method: "DELETE", headers: csrfHeaders() });
@@ -230,10 +230,20 @@ function SessionDetail({
         </div>
       )}
 
+      {/* Mobile: slide to delete */}
+      <div className="sm:hidden">
+        <SlideToConfirm
+          label={deleting ? "Deleting..." : "Slide to Delete Session"}
+          onConfirm={handleDelete}
+          disabled={deleting}
+          variant="destructive"
+        />
+      </div>
+      {/* Desktop: text button */}
       <button
-        onClick={handleDelete}
+        onClick={() => { if (confirm("Delete this session?")) handleDelete(); }}
         disabled={deleting}
-        className="text-xs text-muted hover:text-danger-500 transition-colors"
+        className="hidden sm:inline text-xs text-muted hover:text-danger-500 transition-colors"
       >
         {deleting ? "Deleting..." : "Delete session"}
       </button>

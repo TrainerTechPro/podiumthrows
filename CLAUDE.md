@@ -176,6 +176,13 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 - Buttons: use `btn-primary`, `btn-secondary`, `btn-danger` component classes.
 - Links: `text-primary-500 hover:underline` for inline text links.
 
+### Confirmations
+- **High-stakes actions on mobile** (submit session, delete data): Use `<SlideToConfirm>` from `src/components/ui/SlideToConfirm.tsx`. Shows on mobile (`sm:hidden`), falls back to standard button or `ConfirmDialog` on desktop (`hidden sm:flex`).
+- **Props**: `label` (text in track), `onConfirm` (callback), `disabled`, `variant` (`"confirm"` = amber, `"destructive"` = red).
+- **Pattern**: Wrap both in the same parent — `<div className="sm:hidden"><SlideToConfirm /></div>` + `<div className="hidden sm:flex">...buttons...</div>`.
+- **When to use**: Any action that is irreversible or high-stakes on a touch device — session saves, deletes, account changes. Not needed for low-stakes actions (navigation, toggles).
+- **Desktop**: Keep `ConfirmDialog` or `window.confirm()` for destructive actions. `SlideToConfirm` is mobile-only.
+
 ### Numeric Display
 Two components handle numeric animation — choose based on the use case:
 

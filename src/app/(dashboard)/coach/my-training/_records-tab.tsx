@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 
 /** Clean up implement strings like "6.3503007320989564kg" → "6.35kg" */
 function cleanImplement(impl: string): string {
@@ -90,7 +91,6 @@ export function RecordsTab({
   }
 
   async function handleDeleteRecord(id: string) {
-    if (!confirm("Delete this testing record?")) return;
     try {
       const res = await fetch(`/api/coach/my-training/testing/${id}`, { method: "DELETE", headers: csrfHeaders() });
       if (res.ok) {
@@ -423,7 +423,19 @@ function TestingRecordCard({
             <p><span className="text-muted">Notes:</span> <span className="text-[var(--foreground)]">{record.notes}</span></p>
           )}
 
-          <button onClick={onDelete} className="text-xs text-muted hover:text-danger-500 transition-colors">
+          {/* Mobile: slide to delete */}
+          <div className="sm:hidden">
+            <SlideToConfirm
+              label="Slide to Delete Record"
+              onConfirm={onDelete}
+              variant="destructive"
+            />
+          </div>
+          {/* Desktop: text button */}
+          <button
+            onClick={() => { if (confirm("Delete this testing record?")) onDelete(); }}
+            className="hidden sm:inline text-xs text-muted hover:text-danger-500 transition-colors"
+          >
             Delete record
           </button>
         </div>

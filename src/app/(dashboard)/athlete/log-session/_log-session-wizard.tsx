@@ -6,6 +6,7 @@ import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/throws";
 import { NumberFlow } from "@/components/ui/NumberFlow";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -739,19 +740,49 @@ export function LogSessionWizard({
           <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
         )}
 
-        <div className="flex gap-3">
-          <button type="button" onClick={prevStep} className="btn-secondary flex-1">
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={limitedMode ? handleSubmit : nextStep}
-            disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
-            className="btn-primary flex-1"
-          >
-            {limitedMode ? (submitting ? "Saving..." : isEditing ? "Update Session" : "Save Session") : "Next"}
-          </button>
-        </div>
+        {limitedMode ? (
+          <>
+            {/* Mobile: slide to confirm in limited mode */}
+            <div className="sm:hidden space-y-3">
+              <button type="button" onClick={prevStep} className="btn-secondary w-full">
+                Back
+              </button>
+              <SlideToConfirm
+                label={submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"}
+                onConfirm={handleSubmit}
+                disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
+              />
+            </div>
+            {/* Desktop: standard buttons */}
+            <div className="hidden sm:flex gap-3">
+              <button type="button" onClick={prevStep} className="btn-secondary flex-1">
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
+                className="btn-primary flex-1"
+              >
+                {submitting ? "Saving..." : isEditing ? "Update Session" : "Save Session"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex gap-3">
+            <button type="button" onClick={prevStep} className="btn-secondary flex-1">
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={nextStep}
+              disabled={drills.length === 0 || !drills.some((d) => d.drillType)}
+              className="btn-primary flex-1"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -856,7 +887,20 @@ export function LogSessionWizard({
           <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
         )}
 
-        <div className="flex gap-3">
+        {/* Mobile: slide to confirm */}
+        <div className="sm:hidden space-y-3">
+          <button type="button" onClick={prevStep} className="btn-secondary w-full">
+            Back
+          </button>
+          <SlideToConfirm
+            label={submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"}
+            onConfirm={handleSubmit}
+            disabled={submitting}
+          />
+        </div>
+
+        {/* Desktop: standard buttons */}
+        <div className="hidden sm:flex gap-3">
           <button type="button" onClick={prevStep} className="btn-secondary flex-1">
             Back
           </button>
