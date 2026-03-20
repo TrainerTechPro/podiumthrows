@@ -330,13 +330,6 @@ export default async function CoachDashboardPage() {
   const mode = (cookieStore.get("dashboard-mode")?.value ?? "training") as DashboardMode;
   const depth = (cookieStore.get("dashboard-depth")?.value ?? "standard") as DashboardDepth;
 
-  // Get athlete IDs on this coach's roster
-  const rosterAthletes = await prisma.athleteProfile.findMany({
-    where: { coachId: coach.id },
-    select: { id: true },
-  });
-  const rosterIds = rosterAthletes.map((a) => a.id);
-
   const [
     statsResult,
     activityResult,
@@ -374,7 +367,7 @@ export default async function CoachDashboardPage() {
   const competitions = competitionsResult.status === "fulfilled" ? competitionsResult.value : [];
 
   // Adaptation progress — Training Block + Advanced depth only
-  let adaptationRows: AdaptationRow[] = [];
+  const adaptationRows: AdaptationRow[] = [];
   if (mode === "training" && depth === "advanced") {
     try {
       const checkpoints = await prisma.adaptationCheckpoint.findMany({

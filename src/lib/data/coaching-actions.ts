@@ -56,10 +56,6 @@ function daysAgo(n: number): Date {
   return d;
 }
 
-function daysAgoISO(n: number): string {
-  return daysAgo(n).toISOString().slice(0, 10);
-}
-
 function athleteName(a: { firstName: string; lastName: string }): string {
   return `${a.firstName} ${a.lastName}`;
 }
