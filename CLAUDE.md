@@ -204,13 +204,35 @@ Two components handle numeric animation — choose based on the use case:
 
 **Both respect** `prefers-reduced-motion: reduce` — animation is skipped automatically.
 
+### Tabs
+- Use `<Tabs>`, `<TabList>`, `<TabTrigger>`, `<TabPanel>` from `src/components/ui/Tabs.tsx`.
+- **Underline variant** has a sliding indicator that smoothly translates to the active tab (250ms ease-out). Do NOT manually add `border-b-2` to tab triggers — the indicator handles it.
+- **Content transitions are automatic**: outgoing panel fades out (150ms), incoming fades in with slide-up (200ms). No extra code needed.
+- `will-change` is applied only during transitions, removed after.
+- Three variants: `"underline"` (default), `"pills"`, `"boxed"`. Pass the variant to both `<TabList>` and each `<TabTrigger>`.
+
+### Toasts & Celebrations
+- Use `useToast()` from `src/components/ui/Toast.tsx` for all notifications.
+- **Standard variants**: `success()`, `error()`, `warning()`, `info()` — each has appropriate duration and color.
+- **Celebration variant**: `celebration(title, { description?, highlight?, duration? })` — amber/gold gradient background, pulsing trophy icon, CSS confetti burst, large highlight text for PR distances.
+- **When a PR is detected**: Fire `celebration("New Personal Best!", { highlight: "18.42m", description: "Shot Put" })`. This can complement the full-screen `PRCelebration` overlay.
+- **Toast animation**: Slides up from bottom on mobile (full-width), slides in from top-right on desktop. Progress bar at bottom shows auto-dismiss countdown.
+- **Legacy compat**: `useToast()` from `src/components/toast.tsx` also supports `toast(message, "celebration")`.
+
+### Loading States
+- **DashboardWidget**: Pass `loading={true}` to show shimmer skeletons, then `loading={false}` to fade in real content with slide-up transition.
+- **Skeleton → content pattern**: When data loads asynchronously in a widget, always transition from skeleton to content with a fade+slide, not a hard swap.
+- Use the existing `shimmer` CSS class for skeleton placeholders.
+
 ### Animation
 - Page transitions: handled by `src/app/(dashboard)/coach/template.tsx` (framer-motion).
 - Entry animations: `animate-fade-slide-in`, `animate-spring-up`.
 - Animated numbers: `<AnimatedNumber>` for all visible numeric stats (see Numeric Display above).
 - **Staggered lists**: Wrap any `.map()` grid or list in `<StaggeredList className="grid ...">`. Children fade in + slide up with 50ms stagger on first viewport entry. Props: `staggerDelay` (ms), `duration` (ms), `className`. Works in both Server and Client Components.
+- **Tab content**: Automatic fade+slide transitions — just use `<TabPanel>`.
 - Danger pulse: `animate-danger-pulse` on critical badges.
-- **Always respect** `prefers-reduced-motion` — all animation components skip animation automatically.
+- **CSS transitions preferred**: Use CSS `transition` property for all micro-interactions. Only use framer-motion for page-level transitions. No other animation libraries.
+- **Always respect** `prefers-reduced-motion` — all animation components skip animation automatically. Any new animation code MUST check `window.matchMedia("(prefers-reduced-motion: reduce)").matches`.
 
 ---
 
