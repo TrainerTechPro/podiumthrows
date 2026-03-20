@@ -45,6 +45,8 @@ export interface DataTableProps<T> {
   emptyDescription?: string;
   /** Called when row is clicked */
   onRowClick?: (row: T) => void;
+  /** Dynamic class for each row (e.g. colored left borders) */
+  rowClassName?: (row: T) => string | undefined;
   className?: string;
   /** Slot for toolbar actions (right side) */
   actions?: ReactNode;
@@ -64,6 +66,7 @@ export function DataTable<T extends Record<string, unknown>>({
   emptyTitle = "No data",
   emptyDescription,
   onRowClick,
+  rowClassName,
   className,
   actions,
 }: DataTableProps<T>) {
@@ -200,7 +203,8 @@ export function DataTable<T extends Record<string, unknown>>({
                     onClick={() => onRowClick?.(row)}
                     className={cn(
                       "transition-colors",
-                      onRowClick && "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50"
+                      onRowClick && "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50",
+                      rowClassName?.(row)
                     )}
                   >
                     {columns.map((col) => (

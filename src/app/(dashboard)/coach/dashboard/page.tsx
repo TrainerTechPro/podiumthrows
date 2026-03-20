@@ -10,6 +10,7 @@ import {
   TrendingDown,
   Minus,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import prisma from "@/lib/prisma";
 import {
@@ -429,6 +430,38 @@ export default async function CoachDashboardPage() {
           planLimit={planLimit}
         />
       )}
+
+      {/* Persistent injury alert bar */}
+      {(() => {
+        const injured = flagged.filter((a) => a.reason === "injured");
+        if (injured.length === 0) return null;
+        return (
+          <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 flex items-center gap-3">
+            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <p className="text-sm text-red-700 dark:text-red-400 flex-1">
+              {injured.length === 1 ? (
+                <>
+                  <Link href={`/coach/athletes/${injured[0].id}`} className="font-semibold hover:underline">
+                    {injured[0].firstName} {injured[0].lastName}
+                  </Link>
+                  {" has an active injury"}
+                </>
+              ) : (
+                <>
+                  <strong>{injured.length}</strong>
+                  {" athletes need attention"}
+                </>
+              )}
+            </p>
+            <Link
+              href="/coach/athletes"
+              className="text-xs font-medium text-red-600 dark:text-red-400 hover:underline shrink-0"
+            >
+              {injured.length === 1 ? "View profile →" : "View all →"}
+            </Link>
+          </div>
+        );
+      })()}
 
       {/* Header */}
       <div className="space-y-4">

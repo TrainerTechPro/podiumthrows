@@ -149,6 +149,14 @@ const columns: Column<AthleteRosterItem>[] = [
   },
 ];
 
+function getRowClassName(row: AthleteRosterItem): string | undefined {
+  const r = row.latestReadiness;
+  if (r?.injuryStatus === "ACTIVE") return "border-l-4 border-l-red-500";
+  if (r && r.score < 5) return "border-l-4 border-l-amber-500";
+  if (!r) return "border-l-4 border-l-surface-400 dark:border-l-surface-500";
+  return undefined;
+}
+
 export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
   return (
     <DataTable
@@ -158,6 +166,7 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       searchable
       searchPlaceholder="Search by name…"
       pageSize={25}
+      rowClassName={getRowClassName}
       emptyTitle="No athletes on your roster"
       emptyDescription="Send an invite to get your first athlete set up. They'll appear here once they accept."
     />

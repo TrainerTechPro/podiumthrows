@@ -193,6 +193,14 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-6px)" },
         },
+        "danger-pulse": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.85" },
+        },
+        "fade-slide-in": {
+          "0%": { opacity: "0", transform: "translateY(-4px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         // Existing
@@ -218,6 +226,8 @@ const config: Config = {
         "progress-fill": "progress-fill 1s ease-out both",
         "streak-flame": "streak-flame 2s ease-in-out infinite",
         "float": "float 3s ease-in-out infinite",
+        "danger-pulse": "danger-pulse 2s ease-in-out infinite",
+        "fade-slide-in": "fade-slide-in 0.4s ease-out both",
       },
       transitionTimingFunction: {
         "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",

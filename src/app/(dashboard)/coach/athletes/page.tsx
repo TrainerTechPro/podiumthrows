@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { InviteAthleteButton } from "./_invite";
 import { AthletesTable } from "./_table";
 import {
@@ -104,12 +105,8 @@ export default async function AthletesPage({
       {tab === "roster" && (
         <>
           {needsAttention > 0 && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3">
-              <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" strokeWidth={1.75} aria-hidden="true" />
               <p className="text-sm text-red-700 dark:text-red-400 leading-snug">
                 {lowCount > 0 && noCheckInCount > 0 ? (
                   <><strong>{lowCount}</strong> {lowCount === 1 ? "athlete has" : "athletes have"} low readiness and <strong>{noCheckInCount}</strong> {noCheckInCount === 1 ? "hasn't" : "haven't"} checked in recently.</>
