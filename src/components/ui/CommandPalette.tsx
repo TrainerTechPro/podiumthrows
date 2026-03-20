@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import type { NavSection, NavItem } from "./Sidebar";
+import type { NavSection } from "./Sidebar";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
