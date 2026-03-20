@@ -4,6 +4,9 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
+  useRef,
+  useCallback,
   HTMLAttributes,
   ReactNode,
   KeyboardEvent,
@@ -14,12 +17,16 @@ import { cn } from "@/lib/utils";
 
 interface TabsContextValue {
   active: string;
+  prev: string;
   setActive: (id: string) => void;
+  registerTrigger: (id: string, el: HTMLButtonElement | null) => void;
 }
 
 const TabsContext = createContext<TabsContextValue>({
   active: "",
+  prev: "",
   setActive: () => {},
+  registerTrigger: () => {},
 });
 
 /* ─── Root ───────────────────────────────────────────────────────────────── */
@@ -35,15 +42,36 @@ export interface TabsProps {
 
 export function Tabs({ defaultTab, onChange, activeTab, children, className }: TabsProps) {
   const [internal, setInternal] = useState(defaultTab);
+  const [prev, setPrev] = useState(defaultTab);
   const active = activeTab ?? internal;
 
-  const setActive = (id: string) => {
-    if (!activeTab) setInternal(id);
-    onChange?.(id);
-  };
+  const setActive = useCallback(
+    (id: string) => {
+      setPrev(active);
+      if (!activeTab) setInternal(id);
+      onChange?.(id);
+    },
+    [active, activeTab, onChange]
+  );
+
+  // Track previous for controlled mode too
+  const prevActiveRef = useRef(active);
+  useEffect(() => {
+    if (active !== prevActiveRef.current) {
+      setPrev(prevActiveRef.current);
+      prevActiveRef.current = active;
+    }
+  }, [active]);
+
+  // Trigger ref map for sliding indicator
+  const triggerRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const registerTrigger = useCallback((id: string, el: HTMLButtonElement | null) => {
+    if (el) triggerRefs.current.set(id, el);
+    else triggerRefs.current.delete(id);
+  }, []);
 
   return (
-    <TabsContext.Provider value={{ active, setActive }}>
+    <TabsContext.Provider value={{ active, prev, setActive, registerTrigger }}>
       <div className={cn("w-full", className)}>{children}</div>
     </TabsContext.Provider>
   );
@@ -57,6 +85,31 @@ export interface TabListProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function TabList({ variant = "underline", className, children, ...props }: TabListProps) {
+  const { active } = useContext(TabsContext);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+  const reducedMotion = useRef(false);
+
+  useEffect(() => {
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  // Measure the active tab button for the sliding indicator
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || variant !== "underline") return;
+
+    const activeBtn = container.querySelector<HTMLButtonElement>(`[aria-selected="true"]`);
+    if (!activeBtn) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    setIndicator({
+      left: btnRect.left - containerRect.left + container.scrollLeft,
+      width: btnRect.width,
+    });
+  }, [active, variant]);
+
   const variants = {
     underline: "border-b border-[var(--card-border)] gap-0",
     pills:     "gap-1.5",
@@ -65,11 +118,28 @@ export function TabList({ variant = "underline", className, children, ...props }
 
   return (
     <div
+      ref={containerRef}
       role="tablist"
-      className={cn("flex items-center overflow-x-auto scrollbar-none", variants[variant], className)}
+      className={cn(
+        "relative flex items-center overflow-x-auto scrollbar-none",
+        variants[variant],
+        className
+      )}
       {...props}
     >
       {children}
+
+      {/* Sliding underline indicator */}
+      {variant === "underline" && indicator && (
+        <span
+          className="absolute bottom-0 h-0.5 bg-primary-500 rounded-full"
+          style={{
+            left: indicator.left,
+            width: indicator.width,
+            transition: reducedMotion.current ? "none" : "left 250ms ease-out, width 250ms ease-out",
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -96,18 +166,24 @@ export function TabTrigger({
   className,
   variant = "underline",
 }: TabTriggerProps) {
-  const { active, setActive } = useContext(TabsContext);
+  const { active, setActive, registerTrigger } = useContext(TabsContext);
   const isActive = active === id;
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    registerTrigger(id, btnRef.current);
+    return () => registerTrigger(id, null);
+  }, [id, registerTrigger]);
 
   const baseStyles =
     "relative inline-flex items-center gap-2 text-sm font-medium transition-all duration-150 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 select-none disabled:opacity-40 disabled:cursor-not-allowed";
 
   const variantStyles = {
     underline: cn(
-      "px-3 py-2.5 -mb-px border-b-2",
+      "px-3 py-2.5 -mb-px border-b-2 border-transparent",
       isActive
-        ? "border-primary-500 text-primary-600 dark:text-primary-400"
-        : "border-transparent text-muted hover:text-[var(--foreground)] hover:border-surface-300 dark:hover:border-surface-600"
+        ? "text-primary-600 dark:text-primary-400"
+        : "text-muted hover:text-[var(--foreground)]"
     ),
     pills: cn(
       "px-3.5 py-1.5 rounded-full",
@@ -132,6 +208,7 @@ export function TabTrigger({
 
   return (
     <button
+      ref={btnRef}
       role="tab"
       aria-selected={isActive}
       aria-controls={`panel-${id}`}
@@ -157,18 +234,62 @@ export interface TabPanelProps extends HTMLAttributes<HTMLDivElement> {
 export function TabPanel({ id, children, className, ...props }: TabPanelProps) {
   const { active } = useContext(TabsContext);
   const isActive = active === id;
+  const [phase, setPhase] = useState<"hidden" | "entering" | "visible">(
+    isActive ? "visible" : "hidden"
+  );
+  const reducedMotion = useRef(false);
+
+  useEffect(() => {
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  useEffect(() => {
+    if (isActive) {
+      if (reducedMotion.current) {
+        setPhase("visible");
+        return;
+      }
+      // Delay entrance so outgoing panel can fade first
+      setPhase("entering");
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setPhase("visible"));
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      // Immediate hide (outgoing panel fades via CSS)
+      const timer = setTimeout(() => setPhase("hidden"), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isActive]);
+
+  if (phase === "hidden" && !isActive) return null;
+
+  const skip = reducedMotion.current;
 
   return (
     <div
       role="tabpanel"
       id={`panel-${id}`}
       aria-labelledby={`tab-${id}`}
-      hidden={!isActive}
+      hidden={phase === "hidden"}
       tabIndex={0}
-      className={cn("focus:outline-none", isActive && "animate-[fadeIn_150ms_ease]", className)}
+      className={cn("focus:outline-none", className)}
+      style={
+        skip
+          ? undefined
+          : {
+              opacity: phase === "visible" ? 1 : 0,
+              transform: phase === "visible" ? "translateY(0)" : "translateY(8px)",
+              transition:
+                phase === "entering" || phase === "visible"
+                  ? "opacity 200ms ease-out, transform 200ms ease-out"
+                  : "opacity 150ms ease-in",
+              willChange: phase !== "visible" ? "opacity, transform" : undefined,
+            }
+      }
       {...props}
     >
-      {isActive ? children : null}
+      {children}
     </div>
   );
 }
