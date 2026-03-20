@@ -224,6 +224,13 @@ Two components handle numeric animation — choose based on the use case:
 - **Skeleton → content pattern**: When data loads asynchronously in a widget, always transition from skeleton to content with a fade+slide, not a hard swap.
 - Use the existing `shimmer` CSS class for skeleton placeholders.
 
+### Scroll Progress
+- **Any page with significant scroll depth** (wizards, long forms, detail pages with 3+ sections): Add `<ScrollProgressBar />` from `src/components/ui/ScrollProgressBar.tsx` as the first child inside the page wrapper.
+- 3px amber/gold gradient bar fixed at the top of the viewport, fills left→right based on scroll position.
+- Self-hides when the page isn't scrollable. `pointer-events: none`, `z-index: 9999`.
+- Already applied to: athlete log-session, athlete onboarding, coach questionnaire builder, coach questionnaire responses, coach athlete detail, athlete throws profile.
+- **Pattern**: `<div className="..."><ScrollProgressBar />{/* page content */}</div>`.
+
 ### Animation
 - Page transitions: handled by `src/app/(dashboard)/coach/template.tsx` (framer-motion).
 - Entry animations: `animate-fade-slide-in`, `animate-spring-up`.
