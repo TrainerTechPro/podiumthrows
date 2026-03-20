@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { NumberFlow } from "./ui/NumberFlow";
 
 interface RPESliderProps {
   value: number | "";
@@ -64,11 +65,11 @@ export function RPESlider({ value, onChange, label = "RPE", showDescriptions = t
         <div className="flex items-center justify-between">
           <label className="label mb-0">{label} (1-10)</label>
           <span
-            className={`text-2xl font-bold tabular-nums transition-colors ${
+            className={`text-2xl font-bold transition-colors ${
               value ? getRPETextColor(currentValue) : "text-gray-300 dark:text-gray-600"
             }`}
           >
-            {value || "–"}
+            {value ? <NumberFlow value={currentValue} decimals={1} /> : "–"}
           </span>
         </div>
       )}

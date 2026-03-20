@@ -176,11 +176,33 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 - Buttons: use `btn-primary`, `btn-secondary`, `btn-danger` component classes.
 - Links: `text-primary-500 hover:underline` for inline text links.
 
+### Numeric Display
+Two components handle numeric animation — choose based on the use case:
+
+**`<AnimatedNumber>`** — One-shot count-up on viewport entry (dashboard stats, hero numbers):
+- Any prominent numeric value (stat cards, hero numbers, scores, distances, ratios, percentages) MUST use `<AnimatedNumber>` from `src/components/ui/AnimatedNumber.tsx`.
+- **`StatCard` and `MiniStat` auto-animate**: Pass `value` as a `number` (not string) and animation happens automatically. Use `decimals` prop for decimal places (0 for counts, 1 for scores, 2 for distances/ratios).
+- **`ScoreIndicator` auto-animates**: All variants (circle, pill, badge) already include animated count-up.
+- **Hook for custom cases**: `useAnimatedCounter(target, duration, { decimals, unit })` from `src/lib/hooks/useAnimatedCounter.ts`. Returns `{ value, formatted, ref }` — attach `ref` to the container element.
+- **Inline stats**: For numbers embedded in text (e.g. "12 athletes on roster"), wrap the number: `<AnimatedNumber value={count} />`.
+- **Duration**: 1200ms default for stats, 700ms for ScoreIndicator.
+- **Never render raw numbers** for dashboard/detail page hero stats — always use `AnimatedNumber` or a component that wraps it.
+
+**`<NumberFlow>`** — Smooth transitions between value changes (sliders, timers, live totals):
+- Use for any number that changes while the user is interacting: RPE slider display, rest timer countdown, running throw counts, live weight totals.
+- Props: `value`, `decimals`, `suffix` ("kg", "m"), `prefix` ("$"), `duration` (default 400ms).
+- Applies `font-variant-numeric: tabular-nums` automatically so digits don't shift layout.
+- Also accepts `style` and `className` for inline styling (e.g. color from RPE).
+- **Never render a raw number** that changes in response to user interaction — wrap it in `<NumberFlow>`.
+
+**Both respect** `prefers-reduced-motion: reduce` — animation is skipped automatically.
+
 ### Animation
 - Page transitions: handled by `src/app/(dashboard)/coach/template.tsx` (framer-motion).
 - Entry animations: `animate-fade-slide-in`, `animate-spring-up`.
+- Animated numbers: `<AnimatedNumber>` for all visible numeric stats (see Numeric Display above).
 - Danger pulse: `animate-danger-pulse` on critical badges.
-- **Always respect** `prefers-reduced-motion` — covered by globals.css media query.
+- **Always respect** `prefers-reduced-motion` — covered by globals.css media query and `useAnimatedCounter` hook.
 
 ---
 

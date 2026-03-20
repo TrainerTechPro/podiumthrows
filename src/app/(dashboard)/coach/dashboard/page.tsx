@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { cn } from "@/lib/utils";
-import { Avatar, Badge } from "@/components";
+import { Avatar, Badge, AnimatedNumber } from "@/components";
 import {
   Heart,
   Award,
@@ -67,13 +67,13 @@ function StatBar({ stats }: { stats: CoachStats }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted border-b border-[var(--card-border)] pb-6">
       <span>
-        <span className="font-semibold tabular-nums text-[var(--foreground)]">{stats.totalAthletes}</span>
+        <span className="font-semibold tabular-nums text-[var(--foreground)]"><AnimatedNumber value={stats.totalAthletes} /></span>
         {" athletes on roster"}
       </span>
 
       {stats.sessionsToday > 0 && (
         <span>
-          <span className="font-semibold tabular-nums text-[var(--foreground)]">{stats.sessionsToday}</span>
+          <span className="font-semibold tabular-nums text-[var(--foreground)]"><AnimatedNumber value={stats.sessionsToday} /></span>
           {" session"}{stats.sessionsToday !== 1 ? "s" : ""}{" today"}
         </span>
       )}
@@ -88,7 +88,7 @@ function StatBar({ stats }: { stats: CoachStats }) {
               ? "text-amber-500"
               : "text-[var(--foreground)]"
           )}>
-            {stats.complianceRate}%
+            <AnimatedNumber value={stats.complianceRate} />%
           </span>
           {" 30-day compliance"}
         </span>
@@ -96,7 +96,7 @@ function StatBar({ stats }: { stats: CoachStats }) {
 
       {stats.throwsThisWeek > 0 && (
         <span>
-          <span className="font-semibold tabular-nums text-[var(--foreground)]">{stats.throwsThisWeek}</span>
+          <span className="font-semibold tabular-nums text-[var(--foreground)]"><AnimatedNumber value={stats.throwsThisWeek} /></span>
           {" throws this week"}
         </span>
       )}

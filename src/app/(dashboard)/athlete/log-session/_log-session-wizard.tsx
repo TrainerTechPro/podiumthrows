@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/throws";
+import { NumberFlow } from "@/components/ui/NumberFlow";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -897,8 +898,8 @@ export function LogSessionWizard({
             {isEditing ? "Session Updated!" : "Session logged"}
           </h2>
           <p className="text-sm text-muted mt-1">
-            {eventName} &middot; {drills.filter((d) => d.drillType).length} drill{drills.filter((d) => d.drillType).length !== 1 ? "s" : ""} &middot; {totalThrows} throws
-            {sessionBest && <> &middot; best: {sessionBest.toFixed(2)}m</>}
+            {eventName} &middot; {drills.filter((d) => d.drillType).length} drill{drills.filter((d) => d.drillType).length !== 1 ? "s" : ""} &middot; <NumberFlow value={totalThrows} /> throws
+            {sessionBest && <> &middot; best: <NumberFlow value={sessionBest} decimals={2} suffix="m" /></>}
           </p>
         </div>
 
@@ -915,7 +916,7 @@ export function LogSessionWizard({
                 </svg>
                 <div className="text-left">
                   <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                    New PR! {pr.distance.toFixed(2)}m
+                    New PR! <NumberFlow value={pr.distance} decimals={2} suffix="m" />
                   </p>
                   <p className="text-xs text-amber-600 dark:text-amber-400">
                     {pr.implement}

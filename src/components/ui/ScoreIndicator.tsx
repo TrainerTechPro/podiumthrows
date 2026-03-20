@@ -1,6 +1,7 @@
 import { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import { SCORE_FILL } from "@/lib/design-tokens";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 export type ScoreVariant = "circle" | "pill" | "badge";
 
@@ -102,7 +103,7 @@ function CircleScore({ score, size = "md", context }: Pick<ScoreIndicatorProps, 
           />
         </svg>
         <span className={cn("absolute tabular-nums leading-none", text, colors.text)}>
-          {score.toFixed(score % 1 === 0 ? 0 : 1)}
+          <AnimatedNumber value={score} decimals={score % 1 === 0 ? 0 : 1} duration={700} />
         </span>
       </div>
       {context && <p className="text-xs text-muted text-center">{context}</p>}
@@ -127,7 +128,7 @@ function PillScore({ score, size = "md", showLabel = false }: Pick<ScoreIndicato
       colors.text,
       colors.bg
     )}>
-      <span>{score.toFixed(score % 1 === 0 ? 0 : 1)}</span>
+      <AnimatedNumber value={score} decimals={score % 1 === 0 ? 0 : 1} duration={700} />
       {showLabel && <span className="font-normal opacity-80">/ 10</span>}
     </span>
   );
@@ -140,7 +141,7 @@ function BadgeScore({ score, context }: Pick<ScoreIndicatorProps, "score" | "con
   return (
     <div className={cn("inline-flex flex-col items-center rounded-xl px-4 py-2.5 ring-1", colors.bg, colors.ring)}>
       <span className={cn("text-2xl font-bold font-heading tabular-nums leading-none", colors.text)}>
-        {score.toFixed(score % 1 === 0 ? 0 : 1)}
+        <AnimatedNumber value={score} decimals={score % 1 === 0 ? 0 : 1} duration={700} />
       </span>
       <span className={cn("text-xs font-medium mt-0.5", colors.text)}>
         {context ?? getScoreLabel(score)}

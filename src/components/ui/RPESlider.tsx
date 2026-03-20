@@ -3,6 +3,7 @@
 import { InputHTMLAttributes, useId } from "react";
 import { cn } from "@/lib/utils";
 import { getRpeHex } from "@/lib/design-tokens";
+import { NumberFlow } from "./NumberFlow";
 
 export interface RPESliderProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "min" | "max" | "value" | "onChange"> {
   value: number;
@@ -53,12 +54,11 @@ export function RPESlider({
       {/* Value bubble */}
       <div className="flex items-end justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span
-            className="text-3xl font-bold font-heading tabular-nums transition-colors duration-200"
+          <NumberFlow
+            value={value}
+            className="text-3xl font-bold font-heading transition-colors duration-200"
             style={{ color }}
-          >
-            {value}
-          </span>
+          />
           <span className="text-base font-medium text-muted leading-none mb-0.5">/ 10</span>
         </div>
         {showDescription && (

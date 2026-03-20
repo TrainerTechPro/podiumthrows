@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatImplementWeight } from "@/lib/throws";
-import { Avatar, Badge, ProgressBar } from "@/components";
+import { Avatar, Badge, ProgressBar, AnimatedNumber } from "@/components";
 import { ArrowLeft } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LineChart, type LineChartDataPoint } from "@/components/charts/LineChart";
@@ -173,7 +173,9 @@ function DecisionHero({
           {/* Readiness */}
           <div className="text-center">
             <p className={cn("text-3xl font-bold font-heading tabular-nums", readinessColor)}>
-              {readinessScore !== null ? readinessScore.toFixed(1) : "—"}
+              {readinessScore !== null ? (
+                <AnimatedNumber value={readinessScore} decimals={1} />
+              ) : "—"}
             </p>
             <p className="text-[11px] text-muted mt-0.5">Readiness</p>
           </div>
@@ -181,7 +183,9 @@ function DecisionHero({
           {/* ACWR */}
           <div className="text-center">
             <p className={cn("text-3xl font-bold font-heading tabular-nums", acwrColor)}>
-              {acwrRatio !== null ? acwrRatio.toFixed(2) : "—"}
+              {acwrRatio !== null ? (
+                <AnimatedNumber value={acwrRatio} decimals={2} />
+              ) : "—"}
             </p>
             <p className="text-[11px] text-muted mt-0.5">{acwrLabel}</p>
           </div>
@@ -237,7 +241,7 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
 
       <div className="flex items-end gap-4">
         <p className={cn("text-4xl font-bold tabular-nums font-heading", ratioColor)}>
-          {ratio.toFixed(2)}
+          <AnimatedNumber value={ratio} decimals={2} />
         </p>
         <div className="pb-1 space-y-0.5">
           <p className="text-xs text-muted">
@@ -539,7 +543,7 @@ function ThrowsTab({ throws }: { throws: ThrowLogItem[] }) {
             <div key={event} className="card px-4 py-3 space-y-0.5">
               <p className="text-xs text-muted">{formatEventName(event)}</p>
               <p className="text-xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                {best.toFixed(2)}m
+                <AnimatedNumber value={best} decimals={2} />m
               </p>
               <p className="text-[11px] text-muted">
                 Best · {count} {count === 1 ? "throw" : "throws"}
@@ -931,15 +935,21 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
     <div className="pt-6 space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {summaryCards.map(({ label, value, color, note }) => (
+        {summaryCards.map(({ label, value, color, note }) => {
+          const numericPart = parseFloat(value);
+          const suffix = value.replace(String(numericPart), "");
+          return (
           <div key={label} className="card px-4 py-3 space-y-0.5">
             <p className="text-xs text-muted">{label}</p>
             <p className={cn("text-2xl font-bold font-heading tabular-nums", color)}>
-              {value}
+              {!isNaN(numericPart) ? (
+                <><AnimatedNumber value={numericPart} decimals={1} />{suffix}</>
+              ) : value}
             </p>
             <p className="text-[11px] text-muted">{note ?? "30-day avg"}</p>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Multi-series chart */}

@@ -14,6 +14,8 @@ export * from "./ui/Card";
 export * from "./ui/ProgressBar";
 export * from "./ui/StatCard";
 export * from "./ui/ScoreIndicator";
+export * from "./ui/AnimatedNumber";
+export * from "./ui/NumberFlow";
 
 /* ─── Overlays ───────────────────────────────────────────────────────────── */
 export * from "./ui/Modal";

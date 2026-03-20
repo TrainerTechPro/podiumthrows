@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { NumberFlow } from "./NumberFlow";
 
 export interface RestTimerProps {
   /** Duration in seconds */
@@ -166,13 +167,14 @@ export function RestTimer({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
             className={cn(
-              "text-2xl font-bold tabular-nums",
+              "text-2xl font-bold",
               done
                 ? "text-emerald-600 dark:text-emerald-400"
                 : "text-[var(--foreground)]"
             )}
           >
-            {timeStr}
+            <NumberFlow value={remaining} duration={300} />
+            <span className="text-base font-medium text-muted ml-0.5">s</span>
           </span>
           {done && (
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">

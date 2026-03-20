@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components";
+import { Badge, AnimatedNumber } from "@/components";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import {
   requireAthleteSession,
@@ -56,9 +56,12 @@ function StatCard({
   color?: string;
   sub?: string;
 }) {
+  const isNumeric = typeof value === "number";
   return (
     <div className="card px-5 py-4">
-      <p className={cn("text-2xl font-bold tabular-nums font-heading", color)}>{value}</p>
+      <p className={cn("text-2xl font-bold tabular-nums font-heading", color)}>
+        {isNumeric ? <AnimatedNumber value={value} /> : value}
+      </p>
       <p className="text-xs text-muted mt-0.5">{label}</p>
       {sub && <p className="text-[11px] text-muted/70 mt-0.5">{sub}</p>}
     </div>

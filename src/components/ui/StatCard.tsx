@@ -1,6 +1,7 @@
 import { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 export type TrendDirection = "up" | "down" | "flat";
 
@@ -20,6 +21,10 @@ export interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
   accent?: "primary" | "success" | "warning" | "danger" | "none";
   /** Additional note below the value */
   note?: string;
+  /** Animate numeric values with count-up effect (default true for numeric values) */
+  animate?: boolean;
+  /** Decimal places for animated numbers (default 0) */
+  decimals?: number;
 }
 
 const accentColors = {
@@ -51,10 +56,13 @@ export function StatCard({
   icon,
   accent = "none",
   note,
+  animate = true,
+  decimals = 0,
   className,
   ...props
 }: StatCardProps) {
   const hasAccent = accent !== "none";
+  const isNumeric = typeof value === "number";
 
   return (
     <div
@@ -77,7 +85,11 @@ export function StatCard({
       {/* Value row */}
       <div className="flex items-end gap-1.5">
         <span className="text-3xl font-bold font-heading text-[var(--foreground)] leading-none tabular-nums">
-          {value}
+          {isNumeric && animate ? (
+            <AnimatedNumber value={value as number} decimals={decimals} />
+          ) : (
+            value
+          )}
         </span>
         {unit && (
           <span className="text-base font-medium text-muted mb-0.5">{unit}</span>
@@ -113,15 +125,23 @@ export interface MiniStatProps {
   label: string;
   value: ReactNode;
   unit?: string;
+  animate?: boolean;
+  decimals?: number;
   className?: string;
 }
 
-export function MiniStat({ label, value, unit, className }: MiniStatProps) {
+export function MiniStat({ label, value, unit, animate = true, decimals = 0, className }: MiniStatProps) {
+  const isNumeric = typeof value === "number";
+
   return (
     <div className={cn("flex flex-col gap-0.5", className)}>
       <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{label}</p>
       <p className="text-lg font-bold font-heading text-[var(--foreground)] tabular-nums leading-tight">
-        {value}
+        {isNumeric && animate ? (
+          <AnimatedNumber value={value as number} decimals={decimals} />
+        ) : (
+          value
+        )}
         {unit && <span className="text-sm font-medium text-muted ml-1">{unit}</span>}
       </p>
     </div>
