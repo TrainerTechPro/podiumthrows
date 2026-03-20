@@ -6,6 +6,7 @@ import {
   getQuestionnaireResponses,
   getQuestionnaireScoreTrends,
 } from "@/lib/data/coach";
+import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { ResponseViewer } from "./_response-viewer";
 import { ResponseTrendChart } from "./_response-charts";
 
@@ -26,6 +27,7 @@ export default async function ResponsesPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <ScrollProgressBar />
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">

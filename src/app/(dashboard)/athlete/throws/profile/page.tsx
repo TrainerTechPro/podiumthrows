@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import {
  EVENTS,
  type ThrowEvent,
@@ -226,6 +227,7 @@ export default function AthleteProfilePage() {
 
  return (
  <div className="animate-spring-up space-y-6">
+ <ScrollProgressBar />
  <div className="flex items-center justify-between">
  <div>
  <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">My Profile</h1>

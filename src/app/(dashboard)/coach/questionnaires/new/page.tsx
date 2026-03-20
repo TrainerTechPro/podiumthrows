@@ -1,4 +1,5 @@
 import { requireCoachSession } from "@/lib/data/coach";
+import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { FormBuilderShell } from "@/components/form-builder";
 
 export default async function NewQuestionnairePage() {
@@ -6,6 +7,7 @@ export default async function NewQuestionnairePage() {
 
   return (
     <div className="space-y-4">
+      <ScrollProgressBar />
       <div className="flex items-center gap-2">
         <a
           href="/coach/questionnaires"

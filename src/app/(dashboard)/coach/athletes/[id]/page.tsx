@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatImplementWeight } from "@/lib/throws";
-import { Avatar, Badge, ProgressBar, AnimatedNumber } from "@/components";
+import { Avatar, Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
 import { ArrowLeft } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LineChart, type LineChartDataPoint } from "@/components/charts/LineChart";
@@ -1193,6 +1193,7 @@ export default async function AthleteProfilePage({
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 lg:pr-28">
+      <ScrollProgressBar />
       {/* Decision Hero */}
       <DecisionHero
         athlete={athlete}

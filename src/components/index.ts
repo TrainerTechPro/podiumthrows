@@ -27,6 +27,7 @@ export * from "./ui/UpgradeModal";
 export * from "./ui/Breadcrumbs";
 export * from "./ui/Tabs";
 export * from "./ui/Sidebar";
+export * from "./ui/ScrollProgressBar";
 
 /* ─── Data ───────────────────────────────────────────────────────────────── */
 export * from "./ui/DataTable";
