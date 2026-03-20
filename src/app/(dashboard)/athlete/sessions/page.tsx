@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components";
+import { Badge, StaggeredList } from "@/components";
 import { requireAthleteSession, getAthleteSessionHistory } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import { SelfLoggedSessions } from "./_self-logged-sessions";
@@ -132,11 +132,11 @@ export default async function AthleteSessionsPage() {
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
             Upcoming
           </h2>
-          <div className="card divide-y divide-[var(--card-border)] overflow-hidden">
+          <StaggeredList className="card divide-y divide-[var(--card-border)] overflow-hidden">
             {upcoming.map((s) => (
               <SessionRow key={s.id} session={s} />
             ))}
-          </div>
+          </StaggeredList>
         </section>
       )}
 
@@ -160,11 +160,11 @@ export default async function AthleteSessionsPage() {
             <p className="text-sm text-muted py-8 text-center">No completed sessions yet.</p>
           </div>
         ) : (
-          <div className="card divide-y divide-[var(--card-border)] overflow-hidden">
+          <StaggeredList className="card divide-y divide-[var(--card-border)] overflow-hidden">
             {past.map((s) => (
               <SessionRow key={s.id} session={s} />
             ))}
-          </div>
+          </StaggeredList>
         )}
       </section>
     </div>

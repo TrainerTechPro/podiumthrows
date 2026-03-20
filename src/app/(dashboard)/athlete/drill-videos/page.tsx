@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/components/toast";
 import DrillVideoUpload from "@/components/drill-video-upload";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { StaggeredList } from "@/components/ui/StaggeredList";
 
 interface DrillVideo {
  id: string;
@@ -189,7 +190,7 @@ export default function AthleteDrillVideosPage() {
  )}
  </div>
  ) : (
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+ <StaggeredList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
  {filteredVideos.map((video) => (
  <div key={video.id} className="card overflow-hidden p-0 flex flex-col">
  {/* Video player */}
@@ -262,7 +263,7 @@ export default function AthleteDrillVideosPage() {
  </div>
  </div>
  ))}
- </div>
+ </StaggeredList>
  )}
 
  {/* Upload Modal */}

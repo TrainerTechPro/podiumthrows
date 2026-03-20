@@ -35,6 +35,7 @@ export * from "./ui/DataTable";
 export * from "./ui/EmptyState";
 export * from "./ui/RestTimer";
 export * from "./ui/SlideToConfirm";
+export * from "./ui/StaggeredList";
 
 /* ─── Layout ─────────────────────────────────────────────────────────────── */
 export * from "./layout/DashboardLayout";

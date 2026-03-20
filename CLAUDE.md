@@ -208,8 +208,9 @@ Two components handle numeric animation — choose based on the use case:
 - Page transitions: handled by `src/app/(dashboard)/coach/template.tsx` (framer-motion).
 - Entry animations: `animate-fade-slide-in`, `animate-spring-up`.
 - Animated numbers: `<AnimatedNumber>` for all visible numeric stats (see Numeric Display above).
+- **Staggered lists**: Wrap any `.map()` grid or list in `<StaggeredList className="grid ...">`. Children fade in + slide up with 50ms stagger on first viewport entry. Props: `staggerDelay` (ms), `duration` (ms), `className`. Works in both Server and Client Components.
 - Danger pulse: `animate-danger-pulse` on critical badges.
-- **Always respect** `prefers-reduced-motion` — covered by globals.css media query and `useAnimatedCounter` hook.
+- **Always respect** `prefers-reduced-motion` — all animation components skip animation automatically.
 
 ---
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition } from "react";
-import { Badge, Button, EmptyState, Modal, ProgressBar, useConfirm } from "@/components";
+import { Badge, Button, EmptyState, Modal, ProgressBar, useConfirm, StaggeredList } from "@/components";
 import { Input } from "@/components/ui/Input";
 import type { GoalItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
@@ -602,7 +602,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
           <h2 className="text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider">
             Active
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {activeGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -612,7 +612,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
                 onAbandon={handleAbandonRequest}
               />
             ))}
-          </div>
+          </StaggeredList>
         </section>
       )}
 
@@ -622,7 +622,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
           <h2 className="text-sm font-semibold text-success-600 dark:text-success-400 uppercase tracking-wider">
             Completed
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {completedGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -632,7 +632,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
                 onAbandon={handleAbandonRequest}
               />
             ))}
-          </div>
+          </StaggeredList>
         </section>
       )}
 
@@ -642,7 +642,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
             Abandoned
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {abandonedGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -652,7 +652,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
                 onAbandon={handleAbandonRequest}
               />
             ))}
-          </div>
+          </StaggeredList>
         </section>
       )}
 

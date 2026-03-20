@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAthleteSession, getAthleteAssignedQuestionnaires } from "@/lib/data/athlete";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { StaggeredList } from "@/components/ui/StaggeredList";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -98,9 +99,11 @@ export default async function AthleteQuestionnairesPage() {
                 </svg>
                 Due Today ({dueToday.length})
               </h2>
-              {dueToday.map((q) => (
-                <PendingCard key={q.assignmentId} q={q} />
-              ))}
+              <StaggeredList className="space-y-3">
+                {dueToday.map((q) => (
+                  <PendingCard key={q.assignmentId} q={q} />
+                ))}
+              </StaggeredList>
             </div>
           )}
 
@@ -110,9 +113,11 @@ export default async function AthleteQuestionnairesPage() {
               <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">
                 Pending ({otherPending.length})
               </h2>
-              {otherPending.map((q) => (
-                <PendingCard key={q.assignmentId} q={q} />
-              ))}
+              <StaggeredList className="space-y-3">
+                {otherPending.map((q) => (
+                  <PendingCard key={q.assignmentId} q={q} />
+                ))}
+              </StaggeredList>
             </div>
           )}
 
@@ -122,6 +127,7 @@ export default async function AthleteQuestionnairesPage() {
               <h2 className="text-sm font-semibold text-muted uppercase tracking-wide">
                 Completed ({completed.length})
               </h2>
+              <StaggeredList className="space-y-3">
               {completed.map((q) => (
                 <div
                   key={q.assignmentId}
@@ -146,6 +152,7 @@ export default async function AthleteQuestionnairesPage() {
                   </div>
                 </div>
               ))}
+              </StaggeredList>
             </div>
           )}
         </>

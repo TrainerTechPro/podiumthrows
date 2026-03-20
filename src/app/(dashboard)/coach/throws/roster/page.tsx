@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import UserAvatar from "@/components/user-avatar";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { StaggeredList } from "@/components/ui/StaggeredList";
 import { type EventCode, type GenderCode } from "@/lib/throws/constants";
 import {
  DEFICIT_TYPE_LABELS,
@@ -853,7 +854,7 @@ export default function ThrowsRosterPage() {
 
  {/* ── Enrolled Athletes List ────────────────────────────── */}
  {podiumAthletes.length > 0 && (
- <div className="space-y-3">
+ <StaggeredList className="space-y-3">
  {podiumAthletes.map((profile) => {
  const eventCode = profile.event as EventCode;
  const eventColor = EVENT_COLORS[eventCode] ?? "#d4a843";
@@ -974,7 +975,7 @@ export default function ThrowsRosterPage() {
  </div>
  );
  })}
- </div>
+ </StaggeredList>
  )}
  </div>
  )}
@@ -997,7 +998,8 @@ export default function ThrowsRosterPage() {
  </Link>
  </div>
  ) : (
- allAthletes.map((athlete) => {
+ <StaggeredList className="space-y-3">
+ {allAthletes.map((athlete) => {
  const enrolled = enrolledAthleteIds.has(athlete.id);
  const profileRow = podiumAthletes.find(
  (p) => p.athleteId === athlete.id
@@ -1107,7 +1109,8 @@ export default function ThrowsRosterPage() {
  </div>
  </div>
  );
- })
+ })}
+ </StaggeredList>
  )}
  </div>
  )}

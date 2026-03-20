@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { StaggeredList } from "@/components/ui/StaggeredList";
 import { EVENTS, TRAINING_PHASES, parseEvents, type ThrowEvent, type TrainingPhase } from "@/lib/throws/constants";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -191,7 +192,7 @@ export default function ThrowsLibraryPage() {
  </p>
  </div>
  ) : (
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+ <StaggeredList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
  {filtered.map((session) => {
  const sessionEvents = parseEvents(session.event);
  const throwBlocks = session.blocks.filter((b) => b.blockType === "THROWING");
@@ -252,7 +253,7 @@ export default function ThrowsLibraryPage() {
  </div>
  );
  })}
- </div>
+ </StaggeredList>
  )}
 
  {/* Assign Modal */}

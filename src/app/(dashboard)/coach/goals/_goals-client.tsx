@@ -9,6 +9,7 @@ import {
   ProgressBar,
   Avatar,
   useConfirm,
+  StaggeredList,
 } from "@/components";
 import { Input } from "@/components/ui/Input";
 import type { TeamGoalItem, AthletePickerItem } from "@/lib/data/coach";
@@ -711,7 +712,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
               Active
             </h2>
           )}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {activeGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -720,7 +721,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
                 onAbandon={handleAbandonRequest}
               />
             ))}
-          </div>
+          </StaggeredList>
         </section>
       )}
 
@@ -730,7 +731,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
           <h2 className="text-sm font-semibold text-success-600 dark:text-success-400 uppercase tracking-wider">
             Completed
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {completedGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -739,7 +740,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
                 onAbandon={handleAbandonRequest}
               />
             ))}
-          </div>
+          </StaggeredList>
         </section>
       )}
 
@@ -749,7 +750,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
             Abandoned
           </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {abandonedGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -758,7 +759,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
                 onAbandon={handleAbandonRequest}
               />
             ))}
-          </div>
+          </StaggeredList>
         </section>
       )}
 

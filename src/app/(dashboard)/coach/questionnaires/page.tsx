@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireCoachSession, getCoachQuestionnaires } from "@/lib/data/coach";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { StaggeredList } from "@/components/ui/StaggeredList";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -96,7 +97,7 @@ export default async function QuestionnairesPage() {
           }
         />
       ) : (
-        <div className="space-y-3">
+        <StaggeredList className="space-y-3">
           {questionnaires.map((q) => {
             const itemCount = q.blockCount > 0 ? q.blockCount : q.questionCount;
             const itemLabel = q.blockCount > 0 ? "blocks" : "questions";
@@ -158,7 +159,7 @@ export default async function QuestionnairesPage() {
               </Link>
             );
           })}
-        </div>
+        </StaggeredList>
       )}
     </div>
   );
