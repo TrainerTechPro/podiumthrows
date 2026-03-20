@@ -21,22 +21,13 @@ import {
   type ReadinessTrendPoint,
   type GoalItem,
 } from "@/lib/data/coach";
+import { SectionNav } from "./_section-nav";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
 type AthleteProfile = NonNullable<Awaited<ReturnType<typeof getAthleteFull>>>;
 
-const TABS = [
-  { id: "overview",   label: "Overview"  },
-  { id: "training",   label: "Training"  },
-  { id: "throws",     label: "Throws"    },
-  { id: "readiness",  label: "Readiness" },
-  { id: "wellness",   label: "Wellness"  },
-  { id: "goals",      label: "Goals"     },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
-const VALID_TABS: TabId[] = ["overview", "training", "throws", "readiness", "wellness", "goals"];
+const VALID_SECTIONS = ["overview", "training", "throws", "readiness", "wellness", "goals"];
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -75,40 +66,6 @@ const BONDARCHUK_COLORS: Record<string, "warning" | "primary" | "success" | "dan
   STRENGTH_SPEED: "success",
   STRENGTH: "danger",
 };
-
-/* ─── Tab Navigation ─────────────────────────────────────────────────────── */
-
-function TabNav({
-  athleteId,
-  activeTab,
-}: {
-  athleteId: string;
-  activeTab: TabId;
-}) {
-  return (
-    <div className="border-b border-[var(--card-border)] overflow-x-auto scrollbar-none -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
-      <nav className="flex gap-0 min-w-max">
-        {TABS.map((tab) => {
-          const isActive = tab.id === activeTab;
-          return (
-            <Link
-              key={tab.id}
-              href={`/coach/athletes/${athleteId}?tab=${tab.id}`}
-              className={cn(
-                "px-4 py-2.5 text-sm font-medium border-b-2 transition-colors shrink-0 whitespace-nowrap",
-                isActive
-                  ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                  : "border-transparent text-muted hover:text-[var(--foreground)] hover:border-surface-300 dark:hover:border-surface-600"
-              )}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
-  );
-}
 
 /* ─── Athlete Header ─────────────────────────────────────────────────────── */
 
@@ -164,6 +121,92 @@ function AthleteHeader({
               🔥 {athlete.currentStreak}d streak
             </Badge>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Decision Hero ─────────────────────────────────────────────────────── */
+
+function DecisionHero({
+  athlete,
+  bondarchukType,
+  acwr,
+  latestReadiness,
+}: {
+  athlete: AthleteProfile;
+  bondarchukType: string | null;
+  acwr: AthleteACWR;
+  latestReadiness: ReadinessTrendPoint | null;
+}) {
+  const readinessScore = latestReadiness?.overallScore ?? null;
+  const readinessColor =
+    readinessScore === null ? "text-surface-400"
+    : readinessScore >= 8 ? "text-emerald-500"
+    : readinessScore >= 5 ? "text-amber-500"
+    : "text-red-500";
+
+  const acwrRatio = acwr?.ratio ?? null;
+  const acwrLabel = acwr
+    ? acwr.ratio > 1.5 ? "High Risk"
+      : acwr.ratio > 1.3 ? "Elevated"
+      : acwr.ratio < 0.8 ? "Under-trained"
+      : "Optimal"
+    : "ACWR";
+  const acwrColor =
+    acwr === null ? "text-surface-400"
+    : acwr.ratio > 1.5 ? "text-red-500"
+    : acwr.ratio > 1.3 || acwr.ratio < 0.8 ? "text-amber-500"
+    : "text-emerald-500";
+
+  const injuryStatus = latestReadiness?.injuryStatus ?? null;
+  const isInjured = injuryStatus === "ACTIVE";
+
+  return (
+    <div className="rounded-2xl bg-surface-50 dark:bg-surface-800/50 p-5 sm:p-6">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+        <div className="flex-1 min-w-0">
+          <AthleteHeader athlete={athlete} bondarchukType={bondarchukType} />
+        </div>
+
+        <div className="flex items-center gap-5 sm:gap-8 shrink-0">
+          {/* Readiness */}
+          <div className="text-center">
+            <p className={cn("text-3xl font-bold font-heading tabular-nums", readinessColor)}>
+              {readinessScore !== null ? readinessScore.toFixed(1) : "—"}
+            </p>
+            <p className="text-[11px] text-muted mt-0.5">Readiness</p>
+          </div>
+
+          {/* ACWR */}
+          <div className="text-center">
+            <p className={cn("text-3xl font-bold font-heading tabular-nums", acwrColor)}>
+              {acwrRatio !== null ? acwrRatio.toFixed(2) : "—"}
+            </p>
+            <p className="text-[11px] text-muted mt-0.5">{acwrLabel}</p>
+          </div>
+
+          {/* Injury */}
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <span className={cn(
+                "w-2 h-2 rounded-full shrink-0",
+                isInjured ? "bg-red-500" : "bg-emerald-500"
+              )} />
+              <p className={cn(
+                "text-sm font-bold",
+                isInjured
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-emerald-600 dark:text-emerald-400"
+              )}>
+                {isInjured ? "Injured" : "Healthy"}
+              </p>
+            </div>
+            <p className="text-[11px] text-muted mt-0.5">
+              {isInjured ? "Active injury" : "No injuries"}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -335,7 +378,7 @@ function OverviewTab({
               Recent Personal Bests
             </h3>
             <Link
-              href={`/coach/athletes/${athlete.id}?tab=throws`}
+              href="#throws"
               className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
             >
               View all throws →
@@ -1110,32 +1153,19 @@ export default async function AthleteProfilePage({
   const athlete = await getAthleteFull(params.id, coach.id);
   if (!athlete) notFound();
 
-  const rawTab = searchParams.tab ?? "overview";
-  const tab: TabId = VALID_TABS.includes(rawTab as TabId)
-    ? (rawTab as TabId)
-    : "overview";
+  // Backwards compat: ?tab=X → scroll to #X via SectionNav
+  const initialSection = VALID_SECTIONS.includes(searchParams.tab ?? "")
+    ? searchParams.tab!
+    : undefined;
 
-  // Always fetch latest assessment (needed for header badge)
-  // Fetch tab-specific data in parallel, using allSettled for resilience
+  // Fetch ALL section data in parallel (single scrollable page — everything visible)
   const results = await Promise.allSettled([
-    tab === "overview"
-      ? getAthleteACWR(athlete.id)
-      : Promise.resolve(null as AthleteACWR),
-    tab === "overview"
-      ? getAthleteRecentPRs(athlete.id, 5)
-      : Promise.resolve([] as ThrowLogItem[]),
-    tab === "training"
-      ? getAthleteSessions(athlete.id, 25)
-      : Promise.resolve([] as SessionItem[]),
-    tab === "throws"
-      ? getAthleteThrowHistory(athlete.id)
-      : Promise.resolve([] as ThrowLogItem[]),
-    tab === "readiness" || tab === "wellness"
-      ? getAthleteReadinessTrend(athlete.id, 30)
-      : Promise.resolve([] as ReadinessTrendPoint[]),
-    tab === "goals"
-      ? getAthleteGoals(athlete.id)
-      : Promise.resolve([] as GoalItem[]),
+    getAthleteACWR(athlete.id),
+    getAthleteRecentPRs(athlete.id, 5),
+    getAthleteSessions(athlete.id, 25),
+    getAthleteThrowHistory(athlete.id),
+    getAthleteReadinessTrend(athlete.id, 30),
+    getAthleteGoals(athlete.id),
     getLatestBondarchukAssessment(athlete.id),
   ]);
 
@@ -1150,17 +1180,51 @@ export default async function AthleteProfilePage({
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
 
-  return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <AthleteHeader athlete={athlete} bondarchukType={bondarchukType} />
-      <TabNav athleteId={athlete.id} activeTab={tab} />
+  const latestReadiness = trend.length > 0 ? trend[trend.length - 1] : null;
 
-      {tab === "overview"  && <OverviewTab  athlete={athlete} acwr={acwr} recentPRs={recentPRs} bondarchukType={bondarchukType} lastAssessmentDate={lastAssessmentDate} />}
-      {tab === "training"  && <TrainingTab  sessions={sessions} />}
-      {tab === "throws"    && <ThrowsTab    throws={throws} />}
-      {tab === "readiness" && <ReadinessTab trend={trend} />}
-      {tab === "wellness"  && <WellnessTab  trend={trend} />}
-      {tab === "goals"     && <GoalsTab     goals={goals} />}
+  return (
+    <div className="max-w-6xl mx-auto space-y-6 lg:pr-28">
+      {/* Decision Hero */}
+      <DecisionHero
+        athlete={athlete}
+        bondarchukType={bondarchukType}
+        acwr={acwr}
+        latestReadiness={latestReadiness}
+      />
+
+      {/* Floating section nav (desktop only) */}
+      <SectionNav initialSection={initialSection} />
+
+      {/* All sections — single scrollable page */}
+      <section id="overview" className="scroll-mt-20">
+        <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Overview</h2>
+        <OverviewTab athlete={athlete} acwr={acwr} recentPRs={recentPRs} bondarchukType={bondarchukType} lastAssessmentDate={lastAssessmentDate} />
+      </section>
+
+      <section id="training" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+        <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Training</h2>
+        <TrainingTab sessions={sessions} />
+      </section>
+
+      <section id="throws" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+        <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Throws</h2>
+        <ThrowsTab throws={throws} />
+      </section>
+
+      <section id="readiness" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+        <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Readiness</h2>
+        <ReadinessTab trend={trend} />
+      </section>
+
+      <section id="wellness" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+        <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Wellness</h2>
+        <WellnessTab trend={trend} />
+      </section>
+
+      <section id="goals" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+        <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Goals</h2>
+        <GoalsTab goals={goals} />
+      </section>
     </div>
   );
 }
