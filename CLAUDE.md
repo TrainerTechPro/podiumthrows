@@ -173,7 +173,8 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 ### Hover & Interaction States
 - Card hover: `hover:bg-surface-50 dark:hover:bg-surface-800/50` for row items.
 - Interactive cards: `card-interactive` class (CSS handles everything).
-- Buttons: use `btn-primary`, `btn-secondary`, `btn-danger` component classes.
+- **`<Button>` component** has spring bounce on click: primary/danger variants get `0.95→1.03→1.0` spring (300ms), secondary/outline/ghost get a subtle `0.97→1.0` settle (200ms). This is automatic — no extra props needed.
+- **CSS utility buttons** (`btn-primary`, `btn-secondary`, `btn-danger`): keep existing `active:scale-[0.97]`. Prefer the `<Button>` component for new code to get the spring bounce.
 - Links: `text-primary-500 hover:underline` for inline text links.
 
 ### Confirmations
