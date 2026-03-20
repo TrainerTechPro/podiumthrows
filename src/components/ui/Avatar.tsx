@@ -53,7 +53,7 @@ export function Avatar({ name, src, size = "md", status = "none", className, ...
         className={cn(
           "rounded-full overflow-hidden select-none",
           container,
-          !src && cn("flex items-center justify-center font-semibold", colorClasses)
+          src ? "relative" : cn("flex items-center justify-center font-semibold", colorClasses)
         )}
         aria-label={name}
       >
