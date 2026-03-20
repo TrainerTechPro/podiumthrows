@@ -1,6 +1,16 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Avatar, Badge } from "@/components";
+import {
+  Heart,
+  Award,
+  CheckCircle,
+  Activity,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  CheckCircle2,
+} from "lucide-react";
 import prisma from "@/lib/prisma";
 import {
   requireCoachSession,
@@ -94,27 +104,20 @@ function ActivityIcon({ type }: { type: ActivityItem["type"] }) {
   if (type === "check_in") {
     return (
       <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
+        <Heart className="w-4 h-4 text-blue-500" strokeWidth={1.75} aria-hidden="true" />
       </div>
     );
   }
   if (type === "personal_best") {
     return (
       <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="8" r="7" />
-          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-        </svg>
+        <Award className="w-4 h-4 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
       </div>
     );
   }
   return (
     <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
+      <CheckCircle className="w-4 h-4 text-emerald-500" strokeWidth={1.75} aria-hidden="true" />
     </div>
   );
 }
@@ -169,9 +172,7 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
     return (
       <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
         <div className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-400 dark:text-surface-500" aria-hidden="true">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
+          <Activity className="w-5 h-5 text-surface-400 dark:text-surface-500" strokeWidth={1.75} aria-hidden="true" />
         </div>
         <div className="max-w-[200px]">
           <p className="text-sm font-semibold text-[var(--foreground)]">No recent activity</p>
@@ -266,27 +267,13 @@ function FlaggedCard({ athlete }: { athlete: FlaggedAthlete }) {
 
 function TrendIcon({ trend }: { trend: TeamReadinessEntry["trend"] }) {
   if (trend === "up") {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-        <polyline points="17 6 23 6 23 12" />
-      </svg>
-    );
+    return <TrendingUp size={14} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />;
   }
   if (trend === "down") {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-        <polyline points="17 18 23 18 23 12" />
-      </svg>
-    );
+    return <TrendingDown size={14} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />;
   }
   if (trend === "stable") {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
-    );
+    return <Minus size={14} strokeWidth={1.75} className="text-surface-400" aria-hidden="true" />;
   }
   return null;
 }
@@ -479,10 +466,7 @@ export default async function CoachDashboardPage() {
         </section>
       ) : (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
+          <CheckCircle2 size={16} strokeWidth={1.75} className="text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
           <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
             All athletes healthy
           </span>
