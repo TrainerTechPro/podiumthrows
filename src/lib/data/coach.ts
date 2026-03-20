@@ -32,11 +32,12 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, number> = {
 
 export type ActivityItem = {
   id: string;
-  type: "check_in" | "personal_best" | "session_complete";
+  type: "check_in" | "personal_best" | "session_complete" | "streak_break" | "injury_change" | "missed_session" | "sports_form" | "autoregulation";
   athleteId: string;
   athleteName: string;
   athleteAvatar: string | null;
   date: string; // ISO string
+  detail?: string;
   // check_in
   score?: number;
   // personal_best
@@ -157,6 +158,8 @@ export type CoachStats = {
   sessionsToday: number;
   injured: number;
   complianceRate: number | null;
+  throwsThisWeek: number;
+  prsThisWeek: number;
 };
 
 export type OnboardingStep = {
@@ -218,39 +221,105 @@ export async function getCoachStats(coachId: string): Promise<CoachStats> {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const [totalAthletes, athletesWithReadiness, sessionsToday, sessionStats] =
-    await Promise.all([
-      prisma.athleteProfile.count({ where: { coachId } }),
+  function daysAgoISO(n: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0, 10);
+  }
 
-      prisma.athleteProfile.findMany({
-        where: { coachId },
-        select: {
-          readinessCheckIns: {
-            orderBy: { date: "desc" },
-            take: 1,
-            select: { overallScore: true, injuryStatus: true },
+  // Get roster IDs for queries that need them
+  const rosterAthletes = await prisma.athleteProfile.findMany({
+    where: { coachId },
+    select: { id: true },
+  });
+  const rosterIds = rosterAthletes.map((a) => a.id);
+
+  const [
+    totalAthletes,
+    athletesWithReadiness,
+    sessionsToday,
+    sessionStats,
+    throwsBlockLogCount,
+    practiceAttemptCount,
+    drillLogThrowsAgg,
+    throwsPRCount,
+    drillPRCount,
+  ] = await Promise.all([
+    prisma.athleteProfile.count({ where: { coachId } }),
+
+    prisma.athleteProfile.findMany({
+      where: { coachId },
+      select: {
+        readinessCheckIns: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: { overallScore: true, injuryStatus: true },
+        },
+      },
+    }),
+
+    prisma.trainingSession.count({
+      where: {
+        athlete: { coachId },
+        scheduledDate: { gte: startOfToday, lt: endOfToday },
+        status: { not: "SKIPPED" },
+      },
+    }),
+
+    prisma.trainingSession.groupBy({
+      by: ["status"],
+      where: {
+        athlete: { coachId },
+        scheduledDate: { gte: thirtyDaysAgo, lt: startOfToday },
+      },
+      _count: { _all: true },
+    }),
+
+    // throwsThisWeek source 1: ThrowsBlockLog
+    prisma.throwsBlockLog.count({
+      where: {
+        createdAt: { gte: sevenDaysAgo },
+        assignment: { athlete: { coachId } },
+      },
+    }),
+
+    // throwsThisWeek source 2: PracticeAttempt
+    rosterIds.length > 0
+      ? prisma.practiceAttempt.count({
+          where: {
+            createdAt: { gte: sevenDaysAgo },
+            athleteId: { in: rosterIds },
           },
-        },
-      }),
+        })
+      : Promise.resolve(0),
 
-      prisma.trainingSession.count({
-        where: {
-          athlete: { coachId },
-          scheduledDate: { gte: startOfToday, lt: endOfToday },
-          status: { not: "SKIPPED" },
-        },
-      }),
+    // throwsThisWeek source 3: AthleteDrillLog (sum throwCount)
+    prisma.athleteDrillLog.aggregate({
+      _sum: { throwCount: true },
+      where: {
+        createdAt: { gte: sevenDaysAgo },
+        session: { athlete: { coachId } },
+      },
+    }),
 
-      prisma.trainingSession.groupBy({
-        by: ["status"],
-        where: {
-          athlete: { coachId },
-          scheduledDate: { gte: thirtyDaysAgo, lt: startOfToday },
-        },
-        _count: { _all: true },
-      }),
-    ]);
+    // prsThisWeek source 1: ThrowsPR (achievedAt is String YYYY-MM-DD)
+    prisma.throwsPR.count({
+      where: {
+        achievedAt: { gte: daysAgoISO(7) },
+        athlete: { coachId },
+      },
+    }),
+
+    // prsThisWeek source 2: ThrowsDrillPR (achievedAt is String YYYY-MM-DD)
+    prisma.throwsDrillPR.count({
+      where: {
+        achievedAt: { gte: daysAgoISO(7) },
+        athlete: { coachId },
+      },
+    }),
+  ]);
 
   const lowReadiness = athletesWithReadiness.filter(
     (a) => (a.readinessCheckIns[0]?.overallScore ?? 10) < 5
@@ -268,16 +337,32 @@ export async function getCoachStats(coachId: string): Promise<CoachStats> {
   const complianceRate =
     totalPast > 0 ? Math.round((completed / totalPast) * 100) : null;
 
-  return { totalAthletes, lowReadiness, sessionsToday, injured, complianceRate };
+  const throwsThisWeek =
+    throwsBlockLogCount +
+    practiceAttemptCount +
+    (drillLogThrowsAgg._sum.throwCount ?? 0);
+
+  const prsThisWeek = throwsPRCount + drillPRCount;
+
+  return {
+    totalAthletes,
+    lowReadiness,
+    sessionsToday,
+    injured,
+    complianceRate,
+    throwsThisWeek,
+    prsThisWeek,
+  };
 }
 
 export async function getRecentActivity(
   coachId: string,
-  limit = 20
+  limit = 20,
+  notableOnly = false
 ): Promise<ActivityItem[]> {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
-  const [checkIns, prs, completedSessions] = await Promise.all([
+  const [checkIns, prs, completedSessions, ...notableResults] = await Promise.all([
     prisma.readinessCheckIn.findMany({
       where: { athlete: { coachId }, date: { gte: cutoff } },
       include: {
@@ -296,22 +381,48 @@ export async function getRecentActivity(
       take: limit,
     }),
 
-    prisma.trainingSession.findMany({
-      where: {
-        athlete: { coachId },
-        status: "COMPLETED",
-        completedDate: { gte: cutoff },
-      },
-      include: {
-        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-      },
-      orderBy: { completedDate: "desc" },
-      take: limit,
-    }),
+    // When notableOnly, skip routine session completions entirely
+    notableOnly
+      ? Promise.resolve([])
+      : prisma.trainingSession.findMany({
+          where: {
+            athlete: { coachId },
+            status: "COMPLETED",
+            completedDate: { gte: cutoff },
+          },
+          include: {
+            athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          },
+          orderBy: { completedDate: "desc" },
+          take: limit,
+        }),
+
+    // Missed sessions (only when notableOnly)
+    ...(notableOnly
+      ? [
+          prisma.throwsAssignment.findMany({
+            where: {
+              athlete: { coachId },
+              status: "SKIPPED",
+              updatedAt: { gte: cutoff },
+            },
+            include: {
+              athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+            },
+            orderBy: { updatedAt: "desc" },
+            take: limit,
+          }),
+        ]
+      : []),
   ]);
 
+  // Filter check-ins: when notableOnly, only include low scores
+  const filteredCheckIns = notableOnly
+    ? checkIns.filter((c) => c.overallScore < 4.0)
+    : checkIns;
+
   const items: ActivityItem[] = [
-    ...checkIns.map((c) => ({
+    ...filteredCheckIns.map((c) => ({
       id: c.id,
       type: "check_in" as const,
       athleteId: c.athlete.id,
@@ -319,6 +430,9 @@ export async function getRecentActivity(
       athleteAvatar: c.athlete.avatarUrl,
       date: c.date.toISOString(),
       score: c.overallScore,
+      ...(notableOnly && c.overallScore < 4.0
+        ? { detail: `Low readiness: ${c.overallScore.toFixed(1)}` }
+        : {}),
     })),
     ...prs.map((p) => ({
       id: p.id,
@@ -340,6 +454,27 @@ export async function getRecentActivity(
       rpe: s.rpe,
     })),
   ];
+
+  // Add missed sessions when notableOnly
+  if (notableOnly && notableResults[0]) {
+    const missedSessions = notableResults[0] as Array<{
+      id: string;
+      updatedAt: Date;
+      skipReason: string | null;
+      athlete: { id: string; firstName: string; lastName: string; avatarUrl: string | null };
+    }>;
+    for (const m of missedSessions) {
+      items.push({
+        id: m.id,
+        type: "missed_session" as const,
+        athleteId: m.athlete.id,
+        athleteName: `${m.athlete.firstName} ${m.athlete.lastName}`,
+        athleteAvatar: m.athlete.avatarUrl,
+        date: m.updatedAt.toISOString(),
+        detail: m.skipReason ?? "Session skipped",
+      });
+    }
+  }
 
   return items
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

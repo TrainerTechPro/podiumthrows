@@ -384,7 +384,7 @@ export default async function CoachDashboardPage() {
 
   const stats: CoachStats = statsResult.status === "fulfilled"
     ? statsResult.value
-    : { totalAthletes: 0, lowReadiness: 0, sessionsToday: 0, injured: 0, complianceRate: null };
+    : { totalAthletes: 0, lowReadiness: 0, sessionsToday: 0, injured: 0, complianceRate: null, throwsThisWeek: 0, prsThisWeek: 0 };
   const activity = activityResult.status === "fulfilled" ? activityResult.value : [];
   const flagged = flaggedResult.status === "fulfilled" ? flaggedResult.value : [];
   const readiness = readinessResult.status === "fulfilled" ? readinessResult.value : [];
