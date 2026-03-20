@@ -140,6 +140,50 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 
 ---
 
+## Design System Rules (ALWAYS Follow)
+
+### Cards
+- **Navigable cards** (href, onClick that navigates, or opens detail view): ALWAYS add `card-interactive` CSS class. This gives hover scale (1.02), touch press-down (0.97) with spring-back, cursor pointer, and respects `prefers-reduced-motion`.
+- **Static display cards** (data, settings, forms): Use plain `card` CSS class. No interactive effects.
+- **Pattern**: `<Link className="card card-interactive p-4 ...">` or `<Card href="..." interactive>`.
+- **Never** add manual `hover:shadow-md transition-shadow` to card Links — use `card-interactive` instead.
+
+### Icons
+- **Always Lucide React** — no inline SVGs, no other icon libraries.
+- `strokeWidth={1.75}` on all icons (consistent weight).
+- Add `aria-hidden="true"` to decorative icons.
+
+### Color Tokens
+- Use CSS custom properties: `var(--card-bg)`, `var(--card-border)`, `var(--foreground)`, `var(--muted)`.
+- Semantic colors via Tailwind: `text-muted`, `bg-surface-100`, `text-primary-500`, etc.
+- Status colors: success (emerald), warning (amber), danger (red), info (blue).
+- **Never hardcode hex colors** — use the theme tokens.
+
+### Typography
+- Headings: `font-heading` (Outfit) — applied automatically to h1-h6.
+- Body: `font-body` (DM Sans) — applied automatically to body.
+- Section headers: `text-sm font-semibold text-muted uppercase tracking-wider`.
+- Numeric values: `tabular-nums` for alignment.
+
+### Responsive
+- Mobile-first approach with `sm:`, `md:`, `lg:` breakpoints.
+- Tables on desktop → stacked cards on mobile.
+- Horizontal scroll with `overflow-x-auto custom-scrollbar` for card rows.
+
+### Hover & Interaction States
+- Card hover: `hover:bg-surface-50 dark:hover:bg-surface-800/50` for row items.
+- Interactive cards: `card-interactive` class (CSS handles everything).
+- Buttons: use `btn-primary`, `btn-secondary`, `btn-danger` component classes.
+- Links: `text-primary-500 hover:underline` for inline text links.
+
+### Animation
+- Page transitions: handled by `src/app/(dashboard)/coach/template.tsx` (framer-motion).
+- Entry animations: `animate-fade-slide-in`, `animate-spring-up`.
+- Danger pulse: `animate-danger-pulse` on critical badges.
+- **Always respect** `prefers-reduced-motion` — covered by globals.css media query.
+
+---
+
 ## Known Issues (Fix When Encountered)
 
 1. **Missing back buttons** on quizzes, forms, and multi-step wizards
