@@ -1,4 +1,6 @@
-import { HTMLAttributes, ReactNode } from "react";
+"use client";
+
+import { HTMLAttributes, ReactNode, useCallback, useRef } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +9,8 @@ import { cn } from "@/lib/utils";
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /** When true: cursor-pointer, hover shadow lift */
   clickable?: boolean;
+  /** When true: hover scale + shadow lift (desktop), press-down spring (mobile) */
+  interactive?: boolean;
   /** If provided, wraps the card in a Next.js Link */
   href?: string;
   padding?: "none" | "sm" | "md" | "lg";
@@ -21,25 +25,46 @@ const paddingMap = {
 
 export function Card({
   clickable = false,
+  interactive = false,
   href,
   padding = "md",
   className,
   children,
   ...props
 }: CardProps) {
+  const isClickable = clickable || interactive || !!href;
+
   const base = cn(
     "card",
     paddingMap[padding],
-    (clickable || href) &&
-      "cursor-pointer transition-shadow duration-200 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+    isClickable && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+    isClickable && !interactive && "transition-shadow duration-200 hover:shadow-card-hover",
+    interactive && "card-interactive",
     className
   );
 
   if (href) {
-    return (
+    return interactive ? (
+      <InteractiveWrapper className={base} href={href}>
+        {children}
+      </InteractiveWrapper>
+    ) : (
       <Link href={href} className={base}>
         {children}
       </Link>
+    );
+  }
+
+  if (interactive) {
+    return (
+      <InteractiveWrapper
+        className={base}
+        role={clickable ? "button" : undefined}
+        tabIndex={clickable ? 0 : undefined}
+        {...props}
+      >
+        {children}
+      </InteractiveWrapper>
     );
   }
 
@@ -58,6 +83,62 @@ export function Card({
             }
           : undefined
       }
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ─── Interactive Wrapper (touch + hover states) ─────────────────────────── */
+
+function InteractiveWrapper({
+  href,
+  className,
+  children,
+  ...props
+}: { href?: string } & HTMLAttributes<HTMLElement>) {
+  const ref = useRef<HTMLElement>(null);
+
+  const onTouchStart = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transition = "transform 100ms ease-out, box-shadow 100ms ease-out";
+    el.style.transform = "scale(0.97)";
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transition = "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease-out";
+    el.style.transform = "";
+  }, []);
+
+  const touchProps = {
+    onTouchStart,
+    onTouchEnd,
+    onTouchCancel: onTouchEnd,
+  };
+
+  if (href) {
+    return (
+      <Link
+        ref={ref as React.Ref<HTMLAnchorElement>}
+        href={href}
+        className={className}
+        {...touchProps}
+        {...props}
+      >
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      ref={ref as React.RefObject<HTMLDivElement>}
+      className={className}
+      {...touchProps}
       {...props}
     >
       {children}

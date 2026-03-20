@@ -163,7 +163,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Link
             href="/coach/athletes?tab=invitations"
-            className="card p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
+            className="card card-interactive p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden="true">
@@ -189,7 +189,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
 
           <Link
             href="/coach/throws"
-            className="card p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
+            className="card card-interactive p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden="true">
@@ -215,7 +215,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
 
           <Link
             href="/coach/dashboard"
-            className="card p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
+            className="card card-interactive p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden="true">

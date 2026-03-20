@@ -384,7 +384,7 @@ export function ThrowsView({
    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
     <Link
      href="/coach/throws/practice"
-     className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group"
+     className="card card-interactive !p-4 flex items-center gap-3 group"
     >
      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
       <svg
@@ -408,7 +408,7 @@ export function ThrowsView({
     </Link>
     <Link
      href="/coach/throws/invite"
-     className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group"
+     className="card card-interactive !p-4 flex items-center gap-3 group"
     >
      <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
       <svg
@@ -432,7 +432,7 @@ export function ThrowsView({
     </Link>
     <Link
      href="/coach/athlete-preview"
-     className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group"
+     className="card card-interactive !p-4 flex items-center gap-3 group"
     >
      <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
       <svg
@@ -456,7 +456,7 @@ export function ThrowsView({
     </Link>
     <Link
      href="/coach/throws/program-builder"
-     className="card !p-4 flex items-center gap-3 hover:shadow-md transition-shadow group"
+     className="card card-interactive !p-4 flex items-center gap-3 group"
     >
      <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
       <svg

@@ -258,7 +258,7 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
  return (
  <Link
  href={`/coach/throws/practice/${session.id}`}
- className="card !p-4 flex items-center gap-4 hover:shadow-md transition-shadow group"
+ className="card card-interactive !p-4 flex items-center gap-4 group"
  >
  {/* Status indicator */}
  <div

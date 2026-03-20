@@ -48,6 +48,25 @@
     @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
   }
 
+  .card-interactive {
+    will-change: transform;
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  }
+  .card-interactive:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  }
+  .card-interactive:active {
+    transform: scale(0.98);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card-interactive,
+    .card-interactive:hover,
+    .card-interactive:active {
+      transform: none !important;
+    }
+  }
+
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg
       bg-primary-500 text-white font-medium text-sm min-h-[44px]

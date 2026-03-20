@@ -130,7 +130,7 @@ export default function ThrowFlowHistoryPage() {
  <Link
  key={a.id}
  href={`/coach/throws/analyze/${a.id}`}
- className="card !p-4 flex items-center gap-4 hover:shadow-md transition-shadow group"
+ className="card card-interactive !p-4 flex items-center gap-4 group"
  >
  {/* Score circle */}
  <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center">
