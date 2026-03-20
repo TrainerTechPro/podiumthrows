@@ -246,6 +246,24 @@
   background: var(--muted);
 }
 
+/* ─── Progress Bar Shimmer ──────────────────────────────────────────────── */
+.progress-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: progressShimmer 800ms ease-out forwards;
+}
+@keyframes progressShimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+
 /* ─── Reduced Motion ────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -1,4 +1,6 @@
-import { HTMLAttributes } from "react";
+"use client";
+
+import { HTMLAttributes, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type ProgressVariant = "primary" | "success" | "warning" | "danger" | "info";
@@ -14,7 +16,7 @@ export interface ProgressBarProps extends HTMLAttributes<HTMLDivElement> {
   /** Display above the bar */
   title?: string;
   size?: "sm" | "md" | "lg";
-  /** Animate fill on mount */
+  /** Animate fill on mount (default true). Set false for instant render. */
   animate?: boolean;
 }
 
@@ -58,6 +60,56 @@ export function ProgressBar({
   const clamped = Math.max(0, Math.min(100, value));
   const displayLabel = label ?? `${Math.round(clamped)}%`;
 
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [rendered, setRendered] = useState(!animate);
+  const [shimmer, setShimmer] = useState(false);
+  const hasEntered = useRef(!animate);
+  const reducedMotion = useRef(false);
+
+  useEffect(() => {
+    reducedMotion.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (!animate || reducedMotion.current) {
+      setRendered(true);
+      return;
+    }
+
+    const el = trackRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasEntered.current) {
+          hasEntered.current = true;
+          // Start from 0, then animate to target
+          setRendered(true);
+          setShimmer(true);
+          // Remove shimmer after animation completes
+          setTimeout(() => setShimmer(false), 900);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [animate]);
+
+  // After first entrance, value changes animate with 300ms
+  const isPostEntrance = hasEntered.current && rendered;
+  const skip = reducedMotion.current || !animate;
+
+  const fillWidth = rendered ? clamped : 0;
+
+  const transitionStyle = skip
+    ? undefined
+    : isPostEntrance && !shimmer
+      ? "width 300ms ease-out"
+      : "width 800ms ease-out";
+
   return (
     <div className={cn("w-full", className)} {...props}>
       {(title || showLabel) && (
@@ -74,6 +126,7 @@ export function ProgressBar({
       )}
 
       <div
+        ref={trackRef}
         className={cn("w-full rounded-full overflow-hidden", trackHeight[size], trackColors[variant])}
         role="progressbar"
         aria-valuenow={clamped}
@@ -83,11 +136,14 @@ export function ProgressBar({
       >
         <div
           className={cn(
-            "h-full rounded-full",
+            "h-full rounded-full relative",
             fillColors[variant],
-            animate && "transition-[width] duration-700 ease-out"
+            shimmer && "progress-shimmer"
           )}
-          style={{ width: `${clamped}%` }}
+          style={{
+            width: `${fillWidth}%`,
+            transition: transitionStyle,
+          }}
         />
       </div>
     </div>
