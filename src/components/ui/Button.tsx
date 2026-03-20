@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, ButtonHTMLAttributes, ReactNode } from "react";
+import { forwardRef, useRef, useCallback, ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export type ButtonVariant = "primary" | "secondary" | "outline" | "danger" | "ghost";
@@ -53,6 +53,9 @@ const sizes: Record<ButtonSize, string> = {
   lg: "text-base py-3 px-5 rounded-xl gap-2 min-h-[44px]",
 };
 
+/** Variants that get the full spring bounce */
+const SPRING_VARIANTS = new Set<ButtonVariant>(["primary", "danger"]);
+
 const Spinner = () => (
   <svg
     className="animate-spin h-3.5 w-3.5 shrink-0"
@@ -77,29 +80,63 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       children,
       disabled,
+      onClick,
       ...props
     },
     ref
-  ) => (
-    <button
-      ref={ref}
-      disabled={disabled || loading}
-      className={cn(
-        "inline-flex items-center justify-center font-medium select-none",
-        "transition-all duration-150 active:scale-[0.97]",
-        "focus:outline-none focus:ring-2 focus:ring-offset-2",
-        "focus:ring-offset-[var(--background)]",
-        "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
-        variants[variant],
-        sizes[size],
-        className
-      )}
-      {...props}
-    >
-      {loading ? <Spinner /> : leftIcon}
-      {children}
-      {!loading && rightIcon}
-    </button>
-  )
+  ) => {
+    const innerRef = useRef<HTMLButtonElement | null>(null);
+
+    const handleClick = useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        const el = innerRef.current;
+        if (el && !disabled && !loading) {
+          const isSpring = SPRING_VARIANTS.has(variant);
+          const cls = isSpring ? "btn-bounce-spring" : "btn-bounce-subtle";
+
+          // Remove first to allow re-trigger
+          el.classList.remove(cls);
+          // Force reflow
+          void el.offsetWidth;
+          el.classList.add(cls);
+
+          const onEnd = () => {
+            el.classList.remove(cls);
+            el.removeEventListener("animationend", onEnd);
+          };
+          el.addEventListener("animationend", onEnd);
+        }
+        onClick?.(e);
+      },
+      [variant, disabled, loading, onClick]
+    );
+
+    return (
+      <button
+        ref={(node) => {
+          innerRef.current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) ref.current = node;
+        }}
+        disabled={disabled || loading}
+        onClick={handleClick}
+        className={cn(
+          "inline-flex items-center justify-center font-medium select-none",
+          "transition-[background-color,box-shadow,color] duration-150",
+          "focus:outline-none focus:ring-2 focus:ring-offset-2",
+          "focus:ring-offset-[var(--background)]",
+          "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
+          variants[variant],
+          sizes[size],
+          className
+        )}
+        {...props}
+      >
+        {loading ? <Spinner /> : leftIcon}
+        {children}
+        {!loading && rightIcon}
+      </button>
+    );
+  }
 );
 Button.displayName = "Button";
