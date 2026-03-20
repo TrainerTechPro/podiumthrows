@@ -97,17 +97,17 @@ export default function PracticeSessionsPage() {
  {/* Header */}
  <div className="flex items-start justify-between gap-3 flex-wrap">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
  Practice Sessions
  </h1>
- <p className="text-sm text-[var(--color-text-2)] mt-0.5">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
  Live attempt logging for Podium Throws athletes
  </p>
  </div>
  <div className="flex items-center gap-2">
  <Link
  href="/coach/throws"
- className="text-sm text-[var(--color-text-2)] hover:text-[var(--color-text)] font-medium"
+ className="text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] font-medium"
  >
  Dashboard
  </Link>
@@ -127,12 +127,12 @@ export default function PracticeSessionsPage() {
  {showForm && (
  <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="font-semibold text-[var(--color-text)] text-sm">
+ <h3 className="font-semibold text-[var(--foreground)] text-sm">
  New Practice Session
  </h3>
  <button
  onClick={() => setShowForm(false)}
- className="p-1 text-[var(--color-text-3)] hover:text-[var(--color-text-2)] rounded-lg"
+ className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -141,7 +141,7 @@ export default function PracticeSessionsPage() {
  </div>
  <form onSubmit={handleCreate} className="space-y-3">
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
  Session name
  </label>
  <input
@@ -149,19 +149,19 @@ export default function PracticeSessionsPage() {
  value={formName}
  onChange={(e) => setFormName(e.target.value)}
  required
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  placeholder="e.g. Monday Morning Practice"
  />
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
- Notes <span className="font-normal text-[var(--color-text-3)]">(optional)</span>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+ Notes <span className="font-normal text-muted">(optional)</span>
  </label>
  <textarea
  value={formNotes}
  onChange={(e) => setFormNotes(e.target.value)}
  rows={2}
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
  placeholder="Focus areas, weather, venue…"
  />
  </div>
@@ -209,10 +209,10 @@ export default function PracticeSessionsPage() {
  </svg>
  </div>
  <div>
- <p className="font-semibold text-[var(--color-text)] text-sm">
+ <p className="font-semibold text-[var(--foreground)] text-sm">
  No practice sessions yet
  </p>
- <p className="text-xs text-[var(--color-text-3)] mt-1 max-w-xs mx-auto">
+ <p className="text-xs text-muted mt-1 max-w-xs mx-auto">
  Start a live session to log attempts, distances, drill types, and coaching notes in real time.
  </p>
  </div>
@@ -228,7 +228,7 @@ export default function PracticeSessionsPage() {
  {/* Active sessions */}
  {activeSessions.length > 0 && (
  <div className="space-y-3">
- <h2 className="text-sm font-semibold text-[var(--color-text-2)] flex items-center gap-2">
+ <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 flex items-center gap-2">
  <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
  Active
  </h2>
@@ -241,7 +241,7 @@ export default function PracticeSessionsPage() {
  {/* Closed sessions */}
  {closedSessions.length > 0 && (
  <div className="space-y-3">
- <h2 className="text-sm font-semibold text-[var(--color-text-2)]">
+ <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300">
  Past Sessions
  </h2>
  {closedSessions.map((session) => (
@@ -265,7 +265,7 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
  isActive
  ? "bg-emerald-100 dark:bg-emerald-900/30"
- : "bg-[var(--color-bg-subtle)]"
+ : "bg-[var(--muted-bg)]"
  }`}
  >
  {isActive ? (
@@ -273,7 +273,7 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
  </svg>
  ) : (
- <svg className="w-5 h-5 text-[var(--color-text-3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
  </svg>
  )}
@@ -282,7 +282,7 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
  {/* Info */}
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2 flex-wrap">
- <p className="font-semibold text-[var(--color-text)] text-sm truncate">
+ <p className="font-semibold text-[var(--foreground)] text-sm truncate">
  {session.name}
  </p>
  {isActive && (
@@ -293,16 +293,16 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
  )}
  </div>
  <div className="flex items-center gap-3 mt-0.5">
- <p className="text-xs text-[var(--color-text-2)]">
+ <p className="text-xs text-surface-700 dark:text-surface-300">
  {formatDate(session.date)}
  </p>
- <p className="text-xs text-[var(--color-text-3)]">
+ <p className="text-xs text-muted">
  {session._count.attempts} attempt{session._count.attempts !== 1 ? "s" : ""}
  </p>
  </div>
  </div>
 
- <svg className="w-4 h-4 text-[var(--color-border-strong)] group-hover:text-[var(--color-gold)] flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-4 h-4 text-[var(--color-border-strong)] group-hover:text-primary-500 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
  </svg>
  </Link>

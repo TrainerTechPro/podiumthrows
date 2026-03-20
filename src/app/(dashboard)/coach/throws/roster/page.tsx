@@ -410,17 +410,17 @@ export default function ThrowsRosterPage() {
  {/* ── Page Header ──────────────────────────────────────────── */}
  <div className="flex items-start justify-between gap-3 flex-wrap">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
  Throws Roster
  </h1>
- <p className="text-sm text-[var(--color-text-2)] mt-0.5">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
  Manage Podium Throws enrollments and view deficit profiles
  </p>
  </div>
  <div className="flex items-center gap-2">
  <Link
  href="/coach/throws"
- className="text-sm text-[var(--color-text-2)] hover:text-[var(--color-text)] font-medium"
+ className="text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] font-medium"
  >
  Dashboard
  </Link>
@@ -441,7 +441,7 @@ export default function ThrowsRosterPage() {
  <select
  value={selectedTeamId}
  onChange={(e) => handleTeamChange(e.target.value)}
- className="w-full sm:w-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full sm:w-auto rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  >
  <option value="">All Athletes</option>
  {teams.map((t) => (
@@ -456,10 +456,10 @@ export default function ThrowsRosterPage() {
  {/* ── Stats Strip ──────────────────────────────────────────── */}
  <div className="space-y-3">
  <div className="card !p-3 text-center">
- <p className="text-2xl font-bold text-[var(--color-text)]">
+ <p className="text-2xl font-bold text-[var(--foreground)]">
  {podiumAthletes.length}
  </p>
- <p className="text-xs text-[var(--color-text-2)] mt-0.5">
+ <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
  Athletes Enrolled
  </p>
  </div>
@@ -472,7 +472,7 @@ export default function ThrowsRosterPage() {
  >
  {eventCounts[code] ?? 0}
  </p>
- <p className="text-xs text-[var(--color-text-2)] mt-0.5">
+ <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
  {EVENT_LABELS[code]}
  </p>
  </div>
@@ -484,48 +484,48 @@ export default function ThrowsRosterPage() {
  {showAddForm && (
  <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="font-semibold text-[var(--color-text)] text-sm">
+ <h3 className="font-semibold text-[var(--foreground)] text-sm">
  Add Athlete to Roster
  </h3>
  <button
  onClick={() => setShowAddForm(false)}
- className="p-1 text-[var(--color-text-3)] hover:text-[var(--color-text-2)] rounded-lg"
+ className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
  </svg>
  </button>
  </div>
- <p className="text-xs text-[var(--color-text-3)]">
+ <p className="text-xs text-muted">
  Create a placeholder profile. The athlete can claim it later via an invite link.
  </p>
  <form onSubmit={handleAddAthlete} className="space-y-3">
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">First Name</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">First Name</label>
  <input
  type="text"
  value={newFirstName}
  onChange={(e) => setNewFirstName(e.target.value)}
  required
  placeholder="Marcus"
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  />
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Last Name</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Last Name</label>
  <input
  type="text"
  value={newLastName}
  onChange={(e) => setNewLastName(e.target.value)}
  required
  placeholder="Petrov"
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  />
  </div>
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Events</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Events</label>
  <div className="flex flex-wrap gap-2">
  {(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const).map((ev) => (
  <button
@@ -534,8 +534,8 @@ export default function ThrowsRosterPage() {
  onClick={() => toggleNewEvent(ev)}
  className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
  newEvents.includes(ev)
- ? "bg-[rgba(212,168,67,0.15)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-3)] hover:text-[var(--color-text-2)]"
+ ? "bg-[rgba(212,168,67,0.15)] text-primary-600 dark:text-primary-300"
+ : "bg-[var(--muted-bg)] text-muted hover:text-surface-700 dark:hover:text-surface-300"
  }`}
  >
  {ev === "SHOT_PUT" ? "Shot Put" : ev === "DISCUS" ? "Discus" : ev === "HAMMER" ? "Hammer" : "Javelin"}
@@ -570,7 +570,7 @@ export default function ThrowsRosterPage() {
  )}
 
  {/* ── Tabs ─────────────────────────────────────────────────── */}
- <div className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-xl p-1 w-fit">
+ <div className="flex items-center gap-1 bg-[var(--muted-bg)] rounded-xl p-1 w-fit">
  {(
  [
  { id: "podium", label: "Podium Throws" },
@@ -582,13 +582,13 @@ export default function ThrowsRosterPage() {
  onClick={() => setActiveTab(tab.id)}
  className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
  activeTab === tab.id
- ? "bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm"
- : "text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+ ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
+ : "text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
  }`}
  >
  {tab.label}
  {tab.id === "podium" && podiumAthletes.length > 0 && (
- <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgba(212,168,67,0.12)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] text-[10px] font-bold">
+ <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgba(212,168,67,0.12)] text-primary-600 dark:text-primary-300 text-[10px] font-bold">
  {podiumAthletes.length}
  </span>
  )}
@@ -610,7 +610,7 @@ export default function ThrowsRosterPage() {
 
  {/* Enroll button */}
  <div className="flex items-center justify-between">
- <p className="text-sm text-[var(--color-text-2)]">
+ <p className="text-sm text-surface-700 dark:text-surface-300">
  {podiumAthletes.length === 0
  ? "No athletes enrolled yet"
  : `${podiumAthletes.length} athlete${podiumAthletes.length !== 1 ? "s" : ""} in Podium Throws`}
@@ -645,12 +645,12 @@ export default function ThrowsRosterPage() {
  {enrollOpen && (
  <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="font-semibold text-[var(--color-text)] text-sm">
+ <h3 className="font-semibold text-[var(--foreground)] text-sm">
  Enroll Athlete in Podium Throws
  </h3>
  <button
  onClick={() => setEnrollOpen(false)}
- className="p-1 text-[var(--color-text-3)] hover:text-[var(--color-text-2)] rounded-lg"
+ className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
  >
  <svg
  className="w-4 h-4"
@@ -671,14 +671,14 @@ export default function ThrowsRosterPage() {
  <form onSubmit={handleEnroll} className="space-y-3">
  {/* Athlete selector */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
  Athlete
  </label>
  <select
  value={enrollForm.athleteId}
  onChange={(e) => handleEnrollAthleteChange(e.target.value)}
  required
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  >
  <option value="">Select athlete…</option>
  {unenrolledAthletes.map((a) => (
@@ -696,7 +696,7 @@ export default function ThrowsRosterPage() {
 
  {/* Events (multi-toggle) */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
  Events
  </label>
  <div className="flex flex-wrap gap-2">
@@ -707,8 +707,8 @@ export default function ThrowsRosterPage() {
  onClick={() => toggleEnrollEvent(code)}
  className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
  enrollForm.events.includes(code)
- ? "bg-[rgba(212,168,67,0.15)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-3)] hover:text-[var(--color-text-2)]"
+ ? "bg-[rgba(212,168,67,0.15)] text-primary-600 dark:text-primary-300"
+ : "bg-[var(--muted-bg)] text-muted hover:text-surface-700 dark:hover:text-surface-300"
  }`}
  >
  {EVENT_LABELS[code]}
@@ -719,7 +719,7 @@ export default function ThrowsRosterPage() {
 
  {/* Gender */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
  Gender
  </label>
  <select
@@ -731,7 +731,7 @@ export default function ThrowsRosterPage() {
  }))
  }
  required
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  >
  <option value="">Select…</option>
  <option value="M">Male</option>
@@ -742,11 +742,11 @@ export default function ThrowsRosterPage() {
  {/* Competition PB (optional) */}
  <div>
  <div className="flex items-center justify-between mb-1">
- <label className="block text-xs font-medium text-[var(--color-text-2)]">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300">
  Competition PB{" "}
- <span className="text-[var(--color-text-3)] font-normal">(optional)</span>
+ <span className="text-muted font-normal">(optional)</span>
  </label>
- <div className="flex rounded-lg overflow-hidden border border-[var(--color-border)]">
+ <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
  {(["meters", "feet"] as const).map((unit) => (
  <button key={unit} type="button" onClick={() => setEnrollDistUnit(unit)}
  className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
@@ -768,7 +768,7 @@ export default function ThrowsRosterPage() {
  competitionPb: e.target.value,
  }))
  }
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  />
  </div>
 
@@ -810,7 +810,7 @@ export default function ThrowsRosterPage() {
  <div className="card text-center py-12 space-y-3">
  <div className="w-12 h-12 rounded-2xl bg-[rgba(212,168,67,0.08)] flex items-center justify-center mx-auto">
  <svg
- className="w-6 h-6 text-[var(--color-gold)]"
+ className="w-6 h-6 text-primary-500"
  fill="none"
  stroke="currentColor"
  viewBox="0 0 24 24"
@@ -824,10 +824,10 @@ export default function ThrowsRosterPage() {
  </svg>
  </div>
  <div>
- <p className="font-semibold text-[var(--color-text)] text-sm">
+ <p className="font-semibold text-[var(--foreground)] text-sm">
  No athletes in Podium Throws
  </p>
- <p className="text-xs text-[var(--color-text-3)] mt-1">
+ <p className="text-xs text-muted mt-1">
  Enroll athletes to unlock Bondarchuk deficit analysis and KPI
  profiling.
  </p>
@@ -880,7 +880,7 @@ export default function ThrowsRosterPage() {
  <div className="flex-1 min-w-0 space-y-0.5">
  {/* Row 1: Name + event badge + PB */}
  <div className="flex items-center gap-2 flex-wrap">
- <p className="font-semibold text-[var(--color-text)] text-sm">
+ <p className="font-semibold text-[var(--foreground)] text-sm">
  {profile.athlete.user.firstName}{" "}
  {profile.athlete.user.lastName}
  </p>
@@ -894,10 +894,10 @@ export default function ThrowsRosterPage() {
  </span>
  </span>
  {profile.competitionPb && (
- <span className="text-[11px] font-mono text-[var(--color-text-2)] flex-shrink-0">
+ <span className="text-[11px] font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
  {profile.competitionPb.toFixed(2)}m
  {profile.currentDistanceBand && (
- <span className="font-sans ml-1 text-[var(--color-text-3)]">
+ <span className="font-sans ml-1 text-muted">
  Band {profile.currentDistanceBand}m
  </span>
  )}
@@ -913,7 +913,7 @@ export default function ThrowsRosterPage() {
  {DEFICIT_TYPE_LABELS[deficitType]}
  </span>
  ) : (
- <span className="text-[10px] text-[var(--color-text-3)] flex-shrink-0">
+ <span className="text-[10px] text-muted flex-shrink-0">
  {profile.competitionPb ? "Awaiting test data" : "No PB entered"}
  </span>
  )}
@@ -932,7 +932,7 @@ export default function ThrowsRosterPage() {
 
  {confirmingRemove ? (
  <div className="flex items-center gap-1.5">
- <span className="text-xs text-[var(--color-text-2)] whitespace-nowrap">
+ <span className="text-xs text-surface-700 dark:text-surface-300 whitespace-nowrap">
  Remove?
  </span>
  <button
@@ -944,7 +944,7 @@ export default function ThrowsRosterPage() {
  </button>
  <button
  onClick={() => setConfirmRemoveId(null)}
- className="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] "
+ className="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] "
  >
  No
  </button>
@@ -952,7 +952,7 @@ export default function ThrowsRosterPage() {
  ) : (
  <button
  onClick={() => setConfirmRemoveId(profile.athleteId)}
- className="text-xs px-2.5 py-1.5 rounded-lg text-[var(--color-text-3)] hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+ className="text-xs px-2.5 py-1.5 rounded-lg text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
  title="Remove from Podium Throws"
  >
  <svg
@@ -986,7 +986,7 @@ export default function ThrowsRosterPage() {
  <div className="space-y-3">
  {allAthletes.length === 0 ? (
  <div className="card text-center py-10">
- <p className="text-sm text-[var(--color-text-3)]">
+ <p className="text-sm text-muted">
  No athletes on your roster yet.
  </p>
  <Link
@@ -1018,7 +1018,7 @@ export default function ThrowsRosterPage() {
  />
  <div className="min-w-0 flex-1">
  <div className="flex items-center gap-2">
- <p className="font-semibold text-[var(--color-text)] text-sm">
+ <p className="font-semibold text-[var(--foreground)] text-sm">
  {athlete.user.firstName} {athlete.user.lastName}
  </p>
  {!isClaimed && rosterMatch && (
@@ -1027,7 +1027,7 @@ export default function ThrowsRosterPage() {
  </span>
  )}
  </div>
- <p className="text-xs text-[var(--color-text-3)]">
+ <p className="text-xs text-muted">
  {isClaimed || !rosterMatch ? athlete.user.email : "Pending invite"}
  </p>
  </div>
@@ -1058,7 +1058,7 @@ export default function ThrowsRosterPage() {
  Podium {EVENT_LABELS[profileRow.event as EventCode]}
  </span>
  ) : (
- <span className="text-[11px] text-[var(--color-text-3)] flex-shrink-0">
+ <span className="text-[11px] text-muted flex-shrink-0">
  Not enrolled
  </span>
  )}

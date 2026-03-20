@@ -290,10 +290,10 @@ export default function AutoregulationSettingsPage() {
           </svg>
           Settings
         </Link>
-        <h1 className="text-2xl font-bold font-heading text-[var(--color-text)]">
+        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
           Autoregulation Settings
         </h1>
-        <p className="text-[var(--color-text-2)] mt-1">
+        <p className="text-surface-700 dark:text-surface-300 mt-1">
           Control how the adaptation engine surfaces suggestions and applies changes.
         </p>
       </div>

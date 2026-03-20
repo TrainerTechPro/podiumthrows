@@ -188,8 +188,8 @@ export default function ThrowFlowAnalyzePage() {
  {/* Header */}
  <div className="flex items-center justify-between">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">ThrowFlow Analysis</h1>
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">ThrowFlow Analysis</h1>
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  AI-powered biomechanical video analysis for throwing events
  </p>
  </div>
@@ -209,7 +209,7 @@ export default function ThrowFlowAnalyzePage() {
  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
  step >= s
  ? "bg-amber-500 text-white"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
  }`}
  >
  {step > s ? (
@@ -223,13 +223,13 @@ export default function ThrowFlowAnalyzePage() {
  {s < 3 && (
  <div
  className={`w-12 h-0.5 ${
- step > s ? "bg-amber-500" : "bg-[var(--color-bg-subtle)]"
+ step > s ? "bg-amber-500" : "bg-[var(--muted-bg)]"
  }`}
  />
  )}
  </div>
  ))}
- <span className="ml-2 text-sm text-[var(--color-text-2)]">
+ <span className="ml-2 text-sm text-surface-700 dark:text-surface-300">
  {step === 1 && "Calibrate"}
  {step === 2 && "Upload Video"}
  {step === 3 && "Analyze"}
@@ -239,7 +239,7 @@ export default function ThrowFlowAnalyzePage() {
  {/* Step 1: Calibration */}
  {step === 1 && (
  <div className="card space-y-6 stagger-spring">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">
  Step 1: Calibration
  </h2>
 
@@ -254,7 +254,7 @@ export default function ThrowFlowAnalyzePage() {
  className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
  event === opt.value
  ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
- : "border-[var(--color-border)] text-[var(--color-text-2)] hover:border-[var(--color-border-strong)]"
+ : "border-[var(--card-border)] text-surface-700 dark:text-surface-300 hover:border-[var(--color-border-strong)]"
  }`}
  >
  {opt.label}
@@ -274,7 +274,7 @@ export default function ThrowFlowAnalyzePage() {
  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
  drillType === opt.value
  ? "bg-amber-500 text-white"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  }`}
  >
  {opt.label}
@@ -294,17 +294,17 @@ export default function ThrowFlowAnalyzePage() {
  className={`p-3 rounded-lg border-2 text-left transition-all ${
  cameraAngle === opt.value
  ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
- : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+ : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
  }`}
  >
  <div className={`text-sm font-medium ${
  cameraAngle === opt.value
  ? "text-amber-700 dark:text-amber-300"
- : "text-[var(--color-text-2)]"
+ : "text-surface-700 dark:text-surface-300"
  }`}>
  {opt.label}
  </div>
- <div className="text-xs text-[var(--color-text-2)] mt-0.5">
+ <div className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
  {opt.description}
  </div>
  </button>
@@ -340,7 +340,7 @@ export default function ThrowFlowAnalyzePage() {
  placeholder="e.g. 185"
  className="input mt-1"
  />
- <p className="text-xs text-[var(--color-text-3)] mt-1">Helps estimate scale</p>
+ <p className="text-xs text-muted mt-1">Helps estimate scale</p>
  </div>
  <div>
  <label className="label">Implement Weight (kg)</label>
@@ -352,7 +352,7 @@ export default function ThrowFlowAnalyzePage() {
  className="input mt-1"
  step="0.01"
  />
- <p className="text-xs text-[var(--color-text-3)] mt-1">For force calculations</p>
+ <p className="text-xs text-muted mt-1">For force calculations</p>
  </div>
  <div>
  <label className="label">Known Distance (m)</label>
@@ -364,7 +364,7 @@ export default function ThrowFlowAnalyzePage() {
  className="input mt-1"
  step="0.01"
  />
- <p className="text-xs text-[var(--color-text-3)] mt-1">Enables efficiency analysis</p>
+ <p className="text-xs text-muted mt-1">Enables efficiency analysis</p>
  </div>
  </div>
 
@@ -379,7 +379,7 @@ export default function ThrowFlowAnalyzePage() {
  {/* Step 2: Video Upload */}
  {step === 2 && (
  <div className="card space-y-6">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">
  Step 2: Upload Video
  </h2>
 
@@ -415,20 +415,20 @@ export default function ThrowFlowAnalyzePage() {
  <svg className="w-10 h-10 mx-auto text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
  </svg>
- <p className="text-sm font-medium text-[var(--color-text)]">{videoFile.name}</p>
- <p className="text-xs text-[var(--color-text-2)]">
+ <p className="text-sm font-medium text-[var(--foreground)]">{videoFile.name}</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300">
  {(videoFile.size / 1024 / 1024).toFixed(1)} MB - Click to change
  </p>
  </div>
  ) : (
  <div className="space-y-2">
- <svg className="w-10 h-10 mx-auto text-[var(--color-text-3)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <svg className="w-10 h-10 mx-auto text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
  </svg>
- <p className="text-sm font-medium text-[var(--color-text-2)]">
+ <p className="text-sm font-medium text-surface-700 dark:text-surface-300">
  Click to upload a video
  </p>
- <p className="text-xs text-[var(--color-text-2)]">
+ <p className="text-xs text-surface-700 dark:text-surface-300">
  MP4, MOV, or WebM up to 100MB
  </p>
  </div>
@@ -471,7 +471,7 @@ export default function ThrowFlowAnalyzePage() {
  {/* Step 3: Processing & Submit */}
  {step === 3 && (
  <div className="card space-y-6">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">
  Step 3: Analysis
  </h2>
 
@@ -479,10 +479,10 @@ export default function ThrowFlowAnalyzePage() {
  {extractedFrames.length === 0 && !error && (
  <div className="space-y-3">
  <div className="flex items-center justify-between text-sm">
- <span className="text-[var(--color-text-2)]">Extracting frames...</span>
- <span className="font-medium text-[var(--color-text)]">{extractionProgress}%</span>
+ <span className="text-surface-700 dark:text-surface-300">Extracting frames...</span>
+ <span className="font-medium text-[var(--foreground)]">{extractionProgress}%</span>
  </div>
- <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2">
+ <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
  <div
  className="bg-amber-500 h-2 rounded-full transition-all duration-300"
  style={{ width: `${extractionProgress}%` }}
@@ -495,7 +495,7 @@ export default function ThrowFlowAnalyzePage() {
  {extractedFrames.length > 0 && (
  <>
  <div>
- <p className="text-sm text-[var(--color-text-2)] mb-3">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mb-3">
  Extracted {extractedFrames.length} frames ({videoDuration.toFixed(1)}s video).
  8 key frames will be sent for AI analysis.
  </p>
@@ -505,7 +505,7 @@ export default function ThrowFlowAnalyzePage() {
  const step = Math.max(1, Math.floor(extractedFrames.length / 16));
  return i % step === 0;
  }).slice(0, 16).map((frame, i) => (
- <div key={i} className="aspect-video rounded overflow-hidden bg-[var(--color-bg-subtle)]">
+ <div key={i} className="aspect-video rounded overflow-hidden bg-[var(--muted-bg)]">
  {/* eslint-disable-next-line @next/next/no-img-element */}
  <img src={frame} alt={`Frame ${i}`} className="w-full h-full object-cover" />
  </div>
@@ -514,30 +514,30 @@ export default function ThrowFlowAnalyzePage() {
  </div>
 
  {/* Calibration summary */}
- <div className="bg-[var(--color-surface-2)]/50 rounded-lg p-4">
- <h3 className="text-sm font-medium text-[var(--color-text-2)] mb-2">Analysis Configuration</h3>
+ <div className="bg-[var(--muted-bg)]/50 rounded-lg p-4">
+ <h3 className="text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">Analysis Configuration</h3>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
  <div>
- <span className="text-[var(--color-text-2)]">Event:</span>
- <p className="font-medium text-[var(--color-text)]">
+ <span className="text-surface-700 dark:text-surface-300">Event:</span>
+ <p className="font-medium text-[var(--foreground)]">
  {EVENT_OPTIONS.find((e) => e.value === event)?.label}
  </p>
  </div>
  <div>
- <span className="text-[var(--color-text-2)]">Drill:</span>
- <p className="font-medium text-[var(--color-text)]">
+ <span className="text-surface-700 dark:text-surface-300">Drill:</span>
+ <p className="font-medium text-[var(--foreground)]">
  {DRILL_OPTIONS[event].find((d) => d.value === drillType)?.label}
  </p>
  </div>
  <div>
- <span className="text-[var(--color-text-2)]">Camera:</span>
- <p className="font-medium text-[var(--color-text)]">
+ <span className="text-surface-700 dark:text-surface-300">Camera:</span>
+ <p className="font-medium text-[var(--foreground)]">
  {CAMERA_OPTIONS.find((c) => c.value === cameraAngle)?.label}
  </p>
  </div>
  <div>
- <span className="text-[var(--color-text-2)]">Frames:</span>
- <p className="font-medium text-[var(--color-text)]">{extractedFrames.length}</p>
+ <span className="text-surface-700 dark:text-surface-300">Frames:</span>
+ <p className="font-medium text-[var(--foreground)]">{extractedFrames.length}</p>
  </div>
  </div>
  </div>

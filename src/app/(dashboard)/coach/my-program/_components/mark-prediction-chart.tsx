@@ -133,7 +133,7 @@ function MarkPredictionChart({
             cx={scaleX(i)}
             cy={scaleY(mark)}
             r={3.5}
-            className="fill-[var(--color-gold)] stroke-white dark:stroke-[var(--card-bg)]"
+            className="fill-primary-500 stroke-white dark:stroke-[var(--card-bg)]"
             strokeWidth={1.5}
           />
         ))}
@@ -152,7 +152,7 @@ function MarkPredictionChart({
       {/* Legend */}
       <div className="flex items-center gap-4 mt-2 text-[11px] text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-gold)]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-primary-500" />
           Actual Marks
         </span>
         {prediction && (

@@ -114,7 +114,7 @@ export default function ExerciseCorrelationTable({
           <thead>
             <tr className="bg-[var(--muted-bg)] text-left">
               <th
-                className="px-3 py-2 font-medium text-muted cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-gold)]"
+                className="px-3 py-2 font-medium text-muted cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary-500"
                 tabIndex={0}
                 role="columnheader"
                 aria-sort={ariaSortValue("exercise")}
@@ -126,7 +126,7 @@ export default function ExerciseCorrelationTable({
               </th>
               <th className="px-3 py-2 font-medium text-muted w-16" role="columnheader">Type</th>
               <th
-                className="px-3 py-2 font-medium text-muted cursor-pointer w-20 text-right focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-gold)]"
+                className="px-3 py-2 font-medium text-muted cursor-pointer w-20 text-right focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary-500"
                 tabIndex={0}
                 role="columnheader"
                 aria-sort={ariaSortValue("correlation")}
@@ -137,7 +137,7 @@ export default function ExerciseCorrelationTable({
                 <svg className={`w-3 h-3 inline ml-0.5 ${sortKey === "correlation" ? "text-[var(--foreground)]" : "text-muted"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={sortKey === "correlation" && sortDir === "asc" ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} /></svg>
               </th>
               <th
-                className="px-3 py-2 font-medium text-muted cursor-pointer w-20 text-right focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-gold)]"
+                className="px-3 py-2 font-medium text-muted cursor-pointer w-20 text-right focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary-500"
                 tabIndex={0}
                 role="columnheader"
                 aria-sort={ariaSortValue("absCorrelation")}
@@ -223,7 +223,7 @@ export default function ExerciseCorrelationTable({
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
               aria-label="Previous page"
-              className="px-2 py-1 rounded bg-[var(--muted-bg)] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)]"
+              className="px-2 py-1 rounded bg-[var(--muted-bg)] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
             >
               Prev
             </button>
@@ -234,7 +234,7 @@ export default function ExerciseCorrelationTable({
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
               aria-label="Next page"
-              className="px-2 py-1 rounded bg-[var(--muted-bg)] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)]"
+              className="px-2 py-1 rounded bg-[var(--muted-bg)] disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
             >
               Next
             </button>

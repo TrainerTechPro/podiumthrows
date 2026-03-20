@@ -155,8 +155,8 @@ export default function ThrowsLibraryPage() {
  <div className="animate-spring-up space-y-6">
  <div className="flex items-center justify-between">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">Session Library</h1>
- <p className="text-sm text-[var(--color-text-2)]">{sessions.length} saved sessions</p>
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Session Library</h1>
+ <p className="text-sm text-surface-700 dark:text-surface-300">{sessions.length} saved sessions</p>
  </div>
  <Link href="/coach/throws/builder" className="btn-primary">New Session</Link>
  </div>
@@ -186,7 +186,7 @@ export default function ThrowsLibraryPage() {
 
  {filtered.length === 0 ? (
  <div className="card text-center py-12">
- <p className="text-[var(--color-text-3)]">
+ <p className="text-muted">
  {sessions.length === 0 ? "No sessions created yet." : "No sessions match your filters."}
  </p>
  </div>
@@ -202,7 +202,7 @@ export default function ThrowsLibraryPage() {
  return (
  <div key={session.id} className="card !p-4 space-y-3 hover:shadow-md transition-shadow">
  <div>
- <h3 className="font-semibold text-[var(--color-text)]">{session.name}</h3>
+ <h3 className="font-semibold text-[var(--foreground)]">{session.name}</h3>
  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
  {sessionEvents.map((ev) => {
  const meta = EVENTS[ev];
@@ -216,7 +216,7 @@ export default function ThrowsLibraryPage() {
  </span>
  );
  })}
- <span className="text-xs text-[var(--color-text-3)]">
+ <span className="text-xs text-muted">
  {session.sessionType.replace(/_/g, " ")}
  </span>
  {session.targetPhase && (
@@ -232,14 +232,14 @@ export default function ThrowsLibraryPage() {
  )}
  </div>
  </div>
- <div className="flex items-center gap-4 text-xs text-[var(--color-text-2)]">
+ <div className="flex items-center gap-4 text-xs text-surface-700 dark:text-surface-300">
  <span>{session.blocks.length} blocks</span>
  {totalThrows > 0 && <span>{totalThrows} throws</span>}
  {session.estimatedDuration && <span>~{session.estimatedDuration} min</span>}
  <span>{session.assignments.length}x assigned</span>
  </div>
  <div className="flex items-center justify-between">
- <span className="text-xs text-[var(--color-text-3)]">
+ <span className="text-xs text-muted">
  Created {new Date(session.createdAt).toLocaleDateString()}
  </span>
  <button
@@ -258,10 +258,10 @@ export default function ThrowsLibraryPage() {
  {/* Assign Modal */}
  {assignSessionId && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setAssignSessionId(null)}>
- <div className="bg-[var(--color-surface)] rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
- <div className="p-5 border-b border-[var(--color-border)]">
-  <h2 className="text-lg font-bold text-[var(--color-text)]">Assign Session</h2>
-  <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <div className="bg-[var(--card-bg)] rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+ <div className="p-5 border-b border-[var(--card-border)]">
+  <h2 className="text-lg font-bold text-[var(--foreground)]">Assign Session</h2>
+  <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
   {sessions.find((s) => s.id === assignSessionId)?.name}
   </p>
  </div>
@@ -269,7 +269,7 @@ export default function ThrowsLibraryPage() {
  <div className="p-5 space-y-4 overflow-y-auto" style={{ maxHeight: "50vh" }}>
   {/* Date picker */}
   <div>
-  <label className="block text-sm font-medium text-[var(--color-text)] mb-1">Date</label>
+  <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Date</label>
   <input
    type="date"
    value={assignDate}
@@ -281,7 +281,7 @@ export default function ThrowsLibraryPage() {
   {/* Athlete list */}
   <div>
   <div className="flex items-center justify-between mb-2">
-   <label className="text-sm font-medium text-[var(--color-text)]">Athletes</label>
+   <label className="text-sm font-medium text-[var(--foreground)]">Athletes</label>
    <button
    onClick={selectAllAthletes}
    className="text-xs text-primary-500 hover:text-primary-600 transition-colors"
@@ -290,7 +290,7 @@ export default function ThrowsLibraryPage() {
    </button>
   </div>
   {athletes.length === 0 ? (
-   <p className="text-sm text-[var(--color-text-3)] text-center py-4">No athletes on roster</p>
+   <p className="text-sm text-muted text-center py-4">No athletes on roster</p>
   ) : (
    <div className="space-y-1">
    {athletes.map((a) => (
@@ -299,7 +299,7 @@ export default function ThrowsLibraryPage() {
     className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
      selectedAthletes.has(a.id)
      ? "bg-primary-500/10"
-     : "hover:bg-[var(--color-bg-subtle)]"
+     : "hover:bg-[var(--muted-bg)]"
     }`}
     >
     <input
@@ -308,7 +308,7 @@ export default function ThrowsLibraryPage() {
      onChange={() => toggleAthlete(a.id)}
      className="w-4 h-4 accent-primary-500 rounded"
     />
-    <span className="text-sm text-[var(--color-text)]">
+    <span className="text-sm text-[var(--foreground)]">
      {a.firstName} {a.lastName}
     </span>
     </label>
@@ -318,7 +318,7 @@ export default function ThrowsLibraryPage() {
   </div>
  </div>
 
- <div className="p-5 border-t border-[var(--color-border)] space-y-3">
+ <div className="p-5 border-t border-[var(--card-border)] space-y-3">
   {assignError && (
   <p className="text-sm text-red-600 dark:text-red-400">{assignError}</p>
   )}
@@ -335,7 +335,7 @@ export default function ThrowsLibraryPage() {
   </button>
   <button
    onClick={() => setAssignSessionId(null)}
-   className="px-4 py-2 rounded-lg text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+   className="px-4 py-2 rounded-lg text-sm text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
   >
    Cancel
   </button>

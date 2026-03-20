@@ -94,7 +94,7 @@ const CLASSIFICATION_COLORS: Record<Classification, string> = {
  CE: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
  SD: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
  SP: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
- GP: "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]",
+ GP: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300",
 };
 
 // ── Component ───────────────────────────────────────────────────────
@@ -305,16 +305,16 @@ export default function ThrowsSessionBuilder() {
  <div className="animate-spring-up">
  <div className="flex items-center justify-between mb-2">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
  Session Builder
  </h1>
- <p className="text-sm text-[var(--color-text-2)]">
+ <p className="text-sm text-surface-700 dark:text-surface-300">
  Build a Bondarchuk-validated throws practice session
  </p>
  </div>
  <div className="flex items-center gap-2">
  {estimatedDuration > 0 && (
- <span className="text-sm text-[var(--color-text-2)]">
+ <span className="text-sm text-surface-700 dark:text-surface-300">
  ~{estimatedDuration} min
  </span>
  )}
@@ -331,7 +331,7 @@ export default function ThrowsSessionBuilder() {
  <div className="flex gap-6 mt-4">
  {/* ── Left: Block toolbar + Phase info ─────────────────────── */}
  <div className="hidden lg:block w-52 flex-shrink-0 space-y-2">
- <p className="text-xs font-semibold text-[var(--color-text-3)] uppercase tracking-wider mb-3">
+ <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">
  Add Block
  </p>
  {BLOCK_TYPES.map((bt) => (
@@ -339,7 +339,7 @@ export default function ThrowsSessionBuilder() {
  key={bt.value}
  type="button"
  onClick={() => addBlock(bt.value)}
- className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--color-text-2)] bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:shadow-sm transition-all"
+ className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-300 bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--color-border-strong)] hover:shadow-sm transition-all"
  >
  <span className="text-lg">{bt.icon}</span>
  {bt.label}
@@ -348,8 +348,8 @@ export default function ThrowsSessionBuilder() {
 
  {/* Phase ratios hint */}
  {phaseRatios && (
- <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
- <p className="text-xs font-semibold text-[var(--color-text-3)] uppercase tracking-wider mb-2">
+ <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
+ <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
  {targetPhase} Ratios
  </p>
  <div className="space-y-1">
@@ -358,13 +358,13 @@ export default function ThrowsSessionBuilder() {
  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${CLASSIFICATION_COLORS[cls]}`}>
  {cls}
  </span>
- <div className="flex-1 h-2 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+ <div className="flex-1 h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
  <div
  className="h-full rounded-full bg-[rgba(212,168,67,0.08)]0"
  style={{ width: `${phaseRatios[cls]}%` }}
  />
  </div>
- <span className="text-[10px] text-[var(--color-text-2)] w-6 text-right">{phaseRatios[cls]}%</span>
+ <span className="text-[10px] text-surface-700 dark:text-surface-300 w-6 text-right">{phaseRatios[cls]}%</span>
  </div>
  ))}
  </div>
@@ -373,24 +373,24 @@ export default function ThrowsSessionBuilder() {
 
  {/* Rest intervals hint */}
  {phaseRest && (
- <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
- <p className="text-xs font-semibold text-[var(--color-text-3)] uppercase tracking-wider mb-2">
+ <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
+ <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
  Rest Intervals
  </p>
  <div className="space-y-1 text-[10px]">
- <div className="flex justify-between text-[var(--color-text-2)]">
+ <div className="flex justify-between text-surface-700 dark:text-surface-300">
  <span>CE throws</span><span>{phaseRest.CE}s</span>
  </div>
- <div className="flex justify-between text-[var(--color-text-2)]">
+ <div className="flex justify-between text-surface-700 dark:text-surface-300">
  <span>SD throws</span><span>{phaseRest.SD}s</span>
  </div>
- <div className="flex justify-between text-[var(--color-text-2)]">
+ <div className="flex justify-between text-surface-700 dark:text-surface-300">
  <span>SP (power)</span><span>{phaseRest.SP_power}s</span>
  </div>
- <div className="flex justify-between text-[var(--color-text-2)]">
+ <div className="flex justify-between text-surface-700 dark:text-surface-300">
  <span>SP (strength)</span><span>{phaseRest.SP_strength}s</span>
  </div>
- <div className="flex justify-between text-[var(--color-text-2)]">
+ <div className="flex justify-between text-surface-700 dark:text-surface-300">
  <span>GP</span><span>{phaseRest.GP}s</span>
  </div>
  </div>
@@ -399,8 +399,8 @@ export default function ThrowsSessionBuilder() {
 
  {/* Top correlated exercises */}
  {rankedExercises.length > 0 && (
- <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
- <p className="text-xs font-semibold text-[var(--color-text-3)] uppercase tracking-wider mb-2">
+ <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
+ <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
  Top Correlations
  </p>
  <div className="space-y-1">
@@ -409,8 +409,8 @@ export default function ThrowsSessionBuilder() {
  <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${CLASSIFICATION_COLORS[ex.type as Classification] || CLASSIFICATION_COLORS.SP}`}>
  {ex.type}
  </span>
- <span className="text-[10px] text-[var(--color-text-2)] truncate flex-1">{ex.exercise}</span>
- <span className="text-[10px] font-mono text-[var(--color-text-3)]">
+ <span className="text-[10px] text-surface-700 dark:text-surface-300 truncate flex-1">{ex.exercise}</span>
+ <span className="text-[10px] font-mono text-muted">
  {ex.correlation.toFixed(2)}
  </span>
  </div>
@@ -421,8 +421,8 @@ export default function ThrowsSessionBuilder() {
 
  {/* Validation summary */}
  {blocks.length > 0 && (
- <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
- <p className="text-xs font-semibold text-[var(--color-text-3)] uppercase tracking-wider mb-2">
+ <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
+ <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
  Validation
  </p>
  {validationResult.issues.length === 0 ? (
@@ -470,7 +470,7 @@ export default function ThrowsSessionBuilder() {
  />
  </div>
  <div>
- <label className="label">Events * <span className="text-xs font-normal text-[var(--color-text-3)]">(select one or more)</span></label>
+ <label className="label">Events * <span className="text-xs font-normal text-muted">(select one or more)</span></label>
  <div className="flex flex-wrap gap-2">
  {(Object.keys(EVENTS) as ThrowEvent[]).map((ev) => {
  const isSelected = selectedEvents.includes(ev);
@@ -482,7 +482,7 @@ export default function ThrowsSessionBuilder() {
  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
  isSelected
  ? "text-white ring-2 ring-offset-1 ring-offset-white dark:ring-offset-gray-900"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  }`}
  style={isSelected ? { backgroundColor: EVENTS[ev].color, "--tw-ring-color": EVENTS[ev].color } as React.CSSProperties : undefined}
  >
@@ -503,8 +503,8 @@ export default function ThrowsSessionBuilder() {
  onClick={() => setGender(g)}
  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
  gender === g
- ? "bg-[var(--color-gold)] text-white"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ ? "bg-primary-500 text-white"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  }`}
  >
  {g === "MALE" ? "Men" : "Women"}
@@ -537,7 +537,7 @@ export default function ThrowsSessionBuilder() {
  ))}
  </select>
  {targetPhase && (
- <p className="text-[10px] text-[var(--color-text-3)] mt-1">
+ <p className="text-[10px] text-muted mt-1">
  {TRAINING_PHASES.find((p) => p.value === targetPhase)?.description}
  </p>
  )}
@@ -563,10 +563,10 @@ export default function ThrowsSessionBuilder() {
  {/* Block canvas */}
  {blocks.length === 0 ? (
  <div className="card text-center py-16">
- <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">
+ <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">
  Start building your session
  </h3>
- <p className="text-sm text-[var(--color-text-2)] mb-6 max-w-md mx-auto">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mb-6 max-w-md mx-auto">
  Add blocks from the left panel, or use the quick-start buttons below.
  The 7-rule Bondarchuk validation engine checks your session in real time.
  </p>
@@ -593,7 +593,7 @@ export default function ThrowsSessionBuilder() {
  key={bt.value}
  type="button"
  onClick={() => addBlock(bt.value)}
- className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] "
+ className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-[var(--card-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 "
  >
  <span>{bt.icon}</span>
  {bt.label}
@@ -633,7 +633,7 @@ export default function ThrowsSessionBuilder() {
  key={bt.value}
  type="button"
  onClick={() => addBlock(bt.value)}
- className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-2)] "
+ className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[var(--card-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 "
  >
  <span>{bt.icon}</span>
  {bt.label}
@@ -681,7 +681,7 @@ function ValidationBanner({ issue, onAutoFix }: { issue: ValidationIssue; onAuto
  <button
  type="button"
  onClick={onAutoFix}
- className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-[var(--color-surface)] text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+ className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-[var(--card-bg)] text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
  >
  Auto-Fix
  </button>
@@ -714,8 +714,8 @@ function BlockCard({
  return (
  <div className={`card !p-0 border-l-4 ${BLOCK_BORDER_COLORS[block.blockType]} overflow-hidden`}>
  {/* Block header */}
- <div className="flex items-center gap-3 px-4 py-3 bg-[var(--color-surface-2)]/50 border-b border-[var(--color-border)]">
- <div className="cursor-grab active:cursor-grabbing text-[var(--color-text-3)] hover:text-[var(--color-text-2)] ">
+ <div className="flex items-center gap-3 px-4 py-3 bg-[var(--muted-bg)]/50 border-b border-[var(--card-border)]">
+ <div className="cursor-grab active:cursor-grabbing text-muted hover:text-surface-700 dark:hover:text-surface-300 ">
  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
  <circle cx="9" cy="5" r="1.5" /><circle cx="15" cy="5" r="1.5" />
  <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
@@ -723,15 +723,15 @@ function BlockCard({
  </svg>
  </div>
  <span className="text-lg">{blockMeta?.icon}</span>
- <span className="font-semibold text-[var(--color-text)] text-sm">
+ <span className="font-semibold text-[var(--foreground)] text-sm">
  {blockMeta?.label || block.blockType}
  </span>
- <span className="text-xs text-[var(--color-text-3)]">Block {index + 1}</span>
+ <span className="text-xs text-muted">Block {index + 1}</span>
  <div className="flex-1" />
  <button
  type="button"
  onClick={onRemove}
- className="p-1 rounded text-[var(--color-text-3)] hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+ className="p-1 rounded text-muted hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -795,7 +795,7 @@ function ThrowingBlockEditor({
  <div className="space-y-4">
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
  <div className="col-span-2">
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Implement</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Implement</label>
  <select
  className="input"
  value={config.implementWeight}
@@ -817,7 +817,7 @@ function ThrowingBlockEditor({
  </select>
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Throws</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Throws</label>
  <input
  type="number"
  className="exercise-input !text-left"
@@ -828,7 +828,7 @@ function ThrowingBlockEditor({
  />
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Max Effort</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Max Effort</label>
  <input
  type="number"
  className="exercise-input !text-left"
@@ -842,7 +842,7 @@ function ThrowingBlockEditor({
 
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
  Intensity: {config.intensityMin}–{config.intensityMax}%
  </label>
  <div className="flex items-center gap-2">
@@ -879,7 +879,7 @@ function ThrowingBlockEditor({
  </div>
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Technique</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Technique</label>
  <select
  className="input"
  value={config.techniqueFocus || ""}
@@ -891,7 +891,7 @@ function ThrowingBlockEditor({
  </select>
  </div>
  <div className="col-span-2 sm:col-span-1">
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Notes</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Notes</label>
  <input
  className="input"
  value={config.notes || ""}
@@ -946,7 +946,7 @@ function StrengthBlockEditor({
  <div key={i} className="space-y-2">
  <div className="grid grid-cols-12 gap-2 items-end">
  <div className="col-span-4">
- {i === 0 && <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Exercise</label>}
+ {i === 0 && <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Exercise</label>}
  <select
  className="input"
  value={STRENGTH_DB.find((d) => d.name === ex.name)?.id || ""}
@@ -969,7 +969,7 @@ function StrengthBlockEditor({
  </select>
  </div>
  <div className="col-span-2">
- {i === 0 && <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Sets</label>}
+ {i === 0 && <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Sets</label>}
  <input
  type="number"
  className="exercise-input"
@@ -979,7 +979,7 @@ function StrengthBlockEditor({
  />
  </div>
  <div className="col-span-2">
- {i === 0 && <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Reps</label>}
+ {i === 0 && <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Reps</label>}
  <input
  type="number"
  className="exercise-input"
@@ -989,7 +989,7 @@ function StrengthBlockEditor({
  />
  </div>
  <div className="col-span-2">
- {i === 0 && <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">% 1RM</label>}
+ {i === 0 && <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">% 1RM</label>}
  <input
  type="number"
  className="exercise-input"
@@ -1000,7 +1000,7 @@ function StrengthBlockEditor({
  />
  </div>
  <div className="col-span-1">
- {i === 0 && <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Type</label>}
+ {i === 0 && <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Type</label>}
  <span className={`block text-center text-[10px] font-bold px-1 py-1.5 rounded ${CLASSIFICATION_COLORS[ex.classification as Classification] || CLASSIFICATION_COLORS.GP}`}>
  {ex.classification}
  </span>
@@ -1010,7 +1010,7 @@ function StrengthBlockEditor({
  <button
  type="button"
  onClick={() => removeExercise(i)}
- className="p-1 text-[var(--color-text-3)] hover:text-red-500 transition-colors"
+ className="p-1 text-muted hover:text-red-500 transition-colors"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1020,7 +1020,7 @@ function StrengthBlockEditor({
  </div>
  </div>
  {ex.name && (
- <p className="text-[10px] text-[var(--color-text-3)] pl-1">
+ <p className="text-[10px] text-muted pl-1">
  {CLASSIFICATIONS[ex.classification as Classification]?.description || ""}
  </p>
  )}
@@ -1029,7 +1029,7 @@ function StrengthBlockEditor({
  <button
  type="button"
  onClick={addExercise}
- className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:text-[var(--color-gold-dark)] font-medium"
+ className="text-sm text-primary-600 dark:text-primary-300 hover:text-primary-600 font-medium"
  >
  + Add exercise
  </button>
@@ -1061,7 +1061,7 @@ function WarmupCooldownEditor({
  return (
  <div className="space-y-3">
  <div className="w-32">
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Duration (min)</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Duration (min)</label>
  <input
  type="number"
  className="exercise-input"
@@ -1071,18 +1071,18 @@ function WarmupCooldownEditor({
  />
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Drills</label>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Drills</label>
  <div className="flex flex-wrap gap-1.5 mb-2">
  {config.drills.map((drill, i) => (
  <span
  key={i}
- className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] "
+ className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 "
  >
  {drill}
  <button
  type="button"
  onClick={() => removeDrill(i)}
- className="text-[var(--color-text-3)] hover:text-red-500"
+ className="text-muted hover:text-red-500"
  >
  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1126,12 +1126,12 @@ function NotesBlockEditor({
  onChange={(e) => onUpdate({ text: e.target.value })}
  placeholder="Coach instructions, reminders, or athlete-facing notes..."
  />
- <label className="flex items-center gap-2 text-sm text-[var(--color-text-2)]">
+ <label className="flex items-center gap-2 text-sm text-surface-700 dark:text-surface-300">
  <input
  type="checkbox"
  checked={config.coachOnly}
  onChange={(e) => onUpdate({ coachOnly: e.target.checked })}
- className="rounded border-[var(--color-border-strong)] text-[var(--color-gold-dark)] focus:ring-[rgba(212,168,67,0.4)]"
+ className="rounded border-[var(--color-border-strong)] text-primary-600 focus:ring-primary-500/40"
  />
  Coach-only note (hidden from athletes)
  </label>

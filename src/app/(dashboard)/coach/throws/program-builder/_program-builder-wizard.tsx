@@ -557,11 +557,11 @@ export function ProgramBuilderWizard({
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
           </Link>
-          <h1 className="text-title font-heading text-[var(--color-text)]">
+          <h1 className="text-title font-heading text-[var(--foreground)]">
             Build Training Program
           </h1>
         </div>
-        <p className="text-body text-[var(--color-text-2)] mt-1">
+        <p className="text-body text-surface-700 dark:text-surface-300 mt-1">
           {sandboxMode
             ? "Explore the Bondarchuk engine with a test profile"
             : "Generate a Bondarchuk-based periodized program for an athlete"}
@@ -579,10 +579,10 @@ export function ProgramBuilderWizard({
               }}
               className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold transition-all ${
                 i === step
-                  ? "bg-[var(--color-gold)] text-black shadow-md"
+                  ? "bg-primary-500 text-black shadow-md"
                   : i < step
-                    ? "bg-[rgba(212,168,67,0.2)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold)] cursor-pointer"
-                    : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+                    ? "bg-[rgba(212,168,67,0.2)] text-primary-600 dark:text-primary-500 cursor-pointer"
+                    : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
               }`}
             >
               {i < step ? (
@@ -605,13 +605,13 @@ export function ProgramBuilderWizard({
             </button>
           ))}
         </div>
-        <div className="h-1.5 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+        <div className="h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-[var(--color-gold)] rounded-full transition-all duration-500"
+            className="h-full bg-primary-500 rounded-full transition-all duration-500"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
-        <p className="text-caption text-[var(--color-text-2)] mt-2 text-center">
+        <p className="text-caption text-surface-700 dark:text-surface-300 mt-2 text-center">
           Step {step + 1} of {STEPS.length}: {STEPS[step]}
         </p>
       </div>
@@ -619,7 +619,7 @@ export function ProgramBuilderWizard({
       {/* Loading overlay for prefill */}
       {loading && (
         <div className="card flex items-center justify-center py-12">
-          <div className="flex items-center gap-3 text-[var(--color-text-2)]">
+          <div className="flex items-center gap-3 text-surface-700 dark:text-surface-300">
             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"
@@ -846,14 +846,14 @@ function StepSelectAthleteOrTest({
   return (
     <div className="space-y-4">
       {/* Mode Toggle */}
-      <div className="flex rounded-xl border border-[var(--color-border)] overflow-hidden">
+      <div className="flex rounded-xl border border-[var(--card-border)] overflow-hidden">
         <button
           type="button"
           onClick={() => onToggleMode(false)}
           className={`flex-1 py-2.5 text-sm font-medium transition-all ${
             !sandboxMode
-              ? "bg-[var(--color-gold)] text-white"
-              : "bg-transparent text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)]"
+              ? "bg-primary-500 text-white"
+              : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
           }`}
         >
           Real Athlete
@@ -863,8 +863,8 @@ function StepSelectAthleteOrTest({
           onClick={() => onToggleMode(true)}
           className={`flex-1 py-2.5 text-sm font-medium transition-all ${
             sandboxMode
-              ? "bg-[var(--color-gold)] text-white"
-              : "bg-transparent text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)]"
+              ? "bg-primary-500 text-white"
+              : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
           }`}
         >
           Test Profile
@@ -897,7 +897,7 @@ function StepSelectAthleteOrTest({
               value={sandboxName}
               onChange={(e) => onSandboxNameChange(e.target.value)}
             />
-            <p className="text-caption text-[var(--color-text-2)] mt-1">
+            <p className="text-caption text-surface-700 dark:text-surface-300 mt-1">
               This is just a label for display purposes.
             </p>
           </div>
@@ -905,7 +905,7 @@ function StepSelectAthleteOrTest({
       ) : (
         /* ── Real Athlete Picker ──────────────────────────────────── */
         <>
-          <p className="text-body text-[var(--color-text-2)]">
+          <p className="text-body text-surface-700 dark:text-surface-300">
             Select the athlete to build a training program for.
           </p>
           <input
@@ -917,7 +917,7 @@ function StepSelectAthleteOrTest({
           />
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {filtered.length === 0 && (
-              <p className="text-sm text-[var(--color-text-2)] py-4 text-center">
+              <p className="text-sm text-surface-700 dark:text-surface-300 py-4 text-center">
                 {athletes.length === 0
                   ? "No athletes on your roster yet."
                   : "No athletes match your search."}
@@ -930,30 +930,30 @@ function StepSelectAthleteOrTest({
                 onClick={() => onSelect(a.id)}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
                   selectedId === a.id
-                    ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
-                    : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                    ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+                    : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                 }`}
               >
-                <div className="w-10 h-10 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-[var(--muted-bg)] flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {a.avatarUrl ? (
                     <img src={a.avatarUrl} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
                   ) : (
-                    <span className="text-sm font-semibold text-[var(--color-text-2)]">
+                    <span className="text-sm font-semibold text-surface-700 dark:text-surface-300">
                       {a.firstName?.[0]}
                       {a.lastName?.[0]}
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-[var(--color-text)] truncate">
+                  <p className="font-medium text-sm text-[var(--foreground)] truncate">
                     {a.firstName} {a.lastName}
                   </p>
-                  <p className="text-xs text-[var(--color-text-2)] truncate">
+                  <p className="text-xs text-surface-700 dark:text-surface-300 truncate">
                     {a.events.length > 0 ? a.events.join(", ") : "No events"}
                   </p>
                 </div>
                 {selectedId === a.id && (
-                  <svg className="w-5 h-5 text-[var(--color-gold)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-primary-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 )}
@@ -988,8 +988,8 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
               }}
               className={`p-3 rounded-xl border-2 text-left transition-all ${
                 form.event === ev.value
-                  ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
-                  : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                  ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+                  : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -997,7 +997,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: ev.color }}
                 />
-                <span className="font-medium text-sm text-[var(--color-text)]">
+                <span className="font-medium text-sm text-[var(--foreground)]">
                   {ev.label}
                 </span>
               </div>
@@ -1022,11 +1022,11 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
               }}
               className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${
                 form.gender === g.value
-                  ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
-                  : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                  ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+                  : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
               }`}
             >
-              <span className="font-medium text-sm text-[var(--color-text)]">
+              <span className="font-medium text-sm text-[var(--foreground)]">
                 {g.label}
               </span>
             </button>
@@ -1082,7 +1082,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
           onChange={(e) => update("goalDistance", e.target.value)}
         />
         {form.competitionPr && form.goalDistance && (
-          <p className="text-caption text-[var(--color-text-2)] mt-1">
+          <p className="text-caption text-surface-700 dark:text-surface-300 mt-1">
             +
             {(
               parseFloat(form.goalDistance) - parseFloat(form.competitionPr)
@@ -1107,7 +1107,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
           onChange={(e) => update("targetDate", e.target.value)}
         />
         {form.targetDate && (
-          <p className="text-caption text-[var(--color-text-2)] mt-1">
+          <p className="text-caption text-surface-700 dark:text-surface-300 mt-1">
             {Math.ceil(
               (new Date(form.targetDate).getTime() - Date.now()) /
                 (1000 * 60 * 60 * 24 * 7),
@@ -1121,8 +1121,8 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
       </div>
 
       {/* Schedule */}
-      <div className="border-t border-[var(--color-border)] pt-6">
-        <h3 className="text-section font-heading text-[var(--color-text)] mb-4">
+      <div className="border-t border-[var(--card-border)] pt-6">
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-4">
           Training Schedule
         </h3>
 
@@ -1137,15 +1137,15 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
                   onClick={() => update("daysPerWeek", d)}
                   className={`flex-1 p-3 rounded-xl border-2 text-center font-semibold transition-all ${
                     form.daysPerWeek === d
-                      ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]"
-                      : "border-[var(--color-border)] text-[var(--color-text-2)]"
+                      ? "border-primary-500 bg-[rgba(212,168,67,0.08)] text-primary-600 dark:text-primary-300"
+                      : "border-[var(--card-border)] text-surface-700 dark:text-surface-300"
                   }`}
                 >
                   {d}
                 </button>
               ))}
             </div>
-            <p className="text-caption text-[var(--color-text-2)] mt-1">
+            <p className="text-caption text-surface-700 dark:text-surface-300 mt-1">
               {form.daysPerWeek === 2
                 ? "Minimum viable — competition prep or recovery focus"
                 : form.daysPerWeek === 3
@@ -1166,14 +1166,14 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
                   onClick={() => update("sessionsPerDay", s)}
                   className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${
                     form.sessionsPerDay === s
-                      ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
-                      : "border-[var(--color-border)]"
+                      ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+                      : "border-[var(--card-border)]"
                   }`}
                 >
-                  <span className="font-semibold text-[var(--color-text)]">
+                  <span className="font-semibold text-[var(--foreground)]">
                     {s}
                   </span>
-                  <p className="text-xs text-[var(--color-text-2)] mt-0.5">
+                  <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
                     {s === 1 ? "Single session" : "AM/PM split"}
                   </p>
                 </button>
@@ -1186,22 +1186,22 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
             onClick={() => update("includeLift", !form.includeLift)}
             className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
               form.includeLift
-                ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
-                : "border-[var(--color-border)]"
+                ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+                : "border-[var(--card-border)]"
             }`}
           >
             <div>
-              <span className="font-medium text-sm text-[var(--color-text)]">
+              <span className="font-medium text-sm text-[var(--foreground)]">
                 Include Strength Training
               </span>
-              <p className="text-xs text-[var(--color-text-2)]">
+              <p className="text-xs text-surface-700 dark:text-surface-300">
                 Prescribed lifts based on PRs and training phase
               </p>
             </div>
             <div
               className={`w-10 h-6 rounded-full transition-colors relative ${
                 form.includeLift
-                  ? "bg-[var(--color-gold)]"
+                  ? "bg-primary-500"
                   : "bg-[var(--color-border-strong)]"
               }`}
             >
@@ -1272,15 +1272,15 @@ function StepEquipment({
     <div className="space-y-6">
       {/* Implements */}
       <div>
-        <h3 className="text-section font-heading text-[var(--color-text)] mb-2">
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-2">
           Available Implements
         </h3>
-        <p className="text-body text-[var(--color-text-2)] mb-3">
+        <p className="text-body text-surface-700 dark:text-surface-300 mb-3">
           Select all implements the athlete has access to.
         </p>
 
         {!form.event || !form.gender ? (
-          <p className="text-sm text-[var(--color-text-2)]">
+          <p className="text-sm text-surface-700 dark:text-surface-300">
             Please select event and gender first (Step 2).
           </p>
         ) : (
@@ -1299,15 +1299,15 @@ function StepEquipment({
                   disabled={impl.isCompetition}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                     selected
-                      ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
-                      : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                      ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+                      : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                   } ${impl.isCompetition ? "opacity-80" : ""}`}
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                         selected
-                          ? "bg-[var(--color-gold)] border-[var(--color-gold)]"
+                          ? "bg-primary-500 border-primary-500"
                           : "border-[var(--color-border-strong)]"
                       }`}
                     >
@@ -1327,12 +1327,12 @@ function StepEquipment({
                         </svg>
                       )}
                     </div>
-                    <span className="font-medium text-sm text-[var(--color-text)]">
+                    <span className="font-medium text-sm text-[var(--foreground)]">
                       {impl.label}
                     </span>
                   </div>
                   {impl.isCompetition && (
-                    <span className="text-xs bg-[rgba(212,168,67,0.12)] dark:bg-[rgba(212,168,67,0.15)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-[rgba(212,168,67,0.12)] dark:bg-[rgba(212,168,67,0.15)] text-primary-600 dark:text-primary-300 px-2 py-0.5 rounded-full">
                       Required
                     </span>
                   )}
@@ -1348,8 +1348,8 @@ function StepEquipment({
       </div>
 
       {/* Facilities */}
-      <div className="border-t border-[var(--color-border)] pt-6">
-        <h3 className="text-section font-heading text-[var(--color-text)] mb-3">
+      <div className="border-t border-[var(--card-border)] pt-6">
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-3">
           Facilities
         </h3>
         <div className="space-y-3">
@@ -1360,20 +1360,20 @@ function StepEquipment({
               onClick={() => update(f.key, !form[f.key])}
               className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
                 form[f.key]
-                  ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
-                  : "border-[var(--color-border)]"
+                  ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+                  : "border-[var(--card-border)]"
               }`}
             >
               <div>
-                <span className="font-medium text-sm text-[var(--color-text)]">
+                <span className="font-medium text-sm text-[var(--foreground)]">
                   {f.label}
                 </span>
-                <p className="text-xs text-[var(--color-text-2)]">{f.desc}</p>
+                <p className="text-xs text-surface-700 dark:text-surface-300">{f.desc}</p>
               </div>
               <div
                 className={`w-10 h-6 rounded-full transition-colors relative ${
                   form[f.key]
-                    ? "bg-[var(--color-gold)]"
+                    ? "bg-primary-500"
                     : "bg-[var(--color-border-strong)]"
                 }`}
               >
@@ -1398,8 +1398,8 @@ function StepEquipment({
                   onClick={() => toggleGymItem(eq.key)}
                   className={`p-2.5 rounded-lg border text-left text-sm transition-all ${
                     form.gymEquipment[eq.key]
-                      ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)] font-medium"
-                      : "border-[var(--color-border)] text-[var(--color-text-2)]"
+                      ? "border-primary-500 bg-[rgba(212,168,67,0.08)] font-medium"
+                      : "border-[var(--card-border)] text-surface-700 dark:text-surface-300"
                   }`}
                 >
                   {eq.label}
@@ -1429,10 +1429,10 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
     <div className="space-y-6">
       {/* Lifting PRs */}
       <div>
-        <h3 className="text-section font-heading text-[var(--color-text)] mb-2">
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-2">
           Lifting PRs
         </h3>
-        <p className="text-body text-[var(--color-text-2)] mb-4">
+        <p className="text-body text-surface-700 dark:text-surface-300 mb-4">
           Enter the athlete&apos;s 1RM or best recent working weight. Leave blank if
           unknown.
         </p>
@@ -1478,8 +1478,8 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
       </div>
 
       {/* Experience */}
-      <div className="border-t border-[var(--color-border)] pt-6">
-        <h3 className="text-section font-heading text-[var(--color-text)] mb-4">
+      <div className="border-t border-[var(--card-border)] pt-6">
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-4">
           Experience
         </h3>
 
@@ -1518,7 +1518,7 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
               value={form.currentWeeklyVolume}
               onChange={(e) => update("currentWeeklyVolume", e.target.value)}
             />
-            <p className="text-caption text-[var(--color-text-2)] mt-1">
+            <p className="text-caption text-surface-700 dark:text-surface-300 mt-1">
               Helps calibrate starting volume to avoid injury
             </p>
           </div>
@@ -1547,10 +1547,10 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
       {/* Typing Info */}
       {form.hasTyping ? (
         <div className="p-4 bg-[rgba(212,168,67,0.08)] border border-[rgba(212,168,67,0.2)] rounded-xl">
-          <p className="text-sm font-medium text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]">
+          <p className="text-sm font-medium text-primary-600 dark:text-primary-300">
             Adaptation Profile Detected
           </p>
-          <p className="text-xs text-[var(--color-text-2)] mt-1">
+          <p className="text-xs text-surface-700 dark:text-surface-300 mt-1">
             Group {form.adaptationGroup} · ~{form.sessionsToForm} sessions to form ·{" "}
             {form.recommendedMethod} method
           </p>
@@ -1592,7 +1592,7 @@ function StepReview({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-section font-heading text-[var(--color-text)]">
+      <h3 className="text-section font-heading text-[var(--foreground)]">
         Review Program Setup
       </h3>
 
@@ -1626,7 +1626,7 @@ function StepReview({
       </div>
 
       <div className="p-4 bg-[rgba(212,168,67,0.08)] border border-[rgba(212,168,67,0.2)] rounded-xl mt-4">
-        <p className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]">
+        <p className="text-sm text-primary-600 dark:text-primary-300">
           {isSandbox
             ? "This is a sandbox preview \u2014 the engine output will be shown but nothing will be saved."
             : "This program will be generated using Bondarchuk periodization methodology, customized for the athlete\u2019s event, level, and adaptation profile."}
@@ -1666,33 +1666,33 @@ function ProgramSummaryCard({
             />
           </svg>
         </div>
-        <h3 className="text-section font-heading text-[var(--color-text)]">
+        <h3 className="text-section font-heading text-[var(--foreground)]">
           Program Generated!
         </h3>
-        <p className="text-body text-[var(--color-text-2)] mt-1">
+        <p className="text-body text-surface-700 dark:text-surface-300 mt-1">
           Training program for {athleteName} is ready
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="text-center p-3 bg-[var(--color-bg-subtle)] rounded-xl">
-          <p className="text-2xl font-bold font-heading text-[var(--color-gold)]">
+        <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
+          <p className="text-2xl font-bold font-heading text-primary-500">
             {result.totalWeeks}
           </p>
-          <p className="text-xs text-[var(--color-text-2)]">Weeks</p>
+          <p className="text-xs text-surface-700 dark:text-surface-300">Weeks</p>
         </div>
-        <div className="text-center p-3 bg-[var(--color-bg-subtle)] rounded-xl">
-          <p className="text-2xl font-bold font-heading text-[var(--color-gold)]">
+        <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
+          <p className="text-2xl font-bold font-heading text-primary-500">
             {result.summary.totalPhases}
           </p>
-          <p className="text-xs text-[var(--color-text-2)]">Phases</p>
+          <p className="text-xs text-surface-700 dark:text-surface-300">Phases</p>
         </div>
-        <div className="text-center p-3 bg-[var(--color-bg-subtle)] rounded-xl">
-          <p className="text-2xl font-bold font-heading text-[var(--color-gold)]">
+        <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
+          <p className="text-2xl font-bold font-heading text-primary-500">
             {result.summary.totalSessions}
           </p>
-          <p className="text-xs text-[var(--color-text-2)]">Sessions</p>
+          <p className="text-xs text-surface-700 dark:text-surface-300">Sessions</p>
         </div>
       </div>
 
@@ -1703,7 +1703,7 @@ function ProgramSummaryCard({
           {result.summary.phaseBreakdown.map((pb, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 p-2.5 rounded-lg bg-[var(--color-bg-subtle)]"
+              className="flex items-center gap-3 p-2.5 rounded-lg bg-[var(--muted-bg)]"
             >
               <div
                 className="w-3 h-3 rounded-full flex-shrink-0"
@@ -1712,15 +1712,15 @@ function ProgramSummaryCard({
                 }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--color-text)]">
+                <p className="text-sm font-medium text-[var(--foreground)]">
                   {pb.phase}
                 </p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-semibold text-[var(--color-text)]">
+                <p className="text-sm font-semibold text-[var(--foreground)]">
                   {pb.weeks}w
                 </p>
-                <p className="text-xs text-[var(--color-text-2)]">
+                <p className="text-xs text-surface-700 dark:text-surface-300">
                   ~{pb.throwsPerWeek} throws/wk
                 </p>
               </div>
@@ -1731,10 +1731,10 @@ function ProgramSummaryCard({
 
       {/* Estimated Total Throws */}
       <div className="text-center p-4 bg-[rgba(212,168,67,0.08)] border border-[rgba(212,168,67,0.2)] rounded-xl">
-        <p className="text-sm text-[var(--color-text-2)]">
+        <p className="text-sm text-surface-700 dark:text-surface-300">
           Estimated Total Throws
         </p>
-        <p className="text-3xl font-bold font-heading text-[var(--color-gold)]">
+        <p className="text-3xl font-bold font-heading text-primary-500">
           {result.summary.estimatedTotalThrows.toLocaleString()}
         </p>
       </div>
@@ -1797,21 +1797,21 @@ function SandboxPreviewCard({
 
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-2">
-        <div className="text-center p-3 bg-[var(--color-bg-subtle)] rounded-xl">
-          <p className="text-xl font-bold font-heading text-[var(--color-gold)]">{generated.totalWeeks}</p>
-          <p className="text-[10px] text-[var(--color-text-2)]">Weeks</p>
+        <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
+          <p className="text-xl font-bold font-heading text-primary-500">{generated.totalWeeks}</p>
+          <p className="text-[10px] text-surface-700 dark:text-surface-300">Weeks</p>
         </div>
-        <div className="text-center p-3 bg-[var(--color-bg-subtle)] rounded-xl">
-          <p className="text-xl font-bold font-heading text-[var(--color-gold)]">{generated.summary.totalPhases}</p>
-          <p className="text-[10px] text-[var(--color-text-2)]">Phases</p>
+        <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
+          <p className="text-xl font-bold font-heading text-primary-500">{generated.summary.totalPhases}</p>
+          <p className="text-[10px] text-surface-700 dark:text-surface-300">Phases</p>
         </div>
-        <div className="text-center p-3 bg-[var(--color-bg-subtle)] rounded-xl">
-          <p className="text-xl font-bold font-heading text-[var(--color-gold)]">{generated.summary.totalSessions}</p>
-          <p className="text-[10px] text-[var(--color-text-2)]">Sessions</p>
+        <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
+          <p className="text-xl font-bold font-heading text-primary-500">{generated.summary.totalSessions}</p>
+          <p className="text-[10px] text-surface-700 dark:text-surface-300">Sessions</p>
         </div>
-        <div className="text-center p-3 bg-[var(--color-bg-subtle)] rounded-xl">
-          <p className="text-xl font-bold font-heading text-[var(--color-gold)]">{generated.summary.estimatedTotalThrows.toLocaleString()}</p>
-          <p className="text-[10px] text-[var(--color-text-2)]">Total Throws</p>
+        <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
+          <p className="text-xl font-bold font-heading text-primary-500">{generated.summary.estimatedTotalThrows.toLocaleString()}</p>
+          <p className="text-[10px] text-surface-700 dark:text-surface-300">Total Throws</p>
         </div>
       </div>
 
@@ -1823,31 +1823,31 @@ function SandboxPreviewCard({
             const isExpanded = expandedPhase === pi;
             const color = PHASE_COLORS[phase.phase] || "#888";
             return (
-              <div key={pi} className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+              <div key={pi} className="border border-[var(--card-border)] rounded-xl overflow-hidden">
                 {/* Phase header (clickable) */}
                 <button
                   type="button"
                   onClick={() => setExpandedPhase(isExpanded ? -1 : pi)}
-                  className="w-full flex items-center gap-3 p-3 text-left hover:bg-[var(--color-bg-subtle)] transition-colors"
+                  className="w-full flex items-center gap-3 p-3 text-left hover:bg-[var(--muted-bg)] transition-colors"
                 >
                   <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--color-text)]">{phase.phase}</p>
-                    <p className="text-xs text-[var(--color-text-2)]">
+                    <p className="text-sm font-medium text-[var(--foreground)]">{phase.phase}</p>
+                    <p className="text-xs text-surface-700 dark:text-surface-300">
                       Weeks {phase.startWeek}-{phase.endWeek} &middot; {phase.durationWeeks}w &middot; ~{phase.throwsPerWeekTarget} throws/wk
                     </p>
                   </div>
-                  <svg className={`w-4 h-4 text-[var(--color-text-2)] transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className={`w-4 h-4 text-surface-700 dark:text-surface-300 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {/* Phase expanded content */}
                 {isExpanded && (
-                  <div className="px-3 pb-3 space-y-3 border-t border-[var(--color-border)]">
+                  <div className="px-3 pb-3 space-y-3 border-t border-[var(--card-border)]">
                     {/* Category Ratios (CE/SD/SP/GP) */}
                     <div className="pt-3">
-                      <p className="text-[11px] font-medium text-[var(--color-text-2)] mb-1.5">Exercise Categories</p>
+                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Exercise Categories</p>
                       <div className="flex rounded-lg overflow-hidden h-6 text-[10px] font-semibold">
                         {phase.cePercent > 0 && (
                           <div className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center" style={{ width: `${phase.cePercent}%` }}>
@@ -1874,7 +1874,7 @@ function SandboxPreviewCard({
 
                     {/* Implement Distribution */}
                     <div>
-                      <p className="text-[11px] font-medium text-[var(--color-text-2)] mb-1.5">Implement Distribution</p>
+                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Implement Distribution</p>
                       <div className="flex rounded-lg overflow-hidden h-6 text-[10px] font-semibold">
                         {phase.heavyPercent > 0 && (
                           <div className="bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100 flex items-center justify-center" style={{ width: `${phase.heavyPercent}%` }}>
@@ -1897,20 +1897,20 @@ function SandboxPreviewCard({
                     {/* Exercise Complex */}
                     {phase.exerciseComplex?.length > 0 && (
                       <div>
-                        <p className="text-[11px] font-medium text-[var(--color-text-2)] mb-1.5">Exercise Complex</p>
+                        <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Exercise Complex</p>
                         <div className="space-y-1">
                           {phase.exerciseComplex.map((ex: any, ei: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                             const cls = CLASSIFICATION_COLORS[ex.classification] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300" };
                             return (
-                              <div key={ei} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--color-bg-subtle)] text-xs">
+                              <div key={ei} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs">
                                 <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}>
                                   {ex.classification}
                                 </span>
-                                <span className="font-medium text-[var(--color-text)] flex-1">{ex.name}</span>
+                                <span className="font-medium text-[var(--foreground)] flex-1">{ex.name}</span>
                                 {ex.implementKg && (
-                                  <span className="text-[var(--color-text-2)]">{ex.implementKg}kg</span>
+                                  <span className="text-surface-700 dark:text-surface-300">{ex.implementKg}kg</span>
                                 )}
-                                <span className="text-[var(--color-text-2)]">
+                                <span className="text-surface-700 dark:text-surface-300">
                                   {ex.setsMin}-{ex.setsMax}s &times; {ex.repsMin}-{ex.repsMax}r
                                 </span>
                               </div>
@@ -1935,49 +1935,49 @@ function SandboxPreviewCard({
             {sessions.map((session: any, si: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
               const isExpanded = expandedSession === si;
               return (
-                <div key={si} className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+                <div key={si} className="border border-[var(--card-border)] rounded-xl overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setExpandedSession(isExpanded ? -1 : si)}
-                    className="w-full flex items-center gap-2 p-3 text-left hover:bg-[var(--color-bg-subtle)] transition-colors"
+                    className="w-full flex items-center gap-2 p-3 text-left hover:bg-[var(--muted-bg)] transition-colors"
                   >
-                    <span className="text-sm font-semibold text-[var(--color-text)]">
+                    <span className="text-sm font-semibold text-[var(--foreground)]">
                       {DAY_SHORT[session.dayOfWeek] || `Day ${session.dayOfWeek}`}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
                       {session.dayType}
                     </span>
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
                       {session.sessionType.replace(/_/g, " ")}
                     </span>
-                    <span className="flex-1 text-xs text-[var(--color-text-2)] truncate text-right">
+                    <span className="flex-1 text-xs text-surface-700 dark:text-surface-300 truncate text-right">
                       {session.focusLabel}
                     </span>
-                    <svg className={`w-4 h-4 text-[var(--color-text-2)] transition-transform flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className={`w-4 h-4 text-surface-700 dark:text-surface-300 transition-transform flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {isExpanded && (
-                    <div className="px-3 pb-3 space-y-3 border-t border-[var(--color-border)]">
-                      <p className="text-[11px] text-[var(--color-text-2)] pt-2">
+                    <div className="px-3 pb-3 space-y-3 border-t border-[var(--card-border)]">
+                      <p className="text-[11px] text-surface-700 dark:text-surface-300 pt-2">
                         ~{session.totalThrowsTarget} throws &middot; ~{session.estimatedDuration} min
                       </p>
 
                       {/* Throws Block */}
                       {session.throws?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-[var(--color-text-2)] mb-1.5">Throws</p>
+                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Throws</p>
                           <div className="space-y-1">
                             {session.throws.map((t: any, ti: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                               const cls = CLASSIFICATION_COLORS[t.category] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300" };
                               return (
-                                <div key={ti} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--color-bg-subtle)] text-xs">
-                                  <span className="font-bold text-[var(--color-text)] min-w-[48px]">{t.implement}</span>
+                                <div key={ti} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs">
+                                  <span className="font-bold text-[var(--foreground)] min-w-[48px]">{t.implement}</span>
                                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}>{t.category}</span>
-                                  <span className="text-[var(--color-text-2)]">{t.drillType?.replace(/_/g, " ")}</span>
-                                  <span className="ml-auto font-medium text-[var(--color-text)]">{t.sets}&times;{t.repsPerSet}</span>
-                                  <span className="text-[var(--color-text-2)]">{t.restSeconds}s rest</span>
+                                  <span className="text-surface-700 dark:text-surface-300">{t.drillType?.replace(/_/g, " ")}</span>
+                                  <span className="ml-auto font-medium text-[var(--foreground)]">{t.sets}&times;{t.repsPerSet}</span>
+                                  <span className="text-surface-700 dark:text-surface-300">{t.restSeconds}s rest</span>
                                 </div>
                               );
                             })}
@@ -1990,17 +1990,17 @@ function SandboxPreviewCard({
                       {/* Strength Block */}
                       {session.strength?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-[var(--color-text-2)] mb-1.5">Strength</p>
+                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Strength</p>
                           <div className="space-y-1">
                             {session.strength.map((s: any, si2: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
                               const cls = CLASSIFICATION_COLORS[s.classification] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300" };
                               return (
-                                <div key={si2} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--color-bg-subtle)] text-xs">
+                                <div key={si2} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs">
                                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}>{s.classification}</span>
-                                  <span className="font-medium text-[var(--color-text)] flex-1">{s.exerciseName}</span>
-                                  <span className="text-[var(--color-text)]">{s.sets}&times;{s.reps}</span>
-                                  {s.intensityPercent && <span className="text-[var(--color-text-2)]">@{s.intensityPercent}%</span>}
-                                  {s.loadKg && <span className="text-[var(--color-text-2)]">{s.loadKg}kg</span>}
+                                  <span className="font-medium text-[var(--foreground)] flex-1">{s.exerciseName}</span>
+                                  <span className="text-[var(--foreground)]">{s.sets}&times;{s.reps}</span>
+                                  {s.intensityPercent && <span className="text-surface-700 dark:text-surface-300">@{s.intensityPercent}%</span>}
+                                  {s.loadKg && <span className="text-surface-700 dark:text-surface-300">{s.loadKg}kg</span>}
                                 </div>
                               );
                             })}
@@ -2011,10 +2011,10 @@ function SandboxPreviewCard({
                       {/* Warmup */}
                       {session.warmup?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-[var(--color-text-2)] mb-1.5">Warmup</p>
+                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Warmup</p>
                           <div className="flex flex-wrap gap-1.5">
                             {session.warmup.map((w: any, wi: number) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-                              <span key={wi} className="text-[11px] px-2 py-1 rounded-lg bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]">
+                              <span key={wi} className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
                                 {w.name}{w.duration ? ` (${w.duration}min)` : ""}
                               </span>
                             ))}
@@ -2073,7 +2073,7 @@ function ImplementOrderCheck({ throws }: { throws: Array<{ implementKg: number; 
       <span className="font-medium">
         {isDescending ? "Correct descending order" : "Warning: ascending order detected"}
       </span>
-      <span className="text-[var(--color-text-2)]">({weights})</span>
+      <span className="text-surface-700 dark:text-surface-300">({weights})</span>
     </div>
   );
 }
@@ -2083,8 +2083,8 @@ function ImplementOrderCheck({ throws }: { throws: Array<{ implementKg: number; 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between py-2.5">
-      <span className="text-sm text-[var(--color-text-2)]">{label}</span>
-      <span className="text-sm font-medium text-[var(--color-text)] text-right max-w-[60%]">
+      <span className="text-sm text-surface-700 dark:text-surface-300">{label}</span>
+      <span className="text-sm font-medium text-[var(--foreground)] text-right max-w-[60%]">
         {value}
       </span>
     </div>

@@ -25,7 +25,7 @@ const DRILL_LABELS: Record<string, string> = {
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
  COMPLETED: { bg: "bg-green-100 dark:bg-green-900/40", text: "text-green-800 dark:text-green-200", label: "Completed" },
  ANALYZING: { bg: "bg-blue-100 dark:bg-blue-900/40", text: "text-blue-800 dark:text-blue-200", label: "Analyzing" },
- PENDING: { bg: "bg-[var(--color-bg-subtle)]", text: "text-[var(--color-text-2)]", label: "Pending" },
+ PENDING: { bg: "bg-[var(--muted-bg)]", text: "text-surface-700 dark:text-surface-300", label: "Pending" },
  FAILED: { bg: "bg-red-100 dark:bg-red-900/40", text: "text-red-800 dark:text-red-200", label: "Failed" },
 };
 
@@ -60,8 +60,8 @@ export default function ThrowFlowHistoryPage() {
  {/* Header */}
  <div className="flex items-center justify-between">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">Analysis History</h1>
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Analysis History</h1>
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  {analyses.length} total analyses
  </p>
  </div>
@@ -77,7 +77,7 @@ export default function ThrowFlowHistoryPage() {
  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
  !filterEvent
  ? "bg-amber-500 text-white"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] "
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] "
  }`}
  >
  All
@@ -89,7 +89,7 @@ export default function ThrowFlowHistoryPage() {
  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
  filterEvent === value
  ? "bg-amber-500 text-white"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] "
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] "
  }`}
  >
  {label}
@@ -112,7 +112,7 @@ export default function ThrowFlowHistoryPage() {
  <svg className="w-12 h-12 mx-auto text-[var(--color-border-strong)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
  </svg>
- <p className="text-[var(--color-text-2)] mb-3">
+ <p className="text-surface-700 dark:text-surface-300 mb-3">
  {filterEvent ? "No analyses for this event yet." : "No analyses yet."}
  </p>
  <Link href="/coach/throws/analyze" className="btn-primary inline-block">
@@ -137,7 +137,7 @@ export default function ThrowFlowHistoryPage() {
  {a.overallScore != null ? (
  <div className="relative w-14 h-14">
  <svg className="w-14 h-14 -rotate-90" viewBox="0 0 100 100">
- <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="6" className="text-[var(--color-border)]" />
+ <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="6" className="text-[var(--card-border)]" />
  <circle
  cx="50" cy="50" r="42" fill="none" strokeWidth="6" stroke="currentColor"
  strokeDasharray={`${(a.overallScore / 100) * 264} 264`}
@@ -152,7 +152,7 @@ export default function ThrowFlowHistoryPage() {
  </div>
  </div>
  ) : (
- <div className="w-14 h-14 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center">
+ <div className="w-14 h-14 rounded-full bg-[var(--muted-bg)] flex items-center justify-center">
  <span className={`${status.text} text-xs font-medium`}>--</span>
  </div>
  )}
@@ -161,14 +161,14 @@ export default function ThrowFlowHistoryPage() {
  {/* Info */}
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2">
- <span className="font-medium text-[var(--color-text)]">
+ <span className="font-medium text-[var(--foreground)]">
  {EVENT_LABELS[a.event] || a.event}
  </span>
- <span className="text-sm text-[var(--color-text-2)]">
+ <span className="text-sm text-surface-700 dark:text-surface-300">
  {DRILL_LABELS[a.drillType] || a.drillType}
  </span>
  </div>
- <div className="flex items-center gap-3 mt-1 text-xs text-[var(--color-text-2)]">
+ <div className="flex items-center gap-3 mt-1 text-xs text-surface-700 dark:text-surface-300">
  {a.athleteName && <span>{a.athleteName}</span>}
  <span>{new Date(a.createdAt).toLocaleDateString()}</span>
  </div>
@@ -180,7 +180,7 @@ export default function ThrowFlowHistoryPage() {
  </span>
 
  {/* Arrow */}
- <svg className="w-5 h-5 text-[var(--color-border-strong)] group-hover:text-[var(--color-text-2)] dark:group-hover:text-[var(--color-text-3)] transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <svg className="w-5 h-5 text-[var(--color-border-strong)] group-hover:text-surface-700 dark:hover:text-surface-300 dark:group-hover:text-muted transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
  </svg>
  </Link>

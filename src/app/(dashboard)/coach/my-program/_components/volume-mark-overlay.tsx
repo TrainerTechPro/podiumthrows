@@ -98,7 +98,7 @@ function VolumeMarkOverlay({
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
-            className="text-[var(--color-gold)]"
+            className="text-primary-500"
           />
         )}
 
@@ -110,7 +110,7 @@ function VolumeMarkOverlay({
               cx={scaleX(i)}
               cy={scaleMark(m)}
               r={3}
-              className="fill-[var(--color-gold)] stroke-white dark:stroke-[var(--card-bg)]"
+              className="fill-primary-500 stroke-white dark:stroke-[var(--card-bg)]"
               strokeWidth={1.5}
             />
           ) : null,
@@ -132,7 +132,7 @@ function VolumeMarkOverlay({
           x={width - 12}
           y={padding.top + chartHeight / 2}
           textAnchor="middle"
-          className="text-[8px] fill-[var(--color-gold-dark)]"
+          className="text-[8px] fill-primary-600"
           transform={`rotate(90, ${width - 12}, ${padding.top + chartHeight / 2})`}
         >
           Best Mark (m)
@@ -159,7 +159,7 @@ function VolumeMarkOverlay({
           Volume
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-gold)]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-primary-500" />
           Best Mark
         </span>
       </div>

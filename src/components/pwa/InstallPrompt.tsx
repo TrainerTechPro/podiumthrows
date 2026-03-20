@@ -76,7 +76,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-safe animate-spring-up">
-      <div className="mx-auto max-w-md rounded-2xl border border-amber-200/20 dark:border-amber-700/30 bg-[var(--color-surface)]/95 backdrop-blur-xl shadow-2xl shadow-black/20">
+      <div className="mx-auto max-w-md rounded-2xl border border-amber-200/20 dark:border-amber-700/30 bg-[var(--card-bg)]/95 backdrop-blur-xl shadow-2xl shadow-black/20">
         <div className="p-4">
           <div className="flex items-start gap-3">
             {/* App icon */}
@@ -85,10 +85,10 @@ export function InstallPrompt() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-[var(--color-text)]">
+              <h3 className="text-sm font-semibold text-[var(--foreground)]">
                 Install Podium Throws
               </h3>
-              <p className="text-xs text-[var(--color-text-3)] mt-0.5 leading-relaxed">
+              <p className="text-xs text-muted mt-0.5 leading-relaxed">
                 {isIOS
                   ? "Add to your home screen for offline access and a full-screen experience."
                   : "Get instant access, offline support, and a native app experience."}
@@ -97,7 +97,7 @@ export function InstallPrompt() {
 
             <button
               onClick={handleDismiss}
-              className="flex-shrink-0 p-1.5 rounded-lg text-[var(--color-text-3)] hover:text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+              className="flex-shrink-0 p-1.5 rounded-lg text-muted hover:text-surface-700 dark:hover:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
               aria-label="Dismiss"
             >
               <X size={16} />
@@ -106,7 +106,7 @@ export function InstallPrompt() {
 
           <div className="mt-3 flex items-center gap-2">
             {isIOS ? (
-              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--color-bg-subtle)] text-xs text-[var(--color-text-2)]">
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--muted-bg)] text-xs text-surface-700 dark:text-surface-300">
                 <span>Tap</span>
                 <Share size={14} className="text-[#007AFF]" />
                 <span>then &quot;Add to Home Screen&quot;</span>

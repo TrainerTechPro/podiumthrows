@@ -246,7 +246,7 @@ export default function TeamsPage() {
   if (error && teams.length === 0) {
     return (
       <div className="animate-spring-up space-y-4">
-        <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">Teams</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Teams</h1>
         <div className="card text-center py-12 space-y-3">
           <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
           <button onClick={loadTeams} className="btn-primary text-sm px-4 py-2">
@@ -261,7 +261,7 @@ export default function TeamsPage() {
     <div className="animate-spring-up space-y-6">
       {/* ── Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">Teams</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Teams</h1>
         <button
           onClick={openCreateForm}
           className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
@@ -277,12 +277,12 @@ export default function TeamsPage() {
       {(showCreateForm || editingTeamId) && (
         <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-[var(--color-text)] text-sm">
+            <h3 className="font-semibold text-[var(--foreground)] text-sm">
               {editingTeamId ? "Edit Team" : "Create Team"}
             </h3>
             <button
               onClick={() => { setShowCreateForm(false); setEditingTeamId(null); }}
-              className="p-1 text-[var(--color-text-3)] hover:text-[var(--color-text-2)] rounded-lg"
+              className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -291,7 +291,7 @@ export default function TeamsPage() {
           </div>
           <form onSubmit={handleSaveTeam} className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">Team Name</label>
+              <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Team Name</label>
               <input
                 type="text"
                 value={formName}
@@ -299,19 +299,19 @@ export default function TeamsPage() {
                 required
                 maxLength={100}
                 placeholder="e.g., UCSD Shot Put"
-                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
-                Description <span className="text-[var(--color-text-3)] font-normal">(optional)</span>
+              <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+                Description <span className="text-muted font-normal">(optional)</span>
               </label>
               <input
                 type="text"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
                 placeholder="e.g., Division I training group"
-                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
               />
             </div>
             {formError && <p className="text-xs text-red-600 dark:text-red-400">{formError}</p>}
@@ -339,12 +339,12 @@ export default function TeamsPage() {
       {managingTeamId && managingTeam && (
         <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-[var(--color-text)] text-sm">
+            <h3 className="font-semibold text-[var(--foreground)] text-sm">
               Manage Members — {managingTeam.name}
             </h3>
             <button
               onClick={() => setManagingTeamId(null)}
-              className="p-1 text-[var(--color-text-3)] hover:text-[var(--color-text-2)] rounded-lg"
+              className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -365,19 +365,19 @@ export default function TeamsPage() {
               {/* Current members */}
               {teamMembers.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wider">
                     Current Members ({teamMembers.length})
                   </p>
                   <div className="space-y-1.5">
                     {teamMembers.map((athlete) => (
-                      <div key={athlete.id} className="flex items-center gap-2 p-2 rounded-xl bg-[var(--color-bg-subtle)]">
+                      <div key={athlete.id} className="flex items-center gap-2 p-2 rounded-xl bg-[var(--muted-bg)]">
                         <UserAvatar
                           src={athlete.avatarUrl}
                           firstName={athlete.firstName}
                           lastName={athlete.lastName}
                           size="sm"
                         />
-                        <span className="text-sm text-[var(--color-text)] flex-1">
+                        <span className="text-sm text-[var(--foreground)] flex-1">
                           {athlete.firstName} {athlete.lastName}
                         </span>
                         <div className="flex gap-1">
@@ -393,7 +393,7 @@ export default function TeamsPage() {
                         </div>
                         <button
                           onClick={() => handleRemoveMember(athlete.id)}
-                          className="p-1 text-[var(--color-text-3)] hover:text-red-500 transition-colors"
+                          className="p-1 text-muted hover:text-red-500 transition-colors"
                           title="Remove from team"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,20 +409,20 @@ export default function TeamsPage() {
               {/* Add athletes */}
               {availableAthletes.length > 0 ? (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-[var(--color-text-3)] uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-muted uppercase tracking-wider">
                     Add Athletes
                   </p>
                   <div className="space-y-1.5 max-h-60 overflow-y-auto">
                     {availableAthletes.map((athlete) => (
                       <label
                         key={athlete.id}
-                        className="flex items-center gap-2 p-2 rounded-xl hover:bg-[var(--color-bg-subtle)] cursor-pointer"
+                        className="flex items-center gap-2 p-2 rounded-xl hover:bg-[var(--muted-bg)] cursor-pointer"
                       >
                         <input
                           type="checkbox"
                           checked={selectedToAdd.has(athlete.id)}
                           onChange={() => toggleSelectAthlete(athlete.id)}
-                          className="accent-[var(--color-gold)]"
+                          className="accent-primary-500"
                         />
                         <UserAvatar
                           src={athlete.avatarUrl}
@@ -430,7 +430,7 @@ export default function TeamsPage() {
                           lastName={athlete.lastName}
                           size="sm"
                         />
-                        <span className="text-sm text-[var(--color-text)] flex-1">
+                        <span className="text-sm text-[var(--foreground)] flex-1">
                           {athlete.firstName} {athlete.lastName}
                         </span>
                         <div className="flex gap-1">
@@ -456,9 +456,9 @@ export default function TeamsPage() {
                   </button>
                 </div>
               ) : teamMembers.length > 0 ? (
-                <p className="text-xs text-[var(--color-text-3)]">All athletes are already in this team.</p>
+                <p className="text-xs text-muted">All athletes are already in this team.</p>
               ) : (
-                <p className="text-xs text-[var(--color-text-3)]">No athletes on your roster yet.</p>
+                <p className="text-xs text-muted">No athletes on your roster yet.</p>
               )}
             </>
           )}
@@ -469,15 +469,15 @@ export default function TeamsPage() {
       {teams.length === 0 && !showCreateForm ? (
         <div className="card text-center py-12 space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-[rgba(212,168,67,0.08)] flex items-center justify-center mx-auto">
-            <svg className="w-6 h-6 text-[var(--color-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
               <circle cx="9" cy="7" r="4" strokeWidth={1.5} />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
             </svg>
           </div>
           <div>
-            <p className="font-semibold text-[var(--color-text)] text-sm">No teams yet</p>
-            <p className="text-xs text-[var(--color-text-3)] mt-1">
+            <p className="font-semibold text-[var(--foreground)] text-sm">No teams yet</p>
+            <p className="text-xs text-muted mt-1">
               Create your first team to organize your athletes by school, training group, or any way you like.
             </p>
           </div>
@@ -492,17 +492,17 @@ export default function TeamsPage() {
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-heading font-semibold text-[var(--color-text)] truncate">
+                  <h3 className="font-heading font-semibold text-[var(--foreground)] truncate">
                     {team.name}
                   </h3>
-                  <p className="text-xs text-[var(--color-text-3)] truncate">
+                  <p className="text-xs text-muted truncate">
                     {team.description || "No description"}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0 ml-2">
                   <button
                     onClick={() => openEditForm(team)}
-                    className="p-1.5 text-[var(--color-text-3)] hover:text-[var(--color-text-2)] rounded-lg transition-colors"
+                    className="p-1.5 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg transition-colors"
                     title="Edit team"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -520,7 +520,7 @@ export default function TeamsPage() {
                       </button>
                       <button
                         onClick={() => setConfirmDeleteId(null)}
-                        className="text-[10px] px-2 py-1 rounded-lg bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+                        className="text-[10px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
                       >
                         No
                       </button>
@@ -528,7 +528,7 @@ export default function TeamsPage() {
                   ) : (
                     <button
                       onClick={() => setConfirmDeleteId(team.id)}
-                      className="p-1.5 text-[var(--color-text-3)] hover:text-red-500 rounded-lg transition-colors"
+                      className="p-1.5 text-muted hover:text-red-500 rounded-lg transition-colors"
                       title="Delete team"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -541,7 +541,7 @@ export default function TeamsPage() {
 
               {/* Stats */}
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-[var(--color-text)]">
+                <span className="text-sm font-semibold text-[var(--foreground)]">
                   {team.memberCount} athlete{team.memberCount !== 1 ? "s" : ""}
                 </span>
                 <div className="flex gap-1">

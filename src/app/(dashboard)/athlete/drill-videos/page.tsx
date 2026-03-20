@@ -41,7 +41,7 @@ const EVENT_COLORS: Record<string, string> = {
  DISCUS: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
  HAMMER: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
  JAVELIN: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
- OTHER: "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] ",
+ OTHER: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 ",
 };
 
 function formatDate(dateStr: string): string {
@@ -107,8 +107,8 @@ export default function AthleteDrillVideosPage() {
  <div className="max-w-4xl">
  <div className="flex items-start justify-between mb-6">
  <div>
- <h1 className="text-2xl font-bold font-heading text-[var(--color-text)]">Drill PR Videos</h1>
- <p className="text-[var(--color-text-2)] mt-1 text-sm">
+ <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Drill PR Videos</h1>
+ <p className="text-surface-700 dark:text-surface-300 mt-1 text-sm">
  Short clips of your best drill performances (max 10 seconds each)
  </p>
  </div>
@@ -149,7 +149,7 @@ export default function AthleteDrillVideosPage() {
  {(filterEvent || filterDrill) && (
  <button
  onClick={() => { setFilterEvent(""); setFilterDrill(""); }}
- className="text-sm text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+ className="text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
  >
  Clear filters
  </button>
@@ -170,14 +170,14 @@ export default function AthleteDrillVideosPage() {
  ) : filteredVideos.length === 0 ? (
  <div className="card text-center py-16">
  <div className="w-16 h-16 rounded-2xl bg-[rgba(212,168,67,0.12)] flex items-center justify-center mx-auto mb-4">
- <svg className="w-8 h-8 text-[var(--color-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.88v6.24a1 1 0 01-1.447.888L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
  </svg>
  </div>
- <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">
+ <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">
  {videos.length === 0 ? "No drill videos yet" : "No videos match your filters"}
  </h3>
- <p className="text-[var(--color-text-2)] text-sm mb-6 max-w-sm mx-auto">
+ <p className="text-surface-700 dark:text-surface-300 text-sm mb-6 max-w-sm mx-auto">
  {videos.length === 0
  ? "Upload short video clips of your drill PRs to track your technique and progress over time."
  : "Try adjusting your filters to see more videos."}
@@ -223,13 +223,13 @@ export default function AthleteDrillVideosPage() {
  {/* Metadata */}
  <div className="p-4 flex flex-col flex-1">
  <div className="flex items-start justify-between gap-2 mb-2">
- <h3 className="text-sm font-semibold text-[var(--color-text)] line-clamp-2 flex-1">
+ <h3 className="text-sm font-semibold text-[var(--foreground)] line-clamp-2 flex-1">
  {video.title}
  </h3>
  <button
  onClick={() => handleDelete(video.id)}
  disabled={deletingId === video.id}
- className="text-[var(--color-text-3)] hover:text-red-500 dark:hover:text-red-400 shrink-0 transition-colors p-0.5"
+ className="text-muted hover:text-red-500 dark:hover:text-red-400 shrink-0 transition-colors p-0.5"
  title="Delete video"
  >
  {deletingId === video.id ? (
@@ -249,16 +249,16 @@ export default function AthleteDrillVideosPage() {
  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${EVENT_COLORS[video.event] || EVENT_COLORS.OTHER}`}>
  {EVENT_LABELS[video.event] || video.event}
  </span>
- <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] ">
+ <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 ">
  {DRILL_TYPE_LABELS[video.drillType] || video.drillType}
  </span>
  </div>
 
  {video.notes && (
- <p className="text-xs text-[var(--color-text-2)] line-clamp-2 mb-2">{video.notes}</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300 line-clamp-2 mb-2">{video.notes}</p>
  )}
 
- <p className="text-xs text-[var(--color-text-3)] mt-auto">{formatDate(video.createdAt)}</p>
+ <p className="text-xs text-muted mt-auto">{formatDate(video.createdAt)}</p>
  </div>
  </div>
  ))}

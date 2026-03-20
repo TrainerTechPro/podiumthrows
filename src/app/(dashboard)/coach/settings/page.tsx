@@ -381,7 +381,7 @@ export default function CoachSettingsPage() {
   ];
 
   const planColors: Record<string, string> = {
-    FREE: "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]",
+    FREE: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300",
     PRO: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     ELITE: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   };
@@ -421,20 +421,20 @@ export default function CoachSettingsPage() {
     <>
       <div className="max-w-2xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold font-heading text-[var(--color-text)]">Settings</h1>
-          <p className="text-[var(--color-text-2)] mt-1">Manage your profile, billing, and preferences</p>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Settings</h1>
+          <p className="text-surface-700 dark:text-surface-300 mt-1">Manage your profile, billing, and preferences</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-[var(--color-bg-subtle)] rounded-lg p-1 overflow-x-auto">
+        <div className="flex gap-1 mb-6 bg-[var(--muted-bg)] rounded-lg p-1 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm"
-                  : "text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+                  ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
+                  : "text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
               }`}
             >
               {tab.label}
@@ -442,7 +442,7 @@ export default function CoachSettingsPage() {
           ))}
           <Link
             href="/coach/settings/autoregulation"
-            className="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap text-center text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+            className="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap text-center text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
           >
             Autoregulation
           </Link>
@@ -452,10 +452,10 @@ export default function CoachSettingsPage() {
         {activeTab === "profile" && (
           <div className="animate-spring-up">
             <form onSubmit={handleSaveProfile} className="card mb-6">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Profile</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Profile</h2>
               <div className="space-y-4">
                 {/* Profile Picture */}
-                <div className="flex items-center gap-6 pb-4 border-b border-[var(--color-border)]">
+                <div className="flex items-center gap-6 pb-4 border-b border-[var(--card-border)]">
                   <div className="relative group">
                     {profile.avatarUrl ? (
                       <Image
@@ -464,11 +464,11 @@ export default function CoachSettingsPage() {
                         width={72}
                         height={72}
                         unoptimized
-                        className="w-18 h-18 rounded-full object-cover border-2 border-[var(--color-border)]"
+                        className="w-18 h-18 rounded-full object-cover border-2 border-[var(--card-border)]"
                         style={{ width: 72, height: 72 }}
                       />
                     ) : (
-                      <div className="w-[72px] h-[72px] rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] font-bold text-xl border-2 border-[var(--color-border)]">
+                      <div className="w-[72px] h-[72px] rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl border-2 border-[var(--card-border)]">
                         {profile.firstName?.[0] || "C"}{profile.lastName?.[0] || ""}
                       </div>
                     )}
@@ -492,7 +492,7 @@ export default function CoachSettingsPage() {
                     >
                       {profile.avatarUrl ? "Edit Photo" : "Add Photo"}
                     </button>
-                    <p className="text-xs text-[var(--color-text-3)]">Crop, zoom &amp; rotate</p>
+                    <p className="text-xs text-muted">Crop, zoom &amp; rotate</p>
                   </div>
                 </div>
 
@@ -525,9 +525,9 @@ export default function CoachSettingsPage() {
                     type="email"
                     value={profile.email}
                     disabled
-                    className="input bg-[var(--color-surface-2)] text-[var(--color-text-2)] cursor-not-allowed"
+                    className="input bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 cursor-not-allowed"
                   />
-                  <p className="text-xs text-[var(--color-text-3)] mt-1">Email cannot be changed</p>
+                  <p className="text-xs text-muted mt-1">Email cannot be changed</p>
                 </div>
                 <div>
                   <label htmlFor="bio" className="label">Bio</label>
@@ -552,7 +552,7 @@ export default function CoachSettingsPage() {
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--color-border)]">
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--card-border)]">
                 {saved && (
                   <span className="text-sm text-green-600 font-medium flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -570,7 +570,7 @@ export default function CoachSettingsPage() {
 
             {/* Password Section */}
             <form onSubmit={handleChangePassword} className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Change Password</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Change Password</h2>
               {pwMessage && (
                 <div
                   className={`mb-4 p-3 rounded-lg text-sm ${
@@ -624,7 +624,7 @@ export default function CoachSettingsPage() {
                   />
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-[var(--color-border)] flex justify-end">
+              <div className="mt-6 pt-4 border-t border-[var(--card-border)] flex justify-end">
                 <button
                   type="submit"
                   disabled={pwSaving || !passwordForm.currentPassword || !passwordForm.newPassword}
@@ -641,14 +641,14 @@ export default function CoachSettingsPage() {
         {activeTab === "billing" && subscription && (
           <div className="animate-spring-up space-y-6">
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Current Plan</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Current Plan</h2>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${planColors[subscription.plan] || planColors.FREE}`}>
                     {subscription.plan}
                   </span>
                   {subscription.plan === "FREE" ? (
-                    <span className="text-sm text-[var(--color-text-2)]">Free Plan</span>
+                    <span className="text-sm text-surface-700 dark:text-surface-300">Free Plan</span>
                   ) : subscription.paymentFailedAt ? (
                     <span className="text-sm text-amber-500 font-medium">Past Due</span>
                   ) : subscription.cancelAtPeriodEnd ? (
@@ -658,7 +658,7 @@ export default function CoachSettingsPage() {
                   )}
                 </div>
                 {subscription.currentPeriodEnd && subscription.plan !== "FREE" && (
-                  <p className="text-sm text-[var(--color-text-2)] mt-1">
+                  <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
                     {subscription.cancelAtPeriodEnd ? "Access until " : "Renews on "}
                     {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
                       month: "long",
@@ -672,13 +672,13 @@ export default function CoachSettingsPage() {
               {/* Athlete usage */}
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-[var(--color-text-2)]">Athletes</span>
-                  <span className="text-[var(--color-text)] font-medium">
+                  <span className="text-surface-700 dark:text-surface-300">Athletes</span>
+                  <span className="text-[var(--foreground)] font-medium">
                     {subscription.athleteCount} / {PLAN_LIMITS[subscription.plan] === Infinity ? "Unlimited" : PLAN_LIMITS[subscription.plan]}
                   </span>
                 </div>
                 {PLAN_LIMITS[subscription.plan] !== Infinity && (
-                  <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2">
+                  <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
                     <div
                       className="bg-amber-500 h-2 rounded-full transition-all"
                       style={{ width: `${Math.min(100, (subscription.athleteCount / (PLAN_LIMITS[subscription.plan] || 1)) * 100)}%` }}
@@ -687,7 +687,7 @@ export default function CoachSettingsPage() {
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[var(--color-border)]">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[var(--card-border)]">
                 {subscription.plan === "FREE" ? (
                   <a href="/pricing" className="btn-primary text-center">
                     Upgrade Plan
@@ -711,9 +711,9 @@ export default function CoachSettingsPage() {
 
             {/* Plan features */}
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Plan Features</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Plan Features</h2>
               {subscription.plan === "FREE" && (
-                <ul className="space-y-2 text-sm text-[var(--color-text-2)]">
+                <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     Up to 3 athletes
@@ -729,7 +729,7 @@ export default function CoachSettingsPage() {
                 </ul>
               )}
               {subscription.plan === "PRO" && (
-                <ul className="space-y-2 text-sm text-[var(--color-text-2)]">
+                <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     Up to 25 athletes
@@ -749,7 +749,7 @@ export default function CoachSettingsPage() {
                 </ul>
               )}
               {subscription.plan === "ELITE" && (
-                <ul className="space-y-2 text-sm text-[var(--color-text-2)]">
+                <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     Unlimited athletes
@@ -776,8 +776,8 @@ export default function CoachSettingsPage() {
         {activeTab === "invitations" && (
           <div className="animate-spring-up space-y-6">
             <form onSubmit={handleSendInvite} className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Invite an Athlete</h2>
-              <p className="text-sm text-[var(--color-text-2)] mb-4">
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Invite an Athlete</h2>
+              <p className="text-sm text-surface-700 dark:text-surface-300 mb-4">
                 Send an invitation link to an athlete. They&apos;ll be automatically linked to your account when they register.
               </p>
               {inviteMessage && (
@@ -837,7 +837,7 @@ export default function CoachSettingsPage() {
             </form>
 
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Sent Invitations</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Sent Invitations</h2>
               {invitations.length === 0 ? (
                 <div className="flex flex-col items-center text-center py-8 gap-2">
                   <div className="text-surface-300 dark:text-surface-600">
@@ -854,11 +854,11 @@ export default function CoachSettingsPage() {
                   {invitations.map((inv) => (
                     <div
                       key={inv.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-[var(--color-surface-2)] gap-2"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-[var(--muted-bg)] gap-2"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-[var(--color-text)] truncate">{inv.email}</p>
-                        <p className="text-xs text-[var(--color-text-2)]">
+                        <p className="text-sm font-medium text-[var(--foreground)] truncate">{inv.email}</p>
+                        <p className="text-xs text-surface-700 dark:text-surface-300">
                           {inv.sport && `${inv.sport}`}
                           {inv.sport && inv.position && " - "}
                           {inv.position && `${inv.position}`}
@@ -873,7 +873,7 @@ export default function CoachSettingsPage() {
                               ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                               : inv.status === "ACCEPTED"
                               ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+                              : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
                           }`}
                         >
                           {inv.status === "PENDING" && new Date(inv.expiresAt) < new Date()
@@ -901,7 +901,7 @@ export default function CoachSettingsPage() {
         {activeTab === "activity" && (
           <div className="animate-spring-up">
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Recent Activity</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Recent Activity</h2>
               {activities.length === 0 ? (
                 <div className="flex flex-col items-center text-center py-8 gap-2">
                   <div className="text-surface-300 dark:text-surface-600">
@@ -917,7 +917,7 @@ export default function CoachSettingsPage() {
                   {activities.map((act) => (
                     <div
                       key={act.id}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-[var(--color-surface-2)]"
+                      className="flex items-start gap-3 p-3 rounded-lg bg-[var(--muted-bg)]"
                     >
                       <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 mt-0.5">
                         <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -925,14 +925,14 @@ export default function CoachSettingsPage() {
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[var(--color-text)]">
+                        <p className="text-sm font-medium text-[var(--foreground)]">
                           {ACTION_LABELS[act.action] || act.action}
                         </p>
                         {act.details && (
-                          <p className="text-xs text-[var(--color-text-2)] truncate">{act.details}</p>
+                          <p className="text-xs text-surface-700 dark:text-surface-300 truncate">{act.details}</p>
                         )}
                       </div>
-                      <span className="text-xs text-[var(--color-text-3)] shrink-0">
+                      <span className="text-xs text-muted shrink-0">
                         {formatRelativeTime(act.createdAt)}
                       </span>
                     </div>
@@ -948,8 +948,8 @@ export default function CoachSettingsPage() {
           <div className="animate-spring-up space-y-6">
             {/* Global Default Page */}
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-1">Default Landing Page</h2>
-              <p className="text-sm text-[var(--color-text-2)] mb-5">
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">Default Landing Page</h2>
+              <p className="text-sm text-surface-700 dark:text-surface-300 mb-5">
                 Choose which page opens when you first launch the app.
               </p>
               <div className="space-y-2">
@@ -963,8 +963,8 @@ export default function CoachSettingsPage() {
                     key={page.href}
                     className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
                       preferences.globalDefaultPage === page.href
-                        ? "bg-[rgba(212,168,67,0.08)] border border-[var(--color-gold)]/30"
-                        : "border border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                        ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
+                        : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                     }`}
                   >
                     <input
@@ -976,8 +976,8 @@ export default function CoachSettingsPage() {
                       className="mt-0.5"
                     />
                     <div>
-                      <p className="text-sm font-medium text-[var(--color-text)]">{page.label}</p>
-                      <p className="text-xs text-[var(--color-text-3)]">{page.desc}</p>
+                      <p className="text-sm font-medium text-[var(--foreground)]">{page.label}</p>
+                      <p className="text-xs text-muted">{page.desc}</p>
                     </div>
                   </label>
                 ))}
@@ -986,8 +986,8 @@ export default function CoachSettingsPage() {
 
             {/* Per-Workspace Defaults */}
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-1">Quick Links</h2>
-              <p className="text-sm text-[var(--color-text-2)] mb-5">
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">Quick Links</h2>
+              <p className="text-sm text-surface-700 dark:text-surface-300 mb-5">
                 Choose the default page when switching to the throws workspace.
               </p>
               <div className="space-y-6">
@@ -1005,8 +1005,8 @@ export default function CoachSettingsPage() {
                           key={page.href}
                           className={`flex items-center gap-2.5 p-3 rounded-xl cursor-pointer transition-colors ${
                             (preferences.workspaceDefaults?.throws ?? "/coach/throws") === page.href
-                              ? "bg-[rgba(212,168,67,0.08)] border border-[var(--color-gold)]/30"
-                              : "border border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                              ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
+                              : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                           }`}
                         >
                           <input
@@ -1020,7 +1020,7 @@ export default function CoachSettingsPage() {
                               })
                             }
                           />
-                          <span className="text-sm font-medium text-[var(--color-text)]">{page.label}</span>
+                          <span className="text-sm font-medium text-[var(--foreground)]">{page.label}</span>
                         </label>
                       ))}
                     </div>
@@ -1031,8 +1031,8 @@ export default function CoachSettingsPage() {
 
             {/* My Training */}
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-1">My Training</h2>
-              <p className="text-sm text-[var(--color-text-2)] mb-5">
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">My Training</h2>
+              <p className="text-sm text-surface-700 dark:text-surface-300 mb-5">
                 Configure your personal training preferences for the My Training section.
               </p>
 
@@ -1049,8 +1049,8 @@ export default function CoachSettingsPage() {
                         key={mode.value}
                         className={`flex items-start gap-2.5 p-3 rounded-xl cursor-pointer transition-colors ${
                           (preferences.myTraining?.mode ?? "recreational") === mode.value
-                            ? "bg-[rgba(212,168,67,0.08)] border border-[var(--color-gold)]/30"
-                            : "border border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                            ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
+                            : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                         }`}
                       >
                         <input
@@ -1066,8 +1066,8 @@ export default function CoachSettingsPage() {
                           className="mt-0.5"
                         />
                         <div>
-                          <p className="text-sm font-medium text-[var(--color-text)]">{mode.label}</p>
-                          <p className="text-xs text-[var(--color-text-3)]">{mode.desc}</p>
+                          <p className="text-sm font-medium text-[var(--foreground)]">{mode.label}</p>
+                          <p className="text-xs text-muted">{mode.desc}</p>
                         </div>
                       </label>
                     ))}
@@ -1106,8 +1106,8 @@ export default function CoachSettingsPage() {
                         key={g.value}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-colors ${
                           (preferences.myTraining?.gender ?? "male") === g.value
-                            ? "bg-[rgba(212,168,67,0.08)] border border-[var(--color-gold)]/30"
-                            : "border border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                            ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
+                            : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                         }`}
                       >
                         <input
@@ -1121,7 +1121,7 @@ export default function CoachSettingsPage() {
                             })
                           }
                         />
-                        <span className="text-sm font-medium text-[var(--color-text)]">{g.label}</span>
+                        <span className="text-sm font-medium text-[var(--foreground)]">{g.label}</span>
                       </label>
                     ))}
                   </div>
@@ -1130,7 +1130,7 @@ export default function CoachSettingsPage() {
             </div>
 
             {prefSaving && (
-              <div className="text-xs text-[var(--color-text-3)] flex items-center gap-1.5">
+              <div className="text-xs text-muted flex items-center gap-1.5">
                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
@@ -1143,7 +1143,7 @@ export default function CoachSettingsPage() {
 
         {/* Accessibility Section — always visible */}
         <div className="card mt-6 mb-24 lg:mb-0">
-          <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Accessibility</h2>
+          <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Accessibility</h2>
           <div className="space-y-6">
             {/* Font Size */}
             <div>
@@ -1156,8 +1156,8 @@ export default function CoachSettingsPage() {
                     onClick={() => setFontSize(size)}
                     className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       fontSize === size
-                        ? "bg-[rgba(212,168,67,0.12)] text-[var(--color-text)]"
-                        : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+                        ? "bg-[rgba(212,168,67,0.12)] text-[var(--foreground)]"
+                        : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
                     }`}
                   >
                     {size === "default" ? "Default" : size === "large" ? "Large" : "XL"}
@@ -1171,7 +1171,7 @@ export default function CoachSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <label className="label mb-0">Reduce animations</label>
-                  <p className="text-sm text-[var(--color-text-2)] mt-0.5">
+                  <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
                     Minimizes motion for users who are sensitive to animations
                   </p>
                 </div>

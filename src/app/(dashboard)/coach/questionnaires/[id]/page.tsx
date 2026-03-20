@@ -277,7 +277,7 @@ export default async function QuestionnaireDetailPage({
                 key={a.athleteId}
                 className={`flex items-center justify-between text-sm rounded-lg px-3 py-2 -mx-3 transition-colors ${
                   a.completedAt
-                    ? "hover:bg-[var(--color-surface-2)] cursor-default"
+                    ? "hover:bg-[var(--muted-bg)] cursor-default"
                     : ""
                 }`}
               >

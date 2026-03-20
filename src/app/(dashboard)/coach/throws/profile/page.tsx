@@ -71,7 +71,7 @@ function ScoreArc({
  r={radius}
  fill="none"
  stroke="currentColor"
- className="text-[var(--color-text-3)]"
+ className="text-muted"
  strokeWidth={8}
  />
  <circle
@@ -88,16 +88,16 @@ function ScoreArc({
  />
  </svg>
  <div className="absolute inset-0 flex items-center justify-center">
- <span className="text-2xl font-bold text-[var(--color-text)] font-mono">
+ <span className="text-2xl font-bold text-[var(--foreground)] font-mono">
  {score != null ? score : "—"}
  </span>
  </div>
  </div>
  <div className="text-center">
- <p className="text-xs font-bold text-[var(--color-text-2)] uppercase tracking-wider">
+ <p className="text-xs font-bold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
  {label}
  </p>
- <p className="text-[10px] text-[var(--color-text-2)]">{sublabel}</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">{sublabel}</p>
  </div>
  </div>
  );
@@ -121,7 +121,7 @@ function SourceBadge({ source }: { source: string }) {
  );
  }
  return (
- <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]">
+ <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
  Athlete
  </span>
  );
@@ -143,16 +143,16 @@ function BodyMap({ soreness }: { soreness: Record<string, number> }) {
  return (
  <div
  key={zone.key}
- className="rounded-lg p-2 text-center border border-[var(--color-border)]"
+ className="rounded-lg p-2 text-center border border-[var(--card-border)]"
  style={{ backgroundColor: getColor(val) }}
  >
- <p className="text-[10px] font-bold text-[var(--color-text)] uppercase">
+ <p className="text-[10px] font-bold text-[var(--foreground)] uppercase">
  {zone.label}
  </p>
- <p className="text-lg font-bold text-[var(--color-text)] font-mono">
- {val}<span className="text-[10px] text-[var(--color-text-2)] font-sans">/10</span>
+ <p className="text-lg font-bold text-[var(--foreground)] font-mono">
+ {val}<span className="text-[10px] text-surface-700 dark:text-surface-300 font-sans">/10</span>
  </p>
- <p className="text-[9px] text-[var(--color-text-2)] leading-tight mt-0.5">
+ <p className="text-[9px] text-surface-700 dark:text-surface-300 leading-tight mt-0.5">
  {SORENESS_LABELS[val] ?? "None"}
  </p>
  </div>
@@ -215,13 +215,13 @@ function CheckInForm({
 
  return (
  <div className="card !p-5 space-y-5">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Daily Check-In
  </h3>
 
  {/* Self-Feeling */}
  <div className="space-y-2">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">
  Self-Feeling (Bondarchuk Scale)
  </label>
  <div className="flex gap-2">
@@ -231,17 +231,17 @@ function CheckInForm({
  onClick={() => setSelfFeeling(s.value)}
  className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${
  selfFeeling === s.value
- ? "bg-[var(--color-gold)] text-[var(--color-bg)] border-[var(--color-gold)]"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] border-[var(--color-border)]"
+ ? "bg-primary-500 text-[var(--color-bg)] border-primary-500"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"
  }`}
  >
  <span className="block text-sm font-bold">{s.value}</span>
- <span className={`block text-[9px] leading-tight mt-0.5 ${selfFeeling === s.value ? "text-white/80" : "text-[var(--color-text-3)]"}`}>{s.label}</span>
+ <span className={`block text-[9px] leading-tight mt-0.5 ${selfFeeling === s.value ? "text-white/80" : "text-muted"}`}>{s.label}</span>
  </button>
  ))}
  </div>
  {feelingMeta && (
- <p className="text-[10px] text-[var(--color-text-2)]">
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">
  {feelingMeta.desc} — Expected performance: {feelingMeta.perfExpect}
  </p>
  )}
@@ -250,7 +250,7 @@ function CheckInForm({
  {/* Sleep */}
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Sleep Hours</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Sleep Hours</label>
  <input
  type="number"
  min={0}
@@ -258,11 +258,11 @@ function CheckInForm({
  step={0.5}
  value={sleepHours}
  onChange={(e) => setSleepHours(parseFloat(e.target.value) || 0)}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Sleep Quality</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Sleep Quality</label>
  <div className="flex gap-1">
  {SLEEP_QUALITY_SCALE.map((sq) => (
  <button
@@ -270,12 +270,12 @@ function CheckInForm({
  onClick={() => setSleepQuality(sq.value)}
  className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${
  sleepQuality === sq.value
- ? "bg-[var(--color-gold)] text-[var(--color-bg)] border-[var(--color-gold)]"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] border-[var(--color-border)]"
+ ? "bg-primary-500 text-[var(--color-bg)] border-primary-500"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"
  }`}
  >
  <span className="block text-sm font-bold">{sq.value}</span>
- <span className={`block text-[9px] leading-tight mt-0.5 ${sleepQuality === sq.value ? "text-white/80" : "text-[var(--color-text-3)]"}`}>{sq.label}</span>
+ <span className={`block text-[9px] leading-tight mt-0.5 ${sleepQuality === sq.value ? "text-white/80" : "text-muted"}`}>{sq.label}</span>
  </button>
  ))}
  </div>
@@ -284,31 +284,31 @@ function CheckInForm({
 
  {/* Energy */}
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Energy Level</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Energy Level</label>
  <input
  type="range"
  min={1}
  max={10}
  value={energy}
  onChange={(e) => setEnergy(parseInt(e.target.value))}
- className="w-full accent-[var(--color-gold)]"
+ className="w-full accent-primary-500"
  />
- <div className="flex justify-between text-[10px] text-[var(--color-text-3)]">
+ <div className="flex justify-between text-[10px] text-muted">
  <span>Exhausted</span>
- <span className="font-bold text-[var(--color-text-2)]">{energy} — {ENERGY_SCALE.find((e) => e.value === energy)?.label}</span>
+ <span className="font-bold text-surface-700 dark:text-surface-300">{energy} — {ENERGY_SCALE.find((e) => e.value === energy)?.label}</span>
  <span>Peak</span>
  </div>
  </div>
 
  {/* Soreness Map */}
  <div className="space-y-2">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Soreness</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Soreness</label>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
  {SORENESS_ZONES.map((zone) => {
  const val = soreness[zone.key] || 0;
  return (
  <div key={zone.key} className="space-y-1">
- <label className="text-[10px] text-[var(--color-text-2)]">{zone.label}</label>
+ <label className="text-[10px] text-surface-700 dark:text-surface-300">{zone.label}</label>
  <input
  type="range"
  min={0}
@@ -317,10 +317,10 @@ function CheckInForm({
  onChange={(e) =>
  setSoreness({ ...soreness, [zone.key]: parseInt(e.target.value) })
  }
- className="w-full accent-[var(--color-gold)]"
+ className="w-full accent-primary-500"
  />
- <span className="text-[10px] font-mono text-[var(--color-text-2)]">
- {val} — <span className="font-sans text-[var(--color-text-2)]">{SORENESS_LABELS[val] || ""}</span>
+ <span className="text-[10px] font-mono text-surface-700 dark:text-surface-300">
+ {val} — <span className="font-sans text-surface-700 dark:text-surface-300">{SORENESS_LABELS[val] || ""}</span>
  </span>
  </div>
  );
@@ -330,12 +330,12 @@ function CheckInForm({
 
  {/* Notes */}
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Notes (optional)</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Notes (optional)</label>
  <textarea
  value={notes}
  onChange={(e) => setNotes(e.target.value)}
  rows={2}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)] resize-none"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] resize-none"
  placeholder="Any additional notes..."
  />
  </div>
@@ -585,10 +585,10 @@ export default function AthleteProfilePage() {
  {/* Header */}
  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
  Athlete Profile
  </h1>
- <p className="text-sm text-[var(--color-text-2)]">
+ <p className="text-sm text-surface-700 dark:text-surface-300">
  Readiness, adaptation, and Bondarchuk typing
  </p>
  </div>
@@ -596,7 +596,7 @@ export default function AthleteProfilePage() {
  <select
  value={selectedAthleteId}
  onChange={(e) => setSelectedAthleteId(e.target.value)}
- className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  <option value="">Select athlete...</option>
  {athletes.map((a) => (
@@ -607,7 +607,7 @@ export default function AthleteProfilePage() {
  </select>
  <Link
  href="/coach/throws"
- className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:text-[var(--color-gold-dark)] font-medium"
+ className="text-sm text-primary-600 dark:text-primary-300 hover:text-primary-600 font-medium"
  >
  Dashboard
  </Link>
@@ -616,14 +616,14 @@ export default function AthleteProfilePage() {
 
  {!selectedAthleteId && athletesLoaded && athletes.length === 0 && (
  <div className="card text-center py-12 space-y-4">
- <div className="w-14 h-14 mx-auto rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center">
- <svg className="w-7 h-7 text-[var(--color-text-3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <div className="w-14 h-14 mx-auto rounded-full bg-[var(--muted-bg)] flex items-center justify-center">
+ <svg className="w-7 h-7 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
  </svg>
  </div>
  <div>
- <p className="font-medium text-[var(--color-text-2)]">No athletes yet</p>
- <p className="text-sm text-[var(--color-text-2)] mt-1">Add an athlete to your roster to get started.</p>
+ <p className="font-medium text-surface-700 dark:text-surface-300">No athletes yet</p>
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">Add an athlete to your roster to get started.</p>
  </div>
  <Link
  href="/coach/athletes/new"
@@ -639,13 +639,13 @@ export default function AthleteProfilePage() {
 
  {!selectedAthleteId && athletesLoaded && athletes.length > 0 && (
  <div className="space-y-3">
- <p className="text-sm font-semibold text-[var(--color-text-2)]">Choose an athlete</p>
+ <p className="text-sm font-semibold text-surface-700 dark:text-surface-300">Choose an athlete</p>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
  {athletes.map((a) => (
  <button
  key={a.id}
  onClick={() => setSelectedAthleteId(a.id)}
- className="card !p-4 flex flex-col items-center gap-2 hover:border-[var(--color-gold)] hover:shadow-md transition-all text-left cursor-pointer"
+ className="card !p-4 flex flex-col items-center gap-2 hover:border-primary-500 hover:shadow-md transition-all text-left cursor-pointer"
  >
  <UserAvatar
  src={a.profilePictureUrl}
@@ -653,7 +653,7 @@ export default function AthleteProfilePage() {
  lastName={a.user.lastName}
  size="xl"
  />
- <p className="text-sm font-semibold text-[var(--color-text)] text-center leading-tight">
+ <p className="text-sm font-semibold text-[var(--foreground)] text-center leading-tight">
  {a.user.firstName} {a.user.lastName}
  </p>
  </button>
@@ -670,8 +670,8 @@ export default function AthleteProfilePage() {
  </svg>
  </div>
  <div>
- <p className="font-medium text-[var(--color-text-2)]">Could not load profile</p>
- <p className="text-sm text-[var(--color-text-2)] mt-1">There was a problem loading this athlete&apos;s profile data.</p>
+ <p className="font-medium text-surface-700 dark:text-surface-300">Could not load profile</p>
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">There was a problem loading this athlete&apos;s profile data.</p>
  </div>
  <button
  onClick={() => loadProfile(selectedAthleteId)}
@@ -695,24 +695,24 @@ export default function AthleteProfilePage() {
  size="lg"
  />
  <div>
- <p className="font-semibold text-[var(--color-text)]">
+ <p className="font-semibold text-[var(--foreground)]">
  {profile.athlete.firstName} {profile.athlete.lastName}
  </p>
  <div className="flex items-center gap-2 flex-wrap mt-0.5">
  {profile.athlete.gender && (
- <span className="text-[10px] text-[var(--color-text-2)] uppercase font-medium">{profile.athlete.gender}</span>
+ <span className="text-[10px] text-surface-700 dark:text-surface-300 uppercase font-medium">{profile.athlete.gender}</span>
  )}
  {profile.athlete.sport && (
- <span className="text-[10px] text-[var(--color-text-2)]">{profile.athlete.sport}</span>
+ <span className="text-[10px] text-surface-700 dark:text-surface-300">{profile.athlete.sport}</span>
  )}
  {profile.athlete.weight && (
- <span className="text-[10px] text-[var(--color-text-2)]">{profile.athlete.weight}kg</span>
+ <span className="text-[10px] text-surface-700 dark:text-surface-300">{profile.athlete.weight}kg</span>
  )}
  {profile.athlete.height && (
- <span className="text-[10px] text-[var(--color-text-2)]">{profile.athlete.height}cm</span>
+ <span className="text-[10px] text-surface-700 dark:text-surface-300">{profile.athlete.height}cm</span>
  )}
  </div>
- <p className="text-xs text-[var(--color-text-2)] mt-0.5">
+ <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
  {profile.prs.map((pr) => {
  const e = EVENTS[pr.event as ThrowEvent];
  return e ? `${e.label} ${pr.distance.toFixed(2)}m` : null;
@@ -890,7 +890,7 @@ export default function AthleteProfilePage() {
 
  {/* ── Training Complex ─────────────────────────────────────── */}
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Training Complex
  </h3>
  <ManageComplexForm
@@ -943,18 +943,18 @@ export default function AthleteProfilePage() {
  {/* ── Transfer Exercise Breakdown ─────────────────────────── */}
  {transferResult.exercises.length > 0 && (
  <div className="card !p-4 space-y-2">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Transfer Breakdown
  </h3>
- <p className="text-[10px] text-[var(--color-text-2)]">
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">
  Expected correlation coefficients from Bondarchuk Vol IV for current complex exercises
  </p>
  <div className="space-y-1">
  {transferResult.exercises.map((ex) => (
- <div key={ex.name} className="flex items-center justify-between py-1 border-b border-[var(--color-border)] last:border-0">
- <span className="text-xs text-[var(--color-text-2)] truncate max-w-[60%]">{ex.name}</span>
+ <div key={ex.name} className="flex items-center justify-between py-1 border-b border-[var(--card-border)] last:border-0">
+ <span className="text-xs text-surface-700 dark:text-surface-300 truncate max-w-[60%]">{ex.name}</span>
  <div className="flex items-center gap-2">
- <div className="w-20 bg-[var(--color-bg-subtle)] rounded-full h-1.5">
+ <div className="w-20 bg-[var(--muted-bg)] rounded-full h-1.5">
  <div
  className="h-1.5 rounded-full"
  style={{
@@ -980,7 +980,7 @@ export default function AthleteProfilePage() {
 
  {/* ── Panel 1: Mark Timeline ──────────────────────────────── */}
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Mark Timeline
  </h3>
  {profile.competitionMarks.length > 0 ? (() => {
@@ -1014,34 +1014,34 @@ export default function AthleteProfilePage() {
  : `Training ${m.date}: ${m.distance.toFixed(2)}m (${m.implement})`
  }
  >
- <div className="absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[var(--color-text)] text-[var(--color-surface)] text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap z-10">
+ <div className="absolute -top-6 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[var(--foreground)] text-[var(--card-bg)] text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap z-10">
  {isComp ? "COMP " : ""}{m.distance.toFixed(2)}m
  </div>
  </div>
  );
  })}
  </div>
- <div className="flex items-center gap-4 text-[10px] text-[var(--color-text-2)] flex-wrap">
+ <div className="flex items-center gap-4 text-[10px] text-surface-700 dark:text-surface-300 flex-wrap">
  {primaryPR && (
- <span>PR: <strong className="text-[var(--color-text)]">{primaryPR.distance.toFixed(2)}m</strong></span>
+ <span>PR: <strong className="text-[var(--foreground)]">{primaryPR.distance.toFixed(2)}m</strong></span>
  )}
  {compCount > 0 && (
  <span className="flex items-center gap-1">
  <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: "#D46A6A" }} />
- Competition: <strong className="text-[var(--color-text)]">{compCount}</strong>
+ Competition: <strong className="text-[var(--foreground)]">{compCount}</strong>
  </span>
  )}
  {trainCount > 0 && (
  <span className="flex items-center gap-1">
  <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: eventColor, opacity: 0.7 }} />
- Training: <strong className="text-[var(--color-text)]">{trainCount}</strong>
+ Training: <strong className="text-[var(--foreground)]">{trainCount}</strong>
  </span>
  )}
  </div>
  </div>
  );
  })() : (
- <p className="text-xs text-[var(--color-text-3)] italic">No marks recorded yet.</p>
+ <p className="text-xs text-muted italic">No marks recorded yet.</p>
  )}
  </div>
 
@@ -1049,7 +1049,7 @@ export default function AthleteProfilePage() {
  <div className="card !p-4 space-y-3">
  <div className="flex items-center justify-between gap-2 flex-wrap">
  <div className="flex items-center gap-2">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Athlete Typing
  </h3>
  {profile.typing && <SourceBadge source={profile.typing.typingSource || "QUIZ"} />}
@@ -1064,7 +1064,7 @@ export default function AthleteProfilePage() {
  {profile.typing?.quizCompletedDate && (
  <Link
  href={`/coach/throws/profile/typing?athleteId=${selectedAthleteId}`}
- className="text-xs text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:underline"
+ className="text-xs text-primary-600 dark:text-primary-300 hover:underline"
  >
  Retake Quiz
  </Link>
@@ -1091,24 +1091,24 @@ export default function AthleteProfilePage() {
  { label: "Recovery", value: profile.typing.recoveryProfile?.replace(/\b\w/g, (c: string) => c.toUpperCase()) || "—", confidence: null },
  { label: "Method", value: profile.typing.recommendedMethod?.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "—", confidence: null },
  ].map((dim) => (
- <div key={dim.label} className="flex items-center justify-between py-1 border-b border-[var(--color-border)] last:border-0">
- <span className="text-xs text-[var(--color-text-2)] font-medium">{dim.label}</span>
+ <div key={dim.label} className="flex items-center justify-between py-1 border-b border-[var(--card-border)] last:border-0">
+ <span className="text-xs text-surface-700 dark:text-surface-300 font-medium">{dim.label}</span>
  <div className="flex items-center gap-2">
- <span className="text-xs font-semibold text-[var(--color-text)]">{dim.value}</span>
+ <span className="text-xs font-semibold text-[var(--foreground)]">{dim.value}</span>
  {dim.confidence != null && dim.confidence > 0 && (
- <span className="text-[10px] text-[var(--color-text-3)] font-mono">[{dim.confidence}%]</span>
+ <span className="text-[10px] text-muted font-mono">[{dim.confidence}%]</span>
  )}
  </div>
  </div>
  ))}
- <div className="pt-2 flex items-center gap-4 text-[10px] text-[var(--color-text-2)]">
+ <div className="pt-2 flex items-center gap-4 text-[10px] text-surface-700 dark:text-surface-300">
  <span>Duration: <strong>{profile.typing.optimalComplexDuration || "—"}</strong></span>
  <span>Sessions to form: <strong>~{profile.typing.estimatedSessionsToForm || "—"}</strong></span>
  </div>
  </div>
  ) : (
  <div className="text-center py-6">
- <p className="text-xs text-[var(--color-text-3)] mb-3">No typing quiz completed yet.</p>
+ <p className="text-xs text-muted mb-3">No typing quiz completed yet.</p>
  <Link
  href={`/coach/throws/profile/typing?athleteId=${selectedAthleteId}`}
  className="btn-primary text-xs px-4 py-2"
@@ -1122,19 +1122,19 @@ export default function AthleteProfilePage() {
  {/* ── Panel 6: Body & Recovery Tracker ───────────────────── */}
  <div className="card !p-4 space-y-3">
  <div className="flex items-center justify-between">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Body & Recovery
  </h3>
  <div className="flex items-center gap-2">
  {todayCheckin ? (
  <>
- <span className="text-[10px] text-[var(--color-text-3)]">
+ <span className="text-[10px] text-muted">
  Filled today
  </span>
  <SourceBadge source={todayCheckin.source} />
  </>
  ) : profile.checkins.length > 0 ? (
- <span className="text-[10px] text-[var(--color-text-3)]">
+ <span className="text-[10px] text-muted">
  Last: {profile.checkins[0].date}
  </span>
  ) : null}
@@ -1144,20 +1144,20 @@ export default function AthleteProfilePage() {
  <div className="space-y-4">
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
  <div className="text-center">
- <p className="text-[10px] text-[var(--color-text-2)] uppercase">Self-Feeling</p>
- <p className="text-2xl font-bold text-[var(--color-text)] font-mono">{todayCheckin.selfFeeling}/5</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300 uppercase">Self-Feeling</p>
+ <p className="text-2xl font-bold text-[var(--foreground)] font-mono">{todayCheckin.selfFeeling}/5</p>
  </div>
  <div className="text-center">
- <p className="text-[10px] text-[var(--color-text-2)] uppercase">Sleep</p>
- <p className="text-2xl font-bold text-[var(--color-text)] font-mono">{todayCheckin.sleepHours ?? "—"}h</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300 uppercase">Sleep</p>
+ <p className="text-2xl font-bold text-[var(--foreground)] font-mono">{todayCheckin.sleepHours ?? "—"}h</p>
  </div>
  <div className="text-center">
- <p className="text-[10px] text-[var(--color-text-2)] uppercase">Energy</p>
- <p className="text-2xl font-bold text-[var(--color-text)] font-mono">{todayCheckin.energy ?? "—"}/10</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300 uppercase">Energy</p>
+ <p className="text-2xl font-bold text-[var(--foreground)] font-mono">{todayCheckin.energy ?? "—"}/10</p>
  </div>
  <div className="text-center">
- <p className="text-[10px] text-[var(--color-text-2)] uppercase">Sleep Quality</p>
- <p className="text-2xl font-bold text-[var(--color-text)] font-mono">{todayCheckin.sleepQuality ?? "—"}/5</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300 uppercase">Sleep Quality</p>
+ <p className="text-2xl font-bold text-[var(--foreground)] font-mono">{todayCheckin.sleepQuality ?? "—"}/5</p>
  </div>
  </div>
  <BodyMap soreness={{
@@ -1173,7 +1173,7 @@ export default function AthleteProfilePage() {
  {/* Recent check-in trend (last 7 days) */}
  {profile.checkins.length > 1 && (
  <div className="space-y-1">
- <p className="text-[10px] font-semibold text-[var(--color-text-2)] uppercase">
+ <p className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 uppercase">
  Self-Feeling Trend (Last 7 Days)
  </p>
  <div className="flex items-end gap-1 h-12">
@@ -1195,7 +1195,7 @@ export default function AthleteProfilePage() {
  </div>
  ) : (
  <div className="text-center py-4">
- <p className="text-xs text-[var(--color-text-3)] mb-2">No check-in for today.</p>
+ <p className="text-xs text-muted mb-2">No check-in for today.</p>
  <button onClick={() => setShowCheckIn(true)} className="btn-secondary text-xs px-4 py-1.5">
  Submit Check-In
  </button>
@@ -1205,22 +1205,22 @@ export default function AthleteProfilePage() {
 
  {/* ── Panel 3: Session Compliance ─────────────────────────── */}
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Session Compliance
  </h3>
  {profile.assignments.length > 0 ? (
  <div className="space-y-2">
- <div className="flex items-center gap-4 text-xs text-[var(--color-text-2)]">
+ <div className="flex items-center gap-4 text-xs text-surface-700 dark:text-surface-300">
  <span>
  Completed:{" "}
- <strong className="text-[var(--color-text)]">
+ <strong className="text-[var(--foreground)]">
  {profile.assignments.filter((a) => a.status === "COMPLETED").length}
  </strong>
  /{profile.assignments.length}
  </span>
  <span>
  Rate:{" "}
- <strong className="text-[var(--color-text)]">
+ <strong className="text-[var(--foreground)]">
  {Math.round(
  (profile.assignments.filter((a) => a.status === "COMPLETED").length /
  profile.assignments.length) * 100,
@@ -1247,7 +1247,7 @@ export default function AthleteProfilePage() {
  />
  ))}
  </div>
- <div className="flex gap-3 text-[10px] text-[var(--color-text-2)]">
+ <div className="flex gap-3 text-[10px] text-surface-700 dark:text-surface-300">
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#5BB88A]" /> Completed</span>
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#D4915A]" /> Partial</span>
  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#D46A6A]" /> Skipped</span>
@@ -1255,18 +1255,18 @@ export default function AthleteProfilePage() {
  </div>
  </div>
  ) : (
- <p className="text-xs text-[var(--color-text-3)] italic">No sessions assigned yet.</p>
+ <p className="text-xs text-muted italic">No sessions assigned yet.</p>
  )}
  </div>
 
  {/* ── Panel 2: Annual Volume Progress ────────────────────── */}
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Annual Volume
  </h3>
  {volumeTargets ? (
  <div className="space-y-3">
- <p className="text-[10px] text-[var(--color-text-2)]">
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">
  {primaryEvent ? EVENTS[primaryEvent]?.label : "Throws"} — {qualification.toUpperCase()} qualification level
  </p>
  {(["competition", "lighter", "heavier", "analogous", "total"] as const).map((cat) => {
@@ -1279,12 +1279,12 @@ export default function AthleteProfilePage() {
  return (
  <div key={cat} className="space-y-1">
  <div className="flex justify-between text-[10px]">
- <span className="text-[var(--color-text-2)] capitalize font-medium">{cat}</span>
- <span className="text-[var(--color-text-2)] font-mono">
+ <span className="text-surface-700 dark:text-surface-300 capitalize font-medium">{cat}</span>
+ <span className="text-surface-700 dark:text-surface-300 font-mono">
  {actual.toLocaleString()} / {target.toLocaleString()} ({pct}%)
  </span>
  </div>
- <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2">
+ <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
  <div
  className="h-2 rounded-full transition-all"
  style={{
@@ -1300,7 +1300,7 @@ export default function AthleteProfilePage() {
  })}
  </div>
  ) : (
- <p className="text-xs text-[var(--color-text-3)] italic">
+ <p className="text-xs text-muted italic">
  Record PRs to see annual volume targets based on qualification level.
  </p>
  )}
@@ -1308,17 +1308,17 @@ export default function AthleteProfilePage() {
 
  {/* ── Panel 9: Competition Readiness ─────────────────────── */}
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Competition Readiness
  </h3>
  {nextComp ? (
  <div className="space-y-3">
  <div className="flex items-center justify-between">
  <div>
- <p className="text-lg font-bold text-[var(--color-text)]">
+ <p className="text-lg font-bold text-[var(--foreground)]">
  {daysToComp} days
  </p>
- <p className="text-xs text-[var(--color-text-2)]">
+ <p className="text-xs text-surface-700 dark:text-surface-300">
  to {nextComp.name}
  </p>
  </div>
@@ -1334,7 +1334,7 @@ export default function AthleteProfilePage() {
  </div>
 
  {/* Form status */}
- <div className="p-2 rounded-lg bg-[var(--color-surface-2)]/50">
+ <div className="p-2 rounded-lg bg-[var(--muted-bg)]/50">
  {adaptation.phase === "in-form" ? (
  <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
  IN FORM — Peak performance expected
@@ -1348,7 +1348,7 @@ export default function AthleteProfilePage() {
  Still adapting — {Math.max(0, (profile.typing?.estimatedSessionsToForm || 18) - (currentComplex?.sessionsCount || 0))} sessions remaining (est.)
  </p>
  ) : (
- <p className="text-xs text-[var(--color-text-2)]">
+ <p className="text-xs text-surface-700 dark:text-surface-300">
  Early in complex — continue building
  </p>
  )}
@@ -1357,17 +1357,17 @@ export default function AthleteProfilePage() {
  {/* Taper preview */}
  {taper && daysToComp != null && daysToComp <= 7 && (
  <div className="space-y-1">
- <p className="text-[10px] font-semibold text-[var(--color-text-2)] uppercase">
+ <p className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 uppercase">
  Taper Active
  </p>
- <p className="text-xs text-[var(--color-text-2)]">
+ <p className="text-xs text-surface-700 dark:text-surface-300">
  Volume at <strong>{Math.round(taper.volumeMultiplier * 100)}%</strong> ({daysToComp} days out)
  </p>
  </div>
  )}
 
  {/* Add competition form link */}
- <p className="text-[10px] text-[var(--color-text-2)]">
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">
  Event: {EVENTS[nextComp.event as ThrowEvent]?.label || nextComp.event} | Date: {nextComp.date}
  </p>
  </div>
@@ -1443,7 +1443,7 @@ function DrillPRPanel({
  return (
  <div className="card !p-5 space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Drill PRs
  </h3>
  <button
@@ -1455,14 +1455,14 @@ function DrillPRPanel({
  </div>
 
  {showForm && (
- <div className="bg-[var(--color-surface-2)]/50 rounded-lg p-4 space-y-3">
+ <div className="bg-[var(--muted-bg)]/50 rounded-lg p-4 space-y-3">
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Event</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Event</label>
  <select
  value={event}
  onChange={(e) => setEvent(e.target.value)}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  {(Object.keys(EVENTS) as ThrowEvent[]).map((e) => (
  <option key={e} value={e}>{EVENTS[e].label}</option>
@@ -1470,11 +1470,11 @@ function DrillPRPanel({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Drill Type</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Drill Type</label>
  <select
  value={drillType}
  onChange={(e) => setDrillType(e.target.value)}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  {DRILL_TYPE_OPTIONS.map((d) => (
  <option key={d.value} value={d.value}>{d.label}</option>
@@ -1482,17 +1482,17 @@ function DrillPRPanel({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Implement</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Implement</label>
  <input
  type="text"
  value={implement}
  onChange={(e) => setImplement(e.target.value)}
  placeholder="e.g. 7.26kg"
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Distance (m)</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Distance (m)</label>
  <input
  type="number"
  step="0.01"
@@ -1500,26 +1500,26 @@ function DrillPRPanel({
  value={distance}
  onChange={(e) => setDistance(e.target.value)}
  placeholder="0.00"
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Date</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Date</label>
  <input
  type="date"
  value={achievedAt}
  onChange={(e) => setAchievedAt(e.target.value)}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Notes</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Notes</label>
  <input
  type="text"
  value={notes}
  onChange={(e) => setNotes(e.target.value)}
  placeholder="Optional"
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  </div>
@@ -1534,7 +1534,7 @@ function DrillPRPanel({
  )}
 
  {drillPRs.length === 0 && !showForm && (
- <p className="text-sm text-[var(--color-text-3)] text-center py-4">
+ <p className="text-sm text-muted text-center py-4">
  No drill PRs logged yet.
  </p>
  )}
@@ -1553,7 +1553,7 @@ function DrillPRPanel({
  className="inline-block w-2 h-2 rounded-full shrink-0"
  style={{ backgroundColor: eventMeta.color }}
  />
- <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-2)]">
+ <p className="text-[11px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">
  {eventMeta.label}
  </p>
  </div>
@@ -1565,25 +1565,25 @@ function DrillPRPanel({
  return (
  <div
  key={dt.value}
- className="flex items-center justify-between text-sm py-1.5 border-b border-[var(--color-border)] last:border-0"
+ className="flex items-center justify-between text-sm py-1.5 border-b border-[var(--card-border)] last:border-0"
  >
  <div className="flex items-center gap-3 min-w-0">
- <span className="text-[10px] font-semibold text-[var(--color-text-2)] w-28 shrink-0">
+ <span className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 w-28 shrink-0">
  {dt.label}
  </span>
- <span className="text-xs text-[var(--color-text-3)] w-12 shrink-0">
+ <span className="text-xs text-muted w-12 shrink-0">
  {pr.implement}
  </span>
- <span className="font-mono font-bold text-[var(--color-text)]">
+ <span className="font-mono font-bold text-[var(--foreground)]">
  {pr.distance.toFixed(2)}m
  </span>
  {pr.notes && (
- <span className="text-[10px] text-[var(--color-text-3)] italic truncate max-w-[120px]">
+ <span className="text-[10px] text-muted italic truncate max-w-[120px]">
  {pr.notes}
  </span>
  )}
  </div>
- <span className="text-[10px] text-[var(--color-text-3)] shrink-0 ml-2">{pr.achievedAt}</span>
+ <span className="text-[10px] text-muted shrink-0 ml-2">{pr.achievedAt}</span>
  </div>
  );
  })}
@@ -1711,7 +1711,7 @@ function TestingMetricsPanel({
  return (
  <div className="card !p-5 space-y-4">
  <div className="flex items-center justify-between">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Testing Metrics
  </h3>
  {!editing && (
@@ -1725,7 +1725,7 @@ function TestingMetricsPanel({
  <div className="space-y-5">
  {Object.entries(TESTING_FIELDS).map(([category, fields]) => (
  <div key={category}>
- <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)] mb-2">
+ <p className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300 mb-2">
  {category}
  </p>
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1734,7 +1734,7 @@ function TestingMetricsPanel({
  const activeUnit = isImperial ? field.imperialUnit! : field.metricUnit;
  return (
  <div key={field.key} className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">
  {field.label}
  </label>
  <div className="flex items-center gap-1">
@@ -1747,7 +1747,7 @@ function TestingMetricsPanel({
  setForm((prev) => ({ ...prev, [field.key]: e.target.value }))
  }
  placeholder="—"
- className="w-full min-w-0 px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full min-w-0 px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  {field.imperialUnit ? (
  <button
@@ -1756,13 +1756,13 @@ function TestingMetricsPanel({
  title={`Switch to ${isImperial ? field.metricUnit : field.imperialUnit}`}
  className="shrink-0 px-1.5 py-1 rounded text-[10px] font-bold border transition-colors whitespace-nowrap
  border-[var(--color-border-strong)]
- hover:border-[var(--color-gold)] hover:text-[var(--color-gold-dark)] dark:hover:text-[var(--color-gold-light)]
- text-[var(--color-text-2)]"
+ hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-300
+ text-surface-700 dark:text-surface-300"
  >
  {activeUnit}
  </button>
  ) : (
- <span className="shrink-0 text-xs text-[var(--color-text-3)] whitespace-nowrap">{activeUnit}</span>
+ <span className="shrink-0 text-xs text-muted whitespace-nowrap">{activeUnit}</span>
  )}
  </div>
  </div>
@@ -1781,7 +1781,7 @@ function TestingMetricsPanel({
  </div>
  </div>
  ) : allEmpty ? (
- <p className="text-sm text-[var(--color-text-3)] text-center py-4">
+ <p className="text-sm text-muted text-center py-4">
  No benchmarks recorded yet.
  </p>
  ) : (
@@ -1791,7 +1791,7 @@ function TestingMetricsPanel({
  if (populated.length === 0) return null;
  return (
  <div key={category}>
- <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)] mb-2">
+ <p className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300 mb-2">
  {category}
  </p>
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1803,15 +1803,15 @@ function TestingMetricsPanel({
  return (
  <div
  key={field.key}
- className="bg-[var(--color-surface-2)]/50 rounded-lg px-3 py-2"
+ className="bg-[var(--muted-bg)]/50 rounded-lg px-3 py-2"
  >
- <p className="text-xs text-[var(--color-text-2)] truncate mb-0.5">
+ <p className="text-xs text-surface-700 dark:text-surface-300 truncate mb-0.5">
  {field.label}
  </p>
- <p className="text-sm font-mono font-bold text-[var(--color-text)]">
+ <p className="text-sm font-mono font-bold text-[var(--foreground)]">
  {metricVal}{field.metricUnit}
  {imperialVal != null && (
- <span className="ml-1.5 text-[10px] font-normal text-[var(--color-text-3)]">
+ <span className="ml-1.5 text-[10px] font-normal text-muted">
  {imperialVal}{field.imperialUnit}
  </span>
  )}
@@ -1866,16 +1866,16 @@ function RecordPRForm({
 
  return (
  <div className="card !p-5 space-y-4">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Record Personal Record
  </h3>
  <div className="grid grid-cols-3 gap-3">
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Event</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Event</label>
  <select
  value={event}
  onChange={(e) => setEvent(e.target.value)}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  {(Object.keys(EVENTS) as ThrowEvent[]).map((e) => (
  <option key={e} value={e}>{EVENTS[e].label}</option>
@@ -1883,17 +1883,17 @@ function RecordPRForm({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Implement</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Implement</label>
  <input
  type="text"
  value={implement}
  onChange={(e) => setImplement(e.target.value)}
  placeholder="e.g. 7.26kg"
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Distance (m)</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Distance (m)</label>
  <input
  type="number"
  step="0.01"
@@ -1901,7 +1901,7 @@ function RecordPRForm({
  value={distance}
  onChange={(e) => setDistance(e.target.value)}
  placeholder="0.00"
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  </div>
@@ -1969,9 +1969,9 @@ function ManageComplexForm({
  if (!expanded) {
  return (
  <div className="flex items-center justify-between">
- <div className="text-xs text-[var(--color-text-2)]">
+ <div className="text-xs text-surface-700 dark:text-surface-300">
  {currentComplex ? (
- <>Active since <strong className="text-[var(--color-text-2)]">{currentComplex.startDate}</strong> · {currentComplex.sessionsCount} sessions</>
+ <>Active since <strong className="text-surface-700 dark:text-surface-300">{currentComplex.startDate}</strong> · {currentComplex.sessionsCount} sessions</>
  ) : "No active complex"}
  </div>
  <button onClick={() => setExpanded(true)} className="btn-secondary text-xs px-3 py-1.5">
@@ -1991,11 +1991,11 @@ function ManageComplexForm({
  </div>
  )}
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Event</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Event</label>
  <select
  value={event}
  onChange={(e) => setEvent(e.target.value)}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  {(Object.keys(EVENTS) as ThrowEvent[]).map((e) => (
  <option key={e} value={e}>{EVENTS[e].label}</option>
@@ -2003,8 +2003,8 @@ function ManageComplexForm({
  </select>
  </div>
  <div className="space-y-2">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">
- Strength Exercises <span className="font-normal text-[var(--color-text-3)]">(select all in this complex)</span>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">
+ Strength Exercises <span className="font-normal text-muted">(select all in this complex)</span>
  </label>
  <div className="flex flex-wrap gap-1.5">
  {STRENGTH_DB.map((ex) => (
@@ -2013,8 +2013,8 @@ function ManageComplexForm({
  onClick={() => toggleExercise(ex.name)}
  className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all ${
  selectedExercises.includes(ex.name)
- ? "bg-[var(--color-gold)] text-[var(--color-bg)] border-[var(--color-gold)]"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] border-[var(--color-border)] hover:border-[var(--color-gold)]"
+ ? "bg-primary-500 text-[var(--color-bg)] border-primary-500"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)] hover:border-primary-500"
  }`}
  >
  {ex.name}
@@ -2024,8 +2024,8 @@ function ManageComplexForm({
  </div>
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">
- Add Implement <span className="font-normal text-[var(--color-text-3)]">(e.g. &quot;5kg Shot&quot;, &quot;9kg Hammer&quot;)</span>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">
+ Add Implement <span className="font-normal text-muted">(e.g. &quot;5kg Shot&quot;, &quot;9kg Hammer&quot;)</span>
  </label>
  <div className="flex gap-2">
  <input
@@ -2034,19 +2034,19 @@ function ManageComplexForm({
  onChange={(e) => setCustomExercise(e.target.value)}
  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
  placeholder="5kg Shot"
- className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="flex-1 px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  <button onClick={addCustom} className="btn-secondary text-xs px-3 py-2">Add</button>
  </div>
  </div>
  {selectedExercises.length > 0 && (
  <div className="space-y-1">
- <p className="text-[10px] text-[var(--color-text-2)] font-semibold uppercase">Selected ({selectedExercises.length})</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300 font-semibold uppercase">Selected ({selectedExercises.length})</p>
  <div className="flex flex-wrap gap-1.5">
  {selectedExercises.map((ex) => (
  <span
  key={ex}
- className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-[rgba(212,168,67,0.12)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]"
+ className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-[rgba(212,168,67,0.12)] text-primary-600 dark:text-primary-300"
  >
  {ex}
  <button onClick={() => toggleExercise(ex)} className="hover:text-red-500 leading-none">×</button>
@@ -2102,7 +2102,7 @@ function AddCompetitionForm({
  if (!expanded) {
  return (
  <div className="text-center py-4">
- <p className="text-xs text-[var(--color-text-3)] mb-2">No upcoming competitions.</p>
+ <p className="text-xs text-muted mb-2">No upcoming competitions.</p>
  <button onClick={() => setExpanded(true)} className="btn-secondary text-xs px-4 py-1.5">
  Add Competition
  </button>
@@ -2117,19 +2117,19 @@ function AddCompetitionForm({
  value={name}
  onChange={(e) => setName(e.target.value)}
  placeholder="Meet name"
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  <div className="grid grid-cols-3 gap-2">
  <input
  type="date"
  value={date}
  onChange={(e) => setDate(e.target.value)}
- className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  <select
  value={event}
  onChange={(e) => setEvent(e.target.value)}
- className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  {(Object.keys(EVENTS) as ThrowEvent[]).map((e) => (
  <option key={e} value={e}>{EVENTS[e].label}</option>
@@ -2138,7 +2138,7 @@ function AddCompetitionForm({
  <select
  value={priority}
  onChange={(e) => setPriority(e.target.value)}
- className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  <option value="A">A (Priority)</option>
  <option value="B">B (Standard)</option>
@@ -2186,16 +2186,16 @@ function AthleteBioEditForm({
  return (
  <div className="card !p-5 space-y-4 border-2 border-purple-200 dark:border-purple-800">
  <div className="flex items-center gap-2">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Edit Athlete Bio</h3>
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">Edit Athlete Bio</h3>
  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Coach</span>
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Gender</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Gender</label>
  <select
  value={gender}
  onChange={(e) => setGender(e.target.value)}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  <option value="">Not set</option>
  <option value="MALE">Male</option>
@@ -2204,17 +2204,17 @@ function AthleteBioEditForm({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Sport / Event</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Sport / Event</label>
  <input
  type="text"
  value={sport}
  onChange={(e) => setSport(e.target.value)}
  placeholder="e.g. Shot Put"
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Height (cm)</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Height (cm)</label>
  <input
  type="number"
  value={height}
@@ -2222,11 +2222,11 @@ function AthleteBioEditForm({
  placeholder="185"
  min={100}
  max={250}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Weight (kg)</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Weight (kg)</label>
  <input
  type="number"
  value={weight}
@@ -2235,7 +2235,7 @@ function AthleteBioEditForm({
  min={30}
  max={300}
  step={0.1}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  </div>
@@ -2285,7 +2285,7 @@ function CompetitionsPanel({
  <div className="card !p-5 space-y-4 border-2 border-purple-200 dark:border-purple-800">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Competitions</h3>
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">Competitions</h3>
  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Coach</span>
  </div>
  <button onClick={() => setShowAdd(!showAdd)} className="btn-secondary text-xs px-3 py-1.5">
@@ -2294,24 +2294,24 @@ function CompetitionsPanel({
  </div>
 
  {showAdd && (
- <div className="p-3 rounded-lg bg-[var(--color-surface-2)]/50 border border-[var(--color-border)]">
+ <div className="p-3 rounded-lg bg-[var(--muted-bg)]/50 border border-[var(--card-border)]">
  <AddCompetitionForm athleteId={athleteId} onSaved={() => { setShowAdd(false); onSaved(); }} />
  </div>
  )}
 
  {upcoming.length > 0 && (
  <div className="space-y-2">
- <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)]">Upcoming</p>
+ <p className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">Upcoming</p>
  {upcoming.map((c) => (
- <div key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--color-border)] last:border-0 gap-2 flex-wrap">
+ <div key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--card-border)] last:border-0 gap-2 flex-wrap">
  <div>
- <p className="text-xs font-semibold text-[var(--color-text)]">{c.name}</p>
- <p className="text-[10px] text-[var(--color-text-2)]">{c.date} · {EVENTS[c.event as ThrowEvent]?.label || c.event} · Priority {c.priority}</p>
+ <p className="text-xs font-semibold text-[var(--foreground)]">{c.name}</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">{c.date} · {EVENTS[c.event as ThrowEvent]?.label || c.event} · Priority {c.priority}</p>
  </div>
  <div className="flex items-center gap-2">
  {c.result != null ? (
  <div className="flex items-center gap-1">
- <span className="text-xs font-mono font-bold text-[var(--color-text)]">{c.result.toFixed(2)}m</span>
+ <span className="text-xs font-mono font-bold text-[var(--foreground)]">{c.result.toFixed(2)}m</span>
  {c.resultBy && <SourceBadge source={c.resultBy} />}
  <button onClick={() => { setEditingId(c.id); setResultInput(c.result!.toString()); }} className="text-[10px] text-purple-600 hover:underline">Edit</button>
  </div>
@@ -2327,7 +2327,7 @@ function CompetitionsPanel({
  value={resultInput}
  onChange={(e) => setResultInput(e.target.value)}
  placeholder="Distance (m)"
- className="flex-1 px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="flex-1 px-3 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  autoFocus
  />
  <button onClick={() => handleSaveResult(c.id)} disabled={saving} className="btn-primary text-xs px-3 py-1.5">{saving ? "..." : "Save"}</button>
@@ -2341,17 +2341,17 @@ function CompetitionsPanel({
 
  {past.length > 0 && (
  <div className="space-y-2">
- <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)]">Past</p>
+ <p className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">Past</p>
  {past.map((c) => (
- <div key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--color-border)] last:border-0 gap-2 flex-wrap">
+ <div key={c.id} className="flex items-center justify-between py-2 border-b border-[var(--card-border)] last:border-0 gap-2 flex-wrap">
  <div>
- <p className="text-xs font-semibold text-[var(--color-text)]">{c.name}</p>
- <p className="text-[10px] text-[var(--color-text-2)]">{c.date} · {EVENTS[c.event as ThrowEvent]?.label || c.event} · Priority {c.priority}</p>
+ <p className="text-xs font-semibold text-[var(--foreground)]">{c.name}</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">{c.date} · {EVENTS[c.event as ThrowEvent]?.label || c.event} · Priority {c.priority}</p>
  </div>
  <div className="flex items-center gap-2">
  {c.result != null ? (
  <div className="flex items-center gap-1">
- <span className="text-xs font-mono font-bold text-[var(--color-text)]">{c.result.toFixed(2)}m</span>
+ <span className="text-xs font-mono font-bold text-[var(--foreground)]">{c.result.toFixed(2)}m</span>
  {c.resultBy && <SourceBadge source={c.resultBy} />}
  <button onClick={() => { setEditingId(c.id); setResultInput(c.result!.toString()); }} className="text-[10px] text-purple-600 hover:underline">Edit</button>
  </div>
@@ -2367,7 +2367,7 @@ function CompetitionsPanel({
  value={resultInput}
  onChange={(e) => setResultInput(e.target.value)}
  placeholder="Distance (m)"
- className="flex-1 px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="flex-1 px-3 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  autoFocus
  />
  <button onClick={() => handleSaveResult(c.id)} disabled={saving} className="btn-primary text-xs px-3 py-1.5">{saving ? "..." : "Save"}</button>
@@ -2380,7 +2380,7 @@ function CompetitionsPanel({
  )}
 
  {competitions.length === 0 && !showAdd && (
- <p className="text-xs text-[var(--color-text-3)] italic text-center py-2">No competitions recorded yet.</p>
+ <p className="text-xs text-muted italic text-center py-2">No competitions recorded yet.</p>
  )}
  </div>
  );
@@ -2425,7 +2425,7 @@ function TypingOverrideForm({
  setSaving(false);
  }
 
- const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]";
+ const inputCls = "w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]";
 
  return (
  <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 space-y-3">
@@ -2434,7 +2434,7 @@ function TypingOverrideForm({
  </p>
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)] uppercase">Adaptation Group</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 uppercase">Adaptation Group</label>
  <select value={adaptationGroup} onChange={(e) => setAdaptationGroup(e.target.value)} className={inputCls}>
  <option value="">Not set</option>
  <option value="1">1 — Fast</option>
@@ -2443,7 +2443,7 @@ function TypingOverrideForm({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)] uppercase">Transfer Type</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 uppercase">Transfer Type</label>
  <select value={transferType} onChange={(e) => setTransferType(e.target.value)} className={inputCls}>
  <option value="">Not set</option>
  <option value="direct-high">Direct High</option>
@@ -2452,7 +2452,7 @@ function TypingOverrideForm({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)] uppercase">Self-Feeling</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 uppercase">Self-Feeling</label>
  <select value={selfFeelingAccuracy} onChange={(e) => setSelfFeelingAccuracy(e.target.value)} className={inputCls}>
  <option value="">Not set</option>
  <option value="accurate">Accurate</option>
@@ -2461,7 +2461,7 @@ function TypingOverrideForm({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)] uppercase">Light Impl Response</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 uppercase">Light Impl Response</label>
  <select value={lightImplResponse} onChange={(e) => setLightImplResponse(e.target.value)} className={inputCls}>
  <option value="">Not set</option>
  <option value="normal-87pct">Normal (87%)</option>
@@ -2469,7 +2469,7 @@ function TypingOverrideForm({
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)] uppercase">Recovery Profile</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300 uppercase">Recovery Profile</label>
  <select value={recoveryProfile} onChange={(e) => setRecoveryProfile(e.target.value)} className={inputCls}>
  <option value="">Not set</option>
  <option value="fast">Fast</option>
@@ -2572,7 +2572,7 @@ function PRProgressionChart({ athleteId }: { athleteId: string }) {
  if (loading) {
  return (
  <div className="card !p-5 flex items-center justify-center h-32">
- <p className="text-sm text-[var(--color-text-3)]">Loading progression…</p>
+ <p className="text-sm text-muted">Loading progression…</p>
  </div>
  );
  }
@@ -2584,7 +2584,7 @@ function PRProgressionChart({ athleteId }: { athleteId: string }) {
  return (
  <div className="card !p-5 space-y-4">
  <div className="flex items-center justify-between flex-wrap gap-2">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  PR Progression
  </h3>
  <div className="flex items-center gap-2 flex-wrap">
@@ -2592,7 +2592,7 @@ function PRProgressionChart({ athleteId }: { athleteId: string }) {
  <select
  value={selectedEvent}
  onChange={(e) => setSelectedEvent(e.target.value)}
- className="text-xs px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]"
+ className="text-xs px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)]"
  >
  {eventOptions.map((ev) => (
  <option key={ev} value={ev}>
@@ -2605,7 +2605,7 @@ function PRProgressionChart({ athleteId }: { athleteId: string }) {
  <select
  value={selectedImplement}
  onChange={(e) => setSelectedImplement(e.target.value)}
- className="text-xs px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]"
+ className="text-xs px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)]"
  >
  {implementOptions.map((imp) => (
  <option key={imp} value={imp}>{imp}</option>
@@ -2616,7 +2616,7 @@ function PRProgressionChart({ athleteId }: { athleteId: string }) {
  <select
  value={overlay}
  onChange={(e) => setOverlay(e.target.value)}
- className="text-xs px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]"
+ className="text-xs px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)]"
  >
  <option value="">+ Compare metric</option>
  {BENCH_OVERLAY_OPTIONS.map((o) => (
@@ -2627,7 +2627,7 @@ function PRProgressionChart({ athleteId }: { athleteId: string }) {
  </div>
 
  {filteredPRs.length < 2 ? (
- <p className="text-xs text-[var(--color-text-3)] text-center py-6 italic">
+ <p className="text-xs text-muted text-center py-6 italic">
  Need at least 2 PR entries to show a progression chart.
  </p>
  ) : (

@@ -142,7 +142,7 @@ export default function AthleteTypingQuizPage() {
  if (!athleteId) {
  return (
  <div className="animate-fade-in card text-center py-12">
- <p className="text-[var(--color-text-3)]">Could not load your profile. Please try again.</p>
+ <p className="text-muted">Could not load your profile. Please try again.</p>
  </div>
  );
  }
@@ -156,8 +156,8 @@ export default function AthleteTypingQuizPage() {
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
  </svg>
  </div>
- <h2 className="text-xl font-bold text-[var(--color-text)]">Quiz Complete!</h2>
- <p className="text-sm text-[var(--color-text-2)] max-w-xs mx-auto">
+ <h2 className="text-xl font-bold text-[var(--foreground)]">Quiz Complete!</h2>
+ <p className="text-sm text-surface-700 dark:text-surface-300 max-w-xs mx-auto">
  Your Bondarchuk athlete type has been determined. Your coach will use this to personalise your training program.
  </p>
  <button
@@ -174,7 +174,7 @@ export default function AthleteTypingQuizPage() {
  if (saving) {
  return (
  <div className="animate-fade-in card text-center py-12">
- <p className="text-[var(--color-text-3)]">Saving your results...</p>
+ <p className="text-muted">Saving your results...</p>
  </div>
  );
  }
@@ -184,16 +184,16 @@ export default function AthleteTypingQuizPage() {
  {/* Header */}
  <div className="flex items-start justify-between">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
  Athlete Typing Quiz
  </h1>
- <p className="text-sm text-[var(--color-text-2)]">
+ <p className="text-sm text-surface-700 dark:text-surface-300">
  Assessment {currentQuizIdx + 1} of {QUIZ_ORDER.length}: {quiz.title}
  </p>
  </div>
  <Link
  href="/athlete/throws/profile"
- className="text-xs text-[var(--color-text-3)] hover:text-[var(--color-text-2)] transition-colors mt-1"
+ className="text-xs text-muted hover:text-surface-700 dark:hover:text-surface-300 transition-colors mt-1"
  >
  Exit Quiz
  </Link>
@@ -207,13 +207,13 @@ export default function AthleteTypingQuizPage() {
 
  {/* Progress bar */}
  <div className="space-y-1">
- <div className="flex justify-between text-xs text-[var(--color-text-3)]">
+ <div className="flex justify-between text-xs text-muted">
  <span>{answeredSoFar} of {totalQuestions} questions answered</span>
  <span>{Math.round((answeredSoFar / totalQuestions) * 100)}%</span>
  </div>
- <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2">
+ <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
  <div
- className="bg-[var(--color-gold)] h-2 rounded-full transition-all duration-300"
+ className="bg-primary-500 h-2 rounded-full transition-all duration-300"
  style={{ width: `${(answeredSoFar / totalQuestions) * 100}%` }}
  />
  </div>
@@ -226,10 +226,10 @@ export default function AthleteTypingQuizPage() {
  key={i}
  className={`flex-1 h-1 rounded-full transition-colors ${
  i < currentQuizIdx
- ? "bg-[var(--color-gold)]"
+ ? "bg-primary-500"
  : i === currentQuizIdx
  ? "bg-[rgba(212,168,67,0.3)]"
- : "bg-[var(--color-bg-subtle)]"
+ : "bg-[var(--muted-bg)]"
  }`}
  />
  ))}
@@ -238,13 +238,13 @@ export default function AthleteTypingQuizPage() {
  {/* Question card */}
  <div className="card !p-6 space-y-6">
  <div className="flex items-center gap-2">
- <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[rgba(212,168,67,0.12)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]">
+ <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[rgba(212,168,67,0.12)] text-primary-600 dark:text-primary-300">
  Q{currentQuestionIdx + 1}/{questions.length}
  </span>
- <span className="text-xs text-[var(--color-text-3)]">{quiz.title}</span>
+ <span className="text-xs text-muted">{quiz.title}</span>
  </div>
 
- <p className="text-base sm:text-lg font-medium text-[var(--color-text)] leading-relaxed">
+ <p className="text-base sm:text-lg font-medium text-[var(--foreground)] leading-relaxed">
  {currentQuestion.question}
  </p>
 
@@ -258,13 +258,13 @@ export default function AthleteTypingQuizPage() {
  onClick={() => handleOptionClick(option.score)}
  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 group ${
  isSelected
- ? "border-[var(--color-gold)] bg-[rgba(212,168,67,0.08)]"
- : "border-[var(--color-border)] hover:border-[rgba(212,168,67,0.3)] dark:hover:border-[var(--color-gold)] hover:bg-[var(--color-surface-2)]/50"
+ ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
+ : "border-[var(--card-border)] hover:border-[rgba(212,168,67,0.3)] dark:hover:border-primary-500 hover:bg-[var(--muted-bg)]/50"
  }`}
  >
  <div className="flex items-center gap-3">
  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
- isSelected ? "border-[var(--color-gold)] bg-[var(--color-gold)]" : "border-[var(--color-border-strong)]"
+ isSelected ? "border-primary-500 bg-primary-500" : "border-[var(--color-border-strong)]"
  }`}>
  {isSelected && (
  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,7 +273,7 @@ export default function AthleteTypingQuizPage() {
  )}
  </div>
  <span className={`text-sm font-medium ${
- isSelected ? "text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]" : "text-[var(--color-text)]"
+ isSelected ? "text-primary-600 dark:text-primary-300" : "text-[var(--foreground)]"
  }`}>
  {option.label}
  </span>
@@ -284,11 +284,11 @@ export default function AthleteTypingQuizPage() {
  </div>
 
  {/* Navigation */}
- <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
+ <div className="flex items-center justify-between pt-2 border-t border-[var(--card-border)]">
  <button
  onClick={handleBack}
  disabled={isFirstQuestion}
- className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[var(--color-text-2)] hover:text-[var(--color-text)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+ className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -298,7 +298,7 @@ export default function AthleteTypingQuizPage() {
  <button
  onClick={handleNext}
  disabled={!pendingScore || saving}
- className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[var(--color-gold)] hover:opacity-90 text-white text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+ className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary-500 hover:opacity-90 text-white text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
  >
  {saving ? "Saving..." : isLastQuestion ? "Submit" : "Next"}
  {!saving && !isLastQuestion && (
@@ -310,7 +310,7 @@ export default function AthleteTypingQuizPage() {
  </div>
  </div>
 
- <p className="text-center text-xs text-[var(--color-text-3)]">
+ <p className="text-center text-xs text-muted">
  Answer honestly — there are no right or wrong answers. Your coach uses this to optimise your training.
  </p>
  </div>

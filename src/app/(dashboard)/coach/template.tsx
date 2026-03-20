@@ -10,7 +10,7 @@ export default function CoachTemplate({ children }: { children: ReactNode }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{
         duration: 0.3,
-        ease: [0.34, 1.56, 0.64, 1], // spring easing from tailwind config
+        ease: [0.22, 1, 0.36, 1], // ease-out-quint — smooth deceleration, no overshoot
       }}
     >
       {children}

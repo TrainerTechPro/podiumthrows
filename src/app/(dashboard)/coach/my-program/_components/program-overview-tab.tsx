@@ -281,7 +281,7 @@ export default function ProgramOverviewTab({
                 aria-label={`Goal progress: ${currentPr ?? program.startingPr}m of ${program.goalDistance}m`}
               >
                 <div
-                  className="h-full bg-[var(--color-gold)] rounded-full transition-all"
+                  className="h-full bg-primary-500 rounded-full transition-all"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -568,7 +568,7 @@ export default function ProgramOverviewTab({
                   onClick={() => setExpandedPhaseId(isExpanded ? null : phase.id)}
                   aria-expanded={isExpanded}
                   aria-controls={detailPanelId}
-                  className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl transition-all cursor-pointer hover:bg-[var(--muted-bg)]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)] ${
+                  className={`w-full flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl transition-all cursor-pointer hover:bg-[var(--muted-bg)]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 ${
                     isCurrent ? "bg-primary-500/[0.08] ring-1 ring-primary-500/30" : ""
                   }`}
                 >
@@ -623,7 +623,7 @@ export default function ProgramOverviewTab({
             aria-label={`Program progress: week ${program.currentWeekNumber} of ${totalWeeks}`}
           >
             <div
-              className="h-full bg-[var(--color-gold)] rounded-full transition-all"
+              className="h-full bg-primary-500 rounded-full transition-all"
               style={{ width: `${totalWeeks > 0 ? Math.min(100, (program.currentWeekNumber / totalWeeks) * 100) : 0}%` }}
             />
           </div>

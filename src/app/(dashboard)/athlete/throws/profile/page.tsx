@@ -59,18 +59,18 @@ function ScoreArc({
  <div className="flex flex-col items-center gap-2">
  <div className="relative" style={{ width: size, height: size }}>
  <svg width={size} height={size} className="-rotate-90">
- <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" className="text-[var(--color-border)]" strokeWidth={8} />
+ <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" className="text-[var(--card-border)]" strokeWidth={8} />
  <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={8} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference - progress} className="transition-all duration-700" />
  </svg>
  <div className="absolute inset-0 flex items-center justify-center">
- <span className="text-xl font-bold text-[var(--color-text)] font-mono">
+ <span className="text-xl font-bold text-[var(--foreground)] font-mono">
  {score != null ? score : "—"}
  </span>
  </div>
  </div>
  <div className="text-center">
- <p className="text-xs font-bold text-[var(--color-text-2)] uppercase tracking-wider">{label}</p>
- <p className="text-[10px] text-[var(--color-text-2)]">{sublabel}</p>
+ <p className="text-xs font-bold text-surface-700 dark:text-surface-300 uppercase tracking-wider">{label}</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">{sublabel}</p>
  </div>
  </div>
  );
@@ -228,26 +228,26 @@ export default function AthleteProfilePage() {
  <div className="animate-spring-up space-y-6">
  <div className="flex items-center justify-between">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">My Profile</h1>
- <p className="text-sm text-[var(--color-text-2)]">Readiness, recovery, and athlete typing</p>
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">My Profile</h1>
+ <p className="text-sm text-surface-700 dark:text-surface-300">Readiness, recovery, and athlete typing</p>
  </div>
- <Link href="/athlete/throws" className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:text-[var(--color-gold-dark)] font-medium">
+ <Link href="/athlete/throws" className="text-sm text-primary-600 dark:text-primary-300 hover:text-primary-600 font-medium">
  Sessions
  </Link>
  </div>
 
  {!p ? (
  <div className="card text-center py-12 space-y-4">
- <div className="w-14 h-14 mx-auto rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center">
- <svg className="w-7 h-7 text-[var(--color-text-3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <div className="w-14 h-14 mx-auto rounded-full bg-[var(--muted-bg)] flex items-center justify-center">
+ <svg className="w-7 h-7 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
  </svg>
  </div>
  <div>
- <p className="font-medium text-[var(--color-text-2)]">
+ <p className="font-medium text-surface-700 dark:text-surface-300">
  {error ? "Could not load profile" : "No profile data yet"}
  </p>
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  {error
  ? "There was a problem loading your profile. Try again."
  : "Start by recording a personal record or completing a daily check-in."}
@@ -304,8 +304,8 @@ export default function AthleteProfilePage() {
  <div className="flex items-center gap-2">
  <span className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">Action Required</span>
  </div>
- <p className="text-sm font-bold text-[var(--color-text)] mt-0.5">Complete your Athlete Typing Quiz</p>
- <p className="text-xs text-[var(--color-text-2)] mt-0.5">Your coach assigned this quiz. Takes ~5 minutes — tap to start.</p>
+ <p className="text-sm font-bold text-[var(--foreground)] mt-0.5">Complete your Athlete Typing Quiz</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">Your coach assigned this quiz. Takes ~5 minutes — tap to start.</p>
  </div>
  <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -334,7 +334,7 @@ export default function AthleteProfilePage() {
  <div className="card !p-4 space-y-3">
  {/* Header */}
  <div className="flex items-center gap-2 flex-wrap">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">
  Podium Throws
  </h3>
  <span
@@ -345,10 +345,10 @@ export default function AthleteProfilePage() {
  <span className="opacity-80">{pp.gender === "M" ? "♂" : "♀"}</span>
  </span>
  {pp.competitionPb && (
- <span className="text-[11px] font-mono text-[var(--color-text-2)] flex-shrink-0">
+ <span className="text-[11px] font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
  {pp.competitionPb.toFixed(2)}m
  {pp.currentDistanceBand && (
- <span className="font-sans ml-1 text-[var(--color-text-3)]">
+ <span className="font-sans ml-1 text-muted">
  Band {pp.currentDistanceBand}m
  </span>
  )}
@@ -358,21 +358,21 @@ export default function AthleteProfilePage() {
 
  {/* Deficit + training focus */}
  {deficitType && deficitType !== "none" ? (
- <div className={`rounded-xl p-3 space-y-1.5 ${deficitLevel ? DEFICIT_LEVEL_BG[deficitLevel] : "bg-[var(--color-surface-2)]/50"}`}>
+ <div className={`rounded-xl p-3 space-y-1.5 ${deficitLevel ? DEFICIT_LEVEL_BG[deficitLevel] : "bg-[var(--muted-bg)]/50"}`}>
  <div className="flex items-center gap-2">
- <span className={`text-xs font-bold uppercase tracking-wide ${deficitLevel ? DEFICIT_LEVEL_COLORS[deficitLevel] : "text-[var(--color-text-2)]"}`}>
+ <span className={`text-xs font-bold uppercase tracking-wide ${deficitLevel ? DEFICIT_LEVEL_COLORS[deficitLevel] : "text-surface-700 dark:text-surface-300"}`}>
  {hasDeficit ? "Training Focus" : "Status"}
  </span>
- <span className={`text-xs font-medium ${deficitLevel ? DEFICIT_LEVEL_COLORS[deficitLevel] : "text-[var(--color-text-2)]"}`}>
+ <span className={`text-xs font-medium ${deficitLevel ? DEFICIT_LEVEL_COLORS[deficitLevel] : "text-surface-700 dark:text-surface-300"}`}>
  {DEFICIT_TYPE_LABELS[deficitType]}
  </span>
  </div>
- <p className="text-[11px] text-[var(--color-text-2)] leading-relaxed">
+ <p className="text-[11px] text-surface-700 dark:text-surface-300 leading-relaxed">
  {DEFICIT_TRAINING_RECS[deficitType]}
  </p>
  </div>
  ) : (
- <p className="text-xs text-[var(--color-text-3)] italic">
+ <p className="text-xs text-muted italic">
  Your coach hasn&apos;t recorded test data yet. Check back after your next testing session.
  </p>
  )}
@@ -383,10 +383,10 @@ export default function AthleteProfilePage() {
  {/* PRs */}
  <div className="card !p-4 space-y-3">
  <div className="flex items-center justify-between">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Personal Records</h3>
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">Personal Records</h3>
  <button
  onClick={() => setShowAddPR(!showAddPR)}
- className="text-xs font-medium text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:text-[var(--color-gold-dark)]"
+ className="text-xs font-medium text-primary-600 dark:text-primary-300 hover:text-primary-600"
  >
  {showAddPR ? "Cancel" : "+ Record PR"}
  </button>
@@ -400,17 +400,17 @@ export default function AthleteProfilePage() {
  ))}
  </div>
  ) : (
- <p className="text-xs text-[var(--color-text-3)] italic">No PRs recorded yet. Tap &quot;Record PR&quot; to add one.</p>
+ <p className="text-xs text-muted italic">No PRs recorded yet. Tap &quot;Record PR&quot; to add one.</p>
  )}
  {showAddPR && (
- <div className="pt-2 border-t border-[var(--color-border)] space-y-3">
+ <div className="pt-2 border-t border-[var(--card-border)] space-y-3">
  <div className="grid grid-cols-3 gap-2">
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)]">Event</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300">Event</label>
  <select
  value={prForm.event}
  onChange={(e) => setPrForm({ ...prForm, event: e.target.value })}
- className="w-full px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs text-[var(--color-text)]"
+ className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
  >
  {(Object.keys(EVENTS) as ThrowEvent[]).map((e) => (
  <option key={e} value={e}>{EVENTS[e].label}</option>
@@ -418,17 +418,17 @@ export default function AthleteProfilePage() {
  </select>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)]">Implement</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300">Implement</label>
  <input
  type="text"
  value={prForm.implement}
  onChange={(e) => setPrForm({ ...prForm, implement: e.target.value })}
  placeholder="e.g. 7.26kg"
- className="w-full px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs text-[var(--color-text)]"
+ className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
  />
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-semibold text-[var(--color-text-2)]">Distance (m)</label>
+ <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300">Distance (m)</label>
  <input
  type="number"
  step="0.01"
@@ -436,7 +436,7 @@ export default function AthleteProfilePage() {
  value={prForm.distance}
  onChange={(e) => setPrForm({ ...prForm, distance: e.target.value })}
  placeholder="0.00"
- className="w-full px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs text-[var(--color-text)]"
+ className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
  />
  </div>
  </div>
@@ -457,7 +457,7 @@ export default function AthleteProfilePage() {
  {/* Check-in */}
  {!todayCheckin && !showCheckIn && (
  <div className="card !p-4 text-center space-y-2 border-2 border-dashed border-[rgba(212,168,67,0.3)]">
- <p className="text-sm text-[var(--color-text-2)]">How are you feeling today?</p>
+ <p className="text-sm text-surface-700 dark:text-surface-300">How are you feeling today?</p>
  <button onClick={() => setShowCheckIn(true)} className="btn-primary text-sm px-6 py-2">
  Daily Check-In
  </button>
@@ -466,42 +466,42 @@ export default function AthleteProfilePage() {
 
  {showCheckIn && (
  <div className="card !p-5 space-y-5">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Daily Check-In</h3>
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">Daily Check-In</h3>
 
  <div className="space-y-2">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Self-Feeling (Bondarchuk Scale)</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Self-Feeling (Bondarchuk Scale)</label>
  <div className="flex gap-2">
  {SELF_FEELING_SCALE.map((s) => (
  <button
  key={s.value}
  onClick={() => setCheckInData({ ...checkInData, selfFeeling: s.value })}
- className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${checkInData.selfFeeling === s.value ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]" : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] border-[var(--color-border)]"}`}
+ className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${checkInData.selfFeeling === s.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
  >
  <span className="block text-sm font-bold">{s.value}</span>
- <span className={`block text-[9px] leading-tight mt-0.5 ${checkInData.selfFeeling === s.value ? "text-white/80" : "text-[var(--color-text-3)]"}`}>{s.label}</span>
+ <span className={`block text-[9px] leading-tight mt-0.5 ${checkInData.selfFeeling === s.value ? "text-white/80" : "text-muted"}`}>{s.label}</span>
  </button>
  ))}
  </div>
  {feelingMeta && (
- <p className="text-[10px] text-[var(--color-text-2)]">{feelingMeta.desc} — Expected: {feelingMeta.perfExpect}</p>
+ <p className="text-[10px] text-surface-700 dark:text-surface-300">{feelingMeta.desc} — Expected: {feelingMeta.perfExpect}</p>
  )}
  </div>
 
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Sleep Hours</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Sleep Hours</label>
  <input type="number" min={0} max={14} step={0.5} value={checkInData.sleepHours}
  onChange={(e) => setCheckInData({ ...checkInData, sleepHours: parseFloat(e.target.value) || 0 })}
- className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]" />
+ className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]" />
  </div>
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Sleep Quality</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Sleep Quality</label>
  <div className="flex gap-1">
  {SLEEP_QUALITY_SCALE.map((sq) => (
  <button key={sq.value} onClick={() => setCheckInData({ ...checkInData, sleepQuality: sq.value })}
- className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${checkInData.sleepQuality === sq.value ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]" : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] border-[var(--color-border)]"}`}>
+ className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${checkInData.sleepQuality === sq.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}>
  <span className="block text-sm font-bold">{sq.value}</span>
- <span className={`block text-[9px] leading-tight mt-0.5 ${checkInData.sleepQuality === sq.value ? "text-white/80" : "text-[var(--color-text-3)]"}`}>{sq.label}</span>
+ <span className={`block text-[9px] leading-tight mt-0.5 ${checkInData.sleepQuality === sq.value ? "text-white/80" : "text-muted"}`}>{sq.label}</span>
  </button>
  ))}
  </div>
@@ -509,28 +509,28 @@ export default function AthleteProfilePage() {
  </div>
 
  <div className="space-y-1">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Energy Level</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Energy Level</label>
  <input type="range" min={1} max={10} value={checkInData.energy}
  onChange={(e) => setCheckInData({ ...checkInData, energy: parseInt(e.target.value) })}
- className="w-full accent-[var(--color-gold)]" />
- <div className="flex justify-between text-[10px] text-[var(--color-text-3)]">
- <span>Exhausted</span><span className="font-bold text-[var(--color-text-2)]">{checkInData.energy} — {ENERGY_SCALE.find((e) => e.value === checkInData.energy)?.label}</span><span>Peak</span>
+ className="w-full accent-primary-500" />
+ <div className="flex justify-between text-[10px] text-muted">
+ <span>Exhausted</span><span className="font-bold text-surface-700 dark:text-surface-300">{checkInData.energy} — {ENERGY_SCALE.find((e) => e.value === checkInData.energy)?.label}</span><span>Peak</span>
  </div>
  </div>
 
  <div className="space-y-2">
- <label className="text-xs font-semibold text-[var(--color-text-2)]">Soreness</label>
+ <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">Soreness</label>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
  {SORENESS_ZONES.map((zone) => {
  const val = checkInData.soreness[zone.key] || 0;
  return (
  <div key={zone.key} className="space-y-1">
- <label className="text-[10px] text-[var(--color-text-2)]">{zone.label}</label>
+ <label className="text-[10px] text-surface-700 dark:text-surface-300">{zone.label}</label>
  <input type="range" min={0} max={10} value={val}
  onChange={(e) => setCheckInData({ ...checkInData, soreness: { ...checkInData.soreness, [zone.key]: parseInt(e.target.value) } })}
- className="w-full accent-[var(--color-gold)]" />
- <span className="text-[10px] font-mono text-[var(--color-text-2)]">
- {val} — <span className="font-sans text-[var(--color-text-2)]">{SORENESS_LABELS[val] || ""}</span>
+ className="w-full accent-primary-500" />
+ <span className="text-[10px] font-mono text-surface-700 dark:text-surface-300">
+ {val} — <span className="font-sans text-surface-700 dark:text-surface-300">{SORENESS_LABELS[val] || ""}</span>
  </span>
  </div>
  );
@@ -550,12 +550,12 @@ export default function AthleteProfilePage() {
  {/* Typing card */}
  {p.typing?.quizCompletedDate && (
  <div className="card !p-4 space-y-2">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">My Athlete Type</h3>
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">My Athlete Type</h3>
  <div className="grid grid-cols-2 gap-2 text-xs">
- <div><span className="text-[var(--color-text-2)]">Adaptation:</span> <span className="font-semibold text-[var(--color-text)]">Group {p.typing.adaptationGroup}</span></div>
- <div><span className="text-[var(--color-text-2)]">Transfer:</span> <span className="font-semibold text-[var(--color-text)] capitalize">{p.typing.transferType?.replace(/-/g, " ")}</span></div>
- <div><span className="text-[var(--color-text-2)]">Recovery:</span> <span className="font-semibold text-[var(--color-text)] capitalize">{p.typing.recoveryProfile}</span></div>
- <div><span className="text-[var(--color-text-2)]">Method:</span> <span className="font-semibold text-[var(--color-text)] capitalize">{p.typing.recommendedMethod?.replace(/-/g, " ")}</span></div>
+ <div><span className="text-surface-700 dark:text-surface-300">Adaptation:</span> <span className="font-semibold text-[var(--foreground)]">Group {p.typing.adaptationGroup}</span></div>
+ <div><span className="text-surface-700 dark:text-surface-300">Transfer:</span> <span className="font-semibold text-[var(--foreground)] capitalize">{p.typing.transferType?.replace(/-/g, " ")}</span></div>
+ <div><span className="text-surface-700 dark:text-surface-300">Recovery:</span> <span className="font-semibold text-[var(--foreground)] capitalize">{p.typing.recoveryProfile}</span></div>
+ <div><span className="text-surface-700 dark:text-surface-300">Method:</span> <span className="font-semibold text-[var(--foreground)] capitalize">{p.typing.recommendedMethod?.replace(/-/g, " ")}</span></div>
  </div>
  </div>
  )}
@@ -563,7 +563,7 @@ export default function AthleteProfilePage() {
  {/* Recent check-in trend */}
  {p.checkins.length > 1 && (
  <div className="card !p-4 space-y-2">
- <h3 className="text-sm font-bold text-[var(--color-text)] uppercase tracking-wider">Self-Feeling Trend</h3>
+ <h3 className="text-sm font-bold text-[var(--foreground)] uppercase tracking-wider">Self-Feeling Trend</h3>
  <div className="flex items-end gap-1 h-16">
  {p.checkins.slice(0, 14).reverse().map((c, i) => (
  <div

@@ -163,7 +163,7 @@ export default function ThrowFlowResultPage() {
  if (!analysis) {
  return (
  <div className="card text-center py-12">
- <p className="text-[var(--color-text-2)]">Analysis not found.</p>
+ <p className="text-surface-700 dark:text-surface-300">Analysis not found.</p>
  <Link href="/coach/throws/analyze" className="btn-primary mt-4 inline-block">
  New Analysis
  </Link>
@@ -175,7 +175,7 @@ export default function ThrowFlowResultPage() {
  if (analysis.status === "ANALYZING" || analysis.status === "PENDING") {
  return (
  <div className="animate-spring-up space-y-6">
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">Analyzing...</h1>
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Analyzing...</h1>
  <div className="card text-center py-16 space-y-4">
  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30">
  <svg className="animate-spin w-8 h-8 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24">
@@ -183,10 +183,10 @@ export default function ThrowFlowResultPage() {
  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
  </svg>
  </div>
- <h2 className="text-lg font-semibold text-[var(--color-text)]">
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">
  AI is analyzing your throw
  </h2>
- <p className="text-sm text-[var(--color-text-2)] max-w-md mx-auto">
+ <p className="text-sm text-surface-700 dark:text-surface-300 max-w-md mx-auto">
  The AI is reviewing {analysis.frameCount} frames and scoring each phase of the {EVENT_LABELS[analysis.event] || analysis.event} {DRILL_LABELS[analysis.drillType] || analysis.drillType}.
  This typically takes 15-30 seconds.
  </p>
@@ -199,7 +199,7 @@ export default function ThrowFlowResultPage() {
  if (analysis.status === "FAILED") {
  return (
  <div className="animate-spring-up space-y-6">
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">Analysis Failed</h1>
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Analysis Failed</h1>
  <div className="card border-red-200 dark:border-red-800 space-y-4">
  <div className="flex items-start gap-3">
  <svg className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -233,10 +233,10 @@ export default function ThrowFlowResultPage() {
  {/* Header */}
  <div className="flex items-start justify-between">
  <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
  {EVENT_LABELS[analysis.event]} Analysis
  </h1>
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  {DRILL_LABELS[analysis.drillType]} &middot; {CAMERA_LABELS[analysis.cameraAngle]} View
  {analysis.athleteName && ` \u00b7 ${analysis.athleteName}`}
  {" \u00b7 "}
@@ -258,7 +258,7 @@ export default function ThrowFlowResultPage() {
  <div className="card !p-6 flex items-center gap-6">
  <div className="relative w-24 h-24 flex-shrink-0">
  <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
- <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-[var(--color-border)]" />
+ <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" className="text-[var(--card-border)]" />
  <circle
  cx="50" cy="50" r="45" fill="none" strokeWidth="8"
  stroke="currentColor"
@@ -273,7 +273,7 @@ export default function ThrowFlowResultPage() {
  </div>
  <div>
  <h2 className={`text-xl font-bold ${grade.color}`}>{grade.label}</h2>
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  Overall technical score out of 100
  </p>
  </div>
@@ -283,24 +283,24 @@ export default function ThrowFlowResultPage() {
  {/* Phase Scores */}
  {analysis.phaseScores.length > 0 && (
  <div className="card space-y-4">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">Phase Scores</h2>
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">Phase Scores</h2>
  <div className="space-y-3">
  {analysis.phaseScores.map((phase, i) => (
  <div key={i}>
  <div className="flex items-center justify-between mb-1">
- <span className="text-sm font-medium text-[var(--color-text-2)]">{phase.name}</span>
+ <span className="text-sm font-medium text-surface-700 dark:text-surface-300">{phase.name}</span>
  <span className={`text-sm font-bold ${getScoreColor(phase.score)}`}>
  {phase.score}/10
  </span>
  </div>
- <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2">
+ <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
  <div
  className={`h-2 rounded-full transition-all ${getScoreBarColor(phase.score)}`}
  style={{ width: `${phase.score * 10}%` }}
  />
  </div>
  {phase.notes && (
- <p className="text-xs text-[var(--color-text-2)] mt-1">{phase.notes}</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300 mt-1">{phase.notes}</p>
  )}
  </div>
  ))}
@@ -313,29 +313,29 @@ export default function ThrowFlowResultPage() {
  {/* Release Metrics */}
  {analysis.releaseMetrics && (
  <div className="card space-y-3">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">Release Metrics</h2>
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">Release Metrics</h2>
  <div className="grid grid-cols-2 gap-3">
- <div className="bg-[var(--color-surface-2)]/50 rounded-lg p-3">
- <span className="text-xs text-[var(--color-text-2)]">Release Angle</span>
- <p className="text-lg font-bold text-[var(--color-text)]">
+ <div className="bg-[var(--muted-bg)]/50 rounded-lg p-3">
+ <span className="text-xs text-surface-700 dark:text-surface-300">Release Angle</span>
+ <p className="text-lg font-bold text-[var(--foreground)]">
  {analysis.releaseMetrics.angle != null ? `${analysis.releaseMetrics.angle}\u00b0` : "N/A"}
  </p>
  </div>
- <div className="bg-[var(--color-surface-2)]/50 rounded-lg p-3">
- <span className="text-xs text-[var(--color-text-2)]">Velocity Rating</span>
- <p className="text-lg font-bold text-[var(--color-text)]">
+ <div className="bg-[var(--muted-bg)]/50 rounded-lg p-3">
+ <span className="text-xs text-surface-700 dark:text-surface-300">Velocity Rating</span>
+ <p className="text-lg font-bold text-[var(--foreground)]">
  {analysis.releaseMetrics.velocityRating || "N/A"}
  </p>
  </div>
- <div className="bg-[var(--color-surface-2)]/50 rounded-lg p-3">
- <span className="text-xs text-[var(--color-text-2)]">Release Height</span>
- <p className="text-lg font-bold text-[var(--color-text)]">
+ <div className="bg-[var(--muted-bg)]/50 rounded-lg p-3">
+ <span className="text-xs text-surface-700 dark:text-surface-300">Release Height</span>
+ <p className="text-lg font-bold text-[var(--foreground)]">
  {analysis.releaseMetrics.height || "N/A"}
  </p>
  </div>
- <div className="bg-[var(--color-surface-2)]/50 rounded-lg p-3">
- <span className="text-xs text-[var(--color-text-2)]">Est. Distance</span>
- <p className="text-lg font-bold text-[var(--color-text)]">
+ <div className="bg-[var(--muted-bg)]/50 rounded-lg p-3">
+ <span className="text-xs text-surface-700 dark:text-surface-300">Est. Distance</span>
+ <p className="text-lg font-bold text-[var(--foreground)]">
  {analysis.releaseMetrics.theoreticalDistance != null
  ? `${analysis.releaseMetrics.theoreticalDistance}m`
  : "N/A"}
@@ -348,7 +348,7 @@ export default function ThrowFlowResultPage() {
  {/* Energy Leaks */}
  {analysis.energyLeaks.length > 0 && (
  <div className="card space-y-3">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">Energy Leaks</h2>
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">Energy Leaks</h2>
  <div className="space-y-2">
  {analysis.energyLeaks.map((leak, i) => (
  <div
@@ -359,8 +359,8 @@ export default function ThrowFlowResultPage() {
  -{leak.percentImpact}%
  </div>
  <div>
- <p className="text-sm text-[var(--color-text)]">{leak.description}</p>
- <p className="text-xs text-[var(--color-text-2)] mt-0.5">
+ <p className="text-sm text-[var(--foreground)]">{leak.description}</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
  Frame {leak.frameIndex}
  </p>
  </div>
@@ -374,20 +374,20 @@ export default function ThrowFlowResultPage() {
  {/* Issue Cards */}
  {analysis.issueCards.length > 0 && (
  <div className="card space-y-4">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">Issues Found</h2>
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">Issues Found</h2>
  <div className="space-y-3">
  {analysis.issueCards.map((issue, i) => {
  const styles = SEVERITY_STYLES[issue.severity] || SEVERITY_STYLES.LOW;
  return (
  <div key={i} className={`${styles.bg} ${styles.border} border rounded-lg p-4`}>
  <div className="flex items-start justify-between mb-2">
- <h3 className="font-medium text-[var(--color-text)]">{issue.title}</h3>
+ <h3 className="font-medium text-[var(--foreground)]">{issue.title}</h3>
  <span className={`${styles.badge} text-xs font-medium px-2 py-0.5 rounded-full`}>
  {issue.severity}
  </span>
  </div>
- <p className="text-sm text-[var(--color-text-2)]">{issue.description}</p>
- <div className="flex items-center gap-4 mt-2 text-xs text-[var(--color-text-2)]">
+ <p className="text-sm text-surface-700 dark:text-surface-300">{issue.description}</p>
+ <div className="flex items-center gap-4 mt-2 text-xs text-surface-700 dark:text-surface-300">
  <span>Frame {issue.frameIndex}</span>
  <span>Drill: {issue.drill}</span>
  </div>
@@ -401,7 +401,7 @@ export default function ThrowFlowResultPage() {
  {/* Drill Recommendations */}
  {analysis.drillRecs.length > 0 && (
  <div className="card space-y-4">
- <h2 className="text-lg font-semibold text-[var(--color-text)]">
+ <h2 className="text-lg font-semibold text-[var(--foreground)]">
  Recommended Drills
  </h2>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -411,7 +411,7 @@ export default function ThrowFlowResultPage() {
  className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4"
  >
  <h3 className="font-medium text-green-800 dark:text-green-200">{drill.name}</h3>
- <p className="text-sm text-[var(--color-text-2)] mt-1">{drill.description}</p>
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">{drill.description}</p>
  <p className="text-xs text-green-600 dark:text-green-400 mt-2">
  Targets: {drill.targetIssue}
  </p>
@@ -426,7 +426,7 @@ export default function ThrowFlowResultPage() {
  <div className="card">
  <button
  onClick={() => setShowRaw(!showRaw)}
- className="flex items-center gap-2 text-sm text-[var(--color-text-2)] hover:text-[var(--color-text)] "
+ className="flex items-center gap-2 text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] "
  >
  <svg
  className={`w-4 h-4 transition-transform ${showRaw ? "rotate-90" : ""}`}
@@ -437,7 +437,7 @@ export default function ThrowFlowResultPage() {
  {showRaw ? "Hide" : "Show"} Raw AI Response
  </button>
  {showRaw && (
- <pre className="mt-3 p-4 bg-[var(--color-surface-2)] rounded-lg text-xs text-[var(--color-text-2)] overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap">
+ <pre className="mt-3 p-4 bg-[var(--muted-bg)] rounded-lg text-xs text-surface-700 dark:text-surface-300 overflow-x-auto max-h-96 overflow-y-auto whitespace-pre-wrap">
  {analysis.rawAnalysis}
  </pre>
  )}

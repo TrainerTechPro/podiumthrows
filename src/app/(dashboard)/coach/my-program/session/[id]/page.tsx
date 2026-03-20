@@ -258,7 +258,7 @@ export default function SessionDetailPage() {
   if (state.loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-pulse text-[var(--color-text-3)]">Loading session...</div>
+        <div className="animate-pulse text-muted">Loading session...</div>
       </div>
     );
   }
@@ -302,11 +302,11 @@ export default function SessionDetailPage() {
       />
 
       {/* Session info bar */}
-      <div className="px-4 py-3 border-b border-[var(--color-border)]/60">
-        <h1 className="text-base font-heading font-semibold text-[var(--color-text)]">
+      <div className="px-4 py-3 border-b border-[var(--card-border)]/60">
+        <h1 className="text-base font-heading font-semibold text-[var(--foreground)]">
           {session.focusLabel}
         </h1>
-        <p className="text-xs text-[var(--color-text-2)]">
+        <p className="text-xs text-surface-700 dark:text-surface-300">
           Week {session.weekNumber} &middot; Day {session.dayType} &middot; ~{session.estimatedDuration}min
         </p>
       </div>
@@ -357,19 +357,19 @@ export default function SessionDetailPage() {
           <div className="space-y-4">
             {/* Quick summary */}
             <div className="card">
-              <h2 className="text-section font-heading text-[var(--color-text)] mb-2">
+              <h2 className="text-section font-heading text-[var(--foreground)] mb-2">
                 Session Review
               </h2>
               <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-[var(--color-text-2)]">Throws logged</span>
-                <span className="font-semibold text-[var(--color-text)] tabular-nums">
+                <span className="text-surface-700 dark:text-surface-300">Throws logged</span>
+                <span className="font-semibold text-[var(--foreground)] tabular-nums">
                   {computed.totalThrowsLogged}
                 </span>
               </div>
               {computed.overallBest && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-[var(--color-text-2)]">Best mark</span>
-                  <span className="font-semibold text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] tabular-nums">
+                  <span className="text-surface-700 dark:text-surface-300">Best mark</span>
+                  <span className="font-semibold text-primary-600 dark:text-primary-300 tabular-nums">
                     {computed.overallBest}m
                   </span>
                 </div>

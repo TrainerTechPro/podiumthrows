@@ -161,8 +161,8 @@ function SortHeader({
    <span
     className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${
      active
-      ? "text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]"
-      : "text-[var(--color-text-3)]"
+      ? "text-primary-600 dark:text-primary-300"
+      : "text-muted"
     }`}
    >
     {label}
@@ -192,7 +192,7 @@ function ImplementSplitBar({
 }) {
  const total = split.heavy + split.competition + split.light;
  if (total === 0) {
-  return <span className="text-[10px] text-[var(--color-text-3)]">No throws logged</span>;
+  return <span className="text-[10px] text-muted">No throws logged</span>;
  }
  const heavyPct = Math.round((split.heavy / total) * 100);
  const compPct = Math.round((split.competition / total) * 100);
@@ -228,7 +228,7 @@ function ImplementSplitBar({
      </div>
     )}
    </div>
-   <div className="flex justify-between text-[10px] text-[var(--color-text-2)]">
+   <div className="flex justify-between text-[10px] text-surface-700 dark:text-surface-300">
     <span>Hvy · {split.heavy}</span>
     <span>Comp · {split.competition}</span>
     <span>Lt · {split.light}</span>
@@ -252,14 +252,14 @@ function WellnessBar({
  const color = effectiveValue >= 7 ? "#5BB88A" : effectiveValue >= 4 ? "#D4915A" : "#D46A6A";
  return (
   <div className="flex items-center gap-2">
-   <span className="text-[10px] text-[var(--color-text-3)] w-16 flex-shrink-0">{label}</span>
-   <div className="flex-1 h-1.5 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+   <span className="text-[10px] text-muted w-16 flex-shrink-0">{label}</span>
+   <div className="flex-1 h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden">
     <div
      className="h-full rounded-full"
      style={{ width: `${pct}%`, backgroundColor: color }}
     />
    </div>
-   <span className="text-[10px] font-bold text-[var(--color-text)] w-4 text-right">{value}</span>
+   <span className="text-[10px] font-bold text-[var(--foreground)] w-4 text-right">{value}</span>
   </div>
  );
 }
@@ -346,10 +346,10 @@ export function ThrowsView({
    {/* Header */}
    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
     <div>
-     <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+     <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
       Podium Throws
      </h1>
-     <p className="text-sm text-[var(--color-text-2)]">
+     <p className="text-sm text-surface-700 dark:text-surface-300">
       Bondarchuk Transfer of Training — Volume IV Programming
      </p>
     </div>
@@ -402,8 +402,8 @@ export function ThrowsView({
       </svg>
      </div>
      <div className="min-w-0">
-      <p className="text-sm font-semibold text-[var(--color-text)] truncate">Live Practice</p>
-      <p className="text-sm text-[var(--color-text-2)] truncate">Log attempts in real time</p>
+      <p className="text-sm font-semibold text-[var(--foreground)] truncate">Live Practice</p>
+      <p className="text-sm text-surface-700 dark:text-surface-300 truncate">Log attempts in real time</p>
      </div>
     </Link>
     <Link
@@ -426,8 +426,8 @@ export function ThrowsView({
       </svg>
      </div>
      <div className="min-w-0">
-      <p className="text-sm font-semibold text-[var(--color-text)] truncate">Invite Athlete</p>
-      <p className="text-sm text-[var(--color-text-2)] truncate">Generate a shareable link</p>
+      <p className="text-sm font-semibold text-[var(--foreground)] truncate">Invite Athlete</p>
+      <p className="text-sm text-surface-700 dark:text-surface-300 truncate">Generate a shareable link</p>
      </div>
     </Link>
     <Link
@@ -450,8 +450,8 @@ export function ThrowsView({
       </svg>
      </div>
      <div className="min-w-0">
-      <p className="text-sm font-semibold text-[var(--color-text)] truncate">View as Athlete</p>
-      <p className="text-sm text-[var(--color-text-2)] truncate">Preview the athlete experience</p>
+      <p className="text-sm font-semibold text-[var(--foreground)] truncate">View as Athlete</p>
+      <p className="text-sm text-surface-700 dark:text-surface-300 truncate">Preview the athlete experience</p>
      </div>
     </Link>
     <Link
@@ -474,8 +474,8 @@ export function ThrowsView({
       </svg>
      </div>
      <div className="min-w-0">
-      <p className="text-sm font-semibold text-[var(--color-text)] truncate">Build Program</p>
-      <p className="text-sm text-[var(--color-text-2)] truncate">Generate Bondarchuk macrocycle</p>
+      <p className="text-sm font-semibold text-[var(--foreground)] truncate">Build Program</p>
+      <p className="text-sm text-surface-700 dark:text-surface-300 truncate">Generate Bondarchuk macrocycle</p>
      </div>
     </Link>
    </div>
@@ -483,10 +483,10 @@ export function ThrowsView({
    {/* ── Roster Pulse Table ────────────────────────────────────────────────── */}
    <div className="card !p-0 overflow-hidden">
     {/* Table header bar */}
-    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
+    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--card-border)]">
      <div className="flex items-center gap-2 flex-wrap">
-      <h2 className="text-sm font-semibold text-[var(--color-text)]">Roster Pulse</h2>
-      <span className="text-sm text-[var(--color-text-3)]">{pulse.length} enrolled</span>
+      <h2 className="text-sm font-semibold text-[var(--foreground)]">Roster Pulse</h2>
+      <span className="text-sm text-muted">{pulse.length} enrolled</span>
       {needsAttention > 0 && (
        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -503,7 +503,7 @@ export function ThrowsView({
      </div>
      <Link
       href="/coach/throws/roster"
-      className="text-xs text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] font-medium flex-shrink-0 inline-flex items-center min-h-[44px]"
+      className="text-xs text-primary-600 dark:text-primary-300 font-medium flex-shrink-0 inline-flex items-center min-h-[44px]"
      >
       Full Roster →
      </Link>
@@ -511,7 +511,7 @@ export function ThrowsView({
 
     {pulse.length === 0 ? (
      <div className="py-12 text-center px-4">
-      <p className="text-sm text-[var(--color-text-2)] mb-3">No athletes enrolled yet.</p>
+      <p className="text-sm text-surface-700 dark:text-surface-300 mb-3">No athletes enrolled yet.</p>
       <Link href="/coach/throws/invite" className="btn-primary inline-block">
        Invite Athletes
       </Link>
@@ -519,7 +519,7 @@ export function ThrowsView({
     ) : (
      <>
       {/* Mobile sort strip */}
-      <div className="sm:hidden overflow-x-auto border-b border-[var(--color-border)]" style={{ scrollbarWidth: "none" }}>
+      <div className="sm:hidden overflow-x-auto border-b border-[var(--card-border)]" style={{ scrollbarWidth: "none" }}>
        <div className="flex gap-1.5 px-4 py-2">
         {(["urgency", "name", "event", "throws", "days"] as SortKey[]).map((key) => {
          const labels: Record<SortKey, string> = { urgency: "Urgency", name: "Name", event: "Event", throws: "Throws", days: "Days Off" };
@@ -528,7 +528,7 @@ export function ThrowsView({
           <button
            key={key}
            onClick={() => toggleSort(key)}
-           className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold transition-colors ${active ? "bg-[var(--color-gold-dark)] text-white" : "bg-[var(--color-surface-2)] text-[var(--color-text-2)]"}`}
+           className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold transition-colors ${active ? "bg-primary-600 text-white" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"}`}
           >
            {labels[key]}
            {active && (
@@ -542,7 +542,7 @@ export function ThrowsView({
        </div>
       </div>
       {/* Mobile card list */}
-      <div className="sm:hidden divide-y divide-[var(--color-border)]/50">
+      <div className="sm:hidden divide-y divide-[var(--card-border)]/50">
        {sortedPulse.map((row) => {
         const expanded = expandedRows.has(row.athleteId);
         const testCfg = TEST_STATUS_CONFIG[row.testStatus];
@@ -551,42 +551,42 @@ export function ThrowsView({
         const target = phaseThrowsTarget(row.trainingPhase);
         const throwsPct = Math.min(100, (row.throwsThisWeek / target) * 100);
         const throwsColor = throwsPct >= 80 ? "#5BB88A" : throwsPct >= 40 ? "#D4915A" : "#D46A6A";
-        const daysClass = row.daysSincePractice == null ? "text-[var(--color-text-3)]" : row.daysSincePractice > 5 ? "text-red-600 dark:text-red-400 font-semibold" : row.daysSincePractice > 2 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400";
+        const daysClass = row.daysSincePractice == null ? "text-muted" : row.daysSincePractice > 5 ? "text-red-600 dark:text-red-400 font-semibold" : row.daysSincePractice > 2 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400";
         return (
          <Fragment key={`mob-${row.id}`}>
           <div
-           className={`px-4 py-3.5 cursor-pointer transition-colors active:bg-[var(--color-surface-2)]/40 ${expanded ? "bg-[var(--color-surface-2)]/20" : ""}`}
+           className={`px-4 py-3.5 cursor-pointer transition-colors active:bg-[var(--muted-bg)]/40 ${expanded ? "bg-[var(--muted-bg)]/20" : ""}`}
            onClick={() => toggleExpand(row.athleteId)}
           >
            <div className="flex items-center gap-3">
             <UserAvatar src={row.athlete.avatarUrl} firstName={row.athlete.firstName} lastName={row.athlete.lastName} size="sm" />
             <div className="flex-1 min-w-0">
              <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-[var(--color-text)] truncate">{row.athlete.firstName} {row.athlete.lastName}</span>
+              <span className="text-sm font-semibold text-[var(--foreground)] truncate">{row.athlete.firstName} {row.athlete.lastName}</span>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0" style={{ backgroundColor: eventColor }}>{eventLabel} {row.gender === "M" ? "♂" : "♀"}</span>
              </div>
              <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${testCfg.bg} ${testCfg.text}`}>{row.testStatus === "overdue" && row.daysSinceTest != null ? `${row.daysSinceTest}d ago` : testCfg.label}</span>
               {row.trainingPhase && (<span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ color: PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888", backgroundColor: `${PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888"}20` }}>{PHASE_SHORT[row.trainingPhase] ?? row.trainingPhase.slice(0, 5)}</span>)}
               <div className="flex items-center gap-1">
-               <span className="text-xs font-bold text-[var(--color-text)]">{row.throwsThisWeek}</span>
-               <div className="w-10 h-1.5 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }} /></div>
-               <span className="text-[10px] text-[var(--color-text-3)]">/{target}</span>
+               <span className="text-xs font-bold text-[var(--foreground)]">{row.throwsThisWeek}</span>
+               <div className="w-10 h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }} /></div>
+               <span className="text-[10px] text-muted">/{target}</span>
               </div>
              </div>
             </div>
             <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
              <span className={`text-xs ${daysClass}`}>{row.daysSincePractice == null ? "—" : row.daysSincePractice === 0 ? "today" : `${row.daysSincePractice}d`}</span>
-             <svg className={`w-4 h-4 text-[var(--color-text-3)] transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+             <svg className={`w-4 h-4 text-muted transition-transform duration-200 ${expanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </div>
            </div>
           </div>
           {expanded && (
-           <div className="px-4 py-4 bg-[var(--color-surface-2)]/15 border-b border-[var(--color-border)]/50 space-y-3">
+           <div className="px-4 py-4 bg-[var(--muted-bg)]/15 border-b border-[var(--card-border)]/50 space-y-3">
             <ImplementSplitBar split={row.implementSplit} />
             {row.latestCheckIn && (
              <div className="space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">Wellness</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">Wellness</p>
               <WellnessBar label="Self Feeling" value={row.latestCheckIn.selfFeeling} />
               <WellnessBar label="Energy" value={row.latestCheckIn.energy} />
               {row.latestCheckIn.sorenessGeneral != null && <WellnessBar label="Soreness" value={row.latestCheckIn.sorenessGeneral} invert />}
@@ -606,7 +606,7 @@ export function ThrowsView({
       <div className="hidden sm:block overflow-x-auto">
        <table className="w-full min-w-[760px]">
        <thead>
-        <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/30">
+        <tr className="border-b border-[var(--card-border)] bg-[var(--muted-bg)]/30">
          <SortHeader
           label="Athlete"
           sortKey="name"
@@ -622,10 +622,10 @@ export function ThrowsView({
           currentDir={sortDir}
           onSort={toggleSort}
          />
-         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
           Deficit
          </th>
-         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
           Phase
          </th>
          <SortHeader
@@ -650,10 +650,10 @@ export function ThrowsView({
           currentDir={sortDir}
           onSort={toggleSort}
          />
-         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
           Str
          </th>
-         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+         <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
           Recent Mark
          </th>
          <th className="py-2 px-3 w-8" />
@@ -671,7 +671,7 @@ export function ThrowsView({
           throwsPct >= 80 ? "#5BB88A" : throwsPct >= 40 ? "#D4915A" : "#D46A6A";
          const daysClass =
           row.daysSincePractice == null
-           ? "text-[var(--color-text-3)]"
+           ? "text-muted"
            : row.daysSincePractice > 5
            ? "text-red-600 dark:text-red-400 font-semibold"
            : row.daysSincePractice > 2
@@ -688,8 +688,8 @@ export function ThrowsView({
          return (
           <Fragment key={row.id}>
            <tr
-            className={`border-b border-[var(--color-border)]/50 hover:bg-[var(--color-surface-2)]/40 cursor-pointer transition-colors ${
-             expanded ? "bg-[var(--color-surface-2)]/20" : ""
+            className={`border-b border-[var(--card-border)]/50 hover:bg-[var(--muted-bg)]/40 cursor-pointer transition-colors ${
+             expanded ? "bg-[var(--muted-bg)]/20" : ""
             }`}
             onClick={() => toggleExpand(row.athleteId)}
            >
@@ -702,7 +702,7 @@ export function ThrowsView({
                lastName={row.athlete.lastName}
                size="sm"
               />
-              <span className="text-xs font-semibold text-[var(--color-text)] truncate max-w-[80px]">
+              <span className="text-xs font-semibold text-[var(--foreground)] truncate max-w-[80px]">
                {row.athlete.firstName} {row.athlete.lastName}
               </span>
              </div>
@@ -719,7 +719,7 @@ export function ThrowsView({
             {/* Deficit */}
             <td className="py-2.5 px-2">
              {row.deficitPrimary && row.deficitPrimary !== "none" ? (
-              <span className="text-[10px] text-[var(--color-text-2)] max-w-[72px] truncate block">
+              <span className="text-[10px] text-surface-700 dark:text-surface-300 max-w-[72px] truncate block">
                {row.deficitPrimary}
               </span>
              ) : row.overPowered ? (
@@ -727,7 +727,7 @@ export function ThrowsView({
                OverPwrd
               </span>
              ) : (
-              <span className="text-[10px] text-[var(--color-text-3)]">—</span>
+              <span className="text-[10px] text-muted">—</span>
              )}
             </td>
             {/* Phase */}
@@ -743,7 +743,7 @@ export function ThrowsView({
                {PHASE_SHORT[row.trainingPhase] ?? row.trainingPhase.slice(0, 5)}
               </span>
              ) : (
-              <span className="text-[10px] text-[var(--color-text-3)]">—</span>
+              <span className="text-[10px] text-muted">—</span>
              )}
             </td>
             {/* Test Status */}
@@ -761,16 +761,16 @@ export function ThrowsView({
             {/* Throws/Wk */}
             <td className="py-2.5 px-2">
              <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-[var(--color-text)] w-6 text-right">
+              <span className="text-xs font-bold text-[var(--foreground)] w-6 text-right">
                {row.throwsThisWeek}
               </span>
-              <div className="w-14 h-1.5 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden flex-shrink-0">
+              <div className="w-14 h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden flex-shrink-0">
                <div
                 className="h-full rounded-full transition-all"
                 style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }}
                />
               </div>
-              <span className="text-[10px] text-[var(--color-text-3)]">/{target}</span>
+              <span className="text-[10px] text-muted">/{target}</span>
              </div>
             </td>
             {/* Days Off */}
@@ -785,22 +785,22 @@ export function ThrowsView({
             </td>
             {/* Strength */}
             <td className="py-2.5 px-2">
-             <span className="text-[10px] text-[var(--color-text-3)]">—</span>
+             <span className="text-[10px] text-muted">—</span>
             </td>
             {/* Recent Mark */}
             <td className="py-2.5 px-2">
              {row.recentBestMark ? (
-              <span className="text-xs font-semibold text-[var(--color-text)]">
+              <span className="text-xs font-semibold text-[var(--foreground)]">
                {row.recentBestMark.distance.toFixed(2)}m
               </span>
              ) : (
-              <span className="text-[10px] text-[var(--color-text-3)]">—</span>
+              <span className="text-[10px] text-muted">—</span>
              )}
             </td>
             {/* Chevron */}
             <td className="py-2.5 px-3">
              <svg
-              className={`w-4 h-4 text-[var(--color-text-3)] transition-transform duration-200 ${
+              className={`w-4 h-4 text-muted transition-transform duration-200 ${
                expanded ? "rotate-180" : ""
               }`}
               fill="none"
@@ -818,18 +818,18 @@ export function ThrowsView({
            </tr>
            {/* Expanded detail panel */}
            {expanded && (
-            <tr className="bg-[var(--color-surface-2)]/15 border-b border-[var(--color-border)]/50">
+            <tr className="bg-[var(--muted-bg)]/15 border-b border-[var(--card-border)]/50">
              <td colSpan={10} className="px-4 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                {/* Implement Split */}
                <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
                  Implement Split (7d)
                 </p>
                 <ImplementSplitBar split={row.implementSplit} />
                 {prGap != null && (
-                 <div className="mt-2 pt-2 border-t border-[var(--color-border)]/50">
-                  <p className="text-[10px] text-[var(--color-text-3)]">
+                 <div className="mt-2 pt-2 border-t border-[var(--card-border)]/50">
+                  <p className="text-[10px] text-muted">
                    Training → Comp gap
                   </p>
                   <span
@@ -845,7 +845,7 @@ export function ThrowsView({
                     ? `−${prGap.toFixed(2)}m deficit`
                     : `+${Math.abs(prGap).toFixed(2)}m above comp PB`}
                   </span>
-                  <p className="text-[10px] text-[var(--color-text-3)] mt-0.5">
+                  <p className="text-[10px] text-muted mt-0.5">
                    {prForEvent?.distance.toFixed(2)}m training vs{" "}
                    {row.competitionPb?.toFixed(2)}m comp PB
                   </p>
@@ -854,7 +854,7 @@ export function ThrowsView({
                </div>
                {/* Wellness */}
                <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
                  Wellness
                 </p>
                 {row.latestCheckIn ? (
@@ -871,7 +871,7 @@ export function ThrowsView({
                     invert
                    />
                   )}
-                  <p className="text-[10px] text-[var(--color-text-3)] mt-0.5">
+                  <p className="text-[10px] text-muted mt-0.5">
                    Checked in{" "}
                    {new Date(row.latestCheckIn.date).toLocaleDateString("en-US", {
                     month: "short",
@@ -880,14 +880,14 @@ export function ThrowsView({
                   </p>
                  </div>
                 ) : (
-                 <p className="text-[10px] text-[var(--color-text-3)]">
+                 <p className="text-[10px] text-muted">
                   No recent check-in
                  </p>
                 )}
                </div>
                {/* Quick Actions + Mark */}
                <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-3)]">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
                  Quick Actions
                 </p>
                 <div className="flex flex-col gap-2">
@@ -907,12 +907,12 @@ export function ThrowsView({
                  </Link>
                 </div>
                 {row.recentBestMark && (
-                 <div className="mt-1 pt-2 border-t border-[var(--color-border)]/50">
-                  <p className="text-[10px] text-[var(--color-text-3)]">Recent best mark</p>
-                  <p className="text-sm font-bold text-[var(--color-text)]">
+                 <div className="mt-1 pt-2 border-t border-[var(--card-border)]/50">
+                  <p className="text-[10px] text-muted">Recent best mark</p>
+                  <p className="text-sm font-bold text-[var(--foreground)]">
                    {row.recentBestMark.distance.toFixed(2)}m
                   </p>
-                  <p className="text-[10px] text-[var(--color-text-3)]">
+                  <p className="text-[10px] text-muted">
                    {new Date(row.recentBestMark.date).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -938,34 +938,34 @@ export function ThrowsView({
    {/* Stats Cards */}
    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
     <div className="card !p-4">
-     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-surface-700 dark:text-surface-300 uppercase tracking-wider">
       Sessions
      </p>
-     <p className="text-2xl font-bold text-[var(--color-text)] mt-1">{sessions.length}</p>
-     <p className="text-sm text-[var(--color-text-3)] mt-0.5">in library</p>
+     <p className="text-2xl font-bold text-[var(--foreground)] mt-1">{sessions.length}</p>
+     <p className="text-sm text-muted mt-0.5">in library</p>
     </div>
     <div className="card !p-4">
-     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-surface-700 dark:text-surface-300 uppercase tracking-wider">
       Assigned
      </p>
-     <p className="text-2xl font-bold text-[var(--color-text)] mt-1">{totalAssignments}</p>
-     <p className="text-sm text-[var(--color-text-3)] mt-0.5">total assignments</p>
+     <p className="text-2xl font-bold text-[var(--foreground)] mt-1">{totalAssignments}</p>
+     <p className="text-sm text-muted mt-0.5">total assignments</p>
     </div>
     <div className="card !p-4">
-     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-surface-700 dark:text-surface-300 uppercase tracking-wider">
       Completed
      </p>
      <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
       {completedAssignments}
      </p>
-     <p className="text-sm text-[var(--color-text-3)] mt-0.5">
+     <p className="text-sm text-muted mt-0.5">
       {totalAssignments > 0
        ? `${Math.round((completedAssignments / totalAssignments) * 100)}% rate`
        : "no data yet"}
      </p>
     </div>
     <div className="card !p-4">
-     <p className="text-sm font-medium text-[var(--color-text-2)] uppercase tracking-wider">
+     <p className="text-sm font-medium text-surface-700 dark:text-surface-300 uppercase tracking-wider">
       Events
      </p>
      <div className="flex flex-wrap gap-1 mt-2">
@@ -979,7 +979,7 @@ export function ThrowsView({
        </span>
       ))}
       {Object.keys(eventCounts).length === 0 && (
-       <span className="text-sm text-[var(--color-text-3)]">No sessions yet</span>
+       <span className="text-sm text-muted">No sessions yet</span>
       )}
      </div>
     </div>
@@ -988,7 +988,7 @@ export function ThrowsView({
    {/* Phase Programming */}
    <div className="card space-y-4">
     <div className="flex items-center justify-between flex-wrap gap-2">
-     <h2 className="text-lg font-semibold text-[var(--color-text)]">Phase Programming</h2>
+     <h2 className="text-lg font-semibold text-[var(--foreground)]">Phase Programming</h2>
      <div className="flex gap-1">
       {(
        ["ACCUMULATION", "TRANSMUTATION", "REALIZATION", "COMPETITION"] as TrainingPhase[]
@@ -999,7 +999,7 @@ export function ThrowsView({
         className={`px-3 py-3 rounded-full text-xs font-semibold transition-colors min-h-[44px] inline-flex items-center ${
          selectedPhase === phase
           ? "text-white"
-          : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+          : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
         }`}
         style={selectedPhase === phase ? { backgroundColor: PHASE_COLORS[phase] } : undefined}
        >
@@ -1011,15 +1011,15 @@ export function ThrowsView({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
      {/* Classification Ratios */}
-     <div className="rounded-lg bg-[var(--color-surface-2)]/50 p-3 space-y-2">
-      <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+     <div className="rounded-lg bg-[var(--muted-bg)]/50 p-3 space-y-2">
+      <p className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
        Classification Ratios
       </p>
       <div className="space-y-1.5">
        {(["CE", "SD", "SP", "GP"] as const).map((cls) => (
         <div key={cls} className="flex items-center gap-2">
-         <span className="text-xs font-medium text-[var(--color-text-2)] w-6">{cls}</span>
-         <div className="flex-1 h-3 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+         <span className="text-xs font-medium text-surface-700 dark:text-surface-300 w-6">{cls}</span>
+         <div className="flex-1 h-3 bg-[var(--muted-bg)] rounded-full overflow-hidden">
           <div
            className="h-full rounded-full transition-all"
            style={{
@@ -1028,38 +1028,38 @@ export function ThrowsView({
            }}
           />
          </div>
-         <span className="text-xs font-bold text-[var(--color-text)] w-8 text-right">
+         <span className="text-xs font-bold text-[var(--foreground)] w-8 text-right">
           {phaseRatios[cls]}%
          </span>
         </div>
        ))}
       </div>
-      <p className="text-sm text-[var(--color-text-3)] mt-1">
+      <p className="text-sm text-muted mt-1">
        {CLASSIFICATIONS.CE.label} | {CLASSIFICATIONS.SD.label}
       </p>
      </div>
 
      {/* Weekly Parameters */}
-     <div className="rounded-lg bg-[var(--color-surface-2)]/50 p-3 space-y-2">
-      <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+     <div className="rounded-lg bg-[var(--muted-bg)]/50 p-3 space-y-2">
+      <p className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
        Weekly Parameters
       </p>
       <div className="grid grid-cols-2 gap-2">
        <div>
-        <p className="text-sm text-[var(--color-text-3)]">Throws/Wk</p>
-        <p className="text-sm font-bold text-[var(--color-text)]">
+        <p className="text-sm text-muted">Throws/Wk</p>
+        <p className="text-sm font-bold text-[var(--foreground)]">
          {phaseConfig.throwsPerWeekMin}–{phaseConfig.throwsPerWeekMax}
         </p>
        </div>
        <div>
-        <p className="text-sm text-[var(--color-text-3)]">Strength Days</p>
-        <p className="text-sm font-bold text-[var(--color-text)]">
+        <p className="text-sm text-muted">Strength Days</p>
+        <p className="text-sm font-bold text-[var(--foreground)]">
          {phaseConfig.strengthDaysMin}–{phaseConfig.strengthDaysMax}
         </p>
        </div>
        <div>
-        <p className="text-sm text-[var(--color-text-3)]">Duration</p>
-        <p className="text-sm font-bold text-[var(--color-text)]">
+        <p className="text-sm text-muted">Duration</p>
+        <p className="text-sm font-bold text-[var(--foreground)]">
          {phaseConfig.durationWeeksMin}–{phaseConfig.durationWeeksMax} wk
         </p>
        </div>
@@ -1067,8 +1067,8 @@ export function ThrowsView({
      </div>
 
      {/* Implement Distribution */}
-     <div className="rounded-lg bg-[var(--color-surface-2)]/50 p-3 space-y-2">
-      <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+     <div className="rounded-lg bg-[var(--muted-bg)]/50 p-3 space-y-2">
+      <p className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
        Implement Distribution
       </p>
       <div className="flex h-6 rounded-full overflow-hidden">
@@ -1094,7 +1094,7 @@ export function ThrowsView({
         {phaseDist.lightPercent}%
        </div>
       </div>
-      <div className="flex justify-between text-[10px] text-[var(--color-text-2)]">
+      <div className="flex justify-between text-[10px] text-surface-700 dark:text-surface-300">
        <span>Heavy</span>
        <span>Competition</span>
        <span>Light</span>
@@ -1104,7 +1104,7 @@ export function ThrowsView({
 
     {/* Weekly Schedule */}
     <div>
-     <p className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider mb-2">
+     <p className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider mb-2">
       Weekly Template — {selectedPhase.charAt(0) + selectedPhase.slice(1).toLowerCase()}
      </p>
      <div className="overflow-x-auto">
@@ -1112,21 +1112,21 @@ export function ThrowsView({
        {weeklySchedule.map((day) => (
         <div
          key={day.day}
-         className="flex-shrink-0 w-28 rounded-lg border border-[var(--color-border)] p-2 space-y-1"
+         className="flex-shrink-0 w-28 rounded-lg border border-[var(--card-border)] p-2 space-y-1"
          style={{ borderTopColor: PHASE_COLORS[selectedPhase], borderTopWidth: "3px" }}
         >
-         <p className="text-xs font-bold text-[var(--color-text)]">{day.day}</p>
+         <p className="text-xs font-bold text-[var(--foreground)]">{day.day}</p>
          <p
           className="text-[10px] font-semibold"
           style={{ color: PHASE_COLORS[selectedPhase] }}
          >
           Type {day.type}
          </p>
-         <p className="text-[10px] text-[var(--color-text-2)]">{day.focus}</p>
-         <p className="text-[10px] text-[var(--color-text-3)]">
+         <p className="text-[10px] text-surface-700 dark:text-surface-300">{day.focus}</p>
+         <p className="text-[10px] text-muted">
           {day.throwsMin}–{day.throwsMax} throws
          </p>
-         <p className="text-[10px] text-[var(--color-text-3)]">Str: {day.strength}</p>
+         <p className="text-[10px] text-muted">Str: {day.strength}</p>
         </div>
        ))}
       </div>
@@ -1136,7 +1136,7 @@ export function ThrowsView({
 
    {/* Taper Protocol */}
    <div className="card space-y-3">
-    <h2 className="text-lg font-semibold text-[var(--color-text)]">Taper Protocol</h2>
+    <h2 className="text-lg font-semibold text-[var(--foreground)]">Taper Protocol</h2>
     <div className="flex items-end gap-3 h-20">
      {TAPER_PROTOCOL.map((entry) => (
       <div key={entry.daysOut} className="flex-1 flex flex-col items-center gap-1">
@@ -1148,10 +1148,10 @@ export function ThrowsView({
          opacity: 0.3 + entry.volumeMultiplier * 0.7,
         }}
        />
-       <span className="text-[10px] font-bold text-[var(--color-text)]">
+       <span className="text-[10px] font-bold text-[var(--foreground)]">
         {Math.round(entry.volumeMultiplier * 100)}%
        </span>
-       <span className="text-[10px] text-[var(--color-text-3)]">{entry.daysOut}d out</span>
+       <span className="text-[10px] text-muted">{entry.daysOut}d out</span>
       </div>
      ))}
     </div>
@@ -1160,11 +1160,11 @@ export function ThrowsView({
    {/* Recent Sessions */}
    <div>
     <div className="flex items-center justify-between mb-3">
-     <h2 className="text-lg font-semibold text-[var(--color-text)]">Recent Sessions</h2>
+     <h2 className="text-lg font-semibold text-[var(--foreground)]">Recent Sessions</h2>
      {sessions.length > 6 && (
       <Link
        href="/coach/throws/library"
-       className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] font-medium"
+       className="text-sm text-primary-600 dark:text-primary-300 font-medium"
       >
        View All
       </Link>
@@ -1173,8 +1173,8 @@ export function ThrowsView({
 
     {sessions.length === 0 ? (
      <div className="card text-center py-12">
-      <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">No sessions yet</h3>
-      <p className="text-sm text-[var(--color-text-2)] mb-4">
+      <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1">No sessions yet</h3>
+      <p className="text-sm text-surface-700 dark:text-surface-300 mb-4">
        Build your first Bondarchuk-validated throws session to get started.
       </p>
       <Link href="/coach/throws/builder" className="btn-primary">
@@ -1198,7 +1198,7 @@ export function ThrowsView({
         <div key={session.id} className="card !p-4 space-y-3 hover:shadow-md transition-shadow">
          <div className="flex items-start justify-between">
           <div>
-           <h3 className="font-semibold text-[var(--color-text)] text-sm">{session.name}</h3>
+           <h3 className="font-semibold text-[var(--foreground)] text-sm">{session.name}</h3>
            <div className="flex items-center gap-2 mt-1 flex-wrap">
             {sessionEvents.map((ev) => {
              const meta = EVENTS[ev];
@@ -1212,7 +1212,7 @@ export function ThrowsView({
               </span>
              );
             })}
-            <span className="text-xs text-[var(--color-text-3)]">
+            <span className="text-xs text-muted">
              {session.sessionType.replace(/_/g, " ")}
             </span>
             {session.targetPhase && (
@@ -1229,7 +1229,7 @@ export function ThrowsView({
            </div>
           </div>
          </div>
-         <div className="flex items-center gap-4 text-xs text-[var(--color-text-2)]">
+         <div className="flex items-center gap-4 text-xs text-surface-700 dark:text-surface-300">
           <span>{session.blocks.length} blocks</span>
           {totalThrows > 0 && <span>{totalThrows} throws</span>}
           <span>{session.assignments.length} assigned</span>

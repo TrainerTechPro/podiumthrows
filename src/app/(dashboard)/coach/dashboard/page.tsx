@@ -57,13 +57,13 @@ function StatBar({ stats }: { stats: CoachStats }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted border-b border-[var(--card-border)] pb-6">
       <span>
-        <span className="font-semibold text-[var(--foreground)]">{stats.totalAthletes}</span>
+        <span className="font-semibold tabular-nums text-[var(--foreground)]">{stats.totalAthletes}</span>
         {" athletes on roster"}
       </span>
 
       {stats.sessionsToday > 0 && (
         <span>
-          <span className="font-semibold text-[var(--foreground)]">{stats.sessionsToday}</span>
+          <span className="font-semibold tabular-nums text-[var(--foreground)]">{stats.sessionsToday}</span>
           {" session"}{stats.sessionsToday !== 1 ? "s" : ""}{" today"}
         </span>
       )}
@@ -71,7 +71,7 @@ function StatBar({ stats }: { stats: CoachStats }) {
       {stats.complianceRate !== null && (
         <span>
           <span className={cn(
-            "font-semibold",
+            "font-semibold tabular-nums",
             stats.complianceRate >= 80
               ? "text-emerald-600 dark:text-emerald-400"
               : stats.complianceRate < 60
@@ -313,7 +313,7 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
             <Link
               key={entry.athleteId}
               href={`/coach/athletes/${entry.athleteId}`}
-              className="flex items-center gap-3 px-1 py-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+              className="group flex items-center gap-3 px-1 py-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
             >
               <Avatar
                 name={entry.athleteName}
@@ -324,7 +324,7 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
                 <p className="text-sm font-medium text-[var(--foreground)] truncate">
                   {entry.athleteName}
                 </p>
-                <div className="mt-1 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
+                <div className="mt-1 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 group-hover:bg-surface-300 dark:group-hover:bg-surface-600 overflow-hidden transition-colors">
                   <div
                     className={`h-full rounded-full ${barColorClass}`}
                     style={{ width: `${Math.min(pct, 100)}%` }}
@@ -485,7 +485,7 @@ export default async function CoachDashboardPage() {
       {/* Needs Attention — full-width above grid */}
       {flagged.length > 0 ? (
         <section>
-          <h2 className="text-base font-bold text-[var(--foreground)]">
+          <h2 className="text-sm font-bold text-[var(--foreground)]">
             Needs Attention
             <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold align-middle">
               {flagged.length}

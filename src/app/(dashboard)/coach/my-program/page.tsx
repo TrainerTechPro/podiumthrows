@@ -197,7 +197,7 @@ export default function MyProgramPage() {
     return (
       <div className="max-w-lg mx-auto px-4 py-16 text-center">
         <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary-500/[0.12] flex items-center justify-center">
-          <svg className="w-8 h-8 text-[var(--color-gold-dark)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg className="w-8 h-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>

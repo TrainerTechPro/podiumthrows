@@ -301,9 +301,9 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
 
  return (
  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
- <div className="w-full sm:max-w-lg bg-[var(--color-surface)] rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+ <div className="w-full sm:max-w-lg bg-[var(--card-bg)] rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
  {/* Header */}
- <div className="sticky top-0 bg-[var(--color-surface)] px-5 pt-5 pb-3 border-b border-[var(--color-border)] flex items-center justify-between">
+ <div className="sticky top-0 bg-[var(--card-bg)] px-5 pt-5 pb-3 border-b border-[var(--card-border)] flex items-center justify-between">
  <div className="flex items-center gap-3">
  <UserAvatar
  src={athlete.avatarUrl}
@@ -312,17 +312,17 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  size="sm"
  />
  <div>
- <p className="font-semibold text-[var(--color-text)] text-sm">
+ <p className="font-semibold text-[var(--foreground)] text-sm">
  {athlete.user.firstName} {athlete.user.lastName}
  </p>
- <p className="text-xs text-[var(--color-text-3)]">
+ <p className="text-xs text-muted">
  Attempt #{athleteAttemptCount + 1}
  </p>
  </div>
  </div>
  <button
  onClick={onCancel}
- className="p-2 rounded-xl text-[var(--color-text-3)] hover:text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+ className="p-2 rounded-xl text-muted hover:text-surface-700 dark:hover:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
  >
  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -334,13 +334,13 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  {/* Event */}
  <div className="grid grid-cols-2 gap-3">
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
  Event
  </label>
  <select
  value={event}
  onChange={(e) => handleEventChange(e.target.value)}
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  >
  {EVENT_OPTIONS.map((ev) => (
  <option key={ev} value={ev}>{EVENT_LABELS[ev]}</option>
@@ -348,7 +348,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  </select>
  </div>
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
  Implement
  </label>
  <input
@@ -357,7 +357,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  onChange={(e) => setImplement(e.target.value)}
  required
  placeholder="e.g. 7.26kg"
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  />
  </div>
  </div>
@@ -365,8 +365,8 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  {/* Distance */}
  <div>
  <div className="flex items-center justify-between mb-1">
- <label className="block text-xs font-medium text-[var(--color-text-2)]">Distance</label>
- <div className="flex rounded-lg overflow-hidden border border-[var(--color-border)]">
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300">Distance</label>
+ <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
  {(["meters", "feet"] as const).map((unit) => (
  <button key={unit} type="button" onClick={() => setDistanceUnit(unit)}
  className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
@@ -384,7 +384,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  value={distance}
  onChange={(e) => setDistance(e.target.value)}
  placeholder={distanceUnit === "meters" ? "e.g. 18.45" : "e.g. 60.53"}
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 pr-10 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 pr-10 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  />
  {wouldBePR && (
  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-600 dark:text-amber-400">
@@ -393,10 +393,10 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  )}
  </div>
  {existingPR && (
- <p className="text-[11px] text-[var(--color-text-3)] mt-1">
- Current PR: <span className="font-mono font-semibold text-[var(--color-text-2)]">{existingPR.distance.toFixed(2)}m</span>
+ <p className="text-[11px] text-muted mt-1">
+ Current PR: <span className="font-mono font-semibold text-surface-700 dark:text-surface-300">{existingPR.distance.toFixed(2)}m</span>
  {distance && !wouldBePR && (
- <span className="ml-1 text-[var(--color-text-3)]">
+ <span className="ml-1 text-muted">
  (−{(existingPR.distance - parseFloat(distance)).toFixed(2)}m)
  </span>
  )}
@@ -406,13 +406,13 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
 
  {/* Drill type */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
- Drill Type <span className="font-normal text-[var(--color-text-3)]">(optional)</span>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+ Drill Type <span className="font-normal text-muted">(optional)</span>
  </label>
  <select
  value={drillType}
  onChange={(e) => setDrillType(e.target.value)}
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
  >
  <option value="">— Select drill —</option>
  {DRILL_TYPES.map((d) => (
@@ -423,25 +423,25 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
 
  {/* Coach note */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
- Coaching Note <span className="font-normal text-[var(--color-text-3)]">(optional)</span>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+ Coaching Note <span className="font-normal text-muted">(optional)</span>
  </label>
  <textarea
  value={coachNote}
  onChange={(e) => setCoachNote(e.target.value)}
  rows={2}
- className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
+ className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
  placeholder="Observations, technique cues, feedback…"
  />
  </div>
 
  {/* Video */}
  <div>
- <label className="block text-xs font-medium text-[var(--color-text-2)] mb-1">
- Video <span className="font-normal text-[var(--color-text-3)]">(optional, max 10s)</span>
+ <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+ Video <span className="font-normal text-muted">(optional, max 10s)</span>
  </label>
  {!isOnline ? (
- <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[var(--color-bg-subtle)] border border-[var(--color-border)] text-xs text-[var(--color-text-3)]">
+ <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[var(--muted-bg)] border border-[var(--card-border)] text-xs text-muted">
  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <line x1="1" y1="1" x2="23" y2="23" strokeWidth={2} strokeLinecap="round" />
  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" strokeWidth={2} strokeLinecap="round" />
@@ -483,7 +483,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  <button
  type="button"
  onClick={() => fileInputRef.current?.click()}
- className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-[var(--color-border-strong)] text-sm text-[var(--color-text-2)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold-dark)] dark:hover:text-[var(--color-gold)] transition-colors"
+ className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-[var(--color-border-strong)] text-sm text-surface-700 dark:text-surface-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-500 transition-colors"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.361a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -555,7 +555,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  const eventLabel = EVENT_LABELS[attempt.event] ?? attempt.event;
 
  return (
- <div className="flex items-start gap-3 p-3 rounded-xl bg-[var(--color-surface-2)]/50 hover:bg-[var(--color-bg-subtle)] transition-colors">
+ <div className="flex items-start gap-3 p-3 rounded-xl bg-[var(--muted-bg)]/50 hover:bg-[var(--muted-bg)] transition-colors">
  <UserAvatar
  src={attempt.athlete.avatarUrl}
  firstName={attempt.athlete.user.firstName}
@@ -564,7 +564,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  />
  <div className="flex-1 min-w-0 space-y-1">
  <div className="flex items-center gap-2 flex-wrap">
- <p className="text-xs font-semibold text-[var(--color-text)]">
+ <p className="text-xs font-semibold text-[var(--foreground)]">
  {attempt.athlete.user.firstName} {attempt.athlete.user.lastName}
  </p>
  <span
@@ -573,7 +573,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  >
  {eventLabel}
  </span>
- <span className="text-[10px] text-[var(--color-text-3)] flex-shrink-0">
+ <span className="text-[10px] text-muted flex-shrink-0">
  {attempt.implement}
  </span>
  {attempt.isPR && (
@@ -584,14 +584,14 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  </div>
  <div className="flex items-center gap-3 flex-wrap">
  {attempt.distance !== null ? (
- <span className="text-base font-bold font-mono text-[var(--color-text)]">
+ <span className="text-base font-bold font-mono text-[var(--foreground)]">
  {attempt.distance.toFixed(2)}m
  </span>
  ) : (
- <span className="text-xs text-[var(--color-text-3)] italic">No distance</span>
+ <span className="text-xs text-muted italic">No distance</span>
  )}
  {attempt.drillType && (
- <span className="text-xs text-[var(--color-text-2)]">
+ <span className="text-xs text-surface-700 dark:text-surface-300">
  {DRILL_TYPES.find((d) => d.value === attempt.drillType)?.label ?? attempt.drillType}
  </span>
  )}
@@ -600,7 +600,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  href={attempt.videoUrl}
  target="_blank"
  rel="noopener noreferrer"
- className="inline-flex items-center gap-1 text-[11px] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:text-[var(--color-gold-dark)] font-medium"
+ className="inline-flex items-center gap-1 text-[11px] text-primary-600 dark:text-primary-300 hover:text-primary-600 font-medium"
  >
  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -610,7 +610,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  )}
  </div>
  {attempt.coachNote && (
- <p className="text-xs text-[var(--color-text-2)] italic line-clamp-2">
+ <p className="text-xs text-surface-700 dark:text-surface-300 italic line-clamp-2">
  {attempt.coachNote}
  </p>
  )}
@@ -622,7 +622,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  />
  )}
  <div className="flex items-center gap-1.5">
- <p className="text-[10px] text-[var(--color-text-3)]">
+ <p className="text-[10px] text-muted">
  #{attempt.attemptNumber} · {attempt._pendingId ? "just now" : formatTime(attempt.createdAt)}
  </p>
  {attempt._pendingId && <PendingSyncBadge count={1} variant="inline" />}
@@ -641,7 +641,7 @@ function AttemptCard({ attempt, onDelete, sessionClosed }: {
  </button>
  <button
  onClick={() => setConfirmDelete(false)}
- className="text-[11px] px-2 py-1 rounded-lg bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  >
  No
  </button>
@@ -795,7 +795,7 @@ export default function LiveSessionPage() {
  if (!session) {
  return (
  <div className="card text-center py-16">
- <p className="text-[var(--color-text-2)]">Session not found.</p>
+ <p className="text-surface-700 dark:text-surface-300">Session not found.</p>
  <Link href="/coach/throws/practice" className="btn-secondary text-sm mt-4 inline-block">
  Back to Practice
  </Link>
@@ -847,11 +847,11 @@ export default function LiveSessionPage() {
  <div className="flex items-start justify-between gap-3 flex-wrap">
  <div>
  <div className="flex items-center gap-2 flex-wrap">
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--color-text)]">
+ <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
  {session.name}
  </h1>
  {isClosed ? (
- <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]">
+ <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
  Closed
  </span>
  ) : (
@@ -864,7 +864,7 @@ export default function LiveSessionPage() {
  <PendingSyncBadge count={pendingCount} isSyncing={isSyncing} variant="header" />
  )}
  </div>
- <p className="text-sm text-[var(--color-text-2)] mt-0.5">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
  {formatDate(session.date)} · {session.attempts.length} attempts
  </p>
  </div>
@@ -875,7 +875,7 @@ export default function LiveSessionPage() {
  {!isClosed && (
  confirmClose ? (
  <div className="flex items-center gap-2">
- <span className="text-xs text-[var(--color-text-2)]">Close session?</span>
+ <span className="text-xs text-surface-700 dark:text-surface-300">Close session?</span>
  <button
  onClick={handleCloseSession}
  disabled={closing}
@@ -885,7 +885,7 @@ export default function LiveSessionPage() {
  </button>
  <button
  onClick={() => setConfirmClose(false)}
- className="text-xs px-3 py-1.5 rounded-xl bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] font-medium"
+ className="text-xs px-3 py-1.5 rounded-xl bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 font-medium"
  >
  Cancel
  </button>
@@ -912,14 +912,14 @@ export default function LiveSessionPage() {
  <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
  {/* ── Athletes Queue ── */}
  <div className="lg:col-span-2 space-y-3">
- <h2 className="text-sm font-semibold text-[var(--color-text-2)]">
+ <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300">
  Athletes Queue
  </h2>
  {rosterAthletes.length === 0 ? (
  <div className="card text-center py-8">
- <p className="text-xs text-[var(--color-text-3)]">
+ <p className="text-xs text-muted">
  No Podium athletes enrolled.{" "}
- <Link href="/coach/throws/roster" className="text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:underline">
+ <Link href="/coach/throws/roster" className="text-primary-600 dark:text-primary-300 hover:underline">
  Enroll athletes
  </Link>
  </p>
@@ -942,7 +942,7 @@ export default function LiveSessionPage() {
  isClosed
  ? "opacity-60 cursor-not-allowed"
  : "hover:shadow-md hover:border-[rgba(212,168,67,0.2)] active:scale-[0.98] cursor-pointer"
- } ${isSelected ? "border-[rgba(212,168,67,0.3)] dark:border-[var(--color-gold)] shadow-md" : ""}`}
+ } ${isSelected ? "border-[rgba(212,168,67,0.3)] dark:border-primary-500 shadow-md" : ""}`}
  >
  <UserAvatar
  src={athlete.avatarUrl}
@@ -951,7 +951,7 @@ export default function LiveSessionPage() {
  size="sm"
  />
  <div className="flex-1 min-w-0">
- <p className="text-sm font-semibold text-[var(--color-text)] truncate">
+ <p className="text-sm font-semibold text-[var(--foreground)] truncate">
  {athlete.user.firstName} {athlete.user.lastName}
  </p>
  <div className="flex items-center gap-1.5 mt-0.5">
@@ -964,14 +964,14 @@ export default function LiveSessionPage() {
  </div>
  </div>
  <div className="flex-shrink-0 text-right">
- <p className="text-lg font-bold text-[var(--color-text)]">{count}</p>
- <p className="text-[10px] text-[var(--color-text-3)]">
+ <p className="text-lg font-bold text-[var(--foreground)]">{count}</p>
+ <p className="text-[10px] text-muted">
  {count === 1 ? "attempt" : "attempts"}
  </p>
  </div>
  {!isClosed && (
  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center">
- <svg className="w-4 h-4 text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <svg className="w-4 h-4 text-primary-600 dark:text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
  </svg>
  </div>
@@ -984,10 +984,10 @@ export default function LiveSessionPage() {
 
  {/* ── Attempt Feed ── */}
  <div className="lg:col-span-3 space-y-3">
- <h2 className="text-sm font-semibold text-[var(--color-text-2)]">
+ <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300">
  Attempt Feed
  {session.attempts.length > 0 && (
- <span className="ml-1.5 text-[var(--color-text-3)] font-normal">
+ <span className="ml-1.5 text-muted font-normal">
  ({session.attempts.length})
  </span>
  )}
@@ -997,7 +997,7 @@ export default function LiveSessionPage() {
  <svg className="w-8 h-8 text-[var(--color-border-strong)] mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
  </svg>
- <p className="text-xs text-[var(--color-text-3)]">
+ <p className="text-xs text-muted">
  {isClosed ? "No attempts were logged." : "Tap an athlete to log their first attempt."}
  </p>
  </div>

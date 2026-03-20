@@ -47,7 +47,7 @@ export default function ReasoningCard({
           aria-expanded={expanded}
           aria-controls={detailId}
           aria-label={`Why: ${title}`}
-          className="text-xs text-muted hover:text-[var(--foreground)] transition-colors shrink-0 flex items-center gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)] rounded"
+          className="text-xs text-muted hover:text-[var(--foreground)] transition-colors shrink-0 flex items-center gap-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 rounded"
         >
           Why?
           <svg

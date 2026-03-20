@@ -146,7 +146,7 @@ export function PhotoUploadInput({
           className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
             dragOver
               ? "border-primary-400 bg-primary-50 dark:bg-primary-900/20"
-              : "border-[var(--card-border)] hover:border-primary-300 dark:hover:border-primary-600 hover:bg-[var(--color-bg-subtle)]"
+              : "border-[var(--card-border)] hover:border-primary-300 dark:hover:border-primary-600 hover:bg-[var(--muted-bg)]"
           } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           {uploadState === "uploading" ? (

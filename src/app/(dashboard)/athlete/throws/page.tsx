@@ -186,8 +186,8 @@ export default function AthleteThrowsPage() {
  return (
  <div className="animate-spring-up space-y-6">
  <div>
- <h1 className="text-display font-heading text-[var(--color-text)]">Throws Practice</h1>
- <p className="text-sm text-[var(--color-text-2)]">Your assigned throws sessions</p>
+ <h1 className="text-display font-heading text-[var(--foreground)]">Throws Practice</h1>
+ <p className="text-sm text-surface-700 dark:text-surface-300">Your assigned throws sessions</p>
  </div>
 
  <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
@@ -227,7 +227,7 @@ export default function AthleteThrowsPage() {
  {/* Today's sessions */}
  {todaySessions.length > 0 ? (
  <div>
- <h2 className="text-section font-heading text-[var(--color-text)] mb-3">Today</h2>
+ <h2 className="text-section font-heading text-[var(--foreground)] mb-3">Today</h2>
  <div className="space-y-4">
  {todaySessions.map((assignment) => (
  <SessionCard
@@ -246,8 +246,8 @@ export default function AthleteThrowsPage() {
  activeSessions.length === 0 && (
  <div className="card card-hover-lift text-center py-10">
  <div className="text-4xl mb-3">☀️</div>
- <h3 className="font-semibold text-[var(--color-text)]">Rest Day</h3>
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <h3 className="font-semibold text-[var(--foreground)]">Rest Day</h3>
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  {upcomingSessions.length > 0
  ? `Next session: ${upcomingSessions[0].assignedDate}`
  : "No upcoming sessions assigned"}
@@ -259,7 +259,7 @@ export default function AthleteThrowsPage() {
  {/* Upcoming */}
  {upcomingSessions.length > 0 && (
  <div>
- <h2 className="text-section font-heading text-[var(--color-text)] mb-3">Upcoming</h2>
+ <h2 className="text-section font-heading text-[var(--foreground)] mb-3">Upcoming</h2>
  <div className="space-y-2 stagger-spring">
  {upcomingSessions.slice(0, 5).map((a) => {
  const sessionEvents = parseEvents(a.session.event);
@@ -271,7 +271,7 @@ export default function AthleteThrowsPage() {
  style={{ backgroundColor: primaryMeta?.color || "#666" }}
  />
  <div className="flex-1 min-w-0">
- <p className="font-medium text-[var(--color-text)] text-sm truncate">
+ <p className="font-medium text-[var(--foreground)] text-sm truncate">
  {a.session.name}
  </p>
  <div className="flex items-center gap-1 mt-0.5">
@@ -280,10 +280,10 @@ export default function AthleteThrowsPage() {
  {EVENTS[ev]?.label || ev}
  </span>
  ))}
- <span className="text-xs text-[var(--color-text-2)] ml-1">{a.assignedDate}</span>
+ <span className="text-xs text-surface-700 dark:text-surface-300 ml-1">{a.assignedDate}</span>
  </div>
  </div>
- <span className="text-xs text-[var(--color-text-3)]">
+ <span className="text-xs text-muted">
  {a.session.blocks.length} blocks
  </span>
  </div>
@@ -296,22 +296,22 @@ export default function AthleteThrowsPage() {
  {/* Past sessions */}
  {pastSessions.length > 0 && (
  <div>
- <h2 className="text-section font-heading text-[var(--color-text)] mb-3">Recent</h2>
+ <h2 className="text-section font-heading text-[var(--foreground)] mb-3">Recent</h2>
  <div className="space-y-2 stagger-spring">
  {pastSessions.slice(0, 5).map((a) => {
  const pastEvents = parseEvents(a.session.event);
  const pastPrimaryMeta = EVENTS[pastEvents[0]];
  return (
- <Link key={a.id} href={`/athlete/throws/log?sessionId=${a.id}`} className="card !p-3 flex items-center gap-3 hover:bg-[var(--color-surface-2)] transition-colors block">
+ <Link key={a.id} href={`/athlete/throws/log?sessionId=${a.id}`} className="card !p-3 flex items-center gap-3 hover:bg-[var(--muted-bg)] transition-colors block">
  <span
  className="w-2 h-8 rounded-full flex-shrink-0 opacity-50"
  style={{ backgroundColor: pastPrimaryMeta?.color || "#666" }}
  />
  <div className="flex-1 min-w-0">
- <p className="font-medium text-[var(--color-text)] text-sm truncate">
+ <p className="font-medium text-[var(--foreground)] text-sm truncate">
  {a.session.name}
  </p>
- <p className="text-xs text-[var(--color-text-2)]">{a.assignedDate}</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300">{a.assignedDate}</p>
  </div>
  <span
  className={`text-xs font-medium px-2 py-0.5 rounded-full ${
@@ -319,7 +319,7 @@ export default function AthleteThrowsPage() {
  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
  : a.status === "SKIPPED"
  ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
  }`}
  >
  {a.status.toLowerCase()}
@@ -514,7 +514,7 @@ function SessionCard({
  </span>
  ))}
  </div>
- <h3 className="text-lg font-bold text-[var(--color-text)]">
+ <h3 className="text-lg font-bold text-[var(--foreground)]">
  {assignment.session.name}
  </h3>
  </div>
@@ -534,7 +534,7 @@ function SessionCard({
  </span>
  </div>
  {isCompleted && assignment.rpe && (
- <div className="flex items-center gap-4 text-sm text-[var(--color-text-2)]">
+ <div className="flex items-center gap-4 text-sm text-surface-700 dark:text-surface-300">
  <span>RPE: {assignment.rpe}/10</span>
  {assignment.selfFeeling && (
  <span>Feeling: {assignment.selfFeeling.toLowerCase().replace("_", " ")}</span>
@@ -584,7 +584,7 @@ function SessionCard({
  {EVENTS[ev]?.label || ev}
  </span>
  ))}
- <span className="text-xs text-[var(--color-text-3)]">
+ <span className="text-xs text-muted">
  {assignment.session.sessionType.replace(/_/g, " ")}
  </span>
  {isStarted && (
@@ -593,11 +593,11 @@ function SessionCard({
  </span>
  )}
  </div>
- <h3 className="text-lg font-bold text-[var(--color-text)]">
+ <h3 className="text-lg font-bold text-[var(--foreground)]">
  {assignment.session.name}
  </h3>
  {assignment.session.notes && (
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  {assignment.session.notes}
  </p>
  )}
@@ -607,7 +607,7 @@ function SessionCard({
  <>
  <button
  onClick={() => setShowSkipModal(true)}
- className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+ className="px-3 py-1.5 rounded-lg text-xs font-medium text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
  >
  Skip
  </button>
@@ -619,7 +619,7 @@ function SessionCard({
  {isStarted && !allBlocksDone && (
  <button
  onClick={() => setShowSkipModal(true)}
- className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+ className="px-3 py-1.5 rounded-lg text-xs font-medium text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
  >
  Skip
  </button>
@@ -630,13 +630,13 @@ function SessionCard({
  {/* Progress bar */}
  {isStarted && (
  <div>
- <div className="flex items-center justify-between text-xs text-[var(--color-text-2)] mb-1">
+ <div className="flex items-center justify-between text-xs text-surface-700 dark:text-surface-300 mb-1">
  <span>{completedBlocks.size} / {blocks.length} blocks</span>
  <span>{Math.round((completedBlocks.size / blocks.length) * 100)}%</span>
  </div>
- <div className="w-full h-2 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+ <div className="w-full h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
  <div
- className="h-full bg-[var(--color-gold)] rounded-full transition-all duration-500"
+ className="h-full bg-primary-500 rounded-full transition-all duration-500"
  style={{ width: `${(completedBlocks.size / blocks.length) * 100}%` }}
  />
  </div>
@@ -664,7 +664,7 @@ function SessionCard({
  ? "border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10"
  : isExpanded
  ? "border-[rgba(212,168,67,0.3)] bg-[rgba(212,168,67,0.06)]"
- : "border-[var(--color-border)]"
+ : "border-[var(--card-border)]"
  }`}
  >
  {isComplete ? (
@@ -681,7 +681,7 @@ function SessionCard({
  className={`text-sm font-medium ${
  isComplete
  ? "text-green-700 dark:text-green-400 line-through"
- : "text-[var(--color-text)]"
+ : "text-[var(--foreground)]"
  }`}
  >
  <BlockLabel block={block} config={config} eventMeta={eventMeta} />
@@ -691,14 +691,14 @@ function SessionCard({
  isThrowingBlock ? (
  <button
  onClick={() => setExpandedBlock(isExpanded ? null : block.id)}
- className="flex-shrink-0 px-3 py-1 rounded-lg text-xs font-medium bg-[rgba(212,168,67,0.08)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:bg-[rgba(212,168,67,0.15)] transition-colors"
+ className="flex-shrink-0 px-3 py-1 rounded-lg text-xs font-medium bg-[rgba(212,168,67,0.08)] text-primary-600 dark:text-primary-300 hover:bg-[rgba(212,168,67,0.15)] transition-colors"
  >
  {isExpanded ? "Collapse" : "Log Throws"}
  </button>
  ) : (
  <button
  onClick={() => completeBlock(block.id)}
- className="flex-shrink-0 px-3 py-1 rounded-lg text-xs font-medium bg-[rgba(212,168,67,0.08)] text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:bg-[rgba(212,168,67,0.15)] transition-colors"
+ className="flex-shrink-0 px-3 py-1 rounded-lg text-xs font-medium bg-[rgba(212,168,67,0.08)] text-primary-600 dark:text-primary-300 hover:bg-[rgba(212,168,67,0.15)] transition-colors"
  >
  Done
  </button>
@@ -708,12 +708,12 @@ function SessionCard({
 
  {/* Expanded throw logging UI */}
  {isExpanded && isThrowingBlock && throwInputs[block.id] && (
- <div className="mt-2 ml-9 p-4 rounded-lg border border-[rgba(212,168,67,0.2)] bg-[var(--color-surface)]-900 space-y-3">
+ <div className="mt-2 ml-9 p-4 rounded-lg border border-[rgba(212,168,67,0.2)] bg-[var(--card-bg)]-900 space-y-3">
  <div className="flex items-center justify-between">
- <p className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+ <p className="text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
  Log each throw (meters)
  </p>
- <span className="text-xs text-[var(--color-text-3)]">
+ <span className="text-xs text-muted">
  {(config as unknown as ThrowingBlockConfig).implementWeight}
  </span>
  </div>
@@ -729,7 +729,7 @@ function SessionCard({
 
  return (
  <div key={t.throwNumber} className="relative">
- <label className="text-[10px] font-medium text-[var(--color-text-3)] mb-0.5 block">
+ <label className="text-[10px] font-medium text-muted mb-0.5 block">
  Throw {t.throwNumber}
  </label>
  <input
@@ -764,12 +764,12 @@ function SessionCard({
  const avg = distances.reduce((s, d) => s + d, 0) / distances.length;
  const best = Math.max(...distances);
  return (
- <div className="flex items-center gap-4 text-xs text-[var(--color-text-2)] pt-2 border-t border-[var(--color-border)]">
+ <div className="flex items-center gap-4 text-xs text-surface-700 dark:text-surface-300 pt-2 border-t border-[var(--card-border)]">
  <span>
- Logged: <strong className="text-[var(--color-text-2)]">{distances.length}</strong>
+ Logged: <strong className="text-surface-700 dark:text-surface-300">{distances.length}</strong>
  </span>
  <span>
- Avg: <strong className="text-[var(--color-text-2)]">{avg.toFixed(2)}m</strong>
+ Avg: <strong className="text-surface-700 dark:text-surface-300">{avg.toFixed(2)}m</strong>
  </span>
  <span>
  Best: <strong className="text-amber-600 dark:text-amber-400">{best.toFixed(2)}m</strong>
@@ -824,13 +824,13 @@ function SessionCard({
  )}
 
  {showCompletionForm && (
- <div className="border border-green-200 dark:border-green-800 rounded-xl p-5 space-y-5 bg-[var(--color-surface)]-900">
- <h4 className="font-semibold text-[var(--color-text)]">Session Feedback</h4>
+ <div className="border border-green-200 dark:border-green-800 rounded-xl p-5 space-y-5 bg-[var(--card-bg)]-900">
+ <h4 className="font-semibold text-[var(--foreground)]">Session Feedback</h4>
 
  {/* RPE Slider */}
  <div>
- <label className="block text-sm font-medium text-[var(--color-text-2)] mb-2">
- Rate of Perceived Exertion (RPE): <strong className="text-[var(--color-gold-dark)]">{completionRpe}</strong>/10
+ <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+ Rate of Perceived Exertion (RPE): <strong className="text-primary-600">{completionRpe}</strong>/10
  </label>
  <input
  type="range"
@@ -839,9 +839,9 @@ function SessionCard({
  step="1"
  value={completionRpe}
  onChange={(e) => setCompletionRpe(parseInt(e.target.value))}
- className="w-full accent-[var(--color-gold)]"
+ className="w-full accent-primary-500"
  />
- <div className="flex justify-between text-[10px] text-[var(--color-text-3)] mt-1">
+ <div className="flex justify-between text-[10px] text-muted mt-1">
  <span>Easy</span>
  <span>Moderate</span>
  <span>Max Effort</span>
@@ -850,7 +850,7 @@ function SessionCard({
 
  {/* Self-Feeling */}
  <div>
- <label className="block text-sm font-medium text-[var(--color-text-2)] mb-2">
+ <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
  How did you feel?
  </label>
  <div className="flex flex-wrap gap-2">
@@ -860,8 +860,8 @@ function SessionCard({
  onClick={() => setCompletionFeeling(opt.value)}
  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
  completionFeeling === opt.value
- ? "bg-[rgba(212,168,67,0.15)] text-[var(--color-gold-dark)] ring-2 ring-[rgba(212,168,67,0.4)] dark:text-[var(--color-gold-light)]"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ ? "bg-[rgba(212,168,67,0.15)] text-primary-600 ring-2 ring-[rgba(212,168,67,0.4)] dark:text-primary-300"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  }`}
  >
  {opt.label}
@@ -872,7 +872,7 @@ function SessionCard({
 
  {/* Notes */}
  <div>
- <label className="block text-sm font-medium text-[var(--color-text-2)] mb-2">
+ <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
  Notes (optional)
  </label>
  <textarea
@@ -905,7 +905,7 @@ function SessionCard({
  </button>
  <button
  onClick={() => setShowCompletionForm(false)}
- className="px-4 py-2.5 rounded-lg text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+ className="px-4 py-2.5 rounded-lg text-sm text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
  >
  Back
  </button>
@@ -915,10 +915,10 @@ function SessionCard({
 
  {/* Skip Modal */}
  {showSkipModal && (
- <div className="border border-red-200 dark:border-red-800 rounded-xl p-5 space-y-4 bg-[var(--color-surface)]-900">
- <h4 className="font-semibold text-[var(--color-text)]">Skip Session</h4>
+ <div className="border border-red-200 dark:border-red-800 rounded-xl p-5 space-y-4 bg-[var(--card-bg)]-900">
+ <h4 className="font-semibold text-[var(--foreground)]">Skip Session</h4>
  <div>
- <label className="block text-sm font-medium text-[var(--color-text-2)] mb-2">
+ <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
  Reason (optional)
  </label>
  <textarea
@@ -944,7 +944,7 @@ function SessionCard({
  setShowSkipModal(false);
  setSkipReason("");
  }}
- className="px-4 py-2 rounded-lg text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+ className="px-4 py-2 rounded-lg text-sm text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
  >
  Cancel
  </button>

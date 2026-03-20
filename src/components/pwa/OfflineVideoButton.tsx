@@ -87,7 +87,7 @@ export function OfflineVideoButton({
             e.stopPropagation();
             handleRemove();
           }}
-          className="p-1 rounded-md text-[var(--color-text-3)] hover:text-red-500 dark:hover:text-red-400 transition-colors"
+          className="p-1 rounded-md text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors"
           title="Remove offline copy"
         >
           <Trash2 size={12} />
@@ -99,13 +99,13 @@ export function OfflineVideoButton({
   if (state === "downloading") {
     return (
       <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
-        <div className="relative w-16 h-1.5 rounded-full bg-[var(--color-bg-subtle)] overflow-hidden">
+        <div className="relative w-16 h-1.5 rounded-full bg-[var(--muted-bg)] overflow-hidden">
           <div
             className="absolute inset-y-0 left-0 rounded-full bg-amber-500 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="text-[10px] text-[var(--color-text-3)] tabular-nums font-mono">
+        <span className="text-[10px] text-muted tabular-nums font-mono">
           {progress}%
         </span>
       </div>
@@ -114,7 +114,7 @@ export function OfflineVideoButton({
 
   if (state === "removing") {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] text-[var(--color-text-3)]">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] text-muted">
         <Loader2 size={10} className="animate-spin" />
         Removing…
       </span>
@@ -129,7 +129,7 @@ export function OfflineVideoButton({
         e.stopPropagation();
         handleDownload();
       }}
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-[var(--color-text-3)] hover:text-[var(--color-gold-dark)] dark:hover:text-[var(--color-gold)] hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-muted hover:text-primary-600 dark:hover:text-primary-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
       title={`Save offline${fileSizeMb ? ` (${fileSizeMb.toFixed(1)} MB)` : ""}`}
     >
       <Download size={10} />

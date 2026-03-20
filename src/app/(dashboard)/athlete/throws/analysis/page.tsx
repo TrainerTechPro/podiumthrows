@@ -231,8 +231,8 @@ export default function ThrowAnalysisPage() {
           onClick={() => setEventFilter("")}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             eventFilter === ""
-              ? "bg-[var(--color-gold)] text-white"
-              : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+              ? "bg-primary-500 text-white"
+              : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
           }`}
         >
           All Events
@@ -244,7 +244,7 @@ export default function ThrowAnalysisPage() {
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               eventFilter === key
                 ? "text-white"
-                : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+                : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
             }`}
             style={eventFilter === key ? { backgroundColor: meta.color } : {}}
           >
@@ -256,10 +256,10 @@ export default function ThrowAnalysisPage() {
       {/* ── Section 1: Distance Trends ─────────────────────────────── */}
       <section className="card !p-5 space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+          <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             Distance Trends
           </h2>
-          <p className="text-xs text-[var(--color-text-3)] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Best distance per day by event
           </p>
         </div>
@@ -272,15 +272,15 @@ export default function ThrowAnalysisPage() {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="var(--color-border)"
+                stroke="var(--card-border)"
                 opacity={0.5}
               />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: "var(--color-text-3)" }}
+                tick={{ fontSize: 11, fill: "var(--muted)" }}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "var(--color-text-3)" }}
+                tick={{ fontSize: 11, fill: "var(--muted)" }}
                 tickFormatter={(v: number) => `${v}m`}
               />
               <Tooltip
@@ -289,8 +289,8 @@ export default function ThrowAnalysisPage() {
                   EVENT_META[name]?.label ?? name,
                 ]}
                 contentStyle={{
-                  backgroundColor: "var(--color-surface)",
-                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--card-bg)",
+                  border: "1px solid var(--card-border)",
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}
@@ -318,7 +318,7 @@ export default function ThrowAnalysisPage() {
           </ResponsiveContainer>
         ) : (
           <div className="py-10 text-center">
-            <p className="text-sm text-[var(--color-text-3)]">
+            <p className="text-sm text-muted">
               No distance data for the selected filter.
             </p>
           </div>
@@ -328,10 +328,10 @@ export default function ThrowAnalysisPage() {
       {/* ── Section 2: PR Progression Timeline ─────────────────────── */}
       <section className="card !p-5 space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+          <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             PR Progression
           </h2>
-          <p className="text-xs text-[var(--color-text-3)] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Personal record achievements over time
           </p>
         </div>
@@ -339,7 +339,7 @@ export default function ThrowAnalysisPage() {
         {filteredPRs.length > 0 ? (
           <div className="relative ml-3">
             {/* Vertical line */}
-            <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-[var(--color-border)]" />
+            <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-[var(--card-border)]" />
 
             <div className="space-y-4">
               {filteredPRs.map((pr, i) => {
@@ -348,7 +348,7 @@ export default function ThrowAnalysisPage() {
                   <div key={`${pr.event}-${pr.implement}-${i}`} className="relative pl-6">
                     {/* Dot on timeline */}
                     <div
-                      className="absolute left-0 top-2 w-3 h-3 rounded-full border-2 border-white dark:border-[var(--color-surface)] -translate-x-[5px]"
+                      className="absolute left-0 top-2 w-3 h-3 rounded-full border-2 border-white dark:border-[var(--card-bg)] -translate-x-[5px]"
                       style={{ backgroundColor: meta?.color ?? "#666" }}
                     />
                     <div className="flex items-start justify-between gap-3">
@@ -362,20 +362,20 @@ export default function ThrowAnalysisPage() {
                           >
                             {meta?.label ?? pr.event}
                           </span>
-                          <span className="text-xs text-[var(--color-text-3)]">
+                          <span className="text-xs text-muted">
                             {pr.implement}
                           </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--color-bg-subtle)] text-[var(--color-text-3)] font-medium">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
                             {pr.source === "COMPETITION"
                               ? "Competition"
                               : "Training"}
                           </span>
                         </div>
-                        <p className="text-xs text-[var(--color-text-2)] mt-1">
+                        <p className="text-xs text-surface-700 dark:text-surface-300 mt-1">
                           {fmtDateLong(pr.date)}
                         </p>
                       </div>
-                      <span className="text-lg font-bold font-mono text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] whitespace-nowrap">
+                      <span className="text-lg font-bold font-mono text-primary-600 dark:text-primary-300 whitespace-nowrap">
                         {pr.distance.toFixed(2)}m
                       </span>
                     </div>
@@ -386,7 +386,7 @@ export default function ThrowAnalysisPage() {
           </div>
         ) : (
           <div className="py-8 text-center">
-            <p className="text-sm text-[var(--color-text-3)]">
+            <p className="text-sm text-muted">
               No personal records recorded yet.
             </p>
           </div>
@@ -396,38 +396,38 @@ export default function ThrowAnalysisPage() {
       {/* ── Section 3: Competition vs Practice ─────────────────────── */}
       <section className="card !p-5 space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+          <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             Competition vs Practice
           </h2>
-          <p className="text-xs text-[var(--color-text-3)] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Throw volume and average distance split
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Competition */}
-          <div className="rounded-xl border border-[var(--color-border)] p-4 space-y-3">
+          <div className="rounded-xl border border-[var(--card-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              <span className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
                 Competition
               </span>
             </div>
             <div>
-              <p className="text-2xl font-bold font-mono text-[var(--color-text)]">
+              <p className="text-2xl font-bold font-mono text-[var(--foreground)]">
                 {totalComp.count}
               </p>
-              <p className="text-xs text-[var(--color-text-3)]">throws</p>
+              <p className="text-xs text-muted">throws</p>
             </div>
             {totalComp.avgDistance > 0 && (
               <div>
-                <p className="text-sm font-semibold text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]">
+                <p className="text-sm font-semibold text-primary-600 dark:text-primary-300">
                   {totalComp.avgDistance.toFixed(2)}m avg
                 </p>
               </div>
             )}
             {/* Bar */}
-            <div className="w-full h-2 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-amber-500 rounded-full transition-all duration-700"
                 style={{
@@ -438,18 +438,18 @@ export default function ThrowAnalysisPage() {
           </div>
 
           {/* Practice */}
-          <div className="rounded-xl border border-[var(--color-border)] p-4 space-y-3">
+          <div className="rounded-xl border border-[var(--card-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-              <span className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
                 Practice
               </span>
             </div>
             <div>
-              <p className="text-2xl font-bold font-mono text-[var(--color-text)]">
+              <p className="text-2xl font-bold font-mono text-[var(--foreground)]">
                 {totalPract.count}
               </p>
-              <p className="text-xs text-[var(--color-text-3)]">throws</p>
+              <p className="text-xs text-muted">throws</p>
             </div>
             {totalPract.avgDistance > 0 && (
               <div>
@@ -459,7 +459,7 @@ export default function ThrowAnalysisPage() {
               </div>
             )}
             {/* Bar */}
-            <div className="w-full h-2 bg-[var(--color-bg-subtle)] rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 rounded-full transition-all duration-700"
                 style={{
@@ -474,10 +474,10 @@ export default function ThrowAnalysisPage() {
       {/* ── Section 4: Implement Weight Distribution ───────────────── */}
       <section className="card !p-5 space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-[var(--color-text-2)] uppercase tracking-wider">
+          <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             Implement Distribution
           </h2>
-          <p className="text-xs text-[var(--color-text-3)] mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Throw count and distances by implement weight
           </p>
         </div>
@@ -493,21 +493,21 @@ export default function ThrowAnalysisPage() {
                       className="w-2 h-6 rounded-full"
                       style={{ backgroundColor: meta?.color ?? "#666" }}
                     />
-                    <h3 className="text-sm font-bold text-[var(--color-text)]">
+                    <h3 className="text-sm font-bold text-[var(--foreground)]">
                       {meta?.label ?? event}
                     </h3>
                   </div>
-                  <div className="divide-y divide-[var(--color-border)]">
+                  <div className="divide-y divide-[var(--card-border)]">
                     {rows.map((row) => (
                       <div
                         key={`${row.event}-${row.implement}`}
                         className="py-3 flex items-center justify-between gap-4"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[var(--color-text)]">
+                          <p className="text-sm font-semibold text-[var(--foreground)]">
                             {row.implement}
                           </p>
-                          <p className="text-xs text-[var(--color-text-2)]">
+                          <p className="text-xs text-surface-700 dark:text-surface-300">
                             {row.throwCount} throw
                             {row.throwCount !== 1 ? "s" : ""} &middot; avg{" "}
                             {row.avgDistance.toFixed(2)}m
@@ -525,7 +525,7 @@ export default function ThrowAnalysisPage() {
           </div>
         ) : (
           <div className="py-8 text-center">
-            <p className="text-sm text-[var(--color-text-3)]">
+            <p className="text-sm text-muted">
               No implement data for the selected filter.
             </p>
           </div>
@@ -541,16 +541,16 @@ function Header() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-display font-heading text-[var(--color-text)]">
+        <h1 className="text-display font-heading text-[var(--foreground)]">
           Throw Analysis
         </h1>
-        <p className="text-sm text-[var(--color-text-2)]">
+        <p className="text-sm text-surface-700 dark:text-surface-300">
           Distance trends, PRs, and implement breakdown
         </p>
       </div>
       <Link
         href="/athlete/throws"
-        className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:underline"
+        className="text-sm text-primary-600 dark:text-primary-300 hover:underline"
       >
         &larr; Throws
       </Link>

@@ -10,7 +10,7 @@ export default function CoachSettingsLoading() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 p-1 rounded-xl bg-[var(--color-surface-2)]">
+      <div className="flex gap-1 p-1 rounded-xl bg-[var(--muted-bg)]">
         {Array.from({ length: 5 }).map((_, i) => (
           <SkeletonLine key={i} className="flex-1 h-8 rounded-lg" />
         ))}

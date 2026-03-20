@@ -90,8 +90,8 @@ function ImplementPicker({ event, value, onChange, onUnitReset }: { event: strin
  onClick={() => { onChange(String(w)); onUnitReset?.(); }}
  className={`px-2.5 py-1.5 text-xs sm:px-2 sm:py-0.5 sm:text-[10px] font-bold rounded-full border transition-colors ${
  value === String(w)
- ? "bg-[var(--color-gold)] text-white border-[var(--color-gold)]"
- : "border-[var(--color-border-strong)] text-[var(--color-text-2)] hover:border-[var(--color-gold)]"
+ ? "bg-primary-500 text-white border-primary-500"
+ : "border-[var(--color-border-strong)] text-surface-700 dark:text-surface-300 hover:border-primary-500"
  }`}
  >
  {w}kg
@@ -140,8 +140,8 @@ function DrillCard({
  onClick={() => update({ drillType: dt })}
  className={`px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold rounded-lg transition-colors ${
  drill.drillType === dt
- ? "bg-[var(--color-gold)] text-white"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ ? "bg-primary-500 text-white"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  }`}
  >
  {meta?.short ?? dt}
@@ -151,7 +151,7 @@ function DrillCard({
  <button
  type="button"
  onClick={() => setShowAllDrills(true)}
- className="px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold rounded-lg border border-dashed border-[var(--color-border-strong)] text-[var(--color-text-3)] hover:text-[var(--color-gold-dark)] hover:border-[var(--color-gold)] transition-colors"
+ className="px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold rounded-lg border border-dashed border-[var(--color-border-strong)] text-muted hover:text-primary-600 hover:border-primary-500 transition-colors"
  >
  + New Drill
  </button>
@@ -160,7 +160,7 @@ function DrillCard({
  <select
  value={drill.drillType}
  onChange={(e) => update({ drillType: e.target.value })}
- className="text-sm font-semibold bg-transparent text-[var(--color-text)] border-none outline-none cursor-pointer pr-2"
+ className="text-sm font-semibold bg-transparent text-[var(--foreground)] border-none outline-none cursor-pointer pr-2"
  >
  {DRILL_TYPES.map((dt) => (
  <option key={dt.value} value={dt.value}>{dt.label}</option>
@@ -172,7 +172,7 @@ function DrillCard({
  <button
  type="button"
  onClick={onRemove}
- className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-text-3)] hover:text-red-500 transition-colors ml-2"
+ className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-red-500 transition-colors ml-2"
  aria-label="Remove drill"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +185,7 @@ function DrillCard({
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  {/* Implement weight */}
  <div className="space-y-1">
- <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)]">
+ <label className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">
  Implement
  </label>
  <div className="flex items-center gap-1">
@@ -196,12 +196,12 @@ function DrillCard({
  value={drill.implementWeight}
  onChange={(e) => update({ implementWeight: e.target.value })}
  placeholder="—"
- className="w-full px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  <button
  type="button"
  onClick={() => update({ implementUnit: drill.implementUnit === "kg" ? "lbs" : "kg" })}
- className="shrink-0 px-2 py-1.5 text-xs sm:px-1.5 sm:py-1 sm:text-[10px] font-bold border border-[var(--color-border-strong)] rounded text-[var(--color-text-2)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold-dark)] transition-colors"
+ className="shrink-0 px-2 py-1.5 text-xs sm:px-1.5 sm:py-1 sm:text-[10px] font-bold border border-[var(--color-border-strong)] rounded text-surface-700 dark:text-surface-300 hover:border-primary-500 hover:text-primary-600 transition-colors"
  >
  {drill.implementUnit}
  </button>
@@ -211,7 +211,7 @@ function DrillCard({
 
  {/* Best mark */}
  <div className="space-y-1">
- <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)]">
+ <label className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">
  Best Mark (m)
  </label>
  <input
@@ -221,7 +221,7 @@ function DrillCard({
  value={drill.bestMark}
  onChange={(e) => update({ bestMark: e.target.value })}
  placeholder="Optional"
- className="w-full px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
  </div>
@@ -229,7 +229,7 @@ function DrillCard({
  {/* Hammer wire length */}
  {isHammer && (
  <div className="flex items-center gap-2">
- <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)] shrink-0">
+ <label className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300 shrink-0">
  Wire
  </label>
  <div className="flex gap-1">
@@ -241,7 +241,7 @@ function DrillCard({
  className={`px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[10px] font-bold rounded-lg transition-colors ${
  drill.wireLength === wl.value
  ? "bg-purple-600 text-white"
- : "bg-[var(--color-bg-subtle)] text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)]"
+ : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  }`}
  >
  {wl.label}
@@ -253,28 +253,28 @@ function DrillCard({
 
  {/* Throw count stepper */}
  <div className="flex items-center gap-3">
- <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-2)] shrink-0">
+ <label className="text-[10px] font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300 shrink-0">
  Throws
  </label>
  <div className="flex items-center gap-3 sm:gap-2">
  <button
  type="button"
  onClick={() => update({ throwCount: Math.max(0, drill.throwCount - 1) })}
- className="w-8 h-8 rounded-lg bg-[var(--color-bg-subtle)] flex items-center justify-center text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] transition-colors font-bold text-lg"
+ className="w-8 h-8 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors font-bold text-lg"
  >
  −
  </button>
- <span className="w-8 text-center text-base font-bold text-[var(--color-text)] tabular-nums">
+ <span className="w-8 text-center text-base font-bold text-[var(--foreground)] tabular-nums">
  {drill.throwCount}
  </span>
  <button
  type="button"
  onClick={() => update({ throwCount: drill.throwCount + 1 })}
- className="w-8 h-8 rounded-lg bg-[var(--color-bg-subtle)] flex items-center justify-center text-[var(--color-text-2)] hover:bg-[var(--color-surface-2)] transition-colors font-bold text-lg"
+ className="w-8 h-8 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors font-bold text-lg"
  >
  +
  </button>
- <span className="text-xs text-[var(--color-text-3)] ml-1">throws</span>
+ <span className="text-xs text-muted ml-1">throws</span>
  </div>
  </div>
 
@@ -284,7 +284,7 @@ function DrillCard({
  value={drill.notes}
  onChange={(e) => update({ notes: e.target.value })}
  placeholder="Drill notes (optional)"
- className="w-full px-2 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs text-[var(--color-text)] placeholder-[var(--color-text-3)]"
+ className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)] placeholder-[var(--muted)]"
  />
  </div>
  );
@@ -353,7 +353,7 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  <select
  value={filterEvent}
  onChange={(e) => setFilterEvent(e.target.value)}
- className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="px-3 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  <option value="">All Events</option>
  {THROW_EVENTS.map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
@@ -361,19 +361,19 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  <select
  value={filterDrill}
  onChange={(e) => setFilterDrill(e.target.value)}
- className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="px-3 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  >
  <option value="">All Drills</option>
  {DRILL_TYPES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
  </select>
- <span className="self-center text-xs text-[var(--color-text-3)]">{sessionCount} sessions total</span>
+ <span className="self-center text-xs text-muted">{sessionCount} sessions total</span>
  </div>
 
  {/* Best mark trend chart */}
  {filteredTrends.length > 0 && (
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)]">Best Mark Progression</h3>
- <p className="text-xs text-[var(--color-text-2)]">Best throw per drill type and implement weight over time</p>
+ <h3 className="text-sm font-bold text-[var(--foreground)]">Best Mark Progression</h3>
+ <p className="text-xs text-surface-700 dark:text-surface-300">Best throw per drill type and implement weight over time</p>
  <ResponsiveContainer width="100%" height={240}>
  <LineChart margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -411,8 +411,8 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  {/* Volume chart */}
  {volData.length > 0 && (
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)]">Session Volume</h3>
- <p className="text-xs text-[var(--color-text-2)]">Total throws logged per session date</p>
+ <h3 className="text-sm font-bold text-[var(--foreground)]">Session Volume</h3>
+ <p className="text-xs text-surface-700 dark:text-surface-300">Total throws logged per session date</p>
  <ResponsiveContainer width="100%" height={160}>
  <LineChart data={volData} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -428,7 +428,7 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  {/* Per-drill best mark table */}
  {filteredTrends.length > 0 && (
  <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--color-text)]">All-Time Bests</h3>
+ <h3 className="text-sm font-bold text-[var(--foreground)]">All-Time Bests</h3>
  <div className="divide-y divide-gray-100 dark:divide-gray-700/50">
  {filteredTrends.map((series) => {
  const best = Math.max(...series.points.map((p) => p.bestMark));
@@ -436,8 +436,8 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  return (
  <div key={series.key} className="py-2.5 flex items-center justify-between">
  <div>
- <p className="text-sm font-semibold text-[var(--color-text)]">{drillLabel(series.drillType)}</p>
- <p className="text-xs text-[var(--color-text-2)]">{series.implement} · {series.points.length} sessions · {totalThrows} throws</p>
+ <p className="text-sm font-semibold text-[var(--foreground)]">{drillLabel(series.drillType)}</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300">{series.implement} · {series.points.length} sessions · {totalThrows} throws</p>
  </div>
  <span className="text-base font-bold font-mono text-orange-600 dark:text-orange-400">{best.toFixed(2)}m</span>
  </div>
@@ -449,7 +449,7 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
 
  {filteredTrends.length === 0 && (
  <div className="card text-center py-8">
- <p className="text-sm text-[var(--color-text-3)]">No mark data for the selected filters.</p>
+ <p className="text-sm text-muted">No mark data for the selected filters.</p>
  </div>
  )}
  </div>
@@ -527,10 +527,10 @@ function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string |
                  <span className="text-white">{eventMeta?.icon}</span>
                </span>
                <div className="min-w-0">
-                 <p className="text-sm font-bold text-[var(--color-text)] truncate">
+                 <p className="text-sm font-bold text-[var(--foreground)] truncate">
                    {eventMeta?.label ?? session.event}
                  </p>
-                 <p className="text-xs text-[var(--color-text-2)]">
+                 <p className="text-xs text-surface-700 dark:text-surface-300">
                    {dateStr}
                  </p>
                </div>
@@ -538,7 +538,7 @@ function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string |
 
              <div className="flex items-center gap-3">
                <div className="text-right">
-                 <p className="text-xs text-[var(--color-text-2)]">
+                 <p className="text-xs text-surface-700 dark:text-surface-300">
                    {drillCount} drill{drillCount !== 1 ? "s" : ""} &middot; {totalThrows} throw{totalThrows !== 1 ? "s" : ""}
                  </p>
                  {topMark > 0 && (
@@ -551,7 +551,7 @@ function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string |
                <button
                  type="button"
                  onClick={() => onEdit(session.id)}
-                 className="shrink-0 w-8 h-8 rounded-lg bg-[var(--color-bg-subtle)] hover:bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-text-2)] hover:text-[var(--color-gold-dark)] transition-colors"
+                 className="shrink-0 w-8 h-8 rounded-lg bg-[var(--muted-bg)] hover:bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:text-primary-600 transition-colors"
                  aria-label="Edit session"
                  title="Edit session"
                >
@@ -564,7 +564,7 @@ function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string |
 
            {/* Drill breakdown */}
            {session.drillLogs.length > 0 && (
-             <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex flex-wrap gap-2">
+             <div className="mt-3 pt-3 border-t border-[var(--card-border)] flex flex-wrap gap-2">
                {session.drillLogs.map((d, i) => {
                  const drillMeta = DRILL_TYPES.find((dt) => dt.value === d.drillType);
                  const weightStr = formatImplementWeight(
@@ -575,7 +575,7 @@ function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string |
                  return (
                    <span
                      key={i}
-                     className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-[var(--color-bg-subtle)] text-[var(--color-text-2)]"
+                     className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
                    >
                      {drillMeta?.short ?? d.drillType} {weightStr !== "\u2014" ? `(${weightStr})` : ""} &times;{d.throwCount}
                    </span>
@@ -750,7 +750,7 @@ export default function ThrowsLogPage() {
  `px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors ${
  tab === t
  ? "bg-orange-500 text-white"
- : "text-[var(--color-text-2)] hover:bg-[var(--color-bg-subtle)]"
+ : "text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
  }`;
 
  return (
@@ -758,16 +758,16 @@ export default function ThrowsLogPage() {
  {/* Header */}
  <div className="flex items-center justify-between">
  <div>
- <h1 className="text-xl font-bold text-[var(--color-text)]">Throws Session</h1>
- <p className="text-sm text-[var(--color-text-2)]">Log drills, marks, and track your progress</p>
+ <h1 className="text-xl font-bold text-[var(--foreground)]">Throws Session</h1>
+ <p className="text-sm text-surface-700 dark:text-surface-300">Log drills, marks, and track your progress</p>
  </div>
- <Link href="/athlete/throws" className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)] hover:underline">
+ <Link href="/athlete/throws" className="text-sm text-primary-600 dark:text-primary-300 hover:underline">
  ← Throws
  </Link>
  </div>
 
  {/* Tab switcher */}
- <div className="flex gap-1 bg-[var(--color-bg-subtle)] rounded-xl p-1">
+ <div className="flex gap-1 bg-[var(--muted-bg)] rounded-xl p-1">
  <button onClick={() => setTab("log")} className={tabCls("log")}>
  <svg className="w-4 h-4 hidden sm:inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -800,8 +800,8 @@ export default function ThrowsLogPage() {
  </svg>
  </div>
  <div>
- <p className="text-lg font-bold text-[var(--color-text)]">{editingSessionId ? "Session Updated!" : "Session Logged!"}</p>
- <p className="text-sm text-[var(--color-text-2)] mt-1">
+ <p className="text-lg font-bold text-[var(--foreground)]">{editingSessionId ? "Session Updated!" : "Session Logged!"}</p>
+ <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
  Your {eventMeta?.label} session on {new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} has been {editingSessionId ? "updated" : "saved"}.
  </p>
  </div>
@@ -820,7 +820,7 @@ export default function ThrowsLogPage() {
  {step === 1 && (
  <div className="space-y-5">
  <div>
- <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-2)] mb-3">
+ <p className="text-xs font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300 mb-3">
  Select Event
  </p>
  <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -832,12 +832,12 @@ export default function ThrowsLogPage() {
  className={`relative rounded-xl p-3 sm:p-4 text-left transition-all border-2 ${
  selectedEvent === ev.value
  ? "border-transparent shadow-lg scale-[1.02]"
- : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+ : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
  }`}
  style={selectedEvent === ev.value ? { backgroundColor: ev.color, borderColor: ev.color } : {}}
  >
  <div className="text-2xl mb-2">{ev.icon}</div>
- <p className={`text-sm font-bold ${selectedEvent === ev.value ? "text-white" : "text-[var(--color-text)]"}`}>
+ <p className={`text-sm font-bold ${selectedEvent === ev.value ? "text-white" : "text-[var(--foreground)]"}`}>
  {ev.label}
  </p>
  {selectedEvent === ev.value && (
@@ -853,14 +853,14 @@ export default function ThrowsLogPage() {
  </div>
 
  <div className="space-y-1">
- <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-2)]">
+ <label className="text-xs font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">
  Session Date
  </label>
  <input
  type="date"
  value={date}
  onChange={(e) => setDate(e.target.value)}
- className="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)]"
+ className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
  />
  </div>
 
@@ -881,7 +881,7 @@ export default function ThrowsLogPage() {
  {/* Event badge + back */}
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-2">
- <button onClick={() => setStep(1)} className="w-10 h-10 rounded-lg flex items-center justify-center text-[var(--color-text-3)] hover:text-[var(--color-text-2)] transition-colors">
+ <button onClick={() => setStep(1)} className="w-10 h-10 rounded-lg flex items-center justify-center text-muted hover:text-surface-700 dark:hover:text-surface-300 transition-colors">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
  </svg>
@@ -893,7 +893,7 @@ export default function ThrowsLogPage() {
  {eventMeta?.label} · {new Date(date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
  </span>
  </div>
- <span className="text-xs text-[var(--color-text-3)]">{drills.length} drill{drills.length !== 1 ? "s" : ""}</span>
+ <span className="text-xs text-muted">{drills.length} drill{drills.length !== 1 ? "s" : ""}</span>
  </div>
 
  {/* Drill cards */}
@@ -913,7 +913,7 @@ export default function ThrowsLogPage() {
  <button
  type="button"
  onClick={addDrill}
- className="w-full py-3 rounded-xl border-2 border-dashed border-[var(--color-border-strong)] text-sm font-semibold text-[var(--color-text-2)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold-dark)] transition-colors flex items-center justify-center gap-2"
+ className="w-full py-3 rounded-xl border-2 border-dashed border-[var(--color-border-strong)] text-sm font-semibold text-surface-700 dark:text-surface-300 hover:border-primary-500 hover:text-primary-600 transition-colors flex items-center justify-center gap-2"
  >
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -950,12 +950,12 @@ export default function ThrowsLogPage() {
  <div className="space-y-4">
  {/* Back button + header */}
  <div className="flex items-center gap-2">
- <button onClick={() => setStep(2)} className="text-[var(--color-text-3)] hover:text-[var(--color-text-2)] transition-colors">
+ <button onClick={() => setStep(2)} className="text-muted hover:text-surface-700 dark:hover:text-surface-300 transition-colors">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
  </svg>
  </button>
- <span className="text-sm font-semibold text-[var(--color-text-2)]">Review Session</span>
+ <span className="text-sm font-semibold text-surface-700 dark:text-surface-300">Review Session</span>
  </div>
 
  {/* Summary */}
@@ -967,7 +967,7 @@ export default function ThrowsLogPage() {
  >
  {eventMeta?.label}
  </span>
- <span className="text-sm text-[var(--color-text-2)]">
+ <span className="text-sm text-surface-700 dark:text-surface-300">
  {new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
  </span>
  </div>
@@ -978,8 +978,8 @@ export default function ThrowsLogPage() {
  return (
  <div key={drill.id} className="py-2.5 flex items-center justify-between">
  <div>
- <p className="text-sm font-semibold text-[var(--color-text)]">{meta?.label}</p>
- <p className="text-xs text-[var(--color-text-2)]">
+ <p className="text-sm font-semibold text-[var(--foreground)]">{meta?.label}</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300">
  {drill.implementWeight ? `${drill.implementWeight}${drill.implementUnit}` : "No implement"}{selectedEvent === "HAMMER" && drill.wireLength !== "FULL" ? ` (${WIRE_LENGTH_OPTIONS.find((w) => w.value === drill.wireLength)?.label ?? ""} wire)` : ""} · {drill.throwCount} throw{drill.throwCount !== 1 ? "s" : ""}
  </p>
  </div>
@@ -993,14 +993,14 @@ export default function ThrowsLogPage() {
  })}
  </div>
 
- <div className="pt-1 text-xs text-[var(--color-text-3)]">
+ <div className="pt-1 text-xs text-muted">
  Total: {drills.reduce((s, d) => s + d.throwCount, 0)} throws across {drills.length} drill{drills.length !== 1 ? "s" : ""}
  </div>
  </div>
 
  {/* Session notes */}
  <div className="space-y-1">
- <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-2)]">
+ <label className="text-xs font-bold uppercase tracking-wider text-surface-700 dark:text-surface-300">
  Session Notes (optional)
  </label>
  <textarea
@@ -1008,7 +1008,7 @@ export default function ThrowsLogPage() {
  onChange={(e) => setSessionNotes(e.target.value)}
  placeholder="How did it go? Weather, energy, technique cues..."
  rows={3}
- className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)] resize-none"
+ className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] resize-none"
  />
  </div>
 

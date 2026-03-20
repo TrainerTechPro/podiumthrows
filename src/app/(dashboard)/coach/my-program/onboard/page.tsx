@@ -414,7 +414,7 @@ export default function OnboardingWizardPage() {
               aria-current={i === step ? "step" : undefined}
               className={`flex items-center justify-center w-7 h-7 min-w-[44px] min-h-[44px] rounded-full text-[10px] font-semibold transition-all shrink-0 ${
                 i === step
-                  ? "bg-[var(--color-gold)] text-black shadow-md"
+                  ? "bg-primary-500 text-black shadow-md"
                   : i < step
                   ? "bg-primary-500/20 text-primary-600 cursor-pointer"
                   : "bg-[var(--muted-bg)] text-muted"
@@ -437,7 +437,7 @@ export default function OnboardingWizardPage() {
           aria-label={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}
         >
           <div
-            className="h-full bg-[var(--color-gold)] rounded-full transition-all duration-500"
+            className="h-full bg-primary-500 rounded-full transition-all duration-500"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -527,7 +527,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
           {EVENTS.map((ev) => (
             <button key={ev.value} type="button" role="radio" aria-checked={form.event === ev.value}
               onClick={() => { update("event", ev.value); update("selectedImplements", []); }}
-              className={`p-3 rounded-xl border-2 text-left transition-all ${form.event === ev.value ? "border-[var(--color-gold)] bg-primary-500/[0.08]" : "border-[var(--card-border)] hover:border-[var(--foreground)]/20"}`}
+              className={`p-3 rounded-xl border-2 text-left transition-all ${form.event === ev.value ? "border-primary-500 bg-primary-500/[0.08]" : "border-[var(--card-border)] hover:border-[var(--foreground)]/20"}`}
             >
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ev.color }} />
@@ -544,7 +544,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
           {GENDERS.map((g) => (
             <button key={g.value} type="button" role="radio" aria-checked={form.gender === g.value}
               onClick={() => { update("gender", g.value); update("selectedImplements", []); }}
-              className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${form.gender === g.value ? "border-[var(--color-gold)] bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
+              className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${form.gender === g.value ? "border-primary-500 bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
             >
               <span className="font-medium text-sm text-[var(--foreground)]">{g.label}</span>
             </button>
@@ -662,14 +662,14 @@ function StepCompetitions({ form, update }: StepProps) {
           {comps.length > 1 && (
             <button type="button" onClick={() => removeRow(i)}
               aria-label={`Remove competition ${comp.name || i + 1}`}
-              className="text-muted hover:text-red-500 mt-2 min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)] rounded"
+              className="text-muted hover:text-red-500 mt-2 min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 rounded"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           )}
         </div>
       ))}
-      <button type="button" onClick={addRow} className="text-sm text-[var(--color-gold-dark)] hover:underline">+ Add Competition</button>
+      <button type="button" onClick={addRow} className="text-sm text-primary-600 hover:underline">+ Add Competition</button>
     </div>
   );
 }
@@ -692,10 +692,10 @@ function StepImplements({ form, update, errors = {}, options }: StepProps & { op
               role="checkbox"
               aria-checked={selected}
               aria-label={`${impl.label}${impl.isCompetition ? " (required)" : ""}`}
-              className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)] ${selected ? "border-[var(--color-gold)] bg-primary-500/[0.08]" : "border-[var(--card-border)]"} ${impl.isCompetition ? "opacity-80" : ""}`}
+              className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 ${selected ? "border-primary-500 bg-primary-500/[0.08]" : "border-[var(--card-border)]"} ${impl.isCompetition ? "opacity-80" : ""}`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selected ? "bg-[var(--color-gold)] border-[var(--color-gold)]" : "border-[var(--foreground)]/30"}`}>
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selected ? "bg-primary-500 border-primary-500" : "border-[var(--foreground)]/30"}`}>
                   {selected && <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                 </div>
                 <span className="font-medium text-sm text-[var(--foreground)]">{impl.label}</span>
@@ -726,10 +726,10 @@ function StepFacilities({ form, update }: StepProps) {
             role="switch"
             aria-checked={form[f.key]}
             aria-label={f.label}
-            className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${form[f.key] ? "border-[var(--color-gold)] bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
+            className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${form[f.key] ? "border-primary-500 bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
           >
             <div><span className="font-medium text-sm text-[var(--foreground)]">{f.label}</span><p className="text-xs text-muted">{f.desc}</p></div>
-            <div aria-hidden="true" className={`w-10 h-6 rounded-full transition-colors relative ${form[f.key] ? "bg-[var(--color-gold)]" : "bg-surface-400"}`}>
+            <div aria-hidden="true" className={`w-10 h-6 rounded-full transition-colors relative ${form[f.key] ? "bg-primary-500" : "bg-surface-400"}`}>
               <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form[f.key] ? "translate-x-[18px]" : "translate-x-0.5"}`} />
             </div>
           </button>
@@ -743,7 +743,7 @@ function StepFacilities({ form, update }: StepProps) {
               <button key={eq.key} type="button" onClick={() => toggleGymItem(eq.key)}
                 role="checkbox"
                 aria-checked={!!form.gymEquipment[eq.key]}
-                className={`p-2.5 rounded-lg border text-left text-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-gold)] ${form.gymEquipment[eq.key] ? "border-[var(--color-gold)] bg-primary-500/[0.08] font-medium" : "border-[var(--card-border)] text-muted"}`}
+                className={`p-2.5 rounded-lg border text-left text-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 ${form.gymEquipment[eq.key] ? "border-primary-500 bg-primary-500/[0.08] font-medium" : "border-[var(--card-border)] text-muted"}`}
               >{eq.label}</button>
             ))}
           </div>
@@ -839,7 +839,7 @@ function StepTrainingHistory({ form, update, errors = {} }: StepProps) {
         <div className="flex gap-2" role="radiogroup" aria-labelledby="days-label">
           {[2, 3, 4, 5, 6].map((d) => (
             <button key={d} type="button" role="radio" aria-checked={form.daysPerWeek === d} onClick={() => update("daysPerWeek", d)}
-              className={`flex-1 p-3 rounded-xl border-2 text-center font-semibold transition-all ${form.daysPerWeek === d ? "border-[var(--color-gold)] bg-primary-500/[0.08] text-[var(--color-gold-dark)]" : "border-[var(--card-border)] text-muted"}`}
+              className={`flex-1 p-3 rounded-xl border-2 text-center font-semibold transition-all ${form.daysPerWeek === d ? "border-primary-500 bg-primary-500/[0.08] text-primary-600" : "border-[var(--card-border)] text-muted"}`}
             >{d}</button>
           ))}
         </div>
@@ -849,7 +849,7 @@ function StepTrainingHistory({ form, update, errors = {} }: StepProps) {
         <div className="flex gap-3" role="radiogroup" aria-labelledby="sessions-label">
           {[1, 2].map((s) => (
             <button key={s} type="button" role="radio" aria-checked={form.sessionsPerDay === s} onClick={() => update("sessionsPerDay", s)}
-              className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${form.sessionsPerDay === s ? "border-[var(--color-gold)] bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
+              className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${form.sessionsPerDay === s ? "border-primary-500 bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
             >
               <span className="font-semibold text-[var(--foreground)]">{s}</span>
               <p className="text-xs text-muted mt-0.5">{s === 1 ? "Single session" : "AM/PM split"}</p>
@@ -861,10 +861,10 @@ function StepTrainingHistory({ form, update, errors = {} }: StepProps) {
         role="switch"
         aria-checked={form.includeLift}
         aria-label="Include Strength Training"
-        className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${form.includeLift ? "border-[var(--color-gold)] bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
+        className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${form.includeLift ? "border-primary-500 bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
       >
         <div><span className="font-medium text-sm text-[var(--foreground)]">Include Strength Training</span></div>
-        <div aria-hidden="true" className={`w-10 h-6 rounded-full transition-colors relative ${form.includeLift ? "bg-[var(--color-gold)]" : "bg-surface-400"}`}>
+        <div aria-hidden="true" className={`w-10 h-6 rounded-full transition-colors relative ${form.includeLift ? "bg-primary-500" : "bg-surface-400"}`}>
           <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form.includeLift ? "translate-x-[18px]" : "translate-x-0.5"}`} />
         </div>
       </button>
@@ -887,7 +887,7 @@ function StepTyping({ form, update }: StepProps) {
             </div>
           </div>
           <button type="button" onClick={() => update("useExistingTyping", !form.useExistingTyping)}
-            className={`w-full p-3 rounded-xl border-2 text-center transition-all ${form.useExistingTyping ? "border-[var(--color-gold)] bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
+            className={`w-full p-3 rounded-xl border-2 text-center transition-all ${form.useExistingTyping ? "border-primary-500 bg-primary-500/[0.08]" : "border-[var(--card-border)]"}`}
           >
             <span className="font-medium text-sm text-[var(--foreground)]">
               {form.useExistingTyping ? "Using existing results" : "Will retake quiz"}
@@ -942,7 +942,7 @@ function StepReview({ form, implementOptions }: { form: FormState; implementOpti
       </div>
 
       <div className="p-4 bg-primary-500/[0.08] border border-primary-500/20 rounded-xl mt-4">
-        <p className="text-sm text-[var(--color-gold-dark)] dark:text-[var(--color-gold-light)]">
+        <p className="text-sm text-primary-600 dark:text-primary-300">
           Your program will be generated using Bondarchuk periodization methodology, customized for your event, level, and adaptation profile.
         </p>
       </div>
