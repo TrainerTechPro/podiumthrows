@@ -292,7 +292,7 @@ export default function AthleteProfilePage() {
  {p.typing?.quizAssignedByCoach && !p.typing?.quizCompletedDate && (
  <Link
  href="/athlete/throws/quiz"
- className="block card !p-4 border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 hover:border-amber-400 dark:hover:border-amber-600 transition-colors"
+ className="block card card-interactive !p-4 border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 hover:border-amber-400 dark:hover:border-amber-600 transition-colors"
  >
  <div className="flex items-start gap-3">
  <div className="w-9 h-9 flex-shrink-0 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">

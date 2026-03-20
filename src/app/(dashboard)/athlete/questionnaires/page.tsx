@@ -163,7 +163,7 @@ function PendingCard({ q }: { q: ReturnType<typeof import("@/lib/data/athlete")[
   return (
     <Link
       href={`/athlete/questionnaires/${q.questionnaireId}`}
-      className="card p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
+      className="card card-interactive p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">

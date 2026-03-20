@@ -49,7 +49,7 @@ export default async function AthleteVideosPage() {
             <Link
               key={video.id}
               href={`/athlete/videos/${video.id}`}
-              className="card group overflow-hidden hover:shadow-md transition-shadow"
+              className="card card-interactive group overflow-hidden"
             >
               {/* Thumbnail */}
               <div className="relative aspect-video bg-surface-100 dark:bg-surface-800 overflow-hidden">

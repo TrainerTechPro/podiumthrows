@@ -105,7 +105,7 @@ export default async function QuestionnairesPage() {
               <Link
                 key={q.id}
                 href={`/coach/questionnaires/${q.id}`}
-                className="card p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
+                className="card card-interactive p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">

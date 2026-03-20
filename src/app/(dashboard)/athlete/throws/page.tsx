@@ -302,7 +302,7 @@ export default function AthleteThrowsPage() {
  const pastEvents = parseEvents(a.session.event);
  const pastPrimaryMeta = EVENTS[pastEvents[0]];
  return (
- <Link key={a.id} href={`/athlete/throws/log?sessionId=${a.id}`} className="card !p-3 flex items-center gap-3 hover:bg-[var(--muted-bg)] transition-colors block">
+ <Link key={a.id} href={`/athlete/throws/log?sessionId=${a.id}`} className="card card-interactive !p-3 flex items-center gap-3 hover:bg-[var(--muted-bg)] transition-colors block">
  <span
  className="w-2 h-8 rounded-full flex-shrink-0 opacity-50"
  style={{ backgroundColor: pastPrimaryMeta?.color || "#666" }}

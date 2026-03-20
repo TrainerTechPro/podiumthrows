@@ -300,7 +300,7 @@ export default async function QuestionnaireDetailPage({
       {questionnaire.responseCount > 0 && (
         <Link
           href={`/coach/questionnaires/${questionnaire.id}/responses`}
-          className="card p-4 flex items-center justify-between hover:ring-2 hover:ring-primary-500/30 transition-all group"
+          className="card card-interactive p-4 flex items-center justify-between hover:ring-2 hover:ring-primary-500/30 transition-all group"
         >
           <span className="text-sm font-medium text-[var(--foreground)] group-hover:text-primary-600 dark:group-hover:text-primary-400">
             View {questionnaire.responseCount} Response
