@@ -165,30 +165,38 @@ function ActivityDescription({ item }: { item: ActivityItem }) {
 }
 
 function ActivityFeed({ items }: { items: ActivityItem[] }) {
-  return (
-    <div className="space-y-1">
-      {items.length === 0 && (
-        <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
-          <div className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-400 dark:text-surface-500" aria-hidden="true">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-          </div>
-          <div className="max-w-[200px]">
-            <p className="text-sm font-semibold text-[var(--foreground)]">No recent activity</p>
-            <p className="text-xs text-muted mt-1">
-              Check-ins, sessions, and PRs from your athletes will show up here.
-            </p>
-          </div>
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
+        <div className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-400 dark:text-surface-500" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
         </div>
-      )}
+        <div className="max-w-[200px]">
+          <p className="text-sm font-semibold text-[var(--foreground)]">No recent activity</p>
+          <p className="text-xs text-muted mt-1">
+            Check-ins, sessions, and PRs from your athletes will show up here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      {/* Timeline spine */}
+      <div className="absolute left-[19px] top-5 bottom-5 w-0.5 bg-surface-200 dark:bg-surface-700" />
+
       {items.map((item) => (
         <Link
           key={item.id}
           href={`/coach/athletes/${item.athleteId}`}
-          className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+          className="relative flex items-start gap-3 px-1 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
         >
-          <ActivityIcon type={item.type} />
+          <div className="relative z-10 shrink-0">
+            <ActivityIcon type={item.type} />
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-surface-600 dark:text-surface-400 leading-snug">
               <ActivityDescription item={item} />
@@ -218,10 +226,22 @@ function FlaggedCard({ athlete }: { athlete: FlaggedAthlete }) {
       ? "warning"
       : "neutral";
 
+  const borderColor =
+    athlete.reason === "injured"
+      ? "border-l-red-500"
+      : athlete.reason === "low_readiness"
+      ? "border-l-amber-500"
+      : "border-l-surface-400 dark:border-l-surface-500";
+
   return (
     <Link
       href={`/coach/athletes/${athlete.id}`}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+      className={cn(
+        "shrink-0 w-60 flex items-center gap-3 p-3 rounded-xl",
+        "bg-[var(--card-bg)] border border-[var(--card-border)]",
+        "border-l-[3px]", borderColor,
+        "hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+      )}
     >
       <Avatar
         name={`${athlete.firstName} ${athlete.lastName}`}
@@ -232,13 +252,12 @@ function FlaggedCard({ athlete }: { athlete: FlaggedAthlete }) {
         <p className="text-sm font-medium text-[var(--foreground)] truncate">
           {athlete.firstName} {athlete.lastName}
         </p>
-        <p className="text-xs text-muted truncate">
-          {(athlete.events as string[]).map(formatEventName).join(", ") || "No events set"}
-        </p>
+        <div className="mt-1">
+          <Badge variant={badgeVariant}>
+            {reasonLabel}
+          </Badge>
+        </div>
       </div>
-      <Badge variant={badgeVariant}>
-        {reasonLabel}
-      </Badge>
     </Link>
   );
 }
@@ -283,63 +302,61 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
           latest scores
         </span>
       </h2>
-      <div className="card p-0 overflow-hidden">
-        <div className="divide-y divide-[var(--card-border)]">
-          {entries.map((entry) => {
-            const pct =
-              entry.maxScore > 0 && entry.latestScore !== null
-                ? (entry.latestScore / entry.maxScore) * 100
-                : 0;
-            const scoreColorClass =
-              pct >= 70
-                ? "text-emerald-600 dark:text-emerald-400"
-                : pct >= 40
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-red-600 dark:text-red-400";
-            const barColorClass =
-              pct >= 70
-                ? "bg-emerald-500"
-                : pct >= 40
-                ? "bg-amber-500"
-                : "bg-red-500";
+      <div className="divide-y divide-[var(--card-border)] border-t border-[var(--card-border)]">
+        {entries.map((entry) => {
+          const pct =
+            entry.maxScore > 0 && entry.latestScore !== null
+              ? (entry.latestScore / entry.maxScore) * 100
+              : 0;
+          const scoreColorClass =
+            pct >= 70
+              ? "text-emerald-600 dark:text-emerald-400"
+              : pct >= 40
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-red-600 dark:text-red-400";
+          const barColorClass =
+            pct >= 70
+              ? "bg-emerald-500"
+              : pct >= 40
+              ? "bg-amber-500"
+              : "bg-red-500";
 
-            return (
-              <Link
-                key={entry.athleteId}
-                href={`/coach/athletes/${entry.athleteId}`}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-              >
-                <Avatar
-                  name={entry.athleteName}
-                  src={entry.avatarUrl}
-                  size="sm"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                    {entry.athleteName}
-                  </p>
-                  <div className="mt-1 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${barColorClass}`}
-                      style={{ width: `${Math.min(pct, 100)}%` }}
-                    />
-                  </div>
+          return (
+            <Link
+              key={entry.athleteId}
+              href={`/coach/athletes/${entry.athleteId}`}
+              className="flex items-center gap-3 px-1 py-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+            >
+              <Avatar
+                name={entry.athleteName}
+                src={entry.avatarUrl}
+                size="sm"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                  {entry.athleteName}
+                </p>
+                <div className="mt-1 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${barColorClass}`}
+                    style={{ width: `${Math.min(pct, 100)}%` }}
+                  />
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <TrendIcon trend={entry.trend} />
-                  <span className={cn("text-sm font-semibold tabular-nums", scoreColorClass)}>
-                    {entry.latestScore !== null
-                      ? entry.latestScore.toFixed(1)
-                      : "—"}
-                  </span>
-                  <span className="text-[10px] text-muted">
-                    / {entry.maxScore}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <TrendIcon trend={entry.trend} />
+                <span className={cn("text-sm font-semibold tabular-nums", scoreColorClass)}>
+                  {entry.latestScore !== null
+                    ? entry.latestScore.toFixed(1)
+                    : "—"}
+                </span>
+                <span className="text-[10px] text-muted">
+                  / {entry.maxScore}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
@@ -435,27 +452,46 @@ export default async function CoachDashboardPage() {
             </h1>
             <p className="text-sm text-muted mt-0.5">{today}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/coach/athletes"
-              className="text-sm text-muted hover:text-[var(--foreground)] transition-colors"
-            >
-              View Athletes
-            </Link>
-            <Link
-              href="/coach/athletes"
-              className="btn-primary text-sm py-1.5 px-3"
-            >
-              + Invite Athlete
-            </Link>
-          </div>
+          <Link
+            href="/coach/athletes"
+            className="btn-primary text-sm py-1.5 px-3"
+          >
+            + Invite Athlete
+          </Link>
         </div>
         <StatBar stats={stats} />
       </div>
 
+      {/* Needs Attention — full-width above grid */}
+      {flagged.length > 0 ? (
+        <section>
+          <h2 className="text-base font-bold text-[var(--foreground)]">
+            Needs Attention
+            <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold align-middle">
+              {flagged.length}
+            </span>
+          </h2>
+          <div className="mt-3 flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+            {flagged.map((a) => (
+              <FlaggedCard key={a.id} athlete={a} />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+            All athletes healthy
+          </span>
+        </div>
+      )}
+
       {/* Two-column body */}
       <div className="grid lg:grid-cols-5 gap-6">
-        {/* Activity Feed — left column */}
+        {/* Activity Feed — timeline, left column */}
         <section className="lg:col-span-3 space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
             Recent Activity
@@ -463,46 +499,23 @@ export default async function CoachDashboardPage() {
               last 48 hours
             </span>
           </h2>
-          <div className="card py-1">
-            <ActivityFeed items={activity} />
-          </div>
+          <ActivityFeed items={activity} />
+          {activity.length > 0 && (
+            <div className="pt-1 pl-1">
+              <Link
+                href="/coach/athletes"
+                className="text-xs text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 hover:underline transition-colors"
+              >
+                View All &rarr;
+              </Link>
+            </div>
+          )}
         </section>
 
-        {/* Flagged Athletes — right column */}
-        <section className="lg:col-span-2 space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Needs Attention
-            {flagged.length > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold">
-                {flagged.length}
-              </span>
-            )}
-          </h2>
-          <div className="card py-1">
-            {flagged.length === 0 ? (
-              <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
-                <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500" aria-hidden="true">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                </div>
-                <div className="max-w-[200px]">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">All clear</p>
-                  <p className="text-xs text-muted mt-1">
-                    No athletes flagged for low readiness, injuries, or missed sessions.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-0.5">
-                {flagged.map((a) => (
-                  <FlaggedCard key={a.id} athlete={a} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+        {/* Team Readiness — borderless, right column */}
+        <div className="lg:col-span-2">
+          <ReadinessWidget entries={readiness} />
+        </div>
       </div>
 
       {/* Recent Athlete Logs */}
@@ -561,9 +574,6 @@ export default async function CoachDashboardPage() {
           </div>
         </section>
       )}
-
-      {/* Team Readiness */}
-      <ReadinessWidget entries={readiness} />
 
       {/* First-visit contextual hints */}
       <FirstVisitHints />
