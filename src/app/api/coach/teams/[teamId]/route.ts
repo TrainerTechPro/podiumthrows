@@ -23,7 +23,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const team = await prisma.team.findFirst({
+    const team = await prisma.eventGroup.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
@@ -38,9 +38,12 @@ export async function PATCH(
         return NextResponse.json({ error: "Team name cannot be empty" }, { status: 400 });
       }
       if (name.trim().length > 100) {
-        return NextResponse.json({ error: "Team name must be 100 characters or less" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Team name must be 100 characters or less" },
+          { status: 400 }
+        );
       }
-      const existing = await prisma.team.findFirst({
+      const existing = await prisma.eventGroup.findFirst({
         where: {
           coachId: coach.id,
           id: { not: teamId },
@@ -48,11 +51,14 @@ export async function PATCH(
         },
       });
       if (existing) {
-        return NextResponse.json({ error: "A team with this name already exists" }, { status: 409 });
+        return NextResponse.json(
+          { error: "A team with this name already exists" },
+          { status: 409 }
+        );
       }
     }
 
-    const updated = await prisma.team.update({
+    const updated = await prisma.eventGroup.update({
       where: { id: teamId },
       data: {
         ...(name !== undefined ? { name: name.trim() } : {}),
@@ -88,14 +94,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const team = await prisma.team.findFirst({
+    const team = await prisma.eventGroup.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    await prisma.team.delete({ where: { id: teamId } });
+    await prisma.eventGroup.delete({ where: { id: teamId } });
 
     // Clear lastTeamId preference if it pointed to the deleted team
     try {

@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 }
 
 /* ── GET — list all athletes on coach's roster with claim status ── */
-/* Optional query param: ?teamId=<id> to filter by team, ?teamId=unassigned for athletes in no team */
+/* Optional query param: ?teamId=<id> to filter by event group, ?teamId=unassigned for athletes in no group */
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
@@ -102,9 +102,9 @@ export async function GET(request: NextRequest) {
     let where: any = { coachId: coach.id };
 
     if (teamId === "unassigned") {
-      where = { coachId: coach.id, teamMemberships: { none: {} } };
+      where = { coachId: coach.id, eventGroupMemberships: { none: {} } };
     } else if (teamId) {
-      where = { coachId: coach.id, teamMemberships: { some: { teamId } } };
+      where = { coachId: coach.id, eventGroupMemberships: { some: { groupId: teamId } } };
     }
 
     const athletes = await prisma.athleteProfile.findMany({

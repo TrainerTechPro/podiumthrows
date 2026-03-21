@@ -24,7 +24,7 @@ export async function DELETE(
     }
 
     // Verify team belongs to coach
-    const team = await prisma.team.findFirst({
+    const team = await prisma.eventGroup.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
@@ -32,8 +32,8 @@ export async function DELETE(
     }
 
     // Delete membership (idempotent — no error if not found)
-    await prisma.teamMember.deleteMany({
-      where: { teamId, athleteId },
+    await prisma.eventGroupMember.deleteMany({
+      where: { groupId: teamId, athleteId },
     });
 
     return NextResponse.json({ ok: true });

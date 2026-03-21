@@ -23,7 +23,7 @@ export async function POST(
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const team = await prisma.team.findFirst({
+    const team = await prisma.eventGroup.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
@@ -48,19 +48,17 @@ export async function POST(
     const validIds = new Set(athletes.map((a) => a.id));
 
     // Get existing memberships to skip duplicates
-    const existing = await prisma.teamMember.findMany({
-      where: { teamId, athleteId: { in: athleteIds } },
+    const existing = await prisma.eventGroupMember.findMany({
+      where: { groupId: teamId, athleteId: { in: athleteIds } },
       select: { athleteId: true },
     });
     const existingIds = new Set(existing.map((m) => m.athleteId));
 
-    const toAdd = athleteIds.filter(
-      (id: string) => validIds.has(id) && !existingIds.has(id)
-    );
+    const toAdd = athleteIds.filter((id: string) => validIds.has(id) && !existingIds.has(id));
 
     if (toAdd.length > 0) {
-      await prisma.teamMember.createMany({
-        data: toAdd.map((athleteId: string) => ({ teamId, athleteId })),
+      await prisma.eventGroupMember.createMany({
+        data: toAdd.map((athleteId: string) => ({ groupId: teamId, athleteId })),
       });
     }
 

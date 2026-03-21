@@ -8,10 +8,7 @@ import type { RecurrenceFrequency } from "@/lib/forms/types";
  * GET /api/coach/questionnaires/[id]/schedule
  * Get the recurring schedule for a questionnaire.
  */
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { coach } = await requireCoachSession();
 
@@ -39,10 +36,7 @@ export async function GET(
  * PUT /api/coach/questionnaires/[id]/schedule
  * Create or update the recurring schedule for a questionnaire.
  */
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { coach } = await requireCoachSession();
 
@@ -61,7 +55,7 @@ export async function PUT(
       specificDays,
       timeOfDay,
       athleteIds,
-      teamIds,
+      groupIds,
       assignToAll,
       startDate,
       endDate,
@@ -69,10 +63,7 @@ export async function PUT(
     } = body;
 
     if (!frequency || !startDate) {
-      return NextResponse.json(
-        { error: "frequency and startDate are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "frequency and startDate are required" }, { status: 400 });
     }
 
     // Calculate next run date
@@ -92,7 +83,7 @@ export async function PUT(
         specificDays: specificDays ?? [],
         timeOfDay: timeOfDay ?? null,
         athleteIds: athleteIds ?? [],
-        teamIds: teamIds ?? [],
+        groupIds: groupIds ?? [],
         assignToAll: assignToAll ?? false,
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
@@ -104,7 +95,7 @@ export async function PUT(
         specificDays: specificDays ?? [],
         timeOfDay: timeOfDay ?? null,
         athleteIds: athleteIds ?? [],
-        teamIds: teamIds ?? [],
+        groupIds: groupIds ?? [],
         assignToAll: assignToAll ?? false,
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
@@ -123,10 +114,7 @@ export async function PUT(
  * DELETE /api/coach/questionnaires/[id]/schedule
  * Remove the recurring schedule for a questionnaire.
  */
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { coach } = await requireCoachSession();
 

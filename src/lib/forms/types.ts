@@ -58,12 +58,7 @@ export type FormDisplayMode = "ALL_AT_ONCE" | "ONE_PER_PAGE" | "SECTIONED";
 
 // ─── Recurrence ───────────────────────────────────────────────────────────
 
-export type RecurrenceFrequency =
-  | "DAILY"
-  | "SPECIFIC_DAYS"
-  | "WEEKLY"
-  | "BIWEEKLY"
-  | "MONTHLY";
+export type RecurrenceFrequency = "DAILY" | "SPECIFIC_DAYS" | "WEEKLY" | "BIWEEKLY" | "MONTHLY";
 
 export type AssignmentSource = "MANUAL" | "RECURRING";
 
@@ -374,7 +369,7 @@ export interface RecurringScheduleConfig {
   specificDays?: number[]; // 0=Sun ... 6=Sat
   timeOfDay?: string; // "08:00"
   athleteIds: string[];
-  teamIds: string[];
+  groupIds: string[];
   assignToAll: boolean;
   startDate: string;
   endDate?: string;
