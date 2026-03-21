@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { Megaphone, Dumbbell } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 interface ModeToggleProps {
@@ -14,38 +14,37 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
   const router = useRouter();
   const [switching, setSwitching] = useState(false);
 
-  async function handleSwitch(mode: "COACH" | "TRAINING") {
-    if (mode === activeMode || switching) return;
+  const isCoach = activeMode === "COACH";
+
+  async function toggle() {
+    if (switching) return;
+    const nextMode = isCoach ? "TRAINING" : "COACH";
     setSwitching(true);
     try {
       await fetch("/api/user/mode", {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ mode }),
+        body: JSON.stringify({ mode: nextMode }),
       });
-      router.push(mode === "COACH" ? "/coach/dashboard" : "/athlete/dashboard");
+      router.push(nextMode === "COACH" ? "/coach/dashboard" : "/athlete/dashboard");
     } catch {
       setSwitching(false);
     }
   }
 
   return (
-    <div className={cn("flex rounded-xl bg-[var(--muted-bg)] p-1 gap-1", className)}>
-      {(["COACH", "TRAINING"] as const).map((mode) => (
-        <button
-          key={mode}
-          onClick={() => handleSwitch(mode)}
-          disabled={switching}
-          className={cn(
-            "flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150",
-            activeMode === mode
-              ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-card"
-              : "text-muted hover:text-[var(--foreground)]"
-          )}
-        >
-          {mode === "COACH" ? "Coach" : "Training"}
-        </button>
-      ))}
-    </div>
+    <button
+      onClick={toggle}
+      disabled={switching}
+      className={`p-3 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50 ${className ?? ""}`}
+      aria-label={isCoach ? "Switch to Training Mode" : "Switch to Coach Mode"}
+      title={isCoach ? "Switch to Training Mode" : "Switch to Coach Mode"}
+    >
+      {isCoach ? (
+        <Megaphone size={20} strokeWidth={1.75} aria-hidden="true" />
+      ) : (
+        <Dumbbell size={20} strokeWidth={1.75} aria-hidden="true" />
+      )}
+    </button>
   );
 }
