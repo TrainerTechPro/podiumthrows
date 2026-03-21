@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -40,100 +39,105 @@ export default function MarketingNav() {
   const isOnPricing = pathname === "/pricing";
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-surface-950/95 backdrop-blur-md border-b border-surface-800"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 h-[66px] flex items-center justify-between gap-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-          <Image
-            src="/logo.png"
-            alt="Podium Throws"
-            width={32}
-            height={32}
-            className="w-8 h-8"
-          />
-          <span className="font-heading font-bold text-[16px] text-white group-hover:text-primary-400 transition-colors tracking-tight">
-            Podium Throws
-          </span>
-        </Link>
-
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`font-body text-sm transition-colors hover:text-white ${
-                link.href === "/pricing" && isOnPricing
-                  ? "text-white"
-                  : "text-surface-400"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Desktop actions */}
-        <div className="hidden md:flex items-center gap-1">
-          <Link
-            href="/login"
-            className="font-body text-sm text-surface-400 hover:text-white transition-colors px-4 py-2"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/register"
-            className="bg-primary-500 text-surface-950 text-sm px-5 py-2 font-heading font-bold hover:bg-primary-400 transition-colors"
-          >
-            Start Free
-          </Link>
-        </div>
-
-        {/* Mobile toggle */}
-        <button
-          onClick={() => setMenuOpen((v) => !v)}
-          className="md:hidden p-3 text-surface-400 hover:text-white transition-colors"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
+    <>
+      {/* Floating pill nav */}
+      <div className="fixed top-[14px] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-[780px]">
+        <header
+          className={`rounded-[14px] border border-white/[0.06] transition-all duration-300 ${
+            scrolled
+              ? "bg-[var(--landing-surface)]/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.35)]"
+              : "bg-[var(--landing-surface)]/65 backdrop-blur-xl shadow-[0_2px_16px_rgba(0,0,0,0.2)]"
+          }`}
         >
-          {menuOpen ? <X size={20} strokeWidth={1.5} aria-hidden="true" /> : <Menu size={20} strokeWidth={1.5} aria-hidden="true" />}
-        </button>
-      </div>
+          <div className="h-[46px] flex items-center justify-between px-3 gap-4">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
+              <div className="w-[26px] h-[26px] rounded-[6px] bg-primary-500 flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                <span className="font-heading font-bold text-[13px] text-surface-950 leading-none">P</span>
+              </div>
+              <span className="font-heading font-bold text-[14px] text-white group-hover:text-primary-400 transition-colors tracking-tight">
+                Podium Throws
+              </span>
+            </Link>
 
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden bg-surface-950 border-t border-surface-800 px-6 pt-4 pb-6 flex flex-col gap-1">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="font-body text-surface-400 hover:text-white transition-colors py-3 border-b border-surface-900 last:border-0"
+            {/* Desktop nav links */}
+            <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`font-body text-[13px] transition-colors hover:text-white ${
+                    link.href === "/pricing" && isOnPricing
+                      ? "text-white"
+                      : "text-surface-400 hover:text-surface-200"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Desktop actions */}
+            <div className="hidden md:flex items-center gap-1.5">
+              <Link
+                href="/login"
+                className="font-body text-[13px] text-surface-400 hover:text-white transition-colors px-3 py-1.5"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register"
+                className="bg-white text-surface-950 text-[13px] px-4 py-1.5 rounded-lg font-heading font-bold hover:bg-surface-100 transition-colors"
+              >
+                Start Free
+              </Link>
+            </div>
+
+            {/* Mobile toggle */}
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="md:hidden p-2 text-surface-400 hover:text-white transition-colors"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
             >
-              {link.label}
-            </Link>
-          ))}
-          <div className="flex flex-col gap-2 pt-4">
-            <Link
-              href="/login"
-              className="font-body text-center text-surface-400 py-3 border border-surface-800 hover:text-white hover:border-surface-700 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="bg-primary-500 text-surface-950 text-center py-3 font-heading font-bold hover:bg-primary-400 transition-colors"
-            >
-              Start Free Trial
-            </Link>
+              {menuOpen ? (
+                <X size={18} strokeWidth={1.75} aria-hidden="true" />
+              ) : (
+                <Menu size={18} strokeWidth={1.75} aria-hidden="true" />
+              )}
+            </button>
           </div>
-        </div>
-      )}
-    </header>
+
+          {/* Mobile menu — dropdown inside the pill */}
+          {menuOpen && (
+            <div className="md:hidden border-t border-white/[0.06] px-4 pt-3 pb-4 flex flex-col gap-1">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="font-body text-[14px] text-surface-400 hover:text-white transition-colors py-2.5 border-b border-white/[0.04] last:border-0"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="flex flex-col gap-2 pt-3">
+                <Link
+                  href="/login"
+                  className="font-body text-center text-[14px] text-surface-400 py-2.5 border border-white/[0.08] rounded-lg hover:text-white hover:border-white/[0.16] transition-colors"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="bg-white text-surface-950 text-center text-[14px] py-2.5 rounded-lg font-heading font-bold hover:bg-surface-100 transition-colors"
+                >
+                  Start Free Trial
+                </Link>
+              </div>
+            </div>
+          )}
+        </header>
+      </div>
+    </>
   );
 }
