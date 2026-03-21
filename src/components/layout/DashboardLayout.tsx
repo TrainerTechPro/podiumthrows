@@ -232,11 +232,10 @@ function TopBar({
       {/* Actions */}
       {actions && <div className="flex items-center gap-2">{actions}</div>}
 
-      {/* Mode toggle — visible on mobile/tablet where sidebar is hidden */}
+      {/* Mode toggle — always visible in header when training enabled */}
       {user.trainingEnabled && (
         <ModeToggle
           activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"}
-          className="lg:hidden"
         />
       )}
 
