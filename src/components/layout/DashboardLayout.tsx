@@ -259,8 +259,14 @@ export function DashboardLayout({
     setSidebarOpen(false);
   }, [pathname]);
 
+  const isTrainingMode = user.role === "COACH" && user.activeMode === "TRAINING";
   const baseSections =
-    navSections ?? (user.role === "COACH" ? COACH_NAV_SECTIONS : ATHLETE_NAV_SECTIONS);
+    navSections ??
+    (isTrainingMode
+      ? ATHLETE_NAV_SECTIONS
+      : user.role === "COACH"
+        ? COACH_NAV_SECTIONS
+        : ATHLETE_NAV_SECTIONS);
 
   // Inject unread badge onto the Notifications nav item (coach only)
   const sections =
@@ -283,6 +289,8 @@ export function DashboardLayout({
           footer={<SidebarFooter user={user} />}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
+          trainingEnabled={user.trainingEnabled}
+          activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"}
         />
 
         {/* Cmd+K command palette */}
