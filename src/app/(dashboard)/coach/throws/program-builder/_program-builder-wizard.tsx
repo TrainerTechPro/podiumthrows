@@ -1679,7 +1679,7 @@ function ProgramSummaryCard({
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
-        <Link href={`/athlete/dashboard`} className="btn-primary w-full py-3 text-center">
+        <Link href="/athlete/dashboard" className="btn-primary w-full py-3 text-center">
           View Full Program
         </Link>
         <button onClick={onReset} className="btn-secondary w-full py-3">
