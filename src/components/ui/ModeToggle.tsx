@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Megaphone, Dumbbell } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -11,7 +10,6 @@ interface ModeToggleProps {
 }
 
 export function ModeToggle({ activeMode, className }: ModeToggleProps) {
-  const router = useRouter();
   const [switching, setSwitching] = useState(false);
 
   const isCoach = activeMode === "COACH";
@@ -21,12 +19,19 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
     const nextMode = isCoach ? "TRAINING" : "COACH";
     setSwitching(true);
     try {
-      await fetch("/api/user/mode", {
+      const res = await fetch("/api/user/mode", {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ mode: nextMode }),
       });
-      router.push(nextMode === "COACH" ? "/coach/dashboard" : "/athlete/dashboard");
+
+      if (!res.ok) {
+        setSwitching(false);
+        return;
+      }
+
+      // Full navigation so server components re-render with the new mode
+      window.location.href = nextMode === "COACH" ? "/coach/dashboard" : "/athlete/dashboard";
     } catch {
       setSwitching(false);
     }
