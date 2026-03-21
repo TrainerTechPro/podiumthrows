@@ -4,6 +4,7 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/components/ui/ModeToggle";
 import {
   LayoutDashboard,
   Users,
@@ -61,6 +62,10 @@ export interface SidebarProps {
   open: boolean;
   onClose: () => void;
   className?: string;
+  /** Whether the coach has enabled training mode */
+  trainingEnabled?: boolean;
+  /** Current active mode */
+  activeMode?: "COACH" | "TRAINING";
 }
 
 /* ─── Nav Item ───────────────────────────────────────────────────────────── */
@@ -186,7 +191,16 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
 
 /* ─── Sidebar ────────────────────────────────────────────────────────────── */
 
-export function Sidebar({ sections, header, footer, open, onClose, className }: SidebarProps) {
+export function Sidebar({
+  sections,
+  header,
+  footer,
+  open,
+  onClose,
+  className,
+  trainingEnabled,
+  activeMode,
+}: SidebarProps) {
   return (
     <>
       {/* Mobile overlay */}
@@ -216,6 +230,13 @@ export function Sidebar({ sections, header, footer, open, onClose, className }: 
         {/* Header slot */}
         {header && (
           <div className="px-4 py-4 border-b border-[var(--card-border)] shrink-0">{header}</div>
+        )}
+
+        {/* Mode toggle (coach training mode) */}
+        {trainingEnabled && activeMode && (
+          <div className="px-4 pt-3 shrink-0">
+            <ModeToggle activeMode={activeMode} />
+          </div>
         )}
 
         {/* Nav */}
@@ -299,10 +320,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/exercises",
           "/coach/plans",
           "/coach/programming",
-          "/coach/my-training",
-          "/coach/my-lifting",
-          "/coach/my-throws",
-          "/coach/my-program",
         ],
         children: [
           {
@@ -341,25 +358,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             label: "Program Builder",
             href: "/coach/throws/program-builder",
             icon: <Zap {...iconSize} />,
-          },
-          {
-            label: "My Training",
-            href: "/coach/my-training",
-            icon: <Target {...iconSize} />,
-            matchPaths: ["/coach/my-training"],
-          },
-          {
-            label: "My Lifting",
-            href: "/coach/my-lifting",
-            icon: <Dumbbell {...iconSize} />,
-            matchPaths: ["/coach/my-lifting"],
-          },
-          { label: "My Throws", href: "/coach/my-throws", icon: <Target {...iconSize} /> },
-          {
-            label: "My Program",
-            href: "/coach/my-program",
-            icon: <Zap {...iconSize} />,
-            matchPaths: ["/coach/my-program"],
           },
         ],
       },

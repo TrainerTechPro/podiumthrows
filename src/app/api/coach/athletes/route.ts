@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
     }
 
-    // Check plan limits
+    // Check plan limits (exclude self-coached athlete created by Training Mode)
     const athleteCount = await prisma.athleteProfile.count({
-      where: { coachId: coach.id },
+      where: { coachId: coach.id, isSelfCoached: false },
     });
     const limit = PLAN_LIMITS[coach.plan];
     if (limit !== Infinity && athleteCount >= limit) {

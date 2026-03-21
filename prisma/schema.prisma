@@ -134,6 +134,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  activeMode          String         @default("COACH")
+
   coachProfile        CoachProfile?
   athleteProfile      AthleteProfile?
   passwordResetTokens PasswordResetToken[]
@@ -164,6 +166,7 @@ model CoachProfile {
   preferences          String?          @default("{}")
   enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
   onboardingCompletedAt DateTime?       // null = not completed; timestamp = completed/dismissed
+  trainingEnabled       Boolean         @default(false)
   events        EventType[] @default([]) // coach's own throwing events for self-training
 
   // MFA (multi-factor authentication)
@@ -232,6 +235,7 @@ model AthleteProfile {
   weightKg    Float?
 
   onboardingCompletedAt DateTime? // null = not completed; timestamp = completed/dismissed
+  isSelfCoached         Boolean   @default(false)
 
   // Streak tracking
   currentStreak    Int       @default(0)

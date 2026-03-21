@@ -8,11 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
-import {
-  computeDistanceBand,
-  syncAdaptationFromTyping,
-} from "@/lib/throws/podium-profile";
+import { computeDistanceBand, syncAdaptationFromTyping } from "@/lib/throws/podium-profile";
 import type { EventCode, GenderCode } from "@/lib/throws/constants";
+import { CODE_EVENT_MAP } from "@/lib/throws/constants";
 import { logger } from "@/lib/logger";
 
 // ── GET ────────────────────────────────────────────────────────────────────
@@ -21,16 +19,10 @@ export async function GET() {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
     if (currentUser.role !== "COACH") {
-      return NextResponse.json(
-        { success: false, error: "Coaches only" },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: "Coaches only" }, { status: 403 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -71,10 +63,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data: roster });
   } catch (error) {
     logger.error("Get podium roster error", { context: "throws/podium-roster", error: error });
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch roster" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch roster" }, { status: 500 });
   }
 }
 
@@ -84,16 +73,10 @@ export async function POST(request: NextRequest) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
     if (currentUser.role !== "COACH") {
-      return NextResponse.json(
-        { success: false, error: "Coaches only" },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: "Coaches only" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -112,11 +95,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -136,16 +122,68 @@ export async function POST(request: NextRequest) {
     });
     const adaptationFields = typing ? syncAdaptationFromTyping(typing) : {};
 
+    // ── Pull athlete profile data for auto-populate ────────────────
+    const athleteData = await prisma.athleteProfile.findUnique({
+      where: { id: body.athleteId },
+      select: { heightCm: true, weightKg: true, dateOfBirth: true, gender: true },
+    });
+
+    // ── Scan existing best marks per event ──────────────────────────
+    // Map EventCode → ThrowEvent enum for querying ThrowLog
+    const throwEventValues = events
+      .map((e: string) => CODE_EVENT_MAP[e as EventCode])
+      .filter(Boolean);
+
+    // ThrowLog best distance per event+implement
+    const throwLogBests =
+      throwEventValues.length > 0
+        ? await prisma.throwLog.groupBy({
+            by: ["event", "implementWeight"],
+            where: { athleteId: body.athleteId, event: { in: throwEventValues } },
+            _max: { distance: true },
+          })
+        : [];
+
+    // ThrowsPR best distance per event (already aggregated PRs)
+    const throwsPRBests = await prisma.throwsPR.findMany({
+      where: { athleteId: body.athleteId },
+      select: { event: true, implement: true, distance: true },
+    });
+
+    // Build a map of best mark per EventCode from all sources
+    const bestMarkByEvent: Record<string, number> = {};
+    for (const row of throwLogBests) {
+      const maxDist = row._max.distance;
+      if (maxDist != null) {
+        const eventStr = String(row.event);
+        const code = Object.entries(CODE_EVENT_MAP).find(([, v]) => v === eventStr)?.[0];
+        if (code) {
+          bestMarkByEvent[code] = Math.max(bestMarkByEvent[code] ?? 0, maxDist);
+        }
+      }
+    }
+    for (const pr of throwsPRBests) {
+      // ThrowsPR.event is stored as ThrowEvent (e.g. "SHOT_PUT")
+      const code = Object.entries(CODE_EVENT_MAP).find(([, v]) => v === pr.event)?.[0];
+      if (code && pr.distance > 0) {
+        bestMarkByEvent[code] = Math.max(bestMarkByEvent[code] ?? 0, pr.distance);
+      }
+    }
+
+    const autoImportedMarks = Object.keys(bestMarkByEvent).length;
+
     // Upsert one ThrowsProfile per event
     const profiles = [];
     for (const event of events) {
-      const currentDistanceBand =
+      // Use coach-provided competitionPb if available, otherwise fall back to best mark
+      const effectivePb =
         competitionPb != null && competitionPb > 0
-          ? computeDistanceBand(
-              event as EventCode,
-              gender as GenderCode,
-              competitionPb
-            )
+          ? competitionPb
+          : (bestMarkByEvent[event] ?? null);
+
+      const currentDistanceBand =
+        effectivePb != null && effectivePb > 0
+          ? computeDistanceBand(event as EventCode, gender as GenderCode, effectivePb)
           : null;
 
       const profile = await prisma.throwsProfile.upsert({
@@ -156,9 +194,7 @@ export async function POST(request: NextRequest) {
           gender,
           enrolledAt: new Date(),
           inactiveAt: null,
-          ...(competitionPb != null && competitionPb > 0
-            ? { competitionPb }
-            : {}),
+          ...(effectivePb != null && effectivePb > 0 ? { competitionPb: effectivePb } : {}),
           ...(currentDistanceBand ? { currentDistanceBand } : {}),
           ...adaptationFields,
         },
@@ -168,9 +204,7 @@ export async function POST(request: NextRequest) {
           event,
           gender,
           status: "active",
-          ...(competitionPb != null && competitionPb > 0
-            ? { competitionPb }
-            : {}),
+          ...(effectivePb != null && effectivePb > 0 ? { competitionPb: effectivePb } : {}),
           ...(currentDistanceBand ? { currentDistanceBand } : {}),
           ...adaptationFields,
         },
@@ -179,7 +213,19 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: true, data: profiles.length === 1 ? profiles[0] : profiles },
+      {
+        success: true,
+        data: profiles.length === 1 ? profiles[0] : profiles,
+        athleteData: athleteData
+          ? {
+              heightCm: athleteData.heightCm,
+              weightKg: athleteData.weightKg,
+              dateOfBirth: athleteData.dateOfBirth,
+              gender: athleteData.gender,
+            }
+          : null,
+        autoImportedMarks,
+      },
       { status: 201 }
     );
   } catch (error) {

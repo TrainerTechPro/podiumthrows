@@ -82,11 +82,17 @@ export async function POST(request: NextRequest) {
         }
 
         // Enforce plan limit — prevents accepting invitations issued before a downgrade
+        // Exclude self-coached athlete created by Training Mode from the count
         const coach = await tx.coachProfile.findUnique({
           where: { id: invitation.coachId },
-          select: { plan: true, _count: { select: { athletes: true } } },
+          select: { plan: true },
         });
-        if (coach && coach._count.athletes >= (PLAN_LIMITS[coach.plan] ?? 3)) {
+        const realAthleteCount = coach
+          ? await tx.athleteProfile.count({
+              where: { coachId: invitation.coachId, isSelfCoached: false },
+            })
+          : 0;
+        if (coach && realAthleteCount >= (PLAN_LIMITS[coach.plan] ?? 3)) {
           return NextResponse.json(
             { error: "Coach has reached their plan's athlete limit" },
             { status: 403 }
@@ -162,9 +168,8 @@ export async function POST(request: NextRequest) {
       sendWelcomeEmail(normalizedEmail, firstName, "ATHLETE", coachName).catch((err) =>
         logger.error("Failed to send athlete welcome email", { context: "api", error: err })
       );
-      sendAthleteJoinedEmail(invitation.coach.user.email, `${firstName} ${lastName}`).catch(
-        (err) =>
-          logger.error("Failed to send athlete-joined email", { context: "api", error: err })
+      sendAthleteJoinedEmail(invitation.coach.user.email, `${firstName} ${lastName}`).catch((err) =>
+        logger.error("Failed to send athlete-joined email", { context: "api", error: err })
       );
     }
 

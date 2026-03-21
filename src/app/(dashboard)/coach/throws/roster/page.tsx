@@ -7,1113 +7,1195 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { type EventCode, type GenderCode } from "@/lib/throws/constants";
 import {
- DEFICIT_TYPE_LABELS,
- DEFICIT_LEVEL_COLORS,
- DEFICIT_LEVEL_BG,
- type DeficitType,
- type DeficitLevel,
+  DEFICIT_TYPE_LABELS,
+  DEFICIT_LEVEL_COLORS,
+  DEFICIT_LEVEL_BG,
+  type DeficitType,
+  type DeficitLevel,
 } from "@/lib/throws/podium-profile";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
 interface CoachAthlete {
- id: string;
- profilePictureUrl?: string | null;
- user: { firstName: string; lastName: string; email: string; claimedAt?: string | null };
+  id: string;
+  profilePictureUrl?: string | null;
+  user: { firstName: string; lastName: string; email: string; claimedAt?: string | null };
 }
 
 interface RosterAthlete {
- id: string;
- firstName: string;
- lastName: string;
- events: string[];
- gender: string;
- avatarUrl?: string | null;
- user: { email: string; claimedAt: string | null };
- throwsPRs?: { event: string; implement: string; distance: number }[];
+  id: string;
+  firstName: string;
+  lastName: string;
+  events: string[];
+  gender: string;
+  avatarUrl?: string | null;
+  user: { email: string; claimedAt: string | null };
+  throwsPRs?: { event: string; implement: string; distance: number }[];
 }
 
 interface ThrowsProfileRow {
- id: string;
- athleteId: string;
- event: string;
- gender: string;
- status: string;
- competitionPb: number | null;
- currentDistanceBand: string | null;
- deficitPrimary: string | null;
- deficitSecondary: string | null;
- deficitStatus: string | null;
- overPowered: boolean;
- enrolledAt: string;
- athlete: CoachAthlete;
- testingRecords: { testDate: string; testType: string }[];
+  id: string;
+  athleteId: string;
+  event: string;
+  gender: string;
+  status: string;
+  competitionPb: number | null;
+  currentDistanceBand: string | null;
+  deficitPrimary: string | null;
+  deficitSecondary: string | null;
+  deficitStatus: string | null;
+  overPowered: boolean;
+  enrolledAt: string;
+  athlete: CoachAthlete;
+  testingRecords: { testDate: string; testType: string }[];
 }
 
 function daysSince(dateStr: string): number {
- return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
 }
 
 function TestingBadge({ records }: { records: { testDate: string }[] }) {
- if (records.length === 0) {
- return (
- <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex-shrink-0">
- <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
- </svg>
- Never tested
- </span>
- );
- }
- const days = daysSince(records[0].testDate);
- if (days > 14) {
- return (
- <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex-shrink-0">
- <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
- </svg>
- Test due · {days}d ago
- </span>
- );
- }
- if (days > 7) {
- return (
- <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex-shrink-0">
- <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
- </svg>
- {days}d ago
- </span>
- );
- }
- return (
- <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex-shrink-0">
- <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
- </svg>
- {days === 0 ? "Tested today" : `${days}d ago`}
- </span>
- );
+  if (records.length === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex-shrink-0">
+        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        Never tested
+      </span>
+    );
+  }
+  const days = daysSince(records[0].testDate);
+  if (days > 14) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex-shrink-0">
+        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        Test due · {days}d ago
+      </span>
+    );
+  }
+  if (days > 7) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex-shrink-0">
+        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+        {days}d ago
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex-shrink-0">
+      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      {days === 0 ? "Tested today" : `${days}d ago`}
+    </span>
+  );
 }
 
 const EVENT_LABELS: Record<EventCode, string> = {
- SP: "Shot Put",
- DT: "Discus",
- HT: "Hammer",
- JT: "Javelin",
+  SP: "Shot Put",
+  DT: "Discus",
+  HT: "Hammer",
+  JT: "Javelin",
 };
 
 const EVENT_COLORS: Record<EventCode, string> = {
- SP: "#D4915A",
- DT: "#6A9FD8",
- HT: "#5BB88A",
- JT: "#D46A6A",
+  SP: "#D4915A",
+  DT: "#6A9FD8",
+  HT: "#5BB88A",
+  JT: "#D46A6A",
 };
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function ThrowsRosterPage() {
- const [podiumAthletes, setPodiumAthletes] = useState<ThrowsProfileRow[]>([]);
- const [allAthletes, setAllAthletes] = useState<CoachAthlete[]>([]);
- const [loading, setLoading] = useState(true);
- const [activeTab, setActiveTab] = useState<"podium" | "all">("podium");
+  const [podiumAthletes, setPodiumAthletes] = useState<ThrowsProfileRow[]>([]);
+  const [allAthletes, setAllAthletes] = useState<CoachAthlete[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"podium" | "all">("podium");
 
- // Team filter
- const [teams, setTeams] = useState<{ id: string; name: string; memberCount: number }[]>([]);
- const [selectedTeamId, setSelectedTeamId] = useState<string>("");
- const [teamsLoaded, setTeamsLoaded] = useState(false);
+  // Team filter
+  const [teams, setTeams] = useState<{ id: string; name: string; memberCount: number }[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  const [teamsLoaded, setTeamsLoaded] = useState(false);
 
- // Enrollment form
- const [enrollOpen, setEnrollOpen] = useState(false);
- const [enrollDistUnit, setEnrollDistUnit] = useState<"meters" | "feet">("meters");
- const [enrollForm, setEnrollForm] = useState({
- athleteId: "",
- events: [] as EventCode[],
- gender: "" as GenderCode | "",
- competitionPb: "",
- });
- const [autoImported, setAutoImported] = useState(false);
- const [saving, setSaving] = useState(false);
- const [saveError, setSaveError] = useState("");
+  // Enrollment form
+  const [enrollOpen, setEnrollOpen] = useState(false);
+  const [enrollDistUnit, setEnrollDistUnit] = useState<"meters" | "feet">("meters");
+  const [enrollForm, setEnrollForm] = useState({
+    athleteId: "",
+    events: [] as EventCode[],
+    gender: "" as GenderCode | "",
+    competitionPb: "",
+  });
+  const [autoImported, setAutoImported] = useState(false);
+  const [autoImportedPrCount, setAutoImportedPrCount] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
- // Removal
- const [removingId, setRemovingId] = useState<string | null>(null);
- const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
- const [removeError, setRemoveError] = useState("");
+  // Removal
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState("");
 
- // Add Athlete form
- const [showAddForm, setShowAddForm] = useState(false);
- const [newFirstName, setNewFirstName] = useState("");
- const [newLastName, setNewLastName] = useState("");
- const [newEvents, setNewEvents] = useState<string[]>([]);
- const [addLoading, setAddLoading] = useState(false);
- const [addError, setAddError] = useState("");
+  // Add Athlete form
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
+  const [newEvents, setNewEvents] = useState<string[]>([]);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
 
- // Roster athletes (with claim status)
- const [rosterAthletes, setRosterAthletes] = useState<RosterAthlete[]>([]);
+  // Roster athletes (with claim status)
+  const [rosterAthletes, setRosterAthletes] = useState<RosterAthlete[]>([]);
 
- // Invite
- const [inviteCopied, setInviteCopied] = useState<string | null>(null);
+  // Invite
+  const [inviteCopied, setInviteCopied] = useState<string | null>(null);
 
- // ── Data fetching ──────────────────────────────────────────────
+  // ── Data fetching ──────────────────────────────────────────────
 
- const fetchData = useCallback((teamId?: string) => {
- const teamParam = teamId !== undefined ? teamId : selectedTeamId;
- const qs = teamParam ? `?teamId=${teamParam}` : "";
- setLoading(true);
- Promise.all([
- fetch("/api/throws/podium-roster").then((r) => r.json()),
- fetch("/api/athletes").then((r) => r.json()),
- fetch(`/api/coach/athletes${qs}`).then((r) => r.json()),
- ])
- .then(([podiumData, athletesData, rosterData]) => {
- // rosterData is already filtered by teamId via the API
- if (rosterData.ok) setRosterAthletes(rosterData.data);
- const filteredIds = new Set(
- (rosterData.data ?? []).map((a: { id: string }) => a.id)
- );
+  const fetchData = useCallback(
+    (teamId?: string) => {
+      const teamParam = teamId !== undefined ? teamId : selectedTeamId;
+      const qs = teamParam ? `?teamId=${teamParam}` : "";
+      setLoading(true);
+      Promise.all([
+        fetch("/api/throws/podium-roster").then((r) => r.json()),
+        fetch("/api/athletes").then((r) => r.json()),
+        fetch(`/api/coach/athletes${qs}`).then((r) => r.json()),
+      ])
+        .then(([podiumData, athletesData, rosterData]) => {
+          // rosterData is already filtered by teamId via the API
+          if (rosterData.ok) setRosterAthletes(rosterData.data);
+          const filteredIds = new Set((rosterData.data ?? []).map((a: { id: string }) => a.id));
 
- // Client-side filter podium and allAthletes to match team selection
- if (podiumData.success) {
- const podium = teamParam
- ? podiumData.data.filter((p: { athleteId: string }) => filteredIds.has(p.athleteId))
- : podiumData.data;
- setPodiumAthletes(podium);
- }
- if (athletesData.success) {
- let list = Array.isArray(athletesData.data)
- ? athletesData.data
- : athletesData.data
- ? [athletesData.data]
- : [];
- if (teamParam) list = list.filter((a: { id: string }) => filteredIds.has(a.id));
- setAllAthletes(list);
- }
- setLoading(false);
- })
- .catch(() => setLoading(false));
- }, [selectedTeamId]);
+          // Client-side filter podium and allAthletes to match team selection
+          if (podiumData.success) {
+            const podium = teamParam
+              ? podiumData.data.filter((p: { athleteId: string }) => filteredIds.has(p.athleteId))
+              : podiumData.data;
+            setPodiumAthletes(podium);
+          }
+          if (athletesData.success) {
+            let list = Array.isArray(athletesData.data)
+              ? athletesData.data
+              : athletesData.data
+                ? [athletesData.data]
+                : [];
+            if (teamParam) list = list.filter((a: { id: string }) => filteredIds.has(a.id));
+            setAllAthletes(list);
+          }
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    },
+    [selectedTeamId]
+  );
 
- // Load teams and saved preference on mount
- useEffect(() => {
- Promise.all([
- fetch("/api/coach/teams").then((r) => r.json()),
- fetch("/api/coach/preferences").then((r) => r.json()),
- ]).then(([teamsData, prefsData]) => {
- if (teamsData.ok) setTeams(teamsData.data);
- // NOTE: preferences API returns { success: true } not { ok: true }
- const lastTeam = prefsData?.success ? prefsData.data?.lastTeamId : null;
- const teamIds = new Set((teamsData.data ?? []).map((t: { id: string }) => t.id));
- if (lastTeam && teamIds.has(lastTeam)) {
- setSelectedTeamId(lastTeam);
- }
- setTeamsLoaded(true);
- }).catch(() => setTeamsLoaded(true));
- }, []);
+  // Load teams and saved preference on mount
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/coach/teams").then((r) => r.json()),
+      fetch("/api/coach/preferences").then((r) => r.json()),
+    ])
+      .then(([teamsData, prefsData]) => {
+        if (teamsData.ok) setTeams(teamsData.data);
+        // NOTE: preferences API returns { success: true } not { ok: true }
+        const lastTeam = prefsData?.success ? prefsData.data?.lastTeamId : null;
+        const teamIds = new Set((teamsData.data ?? []).map((t: { id: string }) => t.id));
+        if (lastTeam && teamIds.has(lastTeam)) {
+          setSelectedTeamId(lastTeam);
+        }
+        setTeamsLoaded(true);
+      })
+      .catch(() => setTeamsLoaded(true));
+  }, []);
 
- // Fetch roster data after teams are loaded (so we respect the saved filter)
- useEffect(() => {
- if (teamsLoaded) fetchData();
- }, [teamsLoaded, fetchData]);
+  // Fetch roster data after teams are loaded (so we respect the saved filter)
+  useEffect(() => {
+    if (teamsLoaded) fetchData();
+  }, [teamsLoaded, fetchData]);
 
- // ── Derived state ──────────────────────────────────────────────
+  // ── Derived state ──────────────────────────────────────────────
 
- const enrolledAthleteIds = new Set(podiumAthletes.map((p) => p.athleteId));
- const unenrolledAthletes = allAthletes.filter(
- (a) => !enrolledAthleteIds.has(a.id)
- );
+  const enrolledAthleteIds = new Set(podiumAthletes.map((p) => p.athleteId));
+  const unenrolledAthletes = allAthletes.filter((a) => !enrolledAthleteIds.has(a.id));
 
- // ── Enrollment ─────────────────────────────────────────────────
+  // ── Enrollment ─────────────────────────────────────────────────
 
- function handleEnrollAthleteChange(athleteId: string) {
- const roster = rosterAthletes.find((r) => r.id === athleteId);
- if (roster && roster.user?.claimedAt) {
- // Auto-import: map EventType → EventCode, gender → GenderCode
- const eventMap: Record<string, EventCode> = { SHOT_PUT: "SP", DISCUS: "DT", HAMMER: "HT", JAVELIN: "JT" };
- const genderMap: Record<string, GenderCode> = { MALE: "M", FEMALE: "F" };
- const mappedEvents = roster.events
- .map((e) => eventMap[e])
- .filter((e): e is EventCode => !!e);
- const mappedGender = genderMap[roster.gender] || "";
- // Best competition PR (highest distance)
- const bestPr = roster.throwsPRs?.sort((a, b) => b.distance - a.distance)?.[0];
- setEnrollForm({
- athleteId,
- events: mappedEvents,
- gender: mappedGender as GenderCode | "",
- competitionPb: bestPr ? String(bestPr.distance) : "",
- });
- setAutoImported(true);
- if (bestPr) setEnrollDistUnit("meters"); // PRs are stored in meters
- } else {
- setEnrollForm((f) => ({ ...f, athleteId, events: [], gender: "", competitionPb: "" }));
- setAutoImported(false);
- }
- }
+  function handleEnrollAthleteChange(athleteId: string) {
+    const roster = rosterAthletes.find((r) => r.id === athleteId);
+    if (roster && roster.user?.claimedAt) {
+      // Auto-import: map EventType → EventCode, gender → GenderCode
+      const eventMap: Record<string, EventCode> = {
+        SHOT_PUT: "SP",
+        DISCUS: "DT",
+        HAMMER: "HT",
+        JAVELIN: "JT",
+      };
+      const genderMap: Record<string, GenderCode> = { MALE: "M", FEMALE: "F" };
+      const mappedEvents = roster.events.map((e) => eventMap[e]).filter((e): e is EventCode => !!e);
+      const mappedGender = genderMap[roster.gender] || "";
+      // Best competition PR (highest distance)
+      const bestPr = roster.throwsPRs?.sort((a, b) => b.distance - a.distance)?.[0];
+      const prCount = roster.throwsPRs?.length ?? 0;
+      setEnrollForm({
+        athleteId,
+        events: mappedEvents,
+        gender: mappedGender as GenderCode | "",
+        competitionPb: bestPr ? String(bestPr.distance) : "",
+      });
+      setAutoImported(true);
+      setAutoImportedPrCount(prCount);
+      if (bestPr) setEnrollDistUnit("meters"); // PRs are stored in meters
+    } else {
+      setEnrollForm((f) => ({ ...f, athleteId, events: [], gender: "", competitionPb: "" }));
+      setAutoImported(false);
+      setAutoImportedPrCount(0);
+    }
+  }
 
- function toggleEnrollEvent(ev: EventCode) {
- setEnrollForm((f) => ({
- ...f,
- events: f.events.includes(ev) ? f.events.filter((e) => e !== ev) : [...f.events, ev],
- }));
- }
+  function toggleEnrollEvent(ev: EventCode) {
+    setEnrollForm((f) => ({
+      ...f,
+      events: f.events.includes(ev) ? f.events.filter((e) => e !== ev) : [...f.events, ev],
+    }));
+  }
 
- async function handleEnroll(e: React.FormEvent) {
- e.preventDefault();
- if (!enrollForm.athleteId || enrollForm.events.length === 0 || !enrollForm.gender) return;
- setSaving(true);
- setSaveError("");
- try {
- const res = await fetch("/api/throws/podium-roster", {
- method: "POST",
- headers: { "Content-Type": "application/json", ...csrfHeaders() },
- body: JSON.stringify({
- athleteId: enrollForm.athleteId,
- events: enrollForm.events,
- gender: enrollForm.gender,
- competitionPb: enrollForm.competitionPb
- ? (enrollDistUnit === "feet" ? parseFloat(enrollForm.competitionPb) * 0.3048 : parseFloat(enrollForm.competitionPb))
- : undefined,
- }),
- });
- const data = await res.json();
- if (data.success) {
- setEnrollOpen(false);
- setEnrollForm({ athleteId: "", events: [], gender: "", competitionPb: "" });
- setAutoImported(false);
- fetchData();
- } else {
- setSaveError(data.error || "Enrollment failed");
- }
- } catch {
- setSaveError("Enrollment failed");
- } finally {
- setSaving(false);
- }
- }
+  async function handleEnroll(e: React.FormEvent) {
+    e.preventDefault();
+    if (!enrollForm.athleteId || enrollForm.events.length === 0 || !enrollForm.gender) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const res = await fetch("/api/throws/podium-roster", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({
+          athleteId: enrollForm.athleteId,
+          events: enrollForm.events,
+          gender: enrollForm.gender,
+          competitionPb: enrollForm.competitionPb
+            ? enrollDistUnit === "feet"
+              ? parseFloat(enrollForm.competitionPb) * 0.3048
+              : parseFloat(enrollForm.competitionPb)
+            : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEnrollOpen(false);
+        setEnrollForm({ athleteId: "", events: [], gender: "", competitionPb: "" });
+        setAutoImported(false);
+        setAutoImportedPrCount(0);
+        fetchData();
+      } else {
+        setSaveError(data.error || "Enrollment failed");
+      }
+    } catch {
+      setSaveError("Enrollment failed");
+    } finally {
+      setSaving(false);
+    }
+  }
 
- // ── Removal ────────────────────────────────────────────────────
+  // ── Removal ────────────────────────────────────────────────────
 
- async function handleRemove(athleteId: string) {
- setRemovingId(athleteId);
- setRemoveError("");
- try {
- await fetch(`/api/throws/podium-roster/${athleteId}`, {
- method: "PATCH",
- headers: { "Content-Type": "application/json", ...csrfHeaders() },
- body: JSON.stringify({ status: "inactive" }),
- });
- fetchData();
- } catch {
- setRemoveError("Failed to remove athlete. Please try again.");
- } finally {
- setRemovingId(null);
- setConfirmRemoveId(null);
- }
- }
+  async function handleRemove(athleteId: string) {
+    setRemovingId(athleteId);
+    setRemoveError("");
+    try {
+      await fetch(`/api/throws/podium-roster/${athleteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ status: "inactive" }),
+      });
+      fetchData();
+    } catch {
+      setRemoveError("Failed to remove athlete. Please try again.");
+    } finally {
+      setRemovingId(null);
+      setConfirmRemoveId(null);
+    }
+  }
 
- // ── Add Athlete ─────────────────────────────────────────────────
+  // ── Add Athlete ─────────────────────────────────────────────────
 
- function toggleNewEvent(ev: string) {
- setNewEvents((prev) =>
- prev.includes(ev) ? prev.filter((e) => e !== ev) : [...prev, ev]
- );
- }
+  function toggleNewEvent(ev: string) {
+    setNewEvents((prev) => (prev.includes(ev) ? prev.filter((e) => e !== ev) : [...prev, ev]));
+  }
 
- async function handleAddAthlete(e: React.FormEvent) {
- e.preventDefault();
- if (!newFirstName.trim() || !newLastName.trim() || newEvents.length === 0) return;
- setAddLoading(true);
- setAddError("");
- try {
- const res = await fetch("/api/coach/athletes", {
- method: "POST",
- headers: { "Content-Type": "application/json", ...csrfHeaders() },
- body: JSON.stringify({ firstName: newFirstName, lastName: newLastName, events: newEvents }),
- });
- const data = await res.json();
- if (!res.ok) throw new Error(data.error || "Failed to add athlete");
- // Auto-assign to selected team if one is active
- if (selectedTeamId && selectedTeamId !== "unassigned" && data.data?.id) {
- await fetch(`/api/coach/teams/${selectedTeamId}/members`, {
- method: "POST",
- headers: { "Content-Type": "application/json", ...csrfHeaders() },
- body: JSON.stringify({ athleteIds: [data.data.id] }),
- }).catch(() => {});
- }
- setShowAddForm(false);
- setNewFirstName("");
- setNewLastName("");
- setNewEvents([]);
- fetchData();
- } catch (err: unknown) {
- setAddError(err instanceof Error ? err.message : "Failed to add athlete");
- } finally {
- setAddLoading(false);
- }
- }
+  async function handleAddAthlete(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newFirstName.trim() || !newLastName.trim() || newEvents.length === 0) return;
+    setAddLoading(true);
+    setAddError("");
+    try {
+      const res = await fetch("/api/coach/athletes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ firstName: newFirstName, lastName: newLastName, events: newEvents }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add athlete");
+      // Auto-assign to selected team if one is active
+      if (selectedTeamId && selectedTeamId !== "unassigned" && data.data?.id) {
+        await fetch(`/api/coach/teams/${selectedTeamId}/members`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ athleteIds: [data.data.id] }),
+        }).catch(() => {});
+      }
+      setShowAddForm(false);
+      setNewFirstName("");
+      setNewLastName("");
+      setNewEvents([]);
+      fetchData();
+    } catch (err: unknown) {
+      setAddError(err instanceof Error ? err.message : "Failed to add athlete");
+    } finally {
+      setAddLoading(false);
+    }
+  }
 
- async function handleInvite(athleteId: string) {
- try {
- const res = await fetch("/api/invitations", {
- method: "POST",
- headers: { "Content-Type": "application/json", ...csrfHeaders() },
- body: JSON.stringify({ mode: "link", athleteProfileId: athleteId }),
- });
- const data = await res.json();
- if (!res.ok) throw new Error(data.error);
- const link = `${window.location.origin}/register?invite=${data.data.token}`;
- await navigator.clipboard.writeText(link);
- setInviteCopied(athleteId);
- setTimeout(() => setInviteCopied(null), 3000);
- } catch (err) {
- console.error("Failed to create invite:", err);
- }
- }
+  async function handleInvite(athleteId: string) {
+    try {
+      const res = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ mode: "link", athleteProfileId: athleteId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const link = `${window.location.origin}/register?invite=${data.data.token}`;
+      await navigator.clipboard.writeText(link);
+      setInviteCopied(athleteId);
+      setTimeout(() => setInviteCopied(null), 3000);
+    } catch (err) {
+      console.error("Failed to create invite:", err);
+    }
+  }
 
- // ── Team Filter ─────────────────────────────────────────────────
+  // ── Team Filter ─────────────────────────────────────────────────
 
- function handleTeamChange(teamId: string) {
- setSelectedTeamId(teamId);
- // Persist to preferences (fire-and-forget)
- fetch("/api/coach/preferences", {
- method: "PUT",
- headers: { "Content-Type": "application/json", ...csrfHeaders() },
- body: JSON.stringify({ lastTeamId: teamId || null }),
- }).catch(() => {});
- fetchData(teamId);
- }
+  function handleTeamChange(teamId: string) {
+    setSelectedTeamId(teamId);
+    // Persist to preferences (fire-and-forget)
+    fetch("/api/coach/preferences", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...csrfHeaders() },
+      body: JSON.stringify({ lastTeamId: teamId || null }),
+    }).catch(() => {});
+    fetchData(teamId);
+  }
 
- // ── Loading skeleton ───────────────────────────────────────────
+  // ── Loading skeleton ───────────────────────────────────────────
 
- if (loading) {
- return (
- <div className="animate-spring-up space-y-4">
- <div className="skeleton h-8 w-56" />
- <div className="skeleton h-16 rounded-2xl" />
- {[1, 2, 3].map((i) => (
- <div key={i} className="skeleton h-20 rounded-xl" />
- ))}
- </div>
- );
- }
+  if (loading) {
+    return (
+      <div className="animate-spring-up space-y-4">
+        <div className="skeleton h-8 w-56" />
+        <div className="skeleton h-16 rounded-2xl" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="skeleton h-20 rounded-xl" />
+        ))}
+      </div>
+    );
+  }
 
- // ── Event breakdown (for stats strip) ─────────────────────────
+  // ── Event breakdown (for stats strip) ─────────────────────────
 
- const eventCounts = podiumAthletes.reduce<Record<string, number>>((acc, p) => {
- acc[p.event] = (acc[p.event] ?? 0) + 1;
- return acc;
- }, {});
+  const eventCounts = podiumAthletes.reduce<Record<string, number>>((acc, p) => {
+    acc[p.event] = (acc[p.event] ?? 0) + 1;
+    return acc;
+  }, {});
 
- return (
- <div className="animate-spring-up space-y-6">
+  return (
+    <div className="animate-spring-up space-y-6">
+      {/* ── Page Header ──────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Throws Roster</h1>
+          <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
+            Manage Podium Throws enrollments and view deficit profiles
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/coach/throws"
+            className="text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] font-medium"
+          >
+            Dashboard
+          </Link>
+          <button
+            onClick={() => {
+              setShowAddForm(true);
+              setAddError("");
+            }}
+            className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Athlete
+          </button>
+        </div>
+      </div>
 
- {/* ── Page Header ──────────────────────────────────────────── */}
- <div className="flex items-start justify-between gap-3 flex-wrap">
- <div>
- <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
- Throws Roster
- </h1>
- <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
- Manage Podium Throws enrollments and view deficit profiles
- </p>
- </div>
- <div className="flex items-center gap-2">
- <Link
- href="/coach/throws"
- className="text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] font-medium"
- >
- Dashboard
- </Link>
- <button
- onClick={() => { setShowAddForm(true); setAddError(""); }}
- className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
- >
- <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
- </svg>
- Add Athlete
- </button>
- </div>
- </div>
+      {/* ── Team Filter ─────────────────────────────────────────── */}
+      {teams.length > 0 && (
+        <select
+          value={selectedTeamId}
+          onChange={(e) => handleTeamChange(e.target.value)}
+          className="w-full sm:w-auto rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+        >
+          <option value="">All Athletes</option>
+          {teams.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name} ({t.memberCount})
+            </option>
+          ))}
+          <option value="unassigned">Unassigned</option>
+        </select>
+      )}
 
- {/* ── Team Filter ─────────────────────────────────────────── */}
- {teams.length > 0 && (
- <select
- value={selectedTeamId}
- onChange={(e) => handleTeamChange(e.target.value)}
- className="w-full sm:w-auto rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
- >
- <option value="">All Athletes</option>
- {teams.map((t) => (
- <option key={t.id} value={t.id}>
- {t.name} ({t.memberCount})
- </option>
- ))}
- <option value="unassigned">Unassigned</option>
- </select>
- )}
+      {/* ── Stats Strip ──────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <div className="card !p-3 text-center">
+          <p className="text-2xl font-bold text-[var(--foreground)]">{podiumAthletes.length}</p>
+          <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">Athletes Enrolled</p>
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {(["SP", "DT", "HT", "JT"] as EventCode[]).map((code) => (
+            <div key={code} className="card !p-3 text-center">
+              <p className="text-2xl font-bold" style={{ color: EVENT_COLORS[code] }}>
+                {eventCounts[code] ?? 0}
+              </p>
+              <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
+                {EVENT_LABELS[code]}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
 
- {/* ── Stats Strip ──────────────────────────────────────────── */}
- <div className="space-y-3">
- <div className="card !p-3 text-center">
- <p className="text-2xl font-bold text-[var(--foreground)]">
- {podiumAthletes.length}
- </p>
- <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
- Athletes Enrolled
- </p>
- </div>
- <div className="grid grid-cols-4 gap-3">
- {(["SP", "DT", "HT", "JT"] as EventCode[]).map((code) => (
- <div key={code} className="card !p-3 text-center">
- <p
- className="text-2xl font-bold"
- style={{ color: EVENT_COLORS[code] }}
- >
- {eventCounts[code] ?? 0}
- </p>
- <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
- {EVENT_LABELS[code]}
- </p>
- </div>
- ))}
- </div>
- </div>
+      {/* ── Add Athlete Form ─────────────────────────────────────── */}
+      {showAddForm && (
+        <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-[var(--foreground)] text-sm">
+              Add Athlete to Roster
+            </h3>
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <p className="text-xs text-muted">
+            Create a placeholder profile. The athlete can claim it later via an invite link.
+          </p>
+          <form onSubmit={handleAddAthlete} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  value={newFirstName}
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  required
+                  placeholder="Marcus"
+                  className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  value={newLastName}
+                  onChange={(e) => setNewLastName(e.target.value)}
+                  required
+                  placeholder="Petrov"
+                  className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+                Events
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const).map((ev) => (
+                  <button
+                    key={ev}
+                    type="button"
+                    onClick={() => toggleNewEvent(ev)}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                      newEvents.includes(ev)
+                        ? "bg-[rgba(212,168,67,0.15)] text-primary-600 dark:text-primary-300"
+                        : "bg-[var(--muted-bg)] text-muted hover:text-surface-700 dark:hover:text-surface-300"
+                    }`}
+                  >
+                    {ev === "SHOT_PUT"
+                      ? "Shot Put"
+                      : ev === "DISCUS"
+                        ? "Discus"
+                        : ev === "HAMMER"
+                          ? "Hammer"
+                          : "Javelin"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {addError && <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>}
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="btn-secondary text-sm px-4 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  addLoading ||
+                  !newFirstName.trim() ||
+                  !newLastName.trim() ||
+                  newEvents.length === 0
+                }
+                className="btn-primary text-sm px-4 py-2 flex items-center gap-1.5 disabled:opacity-60"
+              >
+                {addLoading ? (
+                  <>
+                    <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Adding…
+                  </>
+                ) : (
+                  "Add Athlete"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
- {/* ── Add Athlete Form ─────────────────────────────────────── */}
- {showAddForm && (
- <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
- <div className="flex items-center justify-between">
- <h3 className="font-semibold text-[var(--foreground)] text-sm">
- Add Athlete to Roster
- </h3>
- <button
- onClick={() => setShowAddForm(false)}
- className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
- >
- <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
- </svg>
- </button>
- </div>
- <p className="text-xs text-muted">
- Create a placeholder profile. The athlete can claim it later via an invite link.
- </p>
- <form onSubmit={handleAddAthlete} className="space-y-3">
- <div className="grid grid-cols-2 gap-3">
- <div>
- <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">First Name</label>
- <input
- type="text"
- value={newFirstName}
- onChange={(e) => setNewFirstName(e.target.value)}
- required
- placeholder="Marcus"
- className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
- />
- </div>
- <div>
- <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Last Name</label>
- <input
- type="text"
- value={newLastName}
- onChange={(e) => setNewLastName(e.target.value)}
- required
- placeholder="Petrov"
- className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
- />
- </div>
- </div>
- <div>
- <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Events</label>
- <div className="flex flex-wrap gap-2">
- {(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const).map((ev) => (
- <button
- key={ev}
- type="button"
- onClick={() => toggleNewEvent(ev)}
- className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
- newEvents.includes(ev)
- ? "bg-[rgba(212,168,67,0.15)] text-primary-600 dark:text-primary-300"
- : "bg-[var(--muted-bg)] text-muted hover:text-surface-700 dark:hover:text-surface-300"
- }`}
- >
- {ev === "SHOT_PUT" ? "Shot Put" : ev === "DISCUS" ? "Discus" : ev === "HAMMER" ? "Hammer" : "Javelin"}
- </button>
- ))}
- </div>
- </div>
- {addError && (
- <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>
- )}
- <div className="flex gap-2 pt-1">
- <button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary text-sm px-4 py-2">
- Cancel
- </button>
- <button
- type="submit"
- disabled={addLoading || !newFirstName.trim() || !newLastName.trim() || newEvents.length === 0}
- className="btn-primary text-sm px-4 py-2 flex items-center gap-1.5 disabled:opacity-60"
- >
- {addLoading ? (
- <>
- <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
- Adding…
- </>
- ) : (
- "Add Athlete"
- )}
- </button>
- </div>
- </form>
- </div>
- )}
+      {/* ── Tabs ─────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1 bg-[var(--muted-bg)] rounded-xl p-1 w-fit">
+        {(
+          [
+            { id: "podium", label: "Podium Throws" },
+            { id: "all", label: "All Athletes" },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              activeTab === tab.id
+                ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
+                : "text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
+            }`}
+          >
+            {tab.label}
+            {tab.id === "podium" && podiumAthletes.length > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgba(212,168,67,0.12)] text-primary-600 dark:text-primary-300 text-[10px] font-bold">
+                {podiumAthletes.length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
- {/* ── Tabs ─────────────────────────────────────────────────── */}
- <div className="flex items-center gap-1 bg-[var(--muted-bg)] rounded-xl p-1 w-fit">
- {(
- [
- { id: "podium", label: "Podium Throws" },
- { id: "all", label: "All Athletes" },
- ] as const
- ).map((tab) => (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id)}
- className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
- activeTab === tab.id
- ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
- : "text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
- }`}
- >
- {tab.label}
- {tab.id === "podium" && podiumAthletes.length > 0 && (
- <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgba(212,168,67,0.12)] text-primary-600 dark:text-primary-300 text-[10px] font-bold">
- {podiumAthletes.length}
- </span>
- )}
- </button>
- ))}
- </div>
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* PODIUM THROWS TAB */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      {activeTab === "podium" && (
+        <div className="space-y-4">
+          {removeError && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+              {removeError}
+            </div>
+          )}
 
- {/* ══════════════════════════════════════════════════════════ */}
- {/* PODIUM THROWS TAB */}
- {/* ══════════════════════════════════════════════════════════ */}
- {activeTab === "podium" && (
- <div className="space-y-4">
+          {/* Enroll button */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-surface-700 dark:text-surface-300">
+              {podiumAthletes.length === 0
+                ? "No athletes enrolled yet"
+                : `${podiumAthletes.length} athlete${podiumAthletes.length !== 1 ? "s" : ""} in Podium Throws`}
+            </p>
+            {unenrolledAthletes.length > 0 && (
+              <button
+                onClick={() => {
+                  setEnrollOpen(true);
+                  setSaveError("");
+                }}
+                className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add to Podium Throws
+              </button>
+            )}
+          </div>
 
- {removeError && (
- <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
- {removeError}
- </div>
- )}
+          {/* ── Enrollment Form (inline panel) ───────────────────── */}
+          {enrollOpen && (
+            <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-[var(--foreground)] text-sm">
+                  Enroll Athlete in Podium Throws
+                </h3>
+                <button
+                  onClick={() => setEnrollOpen(false)}
+                  className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
 
- {/* Enroll button */}
- <div className="flex items-center justify-between">
- <p className="text-sm text-surface-700 dark:text-surface-300">
- {podiumAthletes.length === 0
- ? "No athletes enrolled yet"
- : `${podiumAthletes.length} athlete${podiumAthletes.length !== 1 ? "s" : ""} in Podium Throws`}
- </p>
- {unenrolledAthletes.length > 0 && (
- <button
- onClick={() => {
- setEnrollOpen(true);
- setSaveError("");
- }}
- className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5"
- >
- <svg
- className="w-3.5 h-3.5"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- >
- <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M12 4v16m8-8H4"
- />
- </svg>
- Add to Podium Throws
- </button>
- )}
- </div>
+              <form onSubmit={handleEnroll} className="space-y-3">
+                {/* Athlete selector */}
+                <div>
+                  <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+                    Athlete
+                  </label>
+                  <select
+                    value={enrollForm.athleteId}
+                    onChange={(e) => handleEnrollAthleteChange(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                  >
+                    <option value="">Select athlete…</option>
+                    {unenrolledAthletes.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.user.firstName} {a.user.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  {autoImported && (
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                        <svg
+                          className="w-2.5 h-2.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Auto-imported
+                      </span>
+                      {autoImportedPrCount > 0 && (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                          {autoImportedPrCount} mark{autoImportedPrCount !== 1 ? "s" : ""} found
+                        </span>
+                      )}
+                      {(() => {
+                        const roster = rosterAthletes.find((r) => r.id === enrollForm.athleteId);
+                        if (!roster) return null;
+                        const details: string[] = [];
+                        if (roster.events?.length > 0)
+                          details.push(
+                            `${roster.events.length} event${roster.events.length !== 1 ? "s" : ""}`
+                          );
+                        return details.length > 0 ? (
+                          <span className="text-[10px] text-surface-700 dark:text-surface-300">
+                            {details.join(" · ")}
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </div>
 
- {/* ── Enrollment Form (inline panel) ───────────────────── */}
- {enrollOpen && (
- <div className="card !p-5 border-2 border-[rgba(212,168,67,0.2)] space-y-4">
- <div className="flex items-center justify-between">
- <h3 className="font-semibold text-[var(--foreground)] text-sm">
- Enroll Athlete in Podium Throws
- </h3>
- <button
- onClick={() => setEnrollOpen(false)}
- className="p-1 text-muted hover:text-surface-700 dark:hover:text-surface-300 rounded-lg"
- >
- <svg
- className="w-4 h-4"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- >
- <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M6 18L18 6M6 6l12 12"
- />
- </svg>
- </button>
- </div>
+                {/* Events (multi-toggle) */}
+                <div>
+                  <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+                    Events
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {(["SP", "DT", "HT", "JT"] as EventCode[]).map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => toggleEnrollEvent(code)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                          enrollForm.events.includes(code)
+                            ? "bg-[rgba(212,168,67,0.15)] text-primary-600 dark:text-primary-300"
+                            : "bg-[var(--muted-bg)] text-muted hover:text-surface-700 dark:hover:text-surface-300"
+                        }`}
+                      >
+                        {EVENT_LABELS[code]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
- <form onSubmit={handleEnroll} className="space-y-3">
- {/* Athlete selector */}
- <div>
- <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
- Athlete
- </label>
- <select
- value={enrollForm.athleteId}
- onChange={(e) => handleEnrollAthleteChange(e.target.value)}
- required
- className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
- >
- <option value="">Select athlete…</option>
- {unenrolledAthletes.map((a) => (
- <option key={a.id} value={a.id}>
- {a.user.firstName} {a.user.lastName}
- </option>
- ))}
- </select>
- {autoImported && (
- <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">
- Auto-filled from athlete profile
- </p>
- )}
- </div>
+                {/* Gender */}
+                <div>
+                  <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
+                    Gender
+                  </label>
+                  <select
+                    value={enrollForm.gender}
+                    onChange={(e) =>
+                      setEnrollForm((f) => ({
+                        ...f,
+                        gender: e.target.value as GenderCode,
+                      }))
+                    }
+                    required
+                    className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                  >
+                    <option value="">Select…</option>
+                    <option value="M">Male</option>
+                    <option value="F">Female</option>
+                  </select>
+                </div>
 
- {/* Events (multi-toggle) */}
- <div>
- <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
- Events
- </label>
- <div className="flex flex-wrap gap-2">
- {(["SP", "DT", "HT", "JT"] as EventCode[]).map((code) => (
- <button
- key={code}
- type="button"
- onClick={() => toggleEnrollEvent(code)}
- className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
- enrollForm.events.includes(code)
- ? "bg-[rgba(212,168,67,0.15)] text-primary-600 dark:text-primary-300"
- : "bg-[var(--muted-bg)] text-muted hover:text-surface-700 dark:hover:text-surface-300"
- }`}
- >
- {EVENT_LABELS[code]}
- </button>
- ))}
- </div>
- </div>
+                {/* Competition PB (optional) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-medium text-surface-700 dark:text-surface-300">
+                      Competition PB <span className="text-muted font-normal">(optional)</span>
+                    </label>
+                    <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
+                      {(["meters", "feet"] as const).map((unit) => (
+                        <button
+                          key={unit}
+                          type="button"
+                          onClick={() => setEnrollDistUnit(unit)}
+                          className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+                            enrollDistUnit === unit
+                              ? "bg-primary-500 text-white"
+                              : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+                          }`}
+                        >
+                          {unit === "meters" ? "m" : "ft"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder={enrollDistUnit === "meters" ? "e.g. 18.45" : "e.g. 60.53"}
+                    value={enrollForm.competitionPb}
+                    onChange={(e) =>
+                      setEnrollForm((f) => ({
+                        ...f,
+                        competitionPb: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                  />
+                </div>
 
- {/* Gender */}
- <div>
- <label className="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">
- Gender
- </label>
- <select
- value={enrollForm.gender}
- onChange={(e) =>
- setEnrollForm((f) => ({
- ...f,
- gender: e.target.value as GenderCode,
- }))
- }
- required
- className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
- >
- <option value="">Select…</option>
- <option value="M">Male</option>
- <option value="F">Female</option>
- </select>
- </div>
+                {saveError && <p className="text-xs text-red-600 dark:text-red-400">{saveError}</p>}
 
- {/* Competition PB (optional) */}
- <div>
- <div className="flex items-center justify-between mb-1">
- <label className="block text-xs font-medium text-surface-700 dark:text-surface-300">
- Competition PB{" "}
- <span className="text-muted font-normal">(optional)</span>
- </label>
- <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
- {(["meters", "feet"] as const).map((unit) => (
- <button key={unit} type="button" onClick={() => setEnrollDistUnit(unit)}
- className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
- enrollDistUnit === unit ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
- }`}
- >{unit === "meters" ? "m" : "ft"}</button>
- ))}
- </div>
- </div>
- <input
- type="number"
- step="0.01"
- min="0"
- placeholder={enrollDistUnit === "meters" ? "e.g. 18.45" : "e.g. 60.53"}
- value={enrollForm.competitionPb}
- onChange={(e) =>
- setEnrollForm((f) => ({
- ...f,
- competitionPb: e.target.value,
- }))
- }
- className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
- />
- </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setEnrollOpen(false)}
+                    className="btn-secondary text-sm px-4 py-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="btn-primary text-sm px-4 py-2 flex items-center gap-1.5 disabled:opacity-60"
+                  >
+                    {saving ? (
+                      <>
+                        <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Enrolling…
+                      </>
+                    ) : (
+                      "Enroll Athlete"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
- {saveError && (
- <p className="text-xs text-red-600 dark:text-red-400">
- {saveError}
- </p>
- )}
+          {/* ── Empty State ──────────────────────────────────────── */}
+          {podiumAthletes.length === 0 && !enrollOpen && (
+            <div className="card text-center py-12 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-[rgba(212,168,67,0.08)] flex items-center justify-center mx-auto">
+                <svg
+                  className="w-6 h-6 text-primary-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--foreground)] text-sm">
+                  No athletes in Podium Throws
+                </p>
+                <p className="text-xs text-muted mt-1">
+                  Enroll athletes to unlock Bondarchuk deficit analysis and KPI profiling.
+                </p>
+              </div>
+              {unenrolledAthletes.length > 0 && (
+                <button
+                  onClick={() => setEnrollOpen(true)}
+                  className="btn-primary text-sm px-4 py-2 mx-auto"
+                >
+                  Add First Athlete
+                </button>
+              )}
+              {unenrolledAthletes.length === 0 && allAthletes.length === 0 && (
+                <Link
+                  href="/coach/throws/invite"
+                  className="btn-primary text-sm px-4 py-2 inline-block"
+                >
+                  Invite Athletes
+                </Link>
+              )}
+            </div>
+          )}
 
- <div className="flex gap-2 pt-1">
- <button
- type="button"
- onClick={() => setEnrollOpen(false)}
- className="btn-secondary text-sm px-4 py-2"
- >
- Cancel
- </button>
- <button
- type="submit"
- disabled={saving}
- className="btn-primary text-sm px-4 py-2 flex items-center gap-1.5 disabled:opacity-60"
- >
- {saving ? (
- <>
- <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
- Enrolling…
- </>
- ) : (
- "Enroll Athlete"
- )}
- </button>
- </div>
- </form>
- </div>
- )}
+          {/* ── Enrolled Athletes List ────────────────────────────── */}
+          {podiumAthletes.length > 0 && (
+            <StaggeredList className="space-y-3">
+              {podiumAthletes.map((profile) => {
+                const eventCode = profile.event as EventCode;
+                const eventColor = EVENT_COLORS[eventCode] ?? "#d4a843";
+                const eventLabel = EVENT_LABELS[eventCode] ?? profile.event;
+                const deficitType = profile.deficitPrimary as DeficitType | null;
+                const deficitLevel = profile.deficitStatus as DeficitLevel | null;
+                const isRemoving = removingId === profile.athleteId;
+                const confirmingRemove = confirmRemoveId === profile.athleteId;
 
- {/* ── Empty State ──────────────────────────────────────── */}
- {podiumAthletes.length === 0 && !enrollOpen && (
- <div className="card text-center py-12 space-y-3">
- <div className="w-12 h-12 rounded-2xl bg-[rgba(212,168,67,0.08)] flex items-center justify-center mx-auto">
- <svg
- className="w-6 h-6 text-primary-500"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- >
- <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={1.5}
- d="M13 10V3L4 14h7v7l9-11h-7z"
- />
- </svg>
- </div>
- <div>
- <p className="font-semibold text-[var(--foreground)] text-sm">
- No athletes in Podium Throws
- </p>
- <p className="text-xs text-muted mt-1">
- Enroll athletes to unlock Bondarchuk deficit analysis and KPI
- profiling.
- </p>
- </div>
- {unenrolledAthletes.length > 0 && (
- <button
- onClick={() => setEnrollOpen(true)}
- className="btn-primary text-sm px-4 py-2 mx-auto"
- >
- Add First Athlete
- </button>
- )}
- {unenrolledAthletes.length === 0 && allAthletes.length === 0 && (
- <Link
- href="/coach/throws/invite"
- className="btn-primary text-sm px-4 py-2 inline-block"
- >
- Invite Athletes
- </Link>
- )}
- </div>
- )}
+                return (
+                  <div key={profile.id} className="card !p-4 flex items-center gap-3">
+                    {/* Avatar */}
+                    <UserAvatar
+                      src={profile.athlete.profilePictureUrl}
+                      firstName={profile.athlete.user.firstName}
+                      lastName={profile.athlete.user.lastName}
+                      size="md"
+                    />
 
- {/* ── Enrolled Athletes List ────────────────────────────── */}
- {podiumAthletes.length > 0 && (
- <StaggeredList className="space-y-3">
- {podiumAthletes.map((profile) => {
- const eventCode = profile.event as EventCode;
- const eventColor = EVENT_COLORS[eventCode] ?? "#d4a843";
- const eventLabel = EVENT_LABELS[eventCode] ?? profile.event;
- const deficitType = profile.deficitPrimary as DeficitType | null;
- const deficitLevel = profile.deficitStatus as DeficitLevel | null;
- const isRemoving = removingId === profile.athleteId;
- const confirmingRemove = confirmRemoveId === profile.athleteId;
+                    {/* Main content: 2-row stacked */}
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      {/* Row 1: Name + event badge + PB */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-[var(--foreground)] text-sm">
+                          {profile.athlete.user.firstName} {profile.athlete.user.lastName}
+                        </p>
+                        <span
+                          className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold text-white flex-shrink-0"
+                          style={{ backgroundColor: eventColor }}
+                        >
+                          {eventLabel}
+                          <span className="opacity-80">{profile.gender === "M" ? "♂" : "♀"}</span>
+                        </span>
+                        {profile.competitionPb && (
+                          <span className="text-[11px] font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
+                            {profile.competitionPb.toFixed(2)}m
+                            {profile.currentDistanceBand && (
+                              <span className="font-sans ml-1 text-muted">
+                                Band {profile.currentDistanceBand}m
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      {/* Row 2: Deficit badge + testing badge */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {deficitLevel && deficitType && deficitType !== "none" ? (
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium flex-shrink-0 ${DEFICIT_LEVEL_COLORS[deficitLevel]} ${DEFICIT_LEVEL_BG[deficitLevel]}`}
+                          >
+                            {DEFICIT_TYPE_LABELS[deficitType]}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-muted flex-shrink-0">
+                            {profile.competitionPb ? "Awaiting test data" : "No PB entered"}
+                          </span>
+                        )}
+                        <TestingBadge records={profile.testingRecords ?? []} />
+                      </div>
+                    </div>
 
- return (
- <div
- key={profile.id}
- className="card !p-4 flex items-center gap-3"
- >
- {/* Avatar */}
- <UserAvatar
- src={profile.athlete.profilePictureUrl}
- firstName={profile.athlete.user.firstName}
- lastName={profile.athlete.user.lastName}
- size="md"
- />
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Link
+                        href={`/coach/throws/profile?athleteId=${profile.athleteId}`}
+                        className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
+                      >
+                        View Profile
+                      </Link>
 
- {/* Main content: 2-row stacked */}
- <div className="flex-1 min-w-0 space-y-0.5">
- {/* Row 1: Name + event badge + PB */}
- <div className="flex items-center gap-2 flex-wrap">
- <p className="font-semibold text-[var(--foreground)] text-sm">
- {profile.athlete.user.firstName}{" "}
- {profile.athlete.user.lastName}
- </p>
- <span
- className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold text-white flex-shrink-0"
- style={{ backgroundColor: eventColor }}
- >
- {eventLabel}
- <span className="opacity-80">
- {profile.gender === "M" ? "♂" : "♀"}
- </span>
- </span>
- {profile.competitionPb && (
- <span className="text-[11px] font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
- {profile.competitionPb.toFixed(2)}m
- {profile.currentDistanceBand && (
- <span className="font-sans ml-1 text-muted">
- Band {profile.currentDistanceBand}m
- </span>
- )}
- </span>
- )}
- </div>
- {/* Row 2: Deficit badge + testing badge */}
- <div className="flex items-center gap-2 flex-wrap">
- {deficitLevel && deficitType && deficitType !== "none" ? (
- <span
- className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium flex-shrink-0 ${DEFICIT_LEVEL_COLORS[deficitLevel]} ${DEFICIT_LEVEL_BG[deficitLevel]}`}
- >
- {DEFICIT_TYPE_LABELS[deficitType]}
- </span>
- ) : (
- <span className="text-[10px] text-muted flex-shrink-0">
- {profile.competitionPb ? "Awaiting test data" : "No PB entered"}
- </span>
- )}
- <TestingBadge records={profile.testingRecords ?? []} />
- </div>
- </div>
+                      {confirmingRemove ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-surface-700 dark:text-surface-300 whitespace-nowrap">
+                            Remove?
+                          </span>
+                          <button
+                            onClick={() => handleRemove(profile.athleteId)}
+                            disabled={isRemoving}
+                            className="text-xs px-2.5 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 whitespace-nowrap"
+                          >
+                            {isRemoving ? "…" : "Yes"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmRemoveId(null)}
+                            className="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] "
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmRemoveId(profile.athleteId)}
+                          className="text-xs px-2.5 py-1.5 rounded-lg text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          title="Remove from Podium Throws"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z M18 12v6m-3-3h6"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </StaggeredList>
+          )}
+        </div>
+      )}
 
- {/* Actions */}
- <div className="flex items-center gap-2 flex-shrink-0">
- <Link
- href={`/coach/throws/profile?athleteId=${profile.athleteId}`}
- className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
- >
- View Profile
- </Link>
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* ALL ATHLETES TAB */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      {activeTab === "all" && (
+        <div className="space-y-3">
+          {allAthletes.length === 0 ? (
+            <div className="card text-center py-10">
+              <p className="text-sm text-muted">No athletes on your roster yet.</p>
+              <Link
+                href="/coach/throws/invite"
+                className="btn-primary text-sm px-4 py-2 mt-3 inline-block"
+              >
+                Invite Athlete
+              </Link>
+            </div>
+          ) : (
+            <StaggeredList className="space-y-3">
+              {allAthletes.map((athlete) => {
+                const enrolled = enrolledAthleteIds.has(athlete.id);
+                const profileRow = podiumAthletes.find((p) => p.athleteId === athlete.id);
+                // Check claim status from roster data
+                const rosterMatch = rosterAthletes.find((r) => r.id === athlete.id);
+                const isClaimed = rosterMatch?.user?.claimedAt != null;
+                return (
+                  <div
+                    key={athlete.id}
+                    className="card !p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap"
+                  >
+                    <UserAvatar
+                      src={athlete.profilePictureUrl}
+                      firstName={athlete.user.firstName}
+                      lastName={athlete.user.lastName}
+                      size="md"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-[var(--foreground)] text-sm">
+                          {athlete.user.firstName} {athlete.user.lastName}
+                        </p>
+                        {!isClaimed && rosterMatch && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 flex-shrink-0">
+                            Not yet claimed
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted">
+                        {isClaimed || !rosterMatch ? athlete.user.email : "Pending invite"}
+                      </p>
+                    </div>
 
- {confirmingRemove ? (
- <div className="flex items-center gap-1.5">
- <span className="text-xs text-surface-700 dark:text-surface-300 whitespace-nowrap">
- Remove?
- </span>
- <button
- onClick={() => handleRemove(profile.athleteId)}
- disabled={isRemoving}
- className="text-xs px-2.5 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 whitespace-nowrap"
- >
- {isRemoving ? "…" : "Yes"}
- </button>
- <button
- onClick={() => setConfirmRemoveId(null)}
- className="text-xs px-2.5 py-1.5 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] "
- >
- No
- </button>
- </div>
- ) : (
- <button
- onClick={() => setConfirmRemoveId(profile.athleteId)}
- className="text-xs px-2.5 py-1.5 rounded-lg text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
- title="Remove from Podium Throws"
- >
- <svg
- className="w-4 h-4"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- >
- <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2}
- d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z M18 12v6m-3-3h6"
- />
- </svg>
- </button>
- )}
- </div>
- </div>
- );
- })}
- </StaggeredList>
- )}
- </div>
- )}
+                    {/* Podium Throws status pill */}
+                    {enrolled && profileRow ? (
+                      <span
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-white flex-shrink-0"
+                        style={{
+                          backgroundColor: EVENT_COLORS[profileRow.event as EventCode] ?? "#d4a843",
+                        }}
+                      >
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                        Podium {EVENT_LABELS[profileRow.event as EventCode]}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-muted flex-shrink-0">Not enrolled</span>
+                    )}
 
- {/* ══════════════════════════════════════════════════════════ */}
- {/* ALL ATHLETES TAB */}
- {/* ══════════════════════════════════════════════════════════ */}
- {activeTab === "all" && (
- <div className="space-y-3">
- {allAthletes.length === 0 ? (
- <div className="card text-center py-10">
- <p className="text-sm text-muted">
- No athletes on your roster yet.
- </p>
- <Link
- href="/coach/throws/invite"
- className="btn-primary text-sm px-4 py-2 mt-3 inline-block"
- >
- Invite Athlete
- </Link>
- </div>
- ) : (
- <StaggeredList className="space-y-3">
- {allAthletes.map((athlete) => {
- const enrolled = enrolledAthleteIds.has(athlete.id);
- const profileRow = podiumAthletes.find(
- (p) => p.athleteId === athlete.id
- );
- // Check claim status from roster data
- const rosterMatch = rosterAthletes.find((r) => r.id === athlete.id);
- const isClaimed = rosterMatch?.user?.claimedAt != null;
- return (
- <div
- key={athlete.id}
- className="card !p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap"
- >
- <UserAvatar
- src={athlete.profilePictureUrl}
- firstName={athlete.user.firstName}
- lastName={athlete.user.lastName}
- size="md"
- />
- <div className="min-w-0 flex-1">
- <div className="flex items-center gap-2">
- <p className="font-semibold text-[var(--foreground)] text-sm">
- {athlete.user.firstName} {athlete.user.lastName}
- </p>
- {!isClaimed && rosterMatch && (
- <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 flex-shrink-0">
- Not yet claimed
- </span>
- )}
- </div>
- <p className="text-xs text-muted">
- {isClaimed || !rosterMatch ? athlete.user.email : "Pending invite"}
- </p>
- </div>
-
- {/* Podium Throws status pill */}
- {enrolled && profileRow ? (
- <span
- className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-white flex-shrink-0"
- style={{
- backgroundColor:
- EVENT_COLORS[profileRow.event as EventCode] ??
- "#d4a843",
- }}
- >
- <svg
- className="w-3 h-3"
- fill="none"
- stroke="currentColor"
- viewBox="0 0 24 24"
- >
- <path
- strokeLinecap="round"
- strokeLinejoin="round"
- strokeWidth={2.5}
- d="M13 10V3L4 14h7v7l9-11h-7z"
- />
- </svg>
- Podium {EVENT_LABELS[profileRow.event as EventCode]}
- </span>
- ) : (
- <span className="text-[11px] text-muted flex-shrink-0">
- Not enrolled
- </span>
- )}
-
- <div className="flex gap-2 flex-shrink-0 ml-auto sm:ml-0">
- {!isClaimed && rosterMatch && (
- <button
- onClick={() => handleInvite(athlete.id)}
- className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap flex items-center gap-1"
- >
- {inviteCopied === athlete.id ? (
- <>
- <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
- </svg>
- Copied!
- </>
- ) : (
- <>
- <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
- </svg>
- Invite
- </>
- )}
- </button>
- )}
- <Link
- href={`/coach/throws/profile?athleteId=${athlete.id}`}
- className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
- >
- Throws Profile
- </Link>
- {!enrolled && (
- <button
- onClick={() => {
- handleEnrollAthleteChange(athlete.id);
- setActiveTab("podium");
- setEnrollOpen(true);
- }}
- className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap"
- >
- Enroll
- </button>
- )}
- </div>
- </div>
- );
- })}
- </StaggeredList>
- )}
- </div>
- )}
- </div>
- );
+                    <div className="flex gap-2 flex-shrink-0 ml-auto sm:ml-0">
+                      {!isClaimed && rosterMatch && (
+                        <button
+                          onClick={() => handleInvite(athlete.id)}
+                          className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap flex items-center gap-1"
+                        >
+                          {inviteCopied === athlete.id ? (
+                            <>
+                              <svg
+                                className="w-3 h-3 text-green-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                                />
+                              </svg>
+                              Invite
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <Link
+                        href={`/coach/throws/profile?athleteId=${athlete.id}`}
+                        className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
+                      >
+                        Throws Profile
+                      </Link>
+                      {!enrolled && (
+                        <button
+                          onClick={() => {
+                            handleEnrollAthleteChange(athlete.id);
+                            setActiveTab("podium");
+                            setEnrollOpen(true);
+                          }}
+                          className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap"
+                        >
+                          Enroll
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </StaggeredList>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }

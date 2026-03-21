@@ -3,13 +3,11 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
 
-export default async function AthleteLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
-  if (!session || session.role !== "ATHLETE") redirect("/login");
+  if (!session) redirect("/login");
+  const isCoachTraining = session.role === "COACH";
+  if (session.role !== "ATHLETE" && !isCoachTraining) redirect("/login");
 
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
@@ -22,13 +20,17 @@ export default async function AthleteLayout({
     },
   });
 
-  if (!athlete) redirect("/login");
+  if (!athlete) {
+    redirect(isCoachTraining ? "/coach/dashboard" : "/login");
+  }
 
   const user: DashboardUser = {
     name: `${athlete.firstName} ${athlete.lastName}`,
     email: athlete.user.email,
-    role: "ATHLETE",
+    role: session.role as "COACH" | "ATHLETE",
     avatarUrl: athlete.avatarUrl ?? undefined,
+    activeMode: isCoachTraining ? "TRAINING" : undefined,
+    trainingEnabled: isCoachTraining,
   };
 
   return <DashboardLayout user={user}>{children}</DashboardLayout>;

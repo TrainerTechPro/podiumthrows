@@ -59,16 +59,18 @@ export async function POST(req: NextRequest) {
         firstName: true,
         lastName: true,
         plan: true,
-        _count: { select: { athletes: true } },
       },
     });
     if (!coach) {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    /* ── Plan limit ── */
+    /* ── Plan limit (exclude self-coached athlete created by Training Mode) ── */
+    const realAthleteCount = await prisma.athleteProfile.count({
+      where: { coachId: coach.id, isSelfCoached: false },
+    });
     const limit = PLAN_LIMITS[coach.plan];
-    if (limit !== Infinity && coach._count.athletes >= limit) {
+    if (limit !== Infinity && realAthleteCount >= limit) {
       return NextResponse.json(
         {
           error: `You have reached the ${coach.plan} plan limit of ${limit} athletes. Upgrade to invite more.`,

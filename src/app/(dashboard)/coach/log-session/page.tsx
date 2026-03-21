@@ -20,7 +20,7 @@ export default async function CoachLogSessionPage({
     <div className="py-6 px-4">
       <LogSessionWizard
         apiEndpoint="/api/coach/log-session"
-        sessionsPath="/coach/my-training"
+        sessionsPath="/athlete/sessions"
         allowedEvents={coach?.events ?? []}
         editSessionId={searchParams.edit}
       />
