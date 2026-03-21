@@ -56,6 +56,8 @@ export interface DashboardUser {
   role: "COACH" | "ATHLETE";
   avatarUrl?: string | null;
   plan?: string;
+  activeMode?: string;
+  trainingEnabled?: boolean;
 }
 
 export interface DashboardLayoutProps {
@@ -73,13 +75,7 @@ export interface DashboardLayoutProps {
 
 /* ─── Hamburger button ───────────────────────────────────────────────────── */
 
-function HamburgerButton({
-  open,
-  onClick,
-}: {
-  open: boolean;
-  onClick: () => void;
-}) {
+function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -158,7 +154,9 @@ function UserMenu({ user }: { user: DashboardUser }) {
   async function handleLogout() {
     try {
       await fetch("/api/auth/logout", { method: "POST", headers: csrfHeaders() });
-    } catch { /* proceed anyway */ }
+    } catch {
+      /* proceed anyway */
+    }
     router.push("/login");
   }
 
@@ -231,9 +229,7 @@ function TopBar({
       <div className="flex-1" />
 
       {/* Actions */}
-      {actions && (
-        <div className="flex items-center gap-2">{actions}</div>
-      )}
+      {actions && <div className="flex items-center gap-2">{actions}</div>}
 
       {/* Theme toggle */}
       <ThemeToggle />
@@ -264,8 +260,7 @@ export function DashboardLayout({
   }, [pathname]);
 
   const baseSections =
-    navSections ??
-    (user.role === "COACH" ? COACH_NAV_SECTIONS : ATHLETE_NAV_SECTIONS);
+    navSections ?? (user.role === "COACH" ? COACH_NAV_SECTIONS : ATHLETE_NAV_SECTIONS);
 
   // Inject unread badge onto the Notifications nav item (coach only)
   const sections =
@@ -273,9 +268,7 @@ export function DashboardLayout({
       ? baseSections.map((section) => ({
           ...section,
           items: section.items.map((item) =>
-            item.href === "/coach/notifications"
-              ? { ...item, badge: notificationCount }
-              : item
+            item.href === "/coach/notifications" ? { ...item, badge: notificationCount } : item
           ),
         }))
       : baseSections;

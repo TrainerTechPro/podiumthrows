@@ -9,12 +9,7 @@ import prisma from "@/lib/prisma";
 
 /* ─── Re-export shared types ─────────────────────────────────────────────── */
 
-export type {
-  ThrowLogItem,
-  ReadinessTrendPoint,
-  GoalItem,
-  SessionItem,
-} from "@/lib/data/coach";
+export type { ThrowLogItem, ReadinessTrendPoint, GoalItem, SessionItem } from "@/lib/data/coach";
 
 /* ─── Athlete-specific types ─────────────────────────────────────────────── */
 
@@ -113,7 +108,8 @@ export type ReadinessCheckInItem = {
 /** Require authenticated athlete session. Redirects to /login or /athlete/onboarding. */
 export async function requireAthleteSession() {
   const session = await getSession();
-  if (!session || session.role !== "ATHLETE") redirect("/login");
+  if (!session) redirect("/login");
+  if (session.role !== "ATHLETE" && session.role !== "COACH") redirect("/login");
 
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
@@ -139,7 +135,8 @@ export async function requireAthleteSession() {
 /** Require athlete who has NOT yet completed onboarding. Redirects onboarded athletes to dashboard. */
 export async function requireUnonboardedAthlete() {
   const session = await getSession();
-  if (!session || session.role !== "ATHLETE") redirect("/login");
+  if (!session) redirect("/login");
+  if (session.role !== "ATHLETE" && session.role !== "COACH") redirect("/login");
 
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
@@ -779,16 +776,11 @@ export type AthleteVideoDetail = {
   createdAt: string;
 };
 
-export async function getAthleteVideos(
-  athleteId: string
-): Promise<AthleteVideoItem[]> {
+export async function getAthleteVideos(athleteId: string): Promise<AthleteVideoItem[]> {
   const videos = await prisma.videoUpload.findMany({
     where: {
       status: "ready",
-      OR: [
-        { athleteId },
-        { sharedWithAthletes: { has: athleteId } },
-      ],
+      OR: [{ athleteId }, { sharedWithAthletes: { has: athleteId } }],
     },
     include: {
       coach: { select: { firstName: true, lastName: true } },
@@ -807,9 +799,7 @@ export async function getAthleteVideos(
       category: v.category,
       durationSec: v.durationSec,
       annotationCount: annotations.length,
-      coachName: v.coach
-        ? `${v.coach.firstName} ${v.coach.lastName}`
-        : null,
+      coachName: v.coach ? `${v.coach.firstName} ${v.coach.lastName}` : null,
       createdAt: v.createdAt.toISOString(),
     };
   });
@@ -823,10 +813,7 @@ export async function getAthleteVideoById(
     where: {
       id: videoId,
       status: "ready",
-      OR: [
-        { athleteId },
-        { sharedWithAthletes: { has: athleteId } },
-      ],
+      OR: [{ athleteId }, { sharedWithAthletes: { has: athleteId } }],
     },
     include: {
       coach: { select: { firstName: true, lastName: true } },
@@ -845,9 +832,7 @@ export async function getAthleteVideoById(
     category: video.category,
     annotations: video.annotations,
     durationSec: video.durationSec,
-    coachName: video.coach
-      ? `${video.coach.firstName} ${video.coach.lastName}`
-      : null,
+    coachName: video.coach ? `${video.coach.firstName} ${video.coach.lastName}` : null,
     createdAt: video.createdAt.toISOString(),
   };
 }
@@ -864,9 +849,7 @@ export type AchievementItem = {
   earnedAt: string;
 };
 
-export async function getAthleteAchievements(
-  athleteId: string
-): Promise<AchievementItem[]> {
+export async function getAthleteAchievements(athleteId: string): Promise<AchievementItem[]> {
   const achievements = await prisma.achievement.findMany({
     where: { athleteId },
     orderBy: { earnedAt: "desc" },
@@ -937,18 +920,14 @@ export async function getAthleteOnboardingGuide(
 
   // Check step completion in parallel
   const [hasCheckIn, hasSession, hasThrowLog] = await Promise.all([
-    prisma.readinessCheckIn
-      .findFirst({ where: { athleteId }, select: { id: true } })
-      .then(Boolean),
+    prisma.readinessCheckIn.findFirst({ where: { athleteId }, select: { id: true } }).then(Boolean),
     prisma.trainingSession
       .findFirst({
         where: { athleteId, status: "COMPLETED" },
         select: { id: true },
       })
       .then(Boolean),
-    prisma.throwLog
-      .findFirst({ where: { athleteId }, select: { id: true } })
-      .then(Boolean),
+    prisma.throwLog.findFirst({ where: { athleteId }, select: { id: true } }).then(Boolean),
   ]);
 
   const steps: OnboardingGuideStep[] = [
@@ -1023,12 +1002,7 @@ export async function getAthleteGoalsWithProgress(
     let projectedCompletionDate: string | null = null;
     const daysElapsed = (now - g.createdAt.getTime()) / 86_400_000;
     const remaining = g.targetValue - g.currentValue;
-    if (
-      g.startingValue !== null &&
-      daysElapsed > 0 &&
-      gained > 0 &&
-      remaining > 0
-    ) {
+    if (g.startingValue !== null && daysElapsed > 0 && gained > 0 && remaining > 0) {
       const ratePerDay = gained / daysElapsed;
       const daysToCompletion = remaining / ratePerDay;
       projectedCompletionDate = new Date(now + daysToCompletion * 86_400_000).toISOString();
