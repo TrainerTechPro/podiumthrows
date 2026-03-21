@@ -24,7 +24,7 @@ function formatDate(iso: string): string {
 
 export default async function AthleteSettingsPage() {
   const session = await getSession();
-  if (!session || session.role !== "ATHLETE") redirect("/login");
+  if (!session || (session.role !== "ATHLETE" && session.role !== "COACH")) redirect("/login");
 
   const profile = await getAthleteProfileFull(session.userId);
   if (!profile) redirect("/login");

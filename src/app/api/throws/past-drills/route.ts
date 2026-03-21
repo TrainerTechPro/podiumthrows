@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
 /**
@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the athlete or coach profile
-    const athleteProfile = session.role === "ATHLETE"
+    const isAthlete = await canActAsAthlete(session);
+    const athleteProfile = isAthlete
       ? await prisma.athleteProfile.findUnique({
           where: { userId: session.userId },
           select: { id: true },

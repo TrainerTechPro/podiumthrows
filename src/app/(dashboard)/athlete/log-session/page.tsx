@@ -6,7 +6,7 @@ import { LogSessionWizard } from "./_log-session-wizard";
 
 export default async function AthleteLogSessionPage() {
   const session = await getSession();
-  if (!session || session.role !== "ATHLETE") redirect("/login");
+  if (!session || (session.role !== "ATHLETE" && session.role !== "COACH")) redirect("/login");
 
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },

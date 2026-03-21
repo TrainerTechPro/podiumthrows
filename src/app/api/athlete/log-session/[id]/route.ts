@@ -27,7 +27,7 @@ export async function GET(
     }
 
     // Allow access if the user is the athlete OR their coach
-    if (session.role === "ATHLETE" && entry.athlete.userId !== session.userId) {
+    if (entry.athlete.userId !== session.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
