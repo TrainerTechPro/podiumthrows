@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useCallback } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -1768,8 +1767,8 @@ function SandboxPreviewCard({
       <div>
         <p className="label mb-2">Phase Breakdown</p>
         <div className="space-y-2">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {generated.phases.map((phase: any, pi: number) => {
-            // eslint-disable-line @typescript-eslint/no-explicit-any
             const isExpanded = expandedPhase === pi;
             const color = PHASE_COLORS[phase.phase] || "#888";
             return (
@@ -1893,8 +1892,8 @@ function SandboxPreviewCard({
                           Exercise Complex
                         </p>
                         <div className="space-y-1">
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           {phase.exerciseComplex.map((ex: any, ei: number) => {
-                            // eslint-disable-line @typescript-eslint/no-explicit-any
                             const cls = CLASSIFICATION_COLORS[ex.classification] || {
                               bg: "bg-gray-100 dark:bg-gray-800",
                               text: "text-gray-700 dark:text-gray-300",
@@ -1939,8 +1938,8 @@ function SandboxPreviewCard({
         <div>
           <p className="label mb-2">Week 1 Sessions</p>
           <div className="space-y-2">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {sessions.map((session: any, si: number) => {
-              // eslint-disable-line @typescript-eslint/no-explicit-any
               const isExpanded = expandedSession === si;
               return (
                 <div
@@ -1993,8 +1992,8 @@ function SandboxPreviewCard({
                             Throws
                           </p>
                           <div className="space-y-1">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {session.throws.map((t: any, ti: number) => {
-                              // eslint-disable-line @typescript-eslint/no-explicit-any
                               const cls = CLASSIFICATION_COLORS[t.category] || {
                                 bg: "bg-gray-100 dark:bg-gray-800",
                                 text: "text-gray-700 dark:text-gray-300",
@@ -2037,8 +2036,8 @@ function SandboxPreviewCard({
                             Strength
                           </p>
                           <div className="space-y-1">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {session.strength.map((s: any, si2: number) => {
-                              // eslint-disable-line @typescript-eslint/no-explicit-any
                               const cls = CLASSIFICATION_COLORS[s.classification] || {
                                 bg: "bg-gray-100 dark:bg-gray-800",
                                 text: "text-gray-700 dark:text-gray-300",
@@ -2083,11 +2082,8 @@ function SandboxPreviewCard({
                             Warmup
                           </p>
                           <div className="flex flex-wrap gap-1.5">
-                            {session.warmup.map(
-                              (
-                                w: any,
-                                wi: number // eslint-disable-line @typescript-eslint/no-explicit-any
-                              ) => (
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            {session.warmup.map((w: any, wi: number) => (
                                 <span
                                   key={wi}
                                   className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
