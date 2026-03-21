@@ -130,6 +130,7 @@ export function SlideToConfirm({
   return (
     <div
       ref={trackRef}
+      style={{ touchAction: "none" }}
       className={cn(
         "relative h-[60px] rounded-full select-none overflow-hidden",
         "border",
@@ -210,23 +211,27 @@ export function SlideToConfirm({
             ? "bg-primary-500"
             : "bg-danger-500"
         )}
-        style={{
-          width: thumbSize,
-          height: thumbSize,
-          transform: `translateX(${thumbX}px)`,
-          transition: transitionStyle,
-        }}
         onMouseDown={(e) => {
           e.preventDefault();
           handleStart(e.clientX);
         }}
         onTouchStart={(e) => {
+          e.stopPropagation();
           handleStart(e.touches[0].clientX);
         }}
         onTouchMove={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           handleMove(e.touches[0].clientX);
         }}
         onTouchEnd={handleEnd}
+        style={{
+          width: thumbSize,
+          height: thumbSize,
+          transform: `translateX(${thumbX}px)`,
+          transition: transitionStyle,
+          touchAction: "none",
+        }}
       >
         {completed ? (
           <svg
