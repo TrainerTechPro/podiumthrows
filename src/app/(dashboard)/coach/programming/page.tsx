@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import type { ProgrammedSessionWithDetails } from "@/lib/data/programming";
+import type { ProgrammedSessionWithDetails, SessionTier } from "@/lib/data/programming";
 import type { EventGroupItem } from "@/lib/data/event-groups";
 import { Button } from "@/components";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { Tabs, TabList, TabTrigger } from "@/components/ui/Tabs";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { WeekCalendar } from "./_week-calendar";
+import { SessionSidebar } from "./_session-sidebar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────── */
 
@@ -54,7 +54,7 @@ export default function ProgrammingPage() {
   const [loading, setLoading] = useState(true);
   const [activeGroupFilter, setActiveGroupFilter] = useState<string | null>(null);
 
-  // Sidebar state — will be consumed by Task 8 sidebar component
+  // Sidebar state
   const [sidebarSession, setSidebarSession] = useState<ProgrammedSessionWithDetails | null>(null);
   const [sidebarDate, setSidebarDate] = useState<string | null>(null);
 
@@ -123,6 +123,13 @@ export default function ProgrammingPage() {
     setSidebarDate(null);
     setSidebarSession(session);
   }, []);
+
+  const closeSidebar = useCallback(() => {
+    setSidebarSession(null);
+    setSidebarDate(null);
+    // Refetch sessions so the calendar reflects any changes
+    fetchSessions(weekStart);
+  }, [fetchSessions, weekStart]);
 
   /* ── Tab change handler ────────────────────────────────────────────── */
   const handleTabChange = useCallback((tabId: string) => {
@@ -231,19 +238,28 @@ export default function ProgrammingPage() {
         />
       )}
 
-      {/* Sidebar placeholder — Task 8 will render the actual sidebar here
-          when sidebarSession or sidebarDate is set. For now, show a subtle
-          debug indicator in development. */}
+      {/* Session create/edit sidebar */}
       {(sidebarSession || sidebarDate) && (
-        <div
-          className={cn(
-            "fixed right-0 top-0 bottom-0 w-[400px] bg-[var(--card-bg)] border-l border-[var(--card-border)]",
-            "shadow-lg z-40 p-6 overflow-y-auto animate-fade-slide-in",
-            "hidden" // Hidden until Task 8 implements the sidebar
-          )}
-        >
-          {/* Sidebar content will go here in Task 8 */}
-        </div>
+        <SessionSidebar
+          mode={sidebarSession ? "edit" : "create"}
+          session={sidebarSession}
+          date={sidebarDate}
+          tier={
+            (sidebarSession?.tier as SessionTier) ??
+            (activeGroupFilter && activeGroupFilter !== "unassigned"
+              ? "GROUP"
+              : activeGroupFilter === "unassigned"
+                ? "INDIVIDUAL"
+                : "TEAM")
+          }
+          groupId={
+            sidebarSession?.group?.id ??
+            (activeGroupFilter && activeGroupFilter !== "unassigned" ? activeGroupFilter : null)
+          }
+          groups={groups}
+          onClose={closeSidebar}
+          onSaved={closeSidebar}
+        />
       )}
     </div>
   );
