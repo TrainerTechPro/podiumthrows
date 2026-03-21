@@ -52,6 +52,20 @@ export async function getSession(): Promise<JWTPayload | null> {
   return payload;
 }
 
+/**
+ * Check if the current session can act as an athlete.
+ * True for ATHLETE role, or COACH role in training mode (active-mode cookie = TRAINING).
+ */
+export async function canActAsAthlete(session: JWTPayload | null): Promise<boolean> {
+  if (!session) return false;
+  if (session.role === "ATHLETE") return true;
+  if (session.role === "COACH") {
+    const cookieStore = await cookies();
+    return cookieStore.get("active-mode")?.value === "TRAINING";
+  }
+  return false;
+}
+
 export function setAuthCookie(token: string): string {
   return `auth-token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
 }

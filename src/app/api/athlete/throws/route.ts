@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import { isValidEvent, checkAndSetPR } from "@/lib/throws";
 import { awardPRAchievement } from "@/lib/achievements";
 import { notifyCoachPR } from "@/lib/notifications";
@@ -11,7 +11,7 @@ import { logger } from "@/lib/logger";
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ATHLETE") {
+    if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

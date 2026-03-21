@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger";
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ATHLETE") {
+    if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

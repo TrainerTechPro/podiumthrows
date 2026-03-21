@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
 type RouteContext = { params: { id: string } };
@@ -10,7 +10,7 @@ type RouteContext = { params: { id: string } };
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ATHLETE") {
+    if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -116,7 +116,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ATHLETE") {
+    if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

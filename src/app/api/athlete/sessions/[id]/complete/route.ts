@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
 /* ─── PATCH — mark session as completed ──────────────────────────────────── */
@@ -11,7 +11,7 @@ export async function PATCH(
 ) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ATHLETE") {
+    if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

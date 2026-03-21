@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import {
   COMPETITION_WEIGHTS,
@@ -15,7 +15,7 @@ import {
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ATHLETE") {
+    if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -57,7 +57,7 @@ type CompetitionPB = { event: string; distance: number };
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ATHLETE") {
+    if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
