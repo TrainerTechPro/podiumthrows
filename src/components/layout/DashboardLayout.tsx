@@ -16,6 +16,7 @@ import { CommandPalette } from "@/components/ui/CommandPalette";
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ModeToggle } from "@/components/ui/ModeToggle";
 
 /* ─── Theme toggle ───────────────────────────────────────────────────────── */
 
@@ -230,6 +231,14 @@ function TopBar({
 
       {/* Actions */}
       {actions && <div className="flex items-center gap-2">{actions}</div>}
+
+      {/* Mode toggle — visible on mobile/tablet where sidebar is hidden */}
+      {user.trainingEnabled && (
+        <ModeToggle
+          activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"}
+          className="lg:hidden"
+        />
+      )}
 
       {/* Theme toggle */}
       <ThemeToggle />
