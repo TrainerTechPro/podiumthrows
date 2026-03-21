@@ -181,7 +181,9 @@ export function StepReview({
                     <span className="text-[var(--foreground)]">{ex.exerciseName}</span>
                     {ex.sets > 0 && (
                       <span className="text-muted tabular-nums">
-                        {ex.sets}{ex.reps ? `×${ex.reps}` : " sets"}
+                        {block.blockType === "throwing"
+                          ? `${ex.sets * (parseInt(ex.reps ?? "1", 10) || 1)} throws`
+                          : `${ex.sets}${ex.reps ? `×${ex.reps}` : " sets"}`}
                       </span>
                     )}
                     {ex.implementKg > 0 && (

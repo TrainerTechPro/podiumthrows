@@ -141,7 +141,7 @@ export function ThrowBlockCard({
 
       {/* Drill + target info */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        {drillLabel} &middot; {block.sets} sets &times; {block.repsPerSet} reps &middot; {block.restSeconds}s rest
+        {drillLabel} &middot; {block.sets * block.repsPerSet} throws &middot; {block.restSeconds}s rest
       </p>
 
       {block.notes && (

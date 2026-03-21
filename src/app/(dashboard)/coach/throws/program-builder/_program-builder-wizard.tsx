@@ -2015,7 +2015,7 @@ function SandboxPreviewCard({
                                     {t.drillType?.replace(/_/g, " ")}
                                   </span>
                                   <span className="ml-auto font-medium text-[var(--foreground)]">
-                                    {t.sets}&times;{t.repsPerSet}
+                                    {t.sets * t.repsPerSet} throws
                                   </span>
                                   <span className="text-surface-700 dark:text-surface-300">
                                     {t.restSeconds}s rest
