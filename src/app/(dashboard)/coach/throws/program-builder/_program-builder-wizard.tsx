@@ -276,11 +276,7 @@ const DEFAULT_FORM: FormState = {
 
 // ── Main Wizard ─────────────────────────────────────────────────────────
 
-export function ProgramBuilderWizard({
-  athletes,
-}: {
-  athletes: AthletePickerItem[];
-}) {
+export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem[] }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
@@ -291,17 +287,14 @@ export function ProgramBuilderWizard({
   const [sandboxMode, setSandboxMode] = useState(false);
   const [sandboxName, setSandboxName] = useState("Test Athlete");
 
-  const update = useCallback(
-    (field: keyof FormState, value: FormState[keyof FormState]) => {
-      setForm((prev) => ({ ...prev, [field]: value }));
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    },
-    [],
-  );
+  const update = useCallback((field: keyof FormState, value: FormState[keyof FormState]) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }, []);
 
   // ── Prefill from selected athlete ────────────────────────────────
 
@@ -321,9 +314,7 @@ export function ProgramBuilderWizard({
             gender: p.gender || "",
             competitionPr: p.competitionPr?.toString() || "",
             // Equipment
-            selectedImplements: (p.implements || []).map(
-              (i: { weightKg: number }) => i.weightKg,
-            ),
+            selectedImplements: (p.implements || []).map((i: { weightKg: number }) => i.weightKg),
             hasCage: p.facilities?.hasCage ?? true,
             hasRing: p.facilities?.hasRing ?? true,
             hasFieldAccess: p.facilities?.hasFieldAccess ?? true,
@@ -377,8 +368,7 @@ export function ProgramBuilderWizard({
     }
 
     if (s === 3) {
-      if (form.selectedImplements.length === 0)
-        errs.implements = "Select at least one implement";
+      if (form.selectedImplements.length === 0) errs.implements = "Select at least one implement";
     }
 
     if (s === 4) {
@@ -416,7 +406,7 @@ export function ProgramBuilderWizard({
       const gen = form.gender as Gender;
       const implType = IMPLEMENT_TYPE_MAP[ev];
 
-      const toM = (v: number) => form.distanceUnit === "feet" ? v * 0.3048 : v;
+      const toM = (v: number) => (form.distanceUnit === "feet" ? v * 0.3048 : v);
 
       const payload = {
         athleteId: form.selectedAthleteId,
@@ -443,9 +433,7 @@ export function ProgramBuilderWizard({
             cleanKg: form.cleanKg ? parseFloat(form.cleanKg) : undefined,
             snatchKg: form.snatchKg ? parseFloat(form.snatchKg) : undefined,
             ohpKg: form.ohpKg ? parseFloat(form.ohpKg) : undefined,
-            deadliftKg: form.deadliftKg
-              ? parseFloat(form.deadliftKg)
-              : undefined,
+            deadliftKg: form.deadliftKg ? parseFloat(form.deadliftKg) : undefined,
             bodyWeightKg: parseFloat(form.bodyWeightKg),
           },
           schedule: {
@@ -516,15 +504,12 @@ export function ProgramBuilderWizard({
 
   const implementOptions: ImplementOption[] =
     form.event && form.gender
-      ? (IMPLEMENTS_MAP[form.event as ThrowEvent]?.[form.gender as Gender] ??
-        [])
+      ? (IMPLEMENTS_MAP[form.event as ThrowEvent]?.[form.gender as Gender] ?? [])
       : [];
 
   // ── Selected athlete name for display ─────────────────────────────
 
-  const selectedAthlete = athletes.find(
-    (a) => a.id === form.selectedAthleteId,
-  );
+  const selectedAthlete = athletes.find((a) => a.id === form.selectedAthleteId);
   const athleteName = selectedAthlete
     ? `${selectedAthlete.firstName} ${selectedAthlete.lastName}`
     : "";
@@ -586,12 +571,7 @@ export function ProgramBuilderWizard({
               }`}
             >
               {i < step ? (
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -663,27 +643,12 @@ export function ProgramBuilderWizard({
               onSandboxNameChange={setSandboxName}
             />
           )}
-          {step === 1 && (
-            <StepEventPr form={form} update={update} errors={errors} />
-          )}
-          {step === 2 && (
-            <StepGoalSchedule form={form} update={update} errors={errors} />
-          )}
+          {step === 1 && <StepEventPr form={form} update={update} errors={errors} />}
+          {step === 2 && <StepGoalSchedule form={form} update={update} errors={errors} />}
           {step === 3 && (
-            <StepEquipment
-              form={form}
-              update={update}
-              errors={errors}
-              options={implementOptions}
-            />
+            <StepEquipment form={form} update={update} errors={errors} options={implementOptions} />
           )}
-          {step === 4 && (
-            <StepLiftingExperience
-              form={form}
-              update={update}
-              errors={errors}
-            />
-          )}
+          {step === 4 && <StepLiftingExperience form={form} update={update} errors={errors} />}
           {step === 5 && !generatedResult && (
             <StepReview
               form={form}
@@ -776,8 +741,10 @@ export function ProgramBuilderWizard({
                   </svg>
                   Generating...
                 </span>
+              ) : sandboxMode ? (
+                "Preview Program"
               ) : (
-                sandboxMode ? "Preview Program" : "Generate Program"
+                "Generate Program"
               )}
             </button>
           )}
@@ -789,15 +756,28 @@ export function ProgramBuilderWizard({
 
 // ── Step Components ─────────────────────────────────────────────────────
 
-function UnitToggle({ value, onChange }: { value: "meters" | "feet"; onChange: (v: "meters" | "feet") => void }) {
+function UnitToggle({
+  value,
+  onChange,
+}: {
+  value: "meters" | "feet";
+  onChange: (v: "meters" | "feet") => void;
+}) {
   return (
     <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
       {(["meters", "feet"] as const).map((unit) => (
-        <button key={unit} type="button" onClick={() => onChange(unit)}
+        <button
+          key={unit}
+          type="button"
+          onClick={() => onChange(unit)}
           className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
-            value === unit ? "bg-primary-500 text-white" : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
+            value === unit
+              ? "bg-primary-500 text-white"
+              : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
           }`}
-        >{unit === "meters" ? "m" : "ft"}</button>
+        >
+          {unit === "meters" ? "m" : "ft"}
+        </button>
       ))}
     </div>
   );
@@ -838,9 +818,7 @@ function StepSelectAthleteOrTest({
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     const name = `${a.firstName} ${a.lastName}`.toLowerCase();
-    return (
-      name.includes(q) || a.events.some((e) => e.toLowerCase().includes(q))
-    );
+    return name.includes(q) || a.events.some((e) => e.toLowerCase().includes(q));
   });
 
   return (
@@ -876,19 +854,34 @@ function StepSelectAthleteOrTest({
         <div className="space-y-4">
           <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <div>
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Sandbox Mode</p>
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                  Sandbox Mode
+                </p>
                 <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                  Create a hypothetical profile to explore what the Bondarchuk engine produces. No data will be saved.
+                  Create a hypothetical profile to explore what the Bondarchuk engine produces. No
+                  data will be saved.
                 </p>
               </div>
             </div>
           </div>
           <div>
-            <label className="label" htmlFor="sandboxName">Profile Name</label>
+            <label className="label" htmlFor="sandboxName">
+              Profile Name
+            </label>
             <input
               id="sandboxName"
               type="text"
@@ -953,17 +946,25 @@ function StepSelectAthleteOrTest({
                   </p>
                 </div>
                 {selectedId === a.id && (
-                  <svg className="w-5 h-5 text-primary-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 text-primary-500 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 )}
               </button>
             ))}
           </div>
 
-          {errors.athlete && (
-            <p className="text-red-500 text-xs">{errors.athlete}</p>
-          )}
+          {errors.athlete && <p className="text-red-500 text-xs">{errors.athlete}</p>}
         </>
       )}
     </div>
@@ -993,20 +994,13 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
               }`}
             >
               <div className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: ev.color }}
-                />
-                <span className="font-medium text-sm text-[var(--foreground)]">
-                  {ev.label}
-                </span>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: ev.color }} />
+                <span className="font-medium text-sm text-[var(--foreground)]">{ev.label}</span>
               </div>
             </button>
           ))}
         </div>
-        {errors.event && (
-          <p className="text-red-500 text-xs mt-1">{errors.event}</p>
-        )}
+        {errors.event && <p className="text-red-500 text-xs mt-1">{errors.event}</p>}
       </div>
 
       <div>
@@ -1026,20 +1020,18 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
                   : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
               }`}
             >
-              <span className="font-medium text-sm text-[var(--foreground)]">
-                {g.label}
-              </span>
+              <span className="font-medium text-sm text-[var(--foreground)]">{g.label}</span>
             </button>
           ))}
         </div>
-        {errors.gender && (
-          <p className="text-red-500 text-xs mt-1">{errors.gender}</p>
-        )}
+        {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="label mb-0" htmlFor="pr">Athlete&apos;s Competition PR</label>
+          <label className="label mb-0" htmlFor="pr">
+            Athlete&apos;s Competition PR
+          </label>
           <UnitToggle value={form.distanceUnit} onChange={(v) => update("distanceUnit", v)} />
         </div>
         <input
@@ -1068,7 +1060,9 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
       {/* Goal */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="label mb-0" htmlFor="goalDist">Goal Distance</label>
+          <label className="label mb-0" htmlFor="goalDist">
+            Goal Distance
+          </label>
           <UnitToggle value={form.distanceUnit} onChange={(v) => update("distanceUnit", v)} />
         </div>
         <input
@@ -1083,16 +1077,11 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
         />
         {form.competitionPr && form.goalDistance && (
           <p className="text-caption text-surface-700 dark:text-surface-300 mt-1">
-            +
-            {(
-              parseFloat(form.goalDistance) - parseFloat(form.competitionPr)
-            ).toFixed(2)}
-            m improvement target
+            +{(parseFloat(form.goalDistance) - parseFloat(form.competitionPr)).toFixed(2)}m
+            improvement target
           </p>
         )}
-        {errors.goalDistance && (
-          <p className="text-red-500 text-xs mt-1">{errors.goalDistance}</p>
-        )}
+        {errors.goalDistance && <p className="text-red-500 text-xs mt-1">{errors.goalDistance}</p>}
       </div>
 
       <div>
@@ -1109,15 +1098,12 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
         {form.targetDate && (
           <p className="text-caption text-surface-700 dark:text-surface-300 mt-1">
             {Math.ceil(
-              (new Date(form.targetDate).getTime() - Date.now()) /
-                (1000 * 60 * 60 * 24 * 7),
+              (new Date(form.targetDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 7)
             )}{" "}
             weeks from now
           </p>
         )}
-        {errors.targetDate && (
-          <p className="text-red-500 text-xs mt-1">{errors.targetDate}</p>
-        )}
+        {errors.targetDate && <p className="text-red-500 text-xs mt-1">{errors.targetDate}</p>}
       </div>
 
       {/* Schedule */}
@@ -1170,9 +1156,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
                       : "border-[var(--card-border)]"
                   }`}
                 >
-                  <span className="font-semibold text-[var(--foreground)]">
-                    {s}
-                  </span>
+                  <span className="font-semibold text-[var(--foreground)]">{s}</span>
                   <p className="text-xs text-surface-700 dark:text-surface-300 mt-0.5">
                     {s === 1 ? "Single session" : "AM/PM split"}
                   </p>
@@ -1200,9 +1184,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
             </div>
             <div
               className={`w-10 h-6 rounded-full transition-colors relative ${
-                form.includeLift
-                  ? "bg-primary-500"
-                  : "bg-[var(--color-border-strong)]"
+                form.includeLift ? "bg-primary-500" : "bg-[var(--color-border-strong)]"
               }`}
             >
               <div
@@ -1231,7 +1213,7 @@ function StepEquipment({
     if (current.includes(wKg)) {
       update(
         "selectedImplements",
-        current.filter((w) => w !== wKg),
+        current.filter((w) => w !== wKg)
       );
     } else {
       update("selectedImplements", [...current, wKg]);
@@ -1287,8 +1269,7 @@ function StepEquipment({
           <div className="space-y-2">
             {options.map((impl) => {
               const selected =
-                form.selectedImplements.includes(impl.weightKg) ||
-                impl.isCompetition;
+                form.selectedImplements.includes(impl.weightKg) || impl.isCompetition;
               return (
                 <button
                   key={impl.weightKg}
@@ -1342,16 +1323,12 @@ function StepEquipment({
           </div>
         )}
 
-        {errors.implements && (
-          <p className="text-red-500 text-xs mt-1">{errors.implements}</p>
-        )}
+        {errors.implements && <p className="text-red-500 text-xs mt-1">{errors.implements}</p>}
       </div>
 
       {/* Facilities */}
       <div className="border-t border-[var(--card-border)] pt-6">
-        <h3 className="text-section font-heading text-[var(--foreground)] mb-3">
-          Facilities
-        </h3>
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-3">Facilities</h3>
         <div className="space-y-3">
           {facilities.map((f) => (
             <button
@@ -1365,16 +1342,12 @@ function StepEquipment({
               }`}
             >
               <div>
-                <span className="font-medium text-sm text-[var(--foreground)]">
-                  {f.label}
-                </span>
+                <span className="font-medium text-sm text-[var(--foreground)]">{f.label}</span>
                 <p className="text-xs text-surface-700 dark:text-surface-300">{f.desc}</p>
               </div>
               <div
                 className={`w-10 h-6 rounded-full transition-colors relative ${
-                  form[f.key]
-                    ? "bg-primary-500"
-                    : "bg-[var(--color-border-strong)]"
+                  form[f.key] ? "bg-primary-500" : "bg-[var(--color-border-strong)]"
                 }`}
               >
                 <div
@@ -1429,12 +1402,9 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
     <div className="space-y-6">
       {/* Lifting PRs */}
       <div>
-        <h3 className="text-section font-heading text-[var(--foreground)] mb-2">
-          Lifting PRs
-        </h3>
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-2">Lifting PRs</h3>
         <p className="text-body text-surface-700 dark:text-surface-300 mb-4">
-          Enter the athlete&apos;s 1RM or best recent working weight. Leave blank if
-          unknown.
+          Enter the athlete&apos;s 1RM or best recent working weight. Leave blank if unknown.
         </p>
 
         <div className="mb-4">
@@ -1479,9 +1449,7 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
 
       {/* Experience */}
       <div className="border-t border-[var(--card-border)] pt-6">
-        <h3 className="text-section font-heading text-[var(--foreground)] mb-4">
-          Experience
-        </h3>
+        <h3 className="text-section font-heading text-[var(--foreground)] mb-4">Experience</h3>
 
         <div className="space-y-4">
           <div>
@@ -1499,9 +1467,7 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
               onChange={(e) => update("yearsThrowing", e.target.value)}
             />
             {errors.yearsThrowing && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.yearsThrowing}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{errors.yearsThrowing}</p>
             )}
           </div>
 
@@ -1561,9 +1527,8 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
             No Adaptation Profile Found
           </p>
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-            The program will use moderate adaptation defaults. Complete the
-            Typing Quiz for this athlete to personalize their adaptation
-            profile.
+            The program will use moderate adaptation defaults. Complete the Typing Quiz for this
+            athlete to personalize their adaptation profile.
           </p>
         </div>
       )}
@@ -1584,30 +1549,21 @@ function StepReview({
   implementOptions: ImplementOption[];
   isSandbox?: boolean;
 }) {
-  const eventLabel =
-    EVENTS.find((e) => e.value === form.event)?.label ?? form.event;
+  const eventLabel = EVENTS.find((e) => e.value === form.event)?.label ?? form.event;
   const selectedImpls = implementOptions.filter(
-    (i) => form.selectedImplements.includes(i.weightKg) || i.isCompetition,
+    (i) => form.selectedImplements.includes(i.weightKg) || i.isCompetition
   );
 
   return (
     <div className="space-y-4">
-      <h3 className="text-section font-heading text-[var(--foreground)]">
-        Review Program Setup
-      </h3>
+      <h3 className="text-section font-heading text-[var(--foreground)]">Review Program Setup</h3>
 
       <div className="divide-y divide-gray-100 dark:divide-gray-800">
         <ReviewRow label="Athlete" value={athleteName} />
         <ReviewRow label="Event" value={`${eventLabel} (${form.gender})`} />
         <ReviewRow label="Competition PR" value={`${form.competitionPr}m`} />
-        <ReviewRow
-          label="Goal"
-          value={`${form.goalDistance}m by ${form.targetDate}`}
-        />
-        <ReviewRow
-          label="Implements"
-          value={selectedImpls.map((i) => i.label).join(", ")}
-        />
+        <ReviewRow label="Goal" value={`${form.goalDistance}m by ${form.targetDate}`} />
+        <ReviewRow label="Implements" value={selectedImpls.map((i) => i.label).join(", ")} />
         <ReviewRow
           label="Schedule"
           value={`${form.daysPerWeek} days/week, ${form.sessionsPerDay} session${form.sessionsPerDay > 1 ? "s" : ""}/day${form.includeLift ? " + lifting" : ""}`}
@@ -1658,17 +1614,10 @@ function ProgramSummaryCard({
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-section font-heading text-[var(--foreground)]">
-          Program Generated!
-        </h3>
+        <h3 className="text-section font-heading text-[var(--foreground)]">Program Generated!</h3>
         <p className="text-body text-surface-700 dark:text-surface-300 mt-1">
           Training program for {athleteName} is ready
         </p>
@@ -1677,9 +1626,7 @@ function ProgramSummaryCard({
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3">
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
-          <p className="text-2xl font-bold font-heading text-primary-500">
-            {result.totalWeeks}
-          </p>
+          <p className="text-2xl font-bold font-heading text-primary-500">{result.totalWeeks}</p>
           <p className="text-xs text-surface-700 dark:text-surface-300">Weeks</p>
         </div>
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
@@ -1701,10 +1648,7 @@ function ProgramSummaryCard({
         <p className="label mb-2">Phase Breakdown</p>
         <div className="space-y-2">
           {result.summary.phaseBreakdown.map((pb, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 p-2.5 rounded-lg bg-[var(--muted-bg)]"
-            >
+            <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-[var(--muted-bg)]">
               <div
                 className="w-3 h-3 rounded-full flex-shrink-0"
                 style={{
@@ -1712,14 +1656,10 @@ function ProgramSummaryCard({
                 }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--foreground)]">
-                  {pb.phase}
-                </p>
+                <p className="text-sm font-medium text-[var(--foreground)]">{pb.phase}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-semibold text-[var(--foreground)]">
-                  {pb.weeks}w
-                </p>
+                <p className="text-sm font-semibold text-[var(--foreground)]">{pb.weeks}w</p>
                 <p className="text-xs text-surface-700 dark:text-surface-300">
                   ~{pb.throwsPerWeek} throws/wk
                 </p>
@@ -1731,9 +1671,7 @@ function ProgramSummaryCard({
 
       {/* Estimated Total Throws */}
       <div className="text-center p-4 bg-[rgba(212,168,67,0.08)] border border-[rgba(212,168,67,0.2)] rounded-xl">
-        <p className="text-sm text-surface-700 dark:text-surface-300">
-          Estimated Total Throws
-        </p>
+        <p className="text-sm text-surface-700 dark:text-surface-300">Estimated Total Throws</p>
         <p className="text-3xl font-bold font-heading text-primary-500">
           {result.summary.estimatedTotalThrows.toLocaleString()}
         </p>
@@ -1741,16 +1679,10 @@ function ProgramSummaryCard({
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
-        <Link
-          href={`/coach/my-program?programId=${result.programId}`}
-          className="btn-primary w-full py-3 text-center"
-        >
+        <Link href={`/athlete/dashboard`} className="btn-primary w-full py-3 text-center">
           View Full Program
         </Link>
-        <button
-          onClick={onReset}
-          className="btn-secondary w-full py-3"
-        >
+        <button onClick={onReset} className="btn-secondary w-full py-3">
           Build Another Program
         </button>
       </div>
@@ -1787,8 +1719,18 @@ function SandboxPreviewCard({
     <div className="space-y-6">
       {/* Sandbox Banner */}
       <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center gap-2">
-        <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <svg
+          className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+          />
         </svg>
         <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
           Sandbox Preview for &quot;{profileName}&quot; &mdash; {eventLabel} ({form.gender})
@@ -1802,15 +1744,21 @@ function SandboxPreviewCard({
           <p className="text-[10px] text-surface-700 dark:text-surface-300">Weeks</p>
         </div>
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
-          <p className="text-xl font-bold font-heading text-primary-500">{generated.summary.totalPhases}</p>
+          <p className="text-xl font-bold font-heading text-primary-500">
+            {generated.summary.totalPhases}
+          </p>
           <p className="text-[10px] text-surface-700 dark:text-surface-300">Phases</p>
         </div>
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
-          <p className="text-xl font-bold font-heading text-primary-500">{generated.summary.totalSessions}</p>
+          <p className="text-xl font-bold font-heading text-primary-500">
+            {generated.summary.totalSessions}
+          </p>
           <p className="text-[10px] text-surface-700 dark:text-surface-300">Sessions</p>
         </div>
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
-          <p className="text-xl font-bold font-heading text-primary-500">{generated.summary.estimatedTotalThrows.toLocaleString()}</p>
+          <p className="text-xl font-bold font-heading text-primary-500">
+            {generated.summary.estimatedTotalThrows.toLocaleString()}
+          </p>
           <p className="text-[10px] text-surface-700 dark:text-surface-300">Total Throws</p>
         </div>
       </div>
@@ -1819,26 +1767,44 @@ function SandboxPreviewCard({
       <div>
         <p className="label mb-2">Phase Breakdown</p>
         <div className="space-y-2">
-          {generated.phases.map((phase: any, pi: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+          {generated.phases.map((phase: any, pi: number) => {
+            // eslint-disable-line @typescript-eslint/no-explicit-any
             const isExpanded = expandedPhase === pi;
             const color = PHASE_COLORS[phase.phase] || "#888";
             return (
-              <div key={pi} className="border border-[var(--card-border)] rounded-xl overflow-hidden">
+              <div
+                key={pi}
+                className="border border-[var(--card-border)] rounded-xl overflow-hidden"
+              >
                 {/* Phase header (clickable) */}
                 <button
                   type="button"
                   onClick={() => setExpandedPhase(isExpanded ? -1 : pi)}
                   className="w-full flex items-center gap-3 p-3 text-left hover:bg-[var(--muted-bg)] transition-colors"
                 >
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--foreground)]">{phase.phase}</p>
                     <p className="text-xs text-surface-700 dark:text-surface-300">
-                      Weeks {phase.startWeek}-{phase.endWeek} &middot; {phase.durationWeeks}w &middot; ~{phase.throwsPerWeekTarget} throws/wk
+                      Weeks {phase.startWeek}-{phase.endWeek} &middot; {phase.durationWeeks}w
+                      &middot; ~{phase.throwsPerWeekTarget} throws/wk
                     </p>
                   </div>
-                  <svg className={`w-4 h-4 text-surface-700 dark:text-surface-300 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className={`w-4 h-4 text-surface-700 dark:text-surface-300 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
 
@@ -1847,25 +1813,39 @@ function SandboxPreviewCard({
                   <div className="px-3 pb-3 space-y-3 border-t border-[var(--card-border)]">
                     {/* Category Ratios (CE/SD/SP/GP) */}
                     <div className="pt-3">
-                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Exercise Categories</p>
+                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                        Exercise Categories
+                      </p>
                       <div className="flex rounded-lg overflow-hidden h-6 text-[10px] font-semibold">
                         {phase.cePercent > 0 && (
-                          <div className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center" style={{ width: `${phase.cePercent}%` }}>
+                          <div
+                            className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center"
+                            style={{ width: `${phase.cePercent}%` }}
+                          >
                             CE {phase.cePercent}%
                           </div>
                         )}
                         {phase.sdPercent > 0 && (
-                          <div className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 flex items-center justify-center" style={{ width: `${phase.sdPercent}%` }}>
+                          <div
+                            className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 flex items-center justify-center"
+                            style={{ width: `${phase.sdPercent}%` }}
+                          >
                             SD {phase.sdPercent}%
                           </div>
                         )}
                         {phase.spPercent > 0 && (
-                          <div className="bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 flex items-center justify-center" style={{ width: `${phase.spPercent}%` }}>
+                          <div
+                            className="bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 flex items-center justify-center"
+                            style={{ width: `${phase.spPercent}%` }}
+                          >
                             SP {phase.spPercent}%
                           </div>
                         )}
                         {phase.gpPercent > 0 && (
-                          <div className="bg-purple-200 dark:bg-purple-800 text-purple-900 dark:text-purple-100 flex items-center justify-center" style={{ width: `${phase.gpPercent}%` }}>
+                          <div
+                            className="bg-purple-200 dark:bg-purple-800 text-purple-900 dark:text-purple-100 flex items-center justify-center"
+                            style={{ width: `${phase.gpPercent}%` }}
+                          >
                             GP {phase.gpPercent}%
                           </div>
                         )}
@@ -1874,20 +1854,31 @@ function SandboxPreviewCard({
 
                     {/* Implement Distribution */}
                     <div>
-                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Implement Distribution</p>
+                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                        Implement Distribution
+                      </p>
                       <div className="flex rounded-lg overflow-hidden h-6 text-[10px] font-semibold">
                         {phase.heavyPercent > 0 && (
-                          <div className="bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100 flex items-center justify-center" style={{ width: `${phase.heavyPercent}%` }}>
+                          <div
+                            className="bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100 flex items-center justify-center"
+                            style={{ width: `${phase.heavyPercent}%` }}
+                          >
                             Heavy {phase.heavyPercent}%
                           </div>
                         )}
                         {phase.compPercent > 0 && (
-                          <div className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center" style={{ width: `${phase.compPercent}%` }}>
+                          <div
+                            className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center"
+                            style={{ width: `${phase.compPercent}%` }}
+                          >
                             Comp {phase.compPercent}%
                           </div>
                         )}
                         {phase.lightPercent > 0 && (
-                          <div className="bg-sky-200 dark:bg-sky-800 text-sky-900 dark:text-sky-100 flex items-center justify-center" style={{ width: `${phase.lightPercent}%` }}>
+                          <div
+                            className="bg-sky-200 dark:bg-sky-800 text-sky-900 dark:text-sky-100 flex items-center justify-center"
+                            style={{ width: `${phase.lightPercent}%` }}
+                          >
                             Light {phase.lightPercent}%
                           </div>
                         )}
@@ -1897,18 +1888,33 @@ function SandboxPreviewCard({
                     {/* Exercise Complex */}
                     {phase.exerciseComplex?.length > 0 && (
                       <div>
-                        <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Exercise Complex</p>
+                        <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          Exercise Complex
+                        </p>
                         <div className="space-y-1">
-                          {phase.exerciseComplex.map((ex: any, ei: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                            const cls = CLASSIFICATION_COLORS[ex.classification] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300" };
+                          {phase.exerciseComplex.map((ex: any, ei: number) => {
+                            // eslint-disable-line @typescript-eslint/no-explicit-any
+                            const cls = CLASSIFICATION_COLORS[ex.classification] || {
+                              bg: "bg-gray-100 dark:bg-gray-800",
+                              text: "text-gray-700 dark:text-gray-300",
+                            };
                             return (
-                              <div key={ei} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs">
-                                <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}>
+                              <div
+                                key={ei}
+                                className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs"
+                              >
+                                <span
+                                  className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}
+                                >
                                   {ex.classification}
                                 </span>
-                                <span className="font-medium text-[var(--foreground)] flex-1">{ex.name}</span>
+                                <span className="font-medium text-[var(--foreground)] flex-1">
+                                  {ex.name}
+                                </span>
                                 {ex.implementKg && (
-                                  <span className="text-surface-700 dark:text-surface-300">{ex.implementKg}kg</span>
+                                  <span className="text-surface-700 dark:text-surface-300">
+                                    {ex.implementKg}kg
+                                  </span>
                                 )}
                                 <span className="text-surface-700 dark:text-surface-300">
                                   {ex.setsMin}-{ex.setsMax}s &times; {ex.repsMin}-{ex.repsMax}r
@@ -1932,10 +1938,14 @@ function SandboxPreviewCard({
         <div>
           <p className="label mb-2">Week 1 Sessions</p>
           <div className="space-y-2">
-            {sessions.map((session: any, si: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+            {sessions.map((session: any, si: number) => {
+              // eslint-disable-line @typescript-eslint/no-explicit-any
               const isExpanded = expandedSession === si;
               return (
-                <div key={si} className="border border-[var(--card-border)] rounded-xl overflow-hidden">
+                <div
+                  key={si}
+                  className="border border-[var(--card-border)] rounded-xl overflow-hidden"
+                >
                   <button
                     type="button"
                     onClick={() => setExpandedSession(isExpanded ? -1 : si)}
@@ -1953,31 +1963,63 @@ function SandboxPreviewCard({
                     <span className="flex-1 text-xs text-surface-700 dark:text-surface-300 truncate text-right">
                       {session.focusLabel}
                     </span>
-                    <svg className={`w-4 h-4 text-surface-700 dark:text-surface-300 transition-transform flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg
+                      className={`w-4 h-4 text-surface-700 dark:text-surface-300 transition-transform flex-shrink-0 ${isExpanded ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
 
                   {isExpanded && (
                     <div className="px-3 pb-3 space-y-3 border-t border-[var(--card-border)]">
                       <p className="text-[11px] text-surface-700 dark:text-surface-300 pt-2">
-                        ~{session.totalThrowsTarget} throws &middot; ~{session.estimatedDuration} min
+                        ~{session.totalThrowsTarget} throws &middot; ~{session.estimatedDuration}{" "}
+                        min
                       </p>
 
                       {/* Throws Block */}
                       {session.throws?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Throws</p>
+                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                            Throws
+                          </p>
                           <div className="space-y-1">
-                            {session.throws.map((t: any, ti: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                              const cls = CLASSIFICATION_COLORS[t.category] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300" };
+                            {session.throws.map((t: any, ti: number) => {
+                              // eslint-disable-line @typescript-eslint/no-explicit-any
+                              const cls = CLASSIFICATION_COLORS[t.category] || {
+                                bg: "bg-gray-100 dark:bg-gray-800",
+                                text: "text-gray-700 dark:text-gray-300",
+                              };
                               return (
-                                <div key={ti} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs">
-                                  <span className="font-bold text-[var(--foreground)] min-w-[48px]">{t.implement}</span>
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}>{t.category}</span>
-                                  <span className="text-surface-700 dark:text-surface-300">{t.drillType?.replace(/_/g, " ")}</span>
-                                  <span className="ml-auto font-medium text-[var(--foreground)]">{t.sets}&times;{t.repsPerSet}</span>
-                                  <span className="text-surface-700 dark:text-surface-300">{t.restSeconds}s rest</span>
+                                <div
+                                  key={ti}
+                                  className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs"
+                                >
+                                  <span className="font-bold text-[var(--foreground)] min-w-[48px]">
+                                    {t.implement}
+                                  </span>
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}
+                                  >
+                                    {t.category}
+                                  </span>
+                                  <span className="text-surface-700 dark:text-surface-300">
+                                    {t.drillType?.replace(/_/g, " ")}
+                                  </span>
+                                  <span className="ml-auto font-medium text-[var(--foreground)]">
+                                    {t.sets}&times;{t.repsPerSet}
+                                  </span>
+                                  <span className="text-surface-700 dark:text-surface-300">
+                                    {t.restSeconds}s rest
+                                  </span>
                                 </div>
                               );
                             })}
@@ -1990,17 +2032,42 @@ function SandboxPreviewCard({
                       {/* Strength Block */}
                       {session.strength?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Strength</p>
+                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                            Strength
+                          </p>
                           <div className="space-y-1">
-                            {session.strength.map((s: any, si2: number) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                              const cls = CLASSIFICATION_COLORS[s.classification] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300" };
+                            {session.strength.map((s: any, si2: number) => {
+                              // eslint-disable-line @typescript-eslint/no-explicit-any
+                              const cls = CLASSIFICATION_COLORS[s.classification] || {
+                                bg: "bg-gray-100 dark:bg-gray-800",
+                                text: "text-gray-700 dark:text-gray-300",
+                              };
                               return (
-                                <div key={si2} className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs">
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}>{s.classification}</span>
-                                  <span className="font-medium text-[var(--foreground)] flex-1">{s.exerciseName}</span>
-                                  <span className="text-[var(--foreground)]">{s.sets}&times;{s.reps}</span>
-                                  {s.intensityPercent && <span className="text-surface-700 dark:text-surface-300">@{s.intensityPercent}%</span>}
-                                  {s.loadKg && <span className="text-surface-700 dark:text-surface-300">{s.loadKg}kg</span>}
+                                <div
+                                  key={si2}
+                                  className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs"
+                                >
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}
+                                  >
+                                    {s.classification}
+                                  </span>
+                                  <span className="font-medium text-[var(--foreground)] flex-1">
+                                    {s.exerciseName}
+                                  </span>
+                                  <span className="text-[var(--foreground)]">
+                                    {s.sets}&times;{s.reps}
+                                  </span>
+                                  {s.intensityPercent && (
+                                    <span className="text-surface-700 dark:text-surface-300">
+                                      @{s.intensityPercent}%
+                                    </span>
+                                  )}
+                                  {s.loadKg && (
+                                    <span className="text-surface-700 dark:text-surface-300">
+                                      {s.loadKg}kg
+                                    </span>
+                                  )}
                                 </div>
                               );
                             })}
@@ -2011,13 +2078,24 @@ function SandboxPreviewCard({
                       {/* Warmup */}
                       {session.warmup?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">Warmup</p>
+                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                            Warmup
+                          </p>
                           <div className="flex flex-wrap gap-1.5">
-                            {session.warmup.map((w: any, wi: number) => ( // eslint-disable-line @typescript-eslint/no-explicit-any
-                              <span key={wi} className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
-                                {w.name}{w.duration ? ` (${w.duration}min)` : ""}
-                              </span>
-                            ))}
+                            {session.warmup.map(
+                              (
+                                w: any,
+                                wi: number // eslint-disable-line @typescript-eslint/no-explicit-any
+                              ) => (
+                                <span
+                                  key={wi}
+                                  className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
+                                >
+                                  {w.name}
+                                  {w.duration ? ` (${w.duration}min)` : ""}
+                                </span>
+                              )
+                            )}
                           </div>
                         </div>
                       )}
@@ -2045,7 +2123,11 @@ function SandboxPreviewCard({
 
 // ── Implement Order Check ────────────────────────────────────────────────
 
-function ImplementOrderCheck({ throws }: { throws: Array<{ implementKg: number; implement: string }> }) {
+function ImplementOrderCheck({
+  throws,
+}: {
+  throws: Array<{ implementKg: number; implement: string }>;
+}) {
   if (!throws || throws.length < 2) return null;
 
   // Check if implements are in descending weight order (Bondarchuk rule)
@@ -2060,14 +2142,21 @@ function ImplementOrderCheck({ throws }: { throws: Array<{ implementKg: number; 
   const weights = throws.map((t) => t.implement).join(" \u2192 ");
 
   return (
-    <div className={`mt-1.5 flex items-center gap-1.5 text-[11px] ${isDescending ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+    <div
+      className={`mt-1.5 flex items-center gap-1.5 text-[11px] ${isDescending ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+    >
       {isDescending ? (
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
         </svg>
       ) : (
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
         </svg>
       )}
       <span className="font-medium">

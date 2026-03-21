@@ -26,7 +26,16 @@ const FEELING_STYLES: Record<string, { color: string; label: string }> = {
   BAD: { color: "text-red-600 dark:text-red-400", label: "Bad" },
 };
 
-const DAY_NAMES = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_NAMES = [
+  "",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 // ── Props ────────────────────────────────────────────────────────────
 
@@ -46,13 +55,13 @@ export function CompletedSessionSummary({ session }: CompletedSessionSummaryProp
     <div className="space-y-4 animate-fade-in">
       {/* Back */}
       <Link
-        href="/coach/my-program"
+        href="/athlete/dashboard"
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary-600 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Back to Program
+        Back to Dashboard
       </Link>
 
       {/* Header */}
@@ -66,8 +75,8 @@ export function CompletedSessionSummary({ session }: CompletedSessionSummaryProp
           </span>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {DAY_NAMES[session.dayOfWeek]} &middot; Week {session.weekNumber} &middot;
-          Day {session.dayType}
+          {DAY_NAMES[session.dayOfWeek]} &middot; Week {session.weekNumber} &middot; Day{" "}
+          {session.dayType}
         </p>
       </div>
 
@@ -80,12 +89,8 @@ export function CompletedSessionSummary({ session }: CompletedSessionSummaryProp
           {session.bestMark != null && (
             <StatItem label="Best Mark" value={`${session.bestMark}m`} highlight />
           )}
-          {session.rpe != null && (
-            <StatItem label="RPE" value={`${session.rpe}/10`} />
-          )}
-          {feeling && (
-            <StatItem label="Feeling" value={feeling.label} className={feeling.color} />
-          )}
+          {session.rpe != null && <StatItem label="RPE" value={`${session.rpe}/10`} />}
+          {feeling && <StatItem label="Feeling" value={feeling.label} className={feeling.color} />}
         </div>
         {session.sessionNotes && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 italic border-t border-gray-200 dark:border-gray-700 pt-3">
@@ -109,7 +114,10 @@ export function CompletedSessionSummary({ session }: CompletedSessionSummaryProp
                 <span className="text-sm text-gray-700 dark:text-gray-300">
                   {mark.implement}
                   {mark.drillType && (
-                    <span className="text-gray-500"> &middot; {DRILL_LABELS[mark.drillType] ?? mark.drillType}</span>
+                    <span className="text-gray-500">
+                      {" "}
+                      &middot; {DRILL_LABELS[mark.drillType] ?? mark.drillType}
+                    </span>
                   )}
                 </span>
                 <span className="text-sm font-bold text-primary-700 dark:text-primary-400 tabular-nums">
@@ -155,9 +163,7 @@ export function CompletedSessionSummary({ session }: CompletedSessionSummaryProp
           <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">
             Modified from prescription
           </p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {session.modificationNotes}
-          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300">{session.modificationNotes}</p>
         </div>
       )}
     </div>
@@ -182,7 +188,8 @@ function StatItem({
       <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
       <p
         className={`text-lg font-bold tabular-nums ${
-          className ?? (highlight ? "text-primary-600 dark:text-primary-400" : "text-gray-900 dark:text-white")
+          className ??
+          (highlight ? "text-primary-600 dark:text-primary-400" : "text-gray-900 dark:text-white")
         }`}
       >
         {value}
@@ -191,9 +198,7 @@ function StatItem({
   );
 }
 
-function groupThrowsByImplement(
-  throws: ThrowResult[],
-): Record<string, ThrowResult[]> {
+function groupThrowsByImplement(throws: ThrowResult[]): Record<string, ThrowResult[]> {
   const grouped: Record<string, ThrowResult[]> = {};
   for (const t of throws) {
     const key = t.implement;

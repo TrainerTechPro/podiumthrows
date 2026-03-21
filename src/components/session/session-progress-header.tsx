@@ -40,12 +40,17 @@ export function SessionProgressHeader({
         <div className="flex items-center gap-3 px-4 py-3">
           {/* Back */}
           <Link
-            href="/coach/my-program"
+            href="/athlete/dashboard"
             className="flex-shrink-0 -ml-1 p-1 text-gray-500 hover:text-primary-600 transition-colors"
-            aria-label="Back to program"
+            aria-label="Back to dashboard"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </Link>
 
@@ -82,11 +87,7 @@ export function SessionProgressHeader({
       </div>
 
       {/* Intra-eval banner */}
-      <IntraEvalBanner
-        intraEval={intraEval}
-        dispatch={dispatch}
-        programId={session.programId}
-      />
+      <IntraEvalBanner intraEval={intraEval} dispatch={dispatch} programId={session.programId} />
     </div>
   );
 }
@@ -126,9 +127,25 @@ function IntraEvalBanner({
     return (
       <div className="px-4 py-2.5 border-b border-gray-200/60 dark:border-gray-800/60 bg-surface-50 dark:bg-surface-900/50">
         <div className="flex items-center gap-2">
-          <svg className="animate-spin h-3.5 w-3.5 text-muted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          <svg
+            className="animate-spin h-3.5 w-3.5 text-muted"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
           </svg>
           <span className="text-xs text-muted">Checking readiness...</span>
         </div>
@@ -152,7 +169,12 @@ function IntraEvalBanner({
             aria-label="Dismiss"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -170,14 +192,11 @@ function IntraEvalBanner({
     const handleApply = async () => {
       setApplying(true);
       try {
-        const res = await fetch(
-          `/api/throws/program/${programId}/suggestions/${suggestion.id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
-            body: JSON.stringify({ action: "APPROVE" }),
-          },
-        );
+        const res = await fetch(`/api/throws/program/${programId}/suggestions/${suggestion.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ action: "APPROVE" }),
+        });
         if (res.ok) {
           dispatch({
             type: "INTRA_EVAL_RESULT",
