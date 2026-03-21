@@ -208,7 +208,7 @@ export default function DeficitFinderCTA() {
                 margin: "12px 0 0",
               }}
             >
-              Answer a few questions about your training sequence and we'll
+              Answer a few questions about your training sequence and we&apos;ll
               identify exactly where your transfer is breaking down — for free.
             </p>
 
