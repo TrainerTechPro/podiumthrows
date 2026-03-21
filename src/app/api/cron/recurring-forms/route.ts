@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import {
-  shouldRunToday,
-  calculateNextRunDate,
-} from "@/lib/forms/recurring-scheduler";
+import { shouldRunToday, calculateNextRunDate } from "@/lib/forms/recurring-scheduler";
 import type { RecurrenceFrequency } from "@/lib/forms/types";
 import { logger } from "@/lib/logger";
 
@@ -78,13 +75,13 @@ export async function GET(req: NextRequest) {
         } else {
           athleteIds = [...schedule.athleteIds];
 
-          // Resolve team IDs if any (athletes relate to teams via TeamMember)
-          if (schedule.teamIds.length > 0) {
-            const teamMembers = await prisma.teamMember.findMany({
-              where: { teamId: { in: schedule.teamIds } },
+          // Resolve event group IDs if any (athletes relate to groups via EventGroupMember)
+          if (schedule.groupIds.length > 0) {
+            const groupMembers = await prisma.eventGroupMember.findMany({
+              where: { groupId: { in: schedule.groupIds } },
               select: { athleteId: true },
             });
-            const teamAthleteIds = teamMembers.map((m) => m.athleteId);
+            const teamAthleteIds = groupMembers.map((m) => m.athleteId);
             const combined = new Set([...athleteIds, ...teamAthleteIds]);
             athleteIds = Array.from(combined);
           }
@@ -103,12 +100,8 @@ export async function GET(req: NextRequest) {
           select: { athleteId: true },
         });
 
-        const existingAthleteIds = new Set(
-          existingAssignments.map((a) => a.athleteId)
-        );
-        const newAthleteIds = athleteIds.filter(
-          (id) => !existingAthleteIds.has(id)
-        );
+        const existingAthleteIds = new Set(existingAssignments.map((a) => a.athleteId));
+        const newAthleteIds = athleteIds.filter((id) => !existingAthleteIds.has(id));
 
         if (newAthleteIds.length > 0) {
           await prisma.questionnaireAssignment.createMany({
@@ -157,9 +150,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     logger.error("Recurring forms cron error", { context: "api", error: err });
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

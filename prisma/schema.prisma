@@ -177,7 +177,8 @@ model CoachProfile {
   workoutPlans   WorkoutPlan[]
   questionnaires Questionnaire[]
   videoUploads   VideoUpload[]
-  teams          Team[]
+  eventGroups    EventGroup[]
+  programmedSessions ProgrammedSession[]
   invitations    Invitation[]
   drills         Drill[]
   notifications  Notification[]
@@ -252,7 +253,8 @@ model AthleteProfile {
   responses                QuestionnaireResponse[]
   questionnaireAssignments QuestionnaireAssignment[]
   videoUploads             VideoUpload[]
-  teamMemberships          TeamMember[]
+  eventGroupMemberships    EventGroupMember[]
+  programmedSessions       ProgrammedSession[]
 
   // Throws module relations (from TrainingTracker)
   throwsAssignments        ThrowsAssignment[]
@@ -643,7 +645,7 @@ model RecurringSchedule {
   specificDays    Int[] // 0=Sun ... 6=Sat (for SPECIFIC_DAYS)
   timeOfDay       String? // "08:00" — informational
   athleteIds      String[] // Specific athlete IDs
-  teamIds         String[] // Team IDs (resolved at runtime)
+  groupIds        String[] // EventGroup IDs (resolved at runtime)
   assignToAll     Boolean             @default(false)
   startDate       DateTime
   endDate         DateTime?
@@ -757,16 +759,20 @@ model FrameAnnotation {
   @@index([videoId, timestamp])
 }
 
-// ─── TEAMS ──────────────────────────────────────────────────────────────────
+// ─── EVENT GROUPS ───────────────────────────────────────────────────────────
 
-model Team {
+model EventGroup {
   id          String       @id @default(cuid())
   coachId     String
   coach       CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
   name        String
   description String?
+  events      EventType[]
+  color       String?
+  order       Int          @default(0)
 
-  members TeamMember[]
+  members  EventGroupMember[]
+  sessions ProgrammedSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -774,17 +780,49 @@ model Team {
   @@index([coachId])
 }
 
-model TeamMember {
+model EventGroupMember {
   id        String         @id @default(cuid())
-  teamId    String
-  team      Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     EventGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
   athleteId String
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   joinedAt  DateTime       @default(now())
 
-  @@unique([teamId, athleteId])
-  @@index([teamId])
+  @@unique([groupId, athleteId])
+  @@index([groupId])
   @@index([athleteId])
+}
+
+// ─── PROGRAMMED SESSIONS (Trickle-Down Scheduling) ──────────────────────────
+
+model ProgrammedSession {
+  id              String            @id @default(cuid())
+  coachId         String
+  coach           CoachProfile      @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  title           String
+  scheduledDate   String
+  notes           String?
+  throwsSessionId String
+  throwsSession   ThrowsSession     @relation(fields: [throwsSessionId], references: [id], onDelete: Cascade)
+  tier            String
+  groupId         String?
+  group           EventGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  athleteId       String?
+  athlete         AthleteProfile?   @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  parentId        String?
+  parent          ProgrammedSession?  @relation("SessionOverrides", fields: [parentId], references: [id], onDelete: Cascade)
+  overrides       ProgrammedSession[] @relation("SessionOverrides")
+  assignments     ThrowsAssignment[]
+  status          String    @default("DRAFT")
+  publishedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([coachId, scheduledDate])
+  @@index([groupId])
+  @@index([athleteId])
+  @@index([parentId])
+  @@index([tier])
 }
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
@@ -1040,8 +1078,9 @@ model ThrowsSession {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  blocks      ThrowsBlock[]
-  assignments ThrowsAssignment[]
+  blocks              ThrowsBlock[]
+  assignments         ThrowsAssignment[]
+  programmedSessions  ProgrammedSession[]
 
   @@index([coachId])
   @@index([createdAt])
@@ -1083,6 +1122,10 @@ model ThrowsAssignment {
   feedbackNotes String?
   skipReason    String?
 
+  // Programmed session link (trickle-down scheduling)
+  programmedSessionId String?
+  programmedSession   ProgrammedSession? @relation(fields: [programmedSessionId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1092,6 +1135,7 @@ model ThrowsAssignment {
   @@index([sessionId])
   @@index([athleteId, status])
   @@index([athleteId, createdAt])
+  @@index([programmedSessionId])
 }
 
 /// Individual throw logged within a ThrowsBlock during an assignment.

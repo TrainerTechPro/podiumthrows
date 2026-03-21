@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+import { getEventGroups, createEventGroup } from "@/lib/data/event-groups";
+import type { EventType } from "@prisma/client";
+
+const VALID_EVENT_TYPES = new Set<string>(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
 
 /* ── GET — list all event groups for the authenticated coach ── */
 export async function GET() {
@@ -18,37 +22,7 @@ export async function GET() {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const groups = await prisma.eventGroup.findMany({
-      where: { coachId: coach.id },
-      include: {
-        members: {
-          include: {
-            athlete: {
-              select: { events: true },
-            },
-          },
-        },
-      },
-      orderBy: { name: "asc" },
-    });
-
-    const data = groups.map((group) => {
-      const eventBreakdown: Record<string, number> = {};
-      for (const member of group.members) {
-        for (const ev of member.athlete.events) {
-          eventBreakdown[ev] = (eventBreakdown[ev] ?? 0) + 1;
-        }
-      }
-      return {
-        id: group.id,
-        name: group.name,
-        description: group.description,
-        memberCount: group.members.length,
-        eventBreakdown,
-        createdAt: group.createdAt,
-      };
-    });
-
+    const data = await getEventGroups(coach.id);
     return NextResponse.json({ ok: true, data });
   } catch (error) {
     console.error("Error listing event groups:", error);
@@ -73,38 +47,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description } = body;
+    const { name, events, color, description } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Group name is required" }, { status: 400 });
     }
-    if (name.trim().length > 100) {
+
+    if (!Array.isArray(events) || events.length === 0) {
+      return NextResponse.json({ error: "At least one event is required" }, { status: 400 });
+    }
+
+    const invalidEvents = events.filter(
+      (e: unknown) => typeof e !== "string" || !VALID_EVENT_TYPES.has(e)
+    );
+    if (invalidEvents.length > 0) {
       return NextResponse.json(
-        { error: "Group name must be 100 characters or less" },
+        { error: `Invalid event type(s): ${invalidEvents.join(", ")}` },
         { status: 400 }
       );
     }
 
-    // Check uniqueness (case-insensitive)
-    const existing = await prisma.eventGroup.findFirst({
-      where: {
-        coachId: coach.id,
-        name: { equals: name.trim(), mode: "insensitive" },
-      },
-    });
-    if (existing) {
-      return NextResponse.json({ error: "A group with this name already exists" }, { status: 409 });
-    }
-
-    const group = await prisma.eventGroup.create({
-      data: {
-        coachId: coach.id,
-        name: name.trim(),
-        description: description?.trim() || null,
-      },
+    const data = await createEventGroup(coach.id, {
+      name,
+      events: events as EventType[],
+      color: color ?? undefined,
+      description: description ?? undefined,
     });
 
-    return NextResponse.json({ ok: true, data: group }, { status: 201 });
+    return NextResponse.json({ ok: true, data }, { status: 201 });
   } catch (error) {
     console.error("Error creating event group:", error);
     return NextResponse.json({ error: "Failed to create event group" }, { status: 500 });

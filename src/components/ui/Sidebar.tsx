@@ -22,6 +22,7 @@ import {
   BookOpen,
   PenLine,
   Radio,
+  CalendarRange,
   Wrench,
   UserCircle,
   ListChecks,
@@ -68,9 +69,7 @@ function isItemActive(item: NavItem, pathname: string): boolean {
   return (
     pathname === item.href ||
     pathname.startsWith(item.href + "/") ||
-    !!item.matchPaths?.some(
-      (p) => pathname === p || pathname.startsWith(p + "/")
-    )
+    !!item.matchPaths?.some((p) => pathname === p || pathname.startsWith(p + "/"))
   );
 }
 
@@ -111,12 +110,14 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           </span>
           <span className="flex-1 truncate text-left">{item.label}</span>
           {item.badge !== undefined && (
-            <span className={cn(
-              "px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums",
-              isParentActive
-                ? "bg-primary-200 dark:bg-primary-500/30 text-primary-700 dark:text-primary-300"
-                : "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300"
-            )}>
+            <span
+              className={cn(
+                "px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums",
+                isParentActive
+                  ? "bg-primary-200 dark:bg-primary-500/30 text-primary-700 dark:text-primary-300"
+                  : "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300"
+              )}
+            >
               {item.badge}
             </span>
           )}
@@ -178,23 +179,14 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           {item.badge}
         </span>
       )}
-      {isActive && (
-        <span className="ml-1 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
-      )}
+      {isActive && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />}
     </Link>
   );
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────────────────── */
 
-export function Sidebar({
-  sections,
-  header,
-  footer,
-  open,
-  onClose,
-  className,
-}: SidebarProps) {
+export function Sidebar({ sections, header, footer, open, onClose, className }: SidebarProps) {
   return (
     <>
       {/* Mobile overlay */}
@@ -223,9 +215,7 @@ export function Sidebar({
       >
         {/* Header slot */}
         {header && (
-          <div className="px-4 py-4 border-b border-[var(--card-border)] shrink-0">
-            {header}
-          </div>
+          <div className="px-4 py-4 border-b border-[var(--card-border)] shrink-0">{header}</div>
         )}
 
         {/* Nav */}
@@ -250,9 +240,7 @@ export function Sidebar({
 
         {/* Footer slot */}
         {footer && (
-          <div className="px-4 py-4 border-t border-[var(--card-border)] shrink-0">
-            {footer}
-          </div>
+          <div className="px-4 py-4 border-t border-[var(--card-border)] shrink-0">{footer}</div>
         )}
       </aside>
     </>
@@ -276,11 +264,25 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Athletes",
         href: "/coach/athletes",
         icon: <Users {...iconSize} />,
-        matchPaths: ["/coach/athletes", "/coach/invitations", "/coach/teams", "/coach/wellness"],
+        matchPaths: [
+          "/coach/athletes",
+          "/coach/invitations",
+          "/coach/event-groups",
+          "/coach/wellness",
+        ],
         children: [
-          { label: "Roster", href: "/coach/athletes", icon: <Users {...iconSize} />, matchPaths: ["/coach/athletes"] },
+          {
+            label: "Roster",
+            href: "/coach/athletes",
+            icon: <Users {...iconSize} />,
+            matchPaths: ["/coach/athletes"],
+          },
           { label: "Invitations", href: "/coach/invitations", icon: <UserPlus {...iconSize} /> },
-          { label: "Teams", href: "/coach/teams", icon: <UsersRound {...iconSize} /> },
+          {
+            label: "Event Groups",
+            href: "/coach/event-groups",
+            icon: <UsersRound {...iconSize} />,
+          },
           { label: "Wellness", href: "/coach/wellness", icon: <Heart {...iconSize} /> },
         ],
       },
@@ -291,23 +293,74 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         href: "/coach/throws",
         icon: <Dumbbell {...iconSize} />,
         matchPaths: [
-          "/coach/throws", "/coach/sessions", "/coach/log-session",
-          "/coach/exercises", "/coach/plans",
-          "/coach/my-training", "/coach/my-lifting", "/coach/my-throws", "/coach/my-program",
+          "/coach/throws",
+          "/coach/sessions",
+          "/coach/log-session",
+          "/coach/exercises",
+          "/coach/plans",
+          "/coach/programming",
+          "/coach/my-training",
+          "/coach/my-lifting",
+          "/coach/my-throws",
+          "/coach/my-program",
         ],
         children: [
-          { label: "Throws Hub", href: "/coach/throws", icon: <Target {...iconSize} />, matchPaths: ["/coach/throws"] },
-          { label: "Live Practice", href: "/coach/throws/practice", icon: <Radio {...iconSize} />, matchPaths: ["/coach/throws/practice"] },
-          { label: "Sessions", href: "/coach/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/coach/sessions"] },
-          { label: "Session Builder", href: "/coach/throws/builder", icon: <FileText {...iconSize} /> },
+          {
+            label: "Throws Hub",
+            href: "/coach/throws",
+            icon: <Target {...iconSize} />,
+            matchPaths: ["/coach/throws"],
+          },
+          {
+            label: "Programming",
+            href: "/coach/programming",
+            icon: <CalendarRange {...iconSize} />,
+            matchPaths: ["/coach/programming"],
+          },
+          {
+            label: "Live Practice",
+            href: "/coach/throws/practice",
+            icon: <Radio {...iconSize} />,
+            matchPaths: ["/coach/throws/practice"],
+          },
+          {
+            label: "Sessions",
+            href: "/coach/sessions",
+            icon: <Calendar {...iconSize} />,
+            matchPaths: ["/coach/sessions"],
+          },
+          {
+            label: "Session Builder",
+            href: "/coach/throws/builder",
+            icon: <FileText {...iconSize} />,
+          },
           { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
           { label: "Exercises", href: "/coach/exercises", icon: <Dumbbell {...iconSize} /> },
           { label: "Programs", href: "/coach/plans", icon: <ListChecks {...iconSize} /> },
-          { label: "Program Builder", href: "/coach/throws/program-builder", icon: <Zap {...iconSize} /> },
-          { label: "My Training", href: "/coach/my-training", icon: <Target {...iconSize} />, matchPaths: ["/coach/my-training"] },
-          { label: "My Lifting", href: "/coach/my-lifting", icon: <Dumbbell {...iconSize} />, matchPaths: ["/coach/my-lifting"] },
+          {
+            label: "Program Builder",
+            href: "/coach/throws/program-builder",
+            icon: <Zap {...iconSize} />,
+          },
+          {
+            label: "My Training",
+            href: "/coach/my-training",
+            icon: <Target {...iconSize} />,
+            matchPaths: ["/coach/my-training"],
+          },
+          {
+            label: "My Lifting",
+            href: "/coach/my-lifting",
+            icon: <Dumbbell {...iconSize} />,
+            matchPaths: ["/coach/my-lifting"],
+          },
           { label: "My Throws", href: "/coach/my-throws", icon: <Target {...iconSize} /> },
-          { label: "My Program", href: "/coach/my-program", icon: <Zap {...iconSize} />, matchPaths: ["/coach/my-program"] },
+          {
+            label: "My Program",
+            href: "/coach/my-program",
+            icon: <Zap {...iconSize} />,
+            matchPaths: ["/coach/my-program"],
+          },
         ],
       },
 
@@ -316,13 +369,34 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Analyze",
         href: "/coach/throws/analyze",
         icon: <BarChart3 {...iconSize} />,
-        matchPaths: ["/coach/throws/analyze", "/coach/throws/profile", "/coach/athlete-logs", "/coach/goals", "/coach/questionnaires"],
+        matchPaths: [
+          "/coach/throws/analyze",
+          "/coach/throws/profile",
+          "/coach/athlete-logs",
+          "/coach/goals",
+          "/coach/questionnaires",
+        ],
         children: [
-          { label: "Video Analysis", href: "/coach/throws/analyze", icon: <Clapperboard {...iconSize} />, matchPaths: ["/coach/throws/analyze"] },
-          { label: "Throws Profile", href: "/coach/throws/profile", icon: <UserCircle {...iconSize} />, matchPaths: ["/coach/throws/profile"] },
+          {
+            label: "Video Analysis",
+            href: "/coach/throws/analyze",
+            icon: <Clapperboard {...iconSize} />,
+            matchPaths: ["/coach/throws/analyze"],
+          },
+          {
+            label: "Throws Profile",
+            href: "/coach/throws/profile",
+            icon: <UserCircle {...iconSize} />,
+            matchPaths: ["/coach/throws/profile"],
+          },
           { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
           { label: "Goals", href: "/coach/goals", icon: <Crosshair {...iconSize} /> },
-          { label: "Questionnaires", href: "/coach/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/coach/questionnaires"] },
+          {
+            label: "Questionnaires",
+            href: "/coach/questionnaires",
+            icon: <ClipboardList {...iconSize} />,
+            matchPaths: ["/coach/questionnaires"],
+          },
         ],
       },
 
@@ -331,10 +405,25 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Library",
         href: "/coach/codex",
         icon: <BookOpen {...iconSize} />,
-        matchPaths: ["/coach/videos", "/coach/throws/drills", "/coach/drill-videos", "/coach/codex", "/coach/tools"],
+        matchPaths: [
+          "/coach/videos",
+          "/coach/throws/drills",
+          "/coach/drill-videos",
+          "/coach/codex",
+          "/coach/tools",
+        ],
         children: [
-          { label: "Videos", href: "/coach/videos", icon: <Video {...iconSize} />, matchPaths: ["/coach/videos"] },
-          { label: "Drill Videos", href: "/coach/throws/drills", icon: <Clapperboard {...iconSize} /> },
+          {
+            label: "Videos",
+            href: "/coach/videos",
+            icon: <Video {...iconSize} />,
+            matchPaths: ["/coach/videos"],
+          },
+          {
+            label: "Drill Videos",
+            href: "/coach/throws/drills",
+            icon: <Clapperboard {...iconSize} />,
+          },
           { label: "Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
           { label: "Tools", href: "/coach/tools", icon: <Wrench {...iconSize} /> },
         ],
@@ -344,7 +433,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
-      { label: "Settings", href: "/coach/settings", icon: <Settings {...iconSize} />, matchPaths: ["/coach/settings"] },
+      {
+        label: "Settings",
+        href: "/coach/settings",
+        icon: <Settings {...iconSize} />,
+        matchPaths: ["/coach/settings"],
+      },
     ],
   },
 ];
@@ -352,10 +446,24 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
 export const ATHLETE_NAV_SECTIONS: NavSection[] = [
   {
     items: [
-      { label: "My Dashboard", href: "/athlete/dashboard", icon: <LayoutDashboard {...iconSize} /> },
+      {
+        label: "My Dashboard",
+        href: "/athlete/dashboard",
+        icon: <LayoutDashboard {...iconSize} />,
+      },
       { label: "Log Session", href: "/athlete/log-session", icon: <PenLine {...iconSize} /> },
-      { label: "My Sessions", href: "/athlete/sessions", icon: <Calendar {...iconSize} />, matchPaths: ["/athlete/sessions"] },
-      { label: "Throw History", href: "/athlete/throws", icon: <Target {...iconSize} />, matchPaths: ["/athlete/throws"] },
+      {
+        label: "My Sessions",
+        href: "/athlete/sessions",
+        icon: <Calendar {...iconSize} />,
+        matchPaths: ["/athlete/sessions"],
+      },
+      {
+        label: "Throw History",
+        href: "/athlete/throws",
+        icon: <Target {...iconSize} />,
+        matchPaths: ["/athlete/throws"],
+      },
       { label: "Throws Codex", href: "/athlete/codex", icon: <BookOpen {...iconSize} /> },
     ],
   },
@@ -364,8 +472,18 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
       { label: "Assessments", href: "/athlete/assessments", icon: <BarChart3 {...iconSize} /> },
-      { label: "Questionnaires", href: "/athlete/questionnaires", icon: <ClipboardList {...iconSize} />, matchPaths: ["/athlete/questionnaires"] },
-      { label: "My Videos", href: "/athlete/videos", icon: <Video {...iconSize} />, matchPaths: ["/athlete/videos"] },
+      {
+        label: "Questionnaires",
+        href: "/athlete/questionnaires",
+        icon: <ClipboardList {...iconSize} />,
+        matchPaths: ["/athlete/questionnaires"],
+      },
+      {
+        label: "My Videos",
+        href: "/athlete/videos",
+        icon: <Video {...iconSize} />,
+        matchPaths: ["/athlete/videos"],
+      },
       { label: "Tools", href: "/athlete/tools", icon: <Wrench {...iconSize} /> },
     ],
   },
