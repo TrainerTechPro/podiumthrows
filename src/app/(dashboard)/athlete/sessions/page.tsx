@@ -15,10 +15,18 @@ function formatDate(iso: string): string {
   });
 }
 
-const STATUS_CONFIG: Record<string, { label: string; variant: "success" | "warning" | "danger" | "neutral" }> = {
+function formatEventName(event: string): string {
+  return event
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const STATUS_CONFIG: Record<string, { label: string; variant: "success" | "warning" | "danger" | "neutral" | "primary" }> = {
   COMPLETED:   { label: "Completed",   variant: "success"  },
   IN_PROGRESS: { label: "In Progress", variant: "warning"  },
   SCHEDULED:   { label: "Scheduled",   variant: "neutral"  },
+  PLANNED:     { label: "Planned",     variant: "primary"  },
   SKIPPED:     { label: "Skipped",     variant: "danger"   },
 };
 
@@ -104,12 +112,57 @@ export default async function AthleteSessionsPage() {
     },
   });
 
-  const upcoming = sessions.filter(
-    (s) => s.status === "SCHEDULED" || s.status === "IN_PROGRESS"
-  );
-  const past = sessions.filter(
+  // Fetch program sessions (Bondarchuk training programs)
+  const programSessions = await prisma.programSession.findMany({
+    where: {
+      program: { athleteId: athlete.id },
+      status: { in: ["PLANNED", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "SKIPPED"] },
+    },
+    orderBy: [{ weekNumber: "asc" }, { dayOfWeek: "asc" }],
+    take: 100,
+    include: {
+      program: { select: { event: true, startDate: true } },
+      phase: { select: { phase: true } },
+    },
+  });
+
+  // Convert program sessions to a display format matching SessionRow
+  const programSessionRows = programSessions.map((ps) => {
+    // Calculate scheduled date from program start + week/day
+    const startDate = ps.program.startDate ? new Date(ps.program.startDate) : null;
+    let scheduledDate: string | null = ps.scheduledDate;
+    if (!scheduledDate && startDate) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + (ps.weekNumber - 1) * 7 + (ps.dayOfWeek - 1));
+      scheduledDate = d.toISOString();
+    }
+
+    return {
+      id: ps.id,
+      scheduledDate: scheduledDate ?? new Date().toISOString(),
+      completedDate: ps.completedAt?.toISOString() ?? null,
+      status: ps.status,
+      rpe: null as number | null,
+      notes: null as string | null,
+      coachNotes: null as string | null,
+      planName: `${formatEventName(ps.program.event)} — ${ps.focusLabel}`,
+      isProgram: true,
+      phase: ps.phase.phase,
+      weekNumber: ps.weekNumber,
+      totalThrows: ps.totalThrowsTarget,
+    };
+  });
+
+  // Merge all sessions
+  const allSessions = [...sessions.map(s => ({ ...s, isProgram: false as const })), ...programSessionRows];
+
+  const upcoming = allSessions.filter(
+    (s) => s.status === "SCHEDULED" || s.status === "IN_PROGRESS" || s.status === "PLANNED"
+  ).sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
+
+  const past = allSessions.filter(
     (s) => s.status === "COMPLETED" || s.status === "SKIPPED"
-  );
+  ).sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -118,7 +171,7 @@ export default async function AthleteSessionsPage() {
         <div>
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">My Sessions</h1>
           <p className="text-sm text-muted mt-0.5">
-            {sessions.length + selfLogged.length} session{sessions.length + selfLogged.length !== 1 ? "s" : ""} total
+            {allSessions.length + selfLogged.length} session{allSessions.length + selfLogged.length !== 1 ? "s" : ""} total
           </p>
         </div>
         <Link href="/athlete/log-session" className="btn-primary whitespace-nowrap">
@@ -130,7 +183,7 @@ export default async function AthleteSessionsPage() {
       {upcoming.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Upcoming
+            Upcoming & Planned
           </h2>
           <StaggeredList className="card divide-y divide-[var(--card-border)] overflow-hidden">
             {upcoming.map((s) => (
