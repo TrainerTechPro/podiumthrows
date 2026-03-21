@@ -33,6 +33,7 @@ export async function GET() {
             paymentFailedAt: true,
             cancelAtPeriodEnd: true,
             enabledModules: true,
+            trainingEnabled: true,
             _count: { select: { athletes: true } },
           },
         },

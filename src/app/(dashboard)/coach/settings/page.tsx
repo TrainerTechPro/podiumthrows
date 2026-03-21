@@ -140,6 +140,8 @@ export default function CoachSettingsPage() {
   const [preferences, setPreferences] = useState<CoachPreferences>({});
   const [prefSaving, setPrefSaving] = useState(false);
   const [enabledModules, setEnabledModules] = useState<string[]>(["general", "throws"]);
+  const [trainingEnabled, setTrainingEnabled] = useState(false);
+  const [trainingEnabling, setTrainingEnabling] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -157,6 +159,7 @@ export default function CoachSettingsPage() {
             avatarUrl: cp?.avatarUrl || "",
           });
           if (cp) {
+            setTrainingEnabled(cp.trainingEnabled || false);
             setSubscription({
               plan: cp.plan || "FREE",
               athleteCount: cp._count?.athletes || 0,
@@ -1029,104 +1032,66 @@ export default function CoachSettingsPage() {
               </div>
             </div>
 
-            {/* My Training */}
+            {/* Training Mode */}
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">My Training</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">Training Mode</h2>
               <p className="text-sm text-surface-700 dark:text-surface-300 mb-5">
-                Configure your personal training preferences for the My Training section.
+                {trainingEnabled
+                  ? "Training Mode is enabled. Use the Coach/Training toggle in the header to switch between coaching and your own training."
+                  : "Enable Training Mode to track your own training using the same tools your athletes use. You'll get your own athlete profile, session logging, PRs, and readiness tracking."}
               </p>
 
-              <div className="space-y-5">
-                {/* Training Mode */}
-                <div>
-                  <p className="label mb-3">Training Mode</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {([
-                      { value: "competitive", label: "Competitive", desc: "Full Bondarchuk validation, sequencing rules enforced" },
-                      { value: "recreational", label: "Recreational", desc: "No sequencing warnings, casual training focus" },
-                    ] as const).map((mode) => (
-                      <label
-                        key={mode.value}
-                        className={`flex items-start gap-2.5 p-3 rounded-xl cursor-pointer transition-colors ${
-                          (preferences.myTraining?.mode ?? "recreational") === mode.value
-                            ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
-                            : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="trainingMode"
-                          value={mode.value}
-                          checked={(preferences.myTraining?.mode ?? "recreational") === mode.value}
-                          onChange={() =>
-                            handleSavePreferences({
-                              myTraining: { ...preferences.myTraining, mode: mode.value },
-                            })
-                          }
-                          className="mt-0.5"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-[var(--foreground)]">{mode.label}</p>
-                          <p className="text-xs text-muted">{mode.desc}</p>
-                        </div>
-                      </label>
-                    ))}
+              {trainingEnabled ? (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-success-50 dark:bg-success-500/10 border border-success-200 dark:border-success-500/20">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success-600 dark:text-success-400 shrink-0" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-success-700 dark:text-success-400">Training Mode Active</p>
+                    <p className="text-xs text-success-600/80 dark:text-success-400/70">Switch between Coach and Training using the toggle in the top bar.</p>
                   </div>
                 </div>
-
-                {/* Primary Event */}
-                <div>
-                  <label className="label">Primary Event</label>
-                  <select
-                    value={preferences.myTraining?.primaryEvent ?? ""}
-                    onChange={(e) =>
-                      handleSavePreferences({
-                        myTraining: { ...preferences.myTraining, primaryEvent: e.target.value || undefined },
-                      })
+              ) : (
+                <button
+                  onClick={async () => {
+                    setTrainingEnabling(true);
+                    try {
+                      const res = await fetch("/api/coach/training-mode", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+                      });
+                      const data = await res.json();
+                      if (data.ok) {
+                        setTrainingEnabled(true);
+                        toast("Training Mode enabled! Use the toggle in the header to switch.", "success");
+                      } else {
+                        toast(data.error || "Failed to enable Training Mode", "error");
+                      }
+                    } catch {
+                      toast("Failed to enable Training Mode", "error");
+                    } finally {
+                      setTrainingEnabling(false);
                     }
-                    className="input max-w-xs"
-                  >
-                    <option value="">Not set</option>
-                    <option value="SHOT_PUT">Shot Put</option>
-                    <option value="DISCUS">Discus</option>
-                    <option value="HAMMER">Hammer</option>
-                    <option value="JAVELIN">Javelin</option>
-                  </select>
-                </div>
-
-                {/* Gender */}
-                <div>
-                  <p className="label mb-3">Gender (for competition weight calculations)</p>
-                  <div className="flex gap-3">
-                    {([
-                      { value: "male", label: "Male" },
-                      { value: "female", label: "Female" },
-                    ] as const).map((g) => (
-                      <label
-                        key={g.value}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-colors ${
-                          (preferences.myTraining?.gender ?? "male") === g.value
-                            ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
-                            : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="trainingGender"
-                          value={g.value}
-                          checked={(preferences.myTraining?.gender ?? "male") === g.value}
-                          onChange={() =>
-                            handleSavePreferences({
-                              myTraining: { ...preferences.myTraining, gender: g.value },
-                            })
-                          }
-                        />
-                        <span className="text-sm font-medium text-[var(--foreground)]">{g.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                  }}
+                  disabled={trainingEnabling}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  {trainingEnabling ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Enabling...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Enable Training Mode
+                    </>
+                  )}
+                </button>
+              )}
             </div>
 
             {prefSaving && (
