@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifyTokenEdge as verifyToken } from "@/lib/auth-edge";
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from "@/lib/csrf";
 
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/pricing"];
+const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/pricing", "/deficit-finder"];
 const AUTH_PATHS = ["/login", "/register"];
 
 const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
