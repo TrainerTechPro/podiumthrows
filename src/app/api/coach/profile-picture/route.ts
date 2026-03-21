@@ -34,8 +34,16 @@ export async function PUT(req: NextRequest) {
     const updated = await prisma.coachProfile.update({
       where: { userId: session.userId },
       data: { avatarUrl },
-      select: { avatarUrl: true },
+      select: { avatarUrl: true, trainingEnabled: true },
     });
+
+    // Sync avatar to self-coached AthleteProfile if Training Mode is enabled
+    if (updated.trainingEnabled) {
+      await prisma.athleteProfile.updateMany({
+        where: { userId: session.userId, isSelfCoached: true },
+        data: { avatarUrl },
+      });
+    }
 
     return NextResponse.json({ success: true, avatarUrl: updated.avatarUrl });
   } catch (err) {
@@ -53,10 +61,19 @@ export async function DELETE() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.coachProfile.update({
+    const coach = await prisma.coachProfile.update({
       where: { userId: session.userId },
       data: { avatarUrl: null },
+      select: { trainingEnabled: true },
     });
+
+    // Sync removal to self-coached AthleteProfile
+    if (coach.trainingEnabled) {
+      await prisma.athleteProfile.updateMany({
+        where: { userId: session.userId, isSelfCoached: true },
+        data: { avatarUrl: null },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {

@@ -161,10 +161,22 @@ export async function PATCH(request: NextRequest) {
         updateData.organization = profileData.organization;
 
       if (Object.keys(updateData).length > 0) {
-        await prisma.coachProfile.update({
+        const updated = await prisma.coachProfile.update({
           where: { userId: session.userId },
           data: updateData,
+          select: { trainingEnabled: true },
         });
+
+        // Sync name changes to self-coached AthleteProfile
+        if (updated.trainingEnabled && (updateData.firstName || updateData.lastName)) {
+          const syncData: Record<string, string> = {};
+          if (updateData.firstName) syncData.firstName = updateData.firstName;
+          if (updateData.lastName) syncData.lastName = updateData.lastName;
+          await prisma.athleteProfile.updateMany({
+            where: { userId: session.userId, isSelfCoached: true },
+            data: syncData,
+          });
+        }
       }
       return NextResponse.json({ success: true });
     }
