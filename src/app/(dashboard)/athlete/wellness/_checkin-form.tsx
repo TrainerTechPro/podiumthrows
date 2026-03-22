@@ -2,8 +2,21 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Watch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+
+/* ─── WHOOP Data ─────────────────────────────────────────────────────────── */
+
+interface WhoopData {
+  recoveryScore: number | null;
+  hrvMs: number | null;
+  restingHR: number | null;
+  spo2: number | null;
+  sleepPerformance: number | null;
+  sleepDurationMs: number | null;
+  strain: number | null;
+}
 
 /* ─── Slider Field ───────────────────────────────────────────────────────── */
 
@@ -30,8 +43,8 @@ function SliderField({
     ? value >= 8
       ? "text-emerald-600 dark:text-emerald-400"
       : value >= 5
-      ? "text-amber-600 dark:text-amber-400"
-      : "text-red-600 dark:text-red-400"
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-red-600 dark:text-red-400"
     : "text-primary-500";
 
   return (
@@ -63,15 +76,25 @@ function SliderField({
 
 /* ─── Form ───────────────────────────────────────────────────────────────── */
 
-export function CheckInForm() {
+export function CheckInForm({ whoopData }: { whoopData?: WhoopData }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  // Pre-fill from WHOOP if available
+  const whoopSleepQuality =
+    whoopData?.sleepPerformance != null
+      ? Math.max(1, Math.min(10, Math.round(whoopData.sleepPerformance / 10)))
+      : null;
+  const whoopSleepHours =
+    whoopData?.sleepDurationMs != null
+      ? Math.round((whoopData.sleepDurationMs / 3_600_000) * 2) / 2
+      : null;
+
   // Form state
-  const [sleepQuality, setSleepQuality] = useState(7);
-  const [sleepHours, setSleepHours] = useState(8);
+  const [sleepQuality, setSleepQuality] = useState(whoopSleepQuality ?? 7);
+  const [sleepHours, setSleepHours] = useState(whoopSleepHours ?? 8);
   const [soreness, setSoreness] = useState(7);
   const [sorenessArea, setSorenessArea] = useState<string | null>(null);
   const [stressLevel, setStressLevel] = useState(5);
@@ -99,6 +122,12 @@ export function CheckInForm() {
             injuryStatus,
             injuryNotes: injuryNotes.trim() || null,
             notes: notes.trim() || null,
+            // WHOOP integration fields
+            hrvMs: whoopData?.hrvMs ?? undefined,
+            restingHR: whoopData?.restingHR ?? undefined,
+            spo2: whoopData?.spo2 ?? undefined,
+            whoopStrain: whoopData?.strain ?? undefined,
+            source: whoopData ? "WHOOP_ASSISTED" : "MANUAL",
           }),
         });
 
@@ -123,11 +152,22 @@ export function CheckInForm() {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
         <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#10b981"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
         </div>
-        <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">Check-in recorded!</h3>
+        <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
+          Check-in recorded!
+        </h3>
         <p className="text-sm text-muted">Taking you back to your wellness log…</p>
       </div>
     );
@@ -135,6 +175,21 @@ export function CheckInForm() {
 
   return (
     <div className="space-y-6">
+      {/* WHOOP banner */}
+      {whoopData && (
+        <div className="flex items-center gap-3 rounded-xl bg-primary-500/10 border border-primary-500/20 px-4 py-3">
+          <Watch
+            size={18}
+            strokeWidth={1.75}
+            className="text-primary-500 shrink-0"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-medium text-primary-700 dark:text-primary-300">
+            WHOOP data available — sleep fields pre-filled
+          </p>
+        </div>
+      )}
+
       {/* Sleep */}
       <div className="card px-5 py-5 space-y-5">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Sleep</h3>
@@ -189,12 +244,14 @@ export function CheckInForm() {
               Where? <span className="text-muted font-normal">(optional)</span>
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {([
-                { value: "upper_body", label: "Upper Body" },
-                { value: "lower_body", label: "Lower Body" },
-                { value: "full_body",  label: "Full Body"  },
-                { value: null,         label: "Not sure"   },
-              ] as const).map((opt) => (
+              {(
+                [
+                  { value: "upper_body", label: "Upper Body" },
+                  { value: "lower_body", label: "Lower Body" },
+                  { value: "full_body", label: "Full Body" },
+                  { value: null, label: "Not sure" },
+                ] as const
+              ).map((opt) => (
                 <button
                   key={String(opt.value)}
                   type="button"
@@ -263,11 +320,25 @@ export function CheckInForm() {
       <div className="card px-5 py-5 space-y-4">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Injury Status</h3>
         <div className="flex gap-2">
-          {([
-            { value: "NONE",       label: "None",       color: "text-emerald-600 dark:text-emerald-400 border-emerald-500 bg-emerald-500/8" },
-            { value: "MONITORING", label: "Monitoring", color: "text-amber-600 dark:text-amber-400 border-amber-500 bg-amber-500/8" },
-            { value: "ACTIVE",     label: "Active",     color: "text-red-600 dark:text-red-400 border-red-500 bg-red-500/8" },
-          ] as const).map((opt) => (
+          {(
+            [
+              {
+                value: "NONE",
+                label: "None",
+                color: "text-emerald-600 dark:text-emerald-400 border-emerald-500 bg-emerald-500/8",
+              },
+              {
+                value: "MONITORING",
+                label: "Monitoring",
+                color: "text-amber-600 dark:text-amber-400 border-amber-500 bg-amber-500/8",
+              },
+              {
+                value: "ACTIVE",
+                label: "Active",
+                color: "text-red-600 dark:text-red-400 border-red-500 bg-red-500/8",
+              },
+            ] as const
+          ).map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -285,7 +356,10 @@ export function CheckInForm() {
         </div>
         {injuryStatus !== "NONE" && (
           <div>
-            <label htmlFor="injury-notes" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            <label
+              htmlFor="injury-notes"
+              className="block text-sm font-medium text-[var(--foreground)] mb-1"
+            >
               Injury Notes <span className="text-muted font-normal">(optional)</span>
             </label>
             <textarea
@@ -315,15 +389,52 @@ export function CheckInForm() {
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      {/* WHOOP metric pills */}
+      {whoopData && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider">WHOOP Metrics</p>
+          <div className="flex flex-wrap gap-2">
+            {whoopData.recoveryScore != null && (
+              <span
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-semibold tabular-nums",
+                  whoopData.recoveryScore >= 67
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : whoopData.recoveryScore >= 34
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "bg-red-500/10 text-red-600 dark:text-red-400"
+                )}
+              >
+                Recovery {whoopData.recoveryScore}%
+              </span>
+            )}
+            {whoopData.hrvMs != null && (
+              <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
+                HRV {Math.round(whoopData.hrvMs)}ms
+              </span>
+            )}
+            {whoopData.restingHR != null && (
+              <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
+                RHR {Math.round(whoopData.restingHR)}bpm
+              </span>
+            )}
+            {whoopData.spo2 != null && (
+              <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
+                SpO2 {whoopData.spo2}%
+              </span>
+            )}
+            {whoopData.strain != null && (
+              <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
+                Strain {whoopData.strain.toFixed(1)}
+              </span>
+            )}
+          </div>
+        </div>
       )}
 
-      <button
-        onClick={handleSubmit}
-        disabled={isPending}
-        className="btn btn-primary w-full"
-      >
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+      <button onClick={handleSubmit} disabled={isPending} className="btn btn-primary w-full">
         {isPending ? "Submitting…" : "Submit Check-In"}
       </button>
     </div>

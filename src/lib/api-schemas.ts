@@ -34,18 +34,27 @@ export const ResetPasswordSchema = z.object({
 // ── MFA Schemas ────────────────────────────────────────────────────────
 
 export const MfaVerifySetupSchema = z.object({
-  token: z.string().length(6, "Code must be exactly 6 digits").regex(/^\d{6}$/, "Code must be 6 digits"),
+  token: z
+    .string()
+    .length(6, "Code must be exactly 6 digits")
+    .regex(/^\d{6}$/, "Code must be 6 digits"),
   encryptedSecret: z.string().min(1, "Secret is required"),
 });
 
 export const MfaVerifySchema = z.object({
   mfaSessionToken: z.string().min(1, "MFA session token is required"),
-  token: z.string().length(6, "Code must be exactly 6 digits").regex(/^\d{6}$/, "Code must be 6 digits"),
+  token: z
+    .string()
+    .length(6, "Code must be exactly 6 digits")
+    .regex(/^\d{6}$/, "Code must be 6 digits"),
 });
 
 export const MfaDisableSchema = z.object({
   password: z.string().min(1, "Password is required"),
-  token: z.string().length(6, "Code must be exactly 6 digits").regex(/^\d{6}$/, "Code must be 6 digits"),
+  token: z
+    .string()
+    .length(6, "Code must be exactly 6 digits")
+    .regex(/^\d{6}$/, "Code must be 6 digits"),
 });
 
 export const MfaBackupSchema = z.object({
@@ -123,6 +132,12 @@ export const ReadinessCheckInSchema = z.object({
   injuryStatus: z.enum(["NONE", "MONITORING", "ACTIVE"]).catch("NONE"),
   injuryNotes: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  // WHOOP integration fields
+  hrvMs: z.number().optional(),
+  restingHR: z.number().optional(),
+  spo2: z.number().optional(),
+  whoopStrain: z.number().optional(),
+  source: z.enum(["MANUAL", "WHOOP_AUTO", "WHOOP_ASSISTED"]).optional(),
 });
 
 // ── Athlete Schemas (for future use) ────────────────────────────────────
