@@ -91,17 +91,30 @@ export async function GET(request: NextRequest) {
     }
 
     const tokenData = await tokenRes.json();
-    const { access_token, refresh_token, expires_in, scope } = tokenData as {
-      access_token: string;
-      refresh_token: string;
-      expires_in: number;
-      scope: string;
-    };
+    logger.info("WHOOP token response keys", { context: "api", metadata: { keys: Object.keys(tokenData) } });
+
+    const access_token = tokenData.access_token as string | undefined;
+    const refresh_token = tokenData.refresh_token as string | undefined;
+    const expires_in = (tokenData.expires_in as number) || 3600;
+    const scope = (tokenData.scope as string) || "";
+
+    if (!access_token || !refresh_token) {
+      logger.error("WHOOP token response missing tokens", { context: "api", metadata: { tokenData } });
+      settingsUrl.searchParams.set("whoop", "error");
+      settingsUrl.searchParams.set("reason", "missing_tokens_in_response");
+      return NextResponse.redirect(settingsUrl);
+    }
 
     // Fetch WHOOP profile to get their user ID
     const profile = await fetchProfile(access_token);
 
     // Encrypt tokens before storage
+    if (!process.env.WHOOP_ENCRYPTION_KEY) {
+      logger.error("WHOOP_ENCRYPTION_KEY not set", { context: "api" });
+      settingsUrl.searchParams.set("whoop", "error");
+      settingsUrl.searchParams.set("reason", "encryption_key_not_configured");
+      return NextResponse.redirect(settingsUrl);
+    }
     const encryptedAccess = encrypt(access_token);
     const encryptedRefresh = encrypt(refresh_token);
     const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
