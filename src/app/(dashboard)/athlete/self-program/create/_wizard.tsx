@@ -348,8 +348,8 @@ export function SelfProgramWizard({
       };
 
       const url = draftId
-        ? `/api/athlete/self-program/${draftId}/draft`
-        : `/api/athlete/self-program/draft`;
+        ? `/api/athlete/self-program/${draftId}`
+        : `/api/athlete/self-program`;
 
       const res = await fetch(url, {
         method: draftId ? "PUT" : "POST",
@@ -410,10 +410,42 @@ export function SelfProgramWizard({
         draftId: draftId,
       };
 
-      const res = await fetch("/api/athlete/self-program/generate", {
+      // First, save the final state and mark as not-draft
+      if (draftId) {
+        await fetch(`/api/athlete/self-program/${draftId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ ...payload, isDraft: false }),
+        });
+      } else {
+        // Create config first if no draft exists
+        const createRes = await fetch("/api/athlete/self-program", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify(payload),
+        });
+        if (createRes.ok) {
+          const created = await createRes.json();
+          setDraftId(created.id);
+          // Mark as finalized
+          await fetch(`/api/athlete/self-program/${created.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            body: JSON.stringify({ ...payload, isDraft: false }),
+          });
+        }
+      }
+
+      const configId = draftId;
+      if (!configId) {
+        setErrors({ generate: "No config to generate from" });
+        toastError("Error", "Please save your answers first.");
+        return;
+      }
+
+      const res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -423,13 +455,14 @@ export function SelfProgramWizard({
         return;
       }
 
-      const data = await res.json();
+      const result = await res.json();
+      const programData = result.data || result;
       celebration("Program Generated!", {
         description: "Your Bondarchuk-based training program is ready",
-        highlight: `${data.totalWeeks} weeks`,
+        highlight: `${programData.totalWeeks} weeks`,
       });
       success("Program created successfully");
-      router.push(`/athlete/self-program/${data.programId}`);
+      router.push(`/athlete/self-program/${programData.programId}`);
     } catch {
       setErrors({ generate: "Something went wrong. Please try again." });
       toastError("Error", "Something went wrong. Please try again.");
@@ -587,52 +620,7 @@ export function SelfProgramWizard({
           Back
         </button>
 
-        {isLastStep ? (
-          <>
-            {/* Desktop generate button */}
-            <div className="hidden sm:flex">
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={generating}
-                className="btn-primary px-6 py-2.5 disabled:opacity-60"
-              >
-                {generating ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      />
-                    </svg>
-                    Generating...
-                  </span>
-                ) : (
-                  "Generate Program"
-                )}
-              </button>
-            </div>
-            {/* Mobile slide to confirm */}
-            <div className="sm:hidden flex-1 ml-4">
-              <SlideToConfirm
-                label="Slide to Generate Program"
-                onConfirm={handleGenerate}
-                disabled={generating}
-                variant="confirm"
-              />
-            </div>
-          </>
-        ) : (
+        {isLastStep ? null : (
           <button type="button" onClick={nextStep} className="btn-primary px-6 py-2.5">
             Continue
           </button>

@@ -32,6 +32,7 @@ const ALLOWED_FIELDS = new Set([
   "exercisePreferences",
   "usedExistingTyping",
   "inlineTypingData",
+  "isDraft",
 ]);
 
 /* ─── GET — fetch config with linked training program ────────────────── */
