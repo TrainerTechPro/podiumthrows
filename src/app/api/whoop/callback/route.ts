@@ -99,9 +99,20 @@ export async function GET(request: NextRequest) {
     const scope = (tokenData.scope as string) || "";
 
     if (!access_token || !refresh_token) {
-      logger.error("WHOOP token response missing tokens", { context: "api", metadata: { tokenData } });
+      logger.error("WHOOP token response missing tokens", {
+        context: "api",
+        metadata: {
+          keys: Object.keys(tokenData),
+          hasAccess: !!access_token,
+          hasRefresh: !!refresh_token,
+          responsePreview: JSON.stringify(tokenData).slice(0, 500),
+        },
+      });
       settingsUrl.searchParams.set("whoop", "error");
-      settingsUrl.searchParams.set("reason", "missing_tokens_in_response");
+      settingsUrl.searchParams.set(
+        "reason",
+        `missing_tokens:keys=${Object.keys(tokenData).join(",")}`
+      );
       return NextResponse.redirect(settingsUrl);
     }
 
