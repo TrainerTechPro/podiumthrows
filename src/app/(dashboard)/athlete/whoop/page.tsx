@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components";
 import { requireAthleteSession } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
@@ -94,47 +93,69 @@ export default async function WhoopPage() {
       {/* Today's Recovery Hero */}
       {todaySnapshot ? (
         <div className={cn("card p-6 text-center", recoveryBg(todaySnapshot.recoveryScore))}>
-          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Today&apos;s Recovery</p>
-          <p className={cn("text-5xl font-bold font-heading tabular-nums", recoveryColor(todaySnapshot.recoveryScore))}>
-            {todaySnapshot.recoveryScore !== null ? `${Math.round(todaySnapshot.recoveryScore)}%` : "—"}
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+            Today&apos;s Recovery
+          </p>
+          <p
+            className={cn(
+              "text-5xl font-bold font-heading tabular-nums",
+              recoveryColor(todaySnapshot.recoveryScore)
+            )}
+          >
+            {todaySnapshot.recoveryScore !== null
+              ? `${Math.round(todaySnapshot.recoveryScore)}%`
+              : "—"}
           </p>
           <div className="flex items-center justify-center gap-6 mt-4 text-sm">
             {todaySnapshot.hrvMs !== null && (
               <div>
                 <span className="text-muted">HRV</span>{" "}
-                <span className="font-semibold text-[var(--foreground)] tabular-nums">{Math.round(todaySnapshot.hrvMs)}ms</span>
+                <span className="font-semibold text-[var(--foreground)] tabular-nums">
+                  {Math.round(todaySnapshot.hrvMs)}ms
+                </span>
               </div>
             )}
             {todaySnapshot.restingHR !== null && (
               <div>
                 <span className="text-muted">RHR</span>{" "}
-                <span className="font-semibold text-[var(--foreground)] tabular-nums">{Math.round(todaySnapshot.restingHR)}bpm</span>
+                <span className="font-semibold text-[var(--foreground)] tabular-nums">
+                  {Math.round(todaySnapshot.restingHR)}bpm
+                </span>
               </div>
             )}
             {todaySnapshot.spo2 !== null && (
               <div>
                 <span className="text-muted">SpO2</span>{" "}
-                <span className="font-semibold text-[var(--foreground)] tabular-nums">{todaySnapshot.spo2.toFixed(1)}%</span>
+                <span className="font-semibold text-[var(--foreground)] tabular-nums">
+                  {todaySnapshot.spo2.toFixed(1)}%
+                </span>
               </div>
             )}
             {todaySnapshot.strain !== null && (
               <div>
                 <span className="text-muted">Strain</span>{" "}
-                <span className="font-semibold text-[var(--foreground)] tabular-nums">{todaySnapshot.strain.toFixed(1)}</span>
+                <span className="font-semibold text-[var(--foreground)] tabular-nums">
+                  {todaySnapshot.strain.toFixed(1)}
+                </span>
               </div>
             )}
           </div>
         </div>
       ) : (
         <div className="card p-6 text-center">
-          <p className="text-muted text-sm">No WHOOP data for today yet. Wear your strap and check back after your recovery is scored.</p>
+          <p className="text-muted text-sm">
+            No WHOOP data for today yet. Wear your strap and check back after your recovery is
+            scored.
+          </p>
         </div>
       )}
 
       {/* Today's Sleep */}
       {todaySnapshot && todaySnapshot.sleepDurationMs && (
         <div className="card p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Last Night&apos;s Sleep</h2>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+            Last Night&apos;s Sleep
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold font-heading text-[var(--foreground)] tabular-nums">
@@ -174,24 +195,36 @@ export default async function WhoopPage() {
               <div className="flex rounded-full overflow-hidden h-2.5 gap-0.5">
                 <div
                   className="bg-blue-400 dark:bg-blue-500 h-full rounded-l-full"
-                  style={{ width: `${(todaySnapshot.lightSleepMs / todaySnapshot.sleepDurationMs) * 100}%` }}
+                  style={{
+                    width: `${(todaySnapshot.lightSleepMs / todaySnapshot.sleepDurationMs) * 100}%`,
+                  }}
                   title="Light sleep"
                 />
                 <div
                   className="bg-indigo-500 h-full"
-                  style={{ width: `${(todaySnapshot.swsSleepMs / todaySnapshot.sleepDurationMs) * 100}%` }}
+                  style={{
+                    width: `${(todaySnapshot.swsSleepMs / todaySnapshot.sleepDurationMs) * 100}%`,
+                  }}
                   title="Deep (SWS)"
                 />
                 <div
                   className="bg-purple-500 h-full rounded-r-full"
-                  style={{ width: `${(todaySnapshot.remSleepMs / todaySnapshot.sleepDurationMs) * 100}%` }}
+                  style={{
+                    width: `${(todaySnapshot.remSleepMs / todaySnapshot.sleepDurationMs) * 100}%`,
+                  }}
                   title="REM"
                 />
               </div>
               <div className="flex gap-4 text-xs text-muted">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400" /> Light</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-500" /> Deep</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> REM</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-blue-400" /> Light
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500" /> Deep
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-500" /> REM
+                </span>
               </div>
             </div>
           )}
@@ -201,10 +234,17 @@ export default async function WhoopPage() {
       {/* 7-Day Averages */}
       {last7.length > 0 && (
         <div className="card p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">7-Day Averages</h2>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+            7-Day Averages
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             <div className="text-center">
-              <p className={cn("text-xl font-bold font-heading tabular-nums", recoveryColor(avgRecovery))}>
+              <p
+                className={cn(
+                  "text-xl font-bold font-heading tabular-nums",
+                  recoveryColor(avgRecovery)
+                )}
+              >
                 {avgRecovery !== null ? `${Math.round(avgRecovery)}%` : "—"}
               </p>
               <p className="text-xs text-muted mt-0.5">Recovery</p>
@@ -247,7 +287,10 @@ export default async function WhoopPage() {
                 <thead>
                   <tr className="border-b border-[var(--card-border)]">
                     {["Date", "Recovery", "HRV", "RHR", "Sleep", "Strain"].map((h) => (
-                      <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
+                      <th
+                        key={h}
+                        className="px-4 py-2.5 text-left text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap"
+                      >
                         {h}
                       </th>
                     ))}
@@ -255,10 +298,17 @@ export default async function WhoopPage() {
                 </thead>
                 <tbody className="divide-y divide-[var(--card-border)]">
                   {snapshots.map((s) => (
-                    <tr key={s.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors">
-                      <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">{formatDate(s.date)}</td>
+                    <tr
+                      key={s.id}
+                      className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors"
+                    >
+                      <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">
+                        {formatDate(s.date)}
+                      </td>
                       <td className="px-4 py-2.5">
-                        <span className={cn("font-bold tabular-nums", recoveryColor(s.recoveryScore))}>
+                        <span
+                          className={cn("font-bold tabular-nums", recoveryColor(s.recoveryScore))}
+                        >
                           {s.recoveryScore !== null ? `${Math.round(s.recoveryScore)}%` : "—"}
                         </span>
                       </td>
@@ -287,7 +337,10 @@ export default async function WhoopPage() {
       {snapshots.length === 0 && !todaySnapshot && (
         <div className="card p-8 text-center space-y-2">
           <p className="text-sm font-semibold text-[var(--foreground)]">No WHOOP data yet</p>
-          <p className="text-xs text-muted">Data will appear here after your first recovery is scored. Make sure your WHOOP strap is connected and syncing.</p>
+          <p className="text-xs text-muted">
+            Data will appear here after your first recovery is scored. Make sure your WHOOP strap is
+            connected and syncing.
+          </p>
         </div>
       )}
     </div>
