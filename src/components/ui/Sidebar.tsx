@@ -32,6 +32,7 @@ import {
   UsersRound,
   UserPlus,
   ChevronRight,
+  Watch,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -475,6 +476,7 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
     title: "Insights",
     items: [
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
+      { label: "WHOOP", href: "/athlete/whoop", icon: <Watch {...iconSize} />, matchPaths: ["/athlete/whoop"] },
       { label: "Assessments", href: "/athlete/assessments", icon: <BarChart3 {...iconSize} /> },
       {
         label: "Questionnaires",

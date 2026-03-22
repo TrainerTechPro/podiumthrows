@@ -43,9 +43,15 @@ export function WhoopCard({ connected, syncMode: initialSyncMode, lastSyncAt }: 
     const params = new URLSearchParams(window.location.search);
     if (params.get("whoop") === "connected") {
       success("WHOOP Connected", "Your WHOOP strap is now linked to your account.");
-      // Clean up the query param without a reload
+    } else if (params.get("whoop") === "error") {
+      const reason = params.get("reason") || "unknown";
+      toastError("WHOOP Connection Failed", `Error: ${reason.replace(/_/g, " ")}`);
+    }
+    // Clean up query params without a reload
+    if (params.has("whoop")) {
       const url = new URL(window.location.href);
       url.searchParams.delete("whoop");
+      url.searchParams.delete("reason");
       window.history.replaceState({}, "", url.pathname);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
