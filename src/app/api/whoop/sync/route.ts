@@ -7,8 +7,10 @@ import { logger } from "@/lib/logger";
 /**
  * POST /api/whoop/sync
  * Manually triggers a sync of the authenticated athlete's WHOOP data.
+ * Also accepts { updateSyncMode: "AUTO" | "ASSISTED" } to change the sync mode
+ * without triggering a full data sync.
  */
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) {
@@ -36,6 +38,26 @@ export async function POST() {
 
     if (!connection) {
       return NextResponse.json({ error: "No WHOOP connection found" }, { status: 404 });
+    }
+
+    // Check if this is a sync-mode update (no data sync needed)
+    let body: Record<string, unknown> = {};
+    try {
+      body = await request.json();
+    } catch {
+      // Empty body is fine — means a normal sync request
+    }
+
+    if (body.updateSyncMode) {
+      const mode = body.updateSyncMode;
+      if (mode !== "AUTO" && mode !== "ASSISTED") {
+        return NextResponse.json({ error: "Invalid sync mode" }, { status: 400 });
+      }
+      await prisma.whoopConnection.update({
+        where: { id: connection.id },
+        data: { syncMode: mode },
+      });
+      return NextResponse.json({ ok: true, syncMode: mode });
     }
 
     await syncWhoopData(connection.id);
