@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useRef,
-  useEffect,
-  useId,
-  KeyboardEvent,
-  ReactNode,
-} from "react";
+import { useState, useRef, useEffect, useId, KeyboardEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Check, X } from "lucide-react";
 
@@ -62,12 +55,14 @@ export function Select<T extends string | number = string>({
 
   const selected = options.find((o) => o.value === value);
 
-  const filtered = searchable && query.trim()
-    ? options.filter((o) =>
-        o.label.toLowerCase().includes(query.toLowerCase()) ||
-        o.description?.toLowerCase().includes(query.toLowerCase())
-      )
-    : options;
+  const filtered =
+    searchable && query.trim()
+      ? options.filter(
+          (o) =>
+            o.label.toLowerCase().includes(query.toLowerCase()) ||
+            o.description?.toLowerCase().includes(query.toLowerCase())
+        )
+      : options;
 
   /* Close on outside click */
   useEffect(() => {
@@ -87,7 +82,11 @@ export function Select<T extends string | number = string>({
   useEffect(() => {
     if (!open) return;
     const handler = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") { setOpen(false); setQuery(""); triggerRef.current?.focus(); }
+      if (e.key === "Escape") {
+        setOpen(false);
+        setQuery("");
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -123,7 +122,11 @@ export function Select<T extends string | number = string>({
       {label && (
         <label htmlFor={id} className="label">
           {label}
-          {required && <span className="ml-1 text-danger-500" aria-hidden="true">*</span>}
+          {required && (
+            <span className="ml-1 text-danger-500" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
 
@@ -136,8 +139,10 @@ export function Select<T extends string | number = string>({
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
-          aria-invalid={!!error}
-          onClick={() => { if (!disabled) setOpen((v) => !v); }}
+          data-invalid={!!error || undefined}
+          onClick={() => {
+            if (!disabled) setOpen((v) => !v);
+          }}
           onKeyDown={handleKeyDown}
           className={cn(
             "input w-full flex items-center justify-between text-left gap-2 cursor-pointer",
@@ -145,7 +150,12 @@ export function Select<T extends string | number = string>({
             disabled && "opacity-50 cursor-not-allowed"
           )}
         >
-          <span className={cn("flex items-center gap-2 min-w-0 flex-1", !selected && "text-surface-400")}>
+          <span
+            className={cn(
+              "flex items-center gap-2 min-w-0 flex-1",
+              !selected && "text-surface-400"
+            )}
+          >
             {selected?.icon && <span className="shrink-0">{selected.icon}</span>}
             <span className="truncate">{selected ? selected.label : placeholder}</span>
           </span>
@@ -164,7 +174,10 @@ export function Select<T extends string | number = string>({
             <ChevronDown
               size={14}
               strokeWidth={2.5}
-              className={cn("text-surface-400 transition-transform duration-150", open && "rotate-180")}
+              className={cn(
+                "text-surface-400 transition-transform duration-150",
+                open && "rotate-180"
+              )}
               aria-hidden="true"
             />
           </span>
@@ -240,13 +253,8 @@ export function Select<T extends string | number = string>({
         )}
       </div>
 
-      {error && (
-        <p className="text-xs text-danger-500 dark:text-danger-400">{error}</p>
-      )}
-      {!error && helper && (
-        <p className="text-xs text-muted">{helper}</p>
-      )}
+      {error && <p className="text-xs text-danger-500 dark:text-danger-400">{error}</p>}
+      {!error && helper && <p className="text-xs text-muted">{helper}</p>}
     </div>
   );
 }
-
