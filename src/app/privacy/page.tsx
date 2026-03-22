@@ -21,7 +21,7 @@ export default function PrivacyPolicyPage() {
           <h1 className="text-display-sm font-heading text-[var(--foreground)]">
             Privacy Policy
           </h1>
-          <p className="text-sm text-muted">Last updated: March 1, 2026</p>
+          <p className="text-sm text-muted">Last updated: March 21, 2026</p>
         </header>
 
         <div className="prose-custom space-y-6 text-sm text-[var(--foreground)] leading-relaxed">
@@ -93,7 +93,46 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-semibold font-heading">
-              5. Third-Party Services
+              5. Wearable Device Integrations
+            </h2>
+            <p className="text-muted">
+              You may optionally connect wearable devices (such as WHOOP) to
+              enhance your readiness data with physiological metrics. When you
+              connect a wearable device:
+            </p>
+            <ul className="list-disc pl-5 space-y-1.5 text-muted">
+              <li>
+                We request access only to specific data categories (recovery,
+                sleep, workouts, profile, body measurements) via OAuth 2.0
+                authorization.
+              </li>
+              <li>
+                Access tokens are encrypted at rest using AES-256-GCM and are
+                only decrypted when making authorized API calls on your behalf.
+              </li>
+              <li>
+                Data we may access includes: recovery scores, heart rate
+                variability (HRV), resting heart rate, sleep duration and
+                stages, blood oxygen levels (SpO2), daily strain, and body
+                measurements (height, weight).
+              </li>
+              <li>
+                You can disconnect your wearable at any time from your account
+                settings, which immediately revokes our access. Previously
+                synced data is retained as part of your training history unless
+                you request its deletion.
+              </li>
+              <li>
+                Wearable data is shared with your assigned coach as part of your
+                readiness metrics, following the same coach-athlete data sharing
+                rules described below.
+              </li>
+            </ul>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold font-heading">
+              6. Third-Party Services
             </h2>
             <p className="text-muted">
               <strong className="text-[var(--foreground)]">Stripe</strong> —
@@ -104,11 +143,17 @@ export default function PrivacyPolicyPage() {
               <strong className="text-[var(--foreground)]">Resend</strong> —
               sends transactional emails (invitations, password resets).
             </p>
+            <p className="text-muted">
+              <strong className="text-[var(--foreground)]">WHOOP</strong> —
+              optional wearable integration for recovery and sleep data.
+              WHOOP&apos;s privacy policy governs data collected by their
+              device. We only access data you explicitly authorize.
+            </p>
           </section>
 
           <section className="space-y-3">
             <h2 className="text-lg font-semibold font-heading">
-              6. Data Ownership &amp; Deletion
+              7. Data Ownership &amp; Deletion
             </h2>
             <p className="text-muted">
               Coaches own all training data they create. You may request a full
@@ -118,7 +163,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-3">
             <h2 className="text-lg font-semibold font-heading">
-              7. Contact
+              8. Contact
             </h2>
             <p className="text-muted">
               For privacy-related questions, contact us at{" "}
