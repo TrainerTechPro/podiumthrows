@@ -142,9 +142,10 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (err) {
+    const message = err instanceof Error ? err.message : "internal_error";
     logger.error("GET /api/whoop/callback", { context: "api", error: err });
     settingsUrl.searchParams.set("whoop", "error");
-    settingsUrl.searchParams.set("reason", "internal_error");
+    settingsUrl.searchParams.set("reason", message);
     return NextResponse.redirect(settingsUrl);
   }
 }
