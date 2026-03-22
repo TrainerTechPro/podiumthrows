@@ -410,9 +410,12 @@ export function SelfProgramWizard({
         draftId: draftId,
       };
 
-      // First, save the final state and mark as not-draft
-      if (draftId) {
-        await fetch(`/api/athlete/self-program/${draftId}`, {
+      // Resolve the config ID — use existing draft or create a new one
+      let configId = draftId;
+
+      if (configId) {
+        // Save final state and mark as not-draft
+        await fetch(`/api/athlete/self-program/${configId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ ...payload, isDraft: false }),
@@ -424,23 +427,19 @@ export function SelfProgramWizard({
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify(payload),
         });
-        if (createRes.ok) {
-          const created = await createRes.json();
-          setDraftId(created.id);
-          // Mark as finalized
-          await fetch(`/api/athlete/self-program/${created.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
-            body: JSON.stringify({ ...payload, isDraft: false }),
-          });
+        if (!createRes.ok) {
+          toastError("Error", "Failed to save program config.");
+          return;
         }
-      }
-
-      const configId = draftId;
-      if (!configId) {
-        setErrors({ generate: "No config to generate from" });
-        toastError("Error", "Please save your answers first.");
-        return;
+        const created = await createRes.json();
+        configId = created.id;
+        setDraftId(configId);
+        // Mark as finalized
+        await fetch(`/api/athlete/self-program/${configId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ ...payload, isDraft: false }),
+        });
       }
 
       const res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
