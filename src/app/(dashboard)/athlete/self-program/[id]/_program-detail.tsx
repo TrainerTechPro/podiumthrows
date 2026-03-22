@@ -6,10 +6,8 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
-  ChevronRight,
   Clock,
   Dumbbell,
-  Loader2,
   Sparkles,
   Target,
   TrendingUp,
@@ -542,7 +540,7 @@ function PhaseContent({
     (s) => s.status === "COMPLETED",
   ).length;
   const totalInPhase = phase.sessions.length;
-  const phaseThrowsTarget = phase.sessions.reduce(
+  const _phaseThrowsTarget = phase.sessions.reduce(
     (sum, s) => sum + s.totalThrowsTarget,
     0,
   );
@@ -633,7 +631,7 @@ function PhaseContent({
 
 function SessionCard({
   session,
-  programStartDate,
+  programStartDate: _programStartDate,
 }: {
   session: ProgramSession;
   programStartDate: string;

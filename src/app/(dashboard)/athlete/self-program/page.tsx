@@ -46,10 +46,9 @@ export default async function SelfProgramPage() {
     select: { id: true, updatedAt: true, event: true },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const eventMismatch =
     activeConfig != null &&
-    !athlete.events.includes(activeConfig.event as any);
+    !athlete.events.includes(activeConfig.event as (typeof athlete.events)[number]);
 
   return (
     <SelfProgramHub
