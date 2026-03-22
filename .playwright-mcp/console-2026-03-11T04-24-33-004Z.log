@@ -1,0 +1,2 @@
+[     192ms] [ERROR] The source list for the Content Security Policy directive 'img-src' contains an invalid source: 'https://*.s3.*.amazonaws.com'. It will be ignored. @ http://localhost:3001/login:0
+[     417ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ http://localhost:3001/login:0

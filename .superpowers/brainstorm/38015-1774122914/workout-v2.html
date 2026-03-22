@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Workout Views V2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:#030303;color:#f0ece4;overflow-x:hidden}
+  h1,h2,h3,h4,h5,h6{font-family:'Outfit',system-ui,sans-serif}
+
+  .page-h{text-align:center;padding:60px 20px 32px}
+  .page-h h1{font-family:'Outfit';font-weight:800;font-size:26px;margin-bottom:6px}
+  .page-h p{font-size:13px;color:#8a8278;max-width:460px;margin:0 auto}
+
+  .variants{display:flex;gap:28px;padding:0 40px 80px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .phone{
+    flex:0 0 393px;scroll-snap-align:center;
+    background:#0a0908;border-radius:40px;
+    overflow:hidden;position:relative;min-height:852px;
+    border:1px solid rgba(255,255,255,.06);
+    box-shadow:0 40px 120px rgba(0,0,0,.6);
+  }
+  .phone-label{
+    position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:40;
+    font-family:'Outfit';font-size:10px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.18em;padding:4px 12px;border-radius:6px;
+    backdrop-filter:blur(12px);
+  }
+  .pl-a{background:rgba(245,158,11,.12);color:#f59e0b}
+  .pl-b{background:rgba(99,102,241,.12);color:#818cf8}
+  .pl-c{background:rgba(236,72,153,.12);color:#f472b6}
+  .phone-notch{height:54px;position:relative}
+  .phone-notch::after{content:'';position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#0a0908;border-radius:0 0 16px 16px}
+  .phone-inner{padding:0;overflow-y:auto;max-height:798px}
+
+  /* ═══════════════════════════════════════
+     VARIANT A — TIMELINE (Nike-inspired)
+     No borders. Depth through elevation. Massive type.
+     ═══════════════════════════════════════ */
+
+  /* Header: edge-to-edge, no chrome */
+  .a-head{padding:0 24px 20px}
+  .a-back{
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(255,255,255,.06);backdrop-filter:blur(8px);
+    display:grid;place-items:center;color:#8a8278;font-size:18px;
+    margin-bottom:20px;
+  }
+  .a-session-name{font-family:'Outfit';font-weight:800;font-size:24px;letter-spacing:-.03em;line-height:1.1}
+  .a-session-meta{font-size:12px;color:#5a5448;margin-top:6px;display:flex;align-items:center;gap:8px}
+  .a-session-meta-dot{width:3px;height:3px;border-radius:50%;background:#3a3430}
+
+  /* Progress — minimal, just a line and fraction */
+  .a-prog{display:flex;align-items:center;gap:12px;padding:0 24px;margin-bottom:28px}
+  .a-prog-bar{flex:1;height:3px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden}
+  .a-prog-fill{height:100%;border-radius:2px;background:#f59e0b;position:relative}
+  .a-prog-fill::after{content:'';position:absolute;right:0;top:-4px;width:11px;height:11px;border-radius:50%;background:#f59e0b;box-shadow:0 0 16px rgba(245,158,11,.4)}
+  .a-prog-frac{font-family:'Outfit';font-weight:700;font-size:13px;color:#5a5448}
+
+  /* Timeline */
+  .a-tl{padding:0 24px 100px;position:relative}
+  /* Progress line — no border, just a subtle fill */
+  .a-tl::before{content:'';position:absolute;left:43px;top:8px;bottom:120px;width:2px;background:rgba(255,255,255,.03);border-radius:1px}
+  .a-tl-fill{position:absolute;left:43px;top:8px;width:2px;border-radius:1px;background:#f59e0b;box-shadow:0 0 10px rgba(245,158,11,.2);z-index:1;transition:height .8s cubic-bezier(.16,1,.3,1)}
+
+  /* Block separator — not a card, not a border, just type */
+  .a-block{padding:24px 0 10px 56px;display:flex;align-items:baseline;gap:6px}
+  .a-block-name{font-family:'Outfit';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.2em}
+  .a-block-throw{color:rgba(245,158,11,.5)}
+  .a-block-str{color:rgba(129,140,248,.5)}
+  .a-block-wt{font-family:'Outfit';font-size:10px;font-weight:600;color:rgba(245,158,11,.35);margin-left:auto}
+
+  /* Node — borderless, bg contrast only */
+  .a-nd{position:relative;padding-left:56px;margin-bottom:4px}
+  .a-nd-dot{
+    position:absolute;left:8px;top:14px;width:12px;height:12px;border-radius:50%;z-index:2;
+    transition:all .3s;
+  }
+  .a-nd-dot::before{content:'';position:absolute;inset:-6px;border-radius:50%;transition:all .3s}
+  .a-dot-done{background:#4ade80;box-shadow:0 0 6px rgba(34,197,94,.3)}
+  .a-dot-active{background:#f59e0b;box-shadow:0 0 10px rgba(245,158,11,.4)}
+  .a-dot-active::before{background:rgba(245,158,11,.08);animation:a-ring 2s ease-in-out infinite}
+  @keyframes a-ring{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.8);opacity:0}}
+  .a-dot-wait{background:rgba(255,255,255,.08)}
+
+  /* Collapsed exercise — NO BORDER, just spacing and bg */
+  .a-row{
+    padding:12px 16px;border-radius:14px;
+    transition:all .3s cubic-bezier(.16,1,.3,1);
+  }
+  .a-row-done{opacity:.45}
+  .a-row-wait{opacity:.4}
+  .a-row-inner{display:flex;align-items:center;justify-content:space-between}
+  .a-row-nm{font-family:'Outfit';font-weight:600;font-size:14px}
+  .a-row-sub{font-size:11px;color:#6a6358;margin-top:1px}
+  .a-row-rt{display:flex;align-items:center;gap:6px}
+  .a-row-wt{font-family:'Outfit';font-weight:700;font-size:13px;color:#8a8278}
+  .a-row-check{font-size:12px;color:#4ade80}
+
+  /* ═══ ACTIVE EXPANDED — This is the star of the show ═══ */
+  .a-active{
+    background:rgba(245,158,11,.03);border-radius:20px;
+    padding:0;overflow:hidden;position:relative;
+    /* NO border. Depth from bg + shadow */
+    box-shadow:0 2px 40px rgba(245,158,11,.06),0 20px 60px rgba(0,0,0,.3);
+  }
+
+  .a-act-head{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:flex-start}
+  .a-act-name{font-family:'Outfit';font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .a-act-sub{font-size:12px;color:#6a6358;margin-top:3px}
+  /* Throw counter — THE BIG NUMBER */
+  .a-act-count{text-align:right}
+  .a-act-count-num{font-family:'Outfit';font-weight:900;font-size:36px;color:#f59e0b;line-height:1;letter-spacing:-.04em}
+  .a-act-count-label{font-size:9px;color:#5a5448;text-transform:uppercase;letter-spacing:.1em}
+
+  /* Throw progress — dots but more organic */
+  .a-act-dots{display:flex;gap:4px;padding:16px 20px 8px;flex-wrap:wrap}
+  .a-dt{width:8px;height:8px;border-radius:50%;transition:all .25s cubic-bezier(.16,1,.3,1)}
+  .a-dt-done{background:#f59e0b}
+  .a-dt-now{background:#f59e0b;box-shadow:0 0 12px rgba(245,158,11,.5);animation:a-dt-p 1.8s ease-in-out infinite}
+  .a-dt-wait{background:rgba(255,255,255,.05)}
+  @keyframes a-dt-p{0%,100%{transform:scale(1)}50%{transform:scale(1.6);box-shadow:0 0 16px rgba(245,158,11,.6)}}
+
+  /* Distance input — big, tactile, no borders */
+  .a-act-inp{padding:12px 20px}
+  .a-act-inp-row{display:flex;gap:8px;margin-bottom:12px}
+  .a-act-field{
+    flex:1;height:56px;
+    background:rgba(255,255,255,.04);border:none;border-radius:14px;
+    font-family:'Outfit';font-size:24px;font-weight:700;
+    color:#f0ece4;text-align:center;outline:none;
+    transition:all .2s;
+    /* Subtle inner shadow for depth */
+    box-shadow:inset 0 2px 8px rgba(0,0,0,.3);
+  }
+  .a-act-field:focus{
+    background:rgba(245,158,11,.06);
+    box-shadow:inset 0 2px 8px rgba(0,0,0,.2),0 0 0 2px rgba(245,158,11,.2),0 0 30px rgba(245,158,11,.04);
+  }
+  .a-act-field::placeholder{color:rgba(255,255,255,.15);font-size:15px;font-weight:400}
+  .a-act-unit{
+    width:48px;height:56px;display:grid;place-items:center;
+    font-family:'Outfit';font-size:14px;font-weight:600;color:#5a5448;
+    background:rgba(255,255,255,.03);border-radius:14px;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.2);
+  }
+
+  /* Log button — bold, physical */
+  .a-act-log{
+    width:100%;height:52px;border:none;border-radius:14px;
+    font-family:'Outfit';font-weight:800;font-size:15px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:all .12s;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#0a0908;
+    box-shadow:0 4px 16px rgba(245,158,11,.25);
+  }
+  .a-act-log:active{transform:scale(.95);box-shadow:0 2px 8px rgba(245,158,11,.2)}
+  /* Subtle shine */
+  .a-act-log::after{
+    content:'';position:absolute;top:0;left:-150%;width:80%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+    animation:shine 4s ease-in-out infinite;
+  }
+  @keyframes shine{0%{left:-150%}25%{left:150%}100%{left:150%}}
+
+  /* Logged throws — minimal, just numbers */
+  .a-act-log-list{padding:4px 20px 16px}
+  .a-act-log-item{
+    display:flex;align-items:center;padding:8px 0;
+    border-bottom:1px solid rgba(255,255,255,.03);
+  }
+  .a-act-log-item:last-child{border:none}
+  .a-log-n{font-family:'Outfit';font-weight:600;font-size:10px;color:#3a3430;width:24px}
+  .a-log-d{font-family:'Outfit';font-weight:700;font-size:15px;flex:1}
+  .a-log-best{color:#f59e0b}
+  .a-log-tag{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 6px;border-radius:4px;background:rgba(245,158,11,.12);color:#f59e0b;margin-left:8px}
+  .a-log-t{font-size:10px;color:#3a3430}
+
+  /* ═══ COMPLETED SUMMARY — celebratory, then quiet ═══ */
+  .a-sum{
+    padding:16px 20px;border-radius:18px;
+    background:rgba(34,197,94,.04);position:relative;overflow:hidden;
+  }
+  .a-sum-h{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .a-sum-icon{
+    width:32px;height:32px;border-radius:10px;
+    background:rgba(34,197,94,.1);color:#4ade80;
+    display:grid;place-items:center;font-size:18px;font-weight:700;
+  }
+  .a-sum-nm{font-family:'Outfit';font-weight:700;font-size:14px}
+  .a-sum-stats{display:flex;gap:6px;margin-bottom:14px}
+  .a-sum-stat{flex:1;text-align:center;padding:10px 6px;background:rgba(255,255,255,.02);border-radius:12px}
+  .a-sum-stat-v{font-family:'Outfit';font-weight:800;font-size:18px}
+  .a-sum-stat-l{font-size:9px;color:#5a5448;margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+  .a-sum-next{
+    width:100%;height:46px;border:none;border-radius:12px;
+    background:rgba(255,255,255,.05);color:#f0ece4;
+    font-family:'Outfit';font-weight:700;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .a-sum-next:active{background:rgba(255,255,255,.08)}
+  .a-sum-next-arrow{color:#5a5448}
+
+  .variant-desc{padding:16px 24px;text-align:center;font-size:10px;color:#3a3430;line-height:1.6;letter-spacing:.01em}
+
+
+  /* ═══════════════════════════════════════
+     VARIANT B — FOCUS MODE (Whoop-inspired)
+     One exercise. Nothing else. Massive ring.
+     ═══════════════════════════════════════ */
+  .b-inner{display:flex;flex-direction:column;min-height:798px;position:relative}
+
+  /* Ambient gradient background — NOT flat black */
+  .b-inner::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:50%;
+    background:radial-gradient(ellipse at 50% 20%,rgba(245,158,11,.04),transparent 60%);
+    pointer-events:none;
+  }
+
+  .b-head{padding:4px 20px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+  .b-back{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);display:grid;place-items:center;color:#6a6358;font-size:16px}
+  .b-step-dots{display:flex;gap:3px}
+  .b-sd{width:20px;height:3px;border-radius:2px}
+  .b-sd-done{background:rgba(245,158,11,.6)}
+  .b-sd-now{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,.4)}
+  .b-sd-wait{background:rgba(255,255,255,.06)}
+  .b-more{width:36px;height:36px;display:grid;place-items:center;color:#5a5448;font-size:18px}
+
+  /* Exercise identity — MASSIVE type */
+  .b-id{text-align:center;padding:28px 24px 0;position:relative;z-index:1}
+  .b-id-block{font-size:10px;color:#5a5448;text-transform:uppercase;letter-spacing:.18em;margin-bottom:8px}
+  .b-id-name{font-family:'Outfit';font-weight:900;font-size:32px;letter-spacing:-.04em;line-height:1}
+  .b-id-impl{
+    display:inline-flex;align-items:center;gap:4px;margin-top:10px;
+    font-family:'Outfit';font-size:11px;font-weight:600;color:rgba(245,158,11,.7);
+    padding:4px 12px;border-radius:20px;background:rgba(245,158,11,.06);
+  }
+
+  /* THE RING — huge, glowing, the signature element */
+  .b-ring{display:flex;justify-content:center;padding:32px 0 16px;position:relative;z-index:1}
+  .b-ring svg{width:200px;height:200px;transform:rotate(-90deg);filter:drop-shadow(0 0 20px rgba(245,158,11,.15))}
+  .b-ring-bg{fill:none;stroke:rgba(255,255,255,.03);stroke-width:5}
+  .b-ring-fill{fill:none;stroke:url(#ring-grad);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.16,1,.3,1)}
+  .b-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+  .b-ring-num{font-family:'Outfit';font-weight:900;font-size:56px;letter-spacing:-.05em;line-height:1}
+  .b-ring-of{font-family:'Outfit';font-weight:400;font-size:20px;color:#5a5448}
+  .b-ring-label{font-size:10px;color:#5a5448;text-transform:uppercase;letter-spacing:.12em;margin-top:2px}
+
+  /* Best throw — prominent callout */
+  .b-best{text-align:center;padding:0 24px;position:relative;z-index:1}
+  .b-best-label{font-size:9px;color:#5a5448;text-transform:uppercase;letter-spacing:.12em;margin-bottom:2px}
+  .b-best-val{font-family:'Outfit';font-weight:800;font-size:28px;color:#f59e0b;letter-spacing:-.02em}
+  .b-best-m{font-family:'Outfit';font-weight:400;font-size:16px;color:#8a8278}
+
+  /* Input — huge, bottom-anchored */
+  .b-inp{padding:24px 24px 0;flex:1;display:flex;flex-direction:column;justify-content:flex-end;position:relative;z-index:1}
+  .b-field{
+    width:100%;height:64px;border:none;border-radius:16px;
+    background:rgba(255,255,255,.04);
+    font-family:'Outfit';font-size:28px;font-weight:800;
+    color:#f0ece4;text-align:center;outline:none;
+    box-shadow:inset 0 2px 10px rgba(0,0,0,.3);
+    transition:all .2s;margin-bottom:12px;
+  }
+  .b-field:focus{background:rgba(245,158,11,.05);box-shadow:inset 0 2px 8px rgba(0,0,0,.2),0 0 0 2px rgba(245,158,11,.15)}
+  .b-field::placeholder{color:rgba(255,255,255,.12);font-size:16px;font-weight:400}
+  .b-log-btn{
+    width:100%;height:56px;border:none;border-radius:16px;
+    background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0908;
+    font-family:'Outfit';font-weight:800;font-size:16px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(245,158,11,.25);
+    position:relative;overflow:hidden;
+  }
+  .b-log-btn:active{transform:scale(.96)}
+  .b-log-btn::after{content:'';position:absolute;top:0;left:-150%;width:80%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);animation:shine 4s ease-in-out infinite}
+
+  /* Navigation hint */
+  .b-nav{padding:16px 24px 20px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+  .b-nav-arrow{
+    width:44px;height:44px;border-radius:50%;
+    background:rgba(255,255,255,.04);display:grid;place-items:center;
+    color:#5a5448;font-size:18px;
+  }
+  .b-nav-info{text-align:center}
+  .b-nav-up{font-family:'Outfit';font-size:11px;font-weight:600;color:#5a5448}
+  .b-nav-next{font-size:10px;color:#3a3430;margin-top:1px}
+
+
+  /* ═══════════════════════════════════════
+     VARIANT C — CARD STACK (physical, depth)
+     ═══════════════════════════════════════ */
+  .c-inner{display:flex;flex-direction:column;min-height:798px}
+
+  .c-head{padding:4px 20px 8px;display:flex;align-items:center;justify-content:space-between}
+  .c-back{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.05);display:grid;place-items:center;color:#6a6358;font-size:16px}
+  .c-title{font-family:'Outfit';font-weight:700;font-size:14px;text-align:center;flex:1}
+  .c-frac{font-family:'Outfit';font-size:12px;color:#5a5448}
+
+  .c-prog{padding:0 20px 16px;display:flex;gap:3px}
+  .c-prog-seg{flex:1;height:3px;border-radius:2px}
+  .c-prog-done{background:#f59e0b}
+  .c-prog-now{background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,.3)}
+  .c-prog-wait{background:rgba(255,255,255,.04)}
+
+  /* Stack container */
+  .c-stack{flex:1;position:relative;margin:0 16px;perspective:1000px}
+
+  /* Cards */
+  .c-card{
+    position:absolute;inset:0;border-radius:24px;overflow:hidden;
+    display:flex;flex-direction:column;
+    transition:all .5s cubic-bezier(.16,1,.3,1);
+  }
+  .c-card-3{
+    background:#12100e;transform:scale(.88) translateY(28px);opacity:.2;z-index:0;
+  }
+  .c-card-2{
+    background:#161412;transform:scale(.94) translateY(14px);opacity:.4;z-index:1;
+  }
+  .c-card-1{
+    background:linear-gradient(180deg,#1a1714 0%,#12100e 100%);z-index:2;
+    box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(245,158,11,.03);
+  }
+
+  /* Card content */
+  .c-top{padding:24px 24px 0;display:flex;justify-content:space-between;align-items:flex-start}
+  .c-top-left{display:flex;align-items:center;gap:14px}
+  .c-top-icon{
+    width:48px;height:48px;border-radius:14px;display:grid;place-items:center;
+    font-family:'Outfit';font-weight:800;font-size:16px;
+    background:rgba(245,158,11,.08);color:#f59e0b;
+  }
+  .c-top-nm{font-family:'Outfit';font-weight:800;font-size:18px;letter-spacing:-.02em}
+  .c-top-sub{font-size:11px;color:#5a5448;margin-top:2px}
+  .c-top-impl{font-family:'Outfit';font-size:12px;font-weight:600;color:rgba(245,158,11,.6)}
+
+  /* Ring in card */
+  .c-ring{display:flex;justify-content:center;padding:24px 0 8px;position:relative}
+  .c-ring svg{width:140px;height:140px;transform:rotate(-90deg);filter:drop-shadow(0 0 12px rgba(245,158,11,.12))}
+  .c-ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+  .c-ring-num{font-family:'Outfit';font-weight:900;font-size:40px;letter-spacing:-.04em;line-height:1}
+  .c-ring-of{font-family:'Outfit';font-weight:400;font-size:16px;color:#5a5448}
+  .c-ring-label{font-size:9px;color:#5a5448;text-transform:uppercase;letter-spacing:.1em;margin-top:1px}
+
+  /* Best */
+  .c-best{text-align:center;margin:4px 24px 0;padding:8px;border-radius:10px;background:rgba(245,158,11,.04)}
+  .c-best-l{font-size:8px;color:rgba(245,158,11,.5);text-transform:uppercase;letter-spacing:.1em}
+  .c-best-v{font-family:'Outfit';font-weight:800;font-size:22px;color:#f59e0b;letter-spacing:-.02em}
+
+  /* Input */
+  .c-inp{padding:20px 24px;flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+  .c-field{
+    width:100%;height:56px;border:none;border-radius:14px;
+    background:rgba(255,255,255,.04);
+    font-family:'Outfit';font-size:24px;font-weight:700;
+    color:#f0ece4;text-align:center;outline:none;
+    box-shadow:inset 0 2px 8px rgba(0,0,0,.3);
+    margin-bottom:12px;transition:all .2s;
+  }
+  .c-field:focus{background:rgba(245,158,11,.04);box-shadow:inset 0 2px 6px rgba(0,0,0,.2),0 0 0 2px rgba(245,158,11,.12)}
+  .c-field::placeholder{color:rgba(255,255,255,.1);font-size:14px;font-weight:400}
+  .c-log-btn{
+    width:100%;height:52px;border:none;border-radius:14px;
+    background:linear-gradient(135deg,#f59e0b,#d97706);color:#0a0908;
+    font-family:'Outfit';font-weight:800;font-size:15px;cursor:pointer;
+    box-shadow:0 4px 20px rgba(245,158,11,.2);position:relative;overflow:hidden;
+  }
+  .c-log-btn:active{transform:scale(.96)}
+  .c-log-btn::after{content:'';position:absolute;top:0;left:-150%;width:80%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);animation:shine 4s ease-in-out infinite}
+
+  /* Swipe hint */
+  .c-swipe{
+    padding:12px 24px 20px;text-align:center;font-size:10px;color:#3a3430;
+    display:flex;align-items:center;justify-content:center;gap:4px;
+  }
+  .c-swipe-arrow{display:inline-block;animation:sw 2.5s ease-in-out infinite}
+  @keyframes sw{0%,100%{transform:translateX(0);opacity:.3}50%{transform:translateX(8px);opacity:.8}}
+
+  /* Feedback widget */
+  .fb{position:absolute;bottom:24px;right:16px;z-index:30}
+  .fb-btn{
+    width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,.05);display:grid;place-items:center;
+    font-size:14px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);
+    transition:all .2s;
+  }
+  .fb-btn:hover{background:rgba(255,255,255,.08);transform:scale(1.1)}
+
+  /* SVG gradient definition */
+  .svg-defs{position:absolute;width:0;height:0}
+</style>
+</head>
+<body>
+
+<!-- SVG gradient definitions -->
+<svg class="svg-defs">
+  <defs>
+    <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="page-h">
+  <h1>Live Workout — 3 Variants</h1>
+  <p>Same moment: South African, throw #5 of 10, 7.26kg competition weight. Scroll right →</p>
+</div>
+
+<div class="variants">
+
+  <!-- ═══ VARIANT A — TIMELINE ═══ -->
+  <div class="phone">
+    <div class="phone-label pl-a">A · Timeline</div>
+    <div class="phone-notch"></div>
+    <div class="phone-inner">
+
+      <div class="a-head">
+        <div class="a-back">←</div>
+        <div class="a-session-name">Shot Put<br/><span style="font-weight:400;font-size:14px;color:#6a6358">Tuesday AM</span></div>
+        <div class="a-session-meta">
+          <span>Wk 12</span><span class="a-session-meta-dot"></span><span>Day 2</span><span class="a-session-meta-dot"></span><span>Two-a-day</span>
+        </div>
+      </div>
+
+      <div class="a-prog">
+        <div class="a-prog-bar"><div class="a-prog-fill" style="width:40%"></div></div>
+        <div class="a-prog-frac">4<span style="color:#3a3430">/</span>10</div>
+      </div>
+
+      <div class="a-tl">
+        <div class="a-tl-fill" style="height:190px"></div>
+
+        <div class="a-block"><span class="a-block-name a-block-throw">Block 1</span><span class="a-block-wt">9kg</span></div>
+
+        <div class="a-nd"><div class="a-nd-dot a-dot-done"></div><div class="a-row a-row-done"><div class="a-row-inner"><div><div class="a-row-nm">Standing Throw</div><div class="a-row-sub">12 throws · 16.8m best</div></div><div class="a-row-rt"><span class="a-row-check">✓</span></div></div></div></div>
+
+        <div class="a-nd"><div class="a-nd-dot a-dot-done"></div><div class="a-row a-row-done"><div class="a-row-inner"><div><div class="a-row-nm">Half Turn</div><div class="a-row-sub">10 throws · 17.1m best</div></div><div class="a-row-rt"><span class="a-row-check">✓</span></div></div></div></div>
+
+        <div class="a-block"><span class="a-block-name a-block-str">Strength</span></div>
+
+        <div class="a-nd"><div class="a-nd-dot a-dot-done"></div><div class="a-row a-row-done"><div class="a-row-inner"><div><div class="a-row-nm">Power Clean</div><div class="a-row-sub">4×3 @ 85% · RPE 7.5</div></div><div class="a-row-rt"><span class="a-row-check">✓</span></div></div></div></div>
+
+        <div class="a-block"><span class="a-block-name a-block-throw">Block 2</span><span class="a-block-wt">↓ 7.26kg</span></div>
+
+        <!-- ACTIVE -->
+        <div class="a-nd">
+          <div class="a-nd-dot a-dot-active"></div>
+          <div class="a-active">
+            <div class="a-act-head">
+              <div>
+                <div class="a-act-name">South African</div>
+                <div class="a-act-sub">7.26kg · competition</div>
+              </div>
+              <div class="a-act-count">
+                <div class="a-act-count-num">4<span style="font-size:20px;color:#5a5448">/10</span></div>
+                <div class="a-act-count-label">throws</div>
+              </div>
+            </div>
+
+            <div class="a-act-dots">
+              <div class="a-dt a-dt-done"></div><div class="a-dt a-dt-done"></div><div class="a-dt a-dt-done"></div><div class="a-dt a-dt-done"></div>
+              <div class="a-dt a-dt-now"></div>
+              <div class="a-dt a-dt-wait"></div><div class="a-dt a-dt-wait"></div><div class="a-dt a-dt-wait"></div><div class="a-dt a-dt-wait"></div><div class="a-dt a-dt-wait"></div>
+            </div>
+
+            <div class="a-act-inp">
+              <div class="a-act-inp-row">
+                <input class="a-act-field" placeholder="Distance" inputmode="decimal">
+                <div class="a-act-unit">m</div>
+              </div>
+              <button class="a-act-log">Log Throw #5</button>
+            </div>
+
+            <div class="a-act-log-list">
+              <div class="a-act-log-item"><span class="a-log-n">#4</span><span class="a-log-d a-log-best">15.9m</span><span class="a-log-tag">best</span><span class="a-log-t" style="margin-left:auto">now</span></div>
+              <div class="a-act-log-item"><span class="a-log-n">#3</span><span class="a-log-d">15.4m</span><span class="a-log-t" style="margin-left:auto">1m</span></div>
+              <div class="a-act-log-item"><span class="a-log-n">#2</span><span class="a-log-d">14.8m</span><span class="a-log-t" style="margin-left:auto">2m</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="a-nd"><div class="a-nd-dot a-dot-wait"></div><div class="a-row a-row-wait"><div class="a-row-inner"><div><div class="a-row-nm">Full Throw</div><div class="a-row-sub">15 throws · 7.26kg</div></div><div class="a-row-rt"><span class="a-row-wt">7.26</span></div></div></div></div>
+
+        <div class="a-block" style="opacity:.35"><span class="a-block-name a-block-str">Strength</span></div>
+        <div class="a-nd"><div class="a-nd-dot a-dot-wait"></div><div class="a-row a-row-wait"><div class="a-row-inner"><div><div class="a-row-nm">Back Squat</div><div class="a-row-sub">3×5 @ 80%</div></div></div></div></div>
+        <div class="a-nd"><div class="a-nd-dot a-dot-wait"></div><div class="a-row a-row-wait"><div class="a-row-inner"><div><div class="a-row-nm">RDL</div><div class="a-row-sub">3×8 @ 70%</div></div></div></div></div>
+      </div>
+
+      <div class="variant-desc">See everything. Scroll through the full session. Active exercise expands inline. Completed exercises quiet down. The timeline fills as you progress.</div>
+    </div>
+  </div>
+
+  <!-- ═══ VARIANT B — FOCUS MODE ═══ -->
+  <div class="phone">
+    <div class="phone-label pl-b">B · Focus</div>
+    <div class="phone-notch"></div>
+    <div class="phone-inner">
+      <div class="b-inner">
+
+        <div class="b-head">
+          <div class="b-back">←</div>
+          <div class="b-step-dots">
+            <div class="b-sd b-sd-done"></div><div class="b-sd b-sd-done"></div><div class="b-sd b-sd-done"></div>
+            <div class="b-sd b-sd-now"></div>
+            <div class="b-sd b-sd-wait"></div><div class="b-sd b-sd-wait"></div><div class="b-sd b-sd-wait"></div><div class="b-sd b-sd-wait"></div>
+          </div>
+          <div class="b-more">⋯</div>
+        </div>
+
+        <div class="b-id">
+          <div class="b-id-block">Throwing Block 2 · Competition</div>
+          <div class="b-id-name">South African</div>
+          <div class="b-id-impl">↓ 7.26kg</div>
+        </div>
+
+        <div class="b-ring">
+          <svg viewBox="0 0 200 200">
+            <circle class="b-ring-bg" cx="100" cy="100" r="86" stroke-width="6" fill="none" stroke="rgba(255,255,255,.03)"/>
+            <circle class="b-ring-fill" cx="100" cy="100" r="86" stroke-width="6" fill="none" stroke="url(#ring-grad)"
+              stroke-linecap="round"
+              stroke-dasharray="540"
+              stroke-dashoffset="324"/>
+          </svg>
+          <div class="b-ring-center">
+            <div class="b-ring-num">4<span class="b-ring-of">/10</span></div>
+            <div class="b-ring-label">throws</div>
+          </div>
+        </div>
+
+        <div class="b-best">
+          <div class="b-best-label">Session Best</div>
+          <div class="b-best-val">15.9<span class="b-best-m">m</span></div>
+        </div>
+
+        <div class="b-inp">
+          <input class="b-field" placeholder="Enter distance" inputmode="decimal">
+          <button class="b-log-btn">Log Throw #5</button>
+        </div>
+
+        <div class="b-nav">
+          <div class="b-nav-arrow">‹</div>
+          <div class="b-nav-info">
+            <div class="b-nav-up">Power Clean</div>
+            <div class="b-nav-next">Full Throw →</div>
+          </div>
+          <div class="b-nav-arrow">›</div>
+        </div>
+
+      </div>
+      <div class="variant-desc">Nothing but this throw. Maximum focus. The ring fills. The number grows. Swipe to navigate. Zero distraction in the ring.</div>
+    </div>
+  </div>
+
+  <!-- ═══ VARIANT C — CARD STACK ═══ -->
+  <div class="phone">
+    <div class="phone-label pl-c">C · Stack</div>
+    <div class="phone-notch"></div>
+    <div class="phone-inner">
+      <div class="c-inner">
+
+        <div class="c-head">
+          <div class="c-back">←</div>
+          <div class="c-title">Shot Put · Tuesday AM</div>
+          <div class="c-frac">4/8</div>
+        </div>
+
+        <!-- Segmented progress -->
+        <div class="c-prog">
+          <div class="c-prog-seg c-prog-done"></div>
+          <div class="c-prog-seg c-prog-done"></div>
+          <div class="c-prog-seg c-prog-done"></div>
+          <div class="c-prog-seg c-prog-now"></div>
+          <div class="c-prog-seg c-prog-wait"></div>
+          <div class="c-prog-seg c-prog-wait"></div>
+          <div class="c-prog-seg c-prog-wait"></div>
+          <div class="c-prog-seg c-prog-wait"></div>
+        </div>
+
+        <div class="c-stack">
+          <!-- Back cards (peeking) -->
+          <div class="c-card c-card-3"><div style="padding:24px"><div style="font-family:Outfit;font-weight:700;font-size:16px;opacity:.5">Back Squat</div></div></div>
+          <div class="c-card c-card-2"><div style="padding:24px"><div style="font-family:Outfit;font-weight:700;font-size:16px;opacity:.6">Full Throw</div></div></div>
+
+          <!-- Front card -->
+          <div class="c-card c-card-1">
+            <div class="c-top">
+              <div class="c-top-left">
+                <div class="c-top-icon">T2</div>
+                <div>
+                  <div class="c-top-nm">South African</div>
+                  <div class="c-top-sub">Block 2 · Competition</div>
+                </div>
+              </div>
+              <div class="c-top-impl">7.26kg</div>
+            </div>
+
+            <div class="c-ring">
+              <svg viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="58" stroke-width="5" fill="none" stroke="rgba(255,255,255,.03)"/>
+                <circle cx="70" cy="70" r="58" stroke-width="5" fill="none" stroke="url(#ring-grad)"
+                  stroke-linecap="round"
+                  stroke-dasharray="365"
+                  stroke-dashoffset="219"
+                  style="filter:drop-shadow(0 0 8px rgba(245,158,11,.3))"/>
+              </svg>
+              <div class="c-ring-center">
+                <div class="c-ring-num">4<span class="c-ring-of">/10</span></div>
+                <div class="c-ring-label">throws</div>
+              </div>
+            </div>
+
+            <div class="c-best">
+              <div class="c-best-l">Session Best</div>
+              <div class="c-best-v">15.9m</div>
+            </div>
+
+            <div class="c-inp">
+              <input class="c-field" placeholder="Distance (m)" inputmode="decimal">
+              <button class="c-log-btn">Log Throw #5</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="c-swipe"><span class="c-swipe-arrow">→</span> swipe to complete & advance</div>
+
+      </div>
+      <div class="variant-desc">A deck of exercises. Finish one, swipe it away. Next card rises up. Satisfying and physical. Gamified progression.</div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="fb"><div class="fb-btn">💬</div></div>
+  </div>
+
+</div>
+
+<div style="text-align:center;padding:0 40px 60px;max-width:600px;margin:0 auto">
+  <div style="font-family:Outfit;font-weight:700;font-size:14px;margin-bottom:6px;color:#8a8278">Beta Testing</div>
+  <div style="font-size:12px;color:#5a5448;line-height:1.7">
+    Athletes randomly assigned a variant. After 3 sessions, the 💬 widget appears. 1-5 stars + optional comment. Coach dashboard shows aggregate results. Pick the winner. Ship it.
+  </div>
+</div>
+
+</body>
+</html>

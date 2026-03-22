@@ -1,0 +1,129 @@
+<h2>Section 3: File Structure & Implementation Details</h2>
+<p class="subtitle">What files change, what gets created, and key technical decisions</p>
+
+<div class="section">
+  <h3>Files to Create / Modify</h3>
+  <div class="mockup">
+    <div class="mockup-header">Change Map</div>
+    <div class="mockup-body" style="padding: 24px; background: #0a0a0c; font-family: monospace; font-size: 13px; line-height: 2.2;">
+      <div style="color: #4ade80; border-left: 3px solid #4ade8033; padding-left: 12px; margin-bottom: 8px;">
+        <strong>NEW</strong> <span style="color: #e8e4dc;">src/components/marketing/HeroMaskReveal.tsx</span>
+        <div style="color: #666; font-size: 11px;">~150 lines • "use client" component • all mask/spring/parallax logic</div>
+      </div>
+      <div style="color: #f59e0b; border-left: 3px solid #f59e0b33; padding-left: 12px; margin-bottom: 8px;">
+        <strong>MODIFY</strong> <span style="color: #e8e4dc;">src/app/page.tsx</span>
+        <div style="color: #666; font-size: 11px;">Replace static hero section with &lt;HeroMaskReveal /&gt; • Keep all other sections unchanged</div>
+      </div>
+      <div style="color: #60a5fa; border-left: 3px solid #60a5fa33; padding-left: 12px; margin-bottom: 8px;">
+        <strong>ASSETS</strong> <span style="color: #e8e4dc;">public/images/hero-stadium.jpg + hero-athlete.jpg</span>
+        <div style="color: #666; font-size: 11px;">Two hero images • You'll need to provide these (or we use Unsplash placeholders initially)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Component API</h3>
+  <div class="mockup">
+    <div class="mockup-header">HeroMaskReveal Props</div>
+    <div class="mockup-body" style="padding: 24px; background: #0a0a0c; font-family: monospace; font-size: 12px; line-height: 1.9;">
+      <div style="color: #888;">interface HeroMaskRevealProps {</div>
+      <div style="padding-left: 20px;">
+        <div><span style="color: #f59e0b;">baseImage</span><span style="color: #888;">: string</span> <span style="color: #555;">// Stadium / default state</span></div>
+        <div><span style="color: #f59e0b;">revealImage</span><span style="color: #888;">: string</span> <span style="color: #555;">// Athlete / revealed state</span></div>
+        <div><span style="color: #f59e0b;">baseAlt</span><span style="color: #888;">: string</span></div>
+        <div><span style="color: #f59e0b;">revealAlt</span><span style="color: #888;">: string</span></div>
+        <div><span style="color: #f59e0b;">minRadius?</span><span style="color: #888;">: number</span> <span style="color: #555;">// default 100</span></div>
+        <div><span style="color: #f59e0b;">maxRadius?</span><span style="color: #888;">: number</span> <span style="color: #555;">// default 350</span></div>
+        <div><span style="color: #f59e0b;">children</span><span style="color: #888;">: React.ReactNode</span> <span style="color: #555;">// headline + CTA overlay</span></div>
+      </div>
+      <div style="color: #888;">}</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>CSS Mask Technique</h3>
+  <div class="mockup">
+    <div class="mockup-header">How the reveal works under the hood</div>
+    <div class="mockup-body" style="padding: 24px; background: #0a0a0c; font-family: monospace; font-size: 12px; line-height: 1.8;">
+      <div style="color: #888;">/* The reveal image layer gets this dynamic mask */</div>
+      <div style="color: #e8e4dc; margin-bottom: 16px;">
+        <span style="color: #a78bfa;">-webkit-mask-image</span>: radial-gradient(<br>
+        <span style="padding-left: 20px;">circle <span style="color: #f59e0b;">{radius}px</span> at <span style="color: #60a5fa;">{x}px {y}px</span>,</span><br>
+        <span style="padding-left: 20px;"><span style="color: #e8e4dc;">black 0%,</span></span><br>
+        <span style="padding-left: 20px;"><span style="color: #999;">rgba(0,0,0,0.6) 50%,</span> <span style="color: #555;">/* soft mid-zone */</span></span><br>
+        <span style="padding-left: 20px;"><span style="color: #666;">rgba(0,0,0,0.1) 80%,</span> <span style="color: #555;">/* feathered edge */</span></span><br>
+        <span style="padding-left: 20px;"><span style="color: #444;">transparent 100%</span> <span style="color: #555;">/* fully hidden */</span></span><br>
+        );
+      </div>
+      <div style="color: #888; margin-bottom: 8px;">/* x, y, radius are Framer Motion spring values */</div>
+      <div style="color: #888;">/* Updated via CSS custom properties for GPU compositing */</div>
+      <div style="color: #e8e4dc; margin-top: 12px;">
+        <span style="color: #a78bfa;">style</span>={{<br>
+        <span style="padding-left: 20px;"><span style="color: #f59e0b;">WebkitMaskImage</span>: `radial-gradient(circle ${r}px at ${x}px ${y}px, ...)`</span><br>
+        }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Performance & Accessibility</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #4ade80; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Performance</div>
+      <ul style="color: #888; font-size: 12px; line-height: 1.8; padding-left: 16px; margin: 0;">
+        <li>CSS mask composites on GPU — no layout/paint thrash</li>
+        <li>Next.js &lt;Image&gt; with priority + sizes for both images</li>
+        <li>useMotionValue (not useState) — no React re-renders on mouse move</li>
+        <li>requestAnimationFrame throttle on velocity calculation</li>
+        <li>prefers-reduced-motion: disable springs, show static reveal</li>
+      </ul>
+    </div>
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #60a5fa; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Accessibility</div>
+      <ul style="color: #888; font-size: 12px; line-height: 1.8; padding-left: 16px; margin: 0;">
+        <li>Both images have alt text (base image is decorative aria-hidden, reveal has descriptive alt)</li>
+        <li>prefers-reduced-motion: skip all animation, show athlete image statically</li>
+        <li>Text overlay maintains WCAG AA contrast via gradient overlay</li>
+        <li>CTA button remains fully focusable and keyboard-accessible</li>
+        <li>Gyro permission: only requested on user tap, never auto-prompted</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Interaction Flow Summary</h3>
+  <div class="mockup">
+    <div class="mockup-header">User Experience Timeline</div>
+    <div class="mockup-body" style="padding: 24px; background: #0a0a0c;">
+      <div style="display: flex; gap: 4px; align-items: stretch;">
+        <div style="flex: 1; background: #1a1510; border-radius: 6px; padding: 16px; text-align: center;">
+          <div style="color: #f59e0b; font-size: 20px; margin-bottom: 8px;">1</div>
+          <div style="color: #e8e4dc; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Page loads</div>
+          <div style="color: #666; font-size: 11px;">Stadium image visible. Text overlay readable. No interaction yet.</div>
+        </div>
+        <div style="color: #333; display: flex; align-items: center; font-size: 18px;">→</div>
+        <div style="flex: 1; background: #1a1510; border-radius: 6px; padding: 16px; text-align: center;">
+          <div style="color: #f59e0b; font-size: 20px; margin-bottom: 8px;">2</div>
+          <div style="color: #e8e4dc; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Mouse enters hero</div>
+          <div style="color: #666; font-size: 11px;">Small mask appears at cursor. Athlete image peeks through. Parallax shifts subtly.</div>
+        </div>
+        <div style="color: #333; display: flex; align-items: center; font-size: 18px;">→</div>
+        <div style="flex: 1; background: #1a1510; border-radius: 6px; padding: 16px; text-align: center;">
+          <div style="color: #f59e0b; font-size: 20px; margin-bottom: 8px;">3</div>
+          <div style="color: #e8e4dc; font-size: 12px; font-weight: 600; margin-bottom: 4px;">User explores</div>
+          <div style="color: #666; font-size: 11px;">Faster movement = bigger reveal. Springs create liquid lag. Feels tactile and alive.</div>
+        </div>
+        <div style="color: #333; display: flex; align-items: center; font-size: 18px;">→</div>
+        <div style="flex: 1; background: #1a1510; border-radius: 6px; padding: 16px; text-align: center;">
+          <div style="color: #f59e0b; font-size: 20px; margin-bottom: 8px;">4</div>
+          <div style="color: #e8e4dc; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Mouse leaves</div>
+          <div style="color: #666; font-size: 11px;">Mask fades out smoothly. Stadium returns. Clean exit animation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

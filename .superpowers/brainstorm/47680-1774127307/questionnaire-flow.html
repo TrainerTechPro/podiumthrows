@@ -1,0 +1,79 @@
+<h2>Questionnaire Flow Structure</h2>
+<p class="subtitle">How should the athlete move through the self-programming questionnaire?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Single Long Form (Sectioned)</h3>
+      <p>One continuous questionnaire broken into labeled sections. Athlete scrolls through or navigates sections: Event Info &rarr; Experience &rarr; Training Availability &rarr; Equipment &rarr; Goals &rarr; Preferences. Progress bar at top. Can jump between sections.</p>
+      <div style="margin-top:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:8px">Preview</div>
+        <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:16px">
+          <div style="height:4px;width:40%;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:2px"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <span style="padding:4px 10px;border-radius:12px;font-size:12px;background:rgba(245,158,11,0.2);color:#f59e0b">Event</span>
+          <span style="padding:4px 10px;border-radius:12px;font-size:12px;background:rgba(245,158,11,0.2);color:#f59e0b">Experience</span>
+          <span style="padding:4px 10px;border-radius:12px;font-size:12px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4)">Schedule</span>
+          <span style="padding:4px 10px;border-radius:12px;font-size:12px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4)">Equipment</span>
+          <span style="padding:4px 10px;border-radius:12px;font-size:12px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4)">Goals</span>
+        </div>
+        <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08)">
+          <div style="font-size:13px;opacity:0.7">All sections visible &mdash; scroll or click tabs to navigate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Step-by-Step Wizard</h3>
+      <p>One question (or small group) per screen. Animated transitions between steps. Feels focused and guided &mdash; like an onboarding flow. Back/forward navigation. Can save progress and resume later.</p>
+      <div style="margin-top:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:8px">Preview</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
+          <div style="width:28px;height:28px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#000">1</div>
+          <div style="flex:1;height:2px;background:#f59e0b"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#000">2</div>
+          <div style="flex:1;height:2px;background:rgba(255,255,255,0.1)"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0.4">3</div>
+          <div style="flex:1;height:2px;background:rgba(255,255,255,0.1)"></div>
+          <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;opacity:0.4">4</div>
+        </div>
+        <div style="text-align:center;padding:20px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08)">
+          <div style="font-size:16px;font-weight:500;margin-bottom:4px">What's your primary event?</div>
+          <div style="font-size:13px;opacity:0.5">One focused question at a time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Conversational / Adaptive</h3>
+      <p>Questions appear one at a time, and later questions adapt based on earlier answers. E.g., if athlete picks "Throws + Lifting", lifting-specific questions appear. If they have typing data, skip those questions. Feels personalized but takes longer to build.</p>
+      <div style="margin-top:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:8px">Preview</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:10px 14px;border-radius:12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);font-size:13px;max-width:80%">What event are you training for?</div>
+          <div style="padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.08);font-size:13px;max-width:60%;align-self:flex-end">Shot Put</div>
+          <div style="padding:10px 14px;border-radius:12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);font-size:13px;max-width:80%">Great. What's your current PR with the 7.26kg?</div>
+          <div style="padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.04);font-size:12px;opacity:0.4;max-width:80%">
+            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f59e0b;margin-right:6px;animation:pulse 1s infinite"></span>
+            Next question adapts to your answers...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+</style>

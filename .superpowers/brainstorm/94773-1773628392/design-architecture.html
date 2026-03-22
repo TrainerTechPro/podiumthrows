@@ -1,0 +1,103 @@
+<h2>Section 1: Component Architecture & Visual Behavior</h2>
+<p class="subtitle">How the hover mask reveal hero is structured and behaves</p>
+
+<div class="section">
+  <h3>Component Structure</h3>
+  <div class="mockup">
+    <div class="mockup-header">HeroMaskReveal Component — Layer Stack</div>
+    <div class="mockup-body" style="padding: 32px; background: #0a0a0c; font-family: monospace; font-size: 13px; line-height: 2.2;">
+      <div style="color: #666;">/* Layer stack (bottom to top) */</div>
+      <div style="padding-left: 0;">
+        <div style="color: #f59e0b; border-left: 3px solid #f59e0b33; padding-left: 12px; margin-bottom: 8px;">
+          <strong>Layer 0:</strong> Base Image (Stadium at dusk)
+          <div style="color: #888; font-size: 11px;">Always visible • Next.js &lt;Image&gt; with priority loading</div>
+        </div>
+        <div style="color: #60a5fa; border-left: 3px solid #60a5fa33; padding-left: 12px; margin-bottom: 8px;">
+          <strong>Layer 1:</strong> Reveal Image (Athlete mid-release)
+          <div style="color: #888; font-size: 11px;">Masked by radial-gradient • Only visible under cursor</div>
+        </div>
+        <div style="color: #a78bfa; border-left: 3px solid #a78bfa33; padding-left: 12px; margin-bottom: 8px;">
+          <strong>Layer 2:</strong> Dark overlay gradient
+          <div style="color: #888; font-size: 11px;">Ensures text readability • gradient from left/bottom</div>
+        </div>
+        <div style="color: #f0abfc; border-left: 3px solid #f0abfc33; padding-left: 12px; margin-bottom: 8px;">
+          <strong>Layer 3:</strong> Hero text + CTA
+          <div style="color: #888; font-size: 11px;">Headline, subhead, CTA button • pointer-events: none on images</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Cursor Interaction — Dynamic Mask</h3>
+  <div class="mockup">
+    <div class="mockup-header">Mask Behavior Diagram</div>
+    <div class="mockup-body" style="padding: 32px; background: #0a0a0c;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; text-align: center;">
+        <!-- Still cursor -->
+        <div>
+          <div style="width: 120px; height: 120px; margin: 0 auto 16px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.3) 0%, rgba(245,158,11,0.1) 40%, transparent 60%); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 16px; height: 16px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 20px #f59e0b66;"></div>
+          </div>
+          <div style="color: #e8e4dc; font-weight: 600; font-size: 14px; font-family: 'Outfit', sans-serif;">Still</div>
+          <div style="color: #666; font-size: 12px; margin-top: 4px;">~100px radius<br>Tight, focused reveal</div>
+        </div>
+        <!-- Medium speed -->
+        <div>
+          <div style="width: 120px; height: 120px; margin: 0 auto 16px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.3) 0%, rgba(245,158,11,0.1) 50%, transparent 75%); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 16px; height: 16px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 30px #f59e0b66;"></div>
+          </div>
+          <div style="color: #e8e4dc; font-weight: 600; font-size: 14px; font-family: 'Outfit', sans-serif;">Moving</div>
+          <div style="color: #666; font-size: 12px; margin-top: 4px;">~200px radius<br>Expanding reveal zone</div>
+        </div>
+        <!-- Fast -->
+        <div>
+          <div style="width: 120px; height: 120px; margin: 0 auto 16px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.3) 0%, rgba(245,158,11,0.08) 60%, transparent 90%); display: flex; align-items: center; justify-content: center;">
+            <div style="width: 16px; height: 16px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 40px #f59e0b88;"></div>
+          </div>
+          <div style="color: #e8e4dc; font-weight: 600; font-size: 14px; font-family: 'Outfit', sans-serif;">Fast</div>
+          <div style="color: #666; font-size: 12px; margin-top: 4px;">~350px radius<br>Wide, dramatic reveal</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Spring Physics Parameters</h3>
+  <div class="mockup">
+    <div class="mockup-header">Framer Motion Configuration</div>
+    <div class="mockup-body" style="padding: 24px; background: #0a0a0c; font-family: monospace; font-size: 13px; line-height: 1.8;">
+      <div style="color: #888;">// Cursor position — springy follow for organic feel</div>
+      <div><span style="color: #f59e0b;">cursorSpring:</span> <span style="color: #e8e4dc;">{ stiffness: 150, damping: 15, mass: 0.5 }</span></div>
+      <div style="color: #555; font-size: 11px; margin-bottom: 12px;">→ Smooth lag behind cursor, slight overshoot = "liquid" motion</div>
+
+      <div style="color: #888;">// Dynamic radius — reacts to velocity</div>
+      <div><span style="color: #60a5fa;">radiusSpring:</span> <span style="color: #e8e4dc;">{ stiffness: 100, damping: 20, mass: 0.8 }</span></div>
+      <div style="color: #555; font-size: 11px; margin-bottom: 12px;">→ Slower spring = radius swells and shrinks organically</div>
+
+      <div style="color: #888;">// Parallax — subtle depth on both images</div>
+      <div><span style="color: #a78bfa;">parallaxSpring:</span> <span style="color: #e8e4dc;">{ stiffness: 50, damping: 30 }</span></div>
+      <div style="color: #555; font-size: 11px;">→ Base image shifts ~10px, reveal image shifts ~20px (opposite) = depth</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Platform Behavior</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #f59e0b; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">🖱️ Desktop</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.6;">Mouse cursor drives mask position. Dynamic radius from velocity. Parallax on both layers.</div>
+    </div>
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #60a5fa; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">📱 Mobile (Gyro)</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.6;">DeviceOrientation API drives mask. Tilting phone moves the reveal. Permission prompt on iOS.</div>
+    </div>
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #a78bfa; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">📱 Fallback</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.6;">Auto-animated loop: mask drifts in a slow figure-8 path. No interaction needed.</div>
+    </div>
+  </div>
+</div>

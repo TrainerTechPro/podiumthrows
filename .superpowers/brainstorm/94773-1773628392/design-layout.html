@@ -1,0 +1,117 @@
+<h2>Section 2: Hero Visual Layout</h2>
+<p class="subtitle">How the text, images, and mask interact on screen</p>
+
+<div class="section">
+  <h3>Desktop Hero Layout (1440px viewport)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Full-width hero — text left, imagery full-bleed</div>
+    <div class="mockup-body" style="padding: 0; background: #08080a; position: relative; overflow: hidden; min-height: 520px;">
+
+      <!-- Simulated base image (stadium) -->
+      <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #1a1510 0%, #0d0c0a 40%, #121018 100%); opacity: 0.9;">
+        <!-- Stadium wireframe hints -->
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 200px; background: linear-gradient(to top, #08080a, transparent);"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 180px; border: 1px solid #1a1816; border-radius: 50%; opacity: 0.3;"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 120px; border: 1px solid #1a1816; border-radius: 50%; opacity: 0.2;"></div>
+        <div style="position: absolute; top: 20px; right: 40px; color: #333; font-size: 10px; font-family: monospace;">BASE IMAGE: Stadium at dusk</div>
+      </div>
+
+      <!-- Simulated mask reveal area -->
+      <div style="position: absolute; top: 45%; right: 28%; transform: translate(50%, -50%); width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, rgba(200,120,20,0.04) 50%, transparent 70%); border: 1px dashed #f59e0b33; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+        <div style="color: #f59e0b55; font-size: 11px; font-family: monospace; text-align: center; line-height: 1.6;">
+          REVEAL MASK<br>
+          <span style="font-size: 10px; color: #f59e0b33;">Athlete image visible here</span><br>
+          <span style="font-size: 10px; color: #f59e0b22;">Follows cursor with spring lag</span>
+        </div>
+      </div>
+
+      <!-- Dark gradient overlay for text readability -->
+      <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(8,8,10,0.85) 0%, rgba(8,8,10,0.6) 40%, rgba(8,8,10,0.1) 70%, transparent 100%);"></div>
+      <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,8,10,0.9) 0%, transparent 40%);"></div>
+
+      <!-- Text content overlay -->
+      <div style="position: relative; z-index: 10; padding: 80px 60px; max-width: 640px;">
+        <p style="font-family: 'Outfit', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3em; color: #f59e0b; margin-bottom: 40px;">
+          Free diagnostic
+        </p>
+        <h1 style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 52px; line-height: 0.88; letter-spacing: -0.035em; color: #e8e4dc; margin-bottom: 28px;">
+          Your thrower is leaving<br>
+          <span style="color: #f59e0b;">2–4&nbsp;meters</span><br>
+          on the table.
+        </h1>
+        <div style="width: 64px; height: 2px; background: rgba(245,158,11,0.4); margin-bottom: 28px;"></div>
+        <p style="font-size: 16px; line-height: 1.7; color: #7a746b; max-width: 380px; margin-bottom: 48px;">
+          Strength deficit, technique gap, or wrong implement sequence? Find out in 60 seconds.
+        </p>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; padding: 16px 40px; background: #f59e0b; color: #08080a;">
+            Find the Deficit
+          </div>
+          <span style="font-size: 12px; color: #444039;">No account needed</span>
+        </div>
+      </div>
+
+      <!-- Layout annotation lines -->
+      <div style="position: absolute; top: 12px; left: 12px; color: #333; font-size: 10px; font-family: monospace;">
+        ← LEFT: Dark gradient ensures text readability
+      </div>
+      <div style="position: absolute; top: 12px; right: 12px; color: #333; font-size: 10px; font-family: monospace; text-align: right;">
+        RIGHT: Images breathe, mask roams freely →
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Key Layout Decisions</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #f59e0b; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Full-bleed images</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.6;">Both images span the entire hero section edge-to-edge. No container constraints. The mask reveal works anywhere the cursor goes — maximum immersion.</div>
+    </div>
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #60a5fa; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Left-anchored text</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.6;">Text stays in the left ~40% with a strong dark gradient behind it. Right side is where the imagery shines and the mask has room to play.</div>
+    </div>
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #a78bfa; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Double gradient overlay</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.6;">Left-to-right gradient (85% → transparent) for text. Bottom-to-top gradient for the section transition. Text always readable even when mask passes near it.</div>
+    </div>
+    <div style="background: #141414; border: 1px solid #222; border-radius: 8px; padding: 20px;">
+      <div style="color: #f0abfc; font-weight: 600; font-size: 13px; margin-bottom: 8px; font-family: 'Outfit', sans-serif;">Hero height: 100svh</div>
+      <div style="color: #888; font-size: 12px; line-height: 1.6;">Full viewport height. The hero IS the first impression. Header overlays the top. Scroll indicator at the bottom hints there's more below.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mobile Layout (375px viewport)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Mobile — stacked, full-height hero</div>
+    <div class="mockup-body" style="padding: 0; background: #08080a; position: relative; overflow: hidden; max-width: 375px; min-height: 500px; margin: 0 auto;">
+
+      <!-- Base image background -->
+      <div style="position: absolute; inset: 0; background: linear-gradient(180deg, #1a1510 0%, #0d0c0a 50%, #121018 100%); opacity: 0.7;"></div>
+
+      <!-- Mask hint -->
+      <div style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 60%); border: 1px dashed #f59e0b22;">
+        <div style="color: #f59e0b33; font-size: 9px; font-family: monospace; text-align: center; padding-top: 85px;">GYRO MASK</div>
+      </div>
+
+      <!-- Full overlay for mobile readability -->
+      <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,8,10,0.95) 0%, rgba(8,8,10,0.7) 50%, rgba(8,8,10,0.4) 100%);"></div>
+
+      <!-- Text -->
+      <div style="position: relative; z-index: 10; padding: 100px 24px 40px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 500px;">
+        <p style="font-family: 'Outfit', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em; color: #f59e0b; margin-bottom: 24px;">Free diagnostic</p>
+        <h1 style="font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 36px; line-height: 0.9; letter-spacing: -0.03em; color: #e8e4dc; margin-bottom: 20px;">
+          Your thrower is leaving <span style="color: #f59e0b;">2–4&nbsp;meters</span> on the table.
+        </h1>
+        <div style="width: 48px; height: 2px; background: rgba(245,158,11,0.4); margin-bottom: 16px;"></div>
+        <p style="font-size: 15px; line-height: 1.7; color: #7a746b; margin-bottom: 32px;">Find out in 60 seconds — with a corrective recommendation.</p>
+        <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 15px; padding: 16px 32px; background: #f59e0b; color: #08080a; text-align: center; width: 100%;">Find the Deficit</div>
+        <p style="font-size: 11px; color: #444039; text-align: center; margin-top: 12px;">No account needed · Based on Bondarchuk research</p>
+      </div>
+    </div>
+  </div>
+</div>

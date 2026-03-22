@@ -1,0 +1,152 @@
+<h2>Self-Programming Wizard — Step Flow</h2>
+<p class="subtitle">The adaptive wizard steps. Grayed steps are conditional — they only appear based on earlier answers.</p>
+
+<div style="max-width:700px;margin:0 auto;">
+  <!-- Step 1 -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;">1</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.3);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);">
+      <div style="font-weight:600;font-size:15px;color:#f59e0b;">Program Type</div>
+      <div style="font-size:13px;opacity:0.7;margin-top:4px;">Throws Only / Throws + Lifting / Lifting Only</div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;">2</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.3);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);">
+      <div style="font-weight:600;font-size:15px;color:#f59e0b;">Event Selection</div>
+      <div style="font-size:13px;opacity:0.7;margin-top:4px;">Shot Put / Discus / Hammer / Javelin — with gender for comp weight lookup</div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;">3</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.3);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);">
+      <div style="font-weight:600;font-size:15px;color:#f59e0b;">Experience & PRs</div>
+      <div style="font-size:13px;opacity:0.7;margin-top:4px;">Years throwing, competition level, current PR (used for implement table lookup and volume targets)</div>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;">4</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.3);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);">
+      <div style="font-weight:600;font-size:15px;color:#f59e0b;">Available Implements</div>
+      <div style="font-size:13px;opacity:0.7;margin-top:4px;">Checklist of implement weights they own — pre-populated from event/gender implement table. Athlete checks what they have.</div>
+    </div>
+  </div>
+
+  <!-- Step 5 (conditional) -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;border:2px dashed rgba(245,158,11,0.6);">5</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.15);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.04);border:1px dashed rgba(245,158,11,0.2);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-weight:600;font-size:15px;color:rgba(245,158,11,0.7);">Athlete Typing</span>
+        <span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(245,158,11,0.15);color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;">Conditional</span>
+      </div>
+      <div style="font-size:13px;opacity:0.5;margin-top:4px;">Only if no existing ThrowsTyping data. Asks 3-4 key questions: adaptation speed, transfer type, recovery profile. Uses sensible defaults if skipped.</div>
+    </div>
+  </div>
+
+  <!-- Step 6 -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;">6</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.3);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);">
+      <div style="font-weight:600;font-size:15px;color:#f59e0b;">Training Schedule</div>
+      <div style="font-size:13px;opacity:0.7;margin-top:4px;">Days per week (3-6), sessions per day (1 or 2), preferred training days, start date</div>
+    </div>
+  </div>
+
+  <!-- Step 7 (conditional) -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;border:2px dashed rgba(245,158,11,0.6);">7</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.15);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.04);border:1px dashed rgba(245,158,11,0.2);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-weight:600;font-size:15px;color:rgba(245,158,11,0.7);">Competition Dates</span>
+        <span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(245,158,11,0.15);color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;">Optional</span>
+      </div>
+      <div style="font-size:13px;opacity:0.5;margin-top:4px;">Add upcoming meets to reverse-engineer peaking phases. Skip for rolling mesocycles.</div>
+    </div>
+  </div>
+
+  <!-- Step 8 -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;">8</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.3);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);">
+      <div style="font-weight:600;font-size:15px;color:#f59e0b;">Goals & Mode</div>
+      <div style="font-size:13px;opacity:0.7;margin-top:4px;">Primary goal (improve distance, technique, consistency). Autopilot vs. Guided with Preferences mode selection.</div>
+    </div>
+  </div>
+
+  <!-- Step 9 (conditional) -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.4);display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;border:2px dashed rgba(245,158,11,0.6);">9</div>
+      <div style="width:2px;height:40px;background:rgba(245,158,11,0.15);"></div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(245,158,11,0.04);border:1px dashed rgba(245,158,11,0.2);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-weight:600;font-size:15px;color:rgba(245,158,11,0.7);">Exercise Preferences</span>
+        <span style="font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(245,158,11,0.15);color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;">Guided mode only</span>
+      </div>
+      <div style="font-size:13px;opacity:0.5;margin-top:4px;">Preferred lifts, exercises to avoid (injuries/preference), favorite drills. Only shown if "Guided with Preferences" selected.</div>
+    </div>
+  </div>
+
+  <!-- Step 10 -->
+  <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:36px;height:36px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:14px;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+    </div>
+    <div style="flex:1;padding:12px 16px;border-radius:10px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);">
+      <div style="font-weight:600;font-size:15px;color:#10b981;">Review & Generate</div>
+      <div style="font-size:13px;opacity:0.7;margin-top:4px;">Summary of all inputs. Preview of program structure (phases, weekly split). Confirm to generate. Slide-to-confirm on mobile.</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;padding:16px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+  <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.4;margin-bottom:8px;">Legend</div>
+  <div style="display:flex;gap:24px;font-size:13px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:16px;height:16px;border-radius:50%;background:#f59e0b;"></div>
+      <span>Always shown</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:16px;height:16px;border-radius:50%;border:2px dashed rgba(245,158,11,0.6);background:rgba(245,158,11,0.2);"></div>
+      <span>Conditional / optional</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:16px;height:16px;border-radius:50%;background:#10b981;"></div>
+      <span>Final step</span>
+    </div>
+  </div>
+</div>

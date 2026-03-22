@@ -1,0 +1,6 @@
+{"type":"server-started","port":56864,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56864","screen_dir":"/Users/anthonysommers/claude-code-projects/Podium Throws/.superpowers/brainstorm/38015-1774122914"}
+{"type":"screen-added","file":"/Users/anthonysommers/claude-code-projects/Podium Throws/.superpowers/brainstorm/38015-1774122914/workout-view.html"}
+{"type":"screen-added","file":"/Users/anthonysommers/claude-code-projects/Podium Throws/.superpowers/brainstorm/38015-1774122914/workout-variants.html"}
+{"type":"screen-added","file":"/Users/anthonysommers/claude-code-projects/Podium Throws/.superpowers/brainstorm/38015-1774122914/workout-v2.html"}
+{"type":"screen-added","file":"/Users/anthonysommers/claude-code-projects/Podium Throws/.superpowers/brainstorm/38015-1774122914/workout-v3.html"}
+{"type":"server-stopped","reason":"idle timeout"}

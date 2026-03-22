@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Podium Throws — V4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --a:#f59e0b;--a2:#fbbf24;--a3:#d97706;--ag:rgba(245,158,11,0.07);--ag2:rgba(245,158,11,0.14);
+    --bg:#050507;--s1:#0c0c10;--s2:#131318;--s3:#1a1a22;--b1:#1a1a22;--b2:#262630;
+    --t1:#eae6de;--t2:#a09a90;--t3:#6a655c;--t4:#3a3630;
+    --indigo:rgba(99,102,241,0.12);--green:#4ade80;--green-bg:rgba(34,197,94,0.08);
+    --red:#f87171;--red-bg:rgba(248,113,113,0.08);
+  }
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--t1);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4,h5,h6,.fh{font-family:'Outfit',system-ui,sans-serif}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:0.018;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .note{font-size:9px;color:var(--a);opacity:0.35;text-align:center;padding:6px 20px;font-style:italic;line-height:1.5;border-top:1px dashed rgba(245,158,11,0.1);margin-top:8px}
+
+  /* ═══ NAV ═══ */
+  .nav{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:2px;background:rgba(12,12,16,0.65);backdrop-filter:blur(24px) saturate(1.3);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:5px 5px 5px 18px;height:46px}
+  .nav-logo{font-family:'Outfit';font-weight:800;font-size:14px;color:white;margin-right:16px;display:flex;align-items:center;gap:7px;text-decoration:none}
+  .nav-sq{width:20px;height:20px;background:var(--a);border-radius:5px;display:grid;place-items:center;font-size:11px;font-weight:900;color:var(--bg)}
+  .nl{font-size:13px;color:var(--t3);text-decoration:none;padding:7px 12px;border-radius:8px;transition:all 0.2s}
+  .nl:hover{color:var(--t1);background:rgba(255,255,255,0.04)}
+  .nav-cta{font-family:'Outfit';font-weight:700;font-size:12px;background:white;color:var(--bg);padding:7px 18px;border-radius:8px;text-decoration:none;transition:all 0.2s;margin-left:2px}
+  .nav-cta:hover{background:var(--t1);transform:translateY(-1px)}
+
+  /* ═══ HERO ═══ */
+  .hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:0 64px}
+  .hero-glow{position:absolute;border-radius:50%;filter:blur(100px);animation:drift 22s ease-in-out infinite}
+  .g1{width:650px;height:650px;top:-220px;right:-120px;background:radial-gradient(circle,rgba(245,158,11,0.055) 0%,transparent 65%)}
+  .g2{width:450px;height:450px;bottom:-180px;left:12%;background:radial-gradient(circle,rgba(245,158,11,0.03) 0%,transparent 60%);animation-delay:-8s}
+  .g3{width:350px;height:350px;top:35%;left:-80px;background:radial-gradient(circle,rgba(99,102,241,0.025) 0%,transparent 55%);animation-delay:-15s}
+  @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(25px,-20px) scale(1.03)}66%{transform:translate(-15px,12px) scale(0.97)}}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.013) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.013) 1px,transparent 1px);background-size:100px 100px;mask-image:radial-gradient(ellipse 55% 55% at 50% 50%,black 20%,transparent 70%)}
+  .hero-in{position:relative;z-index:2;width:100%;max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1.15fr 1fr;gap:80px;align-items:center}
+
+  /* Hero text */
+  .hero-ey{display:inline-flex;align-items:center;gap:10px;margin-bottom:36px;animation:fu .6s ease-out .15s both}
+  .hero-ey-bar{width:32px;height:2px;background:var(--a);border-radius:1px}
+  .hero-ey-t{font-family:'Outfit';font-size:11px;text-transform:uppercase;letter-spacing:.28em;color:var(--a);font-weight:600}
+  .hero-h1{font-weight:900;line-height:.88;letter-spacing:-.05em;font-size:clamp(3.2rem,6.5vw,5.8rem);margin-bottom:28px}
+  .lm{overflow:hidden;display:block}
+  .lm>span{display:inline-block;animation:mr .9s cubic-bezier(.22,1,.36,1) both}
+  .lm:nth-child(1)>span{animation-delay:.25s}
+  .lm:nth-child(2)>span{animation-delay:.38s}
+  .lm:nth-child(3)>span{animation-delay:.5s}
+  @keyframes mr{from{transform:translateY(115%);opacity:0;filter:blur(8px)}to{transform:translateY(0);opacity:1;filter:blur(0)}}
+  .em{color:var(--a);text-shadow:0 0 60px rgba(245,158,11,.25)}
+  .hero-p{font-size:17px;color:var(--t2);line-height:1.8;max-width:440px;margin-bottom:36px;animation:fu .7s ease-out .75s both}
+  .hero-btns{display:flex;gap:12px;align-items:center;animation:fu .7s ease-out .9s both}
+  .btn{font-family:'Outfit';font-weight:700;font-size:14px;padding:14px 32px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .3s cubic-bezier(.16,1,.3,1);cursor:pointer;border:none}
+  .btn-a{background:var(--a);color:var(--bg);box-shadow:0 0 0 1px rgba(245,158,11,.3),0 8px 32px rgba(245,158,11,.15)}
+  .btn-a:hover{background:var(--a2);transform:translateY(-2px);box-shadow:0 0 0 1px rgba(245,158,11,.4),0 12px 48px rgba(245,158,11,.2)}
+  .btn-g{background:transparent;color:var(--t2);border:1px solid var(--b1)}
+  .btn-g:hover{color:white;border-color:var(--b2);background:rgba(255,255,255,.02)}
+  .hero-meta{display:flex;gap:28px;margin-top:28px;animation:fu .7s ease-out 1.05s both}
+  .hero-meta span{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t4)}
+  .hmd{width:5px;height:5px;border-radius:50%;background:var(--a3)}
+  @keyframes fu{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Hero device */
+  .hero-dev{position:relative;animation:de 1.6s cubic-bezier(.16,1,.3,1) .5s both}
+  @keyframes de{from{opacity:0;transform:perspective(1200px) translateY(100px) rotateX(12deg) rotateY(-6deg) scale(.92)}to{opacity:1;transform:perspective(1200px) translateY(0) rotateX(3deg) rotateY(-3deg) scale(1)}}
+  .dev{background:var(--s1);border:1px solid var(--b1);border-radius:14px;overflow:hidden;box-shadow:0 80px 160px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03) inset,0 0 120px rgba(245,158,11,.03);transform:perspective(1200px) rotateX(3deg) rotateY(-3deg);transition:transform .8s cubic-bezier(.16,1,.3,1)}
+  .dev:hover{transform:perspective(1200px) rotateX(0) rotateY(0)}
+  .dev-bar{height:32px;background:var(--s2);display:flex;align-items:center;padding:0 12px;gap:6px;border-bottom:1px solid var(--b1)}
+  .dd{width:8px;height:8px;border-radius:50%}.dd-r{background:#ff5f57}.dd-y{background:#febc2e}.dd-g{background:#28c840}
+  .dev-url{margin-left:16px;font-size:10px;color:var(--t4);background:rgba(255,255,255,.03);padding:2px 8px;border-radius:3px}
+  .dev-body{padding:14px}
+
+  /* Dashboard mock */
+  .dm{display:grid;grid-template-columns:120px 1fr;gap:10px}
+  .dm-nav{background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:10px}
+  .dm-nav-t{font-family:'Outfit';font-weight:800;font-size:10px;color:white;margin-bottom:12px;display:flex;align-items:center;gap:5px}
+  .dm-nav-t .sq{width:12px;height:12px;background:var(--a);border-radius:3px}
+  .dm-ni{font-size:10px;padding:5px 7px;border-radius:4px;margin-bottom:1px;color:var(--t4)}
+  .dm-ni.on{background:var(--ag);color:var(--a);font-weight:600}
+  .dm-main{display:flex;flex-direction:column;gap:8px}
+  .dm-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .dm-c{background:var(--bg);border:1px solid var(--b1);border-radius:7px;padding:9px}
+  .dm-c-l{font-size:8px;color:var(--t4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+  .dm-c-v{font-family:'Outfit';font-weight:700;font-size:16px;color:white}
+  .dm-c-v .u{font-size:10px;color:var(--t4);font-weight:400}
+  .dm-c-s{font-size:8px;color:var(--green);margin-top:2px}
+  .dm-chart{flex:1;background:var(--bg);border:1px solid var(--b1);border-radius:7px;padding:10px;min-height:100px}
+  .dm-chart-t{font-size:9px;color:var(--t3);margin-bottom:6px}
+  .dm-tbl{background:var(--bg);border:1px solid var(--b1);border-radius:7px;padding:10px}
+  .dm-tbl-h{display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr;gap:8px;font-size:8px;color:var(--t4);text-transform:uppercase;letter-spacing:.06em;padding-bottom:6px;border-bottom:1px solid var(--b1)}
+  .dm-tbl-r{display:grid;grid-template-columns:1.5fr 1fr 1fr .8fr;gap:8px;font-size:10px;padding:6px 0;border-bottom:1px solid rgba(26,26,34,.5);align-items:center}
+  .dm-tbl-r:last-child{border-bottom:none}
+  .dm-nm{color:white;font-weight:600;display:flex;align-items:center;gap:6px}
+  .dm-av{width:18px;height:18px;border-radius:50%;background:var(--s3);border:1px solid var(--b1);display:grid;place-items:center;font-size:7px;color:var(--t3);font-weight:700}
+  .dm-v{color:var(--t2)}
+  .dm-pr{font-size:8px;padding:2px 6px;border-radius:10px;font-weight:600}
+  .dm-pr-up{background:var(--green-bg);color:var(--green)}
+  .dm-pr-st{background:rgba(255,255,255,.04);color:var(--t3)}
+
+  /* ═══ MARQUEE ═══ */
+  .mq{border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);padding:16px 0;overflow:hidden;position:relative}
+  .mq::before,.mq::after{content:'';position:absolute;top:0;bottom:0;width:160px;z-index:2}
+  .mq::before{left:0;background:linear-gradient(to right,var(--bg),transparent)}
+  .mq::after{right:0;background:linear-gradient(to left,var(--bg),transparent)}
+  .mq-track{display:flex;gap:40px;animation:mqs 35s linear infinite;width:max-content}
+  @keyframes mqs{to{transform:translateX(-50%)}}
+  .mq-i{font-family:'Outfit';font-size:11px;text-transform:uppercase;letter-spacing:.22em;color:var(--t4);white-space:nowrap;display:flex;align-items:center;gap:10px}
+  .mq-d{width:3px;height:3px;background:var(--a3);border-radius:50%}
+
+  /* ═══ STICKY FEATURES ═══ */
+  .stk{display:grid;grid-template-columns:1fr 1fr;max-width:1400px;margin:0 auto;min-height:240vh}
+  .stk-l{padding:180px 64px}
+  .stk-feat{min-height:70vh;display:flex;flex-direction:column;justify-content:center;padding-right:80px}
+  .stk-feat+.stk-feat{border-top:1px solid var(--b1)}
+  .sf-n{font-family:'Outfit';font-size:11px;color:var(--t4);margin-bottom:20px;display:flex;align-items:center;gap:14px}
+  .sf-n::after{content:'';flex:1;height:1px;background:var(--b1)}
+  .sf-lb{font-family:'Outfit';font-size:11px;text-transform:uppercase;letter-spacing:.28em;color:var(--a);font-weight:600;margin-bottom:14px}
+  .sf-t{font-family:'Outfit';font-weight:800;font-size:34px;line-height:1.08;letter-spacing:-.035em;margin-bottom:16px}
+  .sf-d{font-size:15px;color:var(--t2);line-height:1.8;max-width:380px}
+  .sf-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--a);margin-top:18px;padding:5px 12px;background:var(--ag);border-radius:4px;font-weight:600}
+  .stk-r{position:relative;border-left:1px solid var(--b1)}
+  .stk-pin{position:sticky;top:50%;transform:translateY(-50%);padding:48px 64px}
+
+  /* ─── Session mockup with mode switcher ─── */
+  .sess{background:var(--s1);border:1px solid var(--b1);border-radius:14px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.02) inset}
+  .sess-top{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b1);background:var(--s2)}
+  .sess-title{font-family:'Outfit';font-weight:700;font-size:14px;color:white}
+
+  /* Segmented control */
+  .seg{display:flex;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:2px;gap:2px}
+  .seg-btn{font-family:'Outfit';font-size:10px;font-weight:600;padding:5px 12px;border-radius:6px;border:none;cursor:pointer;transition:all .25s;color:var(--t3);background:transparent}
+  .seg-btn.active{background:var(--ag2);color:var(--a);box-shadow:0 0 12px rgba(245,158,11,.08)}
+  .seg-btn:hover:not(.active){color:var(--t2)}
+
+  .sess-badge{font-size:9px;padding:4px 10px;border-radius:20px;font-weight:600;letter-spacing:.02em}
+  .sess-ok{background:var(--green-bg);color:var(--green)}
+  .sess-warn{background:var(--red-bg);color:var(--red)}
+  .sess-body{padding:12px;display:flex;flex-direction:column;gap:6px}
+  .sess-blk{display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:11px 14px;transition:all .3s cubic-bezier(.16,1,.3,1)}
+  .sess-blk:hover{border-color:var(--b2)}
+  .sess-blk.collapse{max-height:0;padding:0 14px;border-color:transparent;opacity:0;margin-top:-6px;overflow:hidden}
+  .sess-ico{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;font-family:'Outfit';font-weight:800;font-size:11px;flex-shrink:0}
+  .sess-ico-t{background:var(--ag2);color:var(--a)}
+  .sess-ico-s{background:var(--indigo);color:#818cf8}
+  .sess-info{flex:1}
+  .sess-nm{font-size:13px;font-weight:600;color:white}
+  .sess-dt{font-size:10px;color:var(--t3);margin-top:2px}
+  .sess-wt{font-family:'Outfit';font-weight:700;font-size:14px;color:white;display:flex;align-items:center;gap:4px}
+  .sess-arr{font-size:9px;color:var(--green)}
+  .sess-seq{display:flex;align-items:center;gap:8px;padding:6px 14px;margin:2px 12px 12px;border-radius:6px;transition:all .3s}
+  .sess-seq-ok{background:var(--green-bg);border:1px solid rgba(34,197,94,.08)}
+  .sess-seq-ok .sess-seq-t{color:var(--green)}
+  .sess-seq-t{font-size:10px}
+  /* Divider between modes */
+  .sess-mode-label{font-size:9px;color:var(--t4);text-align:center;padding:6px 14px;text-transform:uppercase;letter-spacing:.1em;font-family:'Outfit'}
+
+  /* ═══ BENTO ═══ */
+  .bento{max-width:1400px;margin:0 auto;padding:120px 64px}
+  .bento-head{margin-bottom:48px}
+  .sl{font-family:'Outfit';font-size:11px;text-transform:uppercase;letter-spacing:.3em;color:var(--a);font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+  .sl::before{content:'';width:20px;height:2px;background:var(--a);border-radius:1px}
+  .st{font-family:'Outfit';font-weight:800;font-size:36px;line-height:1.1;letter-spacing:-.035em}
+  .ss{font-size:16px;color:var(--t2);line-height:1.7;max-width:480px;margin-top:12px}
+  .bento-grid{display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:auto auto auto;gap:12px}
+  .bc{background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:28px;position:relative;overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1)}
+  .bc:hover{border-color:var(--b2);transform:translateY(-3px);box-shadow:0 24px 64px rgba(0,0,0,.35)}
+  .bc::after{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(circle 250px at var(--mx,50%) var(--my,50%),var(--ag),transparent);transition:opacity .3s;pointer-events:none}
+  .bc:hover::after{opacity:1}
+  .bc-1{grid-column:span 8}.bc-2{grid-column:span 4}.bc-3{grid-column:span 4}.bc-4{grid-column:span 4}.bc-5{grid-column:span 4}
+  .bc-6{grid-column:span 5}.bc-7{grid-column:span 7}
+  .bc-icon{width:36px;height:36px;border-radius:9px;background:var(--ag2);color:var(--a);display:grid;place-items:center;margin-bottom:18px;font-family:'Outfit';font-weight:900;font-size:14px}
+  .bc-t{font-family:'Outfit';font-weight:700;font-size:17px;color:white;margin-bottom:6px}
+  .bc-d{font-size:13px;color:var(--t2);line-height:1.6}
+  .bc-mock{margin-top:18px;background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:10px}
+  .bc-mock-row{display:flex;gap:8px}
+  .bc-mock-cell{flex:1;background:var(--s1);border:1px solid var(--b1);border-radius:5px;padding:7px}
+  .bc-mock-l{font-size:8px;color:var(--t4);margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em}
+  .bc-mock-v{font-family:'Outfit';font-weight:700;font-size:16px;color:white}
+
+  /* ═══ PROOF ═══ */
+  .proof{padding:180px 64px;position:relative;overflow:hidden}
+  .lamp{position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:700px;height:350px;background:conic-gradient(from 90deg at 50% -5%,transparent 0deg,var(--ag2) 60deg,transparent 120deg);filter:blur(80px);opacity:.5}
+  .proof-in{max-width:1200px;margin:0 auto;position:relative;z-index:2;display:grid;grid-template-columns:auto 1fr;gap:100px;align-items:start}
+  .proof-num{font-family:'Outfit';font-weight:900;font-size:clamp(9rem,18vw,16rem);line-height:.75;letter-spacing:-.07em;color:var(--a);position:relative}
+  .proof-num::before{content:'2–4m';position:absolute;top:3px;left:3px;-webkit-text-stroke:1px rgba(245,158,11,.1);color:transparent;z-index:-1}
+  .proof-r{padding-top:20px;max-width:420px}
+  .proof-q{font-size:19px;color:var(--t1);line-height:1.65;margin-bottom:24px;font-style:italic;font-weight:500}
+  .proof-q em{color:var(--a);font-style:normal;font-weight:700}
+  .proof-cite{font-size:13px;color:var(--t3);line-height:1.6;padding-top:20px;border-top:1px solid var(--b1)}
+  .proof-evts{display:flex;gap:6px;margin-top:20px;flex-wrap:wrap}
+  .proof-evt{font-family:'Outfit';font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--t4);border:1px solid var(--b1);padding:5px 12px;transition:all .3s}
+  .proof-evt:hover{border-color:var(--a3);color:var(--a)}
+
+  /* ═══ DEFICIT FINDER ═══ */
+  .def{max-width:1400px;margin:0 auto;padding:40px 64px 140px}
+  .def-card{background:var(--s1);border:1px solid var(--b1);border-radius:20px;padding:72px;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;position:relative;overflow:hidden}
+  .def-card::before{content:'';position:absolute;top:-150px;right:-50px;width:300px;height:500px;background:linear-gradient(135deg,var(--ag2) 0%,transparent 60%);transform:rotate(-25deg);filter:blur(40px)}
+  .def-l,.def-r{position:relative;z-index:2}
+  .def-steps{display:flex;flex-direction:column;gap:24px}
+  .def-step{display:flex;gap:16px;align-items:flex-start}
+  .def-step-n{width:32px;height:32px;border-radius:50%;background:var(--ag2);color:var(--a);display:grid;place-items:center;font-family:'Outfit';font-weight:700;font-size:13px;flex-shrink:0}
+  .def-step-t{font-family:'Outfit';font-weight:600;font-size:14px;color:white;margin-bottom:2px}
+  .def-step-s{font-size:12px;color:var(--t3)}
+  .def-step+.def-step{position:relative}
+  .def-step+.def-step::before{content:'';position:absolute;left:15px;top:-24px;width:1px;height:24px;background:var(--b1)}
+
+  /* ═══ PRICING ═══ */
+  .pricing{padding:120px 64px;max-width:1200px;margin:0 auto}
+  .pricing-head{margin-bottom:56px}
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+  .pc{background:var(--s1);border:1px solid var(--b1);border-radius:16px;padding:32px;position:relative;transition:all .4s cubic-bezier(.16,1,.3,1)}
+  .pc:hover{transform:translateY(-4px);box-shadow:0 24px 64px rgba(0,0,0,.35)}
+  .pc.pop{border-color:var(--a);transform:translateY(-8px);box-shadow:0 0 80px var(--ag),0 32px 80px rgba(0,0,0,.5)}
+  .pc.pop:hover{transform:translateY(-12px)}
+  /* Animated border beam */
+  .pc.pop::before{content:'';position:absolute;inset:-1px;border-radius:17px;background:conic-gradient(from 0deg,transparent 0deg,var(--a) 60deg,transparent 120deg);z-index:-1;animation:bs 4s linear infinite;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;-webkit-mask-composite:xor;padding:1px}
+  @keyframes bs{to{transform:rotate(360deg)}}
+  .pc-pop-tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--a);color:var(--bg);font-family:'Outfit';font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.1em;padding:4px 14px;border-radius:20px}
+  .pc-tier{font-family:'Outfit';font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--t3);margin-bottom:8px}
+  .pc-price{font-family:'Outfit';font-weight:900;font-size:42px;color:white;line-height:1}
+  .pc-price .mo{font-size:14px;font-weight:500;color:var(--t4)}
+  .pc-desc{font-size:13px;color:var(--t2);margin:10px 0 20px;line-height:1.5}
+  .pc-feats{list-style:none}
+  .pc-feats li{font-size:12px;color:var(--t2);padding:6px 0;display:flex;align-items:center;gap:7px}
+  .pc-chk{width:4px;height:4px;border-radius:50%;background:var(--a);flex-shrink:0}
+  .pc-btn{display:block;width:100%;margin-top:20px;padding:12px;text-align:center;font-family:'Outfit';font-weight:700;font-size:13px;border:none;cursor:pointer;text-decoration:none;border-radius:8px;transition:all .3s}
+  .pc-btn-f{background:var(--a);color:var(--bg)}.pc-btn-f:hover{background:var(--a2)}
+  .pc-btn-o{background:transparent;color:white;border:1px solid var(--b1)}.pc-btn-o:hover{border-color:var(--b2);background:rgba(255,255,255,.02)}
+
+  /* ═══ CTA ═══ */
+  .cta{padding:200px 64px 180px;text-align:center;position:relative;overflow:hidden}
+  .cta::before{content:'';position:absolute;bottom:-50px;left:50%;width:900px;height:500px;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 100%,var(--ag2) 0%,transparent 55%)}
+  .cta-t{font-family:'Outfit';font-weight:800;font-size:clamp(1.8rem,4.5vw,3.2rem);line-height:1.15;letter-spacing:-.03em;max-width:680px;margin:0 auto 40px;position:relative}
+
+  /* ═══ FOOTER ═══ */
+  .foot{border-top:1px solid var(--b1);padding:56px 64px}
+  .foot-in{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1.5fr repeat(4,1fr);gap:36px}
+  .foot-brand{font-family:'Outfit';font-weight:700;font-size:14px;color:white;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .foot-brand-d{font-size:12px;color:var(--t4);line-height:1.6;max-width:200px}
+  .foot-col-t{font-family:'Outfit';font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--t3);margin-bottom:14px}
+  .foot-col a{display:block;font-size:12px;color:var(--t4);text-decoration:none;padding:3px 0;transition:color .2s}
+  .foot-col a:hover{color:var(--t2)}
+  .foot-btm{max-width:1400px;margin:40px auto 0;padding-top:24px;border-top:1px solid var(--b1);display:flex;justify-content:space-between}
+  .foot-cp{font-size:11px;color:var(--t4)}
+  .divider{height:1px;background:var(--b1);max-width:1400px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#" class="nav-logo"><div class="nav-sq">P</div>Podium Throws</a>
+  <a href="#" class="nl">Features</a>
+  <a href="#" class="nl">Methodology</a>
+  <a href="#" class="nl">Pricing</a>
+  <a href="#" class="nl">Sign In</a>
+  <a href="#" class="nav-cta">Start Free</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow g1"></div><div class="hero-glow g2"></div><div class="hero-glow g3"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-in">
+    <div>
+      <div class="hero-ey"><div class="hero-ey-bar"></div><span class="hero-ey-t">For Throws Coaches</span></div>
+      <h1 class="hero-h1">
+        <span class="lm"><span>Stop coaching</span></span>
+        <span class="lm"><span>from a</span></span>
+        <span class="lm"><span><span class="em">spreadsheet.</span></span></span>
+      </h1>
+      <p class="hero-p">The platform that enforces Bondarchuk methodology, validates implement sequencing, and gives you back the hours you lose to Excel every week.</p>
+      <div class="hero-btns">
+        <a href="#" class="btn btn-a">Start Free</a>
+        <a href="#" class="btn btn-g">Free Deficit Finder →</a>
+      </div>
+      <div class="hero-meta">
+        <span><span class="hmd"></span>No credit card</span>
+        <span><span class="hmd"></span>3 athletes free</span>
+        <span><span class="hmd"></span>Cancel anytime</span>
+      </div>
+    </div>
+    <div class="hero-dev">
+      <div class="dev">
+        <div class="dev-bar"><div class="dd dd-r"></div><div class="dd dd-y"></div><div class="dd dd-g"></div><div class="dev-url">podiumthrows.com/coach/dashboard</div></div>
+        <div class="dev-body">
+          <div class="dm">
+            <div class="dm-nav">
+              <div class="dm-nav-t"><div class="sq"></div>Podium</div>
+              <div class="dm-ni on">Dashboard</div><div class="dm-ni">Athletes</div><div class="dm-ni">Sessions</div><div class="dm-ni">Videos</div><div class="dm-ni">Programming</div><div class="dm-ni">Codex</div>
+            </div>
+            <div class="dm-main">
+              <div class="dm-row">
+                <div class="dm-c"><div class="dm-c-l">Athletes</div><div class="dm-c-v">14</div></div>
+                <div class="dm-c"><div class="dm-c-l">This Week</div><div class="dm-c-v">8</div><div class="dm-c-s">sessions</div></div>
+                <div class="dm-c"><div class="dm-c-l">Avg Dist</div><div class="dm-c-v">17.2<span class="u">m</span></div><div class="dm-c-s">+0.4m</div></div>
+                <div class="dm-c"><div class="dm-c-l">PRs</div><div class="dm-c-v">3</div><div class="dm-c-s">this month</div></div>
+              </div>
+              <div class="dm-chart">
+                <div class="dm-chart-t">Shot Put · Team Performance (8 weeks)</div>
+                <svg viewBox="0 0 400 65" preserveAspectRatio="none" style="width:100%;height:55px;">
+                  <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity=".25"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/></linearGradient></defs>
+                  <path d="M0,52 C30,48 60,50 100,40 C140,30 170,36 210,26 C250,16 290,19 340,10 L400,4 L400,65 L0,65Z" fill="url(#cg)"/>
+                  <path d="M0,52 C30,48 60,50 100,40 C140,30 170,36 210,26 C250,16 290,19 340,10 L400,4" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+                  <circle cx="400" cy="4" r="3" fill="#f59e0b"/>
+                </svg>
+              </div>
+              <div class="dm-tbl">
+                <div class="dm-tbl-h"><span>Athlete</span><span>Event</span><span>Best</span><span>Trend</span></div>
+                <div class="dm-tbl-r"><div class="dm-nm"><div class="dm-av">JM</div>J. Martinez</div><div class="dm-v">Shot Put</div><div class="dm-v">18.42m</div><div class="dm-pr dm-pr-up">PR ↑</div></div>
+                <div class="dm-tbl-r"><div class="dm-nm"><div class="dm-av">KW</div>K. Williams</div><div class="dm-v">Discus</div><div class="dm-v">54.1m</div><div class="dm-pr dm-pr-up">+1.2m</div></div>
+                <div class="dm-tbl-r"><div class="dm-nm"><div class="dm-av">TS</div>T. Smith</div><div class="dm-v">Hammer</div><div class="dm-v">62.8m</div><div class="dm-pr dm-pr-st">Steady</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="mq">
+  <div class="mq-track">
+    <span class="mq-i"><span class="mq-d"></span>Shot Put</span><span class="mq-i"><span class="mq-d"></span>Discus</span><span class="mq-i"><span class="mq-d"></span>Hammer Throw</span><span class="mq-i"><span class="mq-d"></span>Javelin</span><span class="mq-i"><span class="mq-d"></span>Bondarchuk Methodology</span><span class="mq-i"><span class="mq-d"></span>D1 Programs</span><span class="mq-i"><span class="mq-d"></span>Session Validation</span><span class="mq-i"><span class="mq-d"></span>Video Analysis</span>
+    <span class="mq-i"><span class="mq-d"></span>Shot Put</span><span class="mq-i"><span class="mq-d"></span>Discus</span><span class="mq-i"><span class="mq-d"></span>Hammer Throw</span><span class="mq-i"><span class="mq-d"></span>Javelin</span><span class="mq-i"><span class="mq-d"></span>Bondarchuk Methodology</span><span class="mq-i"><span class="mq-d"></span>D1 Programs</span><span class="mq-i"><span class="mq-d"></span>Session Validation</span><span class="mq-i"><span class="mq-d"></span>Video Analysis</span>
+  </div>
+</div>
+
+<!-- STICKY FEATURES -->
+<div class="stk">
+  <div class="stk-l">
+    <div class="stk-feat">
+      <div class="sf-n">01</div>
+      <div class="sf-lb">Session Builder</div>
+      <div class="sf-t">Build sessions the<br/>way Bondarchuk intended.</div>
+      <div class="sf-d">Real-time implement sequencing validation. If an athlete's session goes light→heavy, Podium flags it before they touch the ring. Descending weight — the only order proven to work.</div>
+      <div class="sf-tag">✓ Bondarchuk-validated</div>
+    </div>
+    <div class="stk-feat">
+      <div class="sf-n">02</div>
+      <div class="sf-lb">Video Analysis</div>
+      <div class="sf-t">Draw on throws.<br/>Share instantly.</div>
+      <div class="sf-d">Frame-by-frame annotation. Draw release angles, mark positions, add voice notes. Share a link — your athlete sees exactly what to fix.</div>
+    </div>
+    <div class="stk-feat">
+      <div class="sf-n">03</div>
+      <div class="sf-lb">Programming</div>
+      <div class="sf-t">Periodize across<br/>your entire roster.</div>
+      <div class="sf-d">Build training blocks, assign programs by event group, and push updates to every athlete at once. See who's in what phase at a glance.</div>
+    </div>
+  </div>
+
+  <div class="stk-r">
+    <div class="stk-pin">
+      <div class="sess">
+        <div class="sess-top">
+          <div class="sess-title">Tuesday AM — Shot Put</div>
+          <!-- Segmented control for session mode -->
+          <div class="seg" id="modeSeg">
+            <button class="seg-btn active" onclick="switchMode('two')">Two-a-day</button>
+            <button class="seg-btn" onclick="switchMode('one')">Single session</button>
+          </div>
+        </div>
+
+        <!-- Status bar -->
+        <div style="padding:8px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b1);">
+          <div class="sess-mode-label" id="modeLabel">Dual-session programming</div>
+          <div class="sess-badge sess-ok" id="seqBadge">✓ Valid Sequence</div>
+        </div>
+
+        <div class="sess-body" id="sessBody">
+          <!-- T1: Always visible -->
+          <div class="sess-blk" id="t1">
+            <div class="sess-ico sess-ico-t">T1</div>
+            <div class="sess-info">
+              <div class="sess-nm">Standing Throw — Overweight</div>
+              <div class="sess-dt">18 throws</div>
+            </div>
+            <div class="sess-wt">9kg</div>
+          </div>
+
+          <!-- S1: Always visible -->
+          <div class="sess-blk" id="s1">
+            <div class="sess-ico sess-ico-s">S1</div>
+            <div class="sess-info">
+              <div class="sess-nm">Power Clean</div>
+              <div class="sess-dt">4 × 3 @ 85%</div>
+            </div>
+          </div>
+
+          <!-- T2: Only in two-a-day -->
+          <div class="sess-blk" id="t2">
+            <div class="sess-ico sess-ico-t">T2</div>
+            <div class="sess-info">
+              <div class="sess-nm">Full Throw — Competition</div>
+              <div class="sess-dt">20 throws</div>
+            </div>
+            <div class="sess-wt"><span class="sess-arr">↓</span> 7.26kg</div>
+          </div>
+
+          <!-- S2: Only in two-a-day -->
+          <div class="sess-blk" id="s2">
+            <div class="sess-ico sess-ico-s">S2</div>
+            <div class="sess-info">
+              <div class="sess-nm">Back Squat</div>
+              <div class="sess-dt">3 × 5 @ 80%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sess-seq sess-seq-ok" id="seqBar">
+          <span style="font-size:12px;">↓</span>
+          <span class="sess-seq-t" id="seqText">Descending: 9kg → 7.26kg — correct order</span>
+        </div>
+      </div>
+
+      <div class="note">SESSION MOCKUP: Segmented control with sliding indicator (framer-motion layoutId). Switching modes: blocks T2/S2 collapse with height→0 + opacity→0 (spring, 300ms). Sequence bar updates. In production this uses AnimatePresence + layout animations for buttery smooth block rearrangement. Content crossfades entirely when scrolling to the Video or Programming features.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchMode(mode) {
+  const btns = document.querySelectorAll('.seg-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const t2 = document.getElementById('t2');
+  const s2 = document.getElementById('s2');
+  const modeLabel = document.getElementById('modeLabel');
+  const seqText = document.getElementById('seqText');
+
+  if (mode === 'one') {
+    t2.style.maxHeight = '0';
+    t2.style.padding = '0 14px';
+    t2.style.opacity = '0';
+    t2.style.marginTop = '-6px';
+    t2.style.overflow = 'hidden';
+    t2.style.borderColor = 'transparent';
+
+    s2.style.maxHeight = '0';
+    s2.style.padding = '0 14px';
+    s2.style.opacity = '0';
+    s2.style.marginTop = '-6px';
+    s2.style.overflow = 'hidden';
+    s2.style.borderColor = 'transparent';
+
+    modeLabel.textContent = 'Single-session programming';
+    seqText.textContent = 'Single implement: 9kg overweight — correct';
+  } else {
+    t2.style.maxHeight = '';
+    t2.style.padding = '';
+    t2.style.opacity = '';
+    t2.style.marginTop = '';
+    t2.style.overflow = '';
+    t2.style.borderColor = '';
+
+    s2.style.maxHeight = '';
+    s2.style.padding = '';
+    s2.style.opacity = '';
+    s2.style.marginTop = '';
+    s2.style.overflow = '';
+    s2.style.borderColor = '';
+
+    modeLabel.textContent = 'Dual-session programming';
+    seqText.textContent = 'Descending: 9kg → 7.26kg — correct order';
+  }
+}
+</script>
+
+<div class="divider"></div>
+
+<!-- BENTO -->
+<section class="bento">
+  <div class="bento-head">
+    <div class="sl">Everything Else</div>
+    <div class="st">Built for the ring,<br/>not the weight room.</div>
+    <div class="ss">Every feature designed specifically for throws coaches. Not adapted from a gym app.</div>
+  </div>
+  <div class="bento-grid">
+    <div class="bc bc-1">
+      <div class="bc-icon">⊕</div>
+      <div class="bc-t">Athlete Profiles & Readiness</div>
+      <div class="bc-d">Full profiles with event history, implement preferences, and daily readiness check-ins. Know who's ready to throw heavy before they walk in.</div>
+      <div class="bc-mock">
+        <div class="bc-mock-row">
+          <div class="bc-mock-cell"><div class="bc-mock-l">Readiness</div><div class="bc-mock-v" style="color:var(--green)">8.2</div></div>
+          <div class="bc-mock-cell"><div class="bc-mock-l">Sleep</div><div class="bc-mock-v">7.5h</div></div>
+          <div class="bc-mock-cell"><div class="bc-mock-l">Soreness</div><div class="bc-mock-v" style="color:var(--a)">3<span style="font-size:10px;color:var(--t4)">/10</span></div></div>
+          <div class="bc-mock-cell"><div class="bc-mock-l">Stress</div><div class="bc-mock-v">Low</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="bc bc-2"><div class="bc-icon">◎</div><div class="bc-t">PR Tracking</div><div class="bc-d">Automatic detection with celebration. Track across all implements and competition weights.</div></div>
+    <div class="bc bc-3"><div class="bc-icon">↻</div><div class="bc-t">Bondarchuk Codex</div><div class="bc-d">Exercise database classified by transfer type — CE, SDE, SPE, GPE.</div></div>
+    <div class="bc bc-4"><div class="bc-icon">✎</div><div class="bc-t">Questionnaires</div><div class="bc-d">Custom check-in forms. Weekly reviews, meet prep, injury screening.</div></div>
+    <div class="bc bc-5"><div class="bc-icon">▣</div><div class="bc-t">Event Groups</div><div class="bc-d">Manage shot put, discus, hammer, javelin as separate groups with shared programming.</div></div>
+    <div class="bc bc-6"><div class="bc-icon">⚡</div><div class="bc-t">Practice Tools</div><div class="bc-d">Plate calculator, rest timer, RPE logger, voice recorder — tools you actually use during practice.</div></div>
+    <div class="bc bc-7"><div class="bc-icon">📊</div><div class="bc-t">Performance Analytics</div><div class="bc-d">Heavy-to-competition ratios, trend analysis, implement comparison. See who's transferring — before competition day.</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PROOF -->
+<section class="proof">
+  <div class="lamp"></div>
+  <div class="proof-in">
+    <div><div class="proof-num">2–4m</div></div>
+    <div class="proof-r">
+      <div class="sl">The Research</div>
+      <div class="proof-q">"Every natural athlete lost <em>2–4 meters</em> when implements were sequenced ascending. One hundred percent of them."</div>
+      <div class="proof-cite">Dr. Anatoliy Bondarchuk, Transfer of Training in Sports, Volume IV, pp. 114–117. Documented across all four throwing events.</div>
+      <div class="proof-evts"><span class="proof-evt">Shot Put</span><span class="proof-evt">Discus</span><span class="proof-evt">Hammer</span><span class="proof-evt">Javelin</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DEFICIT FINDER -->
+<section class="def">
+  <div class="def-card">
+    <div class="def-l">
+      <div class="sl">Free Tool</div>
+      <div class="st" style="max-width:340px">Not ready to commit?<br/>Find the deficit first.</div>
+      <div class="ss" style="max-width:320px">60-second diagnostic reveals if your thrower is losing distance to strength, technique, or implement mismatch.</div>
+      <div style="margin-top:28px"><a href="#" class="btn btn-a">Run the Free Diagnostic →</a></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--t4)">No signup required · Instant results</div>
+    </div>
+    <div class="def-r">
+      <div class="def-steps">
+        <div class="def-step"><div class="def-step-n">1</div><div><div class="def-step-t">Enter event & distances</div><div class="def-step-s">Competition and heavy implement marks</div></div></div>
+        <div class="def-step"><div class="def-step-n">2</div><div><div class="def-step-t">Answer 3 quick questions</div><div class="def-step-s">Training history, sequence, implement weights</div></div></div>
+        <div class="def-step"><div class="def-step-n">3</div><div><div class="def-step-t">Get your diagnosis</div><div class="def-step-s">Deficit type + corrective recommendation</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PRICING -->
+<section class="pricing">
+  <div class="pricing-head">
+    <div class="sl">Pricing</div>
+    <div class="st">Start free. Scale when<br/>your roster does.</div>
+    <div class="ss">Every plan includes session validation, performance tracking, and practice tools.</div>
+  </div>
+  <div class="pricing-grid">
+    <div class="pc">
+      <div class="pc-tier">Free</div>
+      <div class="pc-price">$0<span class="mo">/mo</span></div>
+      <div class="pc-desc">Full tools, small roster. Get started today.</div>
+      <ul class="pc-feats">
+        <li><span class="pc-chk"></span>Up to 3 athletes</li>
+        <li><span class="pc-chk"></span>Session builder + validation</li>
+        <li><span class="pc-chk"></span>Performance tracking</li>
+        <li><span class="pc-chk"></span>Deficit Finder</li>
+        <li><span class="pc-chk"></span>Practice tools</li>
+      </ul>
+      <a href="#" class="pc-btn pc-btn-o">Start Free</a>
+    </div>
+    <div class="pc pop">
+      <div class="pc-pop-tag">Most Popular</div>
+      <div class="pc-tier">Pro</div>
+      <div class="pc-price">$20<span class="mo">/mo</span></div>
+      <div class="pc-desc">The full toolkit for serious programs.</div>
+      <ul class="pc-feats">
+        <li><span class="pc-chk"></span>Up to 25 athletes</li>
+        <li><span class="pc-chk"></span>Everything in Free</li>
+        <li><span class="pc-chk"></span>Video analysis & annotation</li>
+        <li><span class="pc-chk"></span>Programming & periodization</li>
+        <li><span class="pc-chk"></span>Advanced analytics</li>
+        <li><span class="pc-chk"></span>Priority support</li>
+      </ul>
+      <a href="#" class="pc-btn pc-btn-f">Start Pro Trial</a>
+    </div>
+    <div class="pc">
+      <div class="pc-tier">Elite</div>
+      <div class="pc-price">$50<span class="mo">/mo</span></div>
+      <div class="pc-desc">Unlimited athletes. Full control.</div>
+      <ul class="pc-feats">
+        <li><span class="pc-chk"></span>Unlimited athletes</li>
+        <li><span class="pc-chk"></span>Everything in Pro</li>
+        <li><span class="pc-chk"></span>Event group management</li>
+        <li><span class="pc-chk"></span>Custom questionnaires</li>
+        <li><span class="pc-chk"></span>Dedicated support</li>
+      </ul>
+      <a href="#" class="pc-btn pc-btn-o">Contact Us</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="sl" style="justify-content:center">Ready?</div>
+  <div class="cta-t">Every session with the wrong sequence is<br/>another day leaving <span class="em">distance on the table.</span></div>
+  <div style="display:flex;gap:12px;justify-content:center;position:relative">
+    <a href="#" class="btn btn-a">Start Free Today</a>
+    <a href="#" class="btn btn-g">Run the Deficit Finder →</a>
+  </div>
+  <div class="hero-meta" style="justify-content:center;margin-top:20px">
+    <span><span class="hmd"></span>No credit card</span>
+    <span><span class="hmd"></span>Cancel anytime</span>
+    <span><span class="hmd"></span>Built on published research</span>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="foot">
+  <div class="foot-in">
+    <div><div class="foot-brand"><div class="nav-sq" style="width:18px;height:18px;font-size:10px;border-radius:4px">P</div>Podium Throws</div><div class="foot-brand-d">The coaching platform built for throws. Rooted in Bondarchuk methodology.</div></div>
+    <div class="foot-col"><div class="foot-col-t">Product</div><a href="#">Features</a><a href="#">Methodology</a><a href="#">Pricing</a><a href="#">Deficit Finder</a></div>
+    <div class="foot-col"><div class="foot-col-t">Events</div><a href="#">Shot Put</a><a href="#">Discus</a><a href="#">Hammer</a><a href="#">Javelin</a></div>
+    <div class="foot-col"><div class="foot-col-t">Account</div><a href="#">Sign In</a><a href="#">Register</a></div>
+    <div class="foot-col"><div class="foot-col-t">Legal</div><a href="#">Privacy</a><a href="#">Terms</a></div>
+  </div>
+  <div class="foot-btm"><span class="foot-cp">© 2026 Podium Throws</span><span class="foot-cp">Methodology: Dr. Anatoliy Bondarchuk</span></div>
+</footer>
+
+</body>
+</html>
