@@ -122,6 +122,12 @@ enum BondarchukAthleteType {
   STRENGTH
 }
 
+enum ProgramSource {
+  COACH_PRESCRIBED
+  COACH_SELF_TRAINING
+  ATHLETE_SELF_GENERATED
+}
+
 // ─── USER & AUTH ────────────────────────────────────────────────────────────
 
 model User {
@@ -281,6 +287,8 @@ model AthleteProfile {
   practiceAttempts         PracticeAttempt[]
   trainingPrograms         TrainingProgram[]
   equipmentInventory       EquipmentInventory?
+  exercises                Exercise[]
+  selfProgramConfigs       SelfProgramConfig[]
 
   // Lifting program
   liftingPrograms    LiftingProgram[]
@@ -308,6 +316,8 @@ model Exercise {
   id              String           @id @default(cuid())
   coachId         String?
   coach           CoachProfile?    @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  athleteProfileId String?
+  athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id], onDelete: SetNull)
   name            String
   description     String?
   videoUrl        String?
@@ -329,6 +339,7 @@ model Exercise {
   @@index([category])
   @@index([event])
   @@index([isGlobal])
+  @@index([athleteProfileId])
 }
 
 // ─── WORKOUT PLANS & BLOCKS ─────────────────────────────────────────────────
@@ -2043,6 +2054,7 @@ model TrainingProgram {
 
   // Coach self-program flag
   isCoachSelfProgram Boolean @default(false)
+  source             ProgramSource @default(COACH_PRESCRIBED)
 
   // Classification
   event  String // HAMMER (future: SHOT_PUT, DISCUS, JAVELIN)
@@ -2088,6 +2100,7 @@ model TrainingProgram {
   phases                ProgramPhase[]
   sessions              ProgramSession[]
   adaptationCheckpoints AdaptationCheckpoint[]
+  selfProgramConfig     SelfProgramConfig?
 
   @@index([coachId])
   @@index([athleteId, status])
@@ -2451,4 +2464,48 @@ model TokenBlacklist {
   createdAt DateTime @default(now())
 
   @@index([expiresAt])
+}
+
+// ── SELF-PROGRAMMING ──────────────────────────────────────────────────────
+
+model SelfProgramConfig {
+  id                String          @id @default(cuid())
+  athleteProfileId  String
+  athleteProfile    AthleteProfile  @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
+  trainingProgramId String?         @unique
+  trainingProgram   TrainingProgram? @relation(fields: [trainingProgramId], references: [id], onDelete: SetNull)
+
+  // Wizard answers
+  programType         String          // "THROWS_ONLY" | "THROWS_AND_LIFTING"
+  event               String          // "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN"
+  gender              String          // "MALE" | "FEMALE"
+  yearsExperience     Int
+  competitionLevel    String          // "HIGH_SCHOOL" | "COLLEGIATE" | "POST_COLLEGIATE" | "ELITE"
+  currentPR           Float           // meters
+  goalDistance         Float           // target PR meters
+  currentWeeklyVolume Int?            // throws/week
+  availableImplements Json            // [{weightKg, type}]
+  daysPerWeek         Int             // 2-5
+  sessionsPerDay      Int             // 1 or 2
+  preferredDays       Json            // ["MONDAY", ...]
+  startDate           DateTime
+  competitionDates    Json?           // [{date, name, priority}]
+  primaryGoal         String          // "DISTANCE" | "TECHNIQUE" | "CONSISTENCY"
+  generationMode      String          // "AUTOPILOT" | "GUIDED"
+  exercisePreferences Json?           // {preferred: [], avoided: [], favoriteDrills: []}
+
+  // Typing
+  usedExistingTyping Boolean         @default(false)
+  inlineTypingData   Json?
+
+  // Rolling program state
+  isActive          Boolean          @default(true)
+  isDraft           Boolean          @default(true)
+  generationCount   Int              @default(0)
+  currentPhaseIndex Int              @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([athleteProfileId, isActive])
 }
