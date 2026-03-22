@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
  * GET /api/whoop/authorize
  * Initiates the WHOOP OAuth2 flow by redirecting the user to WHOOP's auth page.
  */
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const session = await getSession();
     if (!session) {
