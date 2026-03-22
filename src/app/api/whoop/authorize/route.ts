@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
  * GET /api/whoop/authorize
  * Initiates the WHOOP OAuth2 flow by redirecting the user to WHOOP's auth page.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) {
@@ -35,7 +35,8 @@ export async function GET() {
     }
 
     const state = crypto.randomUUID();
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || "https://podiumthrows.vercel.app"}/api/whoop/callback`;
+    // Must exactly match the redirect URL registered in the WHOOP developer portal
+    const redirectUri = process.env.WHOOP_REDIRECT_URI || "https://podiumthrows.vercel.app/api/whoop/callback";
 
     const authUrl = new URL("https://api.prod.whoop.com/oauth/oauth2/auth");
     authUrl.searchParams.set("client_id", clientId);
