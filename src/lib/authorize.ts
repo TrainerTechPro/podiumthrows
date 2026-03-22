@@ -96,12 +96,22 @@ export async function canAccessProgram(
       athleteId: true,
       coachId: true,
       isCoachSelfProgram: true,
+      source: true,
       athlete: { select: { coachId: true, userId: true } },
     },
   });
   if (!program) return false;
 
-  // Athlete program: athlete owns it
+  // Support both old and new fields during migration
+  const isCoachSelf = program.isCoachSelfProgram || program.source === "COACH_SELF_TRAINING";
+  const isAthleteSelf = program.source === "ATHLETE_SELF_GENERATED";
+
+  // Athlete self-generated program: athlete owns it directly
+  if (role === "ATHLETE" && isAthleteSelf && program.athlete) {
+    return program.athlete.userId === userId;
+  }
+
+  // Athlete program (coach-prescribed): athlete owns it
   if (role === "ATHLETE" && program.athlete) {
     return program.athlete.userId === userId;
   }
@@ -115,7 +125,7 @@ export async function canAccessProgram(
     if (!coachProfile) return false;
 
     // Coach self-program: coach owns it directly
-    if (program.isCoachSelfProgram) {
+    if (isCoachSelf) {
       return coachProfile.id === program.coachId;
     }
 
@@ -126,6 +136,19 @@ export async function canAccessProgram(
   }
 
   return false;
+}
+
+/**
+ * Check if a user can access the self-programming feature.
+ * Requires isSelfCoached: true on their AthleteProfile.
+ * Works for both athletes and coaches in training mode (who have an AthleteProfile).
+ */
+export async function canAccessSelfProgram(userId: string): Promise<boolean> {
+  const athlete = await prisma.athleteProfile.findUnique({
+    where: { userId },
+    select: { isSelfCoached: true },
+  });
+  return athlete?.isSelfCoached === true;
 }
 
 /**
