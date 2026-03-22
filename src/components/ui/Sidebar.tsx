@@ -451,6 +451,12 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
       },
       { label: "Log Session", href: "/athlete/log-session", icon: <PenLine {...iconSize} /> },
       {
+        label: "Self Program",
+        href: "/athlete/self-program",
+        icon: <Dumbbell {...iconSize} />,
+        matchPaths: ["/athlete/self-program"],
+      },
+      {
         label: "My Sessions",
         href: "/athlete/sessions",
         icon: <Calendar {...iconSize} />,
