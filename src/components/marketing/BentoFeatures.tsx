@@ -99,12 +99,13 @@ function ReadinessMockup() {
         padding: 10,
       }}
     >
-      <div style={{ display: "flex", gap: 8 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {cells.map((cell) => (
           <div
             key={cell.label}
             style={{
-              flex: 1,
+              flex: "1 1 calc(50% - 4px)",
+              minWidth: 0,
               background: "var(--landing-surface)",
               border: "1px solid var(--landing-border)",
               borderRadius: 5,
@@ -279,7 +280,7 @@ export default function BentoFeatures() {
   }, []);
 
   return (
-    <section style={{ maxWidth: 1400, margin: "0 auto" }}>
+    <section className="bento-section" style={{ maxWidth: 1400, margin: "0 auto" }}>
       {/* ── Section header ─────────────────────────────────────────────── */}
       <ScrollReveal>
         <div style={{ marginBottom: 48 }}>
@@ -361,6 +362,22 @@ export default function BentoFeatures() {
 
       {/* ── Spotlight hover styles ──────────────────────────────────────── */}
       <style>{`
+        .bento-section {
+          padding: 64px 16px;
+        }
+
+        @media (min-width: 640px) {
+          .bento-section {
+            padding: 80px 40px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .bento-section {
+            padding: 80px 64px;
+          }
+        }
+
         .bento-card:hover {
           transform: translateY(-3px);
           box-shadow: 0 24px 64px rgba(0,0,0,0.35);

@@ -23,8 +23,8 @@ const TRUST_ITEMS = [
 export default function FinalCTA() {
   return (
     <section
+      className="final-cta-section"
       style={{
-        padding: "200px 64px",
         textAlign: "center",
         position: "relative",
         overflow: "hidden",
@@ -215,6 +215,22 @@ export default function FinalCTA() {
 
       {/* Scoped styles */}
       <style>{`
+        .final-cta-section {
+          padding: 80px 20px;
+        }
+
+        @media (min-width: 640px) {
+          .final-cta-section {
+            padding: 120px 40px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .final-cta-section {
+            padding: 200px 64px;
+          }
+        }
+
         .final-cta-btn-primary:hover {
           background: #d97706;
           transform: translateY(-2px);

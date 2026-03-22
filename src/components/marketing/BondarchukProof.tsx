@@ -22,9 +22,9 @@ export default function BondarchukProof() {
 
   return (
     <section
+      className="bondarchuk-section"
       style={{
         position: "relative",
-        padding: "180px 64px",
         overflow: "hidden",
       }}
     >
@@ -213,6 +213,22 @@ export default function BondarchukProof() {
 
       {/* ── Scoped styles ─────────────────────────────────────────────── */}
       <style>{`
+        .bondarchuk-section {
+          padding: 80px 20px;
+        }
+
+        @media (min-width: 640px) {
+          .bondarchuk-section {
+            padding: 120px 40px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .bondarchuk-section {
+            padding: 180px 64px;
+          }
+        }
+
         .bondarchuk-proof-grid {
           display: grid;
           grid-template-columns: 1fr;

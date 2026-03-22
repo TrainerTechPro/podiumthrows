@@ -11,7 +11,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import SessionMockup from "./SessionMockup";
-import VideoMockup from "./VideoMockup";
 import ProgrammingMockup from "./ProgrammingMockup";
 import ScrollReveal from "./ScrollReveal";
 
@@ -28,14 +27,6 @@ const FEATURES = [
   },
   {
     number: "02",
-    label: "Video Analysis",
-    title: "Draw on throws. Share instantly.",
-    description:
-      "Frame-by-frame annotation. Draw release angles, mark positions, add voice notes. Share a link \u2014 your athlete sees exactly what to fix.",
-    tag: null,
-  },
-  {
-    number: "03",
     label: "Programming",
     title: "Periodize across your entire roster.",
     description:
@@ -44,7 +35,7 @@ const FEATURES = [
   },
 ] as const;
 
-const MOCKUP_COMPONENTS = [SessionMockup, VideoMockup, ProgrammingMockup];
+const MOCKUP_COMPONENTS = [SessionMockup, ProgrammingMockup];
 
 // ─── Feature Block ──────────────────────────────────────────────────────────
 

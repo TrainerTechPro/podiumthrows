@@ -115,19 +115,19 @@ function Step({ number, title, subtitle, isFirst }: StepProps) {
 export default function DeficitFinderCTA() {
   return (
     <section
+      className="deficit-section"
       style={{
         maxWidth: 1400,
         margin: "0 auto",
-        padding: "40px 64px 140px",
       }}
     >
       {/* Card */}
       <div
+        className="deficit-card"
         style={{
           background: "var(--landing-surface)",
           border: "1px solid var(--landing-border)",
           borderRadius: 20,
-          padding: 72,
           position: "relative",
           overflow: "hidden",
         }}
@@ -282,6 +282,38 @@ export default function DeficitFinderCTA() {
 
       {/* Scoped styles */}
       <style>{`
+        .deficit-section {
+          padding: 32px 16px 80px;
+        }
+
+        @media (min-width: 640px) {
+          .deficit-section {
+            padding: 40px 40px 120px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .deficit-section {
+            padding: 40px 64px 140px;
+          }
+        }
+
+        .deficit-card {
+          padding: 32px 24px;
+        }
+
+        @media (min-width: 640px) {
+          .deficit-card {
+            padding: 48px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .deficit-card {
+            padding: 72px;
+          }
+        }
+
         .deficit-grid {
           display: grid;
           grid-template-columns: 1fr;

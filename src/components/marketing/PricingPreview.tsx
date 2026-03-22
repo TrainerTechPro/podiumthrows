@@ -283,7 +283,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
 
 export default function PricingPreview() {
   return (
-    <section style={{ maxWidth: 1200, margin: "0 auto", padding: "120px 64px" }}>
+    <section className="pricing-section" style={{ maxWidth: 1200, margin: "0 auto" }}>
       {/* ── Section header ──────────────────────────────────────────────── */}
       <ScrollReveal>
         <div style={{ marginBottom: 56 }}>
@@ -360,6 +360,22 @@ export default function PricingPreview() {
 
       {/* ── Scoped styles ────────────────────────────────────────────────── */}
       <style>{`
+        .pricing-section {
+          padding: 64px 16px;
+        }
+
+        @media (min-width: 640px) {
+          .pricing-section {
+            padding: 80px 40px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .pricing-section {
+            padding: 120px 64px;
+          }
+        }
+
         .pricing-grid {
           display: grid;
           grid-template-columns: 1fr;
