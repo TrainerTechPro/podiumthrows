@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
-import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
+
 import { useToast } from "@/components/ui/Toast";
 
 import { StepProgramType } from "./_steps/step-program-type";
