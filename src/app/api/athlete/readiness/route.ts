@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
       injuryStatus,
       injuryNotes,
       notes,
+      hrvMs,
+      restingHR,
+      spo2,
+      whoopStrain,
+      source,
     } = parsed;
 
     // Prevent duplicate check-in on same day
@@ -86,6 +91,12 @@ export async function POST(req: NextRequest) {
         injuryStatus: injuryStatus as never,
         injuryNotes: injuryNotes?.trim() || null,
         notes: notes?.trim() || null,
+        // WHOOP integration fields
+        hrvMs: hrvMs ?? null,
+        restingHR: restingHR ?? null,
+        spo2: spo2 ?? null,
+        whoopStrain: whoopStrain ?? null,
+        source: source ?? "MANUAL",
       },
       select: { id: true, overallScore: true, date: true },
     });

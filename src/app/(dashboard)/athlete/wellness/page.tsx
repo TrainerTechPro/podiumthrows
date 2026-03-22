@@ -6,6 +6,7 @@ import {
   type ReadinessCheckInItem,
 } from "@/lib/data/athlete";
 import { getAthleteReadinessTrend, type ReadinessTrendPoint } from "@/lib/data/coach";
+import { getTodaySnapshot } from "@/lib/whoop/sync";
 import { CheckInForm } from "./_checkin-form";
 import { ReadinessChart } from "./_readiness-chart";
 
@@ -52,10 +53,7 @@ function avg(arr: number[]): number {
 
 /* ─── Insights Generator ─────────────────────────────────────────────────── */
 
-function buildInsights(
-  today: ReadinessCheckInItem,
-  trend: ReadinessTrendPoint[]
-): string[] {
+function buildInsights(today: ReadinessCheckInItem, trend: ReadinessTrendPoint[]): string[] {
   const insights: string[] = [];
   // Use last 7 days (excluding today)
   const recent = trend.slice(-8, -1);
@@ -83,7 +81,9 @@ function buildInsights(
       last3[0].overallScore > last3[1].overallScore &&
       last3[1].overallScore > last3[2].overallScore;
     if (declining)
-      insights.push("Your readiness has trended down over the last 3 days — flag this with your coach.");
+      insights.push(
+        "Your readiness has trended down over the last 3 days — flag this with your coach."
+      );
   }
 
   if (today.overallScore >= avgScore + 1.5)
@@ -117,10 +117,14 @@ function TodayResultCard({
   const avg7 = recent7.length > 0 ? avg(recent7.map((p) => p.overallScore)) : null;
 
   const factors = [
-    { label: "Sleep",   value: checkIn.sleepQuality,        hint: `${checkIn.sleepHours}h slept` },
-    { label: "Soreness", value: checkIn.soreness,           hint: checkIn.sorenessArea?.replace(/_/g, " ") ?? undefined },
-    { label: "Stress",  value: checkIn.stressLevel,         hint: undefined },
-    { label: "Energy",  value: checkIn.energyMood,          hint: undefined },
+    { label: "Sleep", value: checkIn.sleepQuality, hint: `${checkIn.sleepHours}h slept` },
+    {
+      label: "Soreness",
+      value: checkIn.soreness,
+      hint: checkIn.sorenessArea?.replace(/_/g, " ") ?? undefined,
+    },
+    { label: "Stress", value: checkIn.stressLevel, hint: undefined },
+    { label: "Energy", value: checkIn.energyMood, hint: undefined },
   ];
 
   return (
@@ -132,7 +136,12 @@ function TodayResultCard({
             <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-1">
               Today&apos;s Readiness Score
             </p>
-            <p className={cn("text-5xl font-bold tabular-nums font-heading", scoreColor(checkIn.overallScore))}>
+            <p
+              className={cn(
+                "text-5xl font-bold tabular-nums font-heading",
+                scoreColor(checkIn.overallScore)
+              )}
+            >
               {checkIn.overallScore.toFixed(1)}
             </p>
             <p className={cn("text-sm font-medium mt-1", scoreColor(checkIn.overallScore))}>
@@ -142,21 +151,29 @@ function TodayResultCard({
 
           <div className="text-right space-y-1.5 shrink-0">
             <p className="text-[10px] text-muted uppercase tracking-wide">Hydration</p>
-            <span className={cn(
-              "inline-block text-xs font-semibold px-2 py-0.5 rounded-full",
-              checkIn.hydration === "GOOD"     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-              : checkIn.hydration === "ADEQUATE" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-              : "bg-red-500/10 text-red-600 dark:text-red-400"
-            )}>
+            <span
+              className={cn(
+                "inline-block text-xs font-semibold px-2 py-0.5 rounded-full",
+                checkIn.hydration === "GOOD"
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : checkIn.hydration === "ADEQUATE"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    : "bg-red-500/10 text-red-600 dark:text-red-400"
+              )}
+            >
               {checkIn.hydration.charAt(0) + checkIn.hydration.slice(1).toLowerCase()}
             </span>
 
             {checkIn.injuryStatus !== "NONE" && (
               <div className="mt-1">
-                <span className={cn(
-                  "inline-block text-xs font-semibold px-2 py-0.5 rounded-full",
-                  checkIn.injuryStatus === "ACTIVE" ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                )}>
+                <span
+                  className={cn(
+                    "inline-block text-xs font-semibold px-2 py-0.5 rounded-full",
+                    checkIn.injuryStatus === "ACTIVE"
+                      ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  )}
+                >
                   {checkIn.injuryStatus === "ACTIVE" ? "Injury Active" : "Monitoring"}
                 </span>
               </div>
@@ -176,9 +193,13 @@ function TodayResultCard({
               <span className="font-semibold">{avg14.toFixed(1)}</span>
             </div>
             {avg7 > avg14 + 0.3 ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">↑ Trending up</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                ↑ Trending up
+              </span>
             ) : avg7 < avg14 - 0.3 ? (
-              <span className="text-amber-600 dark:text-amber-400 font-medium">↓ Trending down</span>
+              <span className="text-amber-600 dark:text-amber-400 font-medium">
+                ↓ Trending down
+              </span>
             ) : (
               <span className="text-muted">→ Steady</span>
             )}
@@ -209,9 +230,7 @@ function TodayResultCard({
                   style={{ width: `${f.value * 10}%` }}
                 />
               </div>
-              {f.hint && (
-                <p className="text-[10px] text-muted capitalize">{f.hint}</p>
-              )}
+              {f.hint && <p className="text-[10px] text-muted capitalize">{f.hint}</p>}
             </div>
           ))}
         </div>
@@ -220,9 +239,7 @@ function TodayResultCard({
       {/* 7-day trend */}
       {chartData.length > 1 && (
         <div className="card px-4 py-4 space-y-2">
-          <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
-            7-Day Trend
-          </h3>
+          <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">7-Day Trend</h3>
           <ReadinessChart data={chartData} />
         </div>
       )}
@@ -233,7 +250,16 @@ function TodayResultCard({
           {insights.map((insight, i) => (
             <div key={i} className="card px-4 py-3 flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--primary-500)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--primary-500)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -245,7 +271,9 @@ function TodayResultCard({
         </div>
       )}
 
-      <p className="text-xs text-muted text-center">Come back tomorrow to submit your next check-in.</p>
+      <p className="text-xs text-muted text-center">
+        Come back tomorrow to submit your next check-in.
+      </p>
     </div>
   );
 }
@@ -280,7 +308,10 @@ function CheckInCard({ c }: { c: CheckIn }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 ml-5">
         {[
           { label: "Sleep", value: `${c.sleepQuality}/10 · ${c.sleepHours}h` },
-          { label: "Soreness", value: `${c.soreness}/10${c.sorenessArea ? ` (${c.sorenessArea.replace(/_/g, " ")})` : ""}` },
+          {
+            label: "Soreness",
+            value: `${c.soreness}/10${c.sorenessArea ? ` (${c.sorenessArea.replace(/_/g, " ")})` : ""}`,
+          },
           { label: "Stress", value: `${c.stressLevel}/10` },
           { label: "Energy", value: `${c.energyMood}/10` },
         ].map((item) => (
@@ -304,9 +335,7 @@ function CheckInCard({ c }: { c: CheckIn }) {
           </span>
         </div>
       )}
-      {c.notes && (
-        <p className="ml-5 mt-1 text-xs text-muted italic">{c.notes}</p>
-      )}
+      {c.notes && <p className="ml-5 mt-1 text-xs text-muted italic">{c.notes}</p>}
     </div>
   );
 }
@@ -316,10 +345,11 @@ function CheckInCard({ c }: { c: CheckIn }) {
 export default async function WellnessPage() {
   const { athlete } = await requireAthleteSession();
 
-  const [checkInToday, history, trend] = await Promise.all([
+  const [checkInToday, history, trend, whoopSnapshot] = await Promise.all([
     getAthleteCheckInToday(athlete.id),
     getAthleteCheckInHistory(athlete.id, 14),
     getAthleteReadinessTrend(athlete.id, 30),
+    getTodaySnapshot(athlete.id),
   ]);
 
   const chartData = trend.map((t) => ({
@@ -342,7 +372,21 @@ export default async function WellnessPage() {
       {checkInToday ? (
         <TodayResultCard checkIn={checkInToday} trend={trend} />
       ) : (
-        <CheckInForm />
+        <CheckInForm
+          whoopData={
+            whoopSnapshot
+              ? {
+                  recoveryScore: whoopSnapshot.recoveryScore,
+                  hrvMs: whoopSnapshot.hrvMs,
+                  restingHR: whoopSnapshot.restingHR,
+                  spo2: whoopSnapshot.spo2,
+                  sleepPerformance: whoopSnapshot.sleepPerformance,
+                  sleepDurationMs: whoopSnapshot.sleepDurationMs,
+                  strain: whoopSnapshot.strain,
+                }
+              : undefined
+          }
+        />
       )}
 
       {/* 30-day trend chart — only shown when no check-in today (post-view shows 7-day) */}
