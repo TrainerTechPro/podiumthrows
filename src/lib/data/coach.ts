@@ -2036,6 +2036,7 @@ export async function getTeamReadinessTrends(
       scores: { not: Prisma.JsonNull },
     },
     orderBy: { completedAt: "desc" },
+    take: 200,
     select: {
       athleteId: true,
       scores: true,

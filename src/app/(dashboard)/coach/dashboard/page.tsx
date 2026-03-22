@@ -326,7 +326,7 @@ export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
   // Read mode/depth preferences from cookies
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const mode = (cookieStore.get("dashboard-mode")?.value ?? "training") as DashboardMode;
   const depth = (cookieStore.get("dashboard-depth")?.value ?? "standard") as DashboardDepth;
 
@@ -384,6 +384,7 @@ export default async function CoachDashboardPage() {
           },
         },
         orderBy: { createdAt: "desc" },
+        take: 20,
       });
 
       const seen = new Set<string>();
