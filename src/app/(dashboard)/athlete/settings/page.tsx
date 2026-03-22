@@ -31,10 +31,15 @@ export default async function AthleteSettingsPage() {
   const profile = await getAthleteProfileFull(session.userId);
   if (!profile) redirect("/login");
 
-  const whoopConnection = await prisma.whoopConnection.findUnique({
-    where: { athleteId: profile.id },
-    select: { syncMode: true, lastSyncAt: true },
-  });
+  let whoopConnection: { syncMode: string; lastSyncAt: Date | null } | null = null;
+  try {
+    whoopConnection = await prisma.whoopConnection.findUnique({
+      where: { athleteId: profile.id },
+      select: { syncMode: true, lastSyncAt: true },
+    });
+  } catch {
+    // Table may not exist yet if migration hasn't been applied
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
