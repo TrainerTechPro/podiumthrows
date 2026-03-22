@@ -462,7 +462,7 @@ export function SelfProgramWizard({
         highlight: `${programData.totalWeeks} weeks`,
       });
       success("Program created successfully");
-      router.push(`/athlete/self-program/${programData.programId}`);
+      router.push(`/athlete/self-program/${configId}`);
     } catch {
       setErrors({ generate: "Something went wrong. Please try again." });
       toastError("Error", "Something went wrong. Please try again.");
