@@ -42,3 +42,15 @@ next-env.d.ts
 # Claude Code local settings
 .claude/settings.local.json
 .claude/worktrees/
+
+# Dev artifacts
+.superpowers/
+.playwright-mcp/
+mobile-date-picker.png
+UI-Effects-Recommendations.md
+ARCHITECTURE.md
+tasks/
+public/uploads/test/
+public/uploads/videos/
+public/uploads/drill-videos/
+public/uploads/cmm*/
