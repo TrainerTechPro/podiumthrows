@@ -43,14 +43,21 @@ function SessionRow({
     rpe: number | null;
     planName: string | null;
     coachNotes: string | null;
+    isProgram?: boolean;
+    selfProgramConfigId?: string | null;
   };
 }) {
   const cfg = STATUS_CONFIG[session.status] ?? { label: session.status, variant: "neutral" as const };
   const isUpcoming = session.status === "SCHEDULED" || session.status === "IN_PROGRESS";
 
+  // Program sessions link to self-program detail; regular sessions link to session detail
+  const href = session.isProgram && session.selfProgramConfigId
+    ? `/athlete/self-program/${session.selfProgramConfigId}`
+    : `/athlete/sessions/${session.id}`;
+
   return (
     <Link
-      href={`/athlete/sessions/${session.id}`}
+      href={href}
       className="flex items-center gap-4 px-4 py-3.5 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors group"
     >
       {/* Date blob */}
@@ -121,7 +128,7 @@ export default async function AthleteSessionsPage() {
     orderBy: [{ weekNumber: "asc" }, { dayOfWeek: "asc" }],
     take: 100,
     include: {
-      program: { select: { event: true, startDate: true } },
+      program: { select: { event: true, startDate: true, selfProgramConfig: { select: { id: true } } } },
       phase: { select: { phase: true } },
     },
   });
@@ -146,7 +153,8 @@ export default async function AthleteSessionsPage() {
       notes: null as string | null,
       coachNotes: null as string | null,
       planName: `${formatEventName(ps.program.event)} — ${ps.focusLabel}`,
-      isProgram: true,
+      isProgram: true as const,
+      selfProgramConfigId: ps.program.selfProgramConfig?.id ?? null,
       phase: ps.phase.phase,
       weekNumber: ps.weekNumber,
       totalThrows: ps.totalThrowsTarget,
