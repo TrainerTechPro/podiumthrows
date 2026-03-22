@@ -1,4 +1,4 @@
-import { SkeletonLine, SkeletonStat, SkeletonCard } from "@/components/ui/Skeleton";
+import { SkeletonLine, SkeletonStat } from "@/components/ui/Skeleton";
 
 export default function ThrowsRosterLoading() {
   return (
