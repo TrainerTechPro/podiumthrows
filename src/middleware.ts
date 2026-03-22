@@ -3,7 +3,16 @@ import type { NextRequest } from "next/server";
 import { verifyTokenEdge as verifyToken } from "@/lib/auth-edge";
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from "@/lib/csrf";
 
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/pricing", "/deficit-finder", "/privacy"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/pricing",
+  "/deficit-finder",
+  "/privacy",
+  "/api/whoop/callback",
+];
 const AUTH_PATHS = ["/login", "/register"];
 
 const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -16,7 +25,10 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/")) {
     if (STATE_CHANGING_METHODS.has(request.method)) {
       // Skip CSRF for webhook & cron routes (they use their own auth)
-      const skipCsrf = pathname.startsWith("/api/webhooks/") || pathname.startsWith("/api/cron/");
+      const skipCsrf =
+        pathname.startsWith("/api/webhooks/") ||
+        pathname.startsWith("/api/cron/") ||
+        pathname.startsWith("/api/whoop/webhook");
 
       if (!skipCsrf) {
         const csrfCookie = request.cookies.get(CSRF_COOKIE_NAME)?.value;
