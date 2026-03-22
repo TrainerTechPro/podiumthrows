@@ -37,6 +37,8 @@ function recoveryBg(score: number | null): string {
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
+export const dynamic = "force-dynamic";
+
 export default async function WhoopPage() {
   const { athlete } = await requireAthleteSession();
 
