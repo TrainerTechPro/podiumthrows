@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     // Exchange authorization code for tokens
     // Must exactly match the redirect URL registered in the WHOOP developer portal
-    const redirectUri = process.env.WHOOP_REDIRECT_URI || "https://podiumthrows.vercel.app/api/whoop/callback";
+    const redirectUri = process.env.WHOOP_REDIRECT_URI || "https://podiumthrows.com/api/whoop/callback";
 
     const tokenRes = await fetch(TOKEN_URL, {
       method: "POST",

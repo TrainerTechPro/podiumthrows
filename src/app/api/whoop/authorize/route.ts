@@ -36,7 +36,7 @@ export async function GET(_request: Request) {
 
     const state = crypto.randomUUID();
     // Must exactly match the redirect URL registered in the WHOOP developer portal
-    const redirectUri = process.env.WHOOP_REDIRECT_URI || "https://podiumthrows.vercel.app/api/whoop/callback";
+    const redirectUri = process.env.WHOOP_REDIRECT_URI || "https://podiumthrows.com/api/whoop/callback";
 
     const authUrl = new URL("https://api.prod.whoop.com/oauth/oauth2/auth");
     authUrl.searchParams.set("client_id", clientId);
