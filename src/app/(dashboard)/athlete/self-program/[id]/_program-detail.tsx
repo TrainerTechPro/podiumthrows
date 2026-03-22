@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
+  ChevronRight,
   Clock,
   Dumbbell,
   Sparkles,
@@ -465,7 +466,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 
             {phases.map((phase) => (
               <TabPanel key={phase.id} id={phase.id} className="mt-4">
-                <PhaseContent phase={phase} programStartDate={program.startDate} />
+                <PhaseContent phase={phase} programStartDate={program.startDate} configId={config.id} />
               </TabPanel>
             ))}
           </Tabs>
@@ -518,9 +519,11 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 function PhaseContent({
   phase,
   programStartDate,
+  configId,
 }: {
   phase: ProgramPhase;
   programStartDate: string;
+  configId: string;
 }) {
   const colors = getPhaseColor(phase.phase);
 
@@ -612,6 +615,7 @@ function PhaseContent({
                 key={session.id}
                 session={session}
                 programStartDate={programStartDate}
+                configId={configId}
               />
             ))}
           </StaggeredList>
@@ -632,15 +636,20 @@ function PhaseContent({
 function SessionCard({
   session,
   programStartDate: _programStartDate,
+  configId,
 }: {
   session: ProgramSession;
   programStartDate: string;
+  configId: string;
 }) {
   const statusStyle = getStatusStyle(session.status);
   const dayName = DAY_NAMES[session.dayOfWeek] ?? `Day ${session.dayOfWeek}`;
 
   return (
-    <div className="card p-4 flex items-center gap-4">
+    <Link
+      href={`/athlete/self-program/${configId}/session/${session.id}`}
+      className="card card-interactive p-4 flex items-center gap-4"
+    >
       {/* Day + type */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
@@ -684,6 +693,9 @@ function SessionCard({
           <span className="tabular-nums">{session.estimatedDuration}min</span>
         </div>
       )}
-    </div>
+
+      {/* Chevron */}
+      <ChevronRight size={16} strokeWidth={1.75} className="text-muted shrink-0" aria-hidden="true" />
+    </Link>
   );
 }
