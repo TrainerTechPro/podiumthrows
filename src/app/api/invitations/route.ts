@@ -168,7 +168,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, data: invitation, emailSent });
   } catch (err) {
     logger.error("POST /api/invitations", { context: "api", error: err });
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Failed to create invitation: ${message}` }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create invitation. Please try again." }, { status: 500 });
   }
 }

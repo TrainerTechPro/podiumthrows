@@ -293,7 +293,9 @@ export async function configureR2Cors(): Promise<void> {
       CORSConfiguration: {
         CORSRules: [
           {
-            AllowedOrigins: ["*"],
+            AllowedOrigins: [
+              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+            ],
             AllowedMethods: ["GET", "HEAD", "PUT", "OPTIONS"],
             AllowedHeaders: [
               "Range",

@@ -3,8 +3,8 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { generateCsrfToken, csrfCookieString, clearCsrfCookieString } from "@/lib/csrf";
 
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
-  throw new Error("JWT_SECRET environment variable must be set in production");
+if ((!process.env.JWT_SECRET?.trim()) && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET environment variable must be set and non-empty in production");
 }
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 const JWT_EXPIRES_IN_SECONDS = 7 * 24 * 60 * 60; // 7 days

@@ -56,7 +56,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+              "script-src 'self' 'unsafe-inline' https://js.stripe.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.r2.dev https://*.s3.amazonaws.com https://*.s3.*.amazonaws.com https://v2.exercisedb.io",
               "font-src 'self' data:",

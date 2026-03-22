@@ -59,9 +59,22 @@ export async function PATCH(
       );
     }
 
+    // Verify exercise exists before allowing modification
+    const existing = await prisma.exerciseLibrary.findUnique({
+      where: { id: params.id },
+      select: { id: true },
+    });
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: "Exercise not found" },
+        { status: 404 }
+      );
+    }
+
     const body = await request.json();
     const { videoUrl, videoEmbed, tips } = body;
 
+    // Only allow updating supplemental fields (video, tips) — not core exercise data
     const updated = await prisma.exerciseLibrary.update({
       where: { id: params.id },
       data: {

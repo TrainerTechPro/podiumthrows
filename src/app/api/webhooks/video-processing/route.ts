@@ -135,7 +135,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     logger.error("video-processing webhook Error", { context: "api", error: err });
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
