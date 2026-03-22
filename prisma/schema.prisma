@@ -294,6 +294,9 @@ model AthleteProfile {
   liftingPrograms    LiftingProgram[]
   liftingWorkoutLogs LiftingWorkoutLog[]
 
+  // WHOOP integration
+  whoopConnection WhoopConnection?
+
   // Utility relations (from TrainingTracker)
   voiceNotes       VoiceNote[]
   bodyMeasurements BodyMeasurement[]
@@ -562,6 +565,13 @@ model ReadinessCheckIn {
   injuryStatus InjuryStatus   @default(NONE)
   injuryNotes  String?
   notes        String?
+
+  // WHOOP integration fields
+  hrvMs        Float?
+  restingHR    Float?
+  spo2         Float?
+  whoopStrain  Float?
+  source       String    @default("MANUAL")
 
   @@unique([athleteId, date])
   @@index([athleteId])
@@ -2508,4 +2518,48 @@ model SelfProgramConfig {
   updatedAt DateTime @updatedAt
 
   @@index([athleteProfileId, isActive])
+}
+
+// ─── WHOOP INTEGRATION ────────────────────────────────────────────────────────
+
+model WhoopConnection {
+  id             String         @id @default(cuid())
+  athleteId      String         @unique
+  athlete        AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  whoopUserId    Int
+  accessToken    String
+  refreshToken   String
+  tokenExpiresAt DateTime
+  scopes         String
+  syncMode       String         @default("ASSISTED")
+  lastSyncAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  snapshots      WhoopDailySnapshot[]
+
+  @@index([whoopUserId])
+}
+
+model WhoopDailySnapshot {
+  id               String          @id @default(cuid())
+  connectionId     String
+  connection       WhoopConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  date             String
+  recoveryScore    Float?
+  hrvMs            Float?
+  restingHR        Float?
+  spo2             Float?
+  skinTempC        Float?
+  sleepPerformance Float?
+  sleepDurationMs  Int?
+  sleepEfficiency  Float?
+  lightSleepMs     Int?
+  swsSleepMs       Int?
+  remSleepMs       Int?
+  strain           Float?
+  rawData          String?
+  createdAt        DateTime @default(now())
+
+  @@unique([connectionId, date])
+  @@index([connectionId, date])
 }
