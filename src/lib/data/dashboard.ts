@@ -270,9 +270,11 @@ export async function fetchTodayWorkoutData(
   const sessions: TodaySession[] = [];
 
   // ── Source 1: ProgramSession ────────────────────────────────────────────
-  const programSessions = await prisma.programSession.findMany({
+  // scheduledDate is nullable — many sessions derive their date from
+  // program.startDate + weekNumber + dayOfWeek. We must fetch all
+  // non-skipped sessions for this athlete and compute the actual date.
+  const allProgramSessions = await prisma.programSession.findMany({
     where: {
-      scheduledDate: today,
       program: { athleteId },
       status: { not: "SKIPPED" },
     },
@@ -280,11 +282,26 @@ export async function fetchTodayWorkoutData(
       program: {
         select: {
           event: true,
+          startDate: true,
           selfProgramConfig: { select: { id: true } },
         },
       },
     },
     orderBy: { createdAt: "asc" },
+  });
+
+  // Filter to today: either scheduledDate matches, or computed date matches
+  const programSessions = allProgramSessions.filter((ps) => {
+    if (ps.scheduledDate === today) return true;
+    if (!ps.scheduledDate && ps.program.startDate) {
+      const start = new Date(ps.program.startDate);
+      start.setDate(start.getDate() + (ps.weekNumber - 1) * 7 + (ps.dayOfWeek - 1));
+      const computed = start.getFullYear() + "-" +
+        String(start.getMonth() + 1).padStart(2, "0") + "-" +
+        String(start.getDate()).padStart(2, "0");
+      return computed === today;
+    }
+    return false;
   });
 
   for (const ps of programSessions) {
@@ -495,14 +512,17 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
   const firstYMD = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, "0")}-01`;
   const lastYMD = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
 
-  const [programSessions, trainingSessions] = await Promise.all([
-    // ProgramSession — scheduledDate is String (YYYY-MM-DD)
+  const [allProgramSessions, trainingSessions] = await Promise.all([
+    // ProgramSession — scheduledDate is nullable String; must also compute from startDate
     prisma.programSession.findMany({
-      where: {
-        program: { athleteId },
-        scheduledDate: { gte: firstYMD, lte: lastYMD },
+      where: { program: { athleteId } },
+      select: {
+        scheduledDate: true,
+        status: true,
+        weekNumber: true,
+        dayOfWeek: true,
+        program: { select: { startDate: true } },
       },
-      select: { scheduledDate: true, status: true },
     }),
 
     // TrainingSession — scheduledDate is DateTime
@@ -523,9 +543,20 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
     return dayMap.get(date)!;
   };
 
-  for (const ps of programSessions) {
-    if (!ps.scheduledDate) continue;
-    const entry = getOrCreate(ps.scheduledDate);
+  for (const ps of allProgramSessions) {
+    // Resolve actual date: explicit scheduledDate or computed from startDate
+    let dateStr = ps.scheduledDate;
+    if (!dateStr && ps.program.startDate) {
+      const start = new Date(ps.program.startDate);
+      start.setDate(start.getDate() + (ps.weekNumber - 1) * 7 + (ps.dayOfWeek - 1));
+      dateStr = start.getFullYear() + "-" +
+        String(start.getMonth() + 1).padStart(2, "0") + "-" +
+        String(start.getDate()).padStart(2, "0");
+    }
+    if (!dateStr) continue;
+    // Filter to current month
+    if (dateStr < firstYMD || dateStr > lastYMD) continue;
+    const entry = getOrCreate(dateStr);
     if (ps.status === "COMPLETED") entry.hasCompleted = true;
     else entry.hasScheduled = true;
   }
