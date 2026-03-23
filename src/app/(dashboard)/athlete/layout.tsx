@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
+import { WhoopAutoSync } from "./_whoop-auto-sync";
+
+const WHOOP_STALE_MS = 60 * 60 * 1000; // 1 hour
 
 export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -17,12 +20,19 @@ export default async function AthleteLayout({ children }: { children: React.Reac
       avatarUrl: true,
       events: true,
       user: { select: { email: true } },
+      whoopConnection: { select: { lastSyncAt: true } },
     },
   });
 
   if (!athlete) {
     redirect(isCoachTraining ? "/coach/dashboard" : "/login");
   }
+
+  // Auto-sync WHOOP if connected and data is stale (>1 hour since last sync)
+  const whoopStale =
+    athlete.whoopConnection != null &&
+    (!athlete.whoopConnection.lastSyncAt ||
+      Date.now() - athlete.whoopConnection.lastSyncAt.getTime() > WHOOP_STALE_MS);
 
   const user: DashboardUser = {
     name: `${athlete.firstName} ${athlete.lastName}`,
@@ -33,5 +43,10 @@ export default async function AthleteLayout({ children }: { children: React.Reac
     trainingEnabled: isCoachTraining,
   };
 
-  return <DashboardLayout user={user}>{children}</DashboardLayout>;
+  return (
+    <DashboardLayout user={user}>
+      {whoopStale && <WhoopAutoSync />}
+      {children}
+    </DashboardLayout>
+  );
 }
