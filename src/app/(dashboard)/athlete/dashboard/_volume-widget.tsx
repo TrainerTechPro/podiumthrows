@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components";
+import { Skeleton, AnimatedNumber } from "@/components";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -55,7 +55,7 @@ export function VolumeWidget() {
 
   if (!hasActivity) {
     return (
-      <div className="card px-6 py-8">
+      <div className="card px-6 py-8 shadow-sm md:hover:shadow-md md:transition-shadow">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">
           Training Volume
         </h3>
@@ -98,7 +98,7 @@ export function VolumeWidget() {
   const throwsDelta = thisWeek && lastWeek ? thisWeek.throws - lastWeek.throws : 0;
 
   return (
-    <div className="card px-6 py-5">
+    <div className="card px-6 py-5 shadow-sm md:hover:shadow-md md:transition-shadow">
       <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">
         Training Volume
       </h3>
@@ -131,12 +131,15 @@ export function VolumeWidget() {
                   </span>
                   <div
                     className={cn(
-                      "w-full rounded-t-md transition-all duration-500",
+                      "w-full rounded-t-md animate-bar-grow",
                       isCurrentWeek
                         ? "bg-primary-500"
                         : "bg-surface-200 dark:bg-surface-700"
                     )}
-                    style={{ height: `${height}%` }}
+                    style={{
+                      height: `${height}%`,
+                      animationDelay: `${i * 60}ms`,
+                    }}
                   />
                   <span className="text-[9px] text-muted truncate max-w-full">
                     {w.week.split(" ")[0]}
@@ -154,7 +157,7 @@ export function VolumeWidget() {
             <p className="text-xs text-muted">Throws this week</p>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-xl font-bold tabular-nums font-heading text-[var(--foreground)]">
-                {thisWeek?.throws ?? 0}
+                <AnimatedNumber value={thisWeek?.throws ?? 0} decimals={0} />
               </span>
               {throwsDelta !== 0 && (
                 <span
@@ -177,7 +180,7 @@ export function VolumeWidget() {
             <p className="text-xs text-muted">Current streak</p>
             <div className="flex items-baseline gap-1.5 mt-0.5">
               <span className="text-xl font-bold tabular-nums font-heading text-primary-600 dark:text-primary-400">
-                {data.streaks.current}
+                <AnimatedNumber value={data.streaks.current} decimals={0} />
               </span>
               <span className="text-xs text-muted">
                 day{data.streaks.current !== 1 ? "s" : ""}
