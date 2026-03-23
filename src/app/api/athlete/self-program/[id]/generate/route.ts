@@ -343,7 +343,8 @@ export async function POST(
       data: {
         trainingProgramId: program.id,
         isDraft: false,
-        generationCount: 1,
+        generationCount: { increment: 1 },
+        currentPhaseIndex: 0,
       },
     });
 
