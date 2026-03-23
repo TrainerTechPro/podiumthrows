@@ -252,6 +252,9 @@ model AthleteProfile {
   // e.g. { squat1RM, bench1RM, deadlift1RM, cleanAndJerk1RM, snatch1RM, overheadPress1RM, ... }
   performanceBenchmarks String? @db.Text
 
+  // Widget layout config: { preset, widgets, order }
+  dashboardConfig Json?
+
   // Core relations (existing PT models)
   trainingSessions         TrainingSession[]
   sessionLogs              SessionLog[]
