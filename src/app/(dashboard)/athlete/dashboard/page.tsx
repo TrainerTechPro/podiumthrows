@@ -7,6 +7,7 @@ import {
 } from "./_widget-registry";
 import { StaggeredList } from "@/components";
 import { StreakBadge } from "@/components/ui/StreakBadge";
+import { CustomizeTrigger } from "./_customize-trigger";
 
 /* ─── Fetchers ──────────────────────────────────────────────────────────── */
 
@@ -107,7 +108,7 @@ export default async function AthleteDashboardPage() {
           </div>
           <p className="text-sm text-muted mt-0.5">{today}</p>
         </div>
-        {/* Customize trigger will be added in Task 11 */}
+        <CustomizeTrigger config={config} />
       </div>
 
       {/* Widgets in order */}
