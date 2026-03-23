@@ -312,8 +312,8 @@ export async function fetchTodayWorkoutData(
     });
     const selfConfigId = ps.program.selfProgramConfig?.id;
     const href = selfConfigId
-      ? `/athlete/self-program/${selfConfigId}`
-      : `/athlete/sessions`;
+      ? `/athlete/self-program/${selfConfigId}/session/${ps.id}`
+      : `/athlete/sessions/${ps.id}`;
 
     sessions.push({
       id: ps.id,
