@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession, canActAsAthlete } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { syncWhoopData } from "@/lib/whoop/sync";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
@@ -17,11 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const isAthlete = await canActAsAthlete(session);
-    if (!isAthlete) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
+    // Find athlete profile — works for ATHLETE role or COACH with Training Mode
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },

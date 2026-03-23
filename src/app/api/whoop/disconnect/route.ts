@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession, canActAsAthlete } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { decrypt } from "@/lib/whoop/crypto";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
@@ -16,11 +16,6 @@ export async function POST() {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const isAthlete = await canActAsAthlete(session);
-    if (!isAthlete) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({

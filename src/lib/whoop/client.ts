@@ -22,8 +22,16 @@ export async function getAccessToken(connectionId: string): Promise<string> {
     return decryptedAccess;
   }
 
-  // Token expired — refresh
+  // Token expired — refresh (if we have a refresh token)
+  if (!connection.refreshToken) {
+    // No refresh token — return current access token and hope it works
+    return decrypt(connection.accessToken);
+  }
+
   const decryptedRefresh = decrypt(connection.refreshToken);
+  if (!decryptedRefresh) {
+    return decrypt(connection.accessToken);
+  }
 
   const res = await fetch(TOKEN_URL, {
     method: "POST",
@@ -43,9 +51,14 @@ export async function getAccessToken(connectionId: string): Promise<string> {
 
   const data = await res.json();
 
-  const newAccessToken = encrypt(data.access_token as string);
-  const newRefreshToken = encrypt(data.refresh_token as string);
-  const expiresAt = new Date(Date.now() + (data.expires_in as number) * 1000);
+  // WHOOP uses space-delimited keys ("access token" not "access_token")
+  const newAccess = (data.access_token ?? data["access token"]) as string;
+  const newRefresh = (data.refresh_token ?? data["refresh token"]) as string | undefined;
+  const expiresIn = (data.expires_in ?? data["expires in"] ?? 3600) as number;
+
+  const newAccessToken = encrypt(newAccess);
+  const newRefreshToken = newRefresh ? encrypt(newRefresh) : connection.refreshToken;
+  const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
   await prisma.whoopConnection.update({
     where: { id: connectionId },
