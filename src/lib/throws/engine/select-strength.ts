@@ -169,16 +169,37 @@ function buildPrescription(
   const exerciseId = dbEntry?.id ?? exercise.name.toLowerCase().replace(/\s+/g, "_");
   const classification = exercise.classification;
 
-  // Calculate load from PRs
+  // ── Vary sets/reps/intensity by classification ─────────────────────
+  // SP (Special Preparation): heavier, lower reps — use upper intensity, lower reps
+  // GP (General Preparation): lighter, higher reps — use lower intensity, higher reps
+  // This prevents every exercise from getting identical 4×7@72%.
+  let sets: number;
+  let reps: number;
+  let intensityBias: number; // 0 = min end, 1 = max end
+
+  if (classification === "SP") {
+    // SP = heavier, fewer reps, more sets
+    sets = loading.setsMax;
+    reps = loading.repsMin;
+    intensityBias = 0.75; // upper quarter of intensity range
+  } else {
+    // GP = lighter, more reps, fewer sets
+    sets = loading.setsMin;
+    reps = loading.repsMax;
+    intensityBias = 0.25; // lower quarter of intensity range
+  }
+
+  // Clamp to valid ranges
+  sets = Math.max(loading.setsMin, Math.min(loading.setsMax, sets));
+  reps = Math.max(loading.repsMin, Math.min(loading.repsMax, reps));
+
+  // Calculate load from PRs with classification-aware intensity
   const { intensityPercent, loadKg } = calculateLoad(
     exerciseId,
     liftingPrs,
     loading,
+    intensityBias,
   );
-
-  // Determine sets and reps
-  const sets = Math.round((loading.setsMin + loading.setsMax) / 2);
-  const reps = Math.round((loading.repsMin + loading.repsMax) / 2);
 
   // Rest interval
   const restSeconds =
@@ -202,13 +223,14 @@ function calculateLoad(
   exerciseId: string,
   liftingPrs: LiftingPrs,
   loading: PhaseLoading,
+  intensityBias: number = 0.5,
 ): { intensityPercent: number; loadKg: number | undefined } {
   const prField = EXERCISE_PR_MAP[exerciseId];
   const scaleFactor = EXERCISE_SCALE[exerciseId] ?? 1.0;
 
-  // Middle of intensity range
+  // Bias-adjusted intensity: 0 = min, 0.5 = mid, 1 = max
   const intensityPercent = Math.round(
-    (loading.intensityMin + loading.intensityMax) / 2,
+    loading.intensityMin + (loading.intensityMax - loading.intensityMin) * intensityBias,
   );
 
   if (!prField) {

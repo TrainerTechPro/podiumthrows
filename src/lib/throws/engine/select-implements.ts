@@ -63,7 +63,7 @@ export function selectImplements(
 
   const heavyOwned = availableImplements
     .filter((i) => i.weightKg > compWeightKg)
-    .sort((a, b) => a.weightKg - b.weightKg); // lightest heavy first
+    .sort((a, b) => b.weightKg - a.weightKg); // heaviest first (Bondarchuk descending order)
 
   // Calculate throw counts per category
   let lightThrows = Math.round((totalThrows * lightPct) / 100);
