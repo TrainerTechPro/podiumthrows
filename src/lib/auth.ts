@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { generateCsrfToken, csrfCookieString, clearCsrfCookieString } from "@/lib/csrf";
+import prisma from "@/lib/prisma";
 
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
   throw new Error("JWT_SECRET environment variable must be set in production");
@@ -54,14 +55,22 @@ export async function getSession(): Promise<JWTPayload | null> {
 
 /**
  * Check if the current session can act as an athlete.
- * True for ATHLETE role, or COACH role in training mode (active-mode cookie = TRAINING).
+ * True for ATHLETE role, or COACH role with Training Mode enabled.
+ * Checks cookie first (fast), falls back to DB check for AthleteProfile.
  */
 export async function canActAsAthlete(session: JWTPayload | null): Promise<boolean> {
   if (!session) return false;
   if (session.role === "ATHLETE") return true;
   if (session.role === "COACH") {
-    const cookieStore = await cookies();
-    return cookieStore.get("active-mode")?.value === "TRAINING";
+    // Fast path: check cookie
+    const cookieStore = cookies();
+    if (cookieStore.get("active-mode")?.value === "TRAINING") return true;
+    // Fallback: check if coach has an AthleteProfile (Training Mode enabled)
+    const athlete = await prisma.athleteProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
+    });
+    return !!athlete;
   }
   return false;
 }
