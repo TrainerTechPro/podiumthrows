@@ -11,14 +11,12 @@ import { logger } from "@/lib/logger";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/* ─── Locked fields — identity of the program, cannot be edited ──────── */
+const LOCKED_FIELDS = ["event", "gender", "competitionLevel", "yearsExperience", "currentPR"];
+
 /* ─── Allowed fields for PUT updates ─────────────────────────────────── */
 const ALLOWED_FIELDS = new Set([
   "programType",
-  "event",
-  "gender",
-  "yearsExperience",
-  "competitionLevel",
-  "currentPR",
   "goalDistance",
   "currentWeeklyVolume",
   "availableImplements",
@@ -158,6 +156,56 @@ export async function PUT(
     }
 
     const body = await req.json().catch(() => ({}));
+
+    // Reject requests that attempt to modify locked (identity) fields
+    const lockedAttempt = LOCKED_FIELDS.filter((f) => f in (body as Record<string, unknown>));
+    if (lockedAttempt.length > 0) {
+      return NextResponse.json(
+        { error: `Cannot modify locked fields: ${lockedAttempt.join(", ")}. Create a new program instead.` },
+        { status: 400 },
+      );
+    }
+
+    // Server-side validation for editable fields
+    const typedBody = body as Record<string, unknown>;
+    if ("daysPerWeek" in typedBody) {
+      const v = typedBody.daysPerWeek;
+      if (typeof v !== "number" || v < 2 || v > 5) {
+        return NextResponse.json({ error: "daysPerWeek must be a number between 2 and 5." }, { status: 400 });
+      }
+    }
+    if ("sessionsPerDay" in typedBody) {
+      const v = typedBody.sessionsPerDay;
+      if (v !== 1 && v !== 2) {
+        return NextResponse.json({ error: "sessionsPerDay must be 1 or 2." }, { status: 400 });
+      }
+    }
+    if ("preferredDays" in typedBody) {
+      const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const v = typedBody.preferredDays;
+      if (!Array.isArray(v) || v.some((d) => !validDays.includes(d as string))) {
+        return NextResponse.json(
+          { error: "preferredDays must be an array of valid day names (Monday–Sunday)." },
+          { status: 400 },
+        );
+      }
+      if ("daysPerWeek" in typedBody && v.length !== (typedBody.daysPerWeek as number)) {
+        return NextResponse.json(
+          { error: "preferredDays length must match daysPerWeek." },
+          { status: 400 },
+        );
+      }
+    }
+    if ("availableImplements" in typedBody) {
+      const v = typedBody.availableImplements;
+      if (!Array.isArray(v) || v.length < 1) {
+        return NextResponse.json(
+          { error: "availableImplements must be an array with at least 1 item." },
+          { status: 400 },
+        );
+      }
+    }
+
     const data: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
