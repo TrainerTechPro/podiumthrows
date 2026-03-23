@@ -58,7 +58,7 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
   }, [days]);
 
   return (
-    <div className="card px-4 py-4 sm:px-5">
+    <div className="card px-4 py-4 sm:px-5 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/*
        * CSS keyframe for dot scale-in with spring overshoot.
        * This is a static string — no user content — injected via <style> tag.
@@ -66,7 +66,7 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
       <style
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{
-          __html: `@keyframes dotScaleIn{0%{transform:scale(0)}60%{transform:scale(1.3)}80%{transform:scale(0.9)}100%{transform:scale(1)}}`,
+          __html: `@keyframes dotScaleIn{0%{transform:scale(0)}60%{transform:scale(1.15)}80%{transform:scale(0.95)}100%{transform:scale(1)}}@media(prefers-reduced-motion:reduce){@keyframes dotScaleIn{0%,100%{transform:scale(1)}}}`,
         }}
       />
 

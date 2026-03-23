@@ -229,7 +229,7 @@ function SessionContent({ session }: { session: TodaySession }) {
 
 function RestDayState() {
   return (
-    <div className="card">
+    <div className="card shadow-sm md:hover:shadow-md md:transition-shadow">
       <div className="flex flex-col items-center text-center py-10 px-6 gap-3">
         <div className="w-12 h-12 rounded-2xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
           <Coffee
@@ -259,7 +259,7 @@ function RestDayState() {
 
 function SingleSessionView({ session }: { session: TodaySession }) {
   return (
-    <div className="card p-5 space-y-4">
+    <div className="card p-5 space-y-4 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
@@ -296,7 +296,7 @@ function SingleSessionView({ session }: { session: TodaySession }) {
 
 function MultiSessionView({ sessions }: { sessions: TodaySession[] }) {
   return (
-    <div className="card p-5 space-y-4">
+    <div className="card p-5 space-y-4 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">

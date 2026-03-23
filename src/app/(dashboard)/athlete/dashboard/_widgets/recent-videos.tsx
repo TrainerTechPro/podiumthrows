@@ -15,7 +15,7 @@ function formatDate(iso: string): string {
 
 export function RecentVideosWidget({ videos }: { videos: VideoItem[] }) {
   return (
-    <div className="card px-4 py-4 sm:px-5">
+    <div className="card px-4 py-4 sm:px-5 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">

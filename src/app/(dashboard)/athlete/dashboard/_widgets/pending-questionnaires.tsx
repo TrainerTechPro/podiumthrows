@@ -9,7 +9,7 @@ export function PendingQuestionnairesWidget({
   data: QuestionnairesData;
 }) {
   return (
-    <div className="card px-4 py-4 sm:px-5">
+    <div className="card px-4 py-4 sm:px-5 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">

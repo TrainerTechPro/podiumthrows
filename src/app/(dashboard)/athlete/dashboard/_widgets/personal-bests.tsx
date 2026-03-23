@@ -26,7 +26,7 @@ function formatRelativeDate(iso: string): string {
 
 export function PersonalBestsWidget({ prs }: { prs: PRItem[] }) {
   return (
-    <div className="card py-1">
+    <div className="card py-1 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
@@ -39,6 +39,13 @@ export function PersonalBestsWidget({ prs }: { prs: PRItem[] }) {
           History &gt;
         </Link>
       </div>
+
+      {/* Medal shimmer keyframe — static CSS, no user content */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `@keyframes medalShimmer{0%,100%{filter:brightness(1) drop-shadow(0 0 0 transparent)}50%{filter:brightness(1.2) drop-shadow(0 0 6px rgba(245,158,11,0.4))}}@media(prefers-reduced-motion:reduce){@keyframes medalShimmer{0%,100%{filter:none}}}`,
+        }}
+      />
 
       {prs.length === 0 ? (
         <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
@@ -63,7 +70,10 @@ export function PersonalBestsWidget({ prs }: { prs: PRItem[] }) {
         <div>
           {prs.map((pr) => (
             <div key={pr.id} className="flex items-center gap-3 px-4 py-3">
-              <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+              <div
+                className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0"
+                style={{ animation: "medalShimmer 3s ease-in-out infinite" }}
+              >
                 <Award
                   size={14}
                   strokeWidth={1.75}

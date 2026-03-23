@@ -28,7 +28,7 @@ export function UpcomingSessionsWidget({
   sessions: UpcomingSessionItem[];
 }) {
   return (
-    <div className="card py-1">
+    <div className="card py-1 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
