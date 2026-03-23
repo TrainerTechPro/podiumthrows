@@ -95,6 +95,13 @@ interface SelfProgramConfig {
   isActive: boolean;
   startDate: string;
   createdAt: string;
+  // Settings fields
+  competitionLevel: string;
+  yearsExperience: number;
+  primaryGoal: string;
+  preferredDays: string[];
+  availableImplements: Array<{ weightKg: number; type?: string }>;
+  competitionDates: Array<{ date: string; name: string; priority: string }> | null;
 }
 
 interface ProgramDetailProps {
