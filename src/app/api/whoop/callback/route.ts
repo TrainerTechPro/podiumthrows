@@ -93,12 +93,13 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenRes.json();
     logger.info("WHOOP token response keys", { context: "api", metadata: { keys: Object.keys(tokenData) } });
 
-    const access_token = tokenData.access_token as string | undefined;
-    const refresh_token = tokenData.refresh_token as string | undefined;
-    const expires_in = (tokenData.expires_in as number) || 3600;
-    const scope = (tokenData.scope as string) || "";
+    // WHOOP returns keys with spaces ("access token") not underscores ("access_token")
+    const access_token = (tokenData.access_token ?? tokenData["access token"]) as string | undefined;
+    const refresh_token = (tokenData.refresh_token ?? tokenData["refresh token"]) as string | undefined;
+    const expires_in = (tokenData.expires_in ?? tokenData["expires in"] ?? 3600) as number;
+    const scope = (tokenData.scope ?? "") as string;
 
-    if (!access_token || !refresh_token) {
+    if (!access_token) {
       logger.error("WHOOP token response missing tokens", {
         context: "api",
         metadata: {
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(settingsUrl);
     }
     const encryptedAccess = encrypt(access_token);
-    const encryptedRefresh = encrypt(refresh_token);
+    const encryptedRefresh = refresh_token ? encrypt(refresh_token) : "";
     const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
 
     // Upsert the connection (handles reconnection after disconnect)
