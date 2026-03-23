@@ -93,8 +93,13 @@ export type QuestionnairesData = {
 /*  HELPERS                                                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
+/** US-Central-ish offset: use America/Chicago as a safe default for D1 athletes.
+ *  Ensures the "today" string matches dates stored when coaches/athletes
+ *  created sessions from US timezones. */
 function todayYMD(): string {
-  const d = new Date();
+  const d = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })
+  );
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
@@ -102,7 +107,9 @@ function todayYMD(): string {
 }
 
 function startOfToday(): Date {
-  const d = new Date();
+  const d = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })
+  );
   d.setHours(0, 0, 0, 0);
   return d;
 }
@@ -267,6 +274,7 @@ export async function fetchTodayWorkoutData(
     where: {
       scheduledDate: today,
       program: { athleteId },
+      status: { not: "SKIPPED" },
     },
     include: {
       program: {
@@ -304,7 +312,7 @@ export async function fetchTodayWorkoutData(
 
   // ── Source 2: ThrowsAssignment ──────────────────────────────────────────
   const throwsAssignments = await prisma.throwsAssignment.findMany({
-    where: { athleteId, assignedDate: today },
+    where: { athleteId, assignedDate: today, status: { notIn: ["SKIPPED"] } },
     include: {
       session: {
         select: {

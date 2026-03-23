@@ -78,12 +78,14 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
 
   const [config, setConfig] = useState<DashboardConfig>({ ...currentConfig });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /* ── Save to API ────────────────────────────────────────────────────── */
 
   const saveConfig = useCallback(
     async (next: DashboardConfig) => {
       setSaving(true);
+      setError(null);
       try {
         // Determine if this matches a preset (send preset name only)
         const presetEntry = (Object.entries(PRESETS) as [PresetId, DashboardConfig][]).find(
@@ -106,12 +108,20 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
           const saved = await res.json();
           setConfig(saved);
           router.refresh();
+        } else {
+          const data = await res.json().catch(() => null);
+          setError(data?.error ?? "Failed to save. Please try again.");
+          // Revert optimistic state
+          setConfig(currentConfig);
         }
+      } catch {
+        setError("Network error. Check your connection and try again.");
+        setConfig(currentConfig);
       } finally {
         setSaving(false);
       }
     },
-    [router],
+    [router, currentConfig],
   );
 
   /* ── Preset select ──────────────────────────────────────────────────── */
@@ -260,6 +270,13 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
               <div className="text-xs text-muted mb-3 flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary-500 animate-pulse" />
                 Saving...
+              </div>
+            )}
+
+            {/* Error message */}
+            {error && (
+              <div className="text-xs text-red-600 dark:text-red-400 mb-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                {error}
               </div>
             )}
 
