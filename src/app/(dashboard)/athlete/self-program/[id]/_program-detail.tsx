@@ -29,6 +29,7 @@ import {
   TabPanel,
 } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
+import { ProgramSettings } from "./_program-settings";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -420,103 +421,119 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
         </StaggeredList>
       </section>
 
-      {/* ── Phase Timeline (Tabs) ──────────────────────────────────────── */}
-      {phases.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Phase Timeline
-          </h2>
+      {/* ── Top-level Program / Settings Tabs ─────────────────────────── */}
+      <Tabs defaultTab="program">
+        <TabList variant="underline">
+          <TabTrigger id="program" variant="underline">Program</TabTrigger>
+          <TabTrigger id="settings" variant="underline">Settings</TabTrigger>
+        </TabList>
 
-          <Tabs defaultTab={defaultTabId}>
-            <TabList variant="underline" className="overflow-x-auto custom-scrollbar">
-              {phases.map((phase) => {
-                const colors = getPhaseColor(phase.phase);
-                const isCurrent = phase.id === currentPhase?.id;
+        {/* ── Program Tab ─────────────────────────────────────────────── */}
+        <TabPanel id="program" className="mt-6 space-y-6">
+          {/* Phase Timeline (Tabs) */}
+          {phases.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+                Phase Timeline
+              </h2>
 
-                return (
-                  <TabTrigger
-                    key={phase.id}
-                    id={phase.id}
-                    variant="underline"
-                    icon={
-                      <span
-                        className={cn(
-                          "w-2 h-2 rounded-full shrink-0",
-                          isCurrent ? colors.dot : "bg-surface-300 dark:bg-surface-600",
-                        )}
-                      />
-                    }
-                    badge={
-                      <span
-                        className={cn(
-                          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase",
-                          getStatusStyle(phase.status).bg,
-                          getStatusStyle(phase.status).text,
-                        )}
+              <Tabs defaultTab={defaultTabId}>
+                <TabList variant="underline" className="overflow-x-auto custom-scrollbar">
+                  {phases.map((phase) => {
+                    const colors = getPhaseColor(phase.phase);
+                    const isCurrent = phase.id === currentPhase?.id;
+
+                    return (
+                      <TabTrigger
+                        key={phase.id}
+                        id={phase.id}
+                        variant="underline"
+                        icon={
+                          <span
+                            className={cn(
+                              "w-2 h-2 rounded-full shrink-0",
+                              isCurrent ? colors.dot : "bg-surface-300 dark:bg-surface-600",
+                            )}
+                          />
+                        }
+                        badge={
+                          <span
+                            className={cn(
+                              "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase",
+                              getStatusStyle(phase.status).bg,
+                              getStatusStyle(phase.status).text,
+                            )}
+                          >
+                            {phase.status}
+                          </span>
+                        }
                       >
-                        {phase.status}
-                      </span>
-                    }
-                  >
-                    <span className="flex flex-col items-start leading-tight">
-                      <span className="text-xs font-semibold">
-                        {phase.phase}
-                      </span>
-                      <span className="text-[10px] text-muted tabular-nums">
-                        Wk {phase.startWeek}&ndash;{phase.endWeek}
-                      </span>
-                    </span>
-                  </TabTrigger>
-                );
-              })}
-            </TabList>
+                        <span className="flex flex-col items-start leading-tight">
+                          <span className="text-xs font-semibold">
+                            {phase.phase}
+                          </span>
+                          <span className="text-[10px] text-muted tabular-nums">
+                            Wk {phase.startWeek}&ndash;{phase.endWeek}
+                          </span>
+                        </span>
+                      </TabTrigger>
+                    );
+                  })}
+                </TabList>
 
-            {phases.map((phase) => (
-              <TabPanel key={phase.id} id={phase.id} className="mt-4">
-                <PhaseContent phase={phase} programStartDate={program.startDate} configId={config.id} />
-              </TabPanel>
-            ))}
-          </Tabs>
-        </section>
-      )}
+                {phases.map((phase) => (
+                  <TabPanel key={phase.id} id={phase.id} className="mt-4">
+                    <PhaseContent phase={phase} programStartDate={program.startDate} configId={config.id} />
+                  </TabPanel>
+                ))}
+              </Tabs>
+            </section>
+          )}
 
-      {/* ── Generate Next Phase ────────────────────────────────────────── */}
-      {canGenerateNext && (
-        <section className="space-y-3">
-          <div className="card p-6 text-center space-y-4 border-dashed border-2 border-primary-300 dark:border-primary-500/30">
-            <div className="w-12 h-12 rounded-2xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center mx-auto">
-              <Sparkles
-                size={22}
-                strokeWidth={1.75}
-                className="text-primary-500"
-                aria-hidden="true"
-              />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
-                Ready for the Next Phase
-              </h3>
-              <p className="text-sm text-muted max-w-md mx-auto">
-                You&apos;re 80%+ through your current phase. Generate the next
-                mesocycle to keep your training on track.
-              </p>
-            </div>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleGenerateNext}
-              loading={generating}
-              leftIcon={
-                generating ? undefined : (
-                  <Zap size={16} strokeWidth={1.75} aria-hidden="true" />
-                )
-              }
-            >
-              {generating ? "Generating..." : "Generate Next Phase"}
-            </Button>
-          </div>
-        </section>
-      )}
+          {/* Generate Next Phase */}
+          {canGenerateNext && (
+            <section className="space-y-3">
+              <div className="card p-6 text-center space-y-4 border-dashed border-2 border-primary-300 dark:border-primary-500/30">
+                <div className="w-12 h-12 rounded-2xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center mx-auto">
+                  <Sparkles
+                    size={22}
+                    strokeWidth={1.75}
+                    className="text-primary-500"
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
+                    Ready for the Next Phase
+                  </h3>
+                  <p className="text-sm text-muted max-w-md mx-auto">
+                    You&apos;re 80%+ through your current phase. Generate the next
+                    mesocycle to keep your training on track.
+                  </p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleGenerateNext}
+                  loading={generating}
+                  leftIcon={
+                    generating ? undefined : (
+                      <Zap size={16} strokeWidth={1.75} aria-hidden="true" />
+                    )
+                  }
+                >
+                  {generating ? "Generating..." : "Generate Next Phase"}
+                </Button>
+              </div>
+            </section>
+          )}
+        </TabPanel>
+
+        {/* ── Settings Tab ────────────────────────────────────────────── */}
+        <TabPanel id="settings" className="mt-6">
+          <ProgramSettings config={config} />
+        </TabPanel>
+      </Tabs>
     </div>
   );
 }
