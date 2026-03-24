@@ -936,8 +936,9 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {summaryCards.map(({ label, value, color, note }) => {
-          const numericPart = parseFloat(value);
-          const suffix = value.replace(String(numericPart), "");
+          const match = value.match(/^(-?[\d.]+)(.*)/);
+          const numericPart = match ? parseFloat(match[1]) : NaN;
+          const suffix = match ? match[2] : "";
           return (
           <div key={label} className="card px-4 py-3 space-y-0.5">
             <p className="text-xs text-muted">{label}</p>

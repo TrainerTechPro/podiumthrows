@@ -69,7 +69,7 @@ export async function getAccessToken(connectionId: string): Promise<string> {
     },
   });
 
-  return data.access_token as string;
+  return newAccess;
 }
 
 // ─── API Helpers ──────────────────────────────────────────────────────────────
