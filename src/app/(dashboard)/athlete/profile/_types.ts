@@ -1,0 +1,161 @@
+// Types shared across all profile tab components
+
+import type { EventType, Gender } from "@prisma/client";
+
+/* ─── AthleteProfile data from server component ─────────────────────── */
+
+export type ProfileData = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  events: EventType[];
+  gender: Gender;
+  dateOfBirth: string | null;
+  avatarUrl: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  turnDirection: string | null;
+  classStanding: string | null;
+  gradYear: number | null;
+  competitionGoals: CompetitionGoalsMap | null;
+  strengthNumbers: StrengthNumbersData | null;
+  technicalProfile: TechnicalProfileData | null;
+  movementRestrictions: MovementRestrictionsData | null;
+  email: string;
+};
+
+/* ─── Section 2: Competition & Distance Bands ───────────────────────── */
+
+export type CompetitionMark = {
+  distance: number;
+  date: string;
+  meet: string;
+};
+
+export type CompetitionGoalsEntry = {
+  competitionPR: CompetitionMark;
+  seasonBest: CompetitionMark;
+  seasonGoal: number;
+  careerGoal: number;
+  targetBand: string;
+};
+
+export type CompetitionGoalsMap = Record<string, CompetitionGoalsEntry>;
+
+/* ─── Section 4: Strength Numbers ───────────────────────────────────── */
+
+export type LiftEntry = {
+  current: number;
+  date: string;
+  goal: number;
+  correlation: string;
+};
+
+export type StrengthNumbersData = {
+  lifts: Record<string, LiftEntry>;
+  tests: { standingLJ: number; tripleJump: number };
+  ratios: { squatBW: number; cleanBW: number; snatchBW: number };
+};
+
+/* ─── Section 5: Technical Profile ──────────────────────────────────── */
+
+export type TechnicalCue = {
+  phase: string;
+  cue: string;
+  why: string;
+};
+
+export type TechnicalCueFail = {
+  cue: string;
+  why: string;
+};
+
+export type TechnicalProfileData = {
+  primaryLimiter: string;
+  strengths: string[];
+  weaknesses: string[];
+  cuesWork: TechnicalCue[];
+  cuesFail: TechnicalCueFail[];
+};
+
+/* ─── Section 6: Movement Restrictions ──────────────────────────────── */
+
+export type MovementRestrictionsData = {
+  fullOverhead: boolean;
+  fullHipRotation: boolean;
+  deepSquat: boolean;
+  singleLegStability: boolean;
+  notes: string;
+};
+
+/* ─── ThrowsPR (from Prisma) ────────────────────────────────────────── */
+
+export type ThrowsPRRecord = {
+  id: string;
+  event: string;
+  implement: string;
+  distance: number;
+  achievedAt: string;
+  source: string | null;
+};
+
+/* ─── ThrowsInjury (from Prisma) ────────────────────────────────────── */
+
+export type ThrowsInjuryRecord = {
+  id: string;
+  injuryDate: string;
+  returnToThrowDate: string | null;
+  fullReturnDate: string | null;
+  bodyPart: string;
+  side: string | null;
+  severity: string;
+  type: string | null;
+  throwsBanned: boolean;
+  heavyBanned: boolean;
+  strengthBanned: boolean;
+  modifiedLoad: boolean;
+  description: string | null;
+  treatmentPlan: string | null;
+  recovered: boolean;
+  recoveredDate: string | null;
+};
+
+/* ─── ThrowsProfile (per-event enrollment) ──────────────────────────── */
+
+export type ThrowsProfileSummary = {
+  event: string;
+  competitionPb: number | null;
+  currentDistanceBand: string | null;
+};
+
+/* ─── Constants ─────────────────────────────────────────────────────── */
+
+export const LIFTS = [
+  { key: "backSquat", label: "Back Squat" },
+  { key: "frontSquat", label: "Front Squat" },
+  { key: "snatch", label: "Snatch" },
+  { key: "powerClean", label: "Power Clean" },
+  { key: "benchPress", label: "Bench Press" },
+] as const;
+
+export const CLASS_STANDINGS = [
+  { value: "FR", label: "FR" },
+  { value: "SO", label: "SO" },
+  { value: "JR", label: "JR" },
+  { value: "SR", label: "SR" },
+  { value: "GRAD", label: "Grad" },
+  { value: "PRO", label: "Pro" },
+] as const;
+
+export const EVENTS_LIST = [
+  { value: "SHOT_PUT", label: "Shot Put" },
+  { value: "DISCUS", label: "Discus" },
+  { value: "HAMMER", label: "Hammer" },
+  { value: "JAVELIN", label: "Javelin" },
+] as const;
+
+export const GENDERS_LIST = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "OTHER", label: "Other" },
+] as const;
