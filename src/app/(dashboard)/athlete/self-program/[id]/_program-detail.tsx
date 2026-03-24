@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Clock,
   Dumbbell,
+  RefreshCw,
   Sparkles,
   Target,
   TrendingUp,
@@ -218,6 +219,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
   const router = useRouter();
   const { success, error: showError } = useToast();
   const [generating, setGenerating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const phases = program.phases;
   const currentPhase = phases[config.currentPhaseIndex] ?? phases[0] ?? null;
@@ -265,6 +267,34 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 
     return progress >= 0.8;
   }, [currentPhase, program.startDate]);
+
+  const handleRegenerate = async () => {
+    const confirmed = window.confirm(
+      "This will replace your current program with a fresh one. Completed sessions are preserved in your history. Continue?",
+    );
+    if (!confirmed) return;
+
+    setRegenerating(true);
+    try {
+      const res = await fetch(
+        `/api/athlete/self-program/${config.id}/generate`,
+        { method: "POST" },
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to regenerate program");
+      }
+      success("Program Regenerated", "Your new program is ready.");
+      router.refresh();
+    } catch (err) {
+      showError(
+        "Regeneration failed",
+        err instanceof Error ? err.message : "Please try again later.",
+      );
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const handleGenerateNext = async () => {
     setGenerating(true);
@@ -320,6 +350,22 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
               </span>
             </div>
           </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            leftIcon={
+              <RefreshCw
+                size={14}
+                strokeWidth={1.75}
+                className={regenerating ? "animate-spin" : ""}
+                aria-hidden="true"
+              />
+            }
+          >
+            {regenerating ? "Regenerating..." : "Regenerate"}
+          </Button>
         </div>
       </div>
 
