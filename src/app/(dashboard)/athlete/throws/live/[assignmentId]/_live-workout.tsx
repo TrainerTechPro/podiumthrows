@@ -14,7 +14,7 @@ import {
   Trophy,
   Clock,
 } from "lucide-react";
-import { Button, ProgressBar, AnimatedNumber } from "@/components";
+import { Button, ProgressBar, AnimatedNumber, RestTimer } from "@/components";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/toast";
@@ -94,6 +94,10 @@ function getImplementKg(cfg: Record<string, unknown>): number {
   return parseFloat(str.replace("kg", "")) || 0;
 }
 
+function getRestSeconds(cfg: Record<string, unknown>): number {
+  return (cfg.restSeconds as number) || 0;
+}
+
 /* ─── Block icons ────────────────────────────────────────────────────── */
 
 const BLOCK_META: Record<string, { icon: typeof Target; color: string; label: string }> = {
@@ -161,11 +165,13 @@ function ThrowingBlockView({
   const { toast, celebration } = useToast();
   const [distance, setDistance] = useState("");
   const [logging, setLogging] = useState(false);
+  const [showRest, setShowRest] = useState(false);
 
   const cfg = parseConfig(block.config);
   const target = getThrowCount(cfg);
   const implement = getImplement(cfg);
   const implementKg = getImplementKg(cfg);
+  const restSeconds = getRestSeconds(cfg);
   const technique = (cfg.techniqueFocus as string) || "FULL_THROW";
   const current = state.throws.length;
   const bestMark = useMemo(
@@ -208,6 +214,11 @@ function ThrowingBlockView({
       onThrowLogged(logged);
       setDistance("");
 
+      // Show rest timer if restSeconds configured and throws remain
+      if (restSeconds > 0 && current + 1 < target) {
+        setShowRest(true);
+      }
+
       if (data.data.isPersonalBest) {
         celebration(`New PR! ${d.toFixed(2)}m`, {
           description: implement || event,
@@ -247,6 +258,24 @@ function ThrowingBlockView({
           <span className="text-lg text-muted">/ {target}</span>
         </div>
       </div>
+
+      {/* Rest timer (shown after logging a throw) */}
+      {showRest && restSeconds > 0 && (
+        <div className="flex flex-col items-center py-2">
+          <RestTimer
+            seconds={restSeconds}
+            autoStart
+            compact={false}
+            onComplete={() => setShowRest(false)}
+          />
+          <button
+            onClick={() => setShowRest(false)}
+            className="mt-2 text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+          >
+            Skip Rest
+          </button>
+        </div>
+      )}
 
       {/* Distance input + log button */}
       {current < target && (
@@ -344,10 +373,12 @@ function StrengthBlockView({
   const { toast } = useToast();
   const cfg = parseConfig(block.config);
   const exercises = (cfg.exercises as Array<Record<string, unknown>>) ?? [];
+  const restSeconds = getRestSeconds(cfg);
 
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [rpe, setRpe] = useState<number | null>(null);
+  const [showRest, setShowRest] = useState(false);
 
   function logSet() {
     const w = parseFloat(weight);
@@ -365,6 +396,11 @@ function StrengthBlockView({
     setWeight("");
     setReps("");
     setRpe(null);
+
+    // Show rest timer after logging a set
+    if (restSeconds > 0) {
+      setShowRest(true);
+    }
   }
 
   return (
@@ -439,6 +475,24 @@ function StrengthBlockView({
           Log Set
         </Button>
       </div>
+
+      {/* Rest timer (shown after logging a set) */}
+      {showRest && restSeconds > 0 && (
+        <div className="flex flex-col items-center py-2">
+          <RestTimer
+            seconds={restSeconds}
+            autoStart
+            compact={false}
+            onComplete={() => setShowRest(false)}
+          />
+          <button
+            onClick={() => setShowRest(false)}
+            className="mt-2 text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+          >
+            Skip Rest
+          </button>
+        </div>
+      )}
 
       {/* Logged sets */}
       {state.sets.length > 0 && (
@@ -732,13 +786,28 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
     return map;
   });
 
-  // Unsaved changes warning
+  // Unsaved changes warning + back button protection
   useEffect(() => {
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-    }
+    };
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+
+    // Push a dummy history entry so the back button hits our handler first
+    window.history.pushState(null, "", window.location.href);
+    const handlePopState = () => {
+      if (confirm("Leave workout? Your logged throws are saved, but the session won't be marked complete.")) {
+        window.history.back();
+      } else {
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, []);
 
   // Progress calculation
@@ -882,7 +951,11 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         <div className="flex items-center justify-between text-xs text-muted">
           <span className="inline-flex items-center gap-1">
             <Clock size={12} strokeWidth={1.75} aria-hidden="true" />
-            <NumberFlow value={Math.floor(elapsed / 60)} suffix={`:${String(elapsed % 60).padStart(2, "0")}`} duration={0} className="tabular-nums" />
+            <span className="tabular-nums">
+              <NumberFlow value={Math.floor(elapsed / 60)} duration={0} />
+              <span>:</span>
+              <NumberFlow value={elapsed % 60} prefix={elapsed % 60 < 10 ? "0" : ""} duration={0} />
+            </span>
           </span>
           <span className="tabular-nums">
             Block {activeBlockIdx + 1} of {totalBlocks}

@@ -28,6 +28,9 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "success" | "warni
   SCHEDULED:   { label: "Scheduled",   variant: "neutral"  },
   PLANNED:     { label: "Planned",     variant: "primary"  },
   SKIPPED:     { label: "Skipped",     variant: "danger"   },
+  ASSIGNED:    { label: "Assigned",    variant: "primary"  },
+  NOTIFIED:    { label: "Assigned",    variant: "primary"  },
+  PARTIAL:     { label: "Partial",     variant: "warning"  },
 };
 
 /* ─── Session Row ─────────────────────────────────────────────────────────── */
@@ -45,15 +48,19 @@ function SessionRow({
     coachNotes: string | null;
     isProgram?: boolean;
     selfProgramConfigId?: string | null;
+    isAssignment?: boolean;
   };
 }) {
   const cfg = STATUS_CONFIG[session.status] ?? { label: session.status, variant: "neutral" as const };
-  const isUpcoming = session.status === "SCHEDULED" || session.status === "IN_PROGRESS";
+  const isUpcoming = session.status === "SCHEDULED" || session.status === "IN_PROGRESS"
+    || session.status === "ASSIGNED" || session.status === "NOTIFIED" || session.status === "PLANNED";
 
-  // Program sessions link to self-program detail; regular sessions link to session detail
-  const href = session.isProgram && session.selfProgramConfigId
-    ? `/athlete/self-program/${session.selfProgramConfigId}`
-    : `/athlete/sessions/${session.id}`;
+  // Assignment sessions link to assignment detail; program sessions to self-program detail; others to session detail
+  const href = session.isAssignment
+    ? `/athlete/sessions/assignment/${session.id}`
+    : session.isProgram && session.selfProgramConfigId
+      ? `/athlete/self-program/${session.selfProgramConfigId}`
+      : `/athlete/sessions/${session.id}`;
 
   return (
     <Link
@@ -119,6 +126,30 @@ export default async function AthleteSessionsPage() {
     },
   });
 
+  // Fetch throws assignments (coach-created ThrowsSessions)
+  const throwsAssignments = await prisma.throwsAssignment.findMany({
+    where: { athleteId: athlete.id },
+    orderBy: { assignedDate: "desc" },
+    take: 50,
+    include: {
+      session: { select: { name: true, event: true } },
+    },
+  });
+
+  const throwsAssignmentRows = throwsAssignments.map((ta) => ({
+    id: ta.id,
+    scheduledDate: new Date(ta.assignedDate + "T12:00:00").toISOString(),
+    completedDate: ta.completedAt?.toISOString() ?? null,
+    status: ta.status,
+    rpe: ta.rpe as number | null,
+    notes: ta.feedbackNotes as string | null,
+    coachNotes: null as string | null,
+    planName: `${ta.session.name} — ${formatEventName(ta.session.event)}`,
+    isProgram: false as const,
+    selfProgramConfigId: null as string | null,
+    isAssignment: true as const,
+  }));
+
   // Fetch program sessions (Bondarchuk training programs)
   const programSessions = await prisma.programSession.findMany({
     where: {
@@ -162,14 +193,19 @@ export default async function AthleteSessionsPage() {
   });
 
   // Merge all sessions
-  const allSessions = [...sessions.map(s => ({ ...s, isProgram: false as const })), ...programSessionRows];
+  const allSessions = [
+    ...sessions.map(s => ({ ...s, isProgram: false as const, isAssignment: false as const })),
+    ...programSessionRows.map(s => ({ ...s, isAssignment: false as const })),
+    ...throwsAssignmentRows,
+  ];
 
   const upcoming = allSessions.filter(
     (s) => s.status === "SCHEDULED" || s.status === "IN_PROGRESS" || s.status === "PLANNED"
+      || s.status === "ASSIGNED" || s.status === "NOTIFIED"
   ).sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
 
   const past = allSessions.filter(
-    (s) => s.status === "COMPLETED" || s.status === "SKIPPED"
+    (s) => s.status === "COMPLETED" || s.status === "SKIPPED" || s.status === "PARTIAL"
   ).sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
 
   return (
