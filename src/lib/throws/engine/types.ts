@@ -217,10 +217,15 @@ export interface GeneratedSession {
   sessionType: string; // THROWS_ONLY | THROWS_LIFT | LIFT_ONLY | RECOVERY
   focusLabel: string;
 
-  // Prescribed content
+  // Prescribed content (flat arrays for backward compat)
   throws: ThrowPrescription[];
   strength: StrengthPrescription[];
   warmup: WarmupPrescription[];
+
+  // 4-part Bondarchuk session structure:
+  // Block 1: CE + SD heavy throws → Block 2: Primary strength
+  // Block 3: SD comp/light + SP throws → Block 4: Accessory/Core strength
+  blocks?: SessionBlock[];
 
   // Targets
   totalThrowsTarget: number;
@@ -270,6 +275,17 @@ export interface StrengthPrescription {
   loadKg?: number; // calculated from % + PR
   restSeconds: number;
   notes?: string;
+  blockGroup?: 1 | 2; // 1 = primary (Olympic+Compound), 2 = accessory/core
+}
+
+// ── Session Block (4-part Bondarchuk structure) ─────────────────────
+
+export interface SessionBlock {
+  order: number;
+  type: "WARMUP" | "THROWING" | "STRENGTH";
+  label: string;
+  throws?: ThrowPrescription[];
+  strength?: StrengthPrescription[];
 }
 
 // ── Warmup Prescription ─────────────────────────────────────────────

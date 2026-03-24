@@ -15,29 +15,35 @@ const ADAPTATION_MULTIPLIERS: Record<number, number> = {
   3: 1.15, // Slow adapters: more volume to drive adaptation
 };
 
-/** Experience-based volume scaling */
+/** Experience-based volume scaling.
+ * Only meaningfully reduces volume for genuinely new athletes.
+ * 3+ years = full volume — these athletes can handle phase targets. */
 function experienceMultiplier(yearsThrowing: number): number {
-  if (yearsThrowing < 1) return 0.65;
-  if (yearsThrowing < 2) return 0.75;
-  if (yearsThrowing < 3) return 0.85;
-  if (yearsThrowing < 5) return 0.95;
-  return 1.0; // 5+ years, full volume
+  if (yearsThrowing < 1) return 0.70;
+  if (yearsThrowing < 2) return 0.80;
+  if (yearsThrowing < 3) return 0.90;
+  return 1.0; // 3+ years, full volume
 }
 
 /**
- * Current volume ramp — if athlete is currently doing far less volume
- * than the target, ramp up gradually to avoid injury.
+ * Current volume ramp — only applies when athlete provides current volume data
+ * AND it's significantly below target. New programs (no data) get full volume
+ * because the experience multiplier already handles fitness level.
+ *
+ * Floor is 0.85 — never cuts more than 15% from target. The old 0.70 floor
+ * stacked with experience multiplier to crush accumulation below 200 throws/wk.
  */
 function volumeRampMultiplier(
   currentWeeklyVolume: number | undefined,
   targetVolume: number,
 ): number {
-  if (!currentWeeklyVolume || currentWeeklyVolume <= 0) return 0.70;
+  // No current data = new program. Trust experience multiplier, don't penalize.
+  if (!currentWeeklyVolume || currentWeeklyVolume <= 0) return 1.0;
   const ratio = currentWeeklyVolume / targetVolume;
-  if (ratio >= 0.85) return 1.0;
-  if (ratio >= 0.65) return 0.90;
-  if (ratio >= 0.45) return 0.80;
-  return 0.70;
+  if (ratio >= 0.80) return 1.0;
+  if (ratio >= 0.60) return 0.92;
+  if (ratio >= 0.40) return 0.85;
+  return 0.85; // Hard floor — never below 85% of target
 }
 
 // ── Main Function ───────────────────────────────────────────────────

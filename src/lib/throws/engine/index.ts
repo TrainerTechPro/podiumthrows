@@ -25,6 +25,7 @@ export type {
   ThrowPrescription,
   StrengthPrescription,
   WarmupPrescription,
+  SessionBlock,
 
   // Exercise complex
   ExerciseComplexEntry,
@@ -84,7 +85,8 @@ export { generateSession } from "./generate-session";
 // ── Selection Engines ────────────────────────────────────────────────
 export { selectExercises } from "./select-exercises";
 export { selectImplements } from "./select-implements";
-export { selectStrength } from "./select-strength";
+export { selectStrength, splitStrengthByBlock, BONDARCHUK_COMPLEXES } from "./select-strength";
+export type { StrengthExerciseType, StrengthComplexTemplate, StrengthComplexExercise } from "./select-strength";
 
 // ── Volume Scaling ───────────────────────────────────────────────────
 export {

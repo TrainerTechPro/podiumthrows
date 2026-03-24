@@ -1,14 +1,20 @@
 // ── Session Generator ────────────────────────────────────────────────
-// Builds a single training session from a day-type template.
-// Distributes throws by CE/SD/SP/GP ratios, assigns implements by phase,
-// adds strength if warranted, calculates loads from lifting PRs.
+// Builds a single training session with Bondarchuk 4-part structure:
+//   Block 1: CE + SD heavy throws (heaviest implements)
+//   Block 2: Primary strength (Olympic lifts + Compounds)
+//   Block 3: SD comp/light + SP throws (lighter implements)
+//   Block 4: Accessory + Core strength
+//
+// This alternating structure (CE → Strength → CE → Strength) cuts
+// adaptation time in half via passive activation transfer.
 
 import { PHASE_RATIOS, REST_INTERVALS, COMPETITION_WEIGHTS, PHASE_IMPLEMENT_DIST, MIN_THROWS, CODE_EVENT_MAP } from "../constants";
 import type { TrainingPhase, EventCode } from "../constants";
-import { selectStrength } from "./select-strength";
+import { selectStrength, splitStrengthByBlock } from "./select-strength";
 import { applyContrastPattern } from "./contrast-patterns";
 import type {
   GeneratedSession,
+  SessionBlock,
   ThrowPrescription,
   WarmupPrescription,
   ExerciseComplexEntry,
@@ -17,13 +23,6 @@ import type {
 
 // ── Main Function ───────────────────────────────────────────────────
 
-/**
- * Generate a single training session.
- *
- * Consumes the SessionGenConfig (day type, throws target, strength level,
- * exercise complex) and produces a fully prescribed session with throws,
- * strength work, and warmup.
- */
 export function generateSession(config: SessionGenConfig): GeneratedSession {
   const {
     weekNumber,
@@ -43,7 +42,6 @@ export function generateSession(config: SessionGenConfig): GeneratedSession {
   let totalThrows = Math.round((throwsMin + throwsMax) / 2);
 
   // Enforce minimum throws floor for motor learning effectiveness
-  // A throwing session with fewer than MIN_THROWS is too few reps for useful adaptation
   if (totalThrows > 0) {
     const throwEvent = CODE_EVENT_MAP[programConfig.eventCode as EventCode];
     const minFloor = throwEvent ? MIN_THROWS[throwEvent] : 8;
@@ -52,7 +50,6 @@ export function generateSession(config: SessionGenConfig): GeneratedSession {
     }
   }
 
-  // Session type
   const hasStrength = includeLift && strengthLevel !== "None";
   const sessionType = totalThrows <= 0
     ? "LIFT_ONLY"
@@ -81,9 +78,12 @@ export function generateSession(config: SessionGenConfig): GeneratedSession {
   // ── Generate warmup ──────────────────────────────────────────
   const warmup = generateWarmup(phase, dayType);
 
+  // ── Build 4-part Bondarchuk session blocks ───────────────────
+  const blocks = buildSessionBlocks(throws, strength, warmup, hasStrength);
+
   // ── Estimate duration ────────────────────────────────────────
-  const throwDuration = totalThrows * 1.5; // ~1.5 min per throw (including rest)
-  const strengthDuration = strength.length * 8; // ~8 min per exercise
+  const throwDuration = totalThrows * 1.5;
+  const strengthDuration = strength.length * 8;
   const warmupDuration = 15;
   const estimatedDuration = Math.round(warmupDuration + throwDuration + strengthDuration);
 
@@ -96,30 +96,144 @@ export function generateSession(config: SessionGenConfig): GeneratedSession {
     throws,
     strength,
     warmup,
+    blocks,
     totalThrowsTarget: totalThrows,
     estimatedDuration,
   };
 }
 
-// ── Throw Distribution ──────────────────────────────────────────────
+// ── 4-Part Session Block Builder ────────────────────────────────────
 
 /**
- * Generate throw prescriptions for a session.
+ * Builds the Bondarchuk session structure:
+ *   0. Warmup
+ *   1. Throwing Block 1: CE + SD heavy (heaviest implements first)
+ *   2. Strength Block 1: Olympic lifts + Compound lifts
+ *   3. Throwing Block 2: SD comp/light + SP (lighter implements)
+ *   4. Strength Block 2: Accessories + Core
  *
- * Applies proper Bondarchuk implement distribution: the phase determines what
- * percentage of throws should be light/comp/heavy, and SD exercises are
- * allocated across categories based on their implement weight.
- *
- * Session ordering follows the contrast method:
- *   1. CE — competition weight full throws (always first)
- *   2. SD heavy — overweight implements (strength stimulus)
- *   3. SD comp — competition weight drills
- *   4. SD light — underweight implements (speed stimulus)
- *   5. SP — specific preparatory drills (med ball, shot)
- *
- * This prevents the "light to heavy" anti-pattern and provides proper
- * neuromuscular contrast within the session.
+ * If no strength, throws still split into two blocks for
+ * proper implement sequencing (heavy → light).
  */
+function buildSessionBlocks(
+  throws: ThrowPrescription[],
+  strength: import("./types").StrengthPrescription[],
+  warmup: WarmupPrescription[],
+  hasStrength: boolean,
+): SessionBlock[] {
+  const blocks: SessionBlock[] = [];
+  let order = 0;
+
+  // Block 0: Warmup
+  blocks.push({
+    order: order++,
+    type: "WARMUP",
+    label: "Warm-Up",
+  });
+
+  // Split throws: heavy first, lighter second
+  const throwBlock1: ThrowPrescription[] = []; // CE + SD heavy
+  const throwBlock2: ThrowPrescription[] = []; // SD comp + SD light + SP
+
+  for (const t of throws) {
+    if (t.category === "CE") {
+      throwBlock1.push(t);
+    } else if (t.category === "SD") {
+      // SD heavy goes in block 1, SD comp/light in block 2
+      // Check if this is a heavy implement (notes may contain exercise name)
+      // Use the prescription order: first SD entries are heavy (from generateThrows ordering)
+      if (throwBlock1.length < throws.length * 0.4 && isHeavySd(t, throws)) {
+        throwBlock1.push(t);
+      } else {
+        throwBlock2.push(t);
+      }
+    } else {
+      // SP goes in block 2
+      throwBlock2.push(t);
+    }
+  }
+
+  // Block 1: Throwing (heavy)
+  if (throwBlock1.length > 0) {
+    blocks.push({
+      order: order++,
+      type: "THROWING",
+      label: "Throwing — Competition & Heavy",
+      throws: throwBlock1,
+    });
+  }
+
+  if (hasStrength && strength.length > 0) {
+    const { primary, accessory } = splitStrengthByBlock(strength);
+
+    // Block 2: Primary strength
+    if (primary.length > 0) {
+      blocks.push({
+        order: order++,
+        type: "STRENGTH",
+        label: "Strength — Olympic & Compound",
+        strength: primary,
+      });
+    }
+
+    // Block 3: Throwing (lighter)
+    if (throwBlock2.length > 0) {
+      blocks.push({
+        order: order++,
+        type: "THROWING",
+        label: "Throwing — Developmental & Drills",
+        throws: throwBlock2,
+      });
+    }
+
+    // Block 4: Accessory strength
+    if (accessory.length > 0) {
+      blocks.push({
+        order: order++,
+        type: "STRENGTH",
+        label: "Strength — Accessories & Core",
+        strength: accessory,
+      });
+    }
+  } else {
+    // No strength — put remaining throws in block 2
+    if (throwBlock2.length > 0) {
+      blocks.push({
+        order: order++,
+        type: "THROWING",
+        label: "Throwing — Developmental & Drills",
+        throws: throwBlock2,
+      });
+    }
+  }
+
+  return blocks;
+}
+
+/**
+ * Determine if an SD prescription is "heavy" based on implement weight
+ * relative to other SD prescriptions in the session.
+ */
+function isHeavySd(
+  prescription: ThrowPrescription,
+  allThrows: ThrowPrescription[],
+): boolean {
+  const sdThrows = allThrows.filter((t) => t.category === "SD");
+  if (sdThrows.length <= 1) return true;
+
+  // Find the median SD implement weight
+  const weights = sdThrows
+    .map((t) => t.implementKg)
+    .filter((w) => w > 0)
+    .sort((a, b) => b - a);
+
+  if (weights.length === 0) return false;
+  const median = weights[Math.floor(weights.length / 2)];
+  return prescription.implementKg >= median;
+}
+
+// ── Throw Distribution ──────────────────────────────────────────────
+
 function generateThrows(
   totalThrows: number,
   phase: TrainingPhase,
@@ -136,25 +250,20 @@ function generateThrows(
   const ratios = PHASE_RATIOS[phase];
   const restIntervals = REST_INTERVALS[phase];
 
-  // Get competition weight for this event/gender
   const compWeight =
     COMPETITION_WEIGHTS[programConfig.eventCode as keyof typeof COMPETITION_WEIGHTS]?.[
       programConfig.genderCode as "M" | "F"
     ] ?? 7.26;
 
-  // Get phase-specific implement distribution percentages
   const phaseDist = PHASE_IMPLEMENT_DIST.find((d) => d.phase === phase);
   const lightPct = phaseDist?.lightPercent ?? 25;
   const compPct = phaseDist?.compPercent ?? 40;
   const heavyPct = phaseDist?.heavyPercent ?? 35;
 
-  // Distribute throws by classification ratio
   const ceThrows = Math.round((totalThrows * ratios.CE) / 100);
   const sdThrows = Math.round((totalThrows * ratios.SD) / 100);
   const spThrows = Math.round((totalThrows * ratios.SP) / 100);
-  // GP doesn't get throws (it's strength work)
 
-  // ── Classify SD exercises by implement weight ──────────────────
   const sdExercises = exerciseComplex.filter((e) => e.classification === "SD");
   const sdHeavy = sdExercises.filter((e) => (e.implementKg ?? 0) > compWeight);
   const sdComp = sdExercises.filter((e) => (e.implementKg ?? 0) === compWeight);
@@ -165,15 +274,11 @@ function generateThrows(
     (e) => e.implementKg === undefined || e.implementKg === 0,
   );
 
-  // ── Distribute SD throws across weight categories ──────────────
-  // CE throws are always comp weight, so the remaining throw volume (SD)
-  // is distributed using phase implement percentages.
   const sdTotalForDist = sdThrows;
   let sdHeavyThrows = Math.round((sdTotalForDist * heavyPct) / 100);
   let sdCompThrows = Math.round((sdTotalForDist * compPct) / 100);
   let sdLightThrows = Math.round((sdTotalForDist * lightPct) / 100);
 
-  // Redistribute if athlete has no exercises in a category
   if (sdHeavy.length === 0 && sdHeavyThrows > 0) {
     sdCompThrows += Math.round(sdHeavyThrows * 0.6);
     sdLightThrows += Math.round(sdHeavyThrows * 0.4);
@@ -190,9 +295,8 @@ function generateThrows(
     sdCompThrows = 0;
   }
 
-  // Unknown-weight SD exercises get remaining throws distributed evenly
   const sdUnknownThrows = sdUnknown.length > 0
-    ? Math.round(sdTotalForDist * 0.1) // 10% for unknown, pulled from comp
+    ? Math.round(sdTotalForDist * 0.1)
     : 0;
   if (sdUnknownThrows > 0) {
     sdCompThrows = Math.max(0, sdCompThrows - sdUnknownThrows);
@@ -200,7 +304,7 @@ function generateThrows(
 
   const prescriptions: ThrowPrescription[] = [];
 
-  // ── 1. CE throws: competition weight full throws (always first) ──
+  // 1. CE throws: competition weight full throws (always first — heaviest block)
   if (ceThrows > 0) {
     const sets = Math.max(1, Math.round(ceThrows / 4));
     const reps = Math.max(1, Math.round(ceThrows / sets));
@@ -216,28 +320,27 @@ function generateThrows(
     });
   }
 
-  // ── 2. SD heavy: overweight implements (contrast: heavy after comp) ──
+  // 2. SD heavy: overweight implements
   if (sdHeavyThrows > 0 && sdHeavy.length > 0) {
     buildSdPrescriptions(sdHeavy, sdHeavyThrows, restIntervals.SD, prescriptions);
   }
 
-  // ── 3. SD comp: competition weight drills ────────────────────────
+  // 3. SD comp: competition weight drills
   if (sdCompThrows > 0 && sdComp.length > 0) {
     buildSdPrescriptions(sdComp, sdCompThrows, restIntervals.SD, prescriptions);
   }
 
-  // ── 4. SD light: underweight implements (speed contrast) ─────────
+  // 4. SD light: underweight implements (speed contrast)
   if (sdLightThrows > 0 && sdLight.length > 0) {
     buildSdPrescriptions(sdLight, sdLightThrows, restIntervals.SD, prescriptions);
   }
 
-  // ── 4b. SD unknown: exercises without a specific implement ───────
+  // 4b. SD unknown
   if (sdUnknownThrows > 0 && sdUnknown.length > 0) {
     buildSdPrescriptions(sdUnknown, sdUnknownThrows, restIntervals.SD, prescriptions);
   }
 
-  // ── Gap 2: Apply PAP contrast pattern to SD blocks ──────────────
-  // Only reorders WITHIN the SD block; CE stays first, SP stays last.
+  // Apply PAP contrast pattern to SD blocks
   const sdPrescriptions = prescriptions.filter((p) => p.category === "SD");
   if (sdPrescriptions.length > 0) {
     const cePrescriptions = prescriptions.filter((p) => p.category === "CE");
@@ -246,7 +349,7 @@ function generateThrows(
     prescriptions.push(...cePrescriptions, ...interleavedSd);
   }
 
-  // ── 5. SP throws: specific preparatory drills (last) ─────────────
+  // 5. SP throws: specific preparatory drills (last)
   const spExercises = exerciseComplex.filter((e) => e.classification === "SP");
   const spThrowExercises = spExercises.filter((e) =>
     isThrowLikeExercise(e.name),
@@ -276,7 +379,6 @@ function generateThrows(
   return prescriptions;
 }
 
-/** Build SD prescriptions for a group of exercises with allocated throw count */
 function buildSdPrescriptions(
   exercises: ExerciseComplexEntry[],
   totalThrows: number,
@@ -340,7 +442,6 @@ function generateWarmup(
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-/** Check if an SP exercise involves throwing motions (vs pure strength) */
 function isThrowLikeExercise(name: string): boolean {
   const lower = name.toLowerCase();
   return (

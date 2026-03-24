@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, ThrowsAssignmentCreateSchema } from "@/lib/api-schemas";
+import { createNotification } from "@/lib/notifications";
 
 // POST /api/throws/assignments — assign a throws session to athletes
 export async function POST(req: NextRequest) {
@@ -48,6 +49,43 @@ export async function POST(req: NextRequest) {
         status: "ASSIGNED",
       })),
     });
+
+    // Fetch session name for notification body
+    const sessionDetails = await prisma.throwsSession.findUnique({
+      where: { id: sessionId },
+      select: { name: true },
+    });
+    const sessionName = sessionDetails?.name ?? "Workout";
+
+    // Fetch created assignments to get IDs for notification metadata
+    const createdAssignments = await prisma.throwsAssignment.findMany({
+      where: { sessionId, assignedDate, athleteId: { in: athleteIds } },
+      select: { id: true, athleteId: true },
+      orderBy: { createdAt: "desc" },
+      take: athleteIds.length,
+    });
+
+    // Fire WORKOUT_ASSIGNED notification per athlete (fire-and-forget)
+    const dateLabel = new Date(assignedDate + "T12:00:00").toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+
+    for (const a of createdAssignments) {
+      void createNotification({
+        type: "WORKOUT_ASSIGNED",
+        athleteProfileId: a.athleteId,
+        title: "New workout assigned",
+        body: `${sessionName} scheduled for ${dateLabel}`,
+        metadata: {
+          assignmentId: a.id,
+          sessionId,
+          date: assignedDate,
+          url: `/athlete/sessions/assignment/${a.id}`,
+        },
+      }).catch((err) => logger.error("Failed to create workout notification", { error: err }));
+    }
 
     return NextResponse.json({ success: true, data: { count: assignments.count } });
   } catch (error) {

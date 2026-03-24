@@ -1,0 +1,171 @@
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { logger } from "@/lib/logger";
+import { checkAndSetPR } from "@/lib/throws";
+import { notifyCoachPR } from "@/lib/notifications";
+import { awardPRAchievement } from "@/lib/achievements";
+
+/**
+ * POST /api/throws/assignments/[id]/log-throw
+ *
+ * Logs a single throw for a ThrowsBlock within an assignment.
+ * Runs PR detection and fires coach notification on new PRs.
+ *
+ * Body: { blockId, distance, implement, throwNumber, event?, notes? }
+ * Returns: { throwLog, isPersonalBest }
+ */
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    }
+
+    const { id: assignmentId } = await params;
+
+    // Verify the assignment belongs to this athlete
+    const user = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      include: {
+        athleteProfile: {
+          select: { id: true, coachId: true, firstName: true, lastName: true },
+        },
+      },
+    });
+
+    if (!user?.athleteProfile) {
+      return NextResponse.json({ success: false, error: "Athlete profile required" }, { status: 403 });
+    }
+
+    const assignment = await prisma.throwsAssignment.findUnique({
+      where: { id: assignmentId },
+      select: { id: true, athleteId: true, status: true, session: { select: { event: true } } },
+    });
+
+    if (!assignment || assignment.athleteId !== user.athleteProfile.id) {
+      return NextResponse.json({ success: false, error: "Assignment not found" }, { status: 404 });
+    }
+
+    // Only allow logging for active assignments
+    if (assignment.status !== "IN_PROGRESS" && assignment.status !== "ASSIGNED") {
+      return NextResponse.json(
+        { success: false, error: "Assignment is not active" },
+        { status: 409 },
+      );
+    }
+
+    // Auto-transition to IN_PROGRESS on first log
+    if (assignment.status === "ASSIGNED") {
+      await prisma.throwsAssignment.update({
+        where: { id: assignmentId },
+        data: { status: "IN_PROGRESS", startedAt: new Date() },
+      });
+    }
+
+    const body = await req.json();
+    const { blockId, distance, implement, throwNumber, notes } = body;
+
+    if (!blockId || typeof throwNumber !== "number") {
+      return NextResponse.json(
+        { success: false, error: "blockId and throwNumber are required" },
+        { status: 400 },
+      );
+    }
+
+    // Verify block belongs to assignment's session
+    const block = await prisma.throwsBlock.findUnique({
+      where: { id: blockId },
+      select: { id: true, sessionId: true, blockType: true },
+    });
+
+    if (!block) {
+      return NextResponse.json({ success: false, error: "Block not found" }, { status: 404 });
+    }
+
+    // Create the throw log
+    const throwLog = await prisma.throwsBlockLog.create({
+      data: {
+        assignmentId,
+        blockId,
+        throwNumber,
+        distance: typeof distance === "number" ? distance : null,
+        implement: implement ?? "",
+        notes: notes ?? null,
+      },
+    });
+
+    // PR detection (only for throws with valid distance)
+    let isPersonalBest = false;
+    if (typeof distance === "number" && distance > 0) {
+      const event = assignment.session.event;
+      const implementKg = parseFloat(String(implement).replace("kg", "")) || 0;
+
+      if (event && implementKg > 0) {
+        const prResult = await checkAndSetPR(
+          user.athleteProfile.id,
+          event,
+          implementKg,
+          distance,
+        );
+        isPersonalBest = prResult.isPersonalBest;
+
+        if (isPersonalBest) {
+          // Update or create ThrowsPR record
+          const implementStr = `${implementKg}kg`;
+          const today = new Date().toISOString().split("T")[0];
+
+          await prisma.throwsPR.upsert({
+            where: {
+              athleteId_event_implement: {
+                athleteId: user.athleteProfile.id,
+                event,
+                implement: implementStr,
+              },
+            },
+            update: { distance, achievedAt: today, source: "TRAINING" },
+            create: {
+              athleteId: user.athleteProfile.id,
+              event,
+              implement: implementStr,
+              distance,
+              achievedAt: today,
+              source: "TRAINING",
+            },
+          });
+
+          // Fire coach notification (fire-and-forget)
+          if (user.athleteProfile.coachId) {
+            const name = [user.athleteProfile.firstName, user.athleteProfile.lastName]
+              .filter(Boolean)
+              .join(" ") || user.email || "Athlete";
+            void notifyCoachPR(
+              user.athleteProfile.coachId,
+              user.athleteProfile.id,
+              name,
+              event,
+              distance,
+            ).catch((err) => logger.error("PR notification failed", { error: err }));
+          }
+
+          // Award PR achievement (fire-and-forget)
+          void awardPRAchievement(
+            user.athleteProfile.id,
+            event,
+          ).catch((err) => logger.error("PR achievement failed", { error: err }));
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: { throwLog, isPersonalBest },
+    });
+  } catch (error) {
+    logger.error("POST /api/throws/assignments/[id]/log-throw error", { error });
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
+  }
+}

@@ -401,7 +401,7 @@ export async function fetchTodayWorkoutData(
       status: ta.status,
       items: items.slice(0, MAX_PREVIEW_ITEMS),
       totalItemCount: items.length,
-      href: `/athlete/sessions`,
+      href: `/athlete/sessions/assignment/${ta.id}`,
     });
   }
 

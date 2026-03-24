@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { createNotification } from "@/lib/notifications";
 
 // PUT /api/throws/assignments/[id] — update assignment status (start, complete, skip)
 export async function PUT(
@@ -97,11 +98,96 @@ export async function PUT(
       data: updateData,
       include: {
         session: {
-          include: { blocks: { orderBy: { position: "asc" } } },
+          include: {
+            blocks: { orderBy: { position: "asc" } },
+            coach: { select: { id: true } },
+          },
+        },
+        athlete: {
+          select: { id: true, firstName: true, lastName: true, coachId: true, currentStreak: true, longestStreak: true },
         },
         throwLogs: { orderBy: { throwNumber: "asc" } },
       },
     });
+
+    // ── Post-completion: streak + notification ─────────────────────
+    if (action === "complete" || action === "partial") {
+      // Update athlete streak
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const yesterdayAssignment = await prisma.throwsAssignment.findFirst({
+        where: {
+          athleteId: updated.athleteId,
+          status: "COMPLETED",
+          completedAt: { gte: yesterday, lt: todayStart },
+        },
+        select: { id: true },
+      });
+
+      const currentStreak = updated.athlete.currentStreak ?? 0;
+      const longestStreak = updated.athlete.longestStreak ?? 0;
+      const newStreak = yesterdayAssignment ? currentStreak + 1 : 1;
+
+      await prisma.athleteProfile.update({
+        where: { id: updated.athleteId },
+        data: {
+          currentStreak: newStreak,
+          longestStreak: Math.max(longestStreak, newStreak),
+        },
+      });
+
+      // Fire WORKOUT_COMPLETED notification to coach
+      const coachId = updated.athlete.coachId ?? updated.session.coach?.id;
+      if (coachId) {
+        const athleteName = [updated.athlete.firstName, updated.athlete.lastName]
+          .filter(Boolean)
+          .join(" ") || "Athlete";
+        const totalThrows = updated.throwLogs.length;
+        const bestMark = updated.throwLogs.reduce(
+          (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
+          0,
+        );
+        const sessionRpe = rpe as number | undefined;
+
+        void createNotification({
+          type: "WORKOUT_COMPLETED",
+          coachId,
+          athleteId: updated.athleteId,
+          title: `${athleteName} completed ${updated.session.name}`,
+          body: `RPE: ${sessionRpe ?? "—"}/10 | Best: ${bestMark > 0 ? bestMark.toFixed(2) + "m" : "—"} | ${totalThrows} throws`,
+          metadata: {
+            assignmentId: updated.id,
+            bestMark,
+            rpe: sessionRpe,
+            selfFeeling,
+            totalThrows,
+            url: `/coach/athletes`,
+          },
+        }).catch((err) => logger.error("Workout completion notification failed", { error: err }));
+      }
+    }
+
+    // Fire WORKOUT_SKIPPED notification to coach
+    if (action === "skip") {
+      const coachId = updated.athlete?.coachId ?? updated.session.coach?.id;
+      if (coachId) {
+        const athleteName = [updated.athlete?.firstName, updated.athlete?.lastName]
+          .filter(Boolean)
+          .join(" ") || "Athlete";
+        void createNotification({
+          type: "WORKOUT_SKIPPED",
+          coachId,
+          athleteId: updated.athleteId,
+          title: `${athleteName} skipped ${updated.session.name}`,
+          body: skipReason ? `Reason: ${skipReason}` : "No reason provided",
+          metadata: { assignmentId: updated.id, skipReason },
+        }).catch((err) => logger.error("Workout skip notification failed", { error: err }));
+      }
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
