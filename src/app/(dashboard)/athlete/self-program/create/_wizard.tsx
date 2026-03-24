@@ -64,6 +64,20 @@ export interface WizardFormState {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DraftData = Record<string, any> | null;
 
+export interface PrefillData {
+  currentPR: number | null;
+  yearsExperience: number | null;
+  competitionLevel: string | null;
+  currentWeeklyVolume: number | null;
+  daysPerWeek: number | null;
+  sessionsPerDay: number | null;
+  preferredDays: unknown;
+  primaryGoal: string | null;
+  generationMode: string | null;
+  programType: string | null;
+  performanceBenchmarks: string | null;
+}
+
 interface SelfProgramWizardProps {
   athleteId: string;
   athleteEvents: string[];
@@ -73,6 +87,7 @@ interface SelfProgramWizardProps {
   existingImplements: string | null;
   exercises: ExerciseItem[];
   draft: DraftData;
+  prefill?: PrefillData;
 }
 
 // ── Step Configuration ─────────────────────────────────────────────────
@@ -107,7 +122,8 @@ const ALL_STEPS: StepConfig[] = [
 function buildDefaultForm(
   athleteEvents: string[],
   athleteGender: string,
-  draft: DraftData
+  draft: DraftData,
+  prefill?: PrefillData,
 ): WizardFormState {
   if (draft) {
     return {
@@ -140,26 +156,30 @@ function buildDefaultForm(
     };
   }
 
+  // Auto-prefill from athlete profile + previous program config + PRs.
+  // Fields the athlete already entered once shouldn't need re-entering.
+  const pf = prefill;
+
   return {
-    programType: "",
+    programType: (pf?.programType as WizardFormState["programType"]) || "",
     event: athleteEvents[0] || "",
     gender: athleteGender || "",
-    yearsExperience: "",
-    competitionLevel: "",
-    currentPR: "",
+    yearsExperience: pf?.yearsExperience?.toString() || "",
+    competitionLevel: pf?.competitionLevel || "",
+    currentPR: pf?.currentPR?.toString() || "",
     goalDistance: "",
-    currentWeeklyVolume: "",
+    currentWeeklyVolume: pf?.currentWeeklyVolume?.toString() || "",
     selectedImplements: [],
     adaptationSpeed: 2,
     transferType: "BALANCED",
     recoveryProfile: "MODERATE",
-    daysPerWeek: 4,
-    sessionsPerDay: 1,
-    preferredDays: [],
-    startDate: "",
+    daysPerWeek: pf?.daysPerWeek ?? 4,
+    sessionsPerDay: pf?.sessionsPerDay ?? 1,
+    preferredDays: Array.isArray(pf?.preferredDays) ? pf.preferredDays as string[] : [],
+    startDate: new Date().toISOString().split("T")[0],
     competitions: [],
-    primaryGoal: "",
-    generationMode: "",
+    primaryGoal: pf?.primaryGoal || "",
+    generationMode: pf?.generationMode || "",
     preferredExercises: [],
     avoidedExercises: [],
     favoriteDrills: [],
@@ -177,12 +197,13 @@ export function SelfProgramWizard({
   existingImplements,
   exercises,
   draft,
+  prefill,
 }: SelfProgramWizardProps) {
   const router = useRouter();
   const { success, error: toastError, celebration } = useToast();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<WizardFormState>(() =>
-    buildDefaultForm(athleteEvents, athleteGender, draft)
+    buildDefaultForm(athleteEvents, athleteGender, draft, prefill)
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
