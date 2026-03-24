@@ -20,6 +20,7 @@ import { TabCore } from "./_tab-core";
 import { TabCompetition } from "./_tab-competition";
 import { TabImplements } from "./_tab-implements";
 import { TabStrength } from "./_tab-strength";
+import { TabTechnical } from "./_tab-technical";
 
 /* ─── Tab definitions ────────────────────────────────────────────────── */
 
@@ -100,12 +101,7 @@ export function ProfileTabs({
           />
         )}
         {active === "strength" && <TabStrength profile={profile} />}
-        {active === "tech" && (
-          <TabPlaceholder
-            title="Technical Profile"
-            description="Primary limiters, strengths, weaknesses, and coaching cues."
-          />
-        )}
+        {active === "tech" && <TabTechnical profile={profile} />}
         {active === "injury" && (
           <TabPlaceholder
             title="Injury History"
