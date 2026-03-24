@@ -7,6 +7,7 @@ import {
 } from "@/lib/data/athlete";
 import { getAthleteReadinessTrend, type ReadinessTrendPoint } from "@/lib/data/coach";
 import { getTodaySnapshot } from "@/lib/whoop/sync";
+import { getTodaySnapshot as getOuraTodaySnapshot } from "@/lib/oura/sync";
 import { CheckInForm } from "./_checkin-form";
 import { ReadinessChart } from "./_readiness-chart";
 
@@ -345,11 +346,12 @@ function CheckInCard({ c }: { c: CheckIn }) {
 export default async function WellnessPage() {
   const { athlete } = await requireAthleteSession();
 
-  const [checkInToday, history, trend, whoopSnapshot] = await Promise.all([
+  const [checkInToday, history, trend, whoopSnapshot, ouraSnapshot] = await Promise.all([
     getAthleteCheckInToday(athlete.id),
     getAthleteCheckInHistory(athlete.id, 14),
     getAthleteReadinessTrend(athlete.id, 30),
     getTodaySnapshot(athlete.id),
+    getOuraTodaySnapshot(athlete.id),
   ]);
 
   const chartData = trend.map((t) => ({
@@ -383,6 +385,19 @@ export default async function WellnessPage() {
                   sleepPerformance: whoopSnapshot.sleepPerformance,
                   sleepDurationMs: whoopSnapshot.sleepDurationMs,
                   strain: whoopSnapshot.strain,
+                }
+              : undefined
+          }
+          ouraData={
+            ouraSnapshot
+              ? {
+                  readinessScore: ouraSnapshot.readinessScore,
+                  hrvMs: ouraSnapshot.hrvMs,
+                  restingHR: ouraSnapshot.restingHR,
+                  spo2: ouraSnapshot.spo2,
+                  sleepScore: ouraSnapshot.sleepScore,
+                  sleepDurationSec: ouraSnapshot.sleepDurationSec,
+                  activityScore: ouraSnapshot.activityScore,
                 }
               : undefined
           }

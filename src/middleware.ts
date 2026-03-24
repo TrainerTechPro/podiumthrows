@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/deficit-finder",
   "/privacy",
   "/api/whoop/callback",
+  "/api/oura/callback",
 ];
 const AUTH_PATHS = ["/login", "/register"];
 

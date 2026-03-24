@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Watch } from "lucide-react";
+import { Watch, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -16,6 +16,18 @@ interface WhoopData {
   sleepPerformance: number | null;
   sleepDurationMs: number | null;
   strain: number | null;
+}
+
+/* ─── Oura Data ──────────────────────────────────────────────────────────── */
+
+interface OuraData {
+  readinessScore: number | null;
+  hrvMs: number | null;
+  restingHR: number | null;
+  spo2: number | null;
+  sleepScore: number | null;
+  sleepDurationSec: number | null;
+  activityScore: number | null;
 }
 
 /* ─── Slider Field ───────────────────────────────────────────────────────── */
@@ -76,25 +88,31 @@ function SliderField({
 
 /* ─── Form ───────────────────────────────────────────────────────────────── */
 
-export function CheckInForm({ whoopData }: { whoopData?: WhoopData }) {
+export function CheckInForm({ whoopData, ouraData }: { whoopData?: WhoopData; ouraData?: OuraData }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  // Pre-fill from WHOOP if available
-  const whoopSleepQuality =
-    whoopData?.sleepPerformance != null
-      ? Math.max(1, Math.min(10, Math.round(whoopData.sleepPerformance / 10)))
+  // Determine which device data to use (WHOOP preferred if both connected)
+  const deviceLabel = whoopData ? "WHOOP" : ouraData ? "Oura Ring" : null;
+  const DeviceIcon = whoopData ? Watch : Circle;
+
+  // Pre-fill from WHOOP or Oura (WHOOP preferred)
+  const prefillSleepQuality = whoopData?.sleepPerformance != null
+    ? Math.max(1, Math.min(10, Math.round(whoopData.sleepPerformance / 10)))
+    : ouraData?.sleepScore != null
+      ? Math.max(1, Math.min(10, Math.round(ouraData.sleepScore / 10)))
       : null;
-  const whoopSleepHours =
-    whoopData?.sleepDurationMs != null
-      ? Math.round((whoopData.sleepDurationMs / 3_600_000) * 2) / 2
+  const prefillSleepHours = whoopData?.sleepDurationMs != null
+    ? Math.round((whoopData.sleepDurationMs / 3_600_000) * 2) / 2
+    : ouraData?.sleepDurationSec != null
+      ? Math.round((ouraData.sleepDurationSec / 3600) * 2) / 2
       : null;
 
   // Form state
-  const [sleepQuality, setSleepQuality] = useState(whoopSleepQuality ?? 7);
-  const [sleepHours, setSleepHours] = useState(whoopSleepHours ?? 8);
+  const [sleepQuality, setSleepQuality] = useState(prefillSleepQuality ?? 7);
+  const [sleepHours, setSleepHours] = useState(prefillSleepHours ?? 8);
   const [soreness, setSoreness] = useState(7);
   const [sorenessArea, setSorenessArea] = useState<string | null>(null);
   const [stressLevel, setStressLevel] = useState(5);
@@ -122,12 +140,14 @@ export function CheckInForm({ whoopData }: { whoopData?: WhoopData }) {
             injuryStatus,
             injuryNotes: injuryNotes.trim() || null,
             notes: notes.trim() || null,
-            // WHOOP integration fields
-            hrvMs: whoopData?.hrvMs ?? undefined,
-            restingHR: whoopData?.restingHR ?? undefined,
-            spo2: whoopData?.spo2 ?? undefined,
+            // Wearable integration fields
+            hrvMs: whoopData?.hrvMs ?? ouraData?.hrvMs ?? undefined,
+            restingHR: whoopData?.restingHR ?? ouraData?.restingHR ?? undefined,
+            spo2: whoopData?.spo2 ?? ouraData?.spo2 ?? undefined,
             whoopStrain: whoopData?.strain ?? undefined,
-            source: whoopData ? "WHOOP_ASSISTED" : "MANUAL",
+            ouraReadiness: ouraData?.readinessScore ?? undefined,
+            ouraActivityScore: ouraData?.activityScore ?? undefined,
+            source: whoopData ? "WHOOP_ASSISTED" : ouraData ? "OURA_ASSISTED" : "MANUAL",
           }),
         });
 
@@ -175,17 +195,17 @@ export function CheckInForm({ whoopData }: { whoopData?: WhoopData }) {
 
   return (
     <div className="space-y-6">
-      {/* WHOOP banner */}
-      {whoopData && (
+      {/* Wearable data banner */}
+      {deviceLabel && (
         <div className="flex items-center gap-3 rounded-xl bg-primary-500/10 border border-primary-500/20 px-4 py-3">
-          <Watch
+          <DeviceIcon
             size={18}
             strokeWidth={1.75}
             className="text-primary-500 shrink-0"
             aria-hidden="true"
           />
           <p className="text-sm font-medium text-primary-700 dark:text-primary-300">
-            WHOOP data available — sleep fields pre-filled
+            {deviceLabel} data available — sleep fields pre-filled
           </p>
         </div>
       )}
@@ -389,12 +409,13 @@ export function CheckInForm({ whoopData }: { whoopData?: WhoopData }) {
         />
       </div>
 
-      {/* WHOOP metric pills */}
-      {whoopData && (
+      {/* Wearable metric pills */}
+      {(whoopData || ouraData) && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted uppercase tracking-wider">WHOOP Metrics</p>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider">{deviceLabel} Metrics</p>
           <div className="flex flex-wrap gap-2">
-            {whoopData.recoveryScore != null && (
+            {/* WHOOP: Recovery score */}
+            {whoopData?.recoveryScore != null && (
               <span
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-xs font-semibold tabular-nums",
@@ -408,24 +429,49 @@ export function CheckInForm({ whoopData }: { whoopData?: WhoopData }) {
                 Recovery {whoopData.recoveryScore}%
               </span>
             )}
-            {whoopData.hrvMs != null && (
-              <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
-                HRV {Math.round(whoopData.hrvMs)}ms
+            {/* Oura: Readiness score */}
+            {!whoopData && ouraData?.readinessScore != null && (
+              <span
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-semibold tabular-nums",
+                  ouraData.readinessScore >= 67
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : ouraData.readinessScore >= 34
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "bg-red-500/10 text-red-600 dark:text-red-400"
+                )}
+              >
+                Readiness {Math.round(ouraData.readinessScore)}
               </span>
             )}
-            {whoopData.restingHR != null && (
+            {/* Shared: HRV */}
+            {(whoopData?.hrvMs ?? ouraData?.hrvMs) != null && (
               <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
-                RHR {Math.round(whoopData.restingHR)}bpm
+                HRV {Math.round((whoopData?.hrvMs ?? ouraData?.hrvMs)!)}ms
               </span>
             )}
-            {whoopData.spo2 != null && (
+            {/* Shared: RHR */}
+            {(whoopData?.restingHR ?? ouraData?.restingHR) != null && (
               <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
-                SpO2 {whoopData.spo2}%
+                RHR {Math.round((whoopData?.restingHR ?? ouraData?.restingHR)!)}bpm
               </span>
             )}
-            {whoopData.strain != null && (
+            {/* Shared: SpO2 */}
+            {(whoopData?.spo2 ?? ouraData?.spo2) != null && (
+              <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
+                SpO2 {(whoopData?.spo2 ?? ouraData?.spo2)}%
+              </span>
+            )}
+            {/* WHOOP: Strain */}
+            {whoopData?.strain != null && (
               <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
                 Strain {whoopData.strain.toFixed(1)}
+              </span>
+            )}
+            {/* Oura: Activity Score */}
+            {!whoopData && ouraData?.activityScore != null && (
+              <span className="px-3 py-1.5 rounded-lg bg-[var(--muted-bg)] text-xs font-semibold tabular-nums text-[var(--foreground)]">
+                Activity {Math.round(ouraData.activityScore)}
               </span>
             )}
           </div>

@@ -32,7 +32,6 @@ import {
   UsersRound,
   UserPlus,
   ChevronRight,
-  Watch,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -432,6 +431,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
+      { label: "Integrations", href: "/coach/integrations", icon: <Zap {...iconSize} />, matchPaths: ["/coach/integrations"] },
       {
         label: "Settings",
         href: "/coach/settings",
@@ -476,7 +476,7 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
     title: "Insights",
     items: [
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
-      { label: "WHOOP", href: "/athlete/whoop", icon: <Watch {...iconSize} />, matchPaths: ["/athlete/whoop"] },
+      { label: "Integrations", href: "/athlete/integrations", icon: <Zap {...iconSize} />, matchPaths: ["/athlete/integrations", "/athlete/whoop", "/athlete/oura"] },
       { label: "Assessments", href: "/athlete/assessments", icon: <BarChart3 {...iconSize} /> },
       {
         label: "Questionnaires",

@@ -40,6 +40,9 @@ export async function POST(req: NextRequest) {
       restingHR,
       spo2,
       whoopStrain,
+      ouraReadiness,
+      ouraActivityScore,
+      temperatureDeviation,
       source,
     } = parsed;
 
@@ -91,11 +94,14 @@ export async function POST(req: NextRequest) {
         injuryStatus: injuryStatus as never,
         injuryNotes: injuryNotes?.trim() || null,
         notes: notes?.trim() || null,
-        // WHOOP integration fields
+        // Wearable integration fields
         hrvMs: hrvMs ?? null,
         restingHR: restingHR ?? null,
         spo2: spo2 ?? null,
         whoopStrain: whoopStrain ?? null,
+        ouraReadiness: ouraReadiness ?? null,
+        ouraActivityScore: ouraActivityScore ?? null,
+        temperatureDeviation: temperatureDeviation ?? null,
         source: source ?? "MANUAL",
       },
       select: { id: true, overallScore: true, date: true },

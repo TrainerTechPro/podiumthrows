@@ -132,12 +132,15 @@ export const ReadinessCheckInSchema = z.object({
   injuryStatus: z.enum(["NONE", "MONITORING", "ACTIVE"]).catch("NONE"),
   injuryNotes: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
-  // WHOOP integration fields
+  // Wearable integration fields
   hrvMs: z.number().optional(),
   restingHR: z.number().optional(),
   spo2: z.number().optional(),
   whoopStrain: z.number().optional(),
-  source: z.enum(["MANUAL", "WHOOP_AUTO", "WHOOP_ASSISTED"]).optional(),
+  ouraReadiness: z.number().optional(),
+  ouraActivityScore: z.number().optional(),
+  temperatureDeviation: z.number().optional(),
+  source: z.enum(["MANUAL", "WHOOP_AUTO", "WHOOP_ASSISTED", "OURA_AUTO", "OURA_ASSISTED"]).optional(),
 });
 
 // ── Athlete Schemas (for future use) ────────────────────────────────────

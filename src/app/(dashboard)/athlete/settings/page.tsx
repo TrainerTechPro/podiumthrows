@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Zap, ChevronRight } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { getAthleteProfileFull } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import { Avatar } from "@/components";
 import { AthleteSettingsForm } from "./_form";
-import { WhoopCard } from "./_whoop-card";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -31,14 +32,14 @@ export default async function AthleteSettingsPage() {
   const profile = await getAthleteProfileFull(session.userId);
   if (!profile) redirect("/login");
 
-  let whoopConnection: { syncMode: string; lastSyncAt: Date | null } | null = null;
+  let connectedDevices = 0;
   try {
-    whoopConnection = await prisma.whoopConnection.findUnique({
-      where: { athleteId: profile.id },
-      select: { syncMode: true, lastSyncAt: true },
-    });
+    const whoop = await prisma.whoopConnection.findUnique({ where: { athleteId: profile.id }, select: { id: true } });
+    const oura = await prisma.ouraConnection.findUnique({ where: { athleteId: profile.id }, select: { id: true } });
+    if (whoop) connectedDevices++;
+    if (oura) connectedDevices++;
   } catch {
-    // Table may not exist yet if migration hasn't been applied
+    // Tables may not exist yet
   }
 
   return (
@@ -80,14 +81,21 @@ export default async function AthleteSettingsPage() {
       {/* Edit form */}
       <AthleteSettingsForm profile={profile} />
 
-      {/* Integrations */}
+      {/* Integrations link */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Integrations</h2>
-        <WhoopCard
-          connected={!!whoopConnection}
-          syncMode={whoopConnection?.syncMode}
-          lastSyncAt={whoopConnection?.lastSyncAt?.toISOString() ?? null}
-        />
+        <Link href="/athlete/integrations" className="card card-interactive p-4 flex items-center gap-3">
+          <Zap size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--foreground)]">Wearable Integrations</p>
+            <p className="text-xs text-muted">
+              {connectedDevices > 0
+                ? `${connectedDevices} device${connectedDevices > 1 ? "s" : ""} connected`
+                : "Connect WHOOP, Oura Ring, and more"}
+            </p>
+          </div>
+          <ChevronRight size={16} strokeWidth={1.75} className="text-muted" aria-hidden="true" />
+        </Link>
       </section>
     </div>
   );

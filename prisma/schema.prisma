@@ -300,6 +300,9 @@ model AthleteProfile {
   // WHOOP integration
   whoopConnection WhoopConnection?
 
+  // Oura Ring integration
+  ouraConnection  OuraConnection?
+
   // Utility relations (from TrainingTracker)
   voiceNotes       VoiceNote[]
   bodyMeasurements BodyMeasurement[]
@@ -576,6 +579,11 @@ model ReadinessCheckIn {
   spo2         Float?
   whoopStrain  Float?
   source       String    @default("MANUAL")
+
+  // Oura Ring integration fields
+  ouraReadiness        Float?
+  ouraActivityScore    Float?
+  temperatureDeviation Float?
 
   @@unique([athleteId, date])
   @@index([athleteId])
@@ -2567,6 +2575,51 @@ model WhoopDailySnapshot {
   strain           Float?
   rawData          String?
   createdAt        DateTime @default(now())
+
+  @@unique([connectionId, date])
+  @@index([connectionId, date])
+}
+
+// ─── OURA RING INTEGRATION ──────────────────────────────────────────────────
+
+model OuraConnection {
+  id             String              @id @default(cuid())
+  athleteId      String              @unique
+  athlete        AthleteProfile      @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  ouraUserId     String
+  accessToken    String
+  refreshToken   String
+  tokenExpiresAt DateTime
+  scopes         String
+  syncMode       String              @default("ASSISTED")
+  lastSyncAt     DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  snapshots      OuraDailySnapshot[]
+
+  @@index([ouraUserId])
+}
+
+model OuraDailySnapshot {
+  id                   String         @id @default(cuid())
+  connectionId         String
+  connection           OuraConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  date                 String
+  readinessScore       Float?
+  hrvMs                Float?
+  restingHR            Float?
+  spo2                 Float?
+  temperatureDeviation Float?
+  sleepScore           Float?
+  sleepDurationSec     Int?
+  sleepEfficiency      Float?
+  lightSleepSec        Int?
+  deepSleepSec         Int?
+  remSleepSec          Int?
+  activityScore        Float?
+  steps                Int?
+  rawData              String?
+  createdAt            DateTime       @default(now())
 
   @@unique([connectionId, date])
   @@index([connectionId, date])

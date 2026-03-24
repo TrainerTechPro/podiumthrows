@@ -4,8 +4,10 @@ import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
 import { getUnreadCount } from "@/lib/notifications";
 import { WhoopAutoSync } from "./_whoop-auto-sync";
+import { OuraAutoSync } from "./_oura-auto-sync";
 
 const WHOOP_STALE_MS = 60 * 60 * 1000; // 1 hour
+const OURA_STALE_MS = 60 * 60 * 1000; // 1 hour
 
 export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -23,6 +25,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
       events: true,
       user: { select: { email: true } },
       whoopConnection: { select: { lastSyncAt: true } },
+      ouraConnection: { select: { lastSyncAt: true } },
     },
   });
 
@@ -35,6 +38,11 @@ export default async function AthleteLayout({ children }: { children: React.Reac
     athlete.whoopConnection != null &&
     (!athlete.whoopConnection.lastSyncAt ||
       Date.now() - athlete.whoopConnection.lastSyncAt.getTime() > WHOOP_STALE_MS);
+
+  const ouraStale =
+    athlete.ouraConnection != null &&
+    (!athlete.ouraConnection.lastSyncAt ||
+      Date.now() - athlete.ouraConnection.lastSyncAt.getTime() > OURA_STALE_MS);
 
   const notificationCount = await getUnreadCount(athlete.id, "ATHLETE");
 
@@ -50,6 +58,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
   return (
     <DashboardLayout user={user} notificationCount={notificationCount}>
       {whoopStale && <WhoopAutoSync />}
+      {ouraStale && <OuraAutoSync />}
       {children}
     </DashboardLayout>
   );
