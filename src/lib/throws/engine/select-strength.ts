@@ -9,7 +9,7 @@
 // - Max 4-6 exercises per session
 // - Complex stays FIXED for the period — stimulus variation comes from implements
 
-import { STRENGTH_DB, REST_INTERVALS } from "../constants";
+import { REST_INTERVALS } from "../constants";
 import type { TrainingPhase, Classification } from "../constants";
 import type {
   StrengthPrescription,
@@ -21,53 +21,6 @@ import type {
 
 export type StrengthExerciseType = "OLYMPIC" | "COMPOUND" | "ACCESSORY" | "CORE";
 
-/** Map exercise IDs to their loading type */
-const EXERCISE_TYPE_MAP: Record<string, StrengthExerciseType> = {
-  snatch: "OLYMPIC",
-  power_snatch: "OLYMPIC",
-  power_clean: "OLYMPIC",
-  clean_pull: "OLYMPIC",
-  squat: "COMPOUND",
-  front_squat: "COMPOUND",
-  half_squat: "COMPOUND",
-  bench: "COMPOUND",
-  incline_bench: "COMPOUND",
-  ohp: "COMPOUND",
-  rdl: "COMPOUND",
-  trap_deadlift: "COMPOUND",
-  good_morning: "ACCESSORY",
-  glute_ham: "ACCESSORY",
-  box_jump: "ACCESSORY",
-  med_ball_rot: "ACCESSORY",
-  med_ball_oh: "ACCESSORY",
-  plyo_bounds: "ACCESSORY",
-  // Template-only exercises (not in STRENGTH_DB but in complexes)
-  step_up: "ACCESSORY",
-  barbell_twist: "ACCESSORY",
-  walking_lunge: "ACCESSORY",
-  hanging_leg_raise: "CORE",
-  arm_leg_raise: "CORE",
-  jerk: "OLYMPIC",
-};
-
-/** Map exercise IDs to lifting PR fields */
-const EXERCISE_PR_MAP: Record<string, keyof LiftingPrs> = {
-  squat: "squatKg",
-  front_squat: "squatKg",
-  half_squat: "squatKg",
-  bench: "benchKg",
-  incline_bench: "benchKg",
-  ohp: "ohpKg",
-  snatch: "snatchKg",
-  power_snatch: "snatchKg",
-  power_clean: "cleanKg",
-  clean_pull: "cleanKg",
-  jerk: "cleanKg",
-  rdl: "deadliftKg",
-  trap_deadlift: "deadliftKg",
-  good_morning: "squatKg",
-  glute_ham: "squatKg",
-};
 
 /** Scale factors for derivative exercises relative to the base PR */
 const EXERCISE_SCALE: Record<string, number> = {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, Button } from "@/components";
+import { Badge } from "@/components";
 import {
   ArrowLeft,
   Clock,
@@ -9,8 +9,6 @@ import {
   Flame,
   Snowflake,
   StickyNote,
-  Play,
-  SkipForward,
   CalendarDays,
 } from "lucide-react";
 import prisma from "@/lib/prisma";

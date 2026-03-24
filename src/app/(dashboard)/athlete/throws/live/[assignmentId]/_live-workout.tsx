@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   Target,
   Dumbbell,
@@ -15,7 +14,7 @@ import {
   Trophy,
   Clock,
 } from "lucide-react";
-import { Button, Badge, ProgressBar, AnimatedNumber } from "@/components";
+import { Button, ProgressBar, AnimatedNumber } from "@/components";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/toast";
@@ -527,12 +526,10 @@ function WarmupCooldownView({
 function CompletionScreen({
   assignmentId,
   blockStates,
-  blocks,
   elapsed,
 }: {
   assignmentId: string;
   blockStates: Map<string, BlockState>;
-  blocks: BlockData[];
   elapsed: number;
 }) {
   const router = useRouter();
@@ -852,7 +849,6 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         <CompletionScreen
           assignmentId={data.assignmentId}
           blockStates={blockStates}
-          blocks={data.blocks}
           elapsed={elapsed}
         />
       </div>
