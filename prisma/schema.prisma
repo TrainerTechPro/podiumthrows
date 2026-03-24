@@ -255,6 +255,23 @@ model AthleteProfile {
   // Widget layout config: { preset, widgets, order }
   dashboardConfig Json?
 
+  // Master Profile — Core Info (Section 1)
+  turnDirection   String?   // "LEFT" | "RIGHT"
+  classStanding   String?   // "FR" | "SO" | "JR" | "SR" | "GRAD" | "PRO"
+  gradYear        Int?
+
+  // Master Profile — Competition & Distance Bands (Section 2)
+  competitionGoals Json?
+
+  // Master Profile — Strength Numbers (Section 4)
+  strengthNumbers  Json?
+
+  // Master Profile — Technical Profile (Section 5, coach-managed)
+  technicalProfile Json?
+
+  // Master Profile — Movement Restrictions (Section 6, coach-managed)
+  movementRestrictions Json?
+
   // Core relations (existing PT models)
   trainingSessions         TrainingSession[]
   sessionLogs              SessionLog[]
