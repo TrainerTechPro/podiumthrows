@@ -30,6 +30,7 @@ import {
   TabPanel,
 } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { ProgramSettings } from "./_program-settings";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -278,7 +279,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
     try {
       const res = await fetch(
         `/api/athlete/self-program/${config.id}/generate`,
-        { method: "POST" },
+        { method: "POST", headers: csrfHeaders() },
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -301,7 +302,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
     try {
       const res = await fetch(
         `/api/athlete/self-program/${config.id}/generate-next`,
-        { method: "POST" },
+        { method: "POST", headers: csrfHeaders() },
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Button } from "@/components/ui/Button";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
@@ -169,7 +170,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
       // 1. Save settings
       const putRes = await fetch(`/api/athlete/self-program/${config.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           programType: form.programType,
           daysPerWeek: form.daysPerWeek,
@@ -188,7 +189,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
       // 2. Regenerate program
       const genRes = await fetch(
         `/api/athlete/self-program/${config.id}/generate`,
-        { method: "POST" },
+        { method: "POST", headers: csrfHeaders() },
       );
       if (!genRes.ok) {
         const data = await genRes.json().catch(() => null);

@@ -248,6 +248,7 @@ export async function POST(
     }
 
     // Persist to database (follows exact pattern from generate-for-athlete)
+    // Extended timeout for large programs (many phases × weeks × sessions)
     const program = await prisma.$transaction(async (tx) => {
       const prog = await tx.trainingProgram.create({
         data: {
@@ -304,38 +305,37 @@ export async function POST(
           });
         }
 
-        // Save sessions for this phase
-        for (const genWeek of genPhase.weeks) {
-          for (const genSession of genWeek.sessions) {
-            await tx.programSession.create({
-              data: {
-                programId: prog.id,
-                phaseId: phase.id,
-                weekNumber: genWeek.weekNumber,
-                dayOfWeek: genSession.dayOfWeek,
-                dayType: genSession.dayType,
-                sessionType: genSession.sessionType,
-                focusLabel: genSession.focusLabel,
-                throwsPrescription: JSON.stringify(genSession.throws),
-                strengthPrescription:
-                  genSession.strength.length > 0
-                    ? JSON.stringify(genSession.strength)
-                    : null,
-                warmupPrescription:
-                  genSession.warmup.length > 0
-                    ? JSON.stringify(genSession.warmup)
-                    : null,
-                totalThrowsTarget: genSession.totalThrowsTarget,
-                estimatedDuration: genSession.estimatedDuration,
-                status: "PLANNED",
-              },
-            });
-          }
+        // Save sessions for this phase (batched for performance)
+        const sessionData = genPhase.weeks.flatMap((genWeek) =>
+          genWeek.sessions.map((genSession) => ({
+            programId: prog.id,
+            phaseId: phase.id,
+            weekNumber: genWeek.weekNumber,
+            dayOfWeek: genSession.dayOfWeek,
+            dayType: genSession.dayType,
+            sessionType: genSession.sessionType,
+            focusLabel: genSession.focusLabel,
+            throwsPrescription: JSON.stringify(genSession.throws),
+            strengthPrescription:
+              genSession.strength.length > 0
+                ? JSON.stringify(genSession.strength)
+                : null,
+            warmupPrescription:
+              genSession.warmup.length > 0
+                ? JSON.stringify(genSession.warmup)
+                : null,
+            totalThrowsTarget: genSession.totalThrowsTarget,
+            estimatedDuration: genSession.estimatedDuration,
+            status: "PLANNED" as const,
+          })),
+        );
+        if (sessionData.length > 0) {
+          await tx.programSession.createMany({ data: sessionData });
         }
       }
 
       return prog;
-    });
+    }, { maxWait: 30000, timeout: 60000 });
 
     // Link the program back to the config and finalize
     await prisma.selfProgramConfig.update({

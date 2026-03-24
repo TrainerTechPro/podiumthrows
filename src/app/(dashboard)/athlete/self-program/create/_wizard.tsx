@@ -3,8 +3,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { Button } from "@/components/ui/Button";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 
 import { useToast } from "@/components/ui/Toast";
@@ -662,19 +663,23 @@ export function SelfProgramWizard({
 
       {/* Navigation */}
       <div className="flex items-center justify-between mt-6">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           onClick={prevStep}
           disabled={step === 0}
-          className="btn-secondary px-5 py-2.5 disabled:opacity-40"
+          leftIcon={<ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Back
-        </button>
+        </Button>
 
         {isLastStep ? null : (
-          <button type="button" onClick={nextStep} className="btn-primary px-6 py-2.5">
+          <Button
+            variant="primary"
+            onClick={nextStep}
+            rightIcon={<ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />}
+          >
             Continue
-          </button>
+          </Button>
         )}
       </div>
     </div>

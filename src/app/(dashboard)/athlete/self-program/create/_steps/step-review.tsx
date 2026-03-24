@@ -12,6 +12,7 @@ import {
   Sparkles,
   Settings2,
 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import type { WizardFormState, ExerciseItem } from "../_wizard";
 
@@ -285,36 +286,19 @@ export function StepReview({
 
         {/* Desktop button */}
         <div className="hidden sm:flex justify-end mt-4">
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="lg"
             onClick={onGenerate}
-            disabled={generating}
-            className="btn-primary px-6 py-2.5 disabled:opacity-60"
+            loading={generating}
+            leftIcon={
+              !generating ? (
+                <Sparkles size={16} strokeWidth={1.75} aria-hidden="true" />
+              ) : undefined
+            }
           >
-            {generating ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  />
-                </svg>
-                Generating...
-              </span>
-            ) : (
-              "Generate Program"
-            )}
-          </button>
+            {generating ? "Generating..." : "Generate Program"}
+          </Button>
         </div>
 
         {/* Mobile slide to confirm */}
