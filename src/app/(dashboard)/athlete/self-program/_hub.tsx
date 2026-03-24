@@ -499,7 +499,7 @@ function ActiveView({
         {/* Next Session */}
         {nextSession ? (
           <Link
-            href="/athlete/training"
+            href={`/athlete/self-program/${config.id}/session/${nextSession.id}`}
             className="card card-interactive p-5 space-y-3 block"
           >
             <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">

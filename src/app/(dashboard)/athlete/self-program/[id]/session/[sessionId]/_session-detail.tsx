@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Clock,
   Dumbbell,
+  Play,
   SkipForward,
   Target,
   Timer,
@@ -16,10 +17,14 @@ import {
   RotateCcw,
   Calendar,
   CheckCircle2,
+  Pencil,
+  X,
 } from "lucide-react";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -68,6 +73,9 @@ interface ProgramSessionData {
   estimatedDuration: number | null;
   status: string;
   completedAt: string | null;
+  wasModified?: boolean;
+  modificationNotes?: string | null;
+  actualPrescription?: string | null;
   phase: {
     phase: string;
     phaseOrder: number;
@@ -158,15 +166,24 @@ function formatRestTime(seconds: number): string {
 export function SessionDetail({
   configId,
   session,
-  scheduledDate,
+  scheduledDate: initialScheduledDate,
   prevSessionId,
   nextSessionId,
 }: SessionDetailProps) {
-  const _router = useRouter();
+  const router = useRouter();
   const { success, error: toastError } = useToast();
   const [status, setStatus] = useState(session.status);
+  const [currentScheduledDate, setCurrentScheduledDate] = useState(initialScheduledDate);
   const [skipping, setSkipping] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState(initialScheduledDate ?? "");
+  const [rescheduling, setRescheduling] = useState(false);
+  const [showModify, setShowModify] = useState(false);
+  const [modNotes, setModNotes] = useState(session.modificationNotes ?? "");
+  const [savingMod, setSavingMod] = useState(false);
+  const modNotesRef = useRef<HTMLTextAreaElement>(null);
 
   const throws: ThrowPrescription[] = JSON.parse(session.throwsPrescription || "[]");
   const strength: StrengthPrescription[] = JSON.parse(session.strengthPrescription || "[]");
@@ -180,17 +197,44 @@ export function SessionDetail({
   const statusStyle = STATUS_STYLES[status] ?? STATUS_STYLES.PLANNED;
 
   const totalThrows = throws.reduce((sum, t) => sum + t.sets * t.repsPerSet, 0);
+  const canAct = status !== "COMPLETED" && status !== "SKIPPED";
 
-  // ── Actions ────────────────────────────────────────────────────────
+  // ── API helper ──────────────────────────────────────────────────────
+
+  async function patchSession(body: Record<string, unknown>) {
+    return fetch(`/api/athlete/self-program/${configId}/session/${session.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...csrfHeaders() },
+      body: JSON.stringify(body),
+    });
+  }
+
+  // ── Start Workout ───────────────────────────────────────────────────
+
+  async function handleStartWorkout() {
+    setStarting(true);
+    try {
+      const res = await patchSession({ status: "IN_PROGRESS" });
+      if (res.ok) {
+        setStatus("IN_PROGRESS");
+        success("Workout started", "Good luck out there!");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Error", data.error || "Failed to start workout");
+      }
+    } catch {
+      toastError("Error", "Something went wrong");
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  // ── Skip ────────────────────────────────────────────────────────────
 
   async function handleSkip() {
     setSkipping(true);
     try {
-      const res = await fetch(`/api/athlete/self-program/${configId}/session/${session.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ status: "SKIPPED" }),
-      });
+      const res = await patchSession({ status: "SKIPPED" });
       if (res.ok) {
         setStatus("SKIPPED");
         success("Session skipped");
@@ -201,6 +245,50 @@ export function SessionDetail({
       toastError("Error", "Something went wrong");
     } finally {
       setSkipping(false);
+    }
+  }
+
+  // ── Reschedule ──────────────────────────────────────────────────────
+
+  async function handleReschedule() {
+    if (!rescheduleDate) return;
+    setRescheduling(true);
+    try {
+      const res = await patchSession({ scheduledDate: rescheduleDate });
+      if (res.ok) {
+        setCurrentScheduledDate(rescheduleDate);
+        setShowReschedule(false);
+        success("Session rescheduled");
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Error", data.error || "Failed to reschedule");
+      }
+    } catch {
+      toastError("Error", "Something went wrong");
+    } finally {
+      setRescheduling(false);
+    }
+  }
+
+  // ── Modify (save notes) ─────────────────────────────────────────────
+
+  async function handleSaveModification() {
+    if (!modNotes.trim()) return;
+    setSavingMod(true);
+    try {
+      const res = await patchSession({ modificationNotes: modNotes.trim() });
+      if (res.ok) {
+        setShowModify(false);
+        success("Modifications saved");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Error", data.error || "Failed to save modifications");
+      }
+    } catch {
+      toastError("Error", "Something went wrong");
+    } finally {
+      setSavingMod(false);
     }
   }
 
@@ -266,15 +354,59 @@ export function SessionDetail({
           <span className={`text-xs px-2.5 py-0.5 rounded-full ${statusStyle.color}`}>
             {statusStyle.label}
           </span>
+          {session.wasModified && (
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+              Modified
+            </span>
+          )}
         </div>
 
-        {scheduledDate && (
+        {currentScheduledDate && (
           <p className="text-sm text-muted mt-1.5 flex items-center gap-1.5">
             <Calendar size={14} strokeWidth={1.75} aria-hidden="true" />
-            {formatDate(scheduledDate)}
+            {formatDate(currentScheduledDate)}
           </p>
         )}
       </div>
+
+      {/* Start Workout CTA */}
+      {canAct && status !== "IN_PROGRESS" && (
+        <div className="mb-6">
+          {/* Desktop */}
+          <div className="hidden sm:block">
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={handleStartWorkout}
+              loading={starting}
+              leftIcon={!starting ? <Play size={18} strokeWidth={1.75} aria-hidden="true" /> : undefined}
+            >
+              {starting ? "Starting..." : "Start Workout"}
+            </Button>
+          </div>
+          {/* Mobile: slide to confirm */}
+          <div className="sm:hidden">
+            <SlideToConfirm
+              label="Slide to Start Workout"
+              onConfirm={handleStartWorkout}
+              variant="confirm"
+              disabled={starting}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* In-Progress banner */}
+      {status === "IN_PROGRESS" && (
+        <div className="mb-6 card p-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-center">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">Workout In Progress</p>
+          </div>
+          <p className="text-xs text-amber-600 dark:text-amber-500">Complete your session, then mark it done below</p>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -295,7 +427,7 @@ export function SessionDetail({
         <div className="card p-3 text-center">
           <Clock size={16} strokeWidth={1.75} className="mx-auto text-blue-500 mb-1" aria-hidden="true" />
           <div className="text-lg font-semibold tabular-nums">
-            {session.estimatedDuration ? <AnimatedNumber value={session.estimatedDuration} /> : "—"}
+            {session.estimatedDuration ? <AnimatedNumber value={session.estimatedDuration} /> : "\u2014"}
           </div>
           <div className="text-xs text-muted">min</div>
         </div>
@@ -440,10 +572,82 @@ export function SessionDetail({
       </section>
 
       {/* Actions */}
-      {status !== "COMPLETED" && status !== "SKIPPED" && (
+      {canAct && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-2">Actions</h2>
 
+          {/* Complete Workout (only when IN_PROGRESS) */}
+          {status === "IN_PROGRESS" && (
+            <>
+              {/* Desktop */}
+              <div className="hidden sm:block">
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  onClick={async () => {
+                    const res = await patchSession({ status: "COMPLETED" });
+                    if (res.ok) {
+                      setStatus("COMPLETED");
+                      success("Workout complete!", "Great work today.");
+                    } else {
+                      toastError("Error", "Failed to complete session");
+                    }
+                  }}
+                  leftIcon={<CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />}
+                >
+                  Complete Workout
+                </Button>
+              </div>
+              {/* Mobile */}
+              <div className="sm:hidden">
+                <SlideToConfirm
+                  label="Slide to Complete Workout"
+                  onConfirm={async () => {
+                    const res = await patchSession({ status: "COMPLETED" });
+                    if (res.ok) {
+                      setStatus("COMPLETED");
+                      success("Workout complete!", "Great work today.");
+                    } else {
+                      toastError("Error", "Failed to complete session");
+                    }
+                  }}
+                  variant="confirm"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Modify */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowModify(true);
+              setTimeout(() => modNotesRef.current?.focus(), 100);
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
+          >
+            <Pencil size={18} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
+            <div>
+              <div className="text-sm font-medium">Modify Session</div>
+              <div className="text-xs text-muted">Adjust exercises or add notes before starting</div>
+            </div>
+          </button>
+
+          {/* Reschedule */}
+          <button
+            type="button"
+            onClick={() => setShowReschedule(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
+          >
+            <RotateCcw size={18} strokeWidth={1.75} className="text-blue-500" aria-hidden="true" />
+            <div>
+              <div className="text-sm font-medium">Reschedule</div>
+              <div className="text-xs text-muted">Move this session to a different day</div>
+            </div>
+          </button>
+
+          {/* Skip */}
           <button
             type="button"
             disabled={skipping}
@@ -456,33 +660,10 @@ export function SessionDetail({
               <div className="text-xs text-muted">Mark as skipped and move on</div>
             </div>
           </button>
-          <ConfirmDialog
-            open={showSkipConfirm}
-            onClose={() => setShowSkipConfirm(false)}
-            title="Skip this session?"
-            description="This session will be marked as skipped. You can't undo this."
-            onConfirm={handleSkip}
-            variant="danger"
-            confirmLabel="Skip"
-          />
-
-          <button
-            type="button"
-            onClick={() => {
-              // TODO: Implement reschedule modal
-              toastError("Coming Soon", "Rescheduling will be available in the next update");
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
-          >
-            <RotateCcw size={18} strokeWidth={1.75} className="text-blue-500" aria-hidden="true" />
-            <div>
-              <div className="text-sm font-medium">Reschedule</div>
-              <div className="text-xs text-muted">Move this session to a different day</div>
-            </div>
-          </button>
         </section>
       )}
 
+      {/* Completed state */}
       {status === "COMPLETED" && (
         <div className="card p-4 bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-center">
           <CheckCircle2 size={24} strokeWidth={1.75} className="text-emerald-500 mx-auto mb-2" aria-hidden="true" />
@@ -495,10 +676,154 @@ export function SessionDetail({
         </div>
       )}
 
+      {/* Skipped state */}
       {status === "SKIPPED" && (
         <div className="card p-4 bg-surface-100 dark:bg-surface-800 text-center">
           <SkipForward size={24} strokeWidth={1.75} className="text-muted mx-auto mb-2" aria-hidden="true" />
           <p className="text-sm font-medium text-muted">Session Skipped</p>
+        </div>
+      )}
+
+      {/* ── Skip Confirm Dialog ──────────────────────────────────────── */}
+      <ConfirmDialog
+        open={showSkipConfirm}
+        onClose={() => setShowSkipConfirm(false)}
+        title="Skip this session?"
+        description="This session will be marked as skipped. You can't undo this."
+        onConfirm={handleSkip}
+        variant="danger"
+        confirmLabel="Skip"
+      />
+
+      {/* ── Reschedule Dialog ────────────────────────────────────────── */}
+      {showReschedule && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
+          <div className="card w-full max-w-sm mx-4 mb-4 sm:mb-0 p-6 space-y-4 animate-fade-slide-in">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
+                Reschedule Session
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowReschedule(false)}
+                className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div>
+              <label htmlFor="reschedule-date" className="text-sm font-medium text-[var(--foreground)] block mb-1.5">
+                New Date
+              </label>
+              <input
+                id="reschedule-date"
+                type="date"
+                value={rescheduleDate}
+                onChange={(e) => setRescheduleDate(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
+                className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                size="md"
+                className="flex-1"
+                onClick={() => setShowReschedule(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                className="flex-1"
+                onClick={handleReschedule}
+                loading={rescheduling}
+                disabled={!rescheduleDate}
+              >
+                {rescheduling ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modify Dialog ────────────────────────────────────────────── */}
+      {showModify && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
+          <div className="card w-full max-w-md mx-4 mb-4 sm:mb-0 p-6 space-y-4 animate-fade-slide-in">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
+                Modify Session
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowModify(false)}
+                className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            </div>
+
+            <p className="text-sm text-muted">
+              Describe how you plan to adjust today&apos;s session. Your notes will be saved alongside the original prescription.
+            </p>
+
+            {/* Current prescription summary */}
+            <div className="rounded-xl bg-surface-50 dark:bg-surface-800/50 p-3 space-y-1.5">
+              <p className="text-xs font-semibold text-muted uppercase tracking-wider">Prescribed</p>
+              {throws.length > 0 && (
+                <p className="text-xs text-[var(--foreground)]">
+                  {throws.map((t) => `${t.implement}: ${t.sets}\u00D7${t.repsPerSet}`).join(" \u2192 ")}
+                </p>
+              )}
+              {strength.length > 0 && (
+                <p className="text-xs text-[var(--foreground)]">
+                  {strength.map((s) => `${s.exerciseName}: ${s.sets}\u00D7${s.reps}`).join(", ")}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="mod-notes" className="text-sm font-medium text-[var(--foreground)] block mb-1.5">
+                Modification Notes
+              </label>
+              <textarea
+                ref={modNotesRef}
+                id="mod-notes"
+                rows={4}
+                value={modNotes}
+                onChange={(e) => setModNotes(e.target.value)}
+                placeholder="e.g., Dropping 9kg set due to shoulder tightness. Adding 2 extra sets of standing throws with 7.26kg."
+                className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-surface-400 dark:placeholder:text-surface-600 focus:outline-none focus:ring-2 focus:ring-primary-500/40 resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                size="md"
+                className="flex-1"
+                onClick={() => setShowModify(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                className="flex-1"
+                onClick={handleSaveModification}
+                loading={savingMod}
+                disabled={!modNotes.trim()}
+              >
+                {savingMod ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

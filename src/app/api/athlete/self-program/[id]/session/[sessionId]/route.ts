@@ -5,6 +5,8 @@ import { logger } from "@/lib/logger";
 
 type RouteContext = { params: Promise<{ id: string; sessionId: string }> };
 
+const ALLOWED_STATUSES = ["PLANNED", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "SKIPPED"];
+
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const session = await getSession();
@@ -41,20 +43,74 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { status: newStatus } = body as { status?: string };
+    const {
+      status: newStatus,
+      scheduledDate,
+      actualPrescription,
+      modificationNotes,
+    } = body as {
+      status?: string;
+      scheduledDate?: string;
+      actualPrescription?: string;
+      modificationNotes?: string;
+    };
 
-    const allowedStatuses = ["PLANNED", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "SKIPPED"];
-    if (!newStatus || !allowedStatuses.includes(newStatus)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    // Build update payload
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: Record<string, any> = {};
+
+    // Status change
+    if (newStatus !== undefined) {
+      if (!ALLOWED_STATUSES.includes(newStatus)) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+      }
+      if (programSession.status === "COMPLETED") {
+        return NextResponse.json({ error: "Cannot modify a completed session" }, { status: 400 });
+      }
+      data.status = newStatus;
+      if (newStatus === "COMPLETED") data.completedAt = new Date();
+    }
+
+    // Reschedule
+    if (scheduledDate !== undefined) {
+      if (programSession.status === "COMPLETED") {
+        return NextResponse.json({ error: "Cannot reschedule a completed session" }, { status: 400 });
+      }
+      // Validate YYYY-MM-DD format
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) {
+        return NextResponse.json({ error: "scheduledDate must be YYYY-MM-DD" }, { status: 400 });
+      }
+      const d = new Date(scheduledDate);
+      if (isNaN(d.getTime())) {
+        return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+      }
+      data.scheduledDate = scheduledDate;
+    }
+
+    // Modification (pre-workout adjustments)
+    if (actualPrescription !== undefined) {
+      data.actualPrescription = actualPrescription;
+      data.wasModified = true;
+    }
+    if (modificationNotes !== undefined) {
+      data.modificationNotes = modificationNotes;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
     const updated = await prisma.programSession.update({
       where: { id: sessionId },
-      data: {
-        status: newStatus,
-        ...(newStatus === "COMPLETED" ? { completedAt: new Date() } : {}),
+      data,
+      select: {
+        id: true,
+        status: true,
+        completedAt: true,
+        scheduledDate: true,
+        wasModified: true,
+        modificationNotes: true,
       },
-      select: { id: true, status: true, completedAt: true },
     });
 
     return NextResponse.json(updated);
