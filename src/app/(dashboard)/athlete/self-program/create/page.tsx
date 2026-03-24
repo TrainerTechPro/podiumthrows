@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { canAccessSelfProgram } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
+import { COMPETITION_WEIGHTS, EVENT_CODE_MAP } from "@/lib/throws/constants";
+import type { ThrowEvent, EventCode, GenderCode } from "@/lib/throws/constants";
 import { SelfProgramWizard } from "./_wizard";
 
 export default async function SelfProgramCreatePage({
@@ -80,8 +82,23 @@ export default async function SelfProgramCreatePage({
     orderBy: { name: "asc" },
   });
 
-  // Build prefill data from profile + PRs + previous config
-  const bestPR = throwsPRs.length > 0 ? throwsPRs[0] : null;
+  // Find competition-implement PR for the athlete's primary event.
+  // Competition weight is the standard implement (e.g. 7.26kg for men's shot).
+  const primaryEvent = (athlete.events[0] ?? "SHOT_PUT") as ThrowEvent;
+  const eventCode = EVENT_CODE_MAP[primaryEvent] as EventCode;
+  const genderCode = (athlete.gender === "MALE" ? "M" : "F") as GenderCode;
+  const compWeight = COMPETITION_WEIGHTS[eventCode]?.[genderCode];
+  const compImplementStr = compWeight ? `${compWeight}kg` : null;
+
+  // Prefer the competition implement PR; fall back to any PR for this event
+  const compPR = compImplementStr
+    ? throwsPRs.find((pr) => pr.event === primaryEvent && pr.implement === compImplementStr)
+    : null;
+  const eventPR = !compPR
+    ? throwsPRs.find((pr) => pr.event === primaryEvent)
+    : null;
+  const bestPR = compPR ?? eventPR ?? null;
+
   const prefill = {
     currentPR: bestPR?.distance ?? null,
     yearsExperience: previousConfig?.yearsExperience ?? null,

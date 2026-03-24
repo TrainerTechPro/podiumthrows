@@ -468,13 +468,39 @@ export function SelfProgramWizard({
         });
       }
 
-      const res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
+      let res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
       });
 
-      if (!res.ok) {
+      // Handle 409 conflict — another active program exists
+      if (res.status === 409) {
         const err = await res.json();
+        const conflictingId = err.conflictingId;
+        if (conflictingId) {
+          const replace = window.confirm(
+            "You already have an active training program. Do you want to replace it with this new one?"
+          );
+          if (!replace) {
+            setGenerating(false);
+            return;
+          }
+          // Deactivate the old config
+          await fetch(`/api/athlete/self-program/${conflictingId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            body: JSON.stringify({ isActive: false }),
+          });
+          // Retry generation
+          res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          });
+        }
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to generate program" }));
         setErrors({ generate: err.error || "Failed to generate program" });
         toastError("Generation Failed", err.error || "Something went wrong");
         return;

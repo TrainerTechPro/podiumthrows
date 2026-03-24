@@ -31,6 +31,7 @@ const ALLOWED_FIELDS = new Set([
   "usedExistingTyping",
   "inlineTypingData",
   "isDraft",
+  "isActive",
 ]);
 
 /* ─── GET — fetch config with linked training program ────────────────── */
