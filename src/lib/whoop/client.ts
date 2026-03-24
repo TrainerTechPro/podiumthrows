@@ -46,6 +46,9 @@ export async function getAccessToken(connectionId: string): Promise<string> {
 
   if (!res.ok) {
     const text = await res.text();
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("Your WHOOP authorization has expired. Please disconnect and reconnect WHOOP in Settings.");
+    }
     throw new Error(`WHOOP token refresh failed (${res.status}): ${text}`);
   }
 
@@ -82,6 +85,9 @@ async function whoopGet(connectionId: string, path: string): Promise<Record<stri
 
   if (!res.ok) {
     const text = await res.text();
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("Your WHOOP authorization has expired. Please disconnect and reconnect WHOOP in Settings.");
+    }
     throw new Error(`WHOOP API ${path} failed (${res.status}): ${text}`);
   }
 
