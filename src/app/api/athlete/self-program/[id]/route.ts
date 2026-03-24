@@ -157,13 +157,11 @@ export async function PUT(
 
     const body = await req.json().catch(() => ({}));
 
-    // Reject requests that attempt to modify locked (identity) fields
-    const lockedAttempt = LOCKED_FIELDS.filter((f) => f in (body as Record<string, unknown>));
-    if (lockedAttempt.length > 0) {
-      return NextResponse.json(
-        { error: `Cannot modify locked fields: ${lockedAttempt.join(", ")}. Create a new program instead.` },
-        { status: 400 },
-      );
+    // Strip locked fields — the wizard sends all fields but these are read-only.
+    // Silently remove them rather than rejecting, since the wizard and settings
+    // tab both send the full payload including locked fields.
+    for (const f of LOCKED_FIELDS) {
+      delete (body as Record<string, unknown>)[f];
     }
 
     // Server-side validation for editable fields
