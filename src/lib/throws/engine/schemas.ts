@@ -24,10 +24,13 @@ export const StrengthPrescriptionSchema = z.object({
   classification: z.enum(["CE", "SD", "SP", "GP"]),
   sets: z.number().int().min(1),
   reps: z.number().int().min(1),
-  intensityPercent: z.number().min(0).max(100).optional(),
+  // Bondarchuk prescribes Olympic pulls at 120% of snatch/clean max,
+  // so intensity can legitimately exceed 100% for derivative exercises.
+  intensityPercent: z.number().min(0).max(200).optional(),
   loadKg: z.number().min(0).optional(),
   restSeconds: z.number().min(0),
   notes: z.string().optional(),
+  blockGroup: z.union([z.literal(1), z.literal(2)]).optional(),
 });
 
 export const WarmupPrescriptionSchema = z.object({
@@ -38,6 +41,14 @@ export const WarmupPrescriptionSchema = z.object({
 
 // ── Session / Week / Phase Schemas ──────────────────────────────────
 
+export const SessionBlockSchema = z.object({
+  order: z.number().int().min(0),
+  type: z.enum(["WARMUP", "THROWING", "STRENGTH"]),
+  label: z.string(),
+  throws: z.array(ThrowPrescriptionSchema).optional(),
+  strength: z.array(StrengthPrescriptionSchema).optional(),
+});
+
 export const GeneratedSessionSchema = z.object({
   weekNumber: z.number().int().min(1),
   dayOfWeek: z.number().int().min(1).max(7),
@@ -47,6 +58,7 @@ export const GeneratedSessionSchema = z.object({
   throws: z.array(ThrowPrescriptionSchema),
   strength: z.array(StrengthPrescriptionSchema),
   warmup: z.array(WarmupPrescriptionSchema),
+  blocks: z.array(SessionBlockSchema).optional(),
   totalThrowsTarget: z.number().int().min(0),
   estimatedDuration: z.number().min(0),
 });
