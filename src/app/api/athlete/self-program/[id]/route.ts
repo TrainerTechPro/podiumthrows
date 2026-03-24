@@ -146,7 +146,7 @@ export async function PUT(
     // Verify ownership
     const existing = await prisma.selfProgramConfig.findUnique({
       where: { id },
-      select: { id: true, athleteProfileId: true },
+      select: { id: true, athleteProfileId: true, isDraft: true, trainingProgramId: true },
     });
     if (!existing) {
       return NextResponse.json({ error: "Config not found" }, { status: 404 });
@@ -157,11 +157,14 @@ export async function PUT(
 
     const body = await req.json().catch(() => ({}));
 
-    // Strip locked fields — the wizard sends all fields but these are read-only.
-    // Silently remove them rather than rejecting, since the wizard and settings
-    // tab both send the full payload including locked fields.
-    for (const f of LOCKED_FIELDS) {
-      delete (body as Record<string, unknown>)[f];
+    // Locked fields are only locked on finalized configs that already have a
+    // generated program. During wizard flow (drafts or configs without a
+    // program yet), all fields must be editable — the user is still choosing.
+    const isLocked = !existing.isDraft && !!existing.trainingProgramId;
+    if (isLocked) {
+      for (const f of LOCKED_FIELDS) {
+        delete (body as Record<string, unknown>)[f];
+      }
     }
 
     // Server-side validation for editable fields
@@ -207,10 +210,16 @@ export async function PUT(
       }
     }
 
+    // When not locked, identity fields (event, gender, etc.) are also editable
+    const allowedFields = new Set(ALLOWED_FIELDS);
+    if (!isLocked) {
+      for (const f of LOCKED_FIELDS) allowedFields.add(f);
+    }
+
     const data: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
-      if (!ALLOWED_FIELDS.has(key)) continue;
+      if (!allowedFields.has(key)) continue;
 
       // Convert startDate string to Date object
       if (key === "startDate" && typeof value === "string") {
