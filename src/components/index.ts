@@ -22,6 +22,7 @@ export * from "./ui/Modal";
 export * from "./ui/Toast";
 export * from "./ui/ConfirmDialog";
 export * from "./ui/UpgradeModal";
+export * from "./ui/NotificationBell";
 
 /* ─── Navigation ─────────────────────────────────────────────────────────── */
 export * from "./ui/Breadcrumbs";

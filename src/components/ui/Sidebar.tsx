@@ -496,6 +496,7 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
   {
     title: "My Profile",
     items: [
+      { label: "Notifications", href: "/athlete/notifications", icon: <Bell {...iconSize} /> },
       { label: "Profile", href: "/athlete/profile", icon: <UserCircle {...iconSize} /> },
       { label: "Goals", href: "/athlete/goals", icon: <Crosshair {...iconSize} /> },
       { label: "Achievements", href: "/athlete/achievements", icon: <Award {...iconSize} /> },

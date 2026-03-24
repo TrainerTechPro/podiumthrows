@@ -2,9 +2,13 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { Badge, Button, EmptyState } from "@/components";
-import type { NotificationItem } from "@/lib/data/coach";
-import Link from "next/link";
+import type { NotificationItem } from "@/lib/notifications";
+import { useRouter } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import {
+  Bell, Trophy, AlertTriangle, ClipboardList, Dumbbell, UserPlus,
+  RefreshCw, MessageCircle, Video, CalendarClock, Clock, Flame, Settings2,
+} from "lucide-react";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -20,72 +24,149 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+const iconProps = { size: 16, strokeWidth: 1.75, "aria-hidden": true as const };
+
 function NotificationIcon({ type }: { type: string }) {
+  const base = "w-9 h-9 rounded-full flex items-center justify-center shrink-0";
+
   switch (type) {
     case "PR_ALERT":
-      return (
-        <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0 text-lg">
-          🏆
-        </div>
-      );
+      return <div className={`${base} bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400`}><Trophy {...iconProps} /></div>;
     case "LOW_READINESS":
-      return (
-        <div className="w-9 h-9 rounded-full bg-danger-50 dark:bg-danger-500/20 flex items-center justify-center shrink-0 text-lg">
-          ⚠️
-        </div>
-      );
+      return <div className={`${base} bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400`}><AlertTriangle {...iconProps} /></div>;
+    case "QUESTIONNAIRE_ASSIGNED":
     case "QUESTIONNAIRE_COMPLETE":
-      return (
-        <div className="w-9 h-9 rounded-full bg-info-50 dark:bg-info-500/20 flex items-center justify-center shrink-0 text-lg">
-          📋
-        </div>
-      );
+      return <div className={`${base} bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400`}><ClipboardList {...iconProps} /></div>;
+    case "WORKOUT_ASSIGNED":
+    case "WORKOUT_COMPLETED":
+    case "WORKOUT_SKIPPED":
+      return <div className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}><Dumbbell {...iconProps} /></div>;
+    case "ATHLETE_JOINED":
+      return <div className={`${base} bg-success-50 dark:bg-success-500/20 text-success-600 dark:text-success-400`}><UserPlus {...iconProps} /></div>;
+    case "PROGRAM_CHECKPOINT":
+    case "COMPLEX_ROTATED":
+      return <div className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}><RefreshCw {...iconProps} /></div>;
+    case "COMMENT_ADDED":
+      return <div className={`${base} bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400`}><MessageCircle {...iconProps} /></div>;
+    case "VIDEO_SHARED":
+      return <div className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}><Video {...iconProps} /></div>;
+    case "COMPETITION_REMINDER":
+      return <div className={`${base} bg-warning-50 dark:bg-warning-500/15 text-warning-600 dark:text-warning-400`}><CalendarClock {...iconProps} /></div>;
+    case "INVITATION_EXPIRED":
+      return <div className={`${base} bg-surface-100 dark:bg-surface-800 text-surface-500`}><Clock {...iconProps} /></div>;
+    case "STREAK_BROKEN":
+      return <div className={`${base} bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400`}><Flame {...iconProps} /></div>;
     default:
-      return (
-        <div className="w-9 h-9 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 text-lg">
-          🔔
-        </div>
-      );
+      return <div className={`${base} bg-surface-100 dark:bg-surface-800 text-surface-500`}><Settings2 {...iconProps} /></div>;
   }
 }
 
-function typeLabel(type: string): string {
-  switch (type) {
-    case "PR_ALERT": return "Personal Best";
-    case "LOW_READINESS": return "Low Readiness";
-    case "QUESTIONNAIRE_COMPLETE": return "Questionnaire";
-    default: return "Notification";
-  }
-}
+/* ─── Type maps ──────────────────────────────────────────────────────────── */
 
-function typeBadgeVariant(type: string): "success" | "danger" | "info" | "neutral" {
-  switch (type) {
-    case "PR_ALERT": return "success";
-    case "LOW_READINESS": return "danger";
-    case "QUESTIONNAIRE_COMPLETE": return "info";
-    default: return "neutral";
+const TYPE_LABELS: Record<string, string> = {
+  PR_ALERT: "Personal Best",
+  LOW_READINESS: "Low Readiness",
+  QUESTIONNAIRE_COMPLETE: "Questionnaire",
+  QUESTIONNAIRE_ASSIGNED: "Questionnaire",
+  STREAK_BROKEN: "Streak",
+  WORKOUT_ASSIGNED: "Workout",
+  WORKOUT_COMPLETED: "Workout",
+  WORKOUT_SKIPPED: "Workout",
+  ATHLETE_JOINED: "Roster",
+  PROGRAM_CHECKPOINT: "Program",
+  COMPLEX_ROTATED: "Program",
+  COMMENT_ADDED: "Comment",
+  VIDEO_SHARED: "Video",
+  COMPETITION_REMINDER: "Competition",
+  INVITATION_EXPIRED: "Invitation",
+};
+
+const TYPE_BADGE_VARIANTS: Record<string, "success" | "danger" | "info" | "neutral" | "warning" | "primary"> = {
+  PR_ALERT: "success",
+  LOW_READINESS: "danger",
+  QUESTIONNAIRE_COMPLETE: "info",
+  QUESTIONNAIRE_ASSIGNED: "info",
+  STREAK_BROKEN: "danger",
+  WORKOUT_ASSIGNED: "primary",
+  WORKOUT_COMPLETED: "success",
+  WORKOUT_SKIPPED: "warning",
+  ATHLETE_JOINED: "success",
+  PROGRAM_CHECKPOINT: "primary",
+  COMPLEX_ROTATED: "primary",
+  COMMENT_ADDED: "info",
+  VIDEO_SHARED: "primary",
+  COMPETITION_REMINDER: "warning",
+  INVITATION_EXPIRED: "neutral",
+};
+
+/* ─── Link helper ────────────────────────────────────────────────────────── */
+
+function getNotificationUrl(n: NotificationItem, role: "COACH" | "ATHLETE"): string | null {
+  const meta = n.metadata as Record<string, unknown> | null;
+  if (meta?.url && typeof meta.url === "string") return meta.url;
+  const prefix = role === "COACH" ? "/coach" : "/athlete";
+  switch (n.type) {
+    case "PR_ALERT":
+    case "LOW_READINESS":
+    case "WORKOUT_COMPLETED":
+    case "WORKOUT_SKIPPED":
+    case "STREAK_BROKEN":
+      return n.athleteId && role === "COACH" ? `/coach/athletes/${n.athleteId}` : null;
+    case "WORKOUT_ASSIGNED":
+      return `${prefix}/sessions`;
+    case "QUESTIONNAIRE_ASSIGNED":
+    case "QUESTIONNAIRE_COMPLETE":
+      return `${prefix}/questionnaires`;
+    case "ATHLETE_JOINED":
+      return "/coach/athletes";
+    case "VIDEO_SHARED":
+      return `${prefix}/videos`;
+    case "COMPETITION_REMINDER":
+      return `${prefix}/dashboard`;
+    case "INVITATION_EXPIRED":
+      return "/coach/invitations";
+    default:
+      return null;
   }
 }
 
 /* ─── Filter tabs ────────────────────────────────────────────────────────── */
 
-type FilterType = "all" | "unread" | "PR_ALERT" | "LOW_READINESS";
+type FilterType = "all" | "unread" | string;
 
-const FILTER_TABS: { key: FilterType; label: string }[] = [
+const COACH_FILTERS: { key: FilterType; label: string }[] = [
   { key: "all", label: "All" },
   { key: "unread", label: "Unread" },
   { key: "PR_ALERT", label: "PR Alerts" },
   { key: "LOW_READINESS", label: "Low Readiness" },
+  { key: "WORKOUT_COMPLETED", label: "Workouts" },
+  { key: "QUESTIONNAIRE_COMPLETE", label: "Questionnaires" },
+  { key: "ATHLETE_JOINED", label: "Roster" },
 ];
 
-/* ─── Notification Row ──────────────────────────────────────────────────────*/
+const ATHLETE_FILTERS: { key: FilterType; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "unread", label: "Unread" },
+  { key: "WORKOUT_ASSIGNED", label: "Workouts" },
+  { key: "QUESTIONNAIRE_ASSIGNED", label: "Questionnaires" },
+  { key: "VIDEO_SHARED", label: "Videos" },
+  { key: "COMPETITION_REMINDER", label: "Competitions" },
+];
 
-interface NotificationRowProps {
+/* ─── Notification Row ──────────────────────────────────────────────────── */
+
+function NotificationRow({
+  notification: n,
+  onMarkRead,
+  role,
+}: {
   notification: NotificationItem;
   onMarkRead: (id: string, read: boolean) => void;
-}
+  role: "COACH" | "ATHLETE";
+}) {
+  const router = useRouter();
+  const url = getNotificationUrl(n, role);
 
-function NotificationRow({ notification: n, onMarkRead }: NotificationRowProps) {
   return (
     <div
       className={`flex items-start gap-3 p-4 rounded-xl border transition-colors ${
@@ -98,11 +179,10 @@ function NotificationRow({ notification: n, onMarkRead }: NotificationRowProps) 
 
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className={`text-sm font-semibold leading-snug ${!n.read ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>
+          <p className="text-sm font-semibold leading-snug text-[var(--foreground)]">
             {n.title}
           </p>
           <div className="flex items-center gap-2 shrink-0">
-            {/* Unread dot */}
             {!n.read && (
               <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
             )}
@@ -115,17 +195,18 @@ function NotificationRow({ notification: n, onMarkRead }: NotificationRowProps) 
         <p className="text-xs text-muted mt-0.5 leading-relaxed">{n.body}</p>
 
         <div className="flex items-center gap-2 mt-2">
-          <Badge variant={typeBadgeVariant(n.type)}>
-            {typeLabel(n.type)}
+          <Badge variant={TYPE_BADGE_VARIANTS[n.type] ?? "neutral"}>
+            {TYPE_LABELS[n.type] ?? "Notification"}
           </Badge>
 
-          {n.athleteId && (
-            <Link
-              href={`/coach/athletes/${n.athleteId}`}
+          {url && (
+            <button
+              type="button"
+              onClick={() => router.push(url)}
               className="text-[10px] text-primary-600 dark:text-primary-400 hover:underline"
             >
-              View athlete →
-            </Link>
+              View details →
+            </button>
           )}
 
           <button
@@ -145,26 +226,27 @@ function NotificationRow({ notification: n, onMarkRead }: NotificationRowProps) 
 interface NotificationsClientProps {
   initialNotifications: NotificationItem[];
   unreadCount: number;
+  role: "COACH" | "ATHLETE";
 }
 
-export function NotificationsClient({ initialNotifications, unreadCount: _initialUnread }: NotificationsClientProps) {
+export function NotificationsClient({ initialNotifications, unreadCount: _initialUnread, role }: NotificationsClientProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [filter, setFilter] = useState<FilterType>("all");
   const [, startTransition] = useTransition();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const filterTabs = role === "COACH" ? COACH_FILTERS : ATHLETE_FILTERS;
 
   const filtered = notifications.filter((n) => {
     if (filter === "unread") return !n.read;
-    if (filter === "PR_ALERT" || filter === "LOW_READINESS") return n.type === filter;
+    if (filter !== "all") return n.type === filter;
     return true;
   });
 
-  /* ── Mark single read/unread ── */
   const handleMarkRead = useCallback((id: string, read: boolean) => {
     startTransition(async () => {
       try {
-        await fetch(`/api/coach/notifications/${id}`, {
+        await fetch(`/api/notifications/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ read }),
@@ -178,14 +260,12 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
     });
   }, []);
 
-  /* ── Mark all read ── */
   const handleMarkAllRead = useCallback(() => {
     startTransition(async () => {
       try {
-        await fetch("/api/coach/notifications", {
+        await fetch("/api/notifications", {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ markAll: true, read: true }),
         });
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       } catch {
@@ -215,7 +295,7 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
 
       {/* Filter tabs */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        {FILTER_TABS.map(({ key, label }) => {
+        {filterTabs.map(({ key, label }) => {
           const count =
             key === "unread"
               ? notifications.filter((n) => !n.read).length
@@ -247,17 +327,14 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
       {/* List */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-          }
+          icon={<Bell size={32} strokeWidth={1.5} />}
           title={filter === "unread" ? "No unread notifications" : "No notifications"}
           description={
             filter === "unread"
               ? "You're all caught up! New alerts will appear here."
-              : "PR alerts, low readiness warnings, and questionnaire completions will appear here."
+              : role === "COACH"
+              ? "PR alerts, readiness warnings, workout completions, and more will appear here."
+              : "Workout assignments, questionnaires, videos, and more will appear here."
           }
         />
       ) : (
@@ -267,6 +344,7 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
               key={notification.id}
               notification={notification}
               onMarkRead={handleMarkRead}
+              role={role}
             />
           ))}
         </div>

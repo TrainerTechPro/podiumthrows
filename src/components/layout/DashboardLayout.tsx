@@ -17,6 +17,7 @@ import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ModeToggle } from "@/components/ui/ModeToggle";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 
 /* ─── Theme toggle ───────────────────────────────────────────────────────── */
 
@@ -202,12 +203,14 @@ function TopBar({
   onToggleSidebar,
   breadcrumbs,
   actions,
+  notificationCount,
 }: {
   user: DashboardUser;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
   breadcrumbs?: BreadcrumbItem[];
   actions?: ReactNode;
+  notificationCount?: number;
 }) {
   return (
     <header className="sticky top-0 z-20 bg-[var(--background)]/90 backdrop-blur-sm border-b border-[var(--card-border)] px-4 sm:px-6 h-14 flex items-center gap-4 shrink-0">
@@ -238,6 +241,12 @@ function TopBar({
           activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"}
         />
       )}
+
+      {/* Notification bell */}
+      <NotificationBell
+        initialCount={notificationCount ?? 0}
+        role={user.role}
+      />
 
       {/* Theme toggle */}
       <ThemeToggle />
@@ -276,13 +285,14 @@ export function DashboardLayout({
         ? COACH_NAV_SECTIONS
         : ATHLETE_NAV_SECTIONS);
 
-  // Inject unread badge onto the Notifications nav item (coach only)
+  // Inject unread badge onto the Notifications nav item (both roles)
+  const notifHref = user.role === "COACH" || isTrainingMode ? "/coach/notifications" : "/athlete/notifications";
   const sections =
-    user.role === "COACH" && notificationCount && notificationCount > 0
+    notificationCount && notificationCount > 0
       ? baseSections.map((section) => ({
           ...section,
           items: section.items.map((item) =>
-            item.href === "/coach/notifications" ? { ...item, badge: notificationCount } : item
+            item.href === notifHref ? { ...item, badge: notificationCount } : item
           ),
         }))
       : baseSections;
@@ -313,6 +323,7 @@ export function DashboardLayout({
             onToggleSidebar={() => setSidebarOpen((v) => !v)}
             breadcrumbs={breadcrumbs}
             actions={actions}
+            notificationCount={notificationCount}
           />
 
           {/* Page content */}

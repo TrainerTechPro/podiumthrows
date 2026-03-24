@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
-import { fetchCoachByUserId, getUnreadNotificationCount } from "@/lib/data/coach";
+import { fetchCoachByUserId } from "@/lib/data/coach";
+import { getUnreadCount } from "@/lib/notifications";
 
 export default async function CoachLayout({
   children,
@@ -32,7 +33,7 @@ export default async function CoachLayout({
     activeMode: dbUser?.activeMode ?? "COACH",
   };
 
-  const notificationCount = await getUnreadNotificationCount(coach.id);
+  const notificationCount = await getUnreadCount(coach.id, "COACH");
 
   return (
     <DashboardLayout user={user} notificationCount={notificationCount}>

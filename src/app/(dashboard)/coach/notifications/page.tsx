@@ -1,5 +1,6 @@
-import { requireCoachSession, getCoachNotifications } from "@/lib/data/coach";
 import { redirect } from "next/navigation";
+import { requireCoachSession } from "@/lib/data/coach";
+import { getNotifications } from "@/lib/notifications";
 import { NotificationsClient } from "./_notifications-client";
 
 export const metadata = { title: "Notifications — Podium Throws" };
@@ -13,13 +14,13 @@ export default async function CoachNotificationsPage() {
     redirect("/login");
   }
 
-  const notifications = await getCoachNotifications(coach.id, { limit: 100 });
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const { notifications, unreadCount } = await getNotifications(coach.id, "COACH", { limit: 100 });
 
   return (
     <NotificationsClient
       initialNotifications={notifications}
       unreadCount={unreadCount}
+      role="COACH"
     />
   );
 }

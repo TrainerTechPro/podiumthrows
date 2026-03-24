@@ -307,6 +307,7 @@ model AthleteProfile {
   riskAssessments  RiskAssessment[]
   smartGoals       AthleteGoal[]
   invitations      Invitation[]
+  notifications    Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -856,19 +857,23 @@ model ProgrammedSession {
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
 
 model Notification {
-  id        String       @id @default(cuid())
-  coachId   String
-  coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  athleteId String? // which athlete triggered the notification
-  type      String // "PR_ALERT" | "LOW_READINESS" | "QUESTIONNAIRE_COMPLETE" | "STREAK_BROKEN"
-  title     String
-  body      String
-  metadata  Json? // { event, distance, unit, readinessScore, etc. }
-  read      Boolean      @default(false)
-  createdAt DateTime     @default(now())
+  id               String          @id @default(cuid())
+  coachId          String?
+  coach            CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteProfileId String?
+  athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
+  athleteId        String?         // which athlete is relevant (legacy plain-string reference)
+  type             String          // notification type key
+  title            String
+  body             String
+  metadata         Json?           // { event, distance, unit, url, etc. }
+  read             Boolean         @default(false)
+  createdAt        DateTime        @default(now())
 
   @@index([coachId, read])
   @@index([coachId, createdAt])
+  @@index([athleteProfileId, read])
+  @@index([athleteProfileId, createdAt])
 }
 
 // ─── INVITATIONS ────────────────────────────────────────────────────────────

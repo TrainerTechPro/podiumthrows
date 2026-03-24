@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
+import { getUnreadCount } from "@/lib/notifications";
 import { WhoopAutoSync } from "./_whoop-auto-sync";
 
 const WHOOP_STALE_MS = 60 * 60 * 1000; // 1 hour
@@ -15,6 +16,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
     select: {
+      id: true,
       firstName: true,
       lastName: true,
       avatarUrl: true,
@@ -34,6 +36,8 @@ export default async function AthleteLayout({ children }: { children: React.Reac
     (!athlete.whoopConnection.lastSyncAt ||
       Date.now() - athlete.whoopConnection.lastSyncAt.getTime() > WHOOP_STALE_MS);
 
+  const notificationCount = await getUnreadCount(athlete.id, "ATHLETE");
+
   const user: DashboardUser = {
     name: `${athlete.firstName} ${athlete.lastName}`,
     email: athlete.user.email,
@@ -44,7 +48,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
   };
 
   return (
-    <DashboardLayout user={user}>
+    <DashboardLayout user={user} notificationCount={notificationCount}>
       {whoopStale && <WhoopAutoSync />}
       {children}
     </DashboardLayout>

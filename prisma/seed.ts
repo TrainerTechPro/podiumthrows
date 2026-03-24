@@ -1689,6 +1689,119 @@ async function main() {
   });
   console.log("  ✓ 1 pending invitation created\n");
 
+  // ─── NOTIFICATIONS ──────────────────────────────────────────────────────
+
+  const athlete1 = athleteProfiles[0];
+  const athlete2 = athleteProfiles[1];
+
+  // Coach notifications (from athlete actions)
+  await prisma.notification.createMany({
+    data: [
+      {
+        coachId: coachProfile.id,
+        athleteId: athlete1.id,
+        type: "PR_ALERT",
+        title: `New PR — ${athlete1.firstName} ${athlete1.lastName}`,
+        body: `${athlete1.firstName} just hit a new Shot Put PR: 18.42m`,
+        metadata: { event: "SHOT_PUT", distance: 18.42, unit: "m", athleteName: `${athlete1.firstName} ${athlete1.lastName}` },
+        read: false,
+        createdAt: daysAgo(0),
+      },
+      {
+        coachId: coachProfile.id,
+        athleteId: athlete2.id,
+        type: "LOW_READINESS",
+        title: `Low Readiness — ${athlete2.firstName} ${athlete2.lastName}`,
+        body: `${athlete2.firstName} checked in with a readiness score of 3.2/10. Consider adjusting today's training load.`,
+        metadata: { readinessScore: 3.2, athleteName: `${athlete2.firstName} ${athlete2.lastName}` },
+        read: false,
+        createdAt: daysAgo(0),
+      },
+      {
+        coachId: coachProfile.id,
+        athleteId: athlete1.id,
+        type: "WORKOUT_COMPLETED",
+        title: `Workout Completed — ${athlete1.firstName}`,
+        body: `${athlete1.firstName} completed "AM Throws — Shot Put" session with RPE 7.5`,
+        metadata: { athleteName: `${athlete1.firstName} ${athlete1.lastName}` },
+        read: false,
+        createdAt: daysAgo(1),
+      },
+      {
+        coachId: coachProfile.id,
+        athleteId: athlete1.id,
+        type: "QUESTIONNAIRE_COMPLETE",
+        title: `Questionnaire Completed — ${athlete1.firstName}`,
+        body: `${athlete1.firstName} completed "Weekly Wellness Check".`,
+        metadata: { questionnaireName: "Weekly Wellness Check", athleteName: `${athlete1.firstName} ${athlete1.lastName}` },
+        read: true,
+        createdAt: daysAgo(2),
+      },
+      {
+        coachId: coachProfile.id,
+        type: "ATHLETE_JOINED",
+        title: "New Athlete Joined",
+        body: `${athlete2.firstName} ${athlete2.lastName} has claimed their invitation and joined your roster.`,
+        metadata: { athleteName: `${athlete2.firstName} ${athlete2.lastName}` },
+        read: true,
+        createdAt: daysAgo(5),
+      },
+    ],
+  });
+
+  // Athlete notifications (from coach actions)
+  await prisma.notification.createMany({
+    data: [
+      {
+        athleteProfileId: athlete1.id,
+        type: "WORKOUT_ASSIGNED",
+        title: "New Workout Assigned",
+        body: "Coach Marcus assigned you \"PM Throws — Heavy Implements\" for today.",
+        metadata: { url: "/athlete/sessions" },
+        read: false,
+        createdAt: daysAgo(0),
+      },
+      {
+        athleteProfileId: athlete1.id,
+        type: "QUESTIONNAIRE_ASSIGNED",
+        title: "New Questionnaire",
+        body: "Coach Marcus wants you to complete \"Pre-Competition Readiness\".",
+        metadata: { url: "/athlete/questionnaires" },
+        read: false,
+        createdAt: daysAgo(0),
+      },
+      {
+        athleteProfileId: athlete1.id,
+        type: "VIDEO_SHARED",
+        title: "New Video Shared",
+        body: "Coach Marcus shared a video analysis of your shot put technique.",
+        metadata: { url: "/athlete/videos" },
+        read: false,
+        createdAt: daysAgo(1),
+      },
+      {
+        athleteProfileId: athlete1.id,
+        type: "COMPETITION_REMINDER",
+        title: "Competition Reminder",
+        body: "NCAA Regionals is in 3 days. Review your preparation checklist.",
+        metadata: {},
+        read: true,
+        createdAt: daysAgo(3),
+      },
+      {
+        athleteProfileId: athlete2.id,
+        type: "COMPLEX_ROTATED",
+        title: "Exercise Complex Updated",
+        body: "Your strength complex has been rotated. Check your updated program.",
+        metadata: { url: "/athlete/sessions" },
+        read: false,
+        createdAt: daysAgo(0),
+      },
+    ],
+  });
+
+  console.log("  ✓ Notifications seeded (5 coach, 5 athlete)\n");
+
   console.log("🏆 Seed complete! Database is ready.\n");
   console.log("  Test accounts:");
   console.log("    Coach:     coach@example.com / coach123");

@@ -1,26 +1,195 @@
 /**
- * Notification Helpers — Podium Throws
+ * Notification Service — Podium Throws
  *
- * Creates Notification records for coaches. All functions are fire-and-forget
- * safe — callers should wrap in void + .catch(console.error).
+ * Bi-directional: supports notifications for both coaches and athletes.
+ * All creator functions are fire-and-forget safe — callers should wrap
+ * in void + .catch(console.error).
  */
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { formatEventType } from "@/lib/utils";
 
 // ─── Notification Types ───────────────────────────────────────────────────────
 
 export type NotificationType =
+  | "WORKOUT_ASSIGNED"
+  | "WORKOUT_COMPLETED"
+  | "WORKOUT_SKIPPED"
   | "PR_ALERT"
   | "LOW_READINESS"
+  | "QUESTIONNAIRE_ASSIGNED"
   | "QUESTIONNAIRE_COMPLETE"
-  | "STREAK_BROKEN";
+  | "STREAK_BROKEN"
+  | "ATHLETE_JOINED"
+  | "PROGRAM_CHECKPOINT"
+  | "COMPLEX_ROTATED"
+  | "COMMENT_ADDED"
+  | "VIDEO_SHARED"
+  | "COMPETITION_REMINDER"
+  | "INVITATION_EXPIRED";
 
-// ─── Creators ─────────────────────────────────────────────────────────────────
+export type NotificationItem = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  athleteId: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+// ─── Generic Creator ─────────────────────────────────────────────────────────
+
+interface CreateNotificationInput {
+  type: NotificationType;
+  title: string;
+  body: string;
+  coachId?: string;
+  athleteProfileId?: string;
+  athleteId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export async function createNotification(input: CreateNotificationInput): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      type: input.type,
+      title: input.title,
+      body: input.body,
+      coachId: input.coachId ?? null,
+      athleteProfileId: input.athleteProfileId ?? null,
+      athleteId: input.athleteId ?? null,
+      metadata: (input.metadata as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+    },
+  });
+}
+
+// ─── Queries ─────────────────────────────────────────────────────────────────
+
+const NOTIFICATION_SELECT = {
+  id: true,
+  type: true,
+  title: true,
+  body: true,
+  read: true,
+  athleteId: true,
+  metadata: true,
+  createdAt: true,
+} as const;
+
+function serializeNotification(n: {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  athleteId: string | null;
+  metadata: unknown;
+  createdAt: Date;
+}): NotificationItem {
+  return {
+    ...n,
+    metadata: n.metadata as Record<string, unknown> | null,
+    createdAt: n.createdAt.toISOString(),
+  };
+}
 
 /**
- * Notify coach that an athlete hit a new personal best.
+ * Get paginated notifications for a user by role.
  */
+export async function getNotifications(
+  profileId: string,
+  role: "COACH" | "ATHLETE",
+  opts: { page?: number; limit?: number; unreadOnly?: boolean; type?: string } = {}
+): Promise<{ notifications: NotificationItem[]; total: number; unreadCount: number }> {
+  const { page = 1, limit = 50, unreadOnly = false, type } = opts;
+  const take = Math.min(Math.max(limit, 1), 100);
+  const skip = (Math.max(page, 1) - 1) * take;
+
+  const where = {
+    ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
+    ...(unreadOnly ? { read: false } : {}),
+    ...(type ? { type } : {}),
+  };
+
+  const [notifications, total, unreadCount] = await Promise.all([
+    prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take,
+      skip,
+      select: NOTIFICATION_SELECT,
+    }),
+    prisma.notification.count({ where }),
+    prisma.notification.count({
+      where: {
+        ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
+        read: false,
+      },
+    }),
+  ]);
+
+  return {
+    notifications: notifications.map(serializeNotification),
+    total,
+    unreadCount,
+  };
+}
+
+/**
+ * Count unread notifications for a user. Lightweight — used for badge polling.
+ */
+export async function getUnreadCount(
+  profileId: string,
+  role: "COACH" | "ATHLETE"
+): Promise<number> {
+  return prisma.notification.count({
+    where: {
+      ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
+      read: false,
+    },
+  });
+}
+
+/**
+ * Mark a single notification as read (with ownership check).
+ */
+export async function markAsRead(
+  notificationId: string,
+  profileId: string,
+  role: "COACH" | "ATHLETE",
+  read = true
+): Promise<boolean> {
+  const result = await prisma.notification.updateMany({
+    where: {
+      id: notificationId,
+      ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
+    },
+    data: { read },
+  });
+  return result.count > 0;
+}
+
+/**
+ * Mark all notifications as read for a user.
+ */
+export async function markAllAsRead(
+  profileId: string,
+  role: "COACH" | "ATHLETE"
+): Promise<void> {
+  await prisma.notification.updateMany({
+    where: {
+      ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
+      read: false,
+    },
+    data: { read: true },
+  });
+}
+
+// ─── Convenience Creators (backward-compatible) ──────────────────────────────
+
 export async function notifyCoachPR(
   coachId: string,
   athleteId: string,
@@ -30,70 +199,54 @@ export async function notifyCoachPR(
   unit: string = "m"
 ): Promise<void> {
   const eventLabel = formatEventType(event);
-  await prisma.notification.create({
-    data: {
-      coachId,
-      athleteId,
-      type: "PR_ALERT",
-      title: `New PR — ${athleteName}`,
-      body: `${athleteName} just hit a new ${eventLabel} PR: ${distance.toFixed(2)}${unit}`,
-      metadata: { event, distance, unit, athleteName },
-    },
+  await createNotification({
+    type: "PR_ALERT",
+    coachId,
+    athleteId,
+    title: `New PR — ${athleteName}`,
+    body: `${athleteName} just hit a new ${eventLabel} PR: ${distance.toFixed(2)}${unit}`,
+    metadata: { event, distance, unit, athleteName },
   });
 }
 
-/**
- * Notify coach of a low readiness score (only fires when score ≤ 4).
- */
 export async function notifyCoachLowReadiness(
   coachId: string,
   athleteId: string,
   athleteName: string,
   score: number
 ): Promise<void> {
-  if (score > 4) return; // Only alert when truly low
-  await prisma.notification.create({
-    data: {
-      coachId,
-      athleteId,
-      type: "LOW_READINESS",
-      title: `Low Readiness — ${athleteName}`,
-      body: `${athleteName} checked in with a readiness score of ${score.toFixed(1)}/10. Consider adjusting today's training load.`,
-      metadata: { readinessScore: score, athleteName },
-    },
+  if (score > 4) return;
+  await createNotification({
+    type: "LOW_READINESS",
+    coachId,
+    athleteId,
+    title: `Low Readiness — ${athleteName}`,
+    body: `${athleteName} checked in with a readiness score of ${score.toFixed(1)}/10. Consider adjusting today's training load.`,
+    metadata: { readinessScore: score, athleteName },
   });
 }
 
-/**
- * Notify coach that an athlete completed a questionnaire.
- */
 export async function notifyCoachQuestionnaireComplete(
   coachId: string,
   athleteId: string,
   athleteName: string,
   questionnaireName: string
 ): Promise<void> {
-  await prisma.notification.create({
-    data: {
-      coachId,
-      athleteId,
-      type: "QUESTIONNAIRE_COMPLETE",
-      title: `Questionnaire Completed — ${athleteName}`,
-      body: `${athleteName} completed "${questionnaireName}".`,
-      metadata: { questionnaireName, athleteName },
-    },
+  await createNotification({
+    type: "QUESTIONNAIRE_COMPLETE",
+    coachId,
+    athleteId,
+    title: `Questionnaire Completed — ${athleteName}`,
+    body: `${athleteName} completed "${questionnaireName}".`,
+    metadata: { questionnaireName, athleteName },
   });
 }
 
-// ─── Queries ──────────────────────────────────────────────────────────────────
+// ─── Legacy Exports ──────────────────────────────────────────────────────────
 
 /**
- * Count unread notifications for a coach. Used for the sidebar badge.
+ * @deprecated Use getUnreadCount() instead.
  */
-export async function getUnreadNotificationCount(
-  coachId: string
-): Promise<number> {
-  return prisma.notification.count({
-    where: { coachId, read: false },
-  });
+export async function getUnreadNotificationCount(coachId: string): Promise<number> {
+  return getUnreadCount(coachId, "COACH");
 }
