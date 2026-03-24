@@ -18,6 +18,8 @@ import type {
 } from "./_types";
 import { TabCore } from "./_tab-core";
 import { TabCompetition } from "./_tab-competition";
+import { TabImplements } from "./_tab-implements";
+import { TabStrength } from "./_tab-strength";
 
 /* ─── Tab definitions ────────────────────────────────────────────────── */
 
@@ -91,17 +93,13 @@ export function ProfileTabs({
           <TabCompetition profile={profile} throwsProfiles={throwsProfiles} />
         )}
         {active === "impl" && (
-          <TabPlaceholder
-            title="Implement Inventory"
-            description="Implement weights, pairings, and heavy/light progressions."
+          <TabImplements
+            throwsPRs={throwsPRs}
+            events={profile.events}
+            gender={profile.gender}
           />
         )}
-        {active === "strength" && (
-          <TabPlaceholder
-            title="Strength Numbers"
-            description="Lift maxes, power tests, and body-weight ratios."
-          />
-        )}
+        {active === "strength" && <TabStrength profile={profile} />}
         {active === "tech" && (
           <TabPlaceholder
             title="Technical Profile"
@@ -115,11 +113,6 @@ export function ProfileTabs({
           />
         )}
       </div>
-
-      {/* Suppress unused-variable warnings for data passed through to future tabs */}
-      <span className="hidden" aria-hidden="true">
-        {throwsPRs.length}
-      </span>
     </div>
   );
 }
