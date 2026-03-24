@@ -16,6 +16,8 @@ import type {
   ThrowsInjuryRecord,
   ThrowsProfileSummary,
 } from "./_types";
+import { TabCore } from "./_tab-core";
+import { TabCompetition } from "./_tab-competition";
 
 /* ─── Tab definitions ────────────────────────────────────────────────── */
 
@@ -84,17 +86,9 @@ export function ProfileTabs({
 
       {/* ── Tab Content ────────────────────────────────────────────── */}
       <div key={active} className="animate-fade-slide-in">
-        {active === "core" && (
-          <TabPlaceholder
-            title="Core Info"
-            description={`${profile.firstName} ${profile.lastName} — basic athlete information, events, and physical stats.`}
-          />
-        )}
+        {active === "core" && <TabCore profile={profile} />}
         {active === "comp" && (
-          <TabPlaceholder
-            title="Competition & Distance Bands"
-            description={`${throwsProfiles.length} event profile(s) — PRs, season bests, goals, and distance bands.`}
-          />
+          <TabCompetition profile={profile} throwsProfiles={throwsProfiles} />
         )}
         {active === "impl" && (
           <TabPlaceholder
