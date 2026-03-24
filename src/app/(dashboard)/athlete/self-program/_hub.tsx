@@ -17,6 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
@@ -24,6 +25,7 @@ import { StaggeredList } from "@/components/ui/StaggeredList";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { useToast } from "@/components/ui/Toast";
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 
@@ -294,6 +296,7 @@ function ActiveView({
   eventMismatch: boolean;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [showDeactivate, setShowDeactivate] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
 
@@ -358,12 +361,18 @@ function ActiveView({
   const handleDeactivate = async () => {
     setDeactivating(true);
     try {
-      await fetch(`/api/athlete/self-program/${config.id}/deactivate`, {
-        method: "POST",
+      const res = await fetch(`/api/athlete/self-program/${config.id}`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? "Failed to deactivate program");
+      }
       router.refresh();
     } finally {
       setDeactivating(false);
+      setShowDeactivate(false);
     }
   };
 
