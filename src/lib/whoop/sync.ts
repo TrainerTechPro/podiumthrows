@@ -13,11 +13,27 @@ export async function syncWhoopData(connectionId: string): Promise<void> {
     where: { id: connectionId },
   });
 
-  const [recovery, sleep, strain] = await Promise.all([
+  // Fetch all three in parallel — if one fails, continue with the others
+  const [recoveryResult, sleepResult, strainResult] = await Promise.allSettled([
     fetchRecovery(connectionId),
     fetchSleep(connectionId),
     fetchStrain(connectionId),
   ]);
+
+  const recovery = recoveryResult.status === "fulfilled"
+    ? recoveryResult.value
+    : { recoveryScore: null, hrvMs: null, restingHR: null, spo2: null, skinTempC: null };
+  const sleep = sleepResult.status === "fulfilled"
+    ? sleepResult.value
+    : { sleepPerformance: null, sleepDurationMs: null, sleepEfficiency: null, lightSleepMs: null, swsSleepMs: null, remSleepMs: null };
+  const strain = strainResult.status === "fulfilled"
+    ? strainResult.value
+    : { strain: null };
+
+  // If ALL three failed, throw so the caller knows
+  if (recoveryResult.status === "rejected" && sleepResult.status === "rejected" && strainResult.status === "rejected") {
+    throw new Error(`All WHOOP API calls failed: ${(recoveryResult as PromiseRejectedResult).reason?.message ?? "unknown"}`);
+  }
 
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 

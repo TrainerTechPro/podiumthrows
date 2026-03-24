@@ -90,10 +90,11 @@ export function WhoopCard({ connected, syncMode: initialSyncMode, lastSyncAt }: 
         setLastSync(new Date().toISOString());
         success("WHOOP Synced", "Your latest data has been imported.");
       } else {
-        toastError("Sync failed", "Please try again in a moment.");
+        const data = await res.json().catch(() => null);
+        toastError("Sync failed", data?.detail ?? "Please try again in a moment.");
       }
     } catch {
-      toastError("Sync failed", "Please try again in a moment.");
+      toastError("Sync failed", "Network error. Check your connection.");
     } finally {
       setSyncing(false);
     }

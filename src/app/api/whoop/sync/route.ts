@@ -60,7 +60,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    logger.error("POST /api/whoop/sync", { context: "api", error: err });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    logger.error("POST /api/whoop/sync", { context: "api", error: err, metadata: { message } });
+    return NextResponse.json(
+      { error: "WHOOP sync failed", detail: message },
+      { status: 500 },
+    );
   }
 }
