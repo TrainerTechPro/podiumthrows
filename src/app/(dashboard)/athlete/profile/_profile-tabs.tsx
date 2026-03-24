@@ -21,6 +21,7 @@ import { TabCompetition } from "./_tab-competition";
 import { TabImplements } from "./_tab-implements";
 import { TabStrength } from "./_tab-strength";
 import { TabTechnical } from "./_tab-technical";
+import { TabInjury } from "./_tab-injury";
 
 /* ─── Tab definitions ────────────────────────────────────────────────── */
 
@@ -103,34 +104,8 @@ export function ProfileTabs({
         {active === "strength" && <TabStrength profile={profile} />}
         {active === "tech" && <TabTechnical profile={profile} />}
         {active === "injury" && (
-          <TabPlaceholder
-            title="Injury History"
-            description={`${injuries.length} injury record(s) — dates, restrictions, and recovery status.`}
-          />
+          <TabInjury injuries={injuries} profile={profile} />
         )}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Placeholder card for each tab ──────────────────────────────────── */
-
-function TabPlaceholder({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-8 text-center">
-      <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">
-        {title}
-      </h2>
-      <p className="mt-2 text-sm text-muted">{description}</p>
-      <div className="mt-6 inline-flex items-center gap-2 rounded-lg bg-surface-100 dark:bg-surface-800 px-4 py-2 text-xs text-muted">
-        <span className="w-2 h-2 rounded-full bg-primary-500/50 animate-pulse" />
-        Content coming soon
       </div>
     </div>
   );
