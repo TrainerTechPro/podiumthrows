@@ -152,8 +152,8 @@ export function selectStrength(params: SelectStrengthParams): StrengthPrescripti
   const restIntervals = REST_INTERVALS[phase];
   const modulation = PHASE_MODULATION[phase];
 
-  // Select complex template
-  const complex = selectComplexTemplate(strengthComplexId, strengthLevel);
+  // Select complex template (phase-aware: different complex per phase)
+  const complex = selectComplexTemplate(strengthComplexId, strengthLevel, phase);
   if (!complex) return [];
 
   const prescriptions: StrengthPrescription[] = [];
@@ -190,9 +190,23 @@ export function splitStrengthByBlock(
 
 // ── Complex Selection ───────────────────────────────────────────────
 
+/**
+ * Select a strength complex template based on phase and strength level.
+ *
+ * Bondarchuk principle: same complex within a phase, different complex
+ * between phases. This provides variety across the macrocycle while
+ * maintaining the stability needed for adaptation within each mesocycle.
+ *
+ * Phase mapping:
+ *   ACCUMULATION  → Complex 1 (Full Body — Heavy Pulls): high volume phase
+ *   TRANSMUTATION → Complex 2 (Power Emphasis): transfer phase
+ *   REALIZATION   → Complex 3 (Upper Body): reduced volume, maintain power
+ *   COMPETITION   → Complex 2 (Power Emphasis): short, explosive maintenance
+ */
 function selectComplexTemplate(
   complexId: string | undefined,
   strengthLevel: string,
+  phase?: TrainingPhase,
 ): StrengthComplexTemplate | null {
   // If a specific complex is requested, use it
   if (complexId) {
@@ -204,7 +218,20 @@ function selectComplexTemplate(
     return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_2") ?? BONDARCHUK_COMPLEXES[0];
   }
 
-  // Default: Complex 1 (full body, most comprehensive)
+  // Phase-based complex rotation
+  if (phase) {
+    switch (phase) {
+      case "ACCUMULATION":
+        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_1") ?? BONDARCHUK_COMPLEXES[0];
+      case "TRANSMUTATION":
+        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_2") ?? BONDARCHUK_COMPLEXES[0];
+      case "REALIZATION":
+        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_3") ?? BONDARCHUK_COMPLEXES[0];
+      case "COMPETITION":
+        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_2") ?? BONDARCHUK_COMPLEXES[0];
+    }
+  }
+
   return BONDARCHUK_COMPLEXES[0];
 }
 

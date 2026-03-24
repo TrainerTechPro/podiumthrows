@@ -304,7 +304,16 @@ function generateThrows(
 
   const prescriptions: ThrowPrescription[] = [];
 
-  // 1. CE throws: competition weight full throws (always first — heaviest block)
+  // BONDARCHUK RULE: Strict descending weight order.
+  // SD heavy (9kg, 8kg) → CE comp (7.26kg) → SD comp drills → SD light (6kg, 5kg)
+  // The heaviest implement in the session MUST come first.
+
+  // 1. SD heavy: overweight implements (HEAVIEST — always first)
+  if (sdHeavyThrows > 0 && sdHeavy.length > 0) {
+    buildSdPrescriptions(sdHeavy, sdHeavyThrows, restIntervals.SD, prescriptions);
+  }
+
+  // 2. CE throws: competition weight full throws (after heavy)
   if (ceThrows > 0) {
     const sets = Math.max(1, Math.round(ceThrows / 4));
     const reps = Math.max(1, Math.round(ceThrows / sets));
@@ -320,17 +329,12 @@ function generateThrows(
     });
   }
 
-  // 2. SD heavy: overweight implements
-  if (sdHeavyThrows > 0 && sdHeavy.length > 0) {
-    buildSdPrescriptions(sdHeavy, sdHeavyThrows, restIntervals.SD, prescriptions);
-  }
-
   // 3. SD comp: competition weight drills
   if (sdCompThrows > 0 && sdComp.length > 0) {
     buildSdPrescriptions(sdComp, sdCompThrows, restIntervals.SD, prescriptions);
   }
 
-  // 4. SD light: underweight implements (speed contrast)
+  // 4. SD light: underweight implements (speed contrast — lightest last)
   if (sdLightThrows > 0 && sdLight.length > 0) {
     buildSdPrescriptions(sdLight, sdLightThrows, restIntervals.SD, prescriptions);
   }
@@ -340,13 +344,21 @@ function generateThrows(
     buildSdPrescriptions(sdUnknown, sdUnknownThrows, restIntervals.SD, prescriptions);
   }
 
-  // Apply PAP contrast pattern to SD blocks
+  // Apply PAP contrast pattern to SD blocks, then merge all throws
+  // in strict descending weight order: SD heavy → CE → SD comp → SD light
   const sdPrescriptions = prescriptions.filter((p) => p.category === "SD");
   if (sdPrescriptions.length > 0) {
     const cePrescriptions = prescriptions.filter((p) => p.category === "CE");
     const interleavedSd = applyContrastPattern(sdPrescriptions, phase);
+
+    // Split SD into heavy (> comp weight) and light (<= comp weight)
+    const ceWeight = cePrescriptions[0]?.implementKg ?? compWeight;
+    const sdAboveComp = interleavedSd.filter((p) => p.implementKg > ceWeight);
+    const sdAtOrBelowComp = interleavedSd.filter((p) => p.implementKg <= ceWeight);
+
+    // Descending order: SD heavy → CE → SD light
     prescriptions.length = 0;
-    prescriptions.push(...cePrescriptions, ...interleavedSd);
+    prescriptions.push(...sdAboveComp, ...cePrescriptions, ...sdAtOrBelowComp);
   }
 
   // 5. SP throws: specific preparatory drills (last)
