@@ -45,6 +45,24 @@ export type ActivityItem = {
   distance?: number;
   // session_complete
   rpe?: number | null;
+  sessionName?: string;
+  assignmentId?: string;
+};
+
+export type ThrowsAssignmentItem = {
+  id: string;
+  sessionName: string;
+  event: string;
+  assignedDate: string;
+  status: string;
+  rpe: number | null;
+  selfFeeling: string | null;
+  feedbackNotes: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  bestMark: number | null;
+  throwCount: number;
+  prescribedThrows: number;
 };
 
 export type AthleteRosterItem = {
@@ -362,7 +380,7 @@ export async function getRecentActivity(
 ): Promise<ActivityItem[]> {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
-  const [checkIns, prs, completedSessions, ...notableResults] = await Promise.all([
+  const [checkIns, prs, completedSessions, completedAssignments, ...notableResults] = await Promise.all([
     prisma.readinessCheckIn.findMany({
       where: { athlete: { coachId }, date: { gte: cutoff } },
       include: {
@@ -396,6 +414,22 @@ export async function getRecentActivity(
           orderBy: { completedDate: "desc" },
           take: limit,
         }),
+
+    // ThrowsAssignment completions (always included)
+    prisma.throwsAssignment.findMany({
+      where: {
+        athlete: { coachId },
+        status: "COMPLETED",
+        completedAt: { gte: cutoff },
+      },
+      include: {
+        session: { select: { name: true } },
+        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        throwLogs: { select: { distance: true } },
+      },
+      orderBy: { completedAt: "desc" },
+      take: limit,
+    }),
 
     // Missed sessions (only when notableOnly)
     ...(notableOnly
@@ -453,6 +487,22 @@ export async function getRecentActivity(
       date: s.completedDate!.toISOString(),
       rpe: s.rpe,
     })),
+    ...completedAssignments.map((a) => {
+      const distances = a.throwLogs.map((l) => l.distance).filter((d): d is number => d != null);
+      const best = distances.length > 0 ? Math.max(...distances) : undefined;
+      return {
+        id: a.id,
+        type: "session_complete" as const,
+        athleteId: a.athlete.id,
+        athleteName: `${a.athlete.firstName} ${a.athlete.lastName}`,
+        athleteAvatar: a.athlete.avatarUrl,
+        date: a.completedAt!.toISOString(),
+        rpe: a.rpe,
+        sessionName: a.session.name,
+        assignmentId: a.id,
+        distance: best,
+      };
+    }),
   ];
 
   // Add missed sessions when notableOnly
@@ -686,6 +736,85 @@ export async function getAthleteSessions(
     coachNotes: s.coachNotes,
     planName: s.plan?.name ?? null,
   }));
+}
+
+export async function getAthleteThrowsAssignments(
+  athleteId: string,
+  limit = 25
+): Promise<ThrowsAssignmentItem[]> {
+  const assignments = await prisma.throwsAssignment.findMany({
+    where: { athleteId },
+    orderBy: { assignedDate: "desc" },
+    take: limit,
+    include: {
+      session: {
+        select: {
+          name: true,
+          event: true,
+          blocks: { select: { blockType: true, config: true } },
+        },
+      },
+      throwLogs: { select: { distance: true } },
+    },
+  });
+
+  return assignments.map((a) => {
+    const distances = a.throwLogs
+      .map((l) => l.distance)
+      .filter((d): d is number => d != null);
+    const bestMark = distances.length > 0 ? Math.max(...distances) : null;
+
+    let prescribedThrows = 0;
+    for (const block of a.session.blocks) {
+      if (block.blockType === "THROWING") {
+        try {
+          const cfg = JSON.parse(block.config) as Record<string, unknown>;
+          prescribedThrows += (cfg.throwCount as number) ?? 0;
+        } catch { /* ignore */ }
+      }
+    }
+
+    return {
+      id: a.id,
+      sessionName: a.session.name,
+      event: a.session.event,
+      assignedDate: a.assignedDate,
+      status: a.status,
+      rpe: a.rpe,
+      selfFeeling: a.selfFeeling,
+      feedbackNotes: a.feedbackNotes,
+      startedAt: a.startedAt?.toISOString() ?? null,
+      completedAt: a.completedAt?.toISOString() ?? null,
+      bestMark,
+      throwCount: a.throwLogs.length,
+      prescribedThrows,
+    };
+  });
+}
+
+export async function getAssignmentDetailForCoach(assignmentId: string) {
+  return prisma.throwsAssignment.findUnique({
+    where: { id: assignmentId },
+    include: {
+      session: {
+        include: {
+          blocks: { orderBy: { position: "asc" } },
+        },
+      },
+      throwLogs: { orderBy: { throwNumber: "asc" } },
+      athlete: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          events: true,
+          coachId: true,
+          user: { select: { id: true } },
+        },
+      },
+    },
+  });
 }
 
 export async function getAthleteGoals(athleteId: string): Promise<GoalItem[]> {

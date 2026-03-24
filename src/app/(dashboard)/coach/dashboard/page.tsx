@@ -180,11 +180,20 @@ function ActivityDescription({ item }: { item: ActivityItem }) {
   return (
     <span>
       <span className="font-medium text-[var(--foreground)]">{item.athleteName}</span>
-      {" completed a training session"}
+      {item.sessionName
+        ? <>{" completed "}<span className="font-medium">{item.sessionName}</span></>
+        : " completed a training session"
+      }
       {item.rpe != null && (
         <>
           {" · RPE "}
           <span className="font-semibold">{item.rpe.toFixed(1)}</span>
+        </>
+      )}
+      {item.distance != null && (
+        <>
+          {", Best: "}
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{item.distance.toFixed(2)}m</span>
         </>
       )}
     </span>
@@ -213,10 +222,14 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
       {/* Timeline spine */}
       <div className="absolute left-[19px] top-5 bottom-5 w-0.5 bg-surface-200 dark:bg-surface-700" />
 
-      {items.map((item) => (
+      {items.map((item) => {
+        const href = item.assignmentId
+          ? `/coach/athletes/${item.athleteId}/sessions/${item.assignmentId}`
+          : `/coach/athletes/${item.athleteId}`;
+        return (
         <Link
           key={item.id}
-          href={`/coach/athletes/${item.athleteId}`}
+          href={href}
           className="relative flex items-start gap-3 px-1 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
         >
           <div className="relative z-10 shrink-0">
@@ -229,7 +242,8 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
             <p className="text-xs text-muted mt-0.5">{formatRelativeTime(item.date)}</p>
           </div>
         </Link>
-      ))}
+        );
+      })}
     </div>
   );
 }

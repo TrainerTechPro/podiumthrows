@@ -12,6 +12,7 @@ import {
   getAthleteACWR,
   getAthleteRecentPRs,
   getAthleteSessions,
+  getAthleteThrowsAssignments,
   getAthleteThrowHistory,
   getAthleteReadinessTrend,
   getAthleteGoals,
@@ -19,6 +20,7 @@ import {
   type AthleteACWR,
   type ThrowLogItem,
   type SessionItem,
+  type ThrowsAssignmentItem,
   type ReadinessTrendPoint,
   type GoalItem,
 } from "@/lib/data/coach";
@@ -435,24 +437,168 @@ function OverviewTab({
 
 /* ─── Training Tab ───────────────────────────────────────────────────────── */
 
-const SESSION_STATUS: Record<string, { label: string; variant: "success" | "danger" | "warning" | "neutral" }> = {
-  COMPLETED:   { label: "Completed",  variant: "success"  },
-  SKIPPED:     { label: "Skipped",    variant: "danger"   },
-  IN_PROGRESS: { label: "In Progress",variant: "warning"  },
-  SCHEDULED:   { label: "Scheduled",  variant: "neutral"  },
+const SESSION_STATUS: Record<string, { label: string; variant: "success" | "danger" | "warning" | "neutral" | "info" }> = {
+  COMPLETED:   { label: "Completed",   variant: "success"  },
+  PARTIAL:     { label: "Partial",     variant: "warning"  },
+  SKIPPED:     { label: "Skipped",     variant: "danger"   },
+  IN_PROGRESS: { label: "In Progress", variant: "warning"  },
+  SCHEDULED:   { label: "Scheduled",   variant: "neutral"  },
+  ASSIGNED:    { label: "Assigned",    variant: "info"     },
+  NOTIFIED:    { label: "Notified",    variant: "info"     },
 };
 
-function TrainingTab({ sessions }: { sessions: SessionItem[] }) {
-  return (
-    <div className="pt-6 space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Sessions
-        </h2>
-        <p className="text-xs text-muted">{sessions.length} sessions</p>
-      </div>
+const FEELING_COLORS: Record<string, string> = {
+  GREAT:     "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  GOOD:      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  AVERAGE:   "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  POOR:      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  VERY_POOR: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+};
 
-      {sessions.length === 0 ? (
+function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionItem[]; assignments: ThrowsAssignmentItem[]; athleteId: string }) {
+  const totalCount = assignments.length + sessions.length;
+
+  return (
+    <div className="pt-6 space-y-6">
+      {/* ThrowsAssignment sessions (primary) */}
+      {assignments.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
+              Prescribed Sessions
+            </h3>
+            <p className="text-xs text-muted">{assignments.length} sessions</p>
+          </div>
+
+          <div className="space-y-2">
+            {assignments.map((a) => {
+              const status = SESSION_STATUS[a.status] ?? { label: a.status, variant: "neutral" as const };
+              const feelingClass = a.selfFeeling ? FEELING_COLORS[a.selfFeeling] ?? "" : "";
+              const throwLabel = a.prescribedThrows > 0
+                ? `${a.throwCount}/${a.prescribedThrows} throws`
+                : a.throwCount > 0
+                  ? `${a.throwCount} throws`
+                  : null;
+              const throwColor = a.prescribedThrows > 0
+                ? a.throwCount >= a.prescribedThrows ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+                : "";
+
+              return (
+                <Link
+                  key={a.id}
+                  href={`/coach/athletes/${athleteId}/sessions/${a.id}`}
+                  className="card card-interactive px-5 py-4 block"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-[var(--foreground)]">
+                          {a.sessionName}
+                        </span>
+                        <Badge variant={status.variant}>
+                          {status.label}
+                        </Badge>
+                        {a.selfFeeling && (
+                          <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize", feelingClass)}>
+                            {a.selfFeeling.toLowerCase().replace("_", " ")}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-4 flex-wrap text-xs text-muted tabular-nums">
+                        <span>{formatDate(a.assignedDate + "T12:00:00")}</span>
+                        {a.rpe != null && (
+                          <span className="font-semibold text-[var(--foreground)]">
+                            RPE {a.rpe}/10
+                          </span>
+                        )}
+                        {a.bestMark != null && (
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            Best: {a.bestMark.toFixed(2)}m
+                          </span>
+                        )}
+                        {throwLabel && (
+                          <span className={cn("font-medium", throwColor)}>
+                            {throwLabel}
+                          </span>
+                        )}
+                      </div>
+
+                      {a.feedbackNotes && (
+                        <p className="text-xs text-surface-500 dark:text-surface-400 line-clamp-2">
+                          {a.feedbackNotes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Legacy TrainingSession sessions */}
+      {sessions.length > 0 && (
+        <div className="space-y-3">
+          {assignments.length > 0 && (
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
+                Other Sessions
+              </h3>
+              <p className="text-xs text-muted">{sessions.length} sessions</p>
+            </div>
+          )}
+          {assignments.length === 0 && (
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
+                Sessions
+              </h3>
+              <p className="text-xs text-muted">{sessions.length} sessions</p>
+            </div>
+          )}
+
+          <div className="card divide-y divide-[var(--card-border)]">
+            {sessions.map((s) => {
+              const status = SESSION_STATUS[s.status] ?? { label: s.status, variant: "neutral" as const };
+              return (
+                <div key={s.id} className="px-5 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant={status.variant}>
+                          {status.label}
+                        </Badge>
+                        {s.planName && (
+                          <span className="text-xs text-muted">{s.planName}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 flex-wrap text-xs text-muted tabular-nums">
+                        <span>{formatDate(s.scheduledDate)}</span>
+                        {s.completedDate && (
+                          <span>Completed {formatShortDate(s.completedDate)}</span>
+                        )}
+                        {s.rpe != null && (
+                          <span className="font-semibold text-[var(--foreground)]">
+                            RPE {s.rpe.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                      {s.notes && (
+                        <p className="text-xs text-surface-500 dark:text-surface-400 line-clamp-2">
+                          {s.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {totalCount === 0 && (
         <div className="card">
           <EmptyState
             compact
@@ -467,51 +613,6 @@ function TrainingTab({ sessions }: { sessions: SessionItem[] }) {
             title="No training sessions yet"
             description="Prescribe a session to get started."
           />
-        </div>
-      ) : (
-        <div className="card divide-y divide-[var(--card-border)]">
-          {sessions.map((s) => {
-            const status = SESSION_STATUS[s.status] ?? { label: s.status, variant: "neutral" as const };
-            return (
-              <div key={s.id} className="px-5 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0 space-y-1.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant={status.variant}>
-                        {status.label}
-                      </Badge>
-                      {s.planName && (
-                        <span className="text-xs text-muted">{s.planName}</span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-4 flex-wrap text-xs text-muted tabular-nums">
-                      <span>{formatDate(s.scheduledDate)}</span>
-                      {s.completedDate && (
-                        <span>Completed {formatShortDate(s.completedDate)}</span>
-                      )}
-                      {s.rpe != null && (
-                        <span className="font-semibold text-[var(--foreground)]">
-                          RPE {s.rpe.toFixed(1)}
-                        </span>
-                      )}
-                    </div>
-
-                    {s.notes && (
-                      <p className="text-xs text-surface-500 dark:text-surface-400 line-clamp-2">
-                        {s.notes}
-                      </p>
-                    )}
-                    {s.coachNotes && (
-                      <p className="text-xs text-primary-600 dark:text-primary-400 line-clamp-1">
-                        Coach note: {s.coachNotes}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
         </div>
       )}
     </div>
@@ -1177,6 +1278,7 @@ export default async function AthleteProfilePage({
     getAthleteReadinessTrend(athlete.id, 30),
     getAthleteGoals(athlete.id),
     getLatestBondarchukAssessment(athlete.id),
+    getAthleteThrowsAssignments(athlete.id, 25),
   ]);
 
   const acwr = results[0].status === "fulfilled" ? results[0].value as AthleteACWR : null as AthleteACWR;
@@ -1186,6 +1288,7 @@ export default async function AthleteProfilePage({
   const trend = results[4].status === "fulfilled" ? results[4].value as ReadinessTrendPoint[] : [] as ReadinessTrendPoint[];
   const goals = results[5].status === "fulfilled" ? results[5].value as GoalItem[] : [] as GoalItem[];
   const latestAssessment = results[6].status === "fulfilled" ? results[6].value : null;
+  const throwsAssignments = results[7].status === "fulfilled" ? results[7].value as ThrowsAssignmentItem[] : [] as ThrowsAssignmentItem[];
 
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
@@ -1214,7 +1317,7 @@ export default async function AthleteProfilePage({
 
       <section id="training" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Training</h2>
-        <TrainingTab sessions={sessions} />
+        <TrainingTab sessions={sessions} assignments={throwsAssignments} athleteId={athlete.id} />
       </section>
 
       <section id="throws" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
