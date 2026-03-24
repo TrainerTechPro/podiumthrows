@@ -181,7 +181,10 @@ export async function PUT(
       }
     }
     if ("preferredDays" in typedBody) {
-      const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const validDays = [
+        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+        "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY",
+      ];
       const v = typedBody.preferredDays;
       if (!Array.isArray(v) || v.some((d) => !validDays.includes(d as string))) {
         return NextResponse.json(

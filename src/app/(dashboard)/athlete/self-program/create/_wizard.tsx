@@ -415,11 +415,16 @@ export function SelfProgramWizard({
 
       if (configId) {
         // Save final state and mark as not-draft
-        await fetch(`/api/athlete/self-program/${configId}`, {
+        const putRes = await fetch(`/api/athlete/self-program/${configId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ ...payload, isDraft: false }),
         });
+        if (!putRes.ok) {
+          const err = await putRes.json().catch(() => ({ error: "Failed to finalize config" }));
+          toastError("Error", err.error || "Failed to finalize program config.");
+          return;
+        }
       } else {
         // Create config first if no draft exists
         const createRes = await fetch("/api/athlete/self-program", {
