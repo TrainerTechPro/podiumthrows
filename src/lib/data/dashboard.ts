@@ -580,35 +580,86 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export async function fetchPRsData(athleteId: string): Promise<PRItem[]> {
-  const prs = await prisma.throwLog.findMany({
-    where: { athleteId, isPersonalBest: true },
-    orderBy: { distance: "desc" },
-    select: {
-      id: true,
-      event: true,
-      distance: true,
-      date: true,
-    },
-  });
+  // PRs can come from multiple sources:
+  // 1. ThrowLog (legacy, has isPersonalBest flag)
+  // 2. ProgramSession.bestMark (Bondarchuk program best marks)
+  // 3. AthleteDrillLog.bestMark (self-logged sessions)
 
-  // Deduplicate by event — keep the best distance per event
-  const bestByEvent = new Map<string, (typeof prs)[number]>();
-  for (const pr of prs) {
+  const [throwLogPRs, programBests, selfLoggedBests] = await Promise.all([
+    // Source 1: ThrowLog PRs
+    prisma.throwLog.findMany({
+      where: { athleteId, isPersonalBest: true },
+      orderBy: { distance: "desc" },
+      select: { id: true, event: true, distance: true, date: true },
+    }),
+
+    // Source 2: ProgramSession best marks
+    prisma.programSession.findMany({
+      where: {
+        program: { athleteId },
+        status: "COMPLETED",
+        bestMark: { not: null, gt: 0 },
+      },
+      orderBy: { bestMark: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        bestMark: true,
+        completedAt: true,
+        program: { select: { event: true } },
+      },
+    }),
+
+    // Source 3: AthleteDrillLog best marks
+    prisma.athleteDrillLog.findMany({
+      where: {
+        session: { athleteId },
+        bestMark: { not: null, gt: 0 },
+      },
+      orderBy: { bestMark: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        bestMark: true,
+        createdAt: true,
+        session: { select: { event: true } },
+      },
+    }),
+  ]);
+
+  // Merge all into a unified format and deduplicate by event (keep best)
+  const bestByEvent = new Map<string, PRItem>();
+
+  for (const pr of throwLogPRs) {
     const event = pr.event as string;
+    const dist = pr.distance;
     const existing = bestByEvent.get(event);
-    if (!existing || pr.distance > existing.distance) {
-      bestByEvent.set(event, pr);
+    if (!existing || dist > existing.distance) {
+      bestByEvent.set(event, { id: pr.id, event, distance: dist, date: pr.date.toISOString() });
+    }
+  }
+
+  for (const ps of programBests) {
+    const event = ps.program.event;
+    const dist = ps.bestMark!;
+    const existing = bestByEvent.get(event);
+    if (!existing || dist > existing.distance) {
+      bestByEvent.set(event, { id: ps.id, event, distance: dist, date: (ps.completedAt ?? new Date()).toISOString() });
+    }
+  }
+
+  for (const dl of selfLoggedBests) {
+    const event = dl.session.event;
+    const dist = dl.bestMark!;
+    const existing = bestByEvent.get(event);
+    if (!existing || dist > existing.distance) {
+      bestByEvent.set(event, { id: dl.id, event, distance: dist, date: dl.createdAt.toISOString() });
     }
   }
 
   return Array.from(bestByEvent.values())
-    .slice(0, 4)
-    .map((p) => ({
-      id: p.id,
-      event: p.event as string,
-      distance: p.distance,
-      date: p.date.toISOString(),
-    }));
+    .sort((a, b) => b.distance - a.distance)
+    .slice(0, 4);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -620,30 +671,46 @@ export async function fetchQuickStatsData(athleteId: string): Promise<QuickStats
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
+  const weekYMD = startOfWeek.getFullYear() + "-" +
+    String(startOfWeek.getMonth() + 1).padStart(2, "0") + "-" +
+    String(startOfWeek.getDate()).padStart(2, "0");
 
-  const [athlete, sessionsThisWeek, totalSessions] = await Promise.all([
+  // Count across ALL session types — not just TrainingSession
+  const [athlete, legacyTotal, legacyWeek, programTotal, programWeek, selfLoggedTotal, selfLoggedWeek] = await Promise.all([
     prisma.athleteProfile.findUnique({
       where: { id: athleteId },
       select: { currentStreak: true },
     }),
 
-    prisma.trainingSession.count({
-      where: {
-        athleteId,
-        status: "COMPLETED",
-        completedDate: { gte: startOfWeek },
-      },
-    }),
-
+    // Legacy TrainingSession
     prisma.trainingSession.count({
       where: { athleteId, status: "COMPLETED" },
+    }),
+    prisma.trainingSession.count({
+      where: { athleteId, status: "COMPLETED", completedDate: { gte: startOfWeek } },
+    }),
+
+    // ProgramSession (Bondarchuk programs)
+    prisma.programSession.count({
+      where: { program: { athleteId }, status: "COMPLETED" },
+    }),
+    prisma.programSession.count({
+      where: { program: { athleteId }, status: "COMPLETED", completedAt: { gte: startOfWeek } },
+    }),
+
+    // AthleteThrowsSession (self-logged)
+    prisma.athleteThrowsSession.count({
+      where: { athleteId },
+    }),
+    prisma.athleteThrowsSession.count({
+      where: { athleteId, date: { gte: weekYMD } },
     }),
   ]);
 
   return {
-    sessionsThisWeek,
+    sessionsThisWeek: legacyWeek + programWeek + selfLoggedWeek,
     currentStreak: athlete?.currentStreak ?? 0,
-    totalSessions,
+    totalSessions: legacyTotal + programTotal + selfLoggedTotal,
   };
 }
 
