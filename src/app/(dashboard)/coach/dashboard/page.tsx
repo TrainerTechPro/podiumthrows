@@ -15,9 +15,6 @@ import {
 import prisma from "@/lib/prisma";
 import {
   requireCoachSession,
-  getCoachStats,
-  getRecentActivity,
-  getFlaggedAthletes,
   getTeamReadinessTrends,
   getOnboardingStatus,
   PLAN_LIMITS,
@@ -25,6 +22,12 @@ import {
   type CoachStats,
   type TeamReadinessEntry,
 } from "@/lib/data/coach";
+import {
+  cachedGetCoachStats,
+  cachedGetRecentActivity,
+  cachedGetFlaggedAthletes,
+} from "@/lib/cache";
+import { withTiming } from "@/lib/perf";
 import { getCoachingActions } from "@/lib/data/coaching-actions";
 import { getRecentTeamPRs, getTeamLoadOverview, getUpcomingCompetitions } from "@/lib/data/dashboard-intel";
 import { OnboardingChecklist } from "./_onboarding-checklist";
@@ -354,17 +357,17 @@ export default async function CoachDashboardPage() {
     prsResult,
     loadResult,
     competitionsResult,
-  ] = await Promise.allSettled([
-    getCoachStats(coach.id),
-    getRecentActivity(coach.id, 20, true),
-    getFlaggedAthletes(coach.id),
+  ] = await withTiming("coach-dashboard-data", () => Promise.allSettled([
+    cachedGetCoachStats(coach.id),
+    cachedGetRecentActivity(coach.id, 20, true),
+    cachedGetFlaggedAthletes(coach.id),
     getTeamReadinessTrends(coach.id),
     getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
     getCoachingActions(coach.id),
     getRecentTeamPRs(coach.id),
     getTeamLoadOverview(coach.id),
     mode === "competition" ? getUpcomingCompetitions(coach.id) : Promise.resolve([]),
-  ]);
+  ]));
 
   const stats: CoachStats = statsResult.status === "fulfilled"
     ? statsResult.value

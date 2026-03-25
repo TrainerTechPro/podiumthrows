@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyTokenEdge as verifyToken } from "@/lib/auth-edge";
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from "@/lib/csrf";
+import { getFlags, type FlagKey } from "@/lib/flags";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -18,7 +19,19 @@ const AUTH_PATHS = ["/login", "/register"];
 
 const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
-export function middleware(request: NextRequest) {
+// Route prefixes gated by feature flags
+const FLAG_GATED_ROUTES: { prefix: string; flag: FlagKey }[] = [
+  { prefix: "/athlete/self-program", flag: "selfProgram" },
+  { prefix: "/coach/videos", flag: "videoAnnotator" },
+  { prefix: "/athlete/throws/analysis", flag: "throwsAnalysis" },
+  { prefix: "/athlete/oura", flag: "ouraIntegration" },
+  { prefix: "/athlete/whoop", flag: "whoopIntegration" },
+  { prefix: "/coach/questionnaires", flag: "questionnaireBuilder" },
+  { prefix: "/athlete/questionnaires", flag: "questionnaireBuilder" },
+  { prefix: "/coach/throws/practice", flag: "practiceMode" },
+];
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("auth-token")?.value;
 
@@ -79,6 +92,18 @@ export function middleware(request: NextRequest) {
     }
   } else {
     response = NextResponse.next();
+  }
+
+  // ── Feature flag gating ───────────────────────────────────────────
+  const gatedRoute = FLAG_GATED_ROUTES.find((r) => pathname.startsWith(r.prefix));
+  if (gatedRoute) {
+    const flags = await getFlags();
+    const flag = flags[gatedRoute.flag];
+    if (!flag?.enabled) {
+      const dashboardUrl =
+        payload?.role === "ATHLETE" ? "/athlete/dashboard" : "/coach/dashboard";
+      return NextResponse.redirect(new URL(dashboardUrl, request.url));
+    }
   }
 
   // ── Default active-mode cookie for coaches ────────────────────────

@@ -7,16 +7,16 @@ import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { WIRE_LENGTH_OPTIONS, LBS_TO_KG, formatImplementWeight } from "@/lib/throws";
-import {
- LineChart,
- Line,
- XAxis,
- YAxis,
- Tooltip,
- ResponsiveContainer,
- CartesianGrid,
- Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+const BestMarkChart = dynamic(
+  () => import("./_charts").then((m) => m.BestMarkChart),
+  { ssr: false, loading: () => <div className="shimmer h-60 rounded-xl" /> },
+);
+const VolumeChart = dynamic(
+  () => import("./_charts").then((m) => m.VolumeChart),
+  { ssr: false, loading: () => <div className="shimmer h-40 rounded-xl" /> },
+);
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -45,9 +45,6 @@ const EVENT_IMPLEMENTS: Record<string, number[]> = {
  JAVELIN: [600, 700, 800],
 };
 
-const TREND_COLORS = [
- "#E85D26","#2563EB","#7C3AED","#059669","#D97706","#DB2777","#0891B2","#65A30D",
-];
 
 // ── Drill row type ─────────────────────────────────────────────────────
 
@@ -374,37 +371,7 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  <div className="card !p-4 space-y-3">
  <h3 className="text-sm font-bold text-[var(--foreground)]">Best Mark Progression</h3>
  <p className="text-xs text-surface-700 dark:text-surface-300">Best throw per drill type and implement weight over time</p>
- <ResponsiveContainer width="100%" height={240}>
- <LineChart margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
- <XAxis
- dataKey="date"
- type="category"
- allowDuplicatedCategory={false}
- tick={{ fontSize: 11 }}
- tickFormatter={fmtDate}
- />
- <YAxis tick={{ fontSize: 11 }} />
- <Tooltip
- formatter={(val: number) => [`${val.toFixed(2)}m`, ""]}
- labelFormatter={(l) => `Date: ${l}`}
- />
- <Legend wrapperStyle={{ fontSize: 10 }} />
- {filteredTrends.map((series, i) => (
- <Line
- key={series.key}
- data={series.points.map((p) => ({ date: fmtDate(p.date), bestMark: p.bestMark }))}
- type="monotone"
- dataKey="bestMark"
- name={`${drillLabel(series.drillType)} ${series.implement}`}
- stroke={TREND_COLORS[i % TREND_COLORS.length]}
- strokeWidth={2}
- dot={{ r: 3 }}
- activeDot={{ r: 5 }}
- />
- ))}
- </LineChart>
- </ResponsiveContainer>
+ <BestMarkChart series={filteredTrends} drillLabel={drillLabel} fmtDate={fmtDate} />
  </div>
  )}
 
@@ -413,15 +380,7 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  <div className="card !p-4 space-y-3">
  <h3 className="text-sm font-bold text-[var(--foreground)]">Session Volume</h3>
  <p className="text-xs text-surface-700 dark:text-surface-300">Total throws logged per session date</p>
- <ResponsiveContainer width="100%" height={160}>
- <LineChart data={volData} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
- <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
- <XAxis dataKey="date" tick={{ fontSize: 11 }} />
- <YAxis tick={{ fontSize: 11 }} />
- <Tooltip formatter={(val: number) => [`${val} throws`, "Volume"]} />
- <Line type="monotone" dataKey="throws" stroke="#E85D26" strokeWidth={2} dot={{ r: 3 }} />
- </LineChart>
- </ResponsiveContainer>
+ <VolumeChart data={volData} />
  </div>
  )}
 

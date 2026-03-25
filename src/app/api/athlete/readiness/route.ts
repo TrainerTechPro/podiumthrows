@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { awardStreakAchievements, awardFirstCheckInAchievement } from "@/lib/achievements";
@@ -124,6 +125,10 @@ export async function POST(req: NextRequest) {
         (err) => logger.error("Async operation failed", { context: "api", error: err })
       );
     }
+
+    // Invalidate caches for this athlete and their coach
+    revalidateTag(`athlete-${athlete.id}`);
+    if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
     return NextResponse.json(
       { id: checkIn.id, overallScore: checkIn.overallScore, date: checkIn.date.toISOString() },

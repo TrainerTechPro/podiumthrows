@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Outfit, DM_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { WebVitalsReporter } from "./web-vitals";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -80,7 +80,7 @@ export default async function RootLayout({
       </head>
       <body>
         <ServiceWorkerProvider>{children}</ServiceWorkerProvider>
-        <SpeedInsights />
+        <WebVitalsReporter />
         <Analytics />
       </body>
     </html>

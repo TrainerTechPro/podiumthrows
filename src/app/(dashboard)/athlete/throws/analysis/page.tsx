@@ -3,16 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+const DistanceTrendChart = dynamic(
+  () => import("./_distance-chart").then((m) => m.DistanceTrendChart),
+  { ssr: false, loading: () => <div className="shimmer h-72 rounded-xl" /> },
+);
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -265,57 +261,7 @@ export default function ThrowAnalysisPage() {
         </div>
 
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 4, right: 8, bottom: 4, left: -10 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--card-border)"
-                opacity={0.5}
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: "var(--muted)" }}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "var(--muted)" }}
-                tickFormatter={(v: number) => `${v}m`}
-              />
-              <Tooltip
-                formatter={(val: number, name: string) => [
-                  `${val.toFixed(2)}m`,
-                  EVENT_META[name]?.label ?? name,
-                ]}
-                contentStyle={{
-                  backgroundColor: "var(--card-bg)",
-                  border: "1px solid var(--card-border)",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                }}
-              />
-              <Legend
-                wrapperStyle={{ fontSize: 11 }}
-                formatter={(value: string) =>
-                  EVENT_META[value]?.label ?? value
-                }
-              />
-              {eventKeys.map((ev) => (
-                <Line
-                  key={ev}
-                  type="monotone"
-                  dataKey={ev}
-                  name={ev}
-                  stroke={EVENT_META[ev]?.color ?? "#666"}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                  connectNulls
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+          <DistanceTrendChart chartData={chartData} eventKeys={eventKeys} />
         ) : (
           <div className="py-10 text-center">
             <p className="text-sm text-muted">

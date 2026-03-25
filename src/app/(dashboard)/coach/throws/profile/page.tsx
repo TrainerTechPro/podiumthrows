@@ -4,16 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useSearchParams } from "next/navigation";
 import { localToday } from "@/lib/utils";
-import {
- LineChart,
- Line,
- XAxis,
- YAxis,
- CartesianGrid,
- Tooltip,
- Legend,
- ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+const PRProgressionLineChart = dynamic(
+  () => import("./_pr-chart").then((m) => m.PRProgressionLineChart),
+  { ssr: false, loading: () => <div className="shimmer h-56 rounded-xl" /> },
+);
 import Link from "next/link";
 import UserAvatar from "@/components/user-avatar";
 import PodiumThrowsPanel from "@/components/podium-throws-panel";
@@ -2499,7 +2495,6 @@ const BENCH_OVERLAY_OPTIONS = [
  { key: "vo2max", label: "VO₂max" },
 ];
 
-const OVERLAY_COLOR = "#a78bfa"; // purple for benchmark overlays
 
 function PRProgressionChart({ athleteId }: { athleteId: string }) {
  const [prHistory, setPrHistory] = useState<PRHistoryEntry[]>([]);
@@ -2631,68 +2626,12 @@ function PRProgressionChart({ athleteId }: { athleteId: string }) {
  Need at least 2 PR entries to show a progression chart.
  </p>
  ) : (
- <ResponsiveContainer width="100%" height={220}>
- <LineChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
- <CartesianGrid strokeDasharray="3 3" stroke="rgba(156,163,175,0.2)" />
- <XAxis
- dataKey="date"
- tick={{ fontSize: 10, fill: "#9ca3af" }}
- tickFormatter={(v: string) => v.slice(5)} // MM-DD
+ <PRProgressionLineChart
+ chartData={chartData}
+ overlay={overlay}
+ eventLabel={eventMeta?.label ?? selectedEvent}
+ eventColor={eventMeta?.color ?? "#6A9FD8"}
  />
- <YAxis
- yAxisId="left"
- tick={{ fontSize: 10, fill: "#9ca3af" }}
- tickFormatter={(v: number) => `${v}m`}
- domain={["auto", "auto"]}
- />
- {overlay && (
- <YAxis
- yAxisId="right"
- orientation="right"
- tick={{ fontSize: 10, fill: OVERLAY_COLOR }}
- />
- )}
- <Tooltip
- contentStyle={{ backgroundColor: "#1f2937", border: "none", borderRadius: "8px", fontSize: 12 }}
- labelStyle={{ color: "#d1d5db" }}
- formatter={(value: number, name: string) =>
- name === "distance"
- ? [`${value?.toFixed(2)}m`, eventMeta?.label ?? selectedEvent]
- : [value, BENCH_OVERLAY_OPTIONS.find((o) => o.key === name)?.label ?? name]
- }
- />
- <Legend
- wrapperStyle={{ fontSize: 11 }}
- formatter={(value: string) =>
- value === "distance"
- ? (eventMeta?.label ?? selectedEvent)
- : (BENCH_OVERLAY_OPTIONS.find((o) => o.key === value)?.label ?? value)
- }
- />
- <Line
- yAxisId="left"
- type="monotone"
- dataKey="distance"
- stroke={eventMeta?.color ?? "#6A9FD8"}
- strokeWidth={2.5}
- dot={{ r: 4, fill: eventMeta?.color ?? "#6A9FD8", strokeWidth: 0 }}
- connectNulls
- activeDot={{ r: 6 }}
- />
- {overlay && (
- <Line
- yAxisId="right"
- type="monotone"
- dataKey={overlay}
- stroke={OVERLAY_COLOR}
- strokeWidth={2}
- strokeDasharray="5 3"
- dot={{ r: 3, fill: OVERLAY_COLOR, strokeWidth: 0 }}
- connectNulls
- />
- )}
- </LineChart>
- </ResponsiveContainer>
  )}
  </div>
  );
