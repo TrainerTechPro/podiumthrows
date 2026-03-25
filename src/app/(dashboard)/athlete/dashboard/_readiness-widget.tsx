@@ -94,7 +94,7 @@ function formatRelativeDate(iso: string): string {
 }
 
 export function ReadinessWidget({ data }: { data: ReadinessData | null }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   if (!data) {
     return (
