@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, ReactNode } from "react";
+import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   Search as SearchLucide,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { EmptyState } from "./EmptyState";
 import { SkeletonTableRow } from "./Skeleton";
+import { useDataTable } from "./useDataTable";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -70,54 +71,25 @@ export function DataTable<T extends Record<string, unknown>>({
   className,
   actions,
 }: DataTableProps<T>) {
-  const [query, setQuery] = useState("");
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<SortDirection>("asc");
-  const [page, setPage] = useState(1);
-
-  /* Filter */
-  const filtered = useMemo(() => {
-    if (!query.trim()) return data;
-    const q = query.toLowerCase();
-    return data.filter((row) =>
-      columns.some((col) => {
-        const raw = row[col.key as keyof T];
-        return String(raw ?? "").toLowerCase().includes(q);
-      })
-    );
-  }, [data, query, columns]);
-
-  /* Sort */
-  const sorted = useMemo(() => {
-    if (!sortKey) return filtered;
-    return [...filtered].sort((a, b) => {
-      const av = a[sortKey as keyof T];
-      const bv = b[sortKey as keyof T];
-      if (av === bv) return 0;
-      const cmp = av! < bv! ? -1 : 1;
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-  }, [filtered, sortKey, sortDir]);
-
-  /* Paginate */
-  const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
-  const paginated = pageSize > 0
-    ? sorted.slice((page - 1) * pageSize, page * pageSize)
-    : sorted;
+  const {
+    query,
+    sortKey,
+    sortDir,
+    page,
+    sorted,
+    paged: paginated,
+    totalPages,
+    setQuery,
+    toggleSort,
+    setPage,
+  } = useDataTable({ data, columns, pageSize, loading });
 
   /* Reset page when query changes */
-  const handleSearch = (v: string) => { setQuery(v); setPage(1); };
+  const handleSearch = (v: string) => { setQuery(v); };
 
   const handleSort = (col: Column<T>) => {
     if (!col.sortable) return;
-    const key = String(col.key);
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-    setPage(1);
+    toggleSort(String(col.key));
   };
 
   return (
@@ -237,7 +209,7 @@ export function DataTable<T extends Record<string, unknown>>({
             </p>
             <div className="flex items-center gap-1">
               <PageButton
-                onClick={() => setPage((p) => p - 1)}
+                onClick={() => setPage(page - 1)}
                 disabled={page === 1}
                 aria-label="Previous page"
               >
@@ -257,7 +229,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 ) : null
               )}
               <PageButton
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => setPage(page + 1)}
                 disabled={page === totalPages}
                 aria-label="Next page"
               >

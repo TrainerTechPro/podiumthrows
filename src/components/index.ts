@@ -32,6 +32,8 @@ export * from "./ui/ScrollProgressBar";
 
 /* ─── Data ───────────────────────────────────────────────────────────────── */
 export * from "./ui/DataTable";
+export { useDataTable } from "./ui/useDataTable";
+export type { UseDataTableOptions, UseDataTableReturn } from "./ui/useDataTable";
 
 /* ─── Feedback ───────────────────────────────────────────────────────────── */
 export * from "./ui/EmptyState";
