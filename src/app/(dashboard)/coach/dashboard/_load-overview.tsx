@@ -51,7 +51,7 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
           Training Load
         </h3>
-        <p className="text-[10px] text-surface-400">7-day overview</p>
+        <p className="text-[10px] text-surface-400">7-day overview · ACWR 0.8–1.3 = optimal, &gt;1.3 = risk</p>
       </div>
 
       {/* Desktop — table */}
@@ -65,7 +65,10 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
               <th className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
                 Throws
               </th>
-              <th className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
+              <th
+                className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right"
+                title="Acute:Chronic Workload Ratio — optimal range 0.8–1.3, above 1.3 = elevated injury risk"
+              >
                 ACWR
               </th>
               <th className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
@@ -76,10 +79,16 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
                   <th className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
                     Phase
                   </th>
-                  <th className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
+                  <th
+                    className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right"
+                    title="Heavy implement deficit — gap between heavy and competition implement performance (>15-20% = separate adaptations)"
+                  >
                     Deficit
                   </th>
-                  <th className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
+                  <th
+                    className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right"
+                    title="Short-term fatigue — recent training stress relative to fitness"
+                  >
                     STF
                   </th>
                 </>
