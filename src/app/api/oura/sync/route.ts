@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { syncOuraData } from "@/lib/oura/sync";
+import { isReauthError } from "@/lib/wearable-auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
@@ -60,6 +61,14 @@ export async function POST(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     logger.error("POST /api/oura/sync", { context: "api", error: err, metadata: { message } });
+
+    if (isReauthError(message)) {
+      return NextResponse.json(
+        { error: "reauth_required", detail: "Your Oura Ring authorization has expired. Please reconnect your Oura Ring." },
+        { status: 401 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Oura sync failed", detail: message },
       { status: 500 },

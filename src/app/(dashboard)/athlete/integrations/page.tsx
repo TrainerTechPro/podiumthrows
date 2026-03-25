@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Activity, Heart } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { needsReauth } from "@/lib/wearable-auth";
 import { StaggeredList } from "@/components";
 import { WhoopCard } from "../settings/_whoop-card";
 import { OuraCard } from "../settings/_oura-card";
@@ -26,20 +27,26 @@ export default async function AthleteIntegrationsPage() {
     // Table may not exist yet
   }
 
-  // Detect unhealthy connection: empty refresh token or missing offline scope
+  // Detect unhealthy connections using shared utility
   const whoopNeedsReauth = whoopConnection
-    ? !whoopConnection.refreshToken || !whoopConnection.scopes.includes("offline")
+    ? needsReauth(whoopConnection.refreshToken, whoopConnection.scopes, "offline")
     : false;
 
-  let ouraConnection: { syncMode: string; lastSyncAt: Date | null } | null = null;
+  let ouraConnection: { syncMode: string; lastSyncAt: Date | null; refreshToken: string; scopes: string } | null = null;
   try {
     ouraConnection = await prisma.ouraConnection.findUnique({
       where: { athleteId: athlete.id },
-      select: { syncMode: true, lastSyncAt: true },
+      select: { syncMode: true, lastSyncAt: true, refreshToken: true, scopes: true },
     });
   } catch {
     // Table may not exist yet
   }
+
+  // Oura doesn't use a separate "offline" scope — refresh tokens are always granted.
+  // Check for empty refresh token only.
+  const ouraNeedsReauth = ouraConnection
+    ? needsReauth(ouraConnection.refreshToken, ouraConnection.scopes, "")
+    : false;
 
   const connectedCount = (whoopConnection ? 1 : 0) + (ouraConnection ? 1 : 0);
 
@@ -75,6 +82,7 @@ export default async function AthleteIntegrationsPage() {
               connected={!!ouraConnection}
               syncMode={ouraConnection?.syncMode}
               lastSyncAt={ouraConnection?.lastSyncAt?.toISOString() ?? null}
+              needsReauth={ouraNeedsReauth}
             />
           </div>
         </StaggeredList>

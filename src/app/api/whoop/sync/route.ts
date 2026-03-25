@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { syncWhoopData } from "@/lib/whoop/sync";
+import { isReauthError } from "@/lib/wearable-auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
@@ -63,14 +64,7 @@ export async function POST(request: Request) {
     const message = err instanceof Error ? err.message : "Unknown error";
     logger.error("POST /api/whoop/sync", { context: "api", error: err, metadata: { message } });
 
-    // Detect token-expiry / missing-refresh-token errors so the frontend
-    // can show a "Reconnect" button instead of a generic error.
-    const isAuthError =
-      message.includes("access token expired") ||
-      message.includes("refresh token") ||
-      message.includes("authorization has expired");
-
-    if (isAuthError) {
+    if (isReauthError(message)) {
       return NextResponse.json(
         { error: "reauth_required", detail: "Your WHOOP authorization has expired. Please reconnect your WHOOP." },
         { status: 401 },

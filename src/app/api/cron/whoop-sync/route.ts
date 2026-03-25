@@ -7,8 +7,8 @@ export const maxDuration = 60;
 
 /**
  * GET /api/cron/whoop-sync
- * Vercel Cron — runs daily at 8:00 AM UTC.
- * Syncs WHOOP data for all connections that haven't synced in 20+ hours.
+ * Vercel Cron — runs every 15 minutes.
+ * Syncs WHOOP data for all connections that haven't synced in 15+ minutes.
  */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -22,11 +22,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const twentyHoursAgo = new Date(Date.now() - 20 * 60 * 60 * 1000);
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
 
     const staleConnections = await prisma.whoopConnection.findMany({
       where: {
-        OR: [{ lastSyncAt: null }, { lastSyncAt: { lt: twentyHoursAgo } }],
+        OR: [{ lastSyncAt: null }, { lastSyncAt: { lt: fifteenMinutesAgo } }],
       },
       select: { id: true },
     });

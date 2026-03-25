@@ -6,8 +6,8 @@ import { getUnreadCount } from "@/lib/notifications";
 import { WhoopAutoSync } from "./_whoop-auto-sync";
 import { OuraAutoSync } from "./_oura-auto-sync";
 
-const WHOOP_STALE_MS = 60 * 60 * 1000; // 1 hour
-const OURA_STALE_MS = 60 * 60 * 1000; // 1 hour
+const WHOOP_STALE_MS = 15 * 60 * 1000; // 15 minutes
+const OURA_STALE_MS = 15 * 60 * 1000; // 15 minutes
 
 export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
