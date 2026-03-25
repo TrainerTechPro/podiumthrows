@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { requireAthleteSession } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
+import { ScrollProgressBar, AnimatedNumber, StaggeredList } from "@/components";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -35,6 +36,25 @@ function readinessBg(score: number | null): string {
   return "bg-red-50 dark:bg-red-500/10";
 }
 
+function readinessLabel(score: number): string {
+  if (score >= 85) return "Optimal";
+  if (score >= 70) return "Good";
+  if (score >= 60) return "Pay Attention";
+  return "Take It Easy";
+}
+
+function TrendArrow({ today, avg }: { today: number | null; avg: number | null }) {
+  if (today === null || avg === null) return null;
+  const diff = today - avg;
+  if (Math.abs(diff) < 1.5) {
+    return <Minus size={12} strokeWidth={1.75} className="text-muted" aria-hidden="true" />;
+  }
+  if (diff > 0) {
+    return <TrendingUp size={12} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />;
+  }
+  return <TrendingDown size={12} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />;
+}
+
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export const dynamic = "force-dynamic";
@@ -62,8 +82,9 @@ export default async function OuraPage() {
   const today = new Date().toISOString().split("T")[0];
   const todaySnapshot = snapshots.find((s) => s.date === today);
 
-  // Compute averages from last 7 days
+  // Compute averages from last 7 days (excluding today for trend comparison)
   const last7 = snapshots.slice(0, 7);
+  const prevDays = snapshots.slice(1, 8); // yesterday through 7 days ago
   const avg = (arr: (number | null)[]): number | null => {
     const valid = arr.filter((v): v is number => v !== null);
     return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
@@ -74,6 +95,10 @@ export default async function OuraPage() {
   const avgRhr = avg(last7.map((s) => s.restingHR));
   const avgActivity = avg(last7.map((s) => s.activityScore));
   const avgSleepSec = avg(last7.map((s) => s.sleepDurationSec));
+
+  // Previous averages for trend arrows
+  const prevAvgHrv = avg(prevDays.map((s) => s.hrvMs));
+  const prevAvgRhr = avg(prevDays.map((s) => s.restingHR));
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -87,8 +112,8 @@ export default async function OuraPage() {
             Readiness, sleep, and activity from your Oura Ring
           </p>
         </div>
-        <Link href="/athlete/settings" className="text-xs text-primary-500 hover:underline">
-          Settings
+        <Link href="/athlete/integrations" className="text-xs text-primary-500 hover:underline">
+          Integrations
         </Link>
       </div>
 
@@ -104,25 +129,36 @@ export default async function OuraPage() {
               readinessColor(todaySnapshot.readinessScore)
             )}
           >
-            {todaySnapshot.readinessScore !== null
-              ? `${Math.round(todaySnapshot.readinessScore)}`
-              : "\u2014"}
+            {todaySnapshot.readinessScore !== null ? (
+              <AnimatedNumber value={Math.round(todaySnapshot.readinessScore)} decimals={0} />
+            ) : (
+              "\u2014"
+            )}
           </p>
-          <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+          {todaySnapshot.readinessScore !== null && (
+            <p className={cn("text-sm font-medium mt-1", readinessColor(todaySnapshot.readinessScore))}>
+              {readinessLabel(todaySnapshot.readinessScore)}
+            </p>
+          )}
+
+          {/* Sub-metrics with trend arrows */}
+          <StaggeredList className="flex items-center justify-center gap-6 mt-4 text-sm" staggerDelay={60}>
             {todaySnapshot.hrvMs !== null && (
-              <div>
-                <span className="text-muted">HRV</span>{" "}
+              <div className="flex items-center gap-1">
+                <span className="text-muted">HRV</span>
                 <span className="font-semibold text-[var(--foreground)] tabular-nums">
-                  {Math.round(todaySnapshot.hrvMs)}ms
+                  <AnimatedNumber value={Math.round(todaySnapshot.hrvMs)} decimals={0} />ms
                 </span>
+                <TrendArrow today={todaySnapshot.hrvMs} avg={prevAvgHrv} />
               </div>
             )}
             {todaySnapshot.restingHR !== null && (
-              <div>
-                <span className="text-muted">RHR</span>{" "}
+              <div className="flex items-center gap-1">
+                <span className="text-muted">RHR</span>
                 <span className="font-semibold text-[var(--foreground)] tabular-nums">
-                  {Math.round(todaySnapshot.restingHR)}bpm
+                  <AnimatedNumber value={Math.round(todaySnapshot.restingHR)} decimals={0} />bpm
                 </span>
+                <TrendArrow today={todaySnapshot.restingHR !== null ? -todaySnapshot.restingHR : null} avg={prevAvgRhr !== null ? -prevAvgRhr : null} />
               </div>
             )}
             {todaySnapshot.spo2 !== null && (
@@ -137,7 +173,7 @@ export default async function OuraPage() {
               <div>
                 <span className="text-muted">Activity</span>{" "}
                 <span className="font-semibold text-[var(--foreground)] tabular-nums">
-                  {Math.round(todaySnapshot.activityScore)}
+                  <AnimatedNumber value={Math.round(todaySnapshot.activityScore)} decimals={0} />
                 </span>
               </div>
             )}
@@ -158,7 +194,7 @@ export default async function OuraPage() {
                 </span>
               </div>
             )}
-          </div>
+          </StaggeredList>
         </div>
       ) : (
         <div className="card p-6 text-center">
@@ -175,7 +211,7 @@ export default async function OuraPage() {
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
             Last Night&apos;s Sleep
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <StaggeredList className="grid grid-cols-2 sm:grid-cols-4 gap-4" staggerDelay={60}>
             <div className="text-center">
               <p className="text-2xl font-bold font-heading text-[var(--foreground)] tabular-nums">
                 {formatSec(todaySnapshot.sleepDurationSec)}
@@ -185,7 +221,7 @@ export default async function OuraPage() {
             {todaySnapshot.sleepScore !== null && (
               <div className="text-center">
                 <p className="text-2xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                  {Math.round(todaySnapshot.sleepScore)}
+                  <AnimatedNumber value={Math.round(todaySnapshot.sleepScore)} decimals={0} />
                 </p>
                 <p className="text-xs text-muted mt-0.5">Sleep Score</p>
               </div>
@@ -193,7 +229,7 @@ export default async function OuraPage() {
             {todaySnapshot.sleepEfficiency !== null && (
               <div className="text-center">
                 <p className="text-2xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                  {Math.round(todaySnapshot.sleepEfficiency)}%
+                  <AnimatedNumber value={Math.round(todaySnapshot.sleepEfficiency)} decimals={0} />%
                 </p>
                 <p className="text-xs text-muted mt-0.5">Efficiency</p>
               </div>
@@ -206,7 +242,7 @@ export default async function OuraPage() {
                 <p className="text-xs text-muted mt-0.5">REM + Deep</p>
               </div>
             )}
-          </div>
+          </StaggeredList>
 
           {/* Sleep stage breakdown bar */}
           {todaySnapshot.lightSleepSec && todaySnapshot.deepSleepSec && todaySnapshot.remSleepSec && (
@@ -236,13 +272,13 @@ export default async function OuraPage() {
               </div>
               <div className="flex gap-4 text-xs text-muted">
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-blue-400" /> Light
+                  <span className="w-2 h-2 rounded-full bg-blue-400" /> Light {formatSec(todaySnapshot.lightSleepSec)}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500" /> Deep
+                  <span className="w-2 h-2 rounded-full bg-indigo-500" /> Deep {formatSec(todaySnapshot.deepSleepSec)}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-purple-500" /> REM
+                  <span className="w-2 h-2 rounded-full bg-purple-500" /> REM {formatSec(todaySnapshot.remSleepSec)}
                 </span>
               </div>
             </div>
@@ -256,7 +292,7 @@ export default async function OuraPage() {
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
             7-Day Averages
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <StaggeredList className="grid grid-cols-2 sm:grid-cols-5 gap-4" staggerDelay={60}>
             <div className="text-center">
               <p
                 className={cn(
@@ -264,25 +300,25 @@ export default async function OuraPage() {
                   readinessColor(avgReadiness)
                 )}
               >
-                {avgReadiness !== null ? `${Math.round(avgReadiness)}` : "\u2014"}
+                {avgReadiness !== null ? <AnimatedNumber value={Math.round(avgReadiness)} decimals={0} /> : "\u2014"}
               </p>
               <p className="text-xs text-muted mt-0.5">Readiness</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                {avgHrv !== null ? `${Math.round(avgHrv)}ms` : "\u2014"}
+                {avgHrv !== null ? <><AnimatedNumber value={Math.round(avgHrv)} decimals={0} />ms</> : "\u2014"}
               </p>
               <p className="text-xs text-muted mt-0.5">HRV</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                {avgRhr !== null ? `${Math.round(avgRhr)}` : "\u2014"}
+                {avgRhr !== null ? <AnimatedNumber value={Math.round(avgRhr)} decimals={0} /> : "\u2014"}
               </p>
               <p className="text-xs text-muted mt-0.5">RHR (bpm)</p>
             </div>
             <div className="text-center">
               <p className="text-xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                {avgActivity !== null ? Math.round(avgActivity).toString() : "\u2014"}
+                {avgActivity !== null ? <AnimatedNumber value={Math.round(avgActivity)} decimals={0} /> : "\u2014"}
               </p>
               <p className="text-xs text-muted mt-0.5">Activity</p>
             </div>
@@ -292,7 +328,7 @@ export default async function OuraPage() {
               </p>
               <p className="text-xs text-muted mt-0.5">Sleep</p>
             </div>
-          </div>
+          </StaggeredList>
         </div>
       )}
 
@@ -300,7 +336,9 @@ export default async function OuraPage() {
       {snapshots.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">History</h2>
-          <div className="card overflow-hidden">
+
+          {/* Desktop table */}
+          <div className="card overflow-hidden hidden sm:block">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -325,9 +363,7 @@ export default async function OuraPage() {
                         {formatDate(s.date)}
                       </td>
                       <td className="px-4 py-2.5">
-                        <span
-                          className={cn("font-bold tabular-nums", readinessColor(s.readinessScore))}
-                        >
+                        <span className={cn("font-bold tabular-nums", readinessColor(s.readinessScore))}>
                           {s.readinessScore !== null ? `${Math.round(s.readinessScore)}` : "\u2014"}
                         </span>
                       </td>
@@ -349,6 +385,26 @@ export default async function OuraPage() {
               </table>
             </div>
           </div>
+
+          {/* Mobile card list */}
+          <StaggeredList className="sm:hidden space-y-2" staggerDelay={40}>
+            {snapshots.map((s) => (
+              <div key={s.id} className="card px-4 py-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-muted">{formatDate(s.date)}</span>
+                  <span className={cn("text-sm font-bold tabular-nums", readinessColor(s.readinessScore))}>
+                    {s.readinessScore !== null ? Math.round(s.readinessScore) : "\u2014"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted">
+                  {s.hrvMs !== null && <span className="tabular-nums">HRV {Math.round(s.hrvMs)}ms</span>}
+                  {s.restingHR !== null && <span className="tabular-nums">RHR {Math.round(s.restingHR)}</span>}
+                  {s.sleepDurationSec && <span className="tabular-nums">{formatSec(s.sleepDurationSec)}</span>}
+                  {s.activityScore !== null && <span className="tabular-nums">Act {Math.round(s.activityScore)}</span>}
+                </div>
+              </div>
+            ))}
+          </StaggeredList>
         </div>
       )}
 

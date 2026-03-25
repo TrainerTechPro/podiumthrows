@@ -197,16 +197,25 @@ export function CheckInForm({ whoopData, ouraData }: { whoopData?: WhoopData; ou
     <div className="space-y-6">
       {/* Wearable data banner */}
       {deviceLabel && (
-        <div className="flex items-center gap-3 rounded-xl bg-primary-500/10 border border-primary-500/20 px-4 py-3">
-          <DeviceIcon
-            size={18}
-            strokeWidth={1.75}
-            className="text-primary-500 shrink-0"
-            aria-hidden="true"
-          />
-          <p className="text-sm font-medium text-primary-700 dark:text-primary-300">
-            {deviceLabel} data available — sleep fields pre-filled
-          </p>
+        <div className="rounded-xl bg-primary-500/10 border border-primary-500/20 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary-500/15 flex items-center justify-center shrink-0">
+              <DeviceIcon
+                size={16}
+                strokeWidth={1.75}
+                className="text-primary-500"
+                aria-hidden="true"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-primary-700 dark:text-primary-300">
+                {deviceLabel} data synced
+              </p>
+              <p className="text-xs text-primary-600/70 dark:text-primary-400/70">
+                Sleep quality &amp; hours pre-filled from your {deviceLabel.toLowerCase()}. Review and adjust before submitting.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
