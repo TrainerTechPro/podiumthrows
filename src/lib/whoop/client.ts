@@ -24,13 +24,16 @@ export async function getAccessToken(connectionId: string): Promise<string> {
 
   // Token expired — refresh (if we have a refresh token)
   if (!connection.refreshToken) {
-    // No refresh token — return current access token and hope it works
-    return decrypt(connection.accessToken);
+    throw new Error(
+      "WHOOP access token expired and no refresh token available. Please disconnect and reconnect WHOOP in Settings."
+    );
   }
 
   const decryptedRefresh = decrypt(connection.refreshToken);
   if (!decryptedRefresh) {
-    return decrypt(connection.accessToken);
+    throw new Error(
+      "WHOOP access token expired and refresh token is empty. Please disconnect and reconnect WHOOP in Settings."
+    );
   }
 
   const res = await fetch(TOKEN_URL, {

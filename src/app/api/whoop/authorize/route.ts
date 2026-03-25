@@ -44,7 +44,7 @@ export async function GET(_request: Request) {
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set(
       "scope",
-      "read:recovery read:sleep read:cycles read:workout read:profile read:body_measurement"
+      "read:recovery read:sleep read:cycles read:workout read:profile read:body_measurement offline"
     );
     authUrl.searchParams.set("state", state);
 

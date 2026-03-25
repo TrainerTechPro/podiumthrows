@@ -24,12 +24,16 @@ export async function getAccessToken(connectionId: string): Promise<string> {
 
   // Token expired — refresh
   if (!connection.refreshToken) {
-    return decryptedAccess;
+    throw new Error(
+      "Oura Ring access token expired and no refresh token available. Please disconnect and reconnect Oura Ring in Settings."
+    );
   }
 
   const decryptedRefresh = decrypt(connection.refreshToken);
   if (!decryptedRefresh) {
-    return decryptedAccess;
+    throw new Error(
+      "Oura Ring access token expired and refresh token is empty. Please disconnect and reconnect Oura Ring in Settings."
+    );
   }
 
   const res = await fetch(TOKEN_URL, {
