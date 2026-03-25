@@ -101,6 +101,16 @@ export type ReadinessCheckInItem = {
   injuryStatus: string;
   injuryNotes: string | null;
   notes: string | null;
+  source: string;
+  // Device metrics (Oura / WHOOP)
+  hrvMs: number | null;
+  restingHR: number | null;
+  spo2: number | null;
+  ouraReadiness: number | null;
+  ouraSleepScore: number | null;
+  ouraActivityScore: number | null;
+  temperatureDeviation: number | null;
+  whoopStrain: number | null;
 };
 
 /* ─── Auth Helper ─────────────────────────────────────────────────────────── */
@@ -417,6 +427,15 @@ export async function getAthleteCheckInHistory(
     injuryStatus: c.injuryStatus as string,
     injuryNotes: c.injuryNotes,
     notes: c.notes,
+    source: c.source,
+    hrvMs: c.hrvMs,
+    restingHR: c.restingHR,
+    spo2: c.spo2,
+    ouraReadiness: c.ouraReadiness,
+    ouraSleepScore: c.ouraSleepScore,
+    ouraActivityScore: c.ouraActivityScore,
+    temperatureDeviation: c.temperatureDeviation,
+    whoopStrain: c.whoopStrain,
   }));
 }
 
@@ -447,6 +466,15 @@ export async function getAthleteCheckInToday(
     injuryStatus: existing.injuryStatus as string,
     injuryNotes: existing.injuryNotes,
     notes: existing.notes,
+    source: existing.source,
+    hrvMs: existing.hrvMs,
+    restingHR: existing.restingHR,
+    spo2: existing.spo2,
+    ouraReadiness: existing.ouraReadiness,
+    ouraSleepScore: existing.ouraSleepScore,
+    ouraActivityScore: existing.ouraActivityScore,
+    temperatureDeviation: existing.temperatureDeviation,
+    whoopStrain: existing.whoopStrain,
   };
 }
 

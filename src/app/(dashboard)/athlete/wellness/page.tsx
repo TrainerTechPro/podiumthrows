@@ -1,3 +1,11 @@
+import {
+  Activity,
+  Heart,
+  Thermometer,
+  Droplets,
+  Zap,
+  CircleDot,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   requireAthleteSession,
@@ -93,6 +101,117 @@ function buildInsights(today: ReadinessCheckInItem, trend: ReadinessTrendPoint[]
   return insights.slice(0, 2);
 }
 
+/* ─── Oura / Device Helpers ──────────────────────────────────────────────── */
+
+/** Oura uses 0-100. Returns a status label matching Oura's own UI. */
+function ouraLabel(score: number): string {
+  if (score >= 85) return "Optimal";
+  if (score >= 70) return "Good";
+  if (score >= 60) return "Pay Attention";
+  return "Take It Easy";
+}
+
+function ouraScoreColor(score: number): string {
+  if (score >= 85) return "text-emerald-600 dark:text-emerald-400";
+  if (score >= 70) return "text-blue-600 dark:text-blue-400";
+  if (score >= 60) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
+}
+
+function ouraBarColor(score: number): string {
+  if (score >= 85) return "bg-emerald-500";
+  if (score >= 70) return "bg-blue-500";
+  if (score >= 60) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function formatSleepDuration(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function hasDeviceData(checkIn: ReadinessCheckInItem): boolean {
+  return checkIn.source === "OURA_AUTO" || checkIn.source === "WHOOP_AUTO";
+}
+
+/* ─── Device Vitals Card ─────────────────────────────────────────────────── */
+
+function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
+  const isOura = checkIn.source === "OURA_AUTO";
+  const vitals: { label: string; value: string; icon: typeof Heart; color: string }[] = [];
+
+  if (checkIn.hrvMs != null) {
+    vitals.push({
+      label: "HRV",
+      value: `${Math.round(checkIn.hrvMs)} ms`,
+      icon: Activity,
+      color: "text-blue-500",
+    });
+  }
+  if (checkIn.restingHR != null) {
+    vitals.push({
+      label: "Resting HR",
+      value: `${Math.round(checkIn.restingHR)} bpm`,
+      icon: Heart,
+      color: "text-red-500",
+    });
+  }
+  if (checkIn.spo2 != null) {
+    vitals.push({
+      label: "SpO2",
+      value: `${checkIn.spo2.toFixed(1)}%`,
+      icon: Droplets,
+      color: "text-cyan-500",
+    });
+  }
+  if (isOura && checkIn.temperatureDeviation != null) {
+    const sign = checkIn.temperatureDeviation >= 0 ? "+" : "";
+    vitals.push({
+      label: "Temp Dev",
+      value: `${sign}${checkIn.temperatureDeviation.toFixed(1)}\u00B0C`,
+      icon: Thermometer,
+      color: checkIn.temperatureDeviation > 0.5
+        ? "text-red-500"
+        : checkIn.temperatureDeviation < -0.5
+          ? "text-blue-500"
+          : "text-emerald-500",
+    });
+  }
+  if (!isOura && checkIn.whoopStrain != null) {
+    vitals.push({
+      label: "Strain",
+      value: checkIn.whoopStrain.toFixed(1),
+      icon: Zap,
+      color: "text-amber-500",
+    });
+  }
+
+  if (vitals.length === 0) return null;
+
+  return (
+    <div className="card px-5 py-4 space-y-3">
+      <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
+        Biometrics
+      </h3>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {vitals.map((v) => {
+          const Icon = v.icon;
+          return (
+            <div key={v.label} className="text-center space-y-1">
+              <Icon size={16} strokeWidth={1.75} className={cn(v.color, "mx-auto")} aria-hidden="true" />
+              <p className="text-lg font-bold font-heading tabular-nums text-[var(--foreground)]">
+                {v.value}
+              </p>
+              <p className="text-[10px] text-muted uppercase tracking-wider">{v.label}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Today's Result Card ────────────────────────────────────────────────── */
 
 function TodayResultCard({
@@ -103,6 +222,9 @@ function TodayResultCard({
   trend: ReadinessTrendPoint[];
 }) {
   const insights = buildInsights(checkIn, trend);
+  const isOura = checkIn.source === "OURA_AUTO";
+  const isWhoop = checkIn.source === "WHOOP_AUTO";
+  const isDevice = hasDeviceData(checkIn);
 
   // 7-day chart data (up to last 7 entries including today)
   const chartSlice = trend.slice(-7);
@@ -117,8 +239,13 @@ function TodayResultCard({
   const avg14 = older.length > 0 ? avg(older.map((p) => p.overallScore)) : null;
   const avg7 = recent7.length > 0 ? avg(recent7.map((p) => p.overallScore)) : null;
 
+  // If Oura, show actual 0-100 scores
+  const ouraReadiness = isOura ? checkIn.ouraReadiness : null;
+  const ouraSleep = isOura ? checkIn.ouraSleepScore : null;
+  const ouraActivity = isOura ? checkIn.ouraActivityScore : null;
+
   const factors = [
-    { label: "Sleep", value: checkIn.sleepQuality, hint: `${checkIn.sleepHours}h slept` },
+    { label: "Sleep", value: checkIn.sleepQuality, hint: formatSleepDuration(checkIn.sleepHours) },
     {
       label: "Soreness",
       value: checkIn.soreness,
@@ -130,12 +257,95 @@ function TodayResultCard({
 
   return (
     <div className="space-y-5">
-      {/* Score hero */}
+      {/* Device source badge */}
+      {isDevice && (
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-100 dark:bg-surface-800 text-xs font-medium text-muted rounded-full">
+            {isOura ? (
+              <><CircleDot size={10} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" /> Oura Ring</>
+            ) : (
+              <><Zap size={10} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" /> WHOOP</>
+            )}
+          </span>
+          <span className="text-[10px] text-muted">Auto-synced</span>
+        </div>
+      )}
+
+      {/* Oura-style score cards (0-100 scale) — shown when device data is available */}
+      {isOura && ouraReadiness != null && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Readiness */}
+          <div className={cn("card px-5 py-4 border", scoreBg(checkIn.overallScore))}>
+            <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Readiness</p>
+            <div className="flex items-baseline gap-2">
+              <span className={cn("text-4xl font-bold font-heading tabular-nums", ouraScoreColor(ouraReadiness))}>
+                {Math.round(ouraReadiness)}
+              </span>
+              <span className="text-xs text-muted">/100</span>
+            </div>
+            <p className={cn("text-xs font-medium mt-1", ouraScoreColor(ouraReadiness))}>
+              {ouraLabel(ouraReadiness)}
+            </p>
+            <div className="mt-2 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
+              <div
+                className={cn("h-full rounded-full", ouraBarColor(ouraReadiness))}
+                style={{ width: `${ouraReadiness}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Sleep */}
+          {ouraSleep != null && (
+            <div className="card px-5 py-4">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Sleep</p>
+              <div className="flex items-baseline gap-2">
+                <span className={cn("text-4xl font-bold font-heading tabular-nums", ouraScoreColor(ouraSleep))}>
+                  {Math.round(ouraSleep)}
+                </span>
+                <span className="text-xs text-muted">/100</span>
+              </div>
+              <p className="text-xs text-muted mt-1">
+                {formatSleepDuration(checkIn.sleepHours)}
+              </p>
+              <div className="mt-2 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full", ouraBarColor(ouraSleep))}
+                  style={{ width: `${ouraSleep}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Activity */}
+          {ouraActivity != null && (
+            <div className="card px-5 py-4">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Activity</p>
+              <div className="flex items-baseline gap-2">
+                <span className={cn("text-4xl font-bold font-heading tabular-nums", ouraScoreColor(Math.min(ouraActivity, 100)))}>
+                  {Math.round(ouraActivity)}
+                </span>
+                <span className="text-xs text-muted">/100</span>
+              </div>
+              <p className={cn("text-xs font-medium mt-1", ouraActivity >= 100 ? "text-emerald-600 dark:text-emerald-400" : "text-muted")}>
+                {ouraActivity >= 100 ? "Goal Reached" : ouraLabel(ouraActivity)}
+              </p>
+              <div className="mt-2 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full", ouraBarColor(Math.min(ouraActivity, 100)))}
+                  style={{ width: `${Math.min(ouraActivity, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mapped readiness score (always shown — this is what the coach sees) */}
       <div className={cn("card px-5 py-5 border", scoreBg(checkIn.overallScore))}>
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-1">
-              Today&apos;s Readiness Score
+              {isDevice ? "Mapped Readiness Score" : "Today\u2019s Readiness Score"}
             </p>
             <p
               className={cn(
@@ -208,11 +418,21 @@ function TodayResultCard({
         )}
       </div>
 
+      {/* Device vitals (HRV, RHR, SpO2, Temp) */}
+      {isDevice && <DeviceVitalsCard checkIn={checkIn} />}
+
       {/* Factor breakdown */}
       <div className="card px-5 py-4 space-y-3">
-        <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
-          Factor Breakdown
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
+            Factor Breakdown
+          </h3>
+          {isDevice && (
+            <span className="text-[10px] text-muted italic">
+              Soreness, Stress, Energy are self-reported defaults
+            </span>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           {factors.map((f) => (
             <div key={f.label} className="space-y-1">

@@ -111,6 +111,7 @@ interface SnapshotData {
   spo2: number | null;
   sleepScore: number | null;
   sleepDurationSec: number | null;
+  sleepEfficiency: number | null;
   activityScore: number | null;
   temperatureDeviation: number | null;
 }
@@ -154,6 +155,7 @@ export async function getOrCreateAutoCheckIn(
     restingHR: snapshot.restingHR,
     spo2: snapshot.spo2,
     ouraReadiness: snapshot.readinessScore,
+    ouraSleepScore: snapshot.sleepScore ?? null,
     ouraActivityScore: snapshot.activityScore,
     temperatureDeviation: snapshot.temperatureDeviation,
   };

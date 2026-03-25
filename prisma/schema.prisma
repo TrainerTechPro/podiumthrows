@@ -597,8 +597,9 @@ model ReadinessCheckIn {
   whoopStrain  Float?
   source       String    @default("MANUAL")
 
-  // Oura Ring integration fields
+  // Oura Ring integration fields (raw 0-100 scores)
   ouraReadiness        Float?
+  ouraSleepScore       Float?
   ouraActivityScore    Float?
   temperatureDeviation Float?
 
