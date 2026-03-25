@@ -16,15 +16,20 @@ export default async function AthleteIntegrationsPage() {
   });
   if (!athlete) redirect("/login");
 
-  let whoopConnection: { syncMode: string; lastSyncAt: Date | null } | null = null;
+  let whoopConnection: { syncMode: string; lastSyncAt: Date | null; refreshToken: string; scopes: string } | null = null;
   try {
     whoopConnection = await prisma.whoopConnection.findUnique({
       where: { athleteId: athlete.id },
-      select: { syncMode: true, lastSyncAt: true },
+      select: { syncMode: true, lastSyncAt: true, refreshToken: true, scopes: true },
     });
   } catch {
     // Table may not exist yet
   }
+
+  // Detect unhealthy connection: empty refresh token or missing offline scope
+  const whoopNeedsReauth = whoopConnection
+    ? !whoopConnection.refreshToken || !whoopConnection.scopes.includes("offline")
+    : false;
 
   let ouraConnection: { syncMode: string; lastSyncAt: Date | null } | null = null;
   try {
@@ -62,6 +67,7 @@ export default async function AthleteIntegrationsPage() {
               connected={!!whoopConnection}
               syncMode={whoopConnection?.syncMode}
               lastSyncAt={whoopConnection?.lastSyncAt?.toISOString() ?? null}
+              needsReauth={whoopNeedsReauth}
             />
           </div>
           <div>

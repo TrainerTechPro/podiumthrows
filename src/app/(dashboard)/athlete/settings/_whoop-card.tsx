@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Watch, RefreshCw, Unlink } from "lucide-react";
+import { Watch, RefreshCw, Unlink, AlertTriangle } from "lucide-react";
 import { Button, Badge, ConfirmDialog } from "@/components";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -13,6 +13,7 @@ interface WhoopCardProps {
   connected: boolean;
   syncMode?: string;
   lastSyncAt?: string | null;
+  needsReauth?: boolean;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */

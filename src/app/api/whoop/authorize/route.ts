@@ -17,16 +17,15 @@ export async function GET(_request: Request) {
     // Find athlete profile (works for ATHLETE role or COACH in training mode)
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true, whoopConnection: { select: { id: true } } },
+      select: { id: true },
     });
 
     if (!athlete) {
       return NextResponse.json({ error: "Athlete profile not found" }, { status: 404 });
     }
 
-    if (athlete.whoopConnection) {
-      return NextResponse.json({ error: "WHOOP is already connected" }, { status: 409 });
-    }
+    // Allow re-authorization even if already connected — the callback does upsert.
+    // This lets users fix expired/missing refresh tokens without disconnecting first.
 
     const clientId = process.env.WHOOP_CLIENT_ID;
     if (!clientId) {
