@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAthleteSession, getAthleteStats } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import {
@@ -6,8 +7,11 @@ import {
   type DashboardConfig,
 } from "./_widget-registry";
 import { StaggeredList } from "@/components";
+import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { CustomizeTrigger } from "./_customize-trigger";
+import { WearableDashboard } from "../_wearable-dashboard";
+import { avg, type WhoopRow, type OuraRow } from "../_wearable-helpers";
 
 /* ─── Fetchers ──────────────────────────────────────────────────────────── */
 
@@ -75,13 +79,25 @@ export default async function AthleteDashboardPage() {
   const config: DashboardConfig = resolveConfig(profile?.dashboardConfig);
   const enabled = config.order.filter((w) => config.widgets.includes(w));
 
-  // Parallel fetch: only enabled widgets + header stats
-  const [stats, ...entries] = await Promise.all([
+  // Parallel fetch: enabled widgets + header stats + wearable connections
+  const [stats, whoopConn, ouraConn, ...entries] = await Promise.all([
     getAthleteStats(athlete.id),
+    prisma.whoopConnection.findUnique({
+      where: { athleteId: athlete.id },
+      select: { id: true, lastSyncAt: true },
+    }),
+    prisma.ouraConnection.findUnique({
+      where: { athleteId: athlete.id },
+      select: { id: true, lastSyncAt: true },
+    }),
     ...enabled.map(async (w) => [w, await FETCHERS[w](athlete.id)] as const),
   ]);
 
   const dataMap = Object.fromEntries(entries as [WidgetId, unknown][]);
+  const hasWearable = whoopConn !== null || ouraConn !== null;
+
+  // Fetch wearable snapshot data if connected
+  const wearableData = await fetchWearableData(whoopConn, ouraConn);
 
   // Time-of-day greeting
   const hour = new Date().getHours();
@@ -111,18 +127,152 @@ export default async function AthleteDashboardPage() {
         <CustomizeTrigger config={config} />
       </div>
 
-      {/* Widgets in order */}
-      <StaggeredList className="space-y-5" staggerDelay={60}>
-        {enabled.map((widgetId) => (
-          <WidgetRenderer
-            key={widgetId}
-            id={widgetId}
-            data={dataMap[widgetId]}
-          />
-        ))}
-      </StaggeredList>
+      {/* Tabbed view: Training + Health */}
+      {hasWearable ? (
+        <Tabs defaultTab="training">
+          <TabList variant="underline">
+            <TabTrigger id="training" variant="underline">Training</TabTrigger>
+            <TabTrigger id="health" variant="underline">Health</TabTrigger>
+          </TabList>
+
+          <TabPanel id="training">
+            <StaggeredList className="space-y-5" staggerDelay={60}>
+              {enabled.map((widgetId) => (
+                <WidgetRenderer
+                  key={widgetId}
+                  id={widgetId}
+                  data={dataMap[widgetId]}
+                />
+              ))}
+            </StaggeredList>
+          </TabPanel>
+
+          <TabPanel id="health">
+            <div className="space-y-8">
+              {wearableData.whoop && (
+                <WearableDashboard
+                  device="whoop"
+                  today={wearableData.whoop.todayRow}
+                  history={wearableData.whoop.historyRows}
+                  averages={wearableData.whoop.averages}
+                  lastSyncAt={wearableData.whoop.lastSyncAt}
+                />
+              )}
+              {wearableData.oura && (
+                <WearableDashboard
+                  device="oura"
+                  today={wearableData.oura.todayRow}
+                  history={wearableData.oura.historyRows}
+                  averages={wearableData.oura.averages}
+                  lastSyncAt={wearableData.oura.lastSyncAt}
+                />
+              )}
+              <p className="text-xs text-muted text-center">
+                <Link href="/athlete/settings" className="text-primary-500 hover:underline">
+                  Manage integrations
+                </Link>
+              </p>
+            </div>
+          </TabPanel>
+        </Tabs>
+      ) : (
+        /* No wearable connected — show training widgets directly (no tabs) */
+        <StaggeredList className="space-y-5" staggerDelay={60}>
+          {enabled.map((widgetId) => (
+            <WidgetRenderer
+              key={widgetId}
+              id={widgetId}
+              data={dataMap[widgetId]}
+            />
+          ))}
+        </StaggeredList>
+      )}
     </div>
   );
+}
+
+/* ─── Wearable Data Fetcher ─────────────────────────────────────────────── */
+
+interface WearableDataResult {
+  whoop: { todayRow: WhoopRow | null; historyRows: WhoopRow[]; averages: Record<string, number | null>; lastSyncAt: Date | null } | null;
+  oura: { todayRow: OuraRow | null; historyRows: OuraRow[]; averages: Record<string, number | null>; lastSyncAt: Date | null } | null;
+}
+
+async function fetchWearableData(
+  whoopConn: { id: string; lastSyncAt: Date | null } | null,
+  ouraConn: { id: string; lastSyncAt: Date | null } | null,
+): Promise<WearableDataResult> {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const result: WearableDataResult = { whoop: null, oura: null };
+
+  if (whoopConn) {
+    const snapshots = await prisma.whoopDailySnapshot.findMany({
+      where: { connectionId: whoopConn.id },
+      orderBy: { date: "desc" },
+      take: 30,
+    });
+    const last7 = snapshots.slice(0, 7);
+    const historyRows: WhoopRow[] = snapshots.map((s) => ({
+      id: s.id, date: s.date,
+      recoveryScore: s.recoveryScore, hrvMs: s.hrvMs, restingHR: s.restingHR,
+      spo2: s.spo2, skinTempC: s.skinTempC, strain: s.strain,
+      sleepPerformance: s.sleepPerformance, sleepDurationMs: s.sleepDurationMs,
+      sleepEfficiency: s.sleepEfficiency, lightSleepMs: s.lightSleepMs,
+      swsSleepMs: s.swsSleepMs, remSleepMs: s.remSleepMs,
+    }));
+    result.whoop = {
+      todayRow: historyRows.find((r) => r.date === todayStr) ?? null,
+      historyRows,
+      averages: {
+        recoveryScore: avg(last7.map((s) => s.recoveryScore)),
+        hrvMs: avg(last7.map((s) => s.hrvMs)),
+        restingHR: avg(last7.map((s) => s.restingHR)),
+        spo2: avg(last7.map((s) => s.spo2)),
+        skinTempC: avg(last7.map((s) => s.skinTempC)),
+        strain: avg(last7.map((s) => s.strain)),
+        sleepDurationMs: avg(last7.map((s) => s.sleepDurationMs)),
+        sleepEfficiency: avg(last7.map((s) => s.sleepEfficiency)),
+        sleepPerformance: avg(last7.map((s) => s.sleepPerformance)),
+      },
+      lastSyncAt: whoopConn.lastSyncAt,
+    };
+  }
+
+  if (ouraConn) {
+    const snapshots = await prisma.ouraDailySnapshot.findMany({
+      where: { connectionId: ouraConn.id },
+      orderBy: { date: "desc" },
+      take: 30,
+    });
+    const last7 = snapshots.slice(0, 7);
+    const historyRows: OuraRow[] = snapshots.map((s) => ({
+      id: s.id, date: s.date,
+      readinessScore: s.readinessScore, hrvMs: s.hrvMs, restingHR: s.restingHR,
+      spo2: s.spo2, temperatureDeviation: s.temperatureDeviation,
+      sleepScore: s.sleepScore, sleepDurationSec: s.sleepDurationSec,
+      sleepEfficiency: s.sleepEfficiency, lightSleepSec: s.lightSleepSec,
+      deepSleepSec: s.deepSleepSec, remSleepSec: s.remSleepSec,
+      activityScore: s.activityScore, steps: s.steps,
+    }));
+    result.oura = {
+      todayRow: historyRows.find((r) => r.date === todayStr) ?? null,
+      historyRows,
+      averages: {
+        readinessScore: avg(last7.map((s) => s.readinessScore)),
+        hrvMs: avg(last7.map((s) => s.hrvMs)),
+        restingHR: avg(last7.map((s) => s.restingHR)),
+        spo2: avg(last7.map((s) => s.spo2)),
+        temperatureDeviation: avg(last7.map((s) => s.temperatureDeviation)),
+        sleepScore: avg(last7.map((s) => s.sleepScore)),
+        sleepDurationSec: avg(last7.map((s) => s.sleepDurationSec)),
+        sleepEfficiency: avg(last7.map((s) => s.sleepEfficiency)),
+        activityScore: avg(last7.map((s) => s.activityScore)),
+      },
+      lastSyncAt: ouraConn.lastSyncAt,
+    };
+  }
+
+  return result;
 }
 
 /* ─── Widget Renderer ───────────────────────────────────────────────────── */
