@@ -53,6 +53,7 @@
     "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18",
+    "react-muscle-highlighter": "^1.2.0",
     "recharts": "^2.15.4",
     "resend": "^6.9.3",
     "stripe": "^20.3.1",

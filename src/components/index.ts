@@ -8,6 +8,7 @@ export * from "./ui/Skeleton";
 export * from "./ui/Input";
 export * from "./ui/Select";
 export * from "./ui/RPESlider";
+export * from "./ui/InteractiveBodyMap";
 
 /* ─── Display ────────────────────────────────────────────────────────────── */
 export * from "./ui/Card";
