@@ -6,18 +6,7 @@ import type {
   LiftEntry,
   SessionAction,
 } from "./use-session-reducer";
-
-// ── Constants ────────────────────────────────────────────────────────
-
-const CLASSIFICATION_COLORS: Record<string, string> = {
-  CE: "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400",
-  SD: "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
-  SDE: "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
-  SP: "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
-  SPE: "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
-  GP: "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400",
-  GPE: "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400",
-};
+import { CLASSIFICATION_COLORS } from "@/lib/throws/constants";
 
 // ── Props ────────────────────────────────────────────────────────────
 

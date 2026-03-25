@@ -480,3 +480,28 @@ export function serializeEvents(events: ThrowEvent[]): string {
 export function primaryEvent(eventStr: string): ThrowEvent {
   return parseEvents(eventStr)[0] ?? "SHOT_PUT";
 }
+
+// ── Classification Display Colors ────────────────────────────────────
+// Canonical Tailwind class strings for Bondarchuk exercise classifications.
+// CE = Competitive Exercise (emerald), SD/SDE = Specific Developmental (blue),
+// SP/SPE = Specific Preparatory (amber), GP/GPE = General Preparatory (purple)
+
+export const CLASSIFICATION_COLORS: Record<string, string> = {
+  CE: "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400",
+  SD: "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
+  SDE: "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400",
+  SP: "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
+  SPE: "bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
+  GP: "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400",
+  GPE: "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400",
+};
+
+export const CLASSIFICATION_COLOR_PARTS: Record<string, { bg: string; text: string }> = {
+  CE: { bg: "bg-emerald-100 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400" },
+  SD: { bg: "bg-blue-100 dark:bg-blue-900/20", text: "text-blue-700 dark:text-blue-400" },
+  SDE: { bg: "bg-blue-100 dark:bg-blue-900/20", text: "text-blue-700 dark:text-blue-400" },
+  SP: { bg: "bg-amber-100 dark:bg-amber-900/20", text: "text-amber-700 dark:text-amber-400" },
+  SPE: { bg: "bg-amber-100 dark:bg-amber-900/20", text: "text-amber-700 dark:text-amber-400" },
+  GP: { bg: "bg-purple-100 dark:bg-purple-900/20", text: "text-purple-700 dark:text-purple-400" },
+  GPE: { bg: "bg-purple-100 dark:bg-purple-900/20", text: "text-purple-700 dark:text-purple-400" },
+};

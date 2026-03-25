@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import Link from "next/link";
 import { GeneratingOverlay } from "@/components/throws/GeneratingOverlay";
+import { CLASSIFICATION_COLOR_PARTS } from "@/lib/throws/constants";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -190,12 +191,6 @@ const PHASE_COLORS: Record<string, string> = {
 
 const DAY_SHORT = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const CLASSIFICATION_COLORS: Record<string, { bg: string; text: string }> = {
-  CE: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-800 dark:text-amber-300" },
-  SD: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-300" },
-  SP: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-800 dark:text-green-300" },
-  GP: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-800 dark:text-purple-300" },
-};
 
 // ── Form State ──────────────────────────────────────────────────────────
 
@@ -1894,7 +1889,7 @@ function SandboxPreviewCard({
                         <div className="space-y-1">
                           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           {phase.exerciseComplex.map((ex: any, ei: number) => {
-                            const cls = CLASSIFICATION_COLORS[ex.classification] || {
+                            const cls = CLASSIFICATION_COLOR_PARTS[ex.classification] || {
                               bg: "bg-gray-100 dark:bg-gray-800",
                               text: "text-gray-700 dark:text-gray-300",
                             };
@@ -1994,7 +1989,7 @@ function SandboxPreviewCard({
                           <div className="space-y-1">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {session.throws.map((t: any, ti: number) => {
-                              const cls = CLASSIFICATION_COLORS[t.category] || {
+                              const cls = CLASSIFICATION_COLOR_PARTS[t.category] || {
                                 bg: "bg-gray-100 dark:bg-gray-800",
                                 text: "text-gray-700 dark:text-gray-300",
                               };
@@ -2038,7 +2033,7 @@ function SandboxPreviewCard({
                           <div className="space-y-1">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {session.strength.map((s: any, si2: number) => {
-                              const cls = CLASSIFICATION_COLORS[s.classification] || {
+                              const cls = CLASSIFICATION_COLOR_PARTS[s.classification] || {
                                 bg: "bg-gray-100 dark:bg-gray-800",
                                 text: "text-gray-700 dark:text-gray-300",
                               };

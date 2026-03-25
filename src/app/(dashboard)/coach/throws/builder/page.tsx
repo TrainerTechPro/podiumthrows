@@ -17,6 +17,7 @@ import {
  REST_INTERVALS,
  EVENT_CODE_MAP,
  GENDER_CODE_MAP,
+ CLASSIFICATION_COLORS,
  serializeEvents,
  type ThrowEvent,
  type Gender,
@@ -86,15 +87,6 @@ const BLOCK_BORDER_COLORS: Record<BlockType, string> = {
  PLYOMETRIC: "border-l-blue-500",
  COOLDOWN: "border-l-cyan-400",
  NOTES: "border-l-purple-400",
-};
-
-// ── Classification color chips ──────────────────────────────────────
-
-const CLASSIFICATION_COLORS: Record<Classification, string> = {
- CE: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
- SD: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
- SP: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
- GP: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300",
 };
 
 // ── Component ───────────────────────────────────────────────────────
