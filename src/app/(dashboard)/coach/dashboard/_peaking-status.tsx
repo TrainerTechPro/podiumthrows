@@ -115,8 +115,7 @@ export function PeakingStatus({
             key={`${row.athleteId}-${row.competitionName}-${i}`}
             href={`/coach/athletes/${row.athleteId}`}
             className={cn(
-              "flex items-center gap-3 px-4 py-3 transition-colors",
-              "hover:bg-surface-50 dark:hover:bg-surface-800/50"
+              "flex items-center gap-3 px-4 py-3 card-interactive"
             )}
           >
             <Avatar

@@ -71,7 +71,7 @@ export function UpcomingSessionsWidget({
               <Link
                 key={session.id}
                 href={`/athlete/sessions/${session.id}`}
-                className="flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors group"
+                className="flex items-center gap-4 px-4 py-3.5 rounded-xl card-interactive group"
               >
                 <div
                   className={cn(

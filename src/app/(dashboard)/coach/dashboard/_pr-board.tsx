@@ -55,8 +55,7 @@ export function PRBoard({ prs }: PRBoardProps) {
             key={`${pr.athleteId}-${pr.event}-${pr.date}-${i}`}
             href={`/coach/athletes/${pr.athleteId}`}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors",
-              "hover:bg-surface-50 dark:hover:bg-surface-800/50"
+              "flex items-center gap-3 rounded-lg px-3 py-2 card-interactive"
             )}
           >
             <Avatar
@@ -104,8 +103,7 @@ export function PRBoard({ prs }: PRBoardProps) {
             key={`mobile-${pr.athleteId}-${pr.event}-${pr.date}-${i}`}
             href={`/coach/athletes/${pr.athleteId}`}
             className={cn(
-              "flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 transition-colors",
-              "hover:bg-surface-50 dark:hover:bg-surface-800/50"
+              "flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 card-interactive"
             )}
           >
             <Avatar

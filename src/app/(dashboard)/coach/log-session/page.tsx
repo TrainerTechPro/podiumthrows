@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { LogSessionWizard } from "../../athlete/log-session/_log-session-wizard";
 
 export default async function CoachLogSessionPage({
@@ -18,6 +19,7 @@ export default async function CoachLogSessionPage({
 
   return (
     <div className="py-6 px-4">
+      <ScrollProgressBar />
       <LogSessionWizard
         apiEndpoint="/api/coach/log-session"
         sessionsPath="/athlete/sessions"

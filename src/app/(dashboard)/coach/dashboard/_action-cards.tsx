@@ -49,8 +49,7 @@ export function ActionCards({ actions, depth }: ActionCardsProps) {
             key={action.id}
             href={action.href ?? `/coach/athletes/${action.athleteId}`}
             className={cn(
-              "group flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 border-l-[3px] transition-colors",
-              "hover:bg-surface-50 dark:hover:bg-surface-800/50",
+              "group flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 border-l-[3px] card-interactive",
               borderColorMap[action.severity]
             )}
           >

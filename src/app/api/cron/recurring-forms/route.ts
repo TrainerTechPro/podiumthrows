@@ -4,6 +4,8 @@ import { shouldRunToday, calculateNextRunDate } from "@/lib/forms/recurring-sche
 import type { RecurrenceFrequency } from "@/lib/forms/types";
 import { logger } from "@/lib/logger";
 
+export const maxDuration = 60;
+
 /**
  * GET /api/cron/recurring-forms
  * Vercel Cron — runs daily at 6 AM UTC.

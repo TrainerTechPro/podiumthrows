@@ -90,7 +90,7 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
             {entries.map((entry) => (
               <tr
                 key={entry.athleteId}
-                className="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+                className="card-interactive"
               >
                 <td className="px-4 py-2.5">
                   <Link
@@ -161,8 +161,7 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
             key={`mobile-${entry.athleteId}`}
             href={`/coach/athletes/${entry.athleteId}`}
             className={cn(
-              "flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 transition-colors",
-              "hover:bg-surface-50 dark:hover:bg-surface-800/50"
+              "flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 card-interactive"
             )}
           >
             <Avatar

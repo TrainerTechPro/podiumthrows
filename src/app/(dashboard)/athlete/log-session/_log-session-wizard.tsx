@@ -7,6 +7,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/throws";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
+import { useToast } from "@/components/ui/Toast";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -187,6 +188,7 @@ export function LogSessionWizard({
   editSessionId,
 }: WizardProps) {
   const router = useRouter();
+  const toast = useToast();
   const [step, setStep] = useState<Step>("event");
   const [isEditing, setIsEditing] = useState(!!editSessionId);
   const [editLoading, setEditLoading] = useState(!!editSessionId);
@@ -294,6 +296,14 @@ export function LogSessionWizard({
       .catch(() => {});
   }, [event]);
 
+  // Warn before navigating away mid-session
+  useEffect(() => {
+    if (step === "done" || step === "event") return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [step]);
+
   function addDrill() {
     setDrills((prev) => [
       ...prev,
@@ -383,7 +393,15 @@ export function LogSessionWizard({
       if (!res.ok) throw new Error(data.error || "Failed to save session");
 
       // Capture PR and warning data from response
-      if (data.prs?.length) setResponsePRs(data.prs);
+      if (data.prs?.length) {
+        setResponsePRs(data.prs);
+        for (const pr of data.prs) {
+          toast.celebration("New Personal Best!", {
+            highlight: `${pr.distance.toFixed(2)}m`,
+            description: pr.implement || event.replace(/_/g, " "),
+          });
+        }
+      }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
 
       setStep("done");
@@ -438,10 +456,10 @@ export function LogSessionWizard({
               key={ev.value}
               type="button"
               onClick={() => setEvent(ev.value)}
-              className={`card p-4 sm:p-5 text-center transition-all ${
+              className={`card card-interactive p-4 sm:p-5 text-center ${
                 event === ev.value
                   ? "ring-2 ring-primary-500 bg-primary-500/5"
-                  : "hover:bg-surface-50 dark:hover:bg-surface-900"
+                  : ""
               }`}
             >
               <span className="text-2xl block mb-1">{ev.icon}</span>

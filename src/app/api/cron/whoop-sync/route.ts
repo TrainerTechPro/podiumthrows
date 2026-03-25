@@ -3,6 +3,8 @@ import { syncWhoopData } from "@/lib/whoop/sync";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
+export const maxDuration = 60;
+
 /**
  * GET /api/cron/whoop-sync
  * Vercel Cron — runs daily at 8:00 AM UTC.

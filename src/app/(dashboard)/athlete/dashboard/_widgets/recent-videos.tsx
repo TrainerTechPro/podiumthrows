@@ -54,7 +54,7 @@ export function RecentVideosWidget({ videos }: { videos: VideoItem[] }) {
             <Link
               key={video.id}
               href={`/athlete/videos/${video.id}`}
-              className="group"
+              className="card-interactive group rounded-lg"
             >
               {/* Thumbnail */}
               <div className="relative aspect-video rounded-lg overflow-hidden bg-surface-100 dark:bg-surface-800">

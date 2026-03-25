@@ -3,6 +3,8 @@ import { syncOuraData } from "@/lib/oura/sync";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
+export const maxDuration = 60;
+
 /**
  * GET /api/cron/oura-sync
  * Vercel Cron — runs daily at 8:30 AM UTC.

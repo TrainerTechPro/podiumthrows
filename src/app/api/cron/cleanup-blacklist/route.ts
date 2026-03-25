@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cleanupExpired } from "@/lib/token-blacklist";
 import { logger } from "@/lib/logger";
 
+export const maxDuration = 60;
+
 /**
  * GET /api/cron/cleanup-blacklist
  * Vercel Cron — runs daily at midnight UTC.

@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { sendWeeklyDigestEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 
+export const maxDuration = 60;
+
 /**
  * GET /api/cron/weekly-digest
  * Vercel Cron — runs every Sunday at 8 AM UTC.

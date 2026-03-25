@@ -47,7 +47,7 @@ export function PendingQuestionnairesWidget({
             <Link
               key={q.id}
               href={`/athlete/questionnaires/${q.id}`}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors group"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg card-interactive group"
             >
               <div className="w-8 h-8 rounded-lg bg-warning-50 dark:bg-warning-500/10 flex items-center justify-center shrink-0">
                 <ClipboardList
