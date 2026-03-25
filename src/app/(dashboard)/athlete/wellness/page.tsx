@@ -223,7 +223,6 @@ function TodayResultCard({
 }) {
   const insights = buildInsights(checkIn, trend);
   const isOura = checkIn.source === "OURA_AUTO";
-  const isWhoop = checkIn.source === "WHOOP_AUTO";
   const isDevice = hasDeviceData(checkIn);
 
   // 7-day chart data (up to last 7 entries including today)
