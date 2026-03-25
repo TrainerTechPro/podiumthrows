@@ -19,10 +19,7 @@ const ImmersiveVideoOverlay = dynamic(
   () => import("@/components/video/ImmersiveVideoOverlay").then((m) => m.ImmersiveVideoOverlay),
   { ssr: false }
 );
-import {
-  VideoAnalysisWorkspace,
-  type VideoAnalysisWorkspaceHandle,
-} from "@/components/video/VideoAnalysisWorkspace";
+import { VideoAnalysisWorkspace } from "@/components/video/VideoAnalysisWorkspace";
 import { formatEventType } from "@/lib/utils";
 import { formatTimestamp } from "@/components/video/types";
 
@@ -48,7 +45,7 @@ type CompareVideo = {
 export function VideoEditor({ video, athletes }: Props) {
   const router = useRouter();
   const { success: toastSuccess, error: toastError } = useToast();
-  const workspaceRef = useRef<VideoAnalysisWorkspaceHandle>(null);
+  const seekRef = useRef<((time: number) => void) | null>(null);
 
   // Primary video state (updated by VideoAnalysisWorkspace)
   const [currentTime, setCurrentTime] = useState(0);
@@ -232,7 +229,7 @@ export function VideoEditor({ video, athletes }: Props) {
   /* ── Seek helper (delegates to workspace) ────────────────────────────── */
 
   function seekTo(time: number) {
-    workspaceRef.current?.seekTo(time);
+    seekRef.current?.(time);
   }
 
   /* ── Render ──────────────────────────────────────────────────────────── */
@@ -412,7 +409,7 @@ export function VideoEditor({ video, athletes }: Props) {
           {/* The workspace handles all video rendering, controls, JogWheel, and sync */}
           {(analysisMode === "single" || compareVideo) && (
             <VideoAnalysisWorkspace
-              ref={workspaceRef}
+              seekRef={seekRef}
               videoA={{
                 src: video.url,
                 poster: video.thumbnailUrl ?? undefined,
