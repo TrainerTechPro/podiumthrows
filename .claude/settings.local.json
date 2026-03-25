@@ -117,7 +117,26 @@
       "Bash(npm i:*)",
       "Bash(test -f \"/Users/anthonysommers/claude-code-projects/Podium Throws/src/app/\\(dashboard\\)/coach/throws/profile/page.tsx\")",
       "Bash(POSTGRES_PRISMA_URL=\"postgresql://anthonysommers@localhost:5432/podium_throws\" POSTGRES_URL_NON_POOLING=\"postgresql://anthonysommers@localhost:5432/podium_throws\" npx prisma migrate dev --name multi_event_throws_profile)",
-      "Bash(POSTGRES_PRISMA_URL=\"postgresql://anthonysommers@localhost:5432/podium_throws\" POSTGRES_URL_NON_POOLING=\"postgresql://anthonysommers@localhost:5432/podium_throws\" npx prisma migrate dev --name multi_event_throws_profile --create-only)"
+      "Bash(POSTGRES_PRISMA_URL=\"postgresql://anthonysommers@localhost:5432/podium_throws\" POSTGRES_URL_NON_POOLING=\"postgresql://anthonysommers@localhost:5432/podium_throws\" npx prisma migrate dev --name multi_event_throws_profile --create-only)",
+      "Bash(chmod:*)",
+      "Bash(npx tsx -e \":*)",
+      "Bash(wc -l src/app/\\\\\\(dashboard\\\\\\)/athlete/self-program/create/_steps/*.tsx)",
+      "Bash(claude:*)",
+      "Bash(bun --version)",
+      "Bash(mkdir -p ~/.claude/channels/discord/approved)",
+      "Bash(~/.claude/channels/discord/approved/483044487682064385)",
+      "mcp__plugin_discord_discord__fetch_messages",
+      "mcp__plugin_discord_discord__reply",
+      "mcp__plugin_fakechat_fakechat__reply",
+      "Bash(git clone:*)",
+      "Read(//private/tmp/accesslint-marketplace/**)",
+      "Bash(mkdir -p ~/.claude/skills)",
+      "Bash(cp -r /tmp/accesslint-marketplace/plugins/accesslint/skills/* ~/.claude/skills/)",
+      "Read(//Users/anthonysommers/.claude/skills/**)",
+      "Bash(cat src/app/\\\\\\(dashboard\\\\\\)/coach/questionnaires/_questionnaire-builder.tsx)",
+      "Bash(npm uninstall:*)",
+      "WebFetch(domain:docs.pencil.dev)"
     ]
-  }
+  },
+  "outputStyle": "Explanatory"
 }
