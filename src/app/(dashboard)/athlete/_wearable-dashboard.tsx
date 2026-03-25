@@ -9,7 +9,6 @@ import {
   type WhoopRow,
   type OuraRow,
   scoreColor,
-  scoreBg,
   scoreLabel,
   spo2Color,
   skinTempColor,
@@ -32,7 +31,7 @@ interface WearableDashboardProps {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function shortDay(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", { weekday: "short" });
+  return new Date(iso + "T12:00:00").toLocaleDateString("en-US", { weekday: "short" });
 }
 
 /** Trend arrow: show if |delta| > 2% of avg. Invert for RHR (lower is better). */
@@ -66,7 +65,7 @@ function TrendArrow({
       ) : (
         <TrendingDown size={10} strokeWidth={1.75} aria-hidden="true" />
       )}
-      {Math.abs(delta).toFixed(delta % 1 === 0 ? 0 : 1)}
+      {Math.abs(delta).toFixed(Number.isInteger(delta) ? 0 : 1)}
     </span>
   );
 }
@@ -752,7 +751,7 @@ export function WearableDashboard({
       {/* Last sync timestamp */}
       {lastSyncAt && (
         <p className="text-xs text-muted text-center">
-          Last synced {lastSyncAt.toLocaleString()}
+          Last synced {lastSyncAt.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
         </p>
       )}
     </div>
