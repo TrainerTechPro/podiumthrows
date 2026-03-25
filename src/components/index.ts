@@ -34,6 +34,8 @@ export * from "./ui/ScrollProgressBar";
 export * from "./ui/DataTable";
 export { useDataTable } from "./ui/useDataTable";
 export type { UseDataTableOptions, UseDataTableReturn } from "./ui/useDataTable";
+// Compound component API — DataTableProvider is exported via export * above,
+// but listed here explicitly for documentation clarity.
 
 /* ─── Feedback ───────────────────────────────────────────────────────────── */
 export * from "./ui/EmptyState";

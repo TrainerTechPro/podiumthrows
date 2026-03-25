@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   Search as SearchLucide,
@@ -12,6 +12,31 @@ import {
 import { EmptyState } from "./EmptyState";
 import { SkeletonTableRow } from "./Skeleton";
 import { useDataTable } from "./useDataTable";
+import type { UseDataTableReturn } from "./useDataTable";
+
+/* ─── Context (compound component API) ──────────────────────────────────── */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DataTableCtx = createContext<UseDataTableReturn<any> | null>(null);
+
+function useDataTableContext<T>(): UseDataTableReturn<T> {
+  const ctx = useContext(DataTableCtx) as UseDataTableReturn<T> | null;
+  if (!ctx)
+    throw new Error(
+      "DataTable compound components must be used within <DataTableProvider>"
+    );
+  return ctx;
+}
+
+export function DataTableProvider<T extends Record<string, unknown>>({
+  value,
+  children,
+}: {
+  value: UseDataTableReturn<T>;
+  children: ReactNode;
+}) {
+  return <DataTableCtx.Provider value={value}>{children}</DataTableCtx.Provider>;
+}
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -289,5 +314,220 @@ function SortIcon({ active, direction }: { active: boolean; direction: SortDirec
       )}
       aria-hidden="true"
     />
+  );
+}
+
+/* ─── Compound sub-components ────────────────────────────────────────────── */
+
+/** Search input that reads/writes query from the nearest DataTableProvider. */
+export function DataTableSearch({
+  placeholder = "Search…",
+  className,
+}: {
+  placeholder?: string;
+  className?: string;
+}) {
+  const { query, setQuery } = useDataTableContext();
+  return (
+    <div className={cn("relative flex-1 min-w-[180px] max-w-xs", className)}>
+      <SearchLucide
+        size={16}
+        strokeWidth={2}
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"
+        aria-hidden="true"
+      />
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); }}
+        placeholder={placeholder}
+        className="input pl-9"
+      />
+    </div>
+  );
+}
+
+/** `<div className="card overflow-hidden">` wrapper. Place DTHeader + DTBody inside. */
+export function DataTableRoot({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("card overflow-hidden", className)}>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">{children}</table>
+      </div>
+    </div>
+  );
+}
+
+/** `<thead>` with sortable column headers. Reads columns/sort state from context. */
+export function DataTableHeader() {
+  const { columns, sortKey, sortDir, toggleSort } = useDataTableContext();
+
+  const handleSort = (col: Column<unknown>) => {
+    if (!col.sortable) return;
+    toggleSort(String(col.key));
+  };
+
+  return (
+    <thead>
+      <tr className="border-b border-[var(--card-border)] bg-[var(--muted-bg)]">
+        {columns.map((col) => (
+          <th
+            key={String(col.key)}
+            onClick={() => handleSort(col)}
+            className={cn(
+              "px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider text-muted whitespace-nowrap",
+              col.sortable &&
+                "cursor-pointer select-none hover:text-[var(--foreground)] transition-colors",
+              col.hideOnMobile && "hidden sm:table-cell",
+              col.className
+            )}
+            aria-sort={
+              sortKey === String(col.key)
+                ? sortDir === "asc"
+                  ? "ascending"
+                  : "descending"
+                : undefined
+            }
+          >
+            <span className="inline-flex items-center gap-1.5">
+              {col.header}
+              {col.sortable && (
+                <SortIcon
+                  active={sortKey === String(col.key)}
+                  direction={sortDir}
+                />
+              )}
+            </span>
+          </th>
+        ))}
+      </tr>
+    </thead>
+  );
+}
+
+/** `<tbody>` with loading skeletons, empty state, and row rendering. */
+export function DataTableBody<T extends Record<string, unknown>>({
+  rowKey,
+  onRowClick,
+  rowClassName,
+  emptyTitle = "No data",
+  emptyDescription,
+  skeletonRows = 5,
+}: {
+  rowKey: keyof T;
+  onRowClick?: (row: T) => void;
+  rowClassName?: (row: T) => string | undefined;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  skeletonRows?: number;
+}) {
+  const { columns, paged, query, loading } = useDataTableContext<T>();
+
+  return (
+    <tbody className="divide-y divide-[var(--card-border)]">
+      {loading ? (
+        Array.from({ length: skeletonRows }).map((_, i) => (
+          <tr key={i}>
+            <td colSpan={columns.length} className="p-0">
+              <SkeletonTableRow cols={columns.length} />
+            </td>
+          </tr>
+        ))
+      ) : paged.length === 0 ? (
+        <tr>
+          <td colSpan={columns.length}>
+            <EmptyState
+              compact
+              title={query ? `No results for "${query}"` : emptyTitle}
+              description={
+                query ? "Try a different search term." : emptyDescription
+              }
+            />
+          </td>
+        </tr>
+      ) : (
+        paged.map((row, rowIdx) => (
+          <tr
+            key={String(row[rowKey])}
+            onClick={() => onRowClick?.(row)}
+            className={cn(
+              "transition-colors",
+              onRowClick &&
+                "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50",
+              rowClassName?.(row)
+            )}
+          >
+            {columns.map((col) => (
+              <td
+                key={String(col.key)}
+                className={cn(
+                  "px-4 py-3.5 text-[var(--foreground)]",
+                  col.hideOnMobile && "hidden sm:table-cell",
+                  col.className
+                )}
+              >
+                {col.cell
+                  ? col.cell(row, rowIdx)
+                  : String(row[col.key as keyof T] ?? "—")}
+              </td>
+            ))}
+          </tr>
+        ))
+      )}
+    </tbody>
+  );
+}
+
+/** Pagination footer. Reads page/totalPages/sorted from context. */
+export function DataTablePagination({ pageSize = 10 }: { pageSize?: number }) {
+  const { page, totalPages, sorted, setPage, loading } =
+    useDataTableContext();
+
+  if (loading || pageSize <= 0 || totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-[var(--card-border)]">
+      <p className="text-xs text-muted">
+        {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, sorted.length)}{" "}
+        of {sorted.length}
+      </p>
+      <div className="flex items-center gap-1">
+        <PageButton
+          onClick={() => setPage(page - 1)}
+          disabled={page === 1}
+          aria-label="Previous page"
+        >
+          <ChevronLeftIcon size={14} strokeWidth={2.5} aria-hidden="true" />
+        </PageButton>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) =>
+          Math.abs(p - page) <= 2 || p === 1 || p === totalPages ? (
+            <PageButton
+              key={p}
+              onClick={() => setPage(p)}
+              active={p === page}
+            >
+              {p}
+            </PageButton>
+          ) : p === 2 || p === totalPages - 1 ? (
+            <span key={`ellipsis-${p}`} className="px-1 text-muted text-xs">
+              …
+            </span>
+          ) : null
+        )}
+        <PageButton
+          onClick={() => setPage(page + 1)}
+          disabled={page === totalPages}
+          aria-label="Next page"
+        >
+          <ChevronRightIcon size={14} strokeWidth={2.5} aria-hidden="true" />
+        </PageButton>
+      </div>
+    </div>
   );
 }
