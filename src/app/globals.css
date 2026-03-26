@@ -197,9 +197,9 @@
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-3
-      bg-surface-800 text-surface-100
-      font-medium text-sm border border-surface-600 min-h-[44px]
-      hover:bg-surface-700 hover:border-[var(--gold)] hover:border-opacity-30 active:scale-[0.97]
+      bg-surface-50 dark:bg-surface-800 text-[var(--foreground)]
+      font-medium text-sm border border-surface-100 dark:border-surface-600 min-h-[44px]
+      hover:bg-surface-100 dark:hover:bg-surface-700 hover:border-[var(--gold)] hover:border-opacity-30 active:scale-[0.97]
       focus:outline-none focus:ring-2 focus:ring-surface-400/50
       disabled:opacity-50 disabled:cursor-not-allowed
       transition-all duration-150;
@@ -218,8 +218,8 @@
 
   .input {
     @apply w-full px-3.5 py-2.5 text-sm font-body
-      bg-surface-900 border border-surface-600
-      text-[var(--foreground)] placeholder:text-surface-400
+      bg-white dark:bg-surface-900 border border-surface-100 dark:border-surface-600
+      text-[var(--foreground)] placeholder:text-surface-200 dark:placeholder:text-surface-400
       focus:outline-none focus:ring-[2px] focus:ring-primary-500/40 focus:border-primary-500
       focus:shadow-[0_0_12px_rgb(255_200_0/0.1)]
       disabled:opacity-50 disabled:cursor-not-allowed
@@ -267,7 +267,8 @@
   }
 
   .shimmer {
-    @apply animate-shimmer bg-gradient-to-r from-surface-800 via-surface-700 to-surface-800
+    @apply animate-shimmer bg-gradient-to-r from-surface-100 via-surface-50 to-surface-100
+      dark:from-surface-800 dark:via-surface-700 dark:to-surface-800
       bg-[length:200%_100%];
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
