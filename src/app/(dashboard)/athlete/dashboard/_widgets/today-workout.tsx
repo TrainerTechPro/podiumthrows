@@ -241,12 +241,18 @@ function RestDayState() {
         </div>
         <div>
           <h3 className="text-sm font-semibold text-[var(--foreground)]">
-            Rest Day
+            No Sessions Scheduled
           </h3>
           <p className="text-xs text-muted mt-1 max-w-[240px] leading-relaxed">
-            No training scheduled today — enjoy your rest day. Recovery is where
-            gains are made.
+            Head to your Training page to request programming or log a session.
           </p>
+          <Link
+            href="/athlete/sessions"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary-500 hover:underline mt-2"
+          >
+            Go to Training
+            <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </div>

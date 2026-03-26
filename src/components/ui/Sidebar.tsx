@@ -458,7 +458,7 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
         matchPaths: ["/athlete/self-program"],
       },
       {
-        label: "My Sessions",
+        label: "Training",
         href: "/athlete/sessions",
         icon: <Calendar {...iconSize} />,
         matchPaths: ["/athlete/sessions"],
