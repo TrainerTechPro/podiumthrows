@@ -8,13 +8,16 @@ import { logger } from "@/lib/logger";
 export async function POST(request: NextRequest) {
   const session = await getSession();
 
-  // Blacklist the current JWT so it can't be reused
+  // Blacklist the current JWT so it can't be reused — await to guarantee invalidation
   const cookieStore = await cookies();
   const rawToken = cookieStore.get("auth-token")?.value;
   if (rawToken) {
-    blacklistToken(rawToken).catch((err) => {
+    try {
+      await blacklistToken(rawToken);
+    } catch (err) {
       logger.error("Failed to blacklist token on logout", { context: "auth", error: err });
-    });
+      // Continue with logout even if blacklisting fails — cookie will still be cleared
+    }
   }
 
   const response = NextResponse.json({ success: true });

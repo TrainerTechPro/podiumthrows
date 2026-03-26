@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
-import { getSession, verifyPassword } from "@/lib/auth";
+import { getSession, verifyPassword, signToken, setAuthCookie, setCsrfCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { verifyTotpToken } from "@/lib/mfa";
 import { parseBody, MfaDisableSchema } from "@/lib/api-schemas";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
+import { blacklistToken } from "@/lib/token-blacklist";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
@@ -88,13 +90,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Rotate token — MFA state changed, invalidate old sessions
+    const cookieStore = await cookies();
+    const oldToken = cookieStore.get("auth-token")?.value;
+    if (oldToken) {
+      await blacklistToken(oldToken).catch(() => {});
+    }
+    const newToken = signToken({
+      userId: session.userId,
+      email: session.email,
+      role: session.role,
+    });
+
     void logAudit({
       userId: user.id,
       action: "MFA_DISABLED",
       ...auditRequestInfo(request),
     });
 
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.headers.append("Set-Cookie", setAuthCookie(newToken));
+    response.headers.append("Set-Cookie", setCsrfCookie());
+    return response;
   } catch (e) {
     logger.error("MFA disable error", { context: "api", error: e });
     return NextResponse.json(

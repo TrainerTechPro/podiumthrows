@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
-import { getSession, SALT_ROUNDS } from "@/lib/auth";
+import { getSession, signToken, setAuthCookie, setCsrfCookie, SALT_ROUNDS } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limit";
 import { PasswordChangeSchema, CoachProfileUpdateSchema } from "@/lib/api-schemas";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
+import { blacklistToken } from "@/lib/token-blacklist";
 
 export async function GET() {
   try {
@@ -130,13 +132,28 @@ export async function PATCH(request: NextRequest) {
         data: { passwordHash: hash },
       });
 
+      // Rotate token — blacklist old JWT and issue a fresh one
+      const cookieStore = await cookies();
+      const oldToken = cookieStore.get("auth-token")?.value;
+      if (oldToken) {
+        await blacklistToken(oldToken).catch(() => {});
+      }
+      const newToken = signToken({
+        userId: session.userId,
+        email: session.email,
+        role: session.role,
+      });
+
       void logAudit({
         userId: session.userId,
         action: "PASSWORD_CHANGED",
         ...auditRequestInfo(request),
       });
 
-      return NextResponse.json({ success: true });
+      const response = NextResponse.json({ success: true });
+      response.headers.append("Set-Cookie", setAuthCookie(newToken));
+      response.headers.append("Set-Cookie", setCsrfCookie());
+      return response;
     }
 
     // Profile update (coach)
