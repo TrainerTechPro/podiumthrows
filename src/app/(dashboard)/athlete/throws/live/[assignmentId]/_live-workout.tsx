@@ -123,7 +123,7 @@ function getBlockAccent(block: BlockData): string {
   return CLASSIFICATION_ACCENT[block.blockType] ?? "#FFC800";
 }
 
-function getBlockLabel(block: BlockData): string {
+function _getBlockLabel(block: BlockData): string {
   const cfg = parseConfig(block.config);
   const name = (cfg.exerciseName as string) || (cfg.drillName as string) || "";
   const impl = getImplement(cfg);
@@ -131,7 +131,7 @@ function getBlockLabel(block: BlockData): string {
   return [classification, impl ? impl : "", name].filter(Boolean).join(" · ");
 }
 
-function getExerciseName(block: BlockData): string {
+function _getExerciseName(block: BlockData): string {
   const cfg = parseConfig(block.config);
   return (cfg.exerciseName as string) || (cfg.drillName as string) || block.blockType;
 }
@@ -537,6 +537,7 @@ function StrengthBlockView({
   onSetLogged: (s: LoggedSet) => void;
 }) {
   const { toast } = useToast();
+  const accent = getBlockAccent(block);
   const cfg = parseConfig(block.config);
   const exercises = (cfg.exercises as Array<Record<string, unknown>>) ?? [];
   const restSeconds = getRestSeconds(cfg);
@@ -545,6 +546,9 @@ function StrengthBlockView({
   const [reps, setReps] = useState("");
   const [rpe, setRpe] = useState<number | null>(null);
   const [showRest, setShowRest] = useState(false);
+
+  const chamferLg =
+    "polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))";
 
   function logSet() {
     const w = parseFloat(weight);
@@ -571,14 +575,63 @@ function StrengthBlockView({
 
   return (
     <div className="space-y-5">
-      {/* Exercise list */}
+      {/* ── Mini Hero: Set Counter ── */}
+      <div className="text-center pt-1">
+        <p
+          className="text-[8px] uppercase font-semibold mb-1"
+          style={{ letterSpacing: "4px", color: `${accent}44` }}
+        >
+          SET
+        </p>
+        <div
+          className="flex items-baseline justify-center"
+          style={{ textShadow: `0 0 40px ${accent}22` }}
+        >
+          <NumberFlow
+            value={state.sets.length + 1}
+            className="font-heading font-extrabold"
+            style={{ fontSize: "32px", lineHeight: 1, color: accent }}
+          />
+          {exercises.length > 0 && (
+            <span
+              className="font-heading font-semibold ml-1"
+              style={{ fontSize: "16px", color: `${accent}55` }}
+            >
+              {/* total sets prescribed from first exercise if available */}
+              {exercises[0].sets ? `/ ${exercises[0].sets}` : ""}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Exercise list (prescribed) ── */}
       {exercises.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs text-muted uppercase tracking-wider">Prescribed</p>
+        <div
+          className="p-3 space-y-2"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #ffffff08",
+            clipPath: chamferLg,
+          }}
+        >
+          <p
+            className="text-[9px] uppercase font-semibold"
+            style={{ letterSpacing: "3px", color: `${accent}66` }}
+          >
+            Prescribed
+          </p>
           {exercises.map((ex, i) => (
-            <div key={i} className="flex items-center justify-between text-sm px-3 py-2 rounded-md bg-surface-50 dark:bg-surface-800/50">
-              <span className="font-medium text-[var(--foreground)]">{(ex.name as string) || "Exercise"}</span>
-              <span className="text-muted tabular-nums">
+            <div key={i} className="flex items-center justify-between">
+              <span
+                className="text-lg font-heading font-bold"
+                style={{ color: accent }}
+              >
+                {(ex.name as string) || "Exercise"}
+              </span>
+              <span
+                className="text-sm tabular-nums font-medium"
+                style={{ color: `${accent}99` }}
+              >
                 {ex.sets && ex.reps ? `${ex.sets} × ${ex.reps}` : "—"}
                 {ex.percentage ? ` @ ${ex.percentage}%` : ""}
               </span>
@@ -587,59 +640,117 @@ function StrengthBlockView({
         </div>
       )}
 
-      {/* Log set form */}
-      <div className="space-y-3">
-        <p className="text-xs text-muted uppercase tracking-wider">
+      {/* ── Log Set Form ── */}
+      <div
+        className="p-4 space-y-4"
+        style={{
+          backgroundColor: "#08080a",
+          border: `1px solid ${accent}22`,
+          clipPath: chamferLg,
+        }}
+      >
+        <p
+          className="text-[9px] uppercase font-semibold"
+          style={{ letterSpacing: "3px", color: `${accent}66` }}
+        >
           Log Set {state.sets.length + 1}
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-muted mb-1 block">Weight (kg)</label>
+            <label
+              className="text-[9px] uppercase font-semibold mb-1.5 block"
+              style={{ letterSpacing: "2px", color: `${accent}66` }}
+            >
+              Weight (kg)
+            </label>
             <input
               type="number"
               step="0.5"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder="0"
-              className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] tabular-nums text-center focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+              className="w-full px-3 py-3 border tabular-nums text-center focus:outline-none transition-colors"
+              style={{
+                backgroundColor: "#0a0a0a",
+                borderColor: "#1a1a1e",
+                color: accent,
+                fontSize: "18px",
+                fontWeight: 600,
+              }}
               inputMode="decimal"
             />
           </div>
           <div>
-            <label className="text-xs text-muted mb-1 block">Reps</label>
+            <label
+              className="text-[9px] uppercase font-semibold mb-1.5 block"
+              style={{ letterSpacing: "2px", color: `${accent}66` }}
+            >
+              Reps
+            </label>
             <input
               type="number"
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && logSet()}
               placeholder="0"
-              className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] tabular-nums text-center focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+              className="w-full px-3 py-3 border tabular-nums text-center focus:outline-none transition-colors"
+              style={{
+                backgroundColor: "#0a0a0a",
+                borderColor: "#1a1a1e",
+                color: accent,
+                fontSize: "18px",
+                fontWeight: 600,
+              }}
               inputMode="numeric"
             />
           </div>
         </div>
+
         {/* RPE selector */}
         <div>
-          <label className="text-xs text-muted mb-1 block">RPE (optional)</label>
+          <label
+            className="text-[9px] uppercase font-semibold mb-2 block"
+            style={{ letterSpacing: "2px", color: `${accent}66` }}
+          >
+            RPE{" "}
+            {rpe !== null && (
+              <span style={{ color: accent }}>— {rpe}</span>
+            )}
+          </label>
           <div className="flex gap-1">
             {[6, 7, 7.5, 8, 8.5, 9, 9.5, 10].map((v) => (
               <button
                 key={v}
                 onClick={() => setRpe(rpe === v ? null : v)}
-                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  rpe === v
-                    ? "bg-primary-500 text-white"
-                    : "bg-surface-100 dark:bg-surface-800 text-muted hover:bg-surface-200 dark:hover:bg-surface-700"
-                }`}
+                className="flex-1 py-2 text-xs font-bold transition-all min-h-[44px]"
+                style={{
+                  backgroundColor: rpe === v ? accent : "#111117",
+                  color: rpe === v ? "#000" : `${accent}55`,
+                  border: `1px solid ${rpe === v ? accent : "#1a1a1e"}`,
+                  clipPath:
+                    "polygon(0 0,calc(100% - 3px) 0,100% 3px,100% 100%,3px 100%,0 calc(100% - 3px))",
+                }}
               >
                 {v}
               </button>
             ))}
           </div>
         </div>
-        <Button variant="primary" onClick={logSet} className="w-full">
-          Log Set
-        </Button>
+
+        {/* Log Set button */}
+        <button
+          onClick={logSet}
+          disabled={!reps}
+          className="w-full min-h-[52px] font-bold text-[11px] uppercase disabled:opacity-40 transition-opacity"
+          style={{
+            letterSpacing: "3px",
+            backgroundColor: accent,
+            color: "#000",
+            clipPath: chamferLg,
+          }}
+        >
+          LOG SET {state.sets.length + 1}
+        </button>
       </div>
 
       {/* Rest timer (shown after logging a set) */}
@@ -653,7 +764,8 @@ function StrengthBlockView({
           />
           <button
             onClick={() => setShowRest(false)}
-            className="mt-2 text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+            className="mt-2 text-xs transition-colors min-h-[44px]"
+            style={{ color: `${accent}66` }}
           >
             Skip Rest
           </button>
@@ -662,14 +774,42 @@ function StrengthBlockView({
 
       {/* Logged sets */}
       {state.sets.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-xs text-muted uppercase tracking-wider">Completed Sets</p>
+        <div className="space-y-1.5">
+          <p
+            className="text-[9px] uppercase font-semibold"
+            style={{ letterSpacing: "3px", color: `${accent}55` }}
+          >
+            Completed Sets
+          </p>
           {state.sets.map((s) => (
-            <div key={s.setNumber} className="flex items-center justify-between text-sm px-3 py-1.5 rounded-md bg-surface-50 dark:bg-surface-800/50">
-              <span className="text-muted">Set {s.setNumber}</span>
-              <span className="font-medium tabular-nums text-[var(--foreground)]">
-                {s.weight > 0 ? `${s.weight}kg × ` : ""}{s.reps} reps
-                {s.rpe != null && <span className="text-muted ml-1">RPE {s.rpe}</span>}
+            <div
+              key={s.setNumber}
+              className="flex items-center justify-between px-3 py-2"
+              style={{
+                backgroundColor: "#08080a",
+                border: "1px solid #ffffff08",
+              }}
+            >
+              <span
+                className="text-xs font-semibold uppercase"
+                style={{ color: `${accent}55`, letterSpacing: "1px" }}
+              >
+                Set {s.setNumber}
+              </span>
+              <span
+                className="text-sm font-bold tabular-nums"
+                style={{ color: `${accent}cc` }}
+              >
+                {s.weight > 0 ? `${s.weight}kg × ` : ""}
+                {s.reps} reps
+                {s.rpe != null && (
+                  <span
+                    className="ml-2 text-xs font-semibold"
+                    style={{ color: accent }}
+                  >
+                    RPE {s.rpe}
+                  </span>
+                )}
               </span>
             </div>
           ))}
@@ -692,48 +832,128 @@ function WarmupCooldownView({
   state: BlockState;
   onToggleDrill: (idx: number) => void;
 }) {
+  const accent = getBlockAccent(block);
   const cfg = parseConfig(block.config);
   const drills = (cfg.drills as string[]) ?? [];
   const duration = cfg.duration as number | undefined;
 
+  const chamfer =
+    "polygon(0 0,calc(100% - 3px) 0,100% 3px,100% 100%,3px 100%,0 calc(100% - 3px))";
+  const chamferLg =
+    "polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))";
+
   return (
     <div className="space-y-4">
+      {/* ── Duration Badge ── */}
       {duration && (
-        <p className="text-sm text-muted text-center">{duration} minutes</p>
+        <div className="text-center">
+          <p
+            className="text-[8px] uppercase font-semibold mb-0.5"
+            style={{ letterSpacing: "4px", color: `${accent}44` }}
+          >
+            Duration
+          </p>
+          <span
+            className="font-heading font-extrabold tabular-nums"
+            style={{ fontSize: "32px", lineHeight: 1, color: accent }}
+          >
+            {duration}
+          </span>
+          <span
+            className="ml-1 text-sm font-semibold"
+            style={{ color: `${accent}66` }}
+          >
+            min
+          </span>
+        </div>
       )}
+
+      {/* ── Drill Checklist ── */}
       {drills.length > 0 ? (
         <div className="space-y-2">
-          {drills.map((drill, i) => (
-            <button
-              key={i}
-              onClick={() => onToggleDrill(i)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
-                state.warmupChecked.has(i)
-                  ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-800"
-                  : "bg-[var(--card-bg)] border-[var(--card-border)] hover:bg-surface-50 dark:hover:bg-surface-800/50"
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${
-                state.warmupChecked.has(i)
-                  ? "bg-emerald-500 border-emerald-500"
-                  : "border-surface-300 dark:border-surface-600"
-              }`}>
-                {state.warmupChecked.has(i) && (
-                  <Check size={12} strokeWidth={2.5} className="text-white" aria-hidden="true" />
-                )}
+          <p
+            className="text-[9px] uppercase font-semibold"
+            style={{ letterSpacing: "3px", color: `${accent}55` }}
+          >
+            {block.blockType === "WARMUP" ? "Warm-Up Drills" : "Cool-Down Drills"}
+          </p>
+          {drills.map((drill, i) => {
+            const checked = state.warmupChecked.has(i);
+            return (
+              <button
+                key={i}
+                onClick={() => onToggleDrill(i)}
+                className="w-full flex items-center gap-3 px-3 py-3 text-left transition-all min-h-[52px]"
+                style={{
+                  backgroundColor: checked ? `${accent}11` : "#08080a",
+                  border: `1px solid ${checked ? `${accent}33` : "#ffffff08"}`,
+                  clipPath: chamfer,
+                }}
+              >
+                {/* Checkbox */}
+                <div
+                  className="w-5 h-5 flex items-center justify-center shrink-0 transition-all"
+                  style={{
+                    backgroundColor: checked ? accent : "transparent",
+                    border: `2px solid ${checked ? accent : `${accent}33`}`,
+                    clipPath: chamfer,
+                  }}
+                >
+                  {checked && (
+                    <Check size={11} strokeWidth={2.5} style={{ color: "#000" }} aria-hidden="true" />
+                  )}
+                </div>
+                {/* Drill text */}
+                <span
+                  className="text-sm font-medium transition-all"
+                  style={{
+                    color: checked ? `${accent}55` : "#E8E8E8",
+                    textDecoration: checked ? "line-through" : "none",
+                  }}
+                >
+                  {drill}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Progress indicator */}
+          {drills.length > 0 && (
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <div
+                className="inline-flex items-center gap-1.5 px-2.5 py-1"
+                style={{
+                  backgroundColor: `${accent}11`,
+                  border: `1px solid ${accent}22`,
+                  clipPath: chamferLg,
+                }}
+              >
+                <span
+                  className="text-[9px] uppercase font-bold"
+                  style={{ letterSpacing: "2px", color: `${accent}77` }}
+                >
+                  {state.warmupChecked.size} / {drills.length}
+                </span>
               </div>
-              <span className={`text-sm ${
-                state.warmupChecked.has(i) ? "text-muted line-through" : "text-[var(--foreground)]"
-              }`}>
-                {drill}
-              </span>
-            </button>
-          ))}
+            </div>
+          )}
         </div>
       ) : (
-        <p className="text-sm text-muted text-center py-4">
-          Complete your {block.blockType.toLowerCase()} routine
-        </p>
+        <div
+          className="text-center py-6"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #ffffff08",
+            clipPath: chamferLg,
+          }}
+        >
+          <p
+            className="text-xs font-medium uppercase"
+            style={{ letterSpacing: "2px", color: `${accent}66` }}
+          >
+            Complete your {block.blockType.toLowerCase()} routine
+          </p>
+        </div>
       )}
     </div>
   );
