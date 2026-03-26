@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifyTokenEdge as verifyToken } from "@/lib/auth-edge";
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from "@/lib/csrf";
 import { getFlags, type FlagKey } from "@/lib/flags";
+import { rateLimit } from "@/lib/rate-limit";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -35,21 +36,37 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("auth-token")?.value;
 
-  // ── API routes: CSRF validation then pass through ──────────────────
+  // ── API routes: rate limiting + CSRF validation then pass through ───
   if (pathname.startsWith("/api/")) {
     if (STATE_CHANGING_METHODS.has(request.method)) {
       // Skip CSRF for webhook & cron routes (they use their own auth)
-      const skipCsrf =
+      const skipExternal =
         pathname.startsWith("/api/webhooks/") ||
         pathname.startsWith("/api/cron/") ||
         pathname.startsWith("/api/whoop/webhook");
 
-      if (!skipCsrf) {
+      if (!skipExternal) {
+        // CSRF check
         const csrfCookie = request.cookies.get(CSRF_COOKIE_NAME)?.value;
         const csrfHeader = request.headers.get(CSRF_HEADER_NAME);
 
         if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
           return NextResponse.json({ error: "Invalid CSRF token" }, { status: 403 });
+        }
+
+        // Global rate limit for mutations — auth routes have their own stricter limits
+        const skipRateLimit = pathname.startsWith("/api/auth/");
+        if (!skipRateLimit) {
+          const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+          const payload = token ? verifyToken(token) : null;
+          const rlKey = payload ? `api:${payload.userId}` : `api:ip:${ip}`;
+          const rl = await rateLimit(rlKey, { maxAttempts: 60, windowMs: 60_000 });
+          if (!rl.success) {
+            return NextResponse.json(
+              { error: "Too many requests. Please try again later." },
+              { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
+            );
+          }
         }
       }
     }
