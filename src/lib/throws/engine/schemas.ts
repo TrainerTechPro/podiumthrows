@@ -81,7 +81,7 @@ export const ExerciseComplexEntrySchema = z.object({
 });
 
 export const GeneratedPhaseSchema = z.object({
-  phase: z.enum(["ACCUMULATION", "TRANSMUTATION", "REALIZATION", "COMPETITION"]),
+  phase: z.enum(["ACCUMULATION", "TRANSMUTATION", "REALIZATION", "COMPETITION", "CLEANSE"]),
   phaseOrder: z.number().int().min(1),
   startWeek: z.number().int().min(1),
   endWeek: z.number().int().min(1),
@@ -122,7 +122,7 @@ export const ProgramSummarySchema = z.object({
   estimatedTotalThrows: z.number().int().min(0),
   phaseBreakdown: z.array(
     z.object({
-      phase: z.enum(["ACCUMULATION", "TRANSMUTATION", "REALIZATION", "COMPETITION"]),
+      phase: z.enum(["ACCUMULATION", "TRANSMUTATION", "REALIZATION", "COMPETITION", "CLEANSE"]),
       weeks: z.number().int().min(1),
       throwsPerWeek: z.number().int().min(0),
     }),
