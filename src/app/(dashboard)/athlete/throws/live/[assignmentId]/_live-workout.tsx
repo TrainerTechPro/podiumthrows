@@ -51,7 +51,7 @@ type WorkoutData = {
 type LoggedThrow = {
   id?: string;
   throwNumber: number;
-  distance: number;
+  distance: number | null;  // null for skipped throws
   isPersonalBest?: boolean;
 };
 
@@ -106,6 +106,35 @@ const BLOCK_META: Record<string, { icon: typeof Target; color: string; label: st
   WARMUP: { icon: Flame, color: "text-amber-500", label: "Warm-Up" },
   COOLDOWN: { icon: Snowflake, color: "text-cyan-500", label: "Cool-Down" },
 };
+
+/* ─── Classification color system ───────────────────────────────────── */
+
+const CLASSIFICATION_ACCENT: Record<string, string> = {
+  CE: "#FFC800", SDE: "#FF8800", SPE: "#00FF88", GPE: "#4488FF",
+  STRENGTH: "#4488FF", WARMUP: "#FF8800", COOLDOWN: "#00BBFF",
+};
+
+function getBlockAccent(block: BlockData): string {
+  const cfg = parseConfig(block.config);
+  const classification = cfg.classification as string;
+  if (classification && CLASSIFICATION_ACCENT[classification]) {
+    return CLASSIFICATION_ACCENT[classification];
+  }
+  return CLASSIFICATION_ACCENT[block.blockType] ?? "#FFC800";
+}
+
+function getBlockLabel(block: BlockData): string {
+  const cfg = parseConfig(block.config);
+  const name = (cfg.exerciseName as string) || (cfg.drillName as string) || "";
+  const impl = getImplement(cfg);
+  const classification = (cfg.classification as string) || "";
+  return [classification, impl ? impl : "", name].filter(Boolean).join(" · ");
+}
+
+function getExerciseName(block: BlockData): string {
+  const cfg = parseConfig(block.config);
+  return (cfg.exerciseName as string) || (cfg.drillName as string) || block.blockType;
+}
 
 /* ─── Elapsed Timer Hook ─────────────────────────────────────────────── */
 
@@ -175,7 +204,7 @@ function ThrowingBlockView({
   const technique = (cfg.techniqueFocus as string) || "FULL_THROW";
   const current = state.throws.length;
   const bestMark = useMemo(
-    () => state.throws.reduce((max, t) => Math.max(max, t.distance), 0),
+    () => state.throws.reduce((max, t) => Math.max(max, t.distance!), 0), // TODO: Task 2 will add proper null guard
     [state.throws],
   );
 
@@ -333,7 +362,7 @@ function ThrowingBlockView({
               >
                 <span className="text-muted tabular-nums">#{t.throwNumber}</span>
                 <span className={`font-medium tabular-nums ${t.isPersonalBest ? "text-amber-600 dark:text-amber-400" : "text-[var(--foreground)]"}`}>
-                  {t.distance.toFixed(2)}m
+                  {t.distance!.toFixed(2)}m {/* TODO: Task 2 will add proper null guard */}
                   {t.isPersonalBest && (
                     <Trophy size={12} strokeWidth={1.75} className="inline ml-1 text-amber-500" aria-hidden="true" />
                   )}
@@ -601,7 +630,7 @@ function CompletionScreen({
     allSets.push(...state.sets);
   }
   const totalThrows = allThrows.length;
-  const bestMark = allThrows.reduce((max, t) => Math.max(max, t.distance), 0);
+  const bestMark = allThrows.reduce((max, t) => Math.max(max, t.distance!), 0); // TODO: Task 4 will add proper null guard
   const totalVolume = allSets.reduce((sum, s) => sum + s.weight * s.reps, 0);
   const prCount = allThrows.filter((t) => t.isPersonalBest).length;
 
