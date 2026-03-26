@@ -13,21 +13,21 @@
 /* ── Semantic Score Colors (SVG fills for ScoreIndicator, LineChart, etc.) ── */
 
 export const SCORE_FILL = {
-  success: "#22c55e", // success-500
-  warning: "#f59e0b", // warning-500
-  danger: "#ef4444", // danger-500
+  success: "#00FF88", // success-500 (cyber green)
+  warning: "#FF8800", // warning-500 (cyber orange)
+  danger: "#FF2222", // danger-500 (cyber red)
 } as const;
 
 /* ── RPE Color Scale (1-10, green → amber → red) ── */
 
 export function getRpeHex(rpe: number): string {
-  if (rpe >= 8) return "#22c55e"; // success-500
-  if (rpe >= 7) return "#84cc16"; // lime-500
-  if (rpe >= 6) return "#eab308"; // yellow-500
-  if (rpe >= 5) return "#f59e0b"; // primary-500
-  if (rpe >= 4) return "#f97316"; // orange-500
-  if (rpe >= 3) return "#ef4444"; // danger-500
-  return "#dc2626"; // danger-600
+  if (rpe >= 8) return "#00FF88"; // cyber green
+  if (rpe >= 7) return "#66FF66"; // bright lime
+  if (rpe >= 6) return "#FFC800"; // cyber gold
+  if (rpe >= 5) return "#FF8800"; // cyber orange
+  if (rpe >= 4) return "#FF6600"; // hot orange
+  if (rpe >= 3) return "#FF2222"; // cyber red
+  return "#CC1A1A"; // deep red
 }
 
 /* ── Event Colors (Shot Put, Discus, Hammer, Javelin) ── */
@@ -64,10 +64,10 @@ export const ANNOTATION_TYPE_COLORS: Record<string, string> = {
 /* ── Deficit / Ratio Status Colors (for inline bar fills) ── */
 
 export const RATIO_STATUS_COLORS: Record<string, string> = {
-  above: "#10b981", // emerald-500
-  within: "#3b82f6", // info-500
-  below: "#f59e0b", // warning-500
-  far: "#ef4444", // danger-500
+  above: "#00FF88", // cyber green
+  within: "#4488FF", // cyber blue
+  below: "#FF8800", // cyber orange
+  far: "#FF2222", // cyber red
 };
 
 /* ── Pose Overlay Colors (canvas drawing) ── */
@@ -89,27 +89,27 @@ export const CANVAS_OVERLAY = {
 /* ── Confetti Colors (PRCelebration) ── */
 
 export const CONFETTI_COLORS = [
-  "#f59e0b", // primary-500
-  "#fbbf24", // primary-400
-  "#f97316", // orange-500
-  "#ef4444", // danger-500
-  "#10b981", // emerald-500
-  "#3b82f6", // info-500
-  "#8b5cf6", // violet-500
-  "#ec4899", // pink-500
+  "#FFC800", // cyber gold
+  "#FFD700", // bright gold
+  "#FF8800", // cyber orange
+  "#FF2222", // cyber red
+  "#00FF88", // cyber green
+  "#4488FF", // cyber blue
+  "#AA44FF", // cyber purple
+  "#FF44AA", // neon pink
   "#ffffff", // white
 ] as const;
 
 /* ── Brand Colors (for inline style contexts where Tailwind isn't available) ── */
 
 export const BRAND = {
-  primary: "#f59e0b", // primary-500
-  primaryDark: "#d97706", // primary-600
+  primary: "#FFC800", // cyber gold
+  primaryDark: "#e6b400", // darker gold
 } as const;
 
 /* ── Default Chart Color ── */
 
-export const CHART_DEFAULT_COLOR = "#f59e0b"; // primary-500
+export const CHART_DEFAULT_COLOR = "#FFC800"; // cyber gold
 
 /* ── Fallback Colors (for unknown/missing values) ── */
 

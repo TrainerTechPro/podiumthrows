@@ -11,64 +11,73 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Warm amber/gold primary palette
+        // Cyberpunk gold primary palette
         primary: {
-          50: "#fffbeb",
-          100: "#fef3c7",
-          200: "#fde68a",
-          300: "#fcd34d",
-          400: "#fbbf24",
-          500: "#f59e0b",
-          600: "#d97706",
-          700: "#b45309",
-          800: "#92400e",
-          900: "#78350f",
-          950: "#451a03",
+          50: "#fffdf0",
+          100: "#fff9d6",
+          200: "#fff2a8",
+          300: "#ffe866",
+          400: "#ffd700",
+          500: "#FFC800",  // Main gold
+          600: "#e6b400",
+          700: "#cc9f00",
+          800: "#997700",
+          900: "#665000",
+          950: "#332800",
         },
-        // Neutral grays for backgrounds/text
+        // Deep dark surfaces for cyberpunk
         surface: {
-          50: "#fafafa",
-          100: "#f5f5f5",
-          200: "#e5e5e5",
-          300: "#d4d4d4",
-          400: "#a3a3a3",
-          500: "#737373",
-          600: "#525252",
-          700: "#404040",
-          800: "#262626",
-          850: "#1e1e1e",
-          900: "#171717",
-          950: "#0a0a0a",
+          50: "#e8e8ea",
+          100: "#c8c8cc",
+          200: "#92929a",
+          300: "#6a6a74",
+          400: "#44444e",
+          500: "#2a2a34",
+          600: "#1e1e28",
+          700: "#16161e",
+          800: "#101016",
+          850: "#0d0d12",
+          900: "#0a0a0e",
+          950: "#06060a",
         },
-        // Semantic colors
+        // Cyberpunk accent colors
+        cyber: {
+          gold: "#FFC800",
+          orange: "#FF8800",
+          green: "#00FF88",
+          blue: "#4488FF",
+          red: "#FF2222",
+          purple: "#AA44FF",
+        },
+        // Semantic colors (cyberpunk-tinted)
         success: {
-          50: "#f0fdf4",
-          500: "#22c55e",
-          600: "#16a34a",
-          700: "#15803d",
+          50: "#0a1a10",
+          500: "#00FF88",
+          600: "#00cc6d",
+          700: "#009952",
         },
         warning: {
-          50: "#fffbeb",
-          500: "#f59e0b",
-          600: "#d97706",
-          700: "#b45309",
+          50: "#1a1400",
+          500: "#FF8800",
+          600: "#e67a00",
+          700: "#cc6c00",
         },
         danger: {
-          50: "#fef2f2",
-          500: "#ef4444",
-          600: "#dc2626",
-          700: "#b91c1c",
+          50: "#1a0808",
+          500: "#FF2222",
+          600: "#e61e1e",
+          700: "#cc1a1a",
         },
         info: {
-          50: "#eff6ff",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
+          50: "#0a1020",
+          500: "#4488FF",
+          600: "#3d7ae6",
+          700: "#366dcc",
         },
       },
       fontFamily: {
-        heading: ["var(--font-outfit)", "system-ui", "sans-serif"],
-        body: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        heading: ["var(--font-chakra-petch)", "system-ui", "sans-serif"],
+        body: ["var(--font-ibm-plex-mono)", "monospace"],
       },
       fontSize: {
         // Strict type scale (per design system)
@@ -90,10 +99,13 @@ const config: Config = {
         "3xl": "1.25rem",
       },
       boxShadow: {
-        "card": "0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)",
-        "card-hover": "0 4px 12px 0 rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04)",
-        "glow": "0 0 20px rgb(245 158 11 / 0.15)",
-        "glow-lg": "0 0 40px rgb(245 158 11 / 0.2)",
+        "card": "0 1px 3px 0 rgb(0 0 0 / 0.3), 0 0 1px 0 rgb(255 200 0 / 0.05)",
+        "card-hover": "0 4px 20px 0 rgb(0 0 0 / 0.4), 0 0 15px rgb(255 200 0 / 0.1)",
+        "glow": "0 0 20px rgb(255 200 0 / 0.2)",
+        "glow-lg": "0 0 40px rgb(255 200 0 / 0.3)",
+        "glow-green": "0 0 20px rgb(0 255 136 / 0.2)",
+        "glow-red": "0 0 20px rgb(255 34 34 / 0.2)",
+        "glow-blue": "0 0 20px rgb(68 136 255 / 0.2)",
       },
       keyframes: {
         // Existing animations
@@ -201,6 +213,14 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(-4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "gold-pulse": {
+          "0%, 100%": { boxShadow: "0 0 8px rgba(255, 200, 0, 0.1)" },
+          "50%": { boxShadow: "0 0 20px rgba(255, 200, 0, 0.25)" },
+        },
+        "scanline": {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100%)" },
+        },
         "step-slide-in-right": {
           "0%": { opacity: "0", transform: "translateX(24px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
@@ -236,6 +256,7 @@ const config: Config = {
         "float": "float 3s ease-in-out infinite",
         "danger-pulse": "danger-pulse 2s ease-in-out infinite",
         "fade-slide-in": "fade-slide-in 0.4s ease-out both",
+        "gold-pulse": "gold-pulse 3s ease-in-out infinite",
         "slide-in-right": "step-slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
         "slide-in-left": "step-slide-in-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
       },

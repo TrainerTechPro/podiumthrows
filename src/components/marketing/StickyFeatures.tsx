@@ -60,7 +60,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
       >
         <span
           style={{
-            fontFamily: "var(--font-outfit), system-ui, sans-serif",
+            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontSize: 11,
             color: "var(--landing-text-dim)",
             flexShrink: 0,
@@ -77,7 +77,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
       {/* Label */}
       <div
         style={{
-          fontFamily: "var(--font-outfit), system-ui, sans-serif",
+          fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
           fontSize: 11,
           fontWeight: 600,
           textTransform: "uppercase",
@@ -92,7 +92,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
       {/* Title */}
       <h3
         style={{
-          fontFamily: "var(--font-outfit), system-ui, sans-serif",
+          fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
           fontWeight: 800,
           fontSize: 34,
           lineHeight: 1.08,
@@ -129,7 +129,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
             padding: "5px 12px",
             background: "var(--landing-amber-glow-strong)",
             borderRadius: 6,
-            fontFamily: "var(--font-outfit), system-ui, sans-serif",
+            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontWeight: 600,
             alignSelf: "flex-start",
           }}

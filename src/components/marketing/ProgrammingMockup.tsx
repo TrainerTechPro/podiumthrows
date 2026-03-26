@@ -82,7 +82,7 @@ function SessionCardItem({ session }: { session: SessionCard }) {
           fontSize: 10,
           fontWeight: 600,
           color: "var(--landing-text)",
-          fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+          fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
           lineHeight: 1.2,
           whiteSpace: "nowrap",
           overflow: "hidden",
@@ -95,7 +95,7 @@ function SessionCardItem({ session }: { session: SessionCard }) {
         style={{
           fontSize: 8,
           color: "var(--landing-text-muted)",
-          fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+          fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
           marginTop: 2,
           whiteSpace: "nowrap",
           overflow: "hidden",
@@ -122,7 +122,7 @@ function DayCol({ col }: { col: DayColumn }) {
           letterSpacing: "0.08em",
           color: "var(--landing-text-muted)",
           textAlign: "center",
-          fontFamily: "var(--font-outfit), system-ui, sans-serif",
+          fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
           fontWeight: 600,
           marginBottom: 4,
         }}
@@ -137,7 +137,7 @@ function DayCol({ col }: { col: DayColumn }) {
             fontSize: 9,
             color: "var(--landing-text-dim)",
             textAlign: "center",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
             paddingTop: 8,
           }}
         >
@@ -175,7 +175,7 @@ export default function ProgrammingMockup() {
       >
         <span
           style={{
-            fontFamily: "var(--font-outfit), system-ui, sans-serif",
+            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontWeight: 700,
             fontSize: 14,
             color: "var(--landing-text)",
@@ -186,7 +186,7 @@ export default function ProgrammingMockup() {
 
         <span
           style={{
-            fontFamily: "var(--font-outfit), system-ui, sans-serif",
+            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontSize: 10,
             fontWeight: 700,
             color: "#f59e0b",

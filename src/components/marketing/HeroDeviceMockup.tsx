@@ -67,7 +67,7 @@ export default function HeroDeviceMockup() {
             background: "var(--landing-surface-2)",
             fontSize: 10,
             color: "var(--landing-text-muted)",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
             letterSpacing: "0.02em",
           }}
         >
@@ -98,7 +98,7 @@ export default function HeroDeviceMockup() {
                   fontWeight: 700,
                   color: "#0a0a0a",
                   lineHeight: 1,
-                  fontFamily: "var(--font-outfit), system-ui, sans-serif",
+                  fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
                 }}
               >
                 P
@@ -109,7 +109,7 @@ export default function HeroDeviceMockup() {
                 fontSize: 11,
                 fontWeight: 700,
                 color: "var(--landing-text)",
-                fontFamily: "var(--font-outfit), system-ui, sans-serif",
+                fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
                 letterSpacing: "-0.02em",
               }}
             >
@@ -125,7 +125,7 @@ export default function HeroDeviceMockup() {
                 className="rounded px-2 py-[4px]"
                 style={{
                   fontSize: 10,
-                  fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                  fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                   color: item.active ? "#f59e0b" : "var(--landing-text-muted)",
                   fontWeight: item.active ? 600 : 400,
                   background: item.active ? "var(--landing-amber-glow-strong)" : "transparent",
@@ -155,7 +155,7 @@ export default function HeroDeviceMockup() {
                   style={{
                     fontSize: 8,
                     color: "var(--landing-text-muted)",
-                    fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.06em",
                     marginBottom: 2,
@@ -168,7 +168,7 @@ export default function HeroDeviceMockup() {
                     fontSize: 16,
                     fontWeight: 700,
                     color: "var(--landing-text)",
-                    fontFamily: "var(--font-outfit), system-ui, sans-serif",
+                    fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
                     lineHeight: 1.1,
                     letterSpacing: "-0.02em",
                   }}
@@ -180,7 +180,7 @@ export default function HeroDeviceMockup() {
                     style={{
                       fontSize: 8,
                       color: card.subColor || "var(--landing-text-muted)",
-                      fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                      fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                       marginTop: 1,
                     }}
                   >
@@ -203,7 +203,7 @@ export default function HeroDeviceMockup() {
               style={{
                 fontSize: 8,
                 color: "var(--landing-text-muted)",
-                fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
                 marginBottom: 4,
@@ -266,7 +266,7 @@ export default function HeroDeviceMockup() {
                     fontSize: 7,
                     fontWeight: 600,
                     color: "var(--landing-text-dim)",
-                    fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.1em",
                   }}
@@ -302,7 +302,7 @@ export default function HeroDeviceMockup() {
                         fontSize: 6,
                         fontWeight: 600,
                         color: "var(--landing-text-muted)",
-                        fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                        fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                       }}
                     >
                       {athlete.initials}
@@ -313,7 +313,7 @@ export default function HeroDeviceMockup() {
                       fontSize: 9,
                       fontWeight: 500,
                       color: "var(--landing-text)",
-                      fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                      fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                     }}
                   >
                     {athlete.name}
@@ -325,7 +325,7 @@ export default function HeroDeviceMockup() {
                   style={{
                     fontSize: 9,
                     color: "var(--landing-text-secondary)",
-                    fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                   }}
                 >
                   {athlete.event}
@@ -337,7 +337,7 @@ export default function HeroDeviceMockup() {
                     fontSize: 9,
                     fontWeight: 600,
                     color: "var(--landing-text)",
-                    fontFamily: "var(--font-outfit), system-ui, sans-serif",
+                    fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
@@ -350,7 +350,7 @@ export default function HeroDeviceMockup() {
                   style={{
                     fontSize: 7,
                     fontWeight: 600,
-                    fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
                     ...(athlete.trendType === "pr"
                       ? { background: "rgba(34,197,94,0.15)", color: "#22c55e" }
                       : athlete.trendType === "up"

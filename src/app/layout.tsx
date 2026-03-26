@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
-import { Outfit, DM_Sans } from "next/font/google";
+import { Chakra_Petch, IBM_Plex_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
 import { Analytics } from "@vercel/analytics/next";
 import { WebVitalsReporter } from "./web-vitals";
 import "./globals.css";
 
-const outfit = Outfit({
+const chakraPetch = Chakra_Petch({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-chakra-petch",
   display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const dmSans = DM_Sans({
+const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-ibm-plex-mono",
   display: "swap",
   weight: ["400", "500", "600", "700"],
 });
@@ -68,12 +68,12 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${dmSans.variable}${darkClass}`}
+      className={`${chakraPetch.variable} ${ibmPlexMono.variable}${darkClass}`}
       suppressHydrationWarning
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#f59e0b" />
+        <meta name="theme-color" content="#0a0a0c" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />

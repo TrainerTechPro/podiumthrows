@@ -88,7 +88,7 @@ function GroupLabel({ label }: { label: string }) {
       className="flex items-center"
       style={{
         gap: 8,
-        fontFamily: "var(--font-outfit), system-ui, sans-serif",
+        fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
         fontSize: 9,
         fontWeight: 600,
         textTransform: "uppercase" as const,
@@ -132,7 +132,7 @@ function ExerciseRow({ block }: { block: ExerciseBlock }) {
           background: isThrowing
             ? "var(--landing-amber-glow-strong)"
             : "rgba(99,102,241,0.12)",
-          fontFamily: "var(--font-outfit), system-ui, sans-serif",
+          fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
           fontWeight: 700,
           fontSize: 11,
           color: isThrowing ? "#f59e0b" : "#818cf8",
@@ -148,7 +148,7 @@ function ExerciseRow({ block }: { block: ExerciseBlock }) {
             fontSize: 13,
             fontWeight: 600,
             color: "var(--landing-text)",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
             lineHeight: 1.2,
           }}
         >
@@ -158,7 +158,7 @@ function ExerciseRow({ block }: { block: ExerciseBlock }) {
           style={{
             fontSize: 10,
             color: "var(--landing-text-muted)",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
             marginTop: 1,
           }}
         >
@@ -171,7 +171,7 @@ function ExerciseRow({ block }: { block: ExerciseBlock }) {
         <div
           className="flex-shrink-0"
           style={{
-            fontFamily: "var(--font-outfit), system-ui, sans-serif",
+            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontWeight: 700,
             fontSize: 14,
             color: "var(--landing-text)",
@@ -239,7 +239,7 @@ export default function SessionMockup() {
         {/* Title */}
         <span
           style={{
-            fontFamily: "var(--font-outfit), system-ui, sans-serif",
+            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontWeight: 700,
             fontSize: 14,
             color: "var(--landing-text)",
@@ -268,7 +268,7 @@ export default function SessionMockup() {
                 onClick={() => setMode(value)}
                 className="relative z-10"
                 style={{
-                  fontFamily: "var(--font-outfit), system-ui, sans-serif",
+                  fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
                   fontSize: 10,
                   fontWeight: 600,
                   borderRadius: 6,
@@ -317,7 +317,7 @@ export default function SessionMockup() {
             textTransform: "uppercase" as const,
             letterSpacing: "0.06em",
             color: "var(--landing-text-dim)",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
           }}
         >
           {modeLabel}
@@ -331,7 +331,7 @@ export default function SessionMockup() {
             background: "rgba(34,197,94,0.08)",
             borderRadius: 9999,
             padding: "2px 8px",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
           }}
         >
           ✓ Valid Sequence
@@ -388,7 +388,7 @@ export default function SessionMockup() {
           style={{
             fontSize: 10,
             color: "#4ade80",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
           }}
         >
           {sequenceText}

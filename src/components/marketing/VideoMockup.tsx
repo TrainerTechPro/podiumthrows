@@ -30,7 +30,7 @@ export default function VideoMockup() {
       >
         <span
           style={{
-            fontFamily: "var(--font-outfit), system-ui, sans-serif",
+            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontWeight: 700,
             fontSize: 14,
             color: "var(--landing-text)",
@@ -41,7 +41,7 @@ export default function VideoMockup() {
 
         <span
           style={{
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
             fontSize: 10,
             fontWeight: 500,
             color: "var(--landing-text-muted)",
@@ -243,7 +243,7 @@ export default function VideoMockup() {
           style={{
             fontSize: 10,
             color: "var(--landing-text-muted)",
-            fontFamily: "var(--font-dm-sans), system-ui, sans-serif",
+            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
             fontVariantNumeric: "tabular-nums",
             flexShrink: 0,
           }}
