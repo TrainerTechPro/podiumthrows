@@ -11,7 +11,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useState } from "react";
-import { Badge, Button, StaggeredList } from "@/components";
+import { Badge } from "@/components";
 import { TodayWorkoutWidget } from "../dashboard/_widgets/today-workout";
 import { WeekStrip } from "./_week-strip";
 import { RequestProgramming } from "./_request-programming";
