@@ -27,7 +27,8 @@ export type NotificationType =
   | "COMMENT_ADDED"
   | "VIDEO_SHARED"
   | "COMPETITION_REMINDER"
-  | "INVITATION_EXPIRED";
+  | "INVITATION_EXPIRED"
+  | "PROGRAMMING_REQUESTED";
 
 export type NotificationItem = {
   id: string;
@@ -239,6 +240,63 @@ export async function notifyCoachQuestionnaireComplete(
     title: `Questionnaire Completed — ${athleteName}`,
     body: `${athleteName} completed "${questionnaireName}".`,
     metadata: { questionnaireName, athleteName },
+  });
+}
+
+/**
+ * Athlete requests programming from their coach.
+ * Replaces any existing PROGRAMMING_REQUESTED notification for this athlete
+ * to prevent duplicate spam.
+ */
+export async function notifyCoachProgrammingRequested(
+  coachId: string,
+  athleteProfileId: string,
+  athleteName: string,
+  context: {
+    events: string[];
+    lastSessionDate: string | null;
+    daysSinceLastSession: number | null;
+    readinessScore: number | null;
+    recentPRs: Array<{ event: string; distance: number; implement: string }>;
+    goals: Array<{ title: string; progress: number }>;
+    bondarchukType: string | null;
+  }
+): Promise<void> {
+  // Delete any existing PROGRAMMING_REQUESTED for this athlete to prevent dupes
+  await prisma.notification.deleteMany({
+    where: {
+      coachId,
+      type: "PROGRAMMING_REQUESTED",
+      athleteProfileId,
+    },
+  });
+
+  // Build summary body
+  const parts: string[] = [];
+  if (context.daysSinceLastSession != null) {
+    parts.push(`Last session ${context.daysSinceLastSession} day${context.daysSinceLastSession !== 1 ? "s" : ""} ago`);
+  } else {
+    parts.push("No sessions yet");
+  }
+  if (context.readinessScore != null) {
+    parts.push(`Readiness ${context.readinessScore.toFixed(1)}`);
+  }
+  if (context.recentPRs.length > 0) {
+    const best = context.recentPRs[0];
+    parts.push(`${formatEventType(best.event)} PR ${best.distance.toFixed(2)}m`);
+  }
+
+  await createNotification({
+    type: "PROGRAMMING_REQUESTED",
+    coachId,
+    athleteProfileId,
+    title: `${athleteName} is requesting programming`,
+    body: parts.join(" | "),
+    metadata: {
+      ...context,
+      athleteName,
+      link: `/coach/programming?athlete=${athleteProfileId}`,
+    },
   });
 }
 
