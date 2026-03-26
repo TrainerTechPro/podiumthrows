@@ -89,7 +89,7 @@ function Step({ number, title, subtitle, isFirst }: StepProps) {
           style={{
             fontWeight: 600,
             fontSize: 14,
-            color: "#fff",
+            color: "var(--landing-text)",
             lineHeight: 1.3,
           }}
         >

@@ -237,7 +237,7 @@ function BentoCard({ card, spotlightEnabled }: BentoCardProps) {
           style={{
             fontWeight: 700,
             fontSize: 17,
-            color: "#fff",
+            color: "var(--landing-text)",
             marginBottom: 6,
             lineHeight: 1.3,
           }}
