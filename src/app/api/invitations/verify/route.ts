@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error verifying invitation:", error);
+    logger.error("Error verifying invitation", { context: "api", error });
     return NextResponse.json({ ok: false, error: "Failed to verify invitation" }, { status: 500 });
   }
 }

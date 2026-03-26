@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { updateEventGroup, deleteEventGroup } from "@/lib/data/event-groups";
 import type { EventType } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 const VALID_EVENT_TYPES = new Set<string>(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
 
@@ -59,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Event group not found" }, { status: 404 });
     }
   } catch (error) {
-    console.error("Error updating event group:", error);
+    logger.error("Error updating event group", { context: "api", error });
     return NextResponse.json({ error: "Failed to update event group" }, { status: 500 });
   }
 }
@@ -87,7 +88,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "Event group not found" }, { status: 404 });
     }
   } catch (error) {
-    console.error("Error deleting event group:", error);
+    logger.error("Error deleting event group", { context: "api", error });
     return NextResponse.json({ error: "Failed to delete event group" }, { status: 500 });
   }
 }

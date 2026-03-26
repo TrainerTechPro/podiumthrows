@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── DELETE — remove athlete from team (idempotent) ── */
 export async function DELETE(
@@ -38,7 +39,7 @@ export async function DELETE(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Error removing team member:", error);
+    logger.error("Error removing team member", { context: "api", error });
     return NextResponse.json({ error: "Failed to remove team member" }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { removeMember } from "@/lib/data/event-groups";
+import { logger } from "@/lib/logger";
 
 /* ── DELETE — remove a member from an event group ── */
 export async function DELETE(
@@ -29,7 +30,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Event group not found" }, { status: 404 });
     }
   } catch (error) {
-    console.error("Error removing member from event group:", error);
+    logger.error("Error removing member from event group", { context: "api", error });
     return NextResponse.json({ error: "Failed to remove member" }, { status: 500 });
   }
 }

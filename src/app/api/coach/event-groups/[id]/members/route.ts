@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { addMembers } from "@/lib/data/event-groups";
+import { logger } from "@/lib/logger";
 
 /* ── POST — add members to an event group ── */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Event group not found" }, { status: 404 });
     }
   } catch (error) {
-    console.error("Error adding members to event group:", error);
+    logger.error("Error adding members to event group", { context: "api", error });
     return NextResponse.json({ error: "Failed to add members" }, { status: 500 });
   }
 }

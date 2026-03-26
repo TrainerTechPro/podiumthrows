@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── PATCH — update team name/description ── */
 export async function PATCH(
@@ -68,7 +69,7 @@ export async function PATCH(
 
     return NextResponse.json({ ok: true, data: updated });
   } catch (error) {
-    console.error("Error updating team:", error);
+    logger.error("Error updating team", { context: "api", error });
     return NextResponse.json({ error: "Failed to update team" }, { status: 500 });
   }
 }
@@ -119,7 +120,7 @@ export async function DELETE(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Error deleting team:", error);
+    logger.error("Error deleting team", { context: "api", error });
     return NextResponse.json({ error: "Failed to delete team" }, { status: 500 });
   }
 }

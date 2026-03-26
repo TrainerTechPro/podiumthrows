@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getEventGroups, createEventGroup } from "@/lib/data/event-groups";
 import type { EventType } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 const VALID_EVENT_TYPES = new Set<string>(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
 
@@ -25,7 +26,7 @@ export async function GET() {
     const data = await getEventGroups(coach.id);
     return NextResponse.json({ ok: true, data });
   } catch (error) {
-    console.error("Error listing event groups:", error);
+    logger.error("Error listing event groups", { context: "api", error });
     return NextResponse.json({ error: "Failed to list event groups" }, { status: 500 });
   }
 }
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data }, { status: 201 });
   } catch (error) {
-    console.error("Error creating event group:", error);
+    logger.error("Error creating event group", { context: "api", error });
     return NextResponse.json({ error: "Failed to create event group" }, { status: 500 });
   }
 }

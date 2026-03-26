@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   request: NextRequest,
@@ -72,7 +73,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true, data: athleteSession }, { status: 201 });
   } catch (error) {
-    console.error("Error logging session for athlete:", error);
+    logger.error("Error logging session for athlete", { context: "api", error });
     return NextResponse.json({ error: "Failed to log session" }, { status: 500 });
   }
 }

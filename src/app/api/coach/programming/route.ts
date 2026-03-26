@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getProgrammedSessions, createProgrammedSession } from "@/lib/data/programming";
+import { logger } from "@/lib/logger";
 
 /* ─── GET — list programmed sessions in a date range ────────────────────── */
 
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
     const data = await getProgrammedSessions(coach.id, start, end);
     return NextResponse.json({ ok: true, data });
   } catch (err) {
-    console.error("[programming GET]", err);
+    logger.error("[programming GET]", { context: "api", error: err });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, data }, { status: 201 });
   } catch (err) {
-    console.error("[programming POST]", err);
+    logger.error("[programming POST]", { context: "api", error: err });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

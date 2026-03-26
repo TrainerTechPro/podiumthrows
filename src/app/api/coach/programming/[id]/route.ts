@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { updateProgrammedSession, deleteProgrammedSession } from "@/lib/data/programming";
+import { logger } from "@/lib/logger";
 
 /* ─── PUT — update a programmed session ─────────────────────────────────── */
 
@@ -30,7 +31,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     return NextResponse.json({ ok: true, data });
   } catch (err) {
-    console.error("[programming PUT]", err);
+    logger.error("[programming PUT]", { context: "api", error: err });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -54,7 +55,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[programming DELETE]", err);
+    logger.error("[programming DELETE]", { context: "api", error: err });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

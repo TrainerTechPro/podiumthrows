@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { randomUUID } from "crypto";
 import { parseBody, CoachAddAthleteSchema } from "@/lib/api-schemas";
+import { logger } from "@/lib/logger";
 
 /* ── POST — coach creates a placeholder athlete profile ── */
 export async function POST(request: NextRequest) {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: result }, { status: 201 });
   } catch (error) {
-    console.error("Error creating athlete:", error);
+    logger.error("Error creating athlete", { context: "api", error });
     return NextResponse.json({ error: "Failed to create athlete" }, { status: 500 });
   }
 }
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: athletes });
   } catch (error) {
-    console.error("Error listing athletes:", error);
+    logger.error("Error listing athletes", { context: "api", error });
     return NextResponse.json({ error: "Failed to list athletes" }, { status: 500 });
   }
 }

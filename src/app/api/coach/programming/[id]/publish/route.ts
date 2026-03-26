@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { publishSession } from "@/lib/data/programming";
+import { logger } from "@/lib/logger";
 
 /* ─── POST — publish a programmed session ───────────────────────────────── */
 
@@ -26,7 +27,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       assignmentsUpdated: result.updated,
     });
   } catch (err) {
-    console.error("[programming publish POST]", err);
+    logger.error("[programming publish POST]", { context: "api", error: err });
     if (err instanceof Error && err.message.includes("not found")) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }

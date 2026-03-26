@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { resolveEffectiveSession } from "@/lib/data/programming";
+import { logger } from "@/lib/logger";
 
 /* ─── GET — resolve the effective session for an athlete on a date ───────── */
 
@@ -46,7 +47,7 @@ export async function GET(
       },
     });
   } catch (err) {
-    console.error("[programming resolve GET]", err);
+    logger.error("[programming resolve GET]", { context: "api", error: err });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

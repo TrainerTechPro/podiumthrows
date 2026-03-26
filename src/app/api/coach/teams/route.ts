@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── GET — list all event groups for the authenticated coach ── */
 export async function GET() {
@@ -51,7 +52,7 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, data });
   } catch (error) {
-    console.error("Error listing event groups:", error);
+    logger.error("Error listing event groups", { context: "api", error });
     return NextResponse.json({ error: "Failed to list event groups" }, { status: 500 });
   }
 }
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: group }, { status: 201 });
   } catch (error) {
-    console.error("Error creating event group:", error);
+    logger.error("Error creating event group", { context: "api", error });
     return NextResponse.json({ error: "Failed to create event group" }, { status: 500 });
   }
 }

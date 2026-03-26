@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 /* ── POST — add athletes to a team ── */
 export async function POST(
@@ -64,7 +65,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true, added: toAdd.length });
   } catch (error) {
-    console.error("Error adding team members:", error);
+    logger.error("Error adding team members", { context: "api", error });
     return NextResponse.json({ error: "Failed to add team members" }, { status: 500 });
   }
 }

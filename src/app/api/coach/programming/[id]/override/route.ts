@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { createOverride } from "@/lib/data/programming";
+import { logger } from "@/lib/logger";
 
 /* ─── POST — create a tier override for a programmed session ─────────────── */
 
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json({ ok: true, data }, { status: 201 });
   } catch (err) {
-    console.error("[programming override POST]", err);
+    logger.error("[programming override POST]", { context: "api", error: err });
     if (err instanceof Error && err.message.includes("not found")) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword, signToken, setAuthCookie, setCsrfCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Error claiming account:", error);
+    logger.error("Error claiming account", { context: "api", error });
     return NextResponse.json({ error: "Failed to claim account" }, { status: 500 });
   }
 }
