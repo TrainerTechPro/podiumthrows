@@ -239,10 +239,12 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
               ? { duration: 0 }
               : { type: "spring", damping: 30, stiffness: 300 }
           }
-          className="absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto custom-scrollbar rounded-t-2xl"
+          className="absolute bottom-0 left-0 right-0 max-h-[90vh] overflow-y-auto custom-scrollbar rounded-t-2xl"
           style={{
             backgroundColor: "var(--card-bg)",
             borderTop: "1px solid var(--card-border)",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+            minHeight: "70vh",
           }}
         >
           {/* Drag handle */}
