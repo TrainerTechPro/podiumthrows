@@ -175,7 +175,7 @@ export const DAYS_OF_WEEK = [
   { value: 6, label: "Sat", fullLabel: "Saturday" },
 ] as const;
 
-// ─── Severity Labels (for body map) ────────────────────────────────────────
+// ─── Severity Labels (for form-blocks body map — legacy 5-point scale) ─────
 
 export const SEVERITY_LABELS: Record<number, string> = {
   1: "Minimal",
