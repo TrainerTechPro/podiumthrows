@@ -201,6 +201,14 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(-4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "step-slide-in-right": {
+          "0%": { opacity: "0", transform: "translateX(24px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "step-slide-in-left": {
+          "0%": { opacity: "0", transform: "translateX(-24px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
       },
       animation: {
         // Existing
@@ -228,6 +236,8 @@ const config: Config = {
         "float": "float 3s ease-in-out infinite",
         "danger-pulse": "danger-pulse 2s ease-in-out infinite",
         "fade-slide-in": "fade-slide-in 0.4s ease-out both",
+        "slide-in-right": "step-slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "slide-in-left": "step-slide-in-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
       transitionTimingFunction: {
         "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",

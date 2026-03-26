@@ -17,7 +17,7 @@ import { parseSorenessArea } from "@/lib/readiness/parse-soreness";
 import { getAthleteReadinessTrend, type ReadinessTrendPoint } from "@/lib/data/coach";
 import { getTodaySnapshot } from "@/lib/whoop/sync";
 import { getTodaySnapshot as getOuraTodaySnapshot } from "@/lib/oura/sync";
-import { CheckInForm } from "./_checkin-form";
+import { CheckinFlow } from "./_checkin-flow";
 import { ReadinessChart } from "./_readiness-chart";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -627,6 +627,21 @@ export default async function WellnessPage() {
     value: t.overallScore,
   }));
 
+  // Extract yesterday's average stress+energy score for comparison badge
+  const previousScore = (() => {
+    if (history.length === 0) return null;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const yd = history.find((h) => {
+      const d = new Date(h.date);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime() === yesterday.getTime();
+    });
+    if (!yd) return null;
+    return (yd.stressLevel + yd.energyMood) / 2;
+  })();
+
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Header */}
@@ -642,7 +657,7 @@ export default async function WellnessPage() {
       {checkInToday ? (
         <TodayResultCard checkIn={checkInToday} trend={trend} />
       ) : (
-        <CheckInForm
+        <CheckinFlow
           whoopData={
             whoopSnapshot
               ? {
@@ -669,6 +684,7 @@ export default async function WellnessPage() {
                 }
               : undefined
           }
+          previousScore={previousScore}
         />
       )}
 
