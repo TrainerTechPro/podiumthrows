@@ -127,9 +127,11 @@ function SidebarFooter({ user }: { user: DashboardUser }) {
       <Avatar name={user.name} src={user.avatarUrl} size="sm" status="online" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[var(--foreground)] truncate">{user.name}</p>
-        <p className="text-sm text-muted truncate capitalize">
+        <p className="text-xs text-muted truncate capitalize">
           {user.role.toLowerCase()}
-          {user.plan && ` · ${user.plan}`}
+          {user.plan && (
+            <span className="text-primary-500 dark:text-primary-400"> · {user.plan}</span>
+          )}
         </p>
       </div>
     </div>

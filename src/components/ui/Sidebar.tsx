@@ -100,15 +100,15 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
             "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
             isParentActive
               ? "text-primary-700 dark:text-primary-300"
-              : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100"
+              : "text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800/70 hover:text-surface-900 dark:hover:text-surface-100"
           )}
         >
           <span
             className={cn(
               "w-5 h-5 shrink-0 transition-colors",
               isParentActive
-                ? "text-primary-600 dark:text-primary-400"
-                : "text-surface-400 dark:text-surface-500 group-hover:text-surface-600 dark:group-hover:text-surface-300"
+                ? "text-primary-500 dark:text-primary-400"
+                : "text-surface-400 dark:text-surface-500 group-hover:text-surface-500 dark:group-hover:text-surface-300"
             )}
           >
             {item.icon}
@@ -155,8 +155,8 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
         "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 group",
         depth > 0 ? "px-3 py-2" : "px-3 py-2.5",
         isActive
-          ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
-          : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-surface-900 dark:hover:text-surface-100"
+          ? "bg-primary-500/12 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.15)]"
+          : "text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800/70 hover:text-surface-900 dark:hover:text-surface-100"
       )}
       aria-current={isActive ? "page" : undefined}
     >
@@ -165,8 +165,8 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           "w-5 h-5 shrink-0 transition-colors",
           depth > 0 && "w-4 h-4",
           isActive
-            ? "text-primary-600 dark:text-primary-400 icon-active"
-            : "text-surface-400 dark:text-surface-500 group-hover:text-surface-600 dark:group-hover:text-surface-300"
+            ? "text-primary-500 dark:text-primary-400"
+            : "text-surface-400 dark:text-surface-500 group-hover:text-surface-500 dark:group-hover:text-surface-300"
         )}
       >
         {item.icon}
@@ -175,16 +175,15 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
       {item.badge !== undefined && (
         <span
           className={cn(
-            "ml-auto px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums",
+            "ml-auto min-w-[20px] text-center px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums shrink-0",
             isActive
-              ? "bg-primary-200 dark:bg-primary-500/30 text-primary-700 dark:text-primary-300"
+              ? "bg-primary-500/20 text-primary-600 dark:text-primary-300"
               : "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300"
           )}
         >
           {item.badge}
         </span>
       )}
-      {isActive && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />}
     </Link>
   );
 }
@@ -244,7 +243,7 @@ export function Sidebar({
           {sections.map((section, si) => (
             <div key={si}>
               {section.title && (
-                <p className="px-3 mb-1.5 text-sm font-semibold uppercase tracking-widest text-surface-400 dark:text-surface-500">
+                <p className="px-3 mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-surface-400 dark:text-surface-500">
                   {section.title}
                 </p>
               )}
