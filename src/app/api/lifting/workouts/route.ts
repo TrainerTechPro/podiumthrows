@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, LiftingWorkoutCreateSchema } from "@/lib/api-schemas";
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 
@@ -41,37 +42,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { programId, weekNumber, workoutNumber, date } = body as Record<
-      string,
-      unknown
-    >;
-
-    // ── Validate required fields ──────────────────────────────────────────
-    if (typeof programId !== "string" || programId.trim().length === 0) {
-      return NextResponse.json(
-        { error: "programId is required." },
-        { status: 400 }
-      );
-    }
-    if (typeof weekNumber !== "number" || weekNumber < 1) {
-      return NextResponse.json(
-        { error: "weekNumber must be a positive number." },
-        { status: 400 }
-      );
-    }
-    if (typeof workoutNumber !== "number" || workoutNumber < 1) {
-      return NextResponse.json(
-        { error: "workoutNumber must be a positive number." },
-        { status: 400 }
-      );
-    }
-    if (typeof date !== "string" || date.trim().length === 0) {
-      return NextResponse.json(
-        { error: "date is required." },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, LiftingWorkoutCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { programId, weekNumber, workoutNumber, date } = parsed;
 
     // ── Fetch program with phases + exercises ─────────────────────────────
     const program = await prisma.liftingProgram.findFirst({

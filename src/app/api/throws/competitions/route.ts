@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, CompetitionCreateSchema, CompetitionUpdateSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,12 +12,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { athleteId, name, date, event, priority, result, notes } = body;
-
-    if (!athleteId || !name || !date || !event) {
-      return NextResponse.json({ success: false, error: "athleteId, name, date, and event are required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, CompetitionCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, name, date, event, priority, result, notes } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
@@ -48,12 +46,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { id, result, notes, resultBy } = body;
-
-    if (!id) {
-      return NextResponse.json({ success: false, error: "id is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, CompetitionUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { id, result, notes, resultBy } = parsed;
 
     // Verify the caller has access to this competition's athlete
     const existing = await prisma.throwsCompetition.findUnique({
@@ -70,7 +65,7 @@ export async function PATCH(request: NextRequest) {
     const competition = await prisma.throwsCompetition.update({
       where: { id },
       data: {
-        ...(result !== undefined && { result: result === "" ? null : parseFloat(result) }),
+        ...(result !== undefined && { result: result ?? null }),
         ...(notes !== undefined && { notes: notes || null }),
         ...(resultBy !== undefined && { resultBy }),
       },

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { randomUUID } from "crypto";
+import { parseBody, CoachAddAthleteSchema } from "@/lib/api-schemas";
 
 /* ── POST — coach creates a placeholder athlete profile ── */
 export async function POST(request: NextRequest) {
@@ -20,19 +21,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { firstName, lastName, events } = body;
-
-    if (!firstName?.trim() || !lastName?.trim()) {
-      return NextResponse.json({ error: "First name and last name are required" }, { status: 400 });
-    }
-    if (!Array.isArray(events) || events.length === 0) {
-      return NextResponse.json({ error: "At least one event is required" }, { status: 400 });
-    }
-    const validEvents = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
-    if (!events.every((e: string) => validEvents.includes(e))) {
-      return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, CoachAddAthleteSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { firstName, lastName, events } = parsed;
 
     // Check plan limits (exclude self-coached athlete created by Training Mode)
     const athleteCount = await prisma.athleteProfile.count({

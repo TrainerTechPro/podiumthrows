@@ -224,8 +224,14 @@ export const ThrowsCheckInSchema = z.object({
 
 export const TypingSubmitSchema = z.object({
   athleteId: z.string().min(1, "Athlete ID is required"),
-  quizResponses: z.record(z.string(), z.unknown()).refine(
-    (v) => Object.keys(v).length > 0,
+  quizResponses: z.object({
+    adaptationSpeed: z.array(z.record(z.string(), z.number())).optional(),
+    transferType: z.array(z.record(z.string(), z.number())).optional(),
+    selfFeeling: z.array(z.record(z.string(), z.number())).optional(),
+    lightImpl: z.array(z.record(z.string(), z.number())).optional(),
+    recovery: z.array(z.record(z.string(), z.number())).optional(),
+  }).refine(
+    (v) => Object.values(v).some(Boolean),
     "At least one quiz response is required"
   ),
 });

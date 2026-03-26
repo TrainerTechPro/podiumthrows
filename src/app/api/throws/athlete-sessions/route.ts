@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, AthleteThrowsSessionCreateSchema } from "@/lib/api-schemas";
 
 // GET  /api/throws/athlete-sessions?athleteId=...   — list self-logged sessions
 // POST /api/throws/athlete-sessions                  — create a self-logged session
@@ -45,12 +46,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { athleteId, event, date, notes, drillLogs } = body;
-
-    if (!athleteId || !event || !date) {
-      return NextResponse.json({ success: false, error: "athleteId, event and date are required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, AthleteThrowsSessionCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, event, date, notes, drillLogs } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, ThrowsCheckInSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +12,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const parsed = await parseBody(request, ThrowsCheckInSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       athleteId,
       date,
@@ -29,12 +31,8 @@ export async function POST(request: NextRequest) {
       lightImplFeeling,
       heavyImplFeeling,
       notes,
-      source, // "ATHLETE" | "COACH" — who is submitting this check-in
-    } = body;
-
-    if (!athleteId || !date || !selfFeeling) {
-      return NextResponse.json({ success: false, error: "athleteId, date, and selfFeeling are required" }, { status: 400 });
-    }
+      source,
+    } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });

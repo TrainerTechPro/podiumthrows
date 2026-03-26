@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, LiftingProgramCreateSchema } from "@/lib/api-schemas";
 
 /* ─── GET — list all lifting programs for the authenticated coach ──────── */
 
@@ -60,42 +61,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const {
-      name,
-      goals,
-      workoutsPerWeek,
-      totalWeeks,
-      rpeTargets,
-      startDate,
-      phases,
-    } = body as Record<string, unknown>;
-
-    // Validate required fields
-    if (typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json(
-        { error: "Program name is required." },
-        { status: 400 }
-      );
-    }
-    if (!Array.isArray(phases) || phases.length === 0) {
-      return NextResponse.json(
-        { error: "At least one phase is required." },
-        { status: 400 }
-      );
-    }
-    if (typeof workoutsPerWeek !== "number" || workoutsPerWeek < 1) {
-      return NextResponse.json(
-        { error: "workoutsPerWeek must be a positive number." },
-        { status: 400 }
-      );
-    }
-    if (typeof totalWeeks !== "number" || totalWeeks < 1) {
-      return NextResponse.json(
-        { error: "totalWeeks must be a positive number." },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, LiftingProgramCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, goals, workoutsPerWeek, totalWeeks, rpeTargets, startDate, phases } = parsed;
 
     // Validate phases
     for (let i = 0; i < phases.length; i++) {

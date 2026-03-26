@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, TypingSubmitSchema } from "@/lib/api-schemas";
 import {
   scoreAdaptationSpeed,
   scoreTransferType,
@@ -19,12 +20,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { athleteId, quizResponses } = body;
-
-    if (!athleteId || !quizResponses) {
-      return NextResponse.json({ success: false, error: "athleteId and quizResponses are required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, TypingSubmitSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, quizResponses } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
