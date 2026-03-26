@@ -120,7 +120,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         }
       : {
           background: "transparent",
-          color: "#fff",
+          color: "var(--landing-text)",
           border: "1px solid var(--landing-border)",
         };
 
@@ -194,7 +194,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
             style={{
               fontWeight: 900,
               fontSize: 42,
-              color: "#fff",
+              color: "var(--landing-text)",
               lineHeight: 1,
             }}
           >
