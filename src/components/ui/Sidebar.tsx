@@ -216,7 +216,7 @@ export function Sidebar({
         className={cn(
           /* Base */
           "fixed top-0 left-0 z-40 h-full w-[260px]",
-          "flex flex-col bg-[var(--card-bg)] border-r border-[var(--card-border)]",
+          "flex flex-col bg-white dark:bg-[#0c0c10] border-r border-[var(--card-border)]",
           /* Mobile: slide in/out */
           "transition-transform duration-250 ease-[cubic-bezier(0.4,0,0.2,1)]",
           open ? "translate-x-0" : "-translate-x-full",
