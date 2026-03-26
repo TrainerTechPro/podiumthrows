@@ -3,18 +3,11 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Target,
-  Dumbbell,
-  Flame,
-  Snowflake,
   ChevronLeft,
-  ChevronRight,
   Check,
-  X,
   Trophy,
-  Clock,
 } from "lucide-react";
-import { Button, ProgressBar, AnimatedNumber, RestTimer } from "@/components";
+import { AnimatedNumber, RestTimer } from "@/components";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/toast";
@@ -98,15 +91,6 @@ function getRestSeconds(cfg: Record<string, unknown>): number {
   return (cfg.restSeconds as number) || 0;
 }
 
-/* ─── Block icons ────────────────────────────────────────────────────── */
-
-const BLOCK_META: Record<string, { icon: typeof Target; color: string; label: string }> = {
-  THROWING: { icon: Target, color: "text-orange-500", label: "Throwing" },
-  STRENGTH: { icon: Dumbbell, color: "text-blue-500", label: "Strength" },
-  WARMUP: { icon: Flame, color: "text-amber-500", label: "Warm-Up" },
-  COOLDOWN: { icon: Snowflake, color: "text-cyan-500", label: "Cool-Down" },
-};
-
 /* ─── Classification color system ───────────────────────────────────── */
 
 const CLASSIFICATION_ACCENT: Record<string, string> = {
@@ -123,7 +107,7 @@ function getBlockAccent(block: BlockData): string {
   return CLASSIFICATION_ACCENT[block.blockType] ?? "#FFC800";
 }
 
-function _getBlockLabel(block: BlockData): string {
+function getBlockLabel(block: BlockData): string {
   const cfg = parseConfig(block.config);
   const name = (cfg.exerciseName as string) || (cfg.drillName as string) || "";
   const impl = getImplement(cfg);
@@ -131,7 +115,7 @@ function _getBlockLabel(block: BlockData): string {
   return [classification, impl ? impl : "", name].filter(Boolean).join(" · ");
 }
 
-function _getExerciseName(block: BlockData): string {
+function getExerciseName(block: BlockData): string {
   const cfg = parseConfig(block.config);
   return (cfg.exerciseName as string) || (cfg.drillName as string) || block.blockType;
 }
@@ -1306,6 +1290,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
   // Block navigation
   const [activeBlockIdx, setActiveBlockIdx] = useState(0);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [showBlockTransition, setShowBlockTransition] = useState(false);
   const totalBlocks = data.blocks.length;
   const activeBlock = data.blocks[activeBlockIdx];
 
@@ -1355,29 +1340,6 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
     };
   }, []);
 
-  // Progress calculation
-  const completedBlocks = useMemo(() => {
-    let count = 0;
-    for (const block of data.blocks) {
-      const state = blockStates.get(block.id);
-      if (!state) continue;
-      const bt = block.blockType.toUpperCase();
-      if (bt === "THROWING") {
-        const cfg = parseConfig(block.config);
-        const target = getThrowCount(cfg);
-        if (state.throws.length >= target) count++;
-      } else if (bt === "STRENGTH") {
-        if (state.sets.length > 0) count++;
-      } else {
-        // Warmup/Cooldown — always count as done if visited past it
-        if (activeBlockIdx > data.blocks.indexOf(block) || state.warmupChecked.size > 0) count++;
-      }
-    }
-    return count;
-  }, [blockStates, activeBlockIdx, data.blocks]);
-
-  const progressPercent = totalBlocks > 0 ? Math.round((completedBlocks / totalBlocks) * 100) : 0;
-
   // Handlers
   const handleThrowLogged = useCallback(
     (blockId: string, t: LoggedThrow) => {
@@ -1385,11 +1347,26 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         const next = new Map(prev);
         const state = { ...next.get(blockId)! };
         state.throws = [...state.throws, t];
+
+        // Check if this throwing block just completed
+        const block = data.blocks.find((b) => b.id === blockId);
+        if (block) {
+          const cfg = parseConfig(block.config);
+          const target = getThrowCount(cfg);
+          if (state.throws.length >= target) {
+            const blockIdx = data.blocks.indexOf(block);
+            if (blockIdx < data.blocks.length - 1) {
+              // There's a next block — show transition card
+              setShowBlockTransition(true);
+            }
+          }
+        }
+
         next.set(blockId, state);
         return next;
       });
     },
-    [],
+    [data.blocks],
   );
 
   const handleSetLogged = useCallback(
@@ -1421,24 +1398,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
     [],
   );
 
-  function goNext() {
-    if (activeBlockIdx < totalBlocks - 1) {
-      setActiveBlockIdx(activeBlockIdx + 1);
-    } else {
-      setShowCompletion(true);
-    }
-  }
-
-  function goPrev() {
-    if (showCompletion) {
-      setShowCompletion(false);
-    } else if (activeBlockIdx > 0) {
-      setActiveBlockIdx(activeBlockIdx - 1);
-    }
-  }
-
   async function endEarly() {
-    if (!confirm("End this session early? Your logged data will be saved.")) return;
     try {
       await fetch(`/api/throws/assignments/${data.assignmentId}`, {
         method: "PUT",
@@ -1452,149 +1412,216 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
     }
   }
 
-  // Completion screen
-  if (showCompletion) {
-    return (
-      <div className="max-w-lg mx-auto py-4 px-1">
-        <button onClick={goPrev} className="inline-flex items-center gap-1 text-sm text-muted hover:text-[var(--foreground)] mb-4">
-          <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />
-          Back to blocks
-        </button>
-        <CompletionScreen
-          assignmentId={data.assignmentId}
-          blockStates={blockStates}
-          elapsed={elapsed}
-          sessionName={data.sessionName}
-        />
-      </div>
-    );
-  }
+  const handleEndSession = useCallback(() => {
+    if (confirm("End session early? Your logged throws are saved.")) {
+      endEarly();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const blockMeta = BLOCK_META[activeBlock?.blockType?.toUpperCase()] ?? BLOCK_META.THROWING;
-  const BlockIcon = blockMeta.icon;
+  // Derived values for header
+  const accent = activeBlock ? getBlockAccent(activeBlock) : "#FFC800";
+  const blockLabel = activeBlock ? getBlockLabel(activeBlock) : "";
+  const exerciseName = activeBlock ? getExerciseName(activeBlock) : "";
+
   const currentState = blockStates.get(activeBlock?.id) ?? {
     throws: [], sets: [], warmupChecked: new Set<number>(), completed: false,
   };
 
-  return (
-    <div className="max-w-lg mx-auto py-2 px-1 space-y-4">
-      {/* Header */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-heading font-bold text-[var(--foreground)] truncate flex-1">
-            {data.sessionName}
-          </h1>
-          <Button variant="ghost" size="sm" onClick={endEarly} className="text-xs shrink-0">
-            <X size={14} strokeWidth={1.75} className="mr-1" aria-hidden="true" />
-            End Early
-          </Button>
+  const bt = activeBlock?.blockType?.toUpperCase();
+
+  // Completion screen — full-screen dramatic wrapper
+  if (showCompletion) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#0a0a0c] relative">
+        {/* Scanline overlay */}
+        <div
+          className="pointer-events-none fixed inset-0 z-50 mix-blend-overlay opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(255,200,0,0.1) 1px,rgba(255,200,0,0.1) 2px)",
+          }}
+        />
+
+        {/* Back header */}
+        <div className="sticky top-0 z-10 px-5 pt-14 pb-3 bg-[#0a0a0c]">
+          <button
+            onClick={() => setShowCompletion(false)}
+            className="text-xs text-white/50 flex items-center gap-1 min-h-[44px]"
+          >
+            <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" /> BACK TO BLOCKS
+          </button>
         </div>
 
-        {/* Progress bar */}
-        <ProgressBar value={progressPercent} animate={false} />
-
-        {/* Timer + block count */}
-        <div className="flex items-center justify-between text-xs text-muted">
-          <span className="inline-flex items-center gap-1">
-            <Clock size={12} strokeWidth={1.75} aria-hidden="true" />
-            <span className="tabular-nums">
-              <NumberFlow value={Math.floor(elapsed / 60)} duration={0} />
-              <span>:</span>
-              <NumberFlow value={elapsed % 60} prefix={elapsed % 60 < 10 ? "0" : ""} duration={0} />
-            </span>
-          </span>
-          <span className="tabular-nums">
-            Block {activeBlockIdx + 1} of {totalBlocks}
-          </span>
-        </div>
-      </div>
-
-      {/* Block stepper dots */}
-      <div className="flex items-center justify-center gap-1.5">
-        {data.blocks.map((block, i) => {
-          const state = blockStates.get(block.id);
-          const bt = block.blockType.toUpperCase();
-          const isThrowDone = bt === "THROWING" && (state?.throws.length ?? 0) >= getThrowCount(parseConfig(block.config));
-          const isStrengthDone = bt === "STRENGTH" && (state?.sets.length ?? 0) > 0;
-          const isDone = isThrowDone || isStrengthDone || (i < activeBlockIdx && (bt === "WARMUP" || bt === "COOLDOWN"));
-          const isActive = i === activeBlockIdx;
-
-          return (
-            <button
-              key={block.id}
-              onClick={() => setActiveBlockIdx(i)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                isDone
-                  ? "bg-emerald-500"
-                  : isActive
-                    ? "bg-primary-500 scale-125"
-                    : "bg-surface-300 dark:bg-surface-600"
-              }`}
-              title={`Block ${i + 1}: ${block.blockType}`}
-            />
-          );
-        })}
-      </div>
-
-      {/* Active block card */}
-      <div className="card p-5 space-y-4">
-        {/* Block type label */}
-        <div className="flex items-center gap-2">
-          <BlockIcon size={18} strokeWidth={1.75} className={blockMeta.color} aria-hidden="true" />
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            {blockMeta.label}
-          </h2>
-          <span className="text-xs text-muted ml-auto tabular-nums">
-            Block {activeBlockIdx + 1}
-          </span>
-        </div>
-
-        {/* Block content */}
-        {activeBlock?.blockType?.toUpperCase() === "THROWING" && (
-          <ThrowingBlockView
-            block={activeBlock}
-            state={currentState}
+        <div className="flex-1 overflow-y-auto pb-20 px-5">
+          <CompletionScreen
             assignmentId={data.assignmentId}
-            event={data.event}
-            onThrowLogged={(t) => handleThrowLogged(activeBlock.id, t)}
+            blockStates={blockStates}
+            elapsed={elapsed}
+            sessionName={data.sessionName}
           />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-[#0a0a0c] relative">
+      {/* Scanline overlay */}
+      <div
+        className="pointer-events-none fixed inset-0 z-50 mix-blend-overlay opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(255,200,0,0.1) 1px,rgba(255,200,0,0.1) 2px)",
+        }}
+      />
+
+      {/* ── Sticky Header ── */}
+      <div className="sticky top-0 z-10 px-5 pt-14 pb-3 bg-[#0a0a0c]">
+        <div className="flex items-center justify-between">
+          {/* End Session — left */}
+          <button
+            onClick={handleEndSession}
+            className="text-xs text-white/50 flex items-center gap-1 min-h-[44px]"
+          >
+            <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" /> END SESSION
+          </button>
+
+          {/* Classification badge — center */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-1 h-5 rounded-sm"
+              style={{ background: accent }}
+            />
+            <span
+              className="text-[10px] font-bold tracking-widest"
+              style={{ color: accent }}
+            >
+              {blockLabel}
+            </span>
+          </div>
+
+          {/* Live indicator + timer — right */}
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] tracking-widest font-semibold text-emerald-500/60">
+              ● LIVE
+            </span>
+            <span className="text-xs tabular-nums text-white/50">
+              {formatElapsed(elapsed)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Block Indicator with Nav Arrows ── */}
+      <div className="flex items-center justify-center gap-4 py-2 px-5">
+        {activeBlockIdx > 0 && (
+          <button
+            onClick={() => setActiveBlockIdx((i) => i - 1)}
+            className="text-white/30 text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+          >
+            ‹
+          </button>
         )}
-        {activeBlock?.blockType?.toUpperCase() === "STRENGTH" && (
-          <StrengthBlockView
-            block={activeBlock}
-            state={currentState}
-            onSetLogged={(s) => handleSetLogged(activeBlock.id, s)}
-          />
-        )}
-        {(activeBlock?.blockType?.toUpperCase() === "WARMUP" ||
-          activeBlock?.blockType?.toUpperCase() === "COOLDOWN") && (
-          <WarmupCooldownView
-            block={activeBlock}
-            state={currentState}
-            onToggleDrill={(idx) => handleToggleDrill(activeBlock.id, idx)}
-          />
+        <div className="text-center flex-1">
+          <div className="text-[9px] text-white/30 tracking-widest font-semibold uppercase">
+            Block {activeBlockIdx + 1} / {totalBlocks}
+          </div>
+          <h1
+            className="text-[22px] font-heading font-bold tracking-wider"
+            style={{ color: accent }}
+          >
+            {exerciseName}
+          </h1>
+        </div>
+        {activeBlockIdx < totalBlocks - 1 && (
+          <button
+            onClick={() => setActiveBlockIdx((i) => i + 1)}
+            className="text-white/30 text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+          >
+            ›
+          </button>
         )}
       </div>
 
-      {/* Block navigation */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="secondary"
-          onClick={goPrev}
-          disabled={activeBlockIdx === 0}
-          className="flex-1"
-          leftIcon={<ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="primary"
-          onClick={goNext}
-          className="flex-1"
-          rightIcon={<ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />}
-        >
-          {activeBlockIdx === totalBlocks - 1 ? "Finish" : "Next Block"}
-        </Button>
+      {/* ── Block Content Area ── */}
+      <div className="flex-1 overflow-y-auto pb-20 px-5">
+        {/* Block transition card */}
+        {showBlockTransition && activeBlockIdx < totalBlocks - 1 ? (
+          <div className="flex-1 flex flex-col items-center justify-center px-7 py-20">
+            <div
+              className="text-[8px] tracking-[4px] font-semibold"
+              style={{ color: "#00FF8888" }}
+            >
+              BLOCK COMPLETE
+            </div>
+            <div
+              className="text-lg font-heading font-bold tracking-wider mt-3"
+              style={{ color: accent }}
+            >
+              Next: {getExerciseName(data.blocks[activeBlockIdx + 1])}
+            </div>
+            <button
+              onClick={() => {
+                setShowBlockTransition(false);
+                setActiveBlockIdx((i) => i + 1);
+              }}
+              className="mt-6 w-full py-4 text-sm font-bold tracking-widest"
+              style={{
+                background: accent,
+                color: "#000",
+                clipPath:
+                  "polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))",
+              }}
+            >
+              CONTINUE
+            </button>
+          </div>
+        ) : (
+          <>
+            {bt === "THROWING" && (
+              <ThrowingBlockView
+                block={activeBlock}
+                state={currentState}
+                assignmentId={data.assignmentId}
+                event={data.event}
+                onThrowLogged={(t) => handleThrowLogged(activeBlock.id, t)}
+              />
+            )}
+            {bt === "STRENGTH" && (
+              <StrengthBlockView
+                block={activeBlock}
+                state={currentState}
+                onSetLogged={(s) => handleSetLogged(activeBlock.id, s)}
+              />
+            )}
+            {(bt === "WARMUP" || bt === "COOLDOWN") && (
+              <WarmupCooldownView
+                block={activeBlock}
+                state={currentState}
+                onToggleDrill={(idx) => handleToggleDrill(activeBlock.id, idx)}
+              />
+            )}
+          </>
+        )}
+
+        {/* ── Bottom Nav: Finish Button (last block only) ── */}
+        {!showBlockTransition && activeBlockIdx === totalBlocks - 1 && (
+          <div className="mt-8 px-2">
+            <button
+              onClick={() => setShowCompletion(true)}
+              className="w-full py-4 text-sm font-bold tracking-widest"
+              style={{
+                background: "#00FF88",
+                color: "#000",
+                clipPath:
+                  "polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))",
+              }}
+            >
+              FINISH SESSION
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
