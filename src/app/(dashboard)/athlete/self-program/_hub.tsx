@@ -46,6 +46,7 @@ interface ProgramSession {
   focusLabel: string;
   estimatedDuration: number | null;
   weekNumber: number;
+  dayOfWeek: number;
 }
 
 interface TrainingProgram {
@@ -326,16 +327,18 @@ function ActiveView({
     Math.round((phaseWeeksCurrent / phaseTotalWeeks) * 100)
   );
 
-  // Next upcoming session
-  const upcomingSessions = sessions
-    .filter((s) => s.status === "PLANNED" || s.status === "SCHEDULED")
-    .filter((s) => s.scheduledDate)
-    .sort(
-      (a, b) =>
-        new Date(a.scheduledDate!).getTime() -
-        new Date(b.scheduledDate!).getTime()
-    );
-  const nextSession = upcomingSessions[0] ?? null;
+  // Next upcoming session — find first incomplete session by week/day order
+  // (scheduledDate may be null for self-program sessions)
+  const incompleteSessions = sessions
+    .filter((s) => s.status === "PLANNED" || s.status === "SCHEDULED" || s.status === "IN_PROGRESS")
+    .sort((a, b) => {
+      // Prefer IN_PROGRESS first (resume), then by week/day order
+      if (a.status === "IN_PROGRESS" && b.status !== "IN_PROGRESS") return -1;
+      if (b.status === "IN_PROGRESS" && a.status !== "IN_PROGRESS") return 1;
+      if (a.weekNumber !== b.weekNumber) return a.weekNumber - b.weekNumber;
+      return a.dayOfWeek - b.dayOfWeek;
+    });
+  const nextSession = incompleteSessions[0] ?? null;
 
   // Stats
   const completedSessions = sessions.filter(
@@ -496,15 +499,23 @@ function ActiveView({
           </div>
         )}
 
-        {/* Next Session */}
+        {/* Next Session / Continue Workout */}
         {nextSession ? (
           <Link
             href={`/athlete/self-program/${config.id}/session/${nextSession.id}`}
             className="card card-interactive p-5 space-y-3 block"
           >
-            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-              Next Session
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+                {nextSession.status === "IN_PROGRESS" ? "Continue Workout" : "Next Session"}
+              </h2>
+              {nextSession.status === "IN_PROGRESS" && (
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary-500 flex items-center justify-center shrink-0">
                 <Calendar

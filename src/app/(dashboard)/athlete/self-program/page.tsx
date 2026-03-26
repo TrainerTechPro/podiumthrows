@@ -33,6 +33,7 @@ export default async function SelfProgramPage() {
               focusLabel: true,
               estimatedDuration: true,
               weekNumber: true,
+              dayOfWeek: true,
             },
           },
         },
