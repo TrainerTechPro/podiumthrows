@@ -209,17 +209,24 @@ export function SessionDetail({
     });
   }
 
-  // ── Start Workout ───────────────────────────────────────────────────
+  // ── Start Workout → Launch Live View ────────────────────────────────
 
   async function handleStartWorkout() {
     setStarting(true);
     try {
-      const res = await patchSession({ status: "IN_PROGRESS" });
-      if (res.ok) {
+      const res = await fetch(
+        `/api/athlete/self-program/${configId}/session/${session.id}/start-live`,
+        { method: "POST", headers: { "Content-Type": "application/json", ...csrfHeaders() } }
+      );
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.assignmentId) {
         setStatus("IN_PROGRESS");
-        success("Workout started", "Good luck out there!");
+        success("Workout started", "Launching live view...");
+        router.push(`/athlete/throws/live/${data.assignmentId}`);
+      } else if (res.status === 409) {
+        toastError("Already done", data.error || "Session already completed");
       } else {
-        const data = await res.json().catch(() => ({}));
         toastError("Error", data.error || "Failed to start workout");
       }
     } catch {

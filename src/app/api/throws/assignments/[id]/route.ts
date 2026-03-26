@@ -98,7 +98,10 @@ export async function PUT(
       data: updateData,
       include: {
         session: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            tags: true,
             blocks: { orderBy: { position: "asc" } },
             coach: { select: { id: true } },
           },
@@ -168,6 +171,35 @@ export async function PUT(
             url: `/coach/athletes`,
           },
         }).catch((err) => logger.error("Workout completion notification failed", { error: err }));
+      }
+    }
+
+    // ── Update self-program ProgramSession if this was auto-created ───
+    if (action === "complete" || action === "partial") {
+      try {
+        const tags = updated.session.tags ? JSON.parse(updated.session.tags) : [];
+        const selfProgramTag = (tags as string[]).find((t: string) => t.startsWith("selfProgram:"));
+        if (selfProgramTag) {
+          const programSessionId = selfProgramTag.replace("selfProgram:", "");
+          const bestMark = updated.throwLogs.reduce(
+            (max: number, tl: { distance: number | null }) => (tl.distance && tl.distance > max ? tl.distance : max),
+            0,
+          );
+          await prisma.programSession.update({
+            where: { id: programSessionId },
+            data: {
+              status: action === "complete" ? "COMPLETED" : "IN_PROGRESS",
+              completedAt: action === "complete" ? new Date() : undefined,
+              actualThrows: updated.throwLogs.length,
+              bestMark: bestMark > 0 ? bestMark : undefined,
+              rpe: (rpe as number) ?? undefined,
+              selfFeeling: (selfFeeling as string) ?? undefined,
+            },
+          });
+        }
+      } catch (err) {
+        // Non-critical — don't fail the assignment completion
+        logger.error("Failed to update self-program session", { context: "api", error: err });
       }
     }
 
