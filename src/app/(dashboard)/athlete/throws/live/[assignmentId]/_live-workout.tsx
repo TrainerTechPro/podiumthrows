@@ -195,7 +195,9 @@ function ThrowingBlockView({
   const [distance, setDistance] = useState("");
   const [logging, setLogging] = useState(false);
   const [showRest, setShowRest] = useState(false);
+  const [inputExpanded, setInputExpanded] = useState(false);
 
+  const accent = getBlockAccent(block);
   const cfg = parseConfig(block.config);
   const target = getThrowCount(cfg);
   const implement = getImplement(cfg);
@@ -204,9 +206,17 @@ function ThrowingBlockView({
   const technique = (cfg.techniqueFocus as string) || "FULL_THROW";
   const current = state.throws.length;
   const bestMark = useMemo(
-    () => state.throws.reduce((max, t) => Math.max(max, t.distance!), 0), // TODO: Task 2 will add proper null guard
+    () =>
+      state.throws
+        .filter((t) => t.distance !== null)
+        .reduce((max, t) => Math.max(max, t.distance as number), 0),
     [state.throws],
   );
+
+  const chamfer =
+    "polygon(0 0,calc(100% - 3px) 0,100% 3px,100% 100%,3px 100%,0 calc(100% - 3px))";
+  const chamferLg =
+    "polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))";
 
   async function logThrow() {
     const d = parseFloat(distance);
@@ -242,6 +252,7 @@ function ThrowingBlockView({
       };
       onThrowLogged(logged);
       setDistance("");
+      setInputExpanded(false);
 
       // Show rest timer if restSeconds configured and throws remain
       if (restSeconds > 0 && current + 1 < target) {
@@ -261,34 +272,109 @@ function ThrowingBlockView({
     }
   }
 
+  function skipThrow() {
+    onThrowLogged({ throwNumber: current + 1, distance: null });
+  }
+
   return (
     <div className="space-y-5">
-      {/* Implement + technique header */}
-      <div className="text-center space-y-2">
-        {(implement || implementKg > 0) && (
-          <div className="inline-flex items-center px-4 py-2 rounded-xl bg-orange-100 dark:bg-orange-900/25">
-            <span className="text-2xl font-heading font-bold text-orange-600 dark:text-orange-400">
-              {implement || `${implementKg}kg`}
-            </span>
-          </div>
-        )}
+      {/* ── Hero Throw Counter ── */}
+      <div className="text-center pt-2">
+        <p
+          className="text-[8px] uppercase font-semibold mb-1"
+          style={{ letterSpacing: "4px", color: `${accent}44` }}
+        >
+          THROW
+        </p>
+        <div
+          className="flex items-baseline justify-center"
+          style={{ textShadow: `0 0 50px ${accent}33` }}
+        >
+          <NumberFlow
+            value={current + (current < target ? 1 : 0)}
+            className="font-heading font-extrabold"
+            style={{ fontSize: "72px", lineHeight: 1, color: accent }}
+          />
+          <span
+            className="font-heading font-semibold ml-1"
+            style={{ fontSize: "22px", color: `${accent}66` }}
+          >
+            /{target}
+          </span>
+        </div>
         {technique !== "FULL_THROW" && (
-          <p className="text-sm text-muted capitalize">
+          <p className="text-xs mt-1 capitalize" style={{ color: `${accent}88` }}>
             {technique.replace(/_/g, " ").toLowerCase()}
           </p>
         )}
       </div>
 
-      {/* Throw counter */}
-      <div className="text-center">
-        <p className="text-sm text-muted uppercase tracking-wider mb-1">Throw</p>
-        <div className="flex items-baseline justify-center gap-1">
-          <NumberFlow value={current} className="text-3xl font-heading font-bold text-[var(--foreground)]" />
-          <span className="text-lg text-muted">/ {target}</span>
-        </div>
+      {/* ── Progress Grid ── */}
+      <div className="flex flex-wrap justify-center gap-[3px]">
+        {Array.from({ length: target }, (_, i) => {
+          const num = i + 1;
+          const logged = state.throws.find((t) => t.throwNumber === num);
+          const isCurrent = num === current + 1 && current < target;
+          const isDone = logged && logged.distance !== null;
+          const isSkipped = logged && logged.distance === null;
+
+          let bg = "#111";
+          let fg = "#333";
+          let label = String(num);
+
+          if (isDone) {
+            bg = "#00FF88";
+            fg = "#000";
+            label = "\u2713";
+          } else if (isSkipped) {
+            bg = "#111";
+            fg = "#555";
+            label = "\u2014";
+          } else if (isCurrent) {
+            bg = accent;
+            fg = "#000";
+          }
+
+          return (
+            <div
+              key={num}
+              className="w-5 h-5 flex items-center justify-center font-semibold select-none"
+              style={{
+                fontSize: "7px",
+                backgroundColor: bg,
+                color: fg,
+                clipPath: chamfer,
+              }}
+            >
+              {label}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Rest timer (shown after logging a throw) */}
+      {/* ── Best Mark Badge ── */}
+      {bestMark > 0 && (
+        <div className="flex justify-end">
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm"
+            style={{ backgroundColor: `${accent}11`, border: `1px solid ${accent}22` }}
+          >
+            <span className="text-[9px] uppercase font-semibold" style={{ color: `${accent}88`, letterSpacing: "2px" }}>
+              Best
+            </span>
+            <span style={{ color: accent }}>
+              <AnimatedNumber
+                value={bestMark}
+                decimals={2}
+                className="text-sm font-heading font-bold"
+              />
+            </span>
+            <span className="text-xs" style={{ color: `${accent}66` }}>m</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Rest Timer ── */}
       {showRest && restSeconds > 0 && (
         <div className="flex flex-col items-center py-2">
           <RestTimer
@@ -299,86 +385,137 @@ function ThrowingBlockView({
           />
           <button
             onClick={() => setShowRest(false)}
-            className="mt-2 text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+            className="mt-2 text-xs text-muted hover:text-[var(--foreground)] transition-colors min-h-[44px]"
           >
             Skip Rest
           </button>
         </div>
       )}
 
-      {/* Distance input + log button */}
-      {current < target && (
-        <div className="flex gap-2 items-end">
-          <div className="flex-1">
-            <label className="text-xs text-muted uppercase tracking-wider mb-1 block">
-              Distance (m)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={distance}
-              onChange={(e) => setDistance(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && logThrow()}
-              placeholder="0.00"
-              className="w-full px-3 py-2.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] text-lg tabular-nums font-medium text-center focus:outline-none focus:ring-2 focus:ring-primary-500/40"
-              autoFocus
-              inputMode="decimal"
-            />
-          </div>
-          <Button
-            variant="primary"
-            onClick={logThrow}
-            disabled={logging || !distance}
-            className="px-6 py-2.5"
-          >
-            {logging ? "..." : "Log"}
-          </Button>
-        </div>
-      )}
-
-      {/* Best mark */}
-      {bestMark > 0 && (
-        <div className="text-center p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
-          <p className="text-xs text-muted uppercase tracking-wider">Best Mark</p>
-          <AnimatedNumber value={bestMark} decimals={2} className="text-xl font-heading font-bold text-primary-600 dark:text-primary-400" />
-          <span className="text-sm text-primary-500 ml-1">m</span>
-        </div>
-      )}
-
-      {/* Logged throws list */}
-      {state.throws.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-xs text-muted uppercase tracking-wider">Logged Throws</p>
-          <div className="space-y-0.5 max-h-48 overflow-y-auto custom-scrollbar">
-            {[...state.throws].reverse().map((t) => (
-              <div
-                key={t.throwNumber}
-                className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm ${
-                  t.isPersonalBest
-                    ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-800"
-                    : "bg-surface-50 dark:bg-surface-800/50"
-                }`}
+      {/* ── Distance Input Card ── */}
+      {current < target && !showRest && (
+        <>
+          {!inputExpanded ? (
+            <button
+              onClick={() => setInputExpanded(true)}
+              className="w-full min-h-[56px] flex items-center justify-center transition-colors"
+              style={{
+                backgroundColor: "#08080a",
+                border: `1px solid ${accent}40`,
+                clipPath: chamferLg,
+              }}
+            >
+              <span
+                className="text-[10px] uppercase font-bold"
+                style={{ letterSpacing: "3px", color: `${accent}cc` }}
               >
-                <span className="text-muted tabular-nums">#{t.throwNumber}</span>
-                <span className={`font-medium tabular-nums ${t.isPersonalBest ? "text-amber-600 dark:text-amber-400" : "text-[var(--foreground)]"}`}>
-                  {t.distance!.toFixed(2)}m {/* TODO: Task 2 will add proper null guard */}
-                  {t.isPersonalBest && (
-                    <Trophy size={12} strokeWidth={1.75} className="inline ml-1 text-amber-500" aria-hidden="true" />
-                  )}
-                </span>
+                TAP TO LOG THROW #{current + 1}
+              </span>
+            </button>
+          ) : (
+            <div
+              className="p-4 space-y-3"
+              style={{
+                backgroundColor: "#08080a",
+                border: `1px solid ${accent}40`,
+                clipPath: chamferLg,
+              }}
+            >
+              <label
+                className="text-[9px] uppercase font-semibold block"
+                style={{ letterSpacing: "2px", color: `${accent}88` }}
+              >
+                Distance (m) — Throw #{current + 1}
+              </label>
+              <div className="flex gap-2 items-end">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={distance}
+                  onChange={(e) => setDistance(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") logThrow();
+                    if (e.key === "Escape") setInputExpanded(false);
+                  }}
+                  placeholder="0.00"
+                  className="flex-1 px-3 py-3 rounded-md border text-lg tabular-nums font-medium text-center focus:outline-none"
+                  style={{
+                    backgroundColor: "#0a0a0c",
+                    borderColor: `${accent}33`,
+                    color: accent,
+                  }}
+                  autoFocus
+                  inputMode="decimal"
+                />
+                <button
+                  onClick={logThrow}
+                  disabled={logging || !distance}
+                  className="px-5 min-h-[48px] font-bold text-xs uppercase disabled:opacity-40 transition-opacity"
+                  style={{
+                    letterSpacing: "2px",
+                    backgroundColor: accent,
+                    color: "#000",
+                    clipPath: chamferLg,
+                  }}
+                >
+                  {logging ? "..." : "LOG"}
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Skip Button ── */}
+      {current < target && !showRest && (
+        <button
+          onClick={skipThrow}
+          className="w-full min-h-[44px] py-3 text-[10px] uppercase font-bold transition-colors"
+          style={{
+            letterSpacing: "3px",
+            color: `${accent}88`,
+            backgroundColor: "transparent",
+            border: `1px solid ${accent}55`,
+            clipPath: chamferLg,
+          }}
+        >
+          SKIP (NO MARK)
+        </button>
+      )}
+
+      {/* ── Logged Throws Mini-List ── */}
+      {state.throws.length > 0 && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1 px-1">
+          {state.throws.map((t) => (
+            <span
+              key={t.throwNumber}
+              className="text-xs tabular-nums"
+              style={{ color: t.isPersonalBest ? "#FFC800" : `${accent}88` }}
+            >
+              #{t.throwNumber}{" "}
+              {t.distance !== null ? `${t.distance.toFixed(2)}m` : "\u2014"}
+              {t.isPersonalBest && (
+                <Trophy size={10} strokeWidth={1.75} className="inline ml-0.5" aria-hidden="true" />
+              )}
+            </span>
+          ))}
         </div>
       )}
 
-      {/* Block complete message */}
+      {/* ── Block Complete ── */}
       {current >= target && (
-        <div className="text-center p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-800">
-          <Check size={24} strokeWidth={1.75} className="mx-auto text-emerald-500 mb-1" aria-hidden="true" />
-          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            Block Complete!
+        <div
+          className="text-center py-4"
+          style={{
+            backgroundColor: "#00FF8811",
+            border: "1px solid #00FF8833",
+            clipPath: chamferLg,
+          }}
+        >
+          <Check size={20} strokeWidth={1.75} className="mx-auto mb-1" style={{ color: "#00FF88" }} aria-hidden="true" />
+          <p className="text-xs font-bold uppercase" style={{ letterSpacing: "3px", color: "#00FF88" }}>
+            Block Complete
           </p>
         </div>
       )}
