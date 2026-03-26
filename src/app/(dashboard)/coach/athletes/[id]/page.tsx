@@ -5,6 +5,7 @@ import { formatImplementWeight } from "@/lib/throws";
 import { Avatar, Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
 import { ArrowLeft } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { parseSorenessArea } from "@/lib/readiness/parse-soreness";
 import { LineChart, type LineChartDataPoint } from "@/components/charts/LineChart";
 import {
   requireCoachSession,
@@ -890,12 +891,35 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
                   : "None"}
               </span>
             </div>
-            {latest.sorenessArea && (
-              <div className="text-xs">
-                <span className="text-muted">Soreness area:</span>{" "}
-                <span className="font-semibold capitalize">{latest.sorenessArea.replace(/_/g, " ")}</span>
-              </div>
-            )}
+            {latest.sorenessArea && (() => {
+              const { isStructured, areas, legacyText } = parseSorenessArea(latest.sorenessArea);
+              return (
+                <div className="text-xs">
+                  <span className="text-muted">Soreness area:</span>{" "}
+                  {isStructured && areas.length > 0 ? (
+                    <span className="inline-flex flex-wrap gap-1 ml-1">
+                      {areas.map((area) => (
+                        <span
+                          key={`${area.slug}-${area.side ?? "center"}`}
+                          className={cn(
+                            "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                            area.severity === 3
+                              ? "bg-red-500/12 text-red-400 border-red-500/20"
+                              : area.severity === 2
+                              ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
+                              : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                          )}
+                        >
+                          {area.region}
+                        </span>
+                      ))}
+                    </span>
+                  ) : legacyText ? (
+                    <span className="font-semibold capitalize">{legacyText.replace(/_/g, " ")}</span>
+                  ) : null}
+                </div>
+              );
+            })()}
             {latest.injuryNotes && (
               <div className="text-xs w-full">
                 <span className="text-muted">Injury notes:</span>{" "}

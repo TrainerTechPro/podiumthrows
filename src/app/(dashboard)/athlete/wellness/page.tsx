@@ -13,6 +13,7 @@ import {
   getAthleteCheckInToday,
   type ReadinessCheckInItem,
 } from "@/lib/data/athlete";
+import { parseSorenessArea } from "@/lib/readiness/parse-soreness";
 import { getAthleteReadinessTrend, type ReadinessTrendPoint } from "@/lib/data/coach";
 import { getTodaySnapshot } from "@/lib/whoop/sync";
 import { getTodaySnapshot as getOuraTodaySnapshot } from "@/lib/oura/sync";
@@ -243,15 +244,18 @@ function TodayResultCard({
   const ouraSleep = isOura ? checkIn.ouraSleepScore : null;
   const ouraActivity = isOura ? checkIn.ouraActivityScore : null;
 
+  const sorenessAreaParsed = parseSorenessArea(checkIn.sorenessArea ?? null);
+
   const factors = [
     { label: "Sleep", value: checkIn.sleepQuality, hint: formatSleepDuration(checkIn.sleepHours) },
     {
       label: "Soreness",
       value: checkIn.soreness,
-      hint: checkIn.sorenessArea?.replace(/_/g, " ") ?? undefined,
+      hint: sorenessAreaParsed.legacyText?.replace(/_/g, " ") ?? undefined,
+      sorenessAreas: sorenessAreaParsed.isStructured ? sorenessAreaParsed.areas : [],
     },
-    { label: "Stress", value: checkIn.stressLevel, hint: undefined },
-    { label: "Energy", value: checkIn.energyMood, hint: undefined },
+    { label: "Stress", value: checkIn.stressLevel, hint: undefined, sorenessAreas: [] },
+    { label: "Energy", value: checkIn.energyMood, hint: undefined, sorenessAreas: [] },
   ];
 
   return (
@@ -450,7 +454,27 @@ function TodayResultCard({
                   style={{ width: `${f.value * 10}%` }}
                 />
               </div>
-              {f.hint && <p className="text-[10px] text-muted capitalize">{f.hint}</p>}
+              {f.sorenessAreas && f.sorenessAreas.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {f.sorenessAreas.map((area) => (
+                    <span
+                      key={`${area.slug}-${area.side ?? "center"}`}
+                      className={cn(
+                        "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                        area.severity === 3
+                          ? "bg-red-500/12 text-red-400 border-red-500/20"
+                          : area.severity === 2
+                          ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
+                          : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                      )}
+                    >
+                      {area.region}
+                    </span>
+                  ))}
+                </div>
+              ) : f.hint ? (
+                <p className="text-[10px] text-muted capitalize">{f.hint}</p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -516,6 +540,8 @@ type CheckIn = {
 };
 
 function CheckInCard({ c }: { c: CheckIn }) {
+  const { isStructured, areas, legacyText } = parseSorenessArea(c.sorenessArea);
+
   return (
     <div className="px-4 py-3.5">
       <div className="flex items-center gap-3 mb-2">
@@ -526,20 +552,43 @@ function CheckInCard({ c }: { c: CheckIn }) {
         </span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 ml-5">
-        {[
-          { label: "Sleep", value: `${c.sleepQuality}/10 · ${c.sleepHours}h` },
-          {
-            label: "Soreness",
-            value: `${c.soreness}/10${c.sorenessArea ? ` (${c.sorenessArea.replace(/_/g, " ")})` : ""}`,
-          },
-          { label: "Stress", value: `${c.stressLevel}/10` },
-          { label: "Energy", value: `${c.energyMood}/10` },
-        ].map((item) => (
-          <div key={item.label}>
-            <p className="text-[10px] text-muted uppercase tracking-wide">{item.label}</p>
-            <p className="text-xs text-[var(--foreground)] font-medium truncate">{item.value}</p>
-          </div>
-        ))}
+        <div>
+          <p className="text-[10px] text-muted uppercase tracking-wide">Sleep</p>
+          <p className="text-xs text-[var(--foreground)] font-medium">{c.sleepQuality}/10 · {c.sleepHours}h</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-muted uppercase tracking-wide">Soreness</p>
+          <p className="text-xs text-[var(--foreground)] font-medium">{c.soreness}/10</p>
+          {isStructured && areas.length > 0 ? (
+            <div className="flex flex-wrap gap-1 mt-0.5">
+              {areas.map((area) => (
+                <span
+                  key={`${area.slug}-${area.side ?? "center"}`}
+                  className={cn(
+                    "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                    area.severity === 3
+                      ? "bg-red-500/12 text-red-400 border-red-500/20"
+                      : area.severity === 2
+                      ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
+                      : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                  )}
+                >
+                  {area.region}
+                </span>
+              ))}
+            </div>
+          ) : legacyText ? (
+            <p className="text-[10px] text-muted capitalize">{legacyText.replace(/_/g, " ")}</p>
+          ) : null}
+        </div>
+        <div>
+          <p className="text-[10px] text-muted uppercase tracking-wide">Stress</p>
+          <p className="text-xs text-[var(--foreground)] font-medium">{c.stressLevel}/10</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-muted uppercase tracking-wide">Energy</p>
+          <p className="text-xs text-[var(--foreground)] font-medium">{c.energyMood}/10</p>
+        </div>
       </div>
       {c.injuryStatus !== "NONE" && (
         <div className="ml-5 mt-1">
