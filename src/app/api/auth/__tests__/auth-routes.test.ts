@@ -291,7 +291,7 @@ describe("POST /api/auth/register", () => {
 
   it("returns 201 + auth cookie for new coach", async () => {
     mockFindUnique.mockResolvedValue(null); // no existing user
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: (...args: unknown[]) => unknown) => {
       const newUser = { id: "new-1", email: "newcoach@test.com", role: "COACH" };
       return fn({
         user: { create: vi.fn().mockResolvedValue(newUser) },
@@ -342,7 +342,7 @@ describe("POST /api/auth/register", () => {
 
   it("normalizes email to lowercase", async () => {
     mockFindUnique.mockResolvedValue(null);
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: (...args: unknown[]) => unknown) => {
       const newUser = { id: "new-1", email: "newcoach@test.com", role: "COACH" };
       return fn({
         user: { create: vi.fn().mockResolvedValue(newUser) },
@@ -361,7 +361,7 @@ describe("POST /api/auth/register", () => {
 
   it("includes checkout redirect when plan is provided", async () => {
     mockFindUnique.mockResolvedValue(null);
-    mockTransaction.mockImplementation(async (fn: Function) => {
+    mockTransaction.mockImplementation(async (fn: (...args: unknown[]) => unknown) => {
       const newUser = { id: "new-1", email: "newcoach@test.com", role: "COACH" };
       return fn({
         user: { create: vi.fn().mockResolvedValue(newUser) },
