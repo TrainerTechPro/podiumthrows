@@ -1,19 +1,3 @@
-import * as Sentry from "@sentry/nextjs";
-
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-
-  environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
-
-  // Capture 100% in dev, 10% in production
-  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
-
-  // Session Replay — 10% of sessions, 100% of sessions with errors
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-
-  integrations: [Sentry.replayIntegration()],
-
-  // Don't send PII by default — coaches manage athlete data
-  sendDefaultPii: false,
-});
+// Client-side Sentry is initialized in instrumentation-client.ts (Next.js 14+ pattern).
+// This file is kept empty to prevent @sentry/nextjs from auto-initializing a second instance,
+// which causes "Multiple Sentry Session Replay instances" errors and kills React hydration.
