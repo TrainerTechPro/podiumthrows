@@ -64,6 +64,10 @@ export type {
   TaperConfig,
   TaperPlan,
 
+  // Bondarchuk taxonomy
+  BondarchukStrengthCategory,
+  MovementPlane,
+
   // Gap 5: Feedback loop
   FeedbackAnalysis,
   ComplexHistory,

@@ -1,14 +1,17 @@
 // ── Volume Scaling Engine ────────────────────────────────────────────
-// Scales weekly throw volume based on adaptation profile, experience,
-// current weekly volume, and phase parameters.
+// Derives weekly throw volume from sessions × throws-per-session.
+//
+// Bondarchuk principle: volume is CONSTANT within each training period.
+// The only variable that changes between periods is the exercise complex.
+// Phase affects the CE/SD/SP *ratio* of throws, not the total count.
 
-import { PHASE_CONFIGS } from "../constants";
+import { PHASE_CONFIGS, THROWS_PER_SESSION } from "../constants";
 import type { TrainingPhase } from "../constants";
 import type { VolumeTargets, ProgramConfig } from "./types";
 
 // ── Configuration ───────────────────────────────────────────────────
 
-/** Adaptation group scaling multipliers (relative to phase base volume) */
+/** Adaptation group scaling multipliers */
 const ADAPTATION_MULTIPLIERS: Record<number, number> = {
   1: 0.85, // Fast adapters: slightly less volume, peak faster
   2: 1.0,  // Moderate: baseline
@@ -17,7 +20,7 @@ const ADAPTATION_MULTIPLIERS: Record<number, number> = {
 
 /** Experience-based volume scaling.
  * Only meaningfully reduces volume for genuinely new athletes.
- * 3+ years = full volume — these athletes can handle phase targets. */
+ * 3+ years = full volume — these athletes can handle session targets. */
 function experienceMultiplier(yearsThrowing: number): number {
   if (yearsThrowing < 1) return 0.70;
   if (yearsThrowing < 2) return 0.80;
@@ -25,40 +28,19 @@ function experienceMultiplier(yearsThrowing: number): number {
   return 1.0; // 3+ years, full volume
 }
 
-/**
- * Current volume ramp — only applies when athlete provides current volume data
- * AND it's significantly below target. New programs (no data) get full volume
- * because the experience multiplier already handles fitness level.
- *
- * Floor is 0.85 — never cuts more than 15% from target. The old 0.70 floor
- * stacked with experience multiplier to crush accumulation below 200 throws/wk.
- */
-function volumeRampMultiplier(
-  currentWeeklyVolume: number | undefined,
-  targetVolume: number,
-): number {
-  // No current data = new program. Trust experience multiplier, don't penalize.
-  if (!currentWeeklyVolume || currentWeeklyVolume <= 0) return 1.0;
-  const ratio = currentWeeklyVolume / targetVolume;
-  if (ratio >= 0.80) return 1.0;
-  if (ratio >= 0.60) return 0.92;
-  if (ratio >= 0.40) return 0.85;
-  return 0.85; // Hard floor — never below 85% of target
-}
-
 // ── Main Function ───────────────────────────────────────────────────
 
 /**
  * Calculate scaled volume targets for a training week.
  *
- * Input:
- *   - phase: current training phase
- *   - config: full program config with adaptation, experience, current volume
+ * Bondarchuk session-derived volume:
+ *   sessionsPerWeek = daysPerWeek × sessionsPerDay
+ *   baseVolume = sessionsPerWeek × THROWS_PER_SESSION (20)
+ *   scaledVolume = baseVolume × adaptationMultiplier × experienceMultiplier
  *
- * Output:
- *   - throwsPerWeek: total weekly throws target
- *   - throwsPerSession: throws per day type (A, B, C, D, E)
- *   - strengthDaysPerWeek: strength training days
+ * Volume is the SAME across all phases. Phase only controls:
+ *   - CE/SD/SP ratio (via PHASE_RATIOS)
+ *   - Implement distribution (via PHASE_IMPLEMENT_DIST)
  */
 export function scaleVolume(
   phase: TrainingPhase,
@@ -69,26 +51,19 @@ export function scaleVolume(
     throw new Error(`Unknown phase: ${phase}`);
   }
 
-  // Base volume: midpoint of phase range
-  const baseVolume = Math.round(
-    (phaseConfig.throwsPerWeekMin + phaseConfig.throwsPerWeekMax) / 2,
-  );
+  // Session-derived base volume (Bondarchuk principle)
+  const sessionsPerWeek = config.daysPerWeek * (config.sessionsPerDay ?? 1);
+  const baseVolume = sessionsPerWeek * THROWS_PER_SESSION;
 
-  // Apply scaling multipliers
+  // Apply scaling multipliers (adaptation + experience only)
   const adaptMult = ADAPTATION_MULTIPLIERS[config.adaptationGroup] ?? 1.0;
   const expMult = experienceMultiplier(config.yearsThrowing);
-  const rampMult = volumeRampMultiplier(config.currentWeeklyVolume, baseVolume);
 
-  // Days-per-week scaling: fewer days = less total volume
-  const daysFactor = config.daysPerWeek / 4; // Normalized to 4 days/week baseline
+  const scaledVolume = Math.round(baseVolume * adaptMult * expMult);
 
-  const scaledVolume = Math.round(
-    baseVolume * adaptMult * expMult * rampMult * daysFactor,
-  );
-
-  // Clamp to phase bounds (scaled by daysFactor)
-  const min = Math.round(phaseConfig.throwsPerWeekMin * daysFactor * 0.8);
-  const max = Math.round(phaseConfig.throwsPerWeekMax * daysFactor * 1.1);
+  // Clamp to phase safety bounds
+  const min = phaseConfig.throwsPerWeekMin;
+  const max = phaseConfig.throwsPerWeekMax;
   let throwsPerWeek = Math.min(max, Math.max(min, scaledVolume));
 
   // Absolute safety ceiling — no athlete should exceed 350 throws/week
@@ -134,6 +109,7 @@ function distributeAcrossDayTypes(
     TRANSMUTATION: { A: 0.25, B: 0.12, C: 0.28, D: 0.0, E: 0.05 },
     REALIZATION: { A: 0.0, B: 0.0, C: 0.45, D: 0.15, E: 0.05 },
     COMPETITION: { A: 0.0, B: 0.0, C: 0.45, D: 0.15, E: 0.05, MEET: 0.10 },
+    CLEANSE: { E: 1.0 },
   };
 
   const weights = DAY_TYPE_WEIGHTS[phase] ?? DAY_TYPE_WEIGHTS.ACCUMULATION;

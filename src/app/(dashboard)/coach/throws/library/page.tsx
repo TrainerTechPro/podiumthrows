@@ -11,6 +11,7 @@ const PHASE_COLORS: Record<TrainingPhase, string> = {
  TRANSMUTATION: "#5BB88A",
  REALIZATION: "#D4915A",
  COMPETITION: "#D46A6A",
+ CLEANSE: "#8b5cf6",
 };
 
 interface ThrowsSession {

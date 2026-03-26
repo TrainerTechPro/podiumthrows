@@ -12,8 +12,15 @@ export type Gender = "MALE" | "FEMALE";
 export type GenderCode = "M" | "F";
 export type BlockType = "WARMUP" | "THROWING" | "STRENGTH" | "PLYOMETRIC" | "COOLDOWN" | "NOTES";
 export type SessionType = "THROWS_ONLY" | "THROWS_LIFT" | "LIFT_ONLY" | "COMPETITION_SIM";
-export type TrainingPhase = "ACCUMULATION" | "TRANSMUTATION" | "REALIZATION" | "COMPETITION";
+export type TrainingPhase = "ACCUMULATION" | "TRANSMUTATION" | "REALIZATION" | "COMPETITION" | "CLEANSE";
 export type Classification = "CE" | "SD" | "SP" | "GP";
+
+/** Bondarchuk's 5-category strength taxonomy. One exercise per category per session. */
+export type BondarchukStrengthCategory = "OLYMPIC" | "LEG" | "ABDOMINAL" | "BACK" | "TWISTING";
+
+/** Movement plane for GPE exercises. One exercise per plane in each complex. */
+export type MovementPlane = "TRANSVERSE" | "FRONTAL" | "POSTERIOR" | "SAGITTAL";
+
 export type TechniqueFocus = "FULL_THROW" | "STANDING" | "POWER_POSITION" | "HALF_TURN" | "GLIDE" | "SPIN" | "OTHER";
 export type AssignmentStatus = "ASSIGNED" | "NOTIFIED" | "IN_PROGRESS" | "COMPLETED" | "PARTIAL" | "SKIPPED";
 export type SelfFeeling = "GREAT" | "GOOD" | "AVERAGE" | "POOR" | "VERY_POOR";
@@ -272,6 +279,7 @@ export const PHASE_RATIOS: Record<TrainingPhase, { CE: number; SD: number; SP: n
   TRANSMUTATION: { CE: 25, SD: 40, SP: 25, GP: 10 },
   REALIZATION:   { CE: 40, SD: 35, SP: 20, GP: 5 },
   COMPETITION:   { CE: 50, SD: 30, SP: 15, GP: 5 },
+  CLEANSE:       { CE: 50, SD: 20, SP: 30, GP: 0 },
 };
 
 export interface PhaseConfig {
@@ -288,11 +296,17 @@ export interface PhaseConfig {
   durationWeeksMax: number;
 }
 
+/**
+ * Phase configs — throwsPerWeek ranges are now safety clamps only.
+ * Primary volume is derived from sessions × THROWS_PER_SESSION (Bondarchuk principle).
+ * Phase controls the CE/SD/SP *ratio* of those throws, not the total count.
+ */
 export const PHASE_CONFIGS: PhaseConfig[] = [
-  { phase: "ACCUMULATION", cePercent: 15, sdPercent: 35, spPercent: 30, gpPercent: 20, throwsPerWeekMin: 200, throwsPerWeekMax: 300, strengthDaysMin: 3, strengthDaysMax: 4, durationWeeksMin: 4, durationWeeksMax: 6 },
-  { phase: "TRANSMUTATION", cePercent: 25, sdPercent: 40, spPercent: 25, gpPercent: 10, throwsPerWeekMin: 150, throwsPerWeekMax: 200, strengthDaysMin: 2, strengthDaysMax: 3, durationWeeksMin: 3, durationWeeksMax: 4 },
-  { phase: "REALIZATION", cePercent: 40, sdPercent: 35, spPercent: 20, gpPercent: 5, throwsPerWeekMin: 100, throwsPerWeekMax: 150, strengthDaysMin: 1, strengthDaysMax: 2, durationWeeksMin: 2, durationWeeksMax: 3 },
-  { phase: "COMPETITION", cePercent: 50, sdPercent: 30, spPercent: 15, gpPercent: 5, throwsPerWeekMin: 50, throwsPerWeekMax: 80, strengthDaysMin: 0, strengthDaysMax: 1, durationWeeksMin: 1, durationWeeksMax: 2 },
+  { phase: "ACCUMULATION", cePercent: 15, sdPercent: 35, spPercent: 30, gpPercent: 20, throwsPerWeekMin: 40, throwsPerWeekMax: 200, strengthDaysMin: 3, strengthDaysMax: 4, durationWeeksMin: 4, durationWeeksMax: 6 },
+  { phase: "TRANSMUTATION", cePercent: 25, sdPercent: 40, spPercent: 25, gpPercent: 10, throwsPerWeekMin: 40, throwsPerWeekMax: 200, strengthDaysMin: 2, strengthDaysMax: 3, durationWeeksMin: 3, durationWeeksMax: 4 },
+  { phase: "REALIZATION", cePercent: 40, sdPercent: 35, spPercent: 20, gpPercent: 5, throwsPerWeekMin: 30, throwsPerWeekMax: 180, strengthDaysMin: 1, strengthDaysMax: 2, durationWeeksMin: 2, durationWeeksMax: 3 },
+  { phase: "COMPETITION", cePercent: 50, sdPercent: 30, spPercent: 15, gpPercent: 5, throwsPerWeekMin: 20, throwsPerWeekMax: 150, strengthDaysMin: 0, strengthDaysMax: 1, durationWeeksMin: 1, durationWeeksMax: 2 },
+  { phase: "CLEANSE", cePercent: 50, sdPercent: 20, spPercent: 30, gpPercent: 0, throwsPerWeekMin: 15, throwsPerWeekMax: 60, strengthDaysMin: 0, strengthDaysMax: 0, durationWeeksMin: 1, durationWeeksMax: 2 },
 ];
 
 // ── Phase Distribution by Implement Weight ──────────────────────────
@@ -309,6 +323,7 @@ export const PHASE_IMPLEMENT_DIST: PhaseImplementDist[] = [
   { phase: "TRANSMUTATION", lightPercent: 20, compPercent: 50, heavyPercent: 30 },
   { phase: "REALIZATION", lightPercent: 15, compPercent: 60, heavyPercent: 25 },
   { phase: "COMPETITION", lightPercent: 10, compPercent: 80, heavyPercent: 10 },
+  { phase: "CLEANSE", lightPercent: 70, compPercent: 30, heavyPercent: 0 },
 ];
 
 // ── Block Types ─────────────────────────────────────────────────────
@@ -343,6 +358,13 @@ export const CLASSIFICATIONS: Record<Classification, { label: string; descriptio
 
 // ── Minimum Throw Counts (Volume IV) ────────────────────────────────
 
+/**
+ * Bondarchuk baseline throws per single training session.
+ * Research: elite athletes average 15-30 throws/session (Bingisser ~160/week across 10 sessions).
+ * 20 is the midpoint for non-elite athletes. Volume is derived from sessions × this constant.
+ */
+export const THROWS_PER_SESSION = 20;
+
 export const MIN_THROWS: Record<ThrowEvent, number> = {
   SHOT_PUT: 12,
   DISCUS: 12,
@@ -357,27 +379,58 @@ export interface StrengthExerciseDef {
   name: string;
   classification: Classification;
   muscle: string;
+  bondarchukCategory?: BondarchukStrengthCategory;
+  movementPlane?: MovementPlane;
 }
 
 export const STRENGTH_DB: StrengthExerciseDef[] = [
-  { id: "snatch", name: "Barbell Snatch", classification: "SP", muscle: "Full Body" },
-  { id: "power_clean", name: "Power Clean", classification: "SP", muscle: "Full Body" },
-  { id: "squat", name: "Back Squat", classification: "GP", muscle: "Legs" },
-  { id: "front_squat", name: "Front Squat", classification: "GP", muscle: "Legs" },
+  // ── OLYMPIC (SP) — Global/Olympic lifts, 70-80% 1RM ──────────────
+  { id: "snatch", name: "Barbell Snatch", classification: "SP", muscle: "Full Body", bondarchukCategory: "OLYMPIC" },
+  { id: "power_clean", name: "Power Clean", classification: "SP", muscle: "Full Body", bondarchukCategory: "OLYMPIC" },
+  { id: "clean_pull", name: "Clean Pull", classification: "SP", muscle: "Full Body", bondarchukCategory: "OLYMPIC" },
+  { id: "power_snatch", name: "Power Snatch", classification: "SP", muscle: "Full Body", bondarchukCategory: "OLYMPIC" },
+  { id: "jerk", name: "Jerk Behind Head", classification: "SP", muscle: "Full Body", bondarchukCategory: "OLYMPIC" },
+
+  // ── LEG — Squat variants, step-ups, lunges ────────────────────────
+  { id: "squat", name: "Back Squat", classification: "GP", muscle: "Legs", bondarchukCategory: "LEG" },
+  { id: "front_squat", name: "Front Squat", classification: "GP", muscle: "Legs", bondarchukCategory: "LEG" },
+  { id: "half_squat", name: "Half Squat", classification: "GP", muscle: "Legs", bondarchukCategory: "LEG" },
+  { id: "step_up", name: "Step-Ups to Bench", classification: "GP", muscle: "Legs", bondarchukCategory: "LEG" },
+  { id: "walking_lunge", name: "Walking Lunges", classification: "GP", muscle: "Legs", bondarchukCategory: "LEG" },
+
+  // ── BACK (POSTERIOR plane) — RDL, good mornings, GHR ──────────────
+  { id: "rdl", name: "Romanian Deadlift", classification: "GP", muscle: "Posterior", bondarchukCategory: "BACK", movementPlane: "POSTERIOR" },
+  { id: "good_morning", name: "Good Mornings", classification: "GP", muscle: "Posterior", bondarchukCategory: "BACK", movementPlane: "POSTERIOR" },
+  { id: "glute_ham", name: "Glute Ham Raise", classification: "GP", muscle: "Posterior", bondarchukCategory: "BACK", movementPlane: "POSTERIOR" },
+  { id: "trap_deadlift", name: "Trap Bar Deadlift", classification: "GP", muscle: "Full Body", bondarchukCategory: "BACK", movementPlane: "POSTERIOR" },
+  { id: "back_extension", name: "Back Extensions", classification: "GP", muscle: "Posterior", bondarchukCategory: "BACK", movementPlane: "POSTERIOR" },
+
+  // ── TWISTING (TRANSVERSE plane) — Highest correlation to throwing ─
+  { id: "med_ball_rot", name: "Med Ball Rotational", classification: "SP", muscle: "Core", bondarchukCategory: "TWISTING", movementPlane: "TRANSVERSE" },
+  { id: "plate_twist", name: "Plate Twists", classification: "GP", muscle: "Core", bondarchukCategory: "TWISTING", movementPlane: "TRANSVERSE" },
+  { id: "barbell_twist", name: "Barbell Twists", classification: "GP", muscle: "Core", bondarchukCategory: "TWISTING", movementPlane: "TRANSVERSE" },
+  { id: "cable_woodchop", name: "Cable Woodchops", classification: "GP", muscle: "Core", bondarchukCategory: "TWISTING", movementPlane: "TRANSVERSE" },
+
+  // ── ABDOMINAL (SAGITTAL plane) — Core / anterior chain ───────────
+  { id: "ab_wheel", name: "Ab Wheel Rollout", classification: "GP", muscle: "Core", bondarchukCategory: "ABDOMINAL", movementPlane: "SAGITTAL" },
+  { id: "v_ups", name: "V-Ups", classification: "GP", muscle: "Core", bondarchukCategory: "ABDOMINAL", movementPlane: "SAGITTAL" },
+  { id: "hanging_leg_raise", name: "Hanging Leg Raises", classification: "GP", muscle: "Core", bondarchukCategory: "ABDOMINAL", movementPlane: "SAGITTAL" },
+  { id: "plank", name: "Plank", classification: "GP", muscle: "Core", bondarchukCategory: "ABDOMINAL", movementPlane: "SAGITTAL" },
+
+  // ── FRONTAL plane — Lateral movement GPE ──────────────────────────
+  { id: "kb_windmill", name: "KB Windmill", classification: "GP", muscle: "Core", bondarchukCategory: "TWISTING", movementPlane: "FRONTAL" },
+  { id: "lateral_raise", name: "Lateral Raises", classification: "GP", muscle: "Shoulders", movementPlane: "FRONTAL" },
+  { id: "side_bend", name: "Barbell Side Bends", classification: "GP", muscle: "Core", movementPlane: "FRONTAL" },
+
+  // ── Upper body pressing (no Bondarchuk category — builder only) ───
   { id: "bench", name: "Bench Press", classification: "GP", muscle: "Chest" },
   { id: "incline_bench", name: "Incline Bench", classification: "GP", muscle: "Chest" },
   { id: "ohp", name: "Overhead Press", classification: "GP", muscle: "Shoulders" },
-  { id: "rdl", name: "Romanian Deadlift", classification: "GP", muscle: "Posterior" },
-  { id: "clean_pull", name: "Clean Pull", classification: "SP", muscle: "Full Body" },
-  { id: "half_squat", name: "Half Squat", classification: "GP", muscle: "Legs" },
-  { id: "box_jump", name: "Box Jumps", classification: "SP", muscle: "Legs" },
-  { id: "med_ball_rot", name: "Med Ball Rotational", classification: "SP", muscle: "Core" },
+
+  // ── SP plyometric / med ball (no strength category) ───────────────
   { id: "med_ball_oh", name: "Med Ball Overhead", classification: "SP", muscle: "Full Body" },
-  { id: "good_morning", name: "Good Mornings", classification: "GP", muscle: "Posterior" },
-  { id: "glute_ham", name: "Glute Ham Raise", classification: "GP", muscle: "Posterior" },
+  { id: "box_jump", name: "Box Jumps", classification: "SP", muscle: "Legs" },
   { id: "plyo_bounds", name: "Bounding", classification: "SP", muscle: "Legs" },
-  { id: "power_snatch", name: "Power Snatch", classification: "SP", muscle: "Full Body" },
-  { id: "trap_deadlift", name: "Trap Bar Deadlift", classification: "GP", muscle: "Full Body" },
 ];
 
 // ── Rest Intervals (seconds) ────────────────────────────────────────
@@ -395,6 +448,7 @@ export const REST_INTERVALS: Record<TrainingPhase, RestIntervals> = {
   TRANSMUTATION: { CE: 150, SD: 90, SP_power: 150, SP_strength: 210, GP: 90 },
   REALIZATION:   { CE: 240, SD: 150, SP_power: 150, SP_strength: 210, GP: 90 },
   COMPETITION:   { CE: 300, SD: 180, SP_power: 120, SP_strength: 180, GP: 60 },
+  CLEANSE:       { CE: 60, SD: 45, SP_power: 90, SP_strength: 90, GP: 45 },
 };
 
 // ── Weekly Schedule Templates ───────────────────────────────────────
@@ -434,6 +488,11 @@ export const WEEKLY_SCHEDULES: Record<TrainingPhase, ScheduleDay[]> = {
     { day: "Tuesday", type: "E", focus: "Recovery", throwsMin: 10, throwsMax: 15, strength: "None" },
     { day: "Thursday", type: "D", focus: "Competition Sim", throwsMin: 6, throwsMax: 10, strength: "None" },
     { day: "Saturday", type: "MEET", focus: "COMPETE", throwsMin: 6, throwsMax: 6, strength: "None" },
+  ],
+  CLEANSE: [
+    { day: "Monday", type: "E", focus: "Cleanse — Light Circuit", throwsMin: 16, throwsMax: 20, strength: "None" },
+    { day: "Wednesday", type: "E", focus: "Cleanse — Light Circuit", throwsMin: 16, throwsMax: 20, strength: "None" },
+    { day: "Friday", type: "E", focus: "Cleanse — Light Circuit", throwsMin: 16, throwsMax: 20, strength: "None" },
   ],
 };
 

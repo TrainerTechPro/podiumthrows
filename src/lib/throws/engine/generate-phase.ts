@@ -126,16 +126,19 @@ export function generatePhase(config: PhaseGenConfig): GeneratedPhase {
   };
 }
 
-// ── Progressive Overload ────────────────────────────────────────────
+// ── Volume Multiplier ───────────────────────────────────────────────
 
 /**
- * Returns a volume multiplier for progressive overload within a phase.
+ * Returns a volume multiplier for each week within a phase.
  *
- * Pattern varies by phase:
- * - ACCUMULATION: Linear ramp up (0.85 → 1.10), deload last week
- * - TRANSMUTATION: Moderate ramp (0.90 → 1.05), deload last week
- * - REALIZATION: Slight taper (1.0 → 0.85)
- * - COMPETITION: Taper down (0.80 → 0.60)
+ * Bondarchuk principle: volume is CONSTANT within each training period.
+ * No progressive overload ramps, no deload weeks. The natural week-4
+ * performance dip is an expected part of the adaptation curve.
+ *
+ * Exception (hybrid concession): REALIZATION and COMPETITION phases
+ * apply a mild taper because coaches expect reduced volume approaching
+ * a meet. Pure Bondarchuk doesn't taper, but our target users (NCAA
+ * coaches) need this for competition peaking.
  */
 function getProgressFactor(
   weekIndex: number,
@@ -143,22 +146,22 @@ function getProgressFactor(
   phase: TrainingPhase,
 ): number {
   const progress = totalWeeks > 1 ? weekIndex / (totalWeeks - 1) : 0;
-  const isLastWeek = weekIndex === totalWeeks - 1;
 
   switch (phase) {
     case "ACCUMULATION":
-      if (isLastWeek && totalWeeks > 3) return 0.75; // Deload week
-      return 0.85 + progress * 0.25; // 85% → 110%
+      return 1.0; // Constant — Bondarchuk principle
 
     case "TRANSMUTATION":
-      if (isLastWeek && totalWeeks > 2) return 0.80; // Deload week
-      return 0.90 + progress * 0.15; // 90% → 105%
+      return 1.0; // Constant — Bondarchuk principle
 
     case "REALIZATION":
-      return 1.0 - progress * 0.15; // 100% → 85%
+      return 1.0 - progress * 0.10; // Mild taper: 100% → 90%
 
     case "COMPETITION":
-      return 0.80 - progress * 0.20; // 80% → 60%
+      return 0.90 - progress * 0.15; // Meet taper: 90% → 75%
+
+    case "CLEANSE":
+      return 1.0; // Constant — recovery circuit, already light
 
     default:
       return 1.0;

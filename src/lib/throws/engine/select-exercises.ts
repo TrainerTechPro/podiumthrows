@@ -5,7 +5,7 @@
 import { getRankedExercises } from "../correlations";
 import type { ExerciseType } from "../correlations";
 import { STRENGTH_DB } from "../constants";
-import type { Classification, TrainingPhase } from "../constants";
+import type { Classification, TrainingPhase, MovementPlane } from "../constants";
 import type {
   ExerciseComplexEntry,
   ExerciseSelectionParams,
@@ -17,10 +17,10 @@ import type {
 
 /** How many exercises per classification to target in a complex */
 const COMPLEX_TARGETS: Record<Classification, { min: number; max: number }> = {
-  CE: { min: 1, max: 2 },
-  SD: { min: 2, max: 4 },
-  SP: { min: 2, max: 3 },
-  GP: { min: 2, max: 4 },
+  CE: { min: 1, max: 2 },  // 1 exercise, up to 3 implements (heavy/comp/light)
+  SD: { min: 1, max: 1 },  // 1 SDE per program (closely mimics competition movement)
+  SP: { min: 2, max: 3 },  // 2 SPE exercises (same muscles, different pattern)
+  GP: { min: 4, max: 4 },  // 4 GPE, one per movement plane (Bondarchuk methodology)
 };
 
 /** Deficit bias multipliers — when a deficit exists, boost that category */
@@ -227,54 +227,56 @@ function scoreExercises(
 }
 
 /**
- * Select GP exercises from STRENGTH_DB based on deficit priorities.
+ * Movement plane priority order for throwers.
+ * TRANSVERSE (rotational) is most important for throwing performance.
+ */
+const GP_PLANE_ORDER: MovementPlane[] = ["TRANSVERSE", "FRONTAL", "POSTERIOR", "SAGITTAL"];
+
+/**
+ * Select GPE exercises: exactly one per movement plane (Bondarchuk methodology).
+ *
+ * Algorithm:
+ * 1. Group GP exercises from STRENGTH_DB by movementPlane
+ * 2. For each plane (in priority order), pick one exercise:
+ *    a. Prefer exercises NOT in the previous complex (freshness)
+ *    b. Fall back to any available if all are stale
+ * 3. Skip plane if no exercises available (graceful degradation)
  */
 function selectGpExercises(
-  deficitPrimary?: string,
-  deficitSecondary?: string,
+  _deficitPrimary?: string,
+  _deficitSecondary?: string,
   previousExercises?: Set<string>,
 ): { name: string; id: string }[] {
-  const gpDb = STRENGTH_DB.filter((e) => e.classification === "GP");
-  const spDb = STRENGTH_DB.filter((e) => e.classification === "SP");
-  const target = COMPLEX_TARGETS.GP;
+  const gpDb = STRENGTH_DB.filter(
+    (e) => e.classification === "GP" && e.movementPlane != null,
+  );
 
-  // Prioritize based on deficit
-  const priorities: string[] = [];
-
-  if (deficitPrimary === "strength" || deficitSecondary === "strength") {
-    // Heavy emphasis on compound movements
-    priorities.push("squat", "bench", "front_squat", "rdl", "trap_deadlift");
-  } else {
-    // Balanced — include some of everything
-    priorities.push("squat", "bench", "ohp", "rdl");
+  // Group by movement plane
+  const byPlane = new Map<MovementPlane, typeof gpDb>();
+  for (const ex of gpDb) {
+    const plane = ex.movementPlane!;
+    if (!byPlane.has(plane)) byPlane.set(plane, []);
+    byPlane.get(plane)!.push(ex);
   }
 
   const selected: { name: string; id: string }[] = [];
-  const usedIds = new Set<string>();
 
-  // First add priority exercises
-  for (const id of priorities) {
-    if (selected.length >= target.max) break;
-    const ex = [...gpDb, ...spDb].find((e) => e.id === id);
-    if (ex && !usedIds.has(ex.id)) {
-      // Freshness check
-      if (!previousExercises?.has(ex.name.toLowerCase())) {
-        selected.push({ name: ex.name, id: ex.id });
-        usedIds.add(ex.id);
-      }
-    }
+  for (const plane of GP_PLANE_ORDER) {
+    const candidates = byPlane.get(plane);
+    if (!candidates || candidates.length === 0) continue;
+
+    // Prefer exercises not in the previous complex
+    const fresh = candidates.filter(
+      (e) => !previousExercises?.has(e.name.toLowerCase()),
+    );
+    const pool = fresh.length > 0 ? fresh : candidates;
+
+    // Pick one from the pool (rotate through for variety)
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    selected.push({ name: pick.name, id: pick.id });
   }
 
-  // Fill remaining slots with other GP exercises
-  for (const ex of gpDb) {
-    if (selected.length >= target.max) break;
-    if (!usedIds.has(ex.id)) {
-      selected.push({ name: ex.name, id: ex.id });
-      usedIds.add(ex.id);
-    }
-  }
-
-  return selected.slice(0, target.max);
+  return selected;
 }
 
 // ── Utility Helpers ─────────────────────────────────────────────────
@@ -332,6 +334,12 @@ function getPhaseSetReps(
       SD: { setsMin: 2, setsMax: 3, repsMin: 2, repsMax: 3 },
       SP: { setsMin: 1, setsMax: 2, repsMin: 2, repsMax: 3 },
       GP: { setsMin: 1, setsMax: 2, repsMin: 3, repsMax: 5 },
+    },
+    CLEANSE: {
+      CE: { setsMin: 1, setsMax: 2, repsMin: 4, repsMax: 5 },  // Circuit-style: 4-5 throws per set
+      SD: { setsMin: 1, setsMax: 1, repsMin: 4, repsMax: 5 },
+      SP: { setsMin: 1, setsMax: 2, repsMin: 4, repsMax: 5 },
+      GP: { setsMin: 0, setsMax: 0, repsMin: 0, repsMax: 0 },  // No GPE in cleanse
     },
   };
 

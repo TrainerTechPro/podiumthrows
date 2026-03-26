@@ -30,6 +30,7 @@ const DEFAULT_PHASE_DURATION: Record<TrainingPhase, number> = {
   TRANSMUTATION: 3,
   REALIZATION: 2,
   COMPETITION: 2,
+  CLEANSE: 1,
 };
 
 /**

@@ -10,7 +10,7 @@
 // - Complex stays FIXED for the period — stimulus variation comes from implements
 
 import { REST_INTERVALS } from "../constants";
-import type { TrainingPhase, Classification } from "../constants";
+import type { TrainingPhase, Classification, BondarchukStrengthCategory } from "../constants";
 import type {
   StrengthPrescription,
   ExerciseComplexEntry,
@@ -39,6 +39,18 @@ const EXERCISE_SCALE: Record<string, number> = {
   trap_deadlift: 1.0,
   good_morning: 0.45,
   glute_ham: 0.30,
+  // New exercises added for 5-category Bondarchuk strength taxonomy
+  step_up: 0.50,
+  walking_lunge: 0.50,
+  back_extension: 0.30,
+  ab_wheel: 0,
+  v_ups: 0,
+  hanging_leg_raise: 0,
+  plank: 0,
+  plate_twist: 0,
+  barbell_twist: 0,
+  cable_woodchop: 0,
+  kb_windmill: 0,
 };
 
 // ── Bondarchuk Volume IV Strength Complexes ─────────────────────────
@@ -47,12 +59,13 @@ export interface StrengthComplexExercise {
   exerciseId: string;
   exerciseName: string;
   type: StrengthExerciseType;
+  bondarchukCategory?: BondarchukStrengthCategory; // Authentic 5-category taxonomy
   sets: number;
   reps: number;
   intensityPercent?: number; // for OLYMPIC/COMPOUND — % of 1RM
   fixedLoadKg?: number;     // for ACCESSORY/CORE — absolute weight
   prField?: keyof LiftingPrs;
-  blockGroup: 1 | 2;       // 1 = primary (Olympic+Compound), 2 = accessory/core
+  blockGroup: 1 | 2;       // 1 = primary (Olympic+Leg), 2 = accessory (Twisting+Back+Abdominal)
 }
 
 export interface StrengthComplexTemplate {
@@ -63,8 +76,14 @@ export interface StrengthComplexTemplate {
 }
 
 /**
- * Predefined strength complexes directly from Bondarchuk Volume IV.
- * Each complex stays fixed for the entire training period.
+ * Predefined strength complexes based on Bondarchuk Volume IV.
+ *
+ * Each complex has exactly 5 exercises — one per Bondarchuk category:
+ *   OLYMPIC + LEG (blockGroup 1 — primary, between throwing blocks)
+ *   TWISTING + BACK + ABDOMINAL (blockGroup 2 — accessory, after second throwing block)
+ *
+ * TWISTING is the most important strength category for throwers
+ * (highest correlation to throwing performance per Bondarchuk's research).
  */
 export const BONDARCHUK_COMPLEXES: StrengthComplexTemplate[] = [
   {
@@ -72,14 +91,13 @@ export const BONDARCHUK_COMPLEXES: StrengthComplexTemplate[] = [
     name: "Full Body — Heavy Pulls",
     focus: "posterior_chain",
     exercises: [
-      // Block 1: Olympic + Compound (between throwing blocks)
-      { exerciseId: "clean_pull", exerciseName: "Snatch Grip Pulls", type: "OLYMPIC", sets: 4, reps: 4, intensityPercent: 120, prField: "snatchKg", blockGroup: 1 },
-      { exerciseId: "squat", exerciseName: "Back Squat (90\u00B0)", type: "COMPOUND", sets: 3, reps: 5, intensityPercent: 82, prField: "squatKg", blockGroup: 1 },
-      // Block 2: Accessories + Core (after second throwing block)
-      { exerciseId: "good_morning", exerciseName: "Good Mornings", type: "ACCESSORY", sets: 4, reps: 6, fixedLoadKg: 60, blockGroup: 2 },
-      { exerciseId: "step_up", exerciseName: "Step-ups to Bench", type: "ACCESSORY", sets: 4, reps: 10, fixedLoadKg: 60, blockGroup: 2 },
-      { exerciseId: "barbell_twist", exerciseName: "Barbell Twists", type: "ACCESSORY", sets: 3, reps: 6, fixedLoadKg: 60, blockGroup: 2 },
-      { exerciseId: "arm_leg_raise", exerciseName: "Arm & Leg Raises", type: "CORE", sets: 3, reps: 8, fixedLoadKg: 0, blockGroup: 2 },
+      // Block 1: Primary (Olympic + Leg) — between throwing blocks
+      { exerciseId: "clean_pull", exerciseName: "Snatch Grip Pulls", type: "OLYMPIC", bondarchukCategory: "OLYMPIC", sets: 4, reps: 4, intensityPercent: 120, prField: "snatchKg", blockGroup: 1 },
+      { exerciseId: "step_up", exerciseName: "Step-Ups to Bench", type: "COMPOUND", bondarchukCategory: "LEG", sets: 4, reps: 10, fixedLoadKg: 60, blockGroup: 1 },
+      // Block 2: Accessory (Twisting + Back + Abdominal) — after second throwing block
+      { exerciseId: "barbell_twist", exerciseName: "Barbell Twists", type: "ACCESSORY", bondarchukCategory: "TWISTING", sets: 3, reps: 6, fixedLoadKg: 60, blockGroup: 2 },
+      { exerciseId: "good_morning", exerciseName: "Good Mornings", type: "ACCESSORY", bondarchukCategory: "BACK", sets: 4, reps: 6, fixedLoadKg: 60, blockGroup: 2 },
+      { exerciseId: "hanging_leg_raise", exerciseName: "Hanging Leg Raises", type: "CORE", bondarchukCategory: "ABDOMINAL", sets: 3, reps: 9, fixedLoadKg: 0, blockGroup: 2 },
     ],
   },
   {
@@ -87,20 +105,27 @@ export const BONDARCHUK_COMPLEXES: StrengthComplexTemplate[] = [
     name: "Power Emphasis",
     focus: "explosive_power",
     exercises: [
-      { exerciseId: "power_clean", exerciseName: "Power Cleans", type: "OLYMPIC", sets: 5, reps: 3, intensityPercent: 82, prField: "cleanKg", blockGroup: 1 },
-      { exerciseId: "half_squat", exerciseName: "Half Front Squat", type: "COMPOUND", sets: 2, reps: 5, intensityPercent: 80, prField: "squatKg", blockGroup: 1 },
-      { exerciseId: "walking_lunge", exerciseName: "Walking Lunges (Barbell)", type: "ACCESSORY", sets: 3, reps: 5, fixedLoadKg: 60, blockGroup: 2 },
-      { exerciseId: "hanging_leg_raise", exerciseName: "Hanging Leg Raises", type: "CORE", sets: 3, reps: 9, fixedLoadKg: 0, blockGroup: 2 },
+      // Block 1: Primary
+      { exerciseId: "power_clean", exerciseName: "Power Cleans", type: "OLYMPIC", bondarchukCategory: "OLYMPIC", sets: 5, reps: 3, intensityPercent: 82, prField: "cleanKg", blockGroup: 1 },
+      { exerciseId: "walking_lunge", exerciseName: "Walking Lunges (Barbell)", type: "COMPOUND", bondarchukCategory: "LEG", sets: 3, reps: 5, fixedLoadKg: 60, blockGroup: 1 },
+      // Block 2: Accessory
+      { exerciseId: "plate_twist", exerciseName: "Plate Twists", type: "ACCESSORY", bondarchukCategory: "TWISTING", sets: 3, reps: 8, fixedLoadKg: 20, blockGroup: 2 },
+      { exerciseId: "rdl", exerciseName: "Romanian Deadlift", type: "ACCESSORY", bondarchukCategory: "BACK", sets: 3, reps: 6, intensityPercent: 70, prField: "deadliftKg", blockGroup: 2 },
+      { exerciseId: "ab_wheel", exerciseName: "Ab Wheel Rollout", type: "CORE", bondarchukCategory: "ABDOMINAL", sets: 3, reps: 10, fixedLoadKg: 0, blockGroup: 2 },
     ],
   },
   {
     id: "complex_3",
-    name: "Upper Body",
+    name: "Upper Body + Rotation",
     focus: "upper_body",
     exercises: [
-      { exerciseId: "bench", exerciseName: "Bench Press", type: "COMPOUND", sets: 5, reps: 3, intensityPercent: 80, prField: "benchKg", blockGroup: 1 },
-      { exerciseId: "power_snatch", exerciseName: "Narrow Grip Snatch", type: "OLYMPIC", sets: 3, reps: 5, fixedLoadKg: 60, blockGroup: 1 },
-      { exerciseId: "jerk", exerciseName: "Jerk Behind Head", type: "OLYMPIC", sets: 5, reps: 3, intensityPercent: 75, prField: "cleanKg", blockGroup: 1 },
+      // Block 1: Primary
+      { exerciseId: "power_snatch", exerciseName: "Narrow Grip Snatch", type: "OLYMPIC", bondarchukCategory: "OLYMPIC", sets: 3, reps: 5, fixedLoadKg: 60, blockGroup: 1 },
+      { exerciseId: "half_squat", exerciseName: "Half Front Squat", type: "COMPOUND", bondarchukCategory: "LEG", sets: 2, reps: 5, intensityPercent: 80, prField: "squatKg", blockGroup: 1 },
+      // Block 2: Accessory
+      { exerciseId: "cable_woodchop", exerciseName: "Cable Woodchops", type: "ACCESSORY", bondarchukCategory: "TWISTING", sets: 3, reps: 8, fixedLoadKg: 30, blockGroup: 2 },
+      { exerciseId: "back_extension", exerciseName: "Back Extensions", type: "ACCESSORY", bondarchukCategory: "BACK", sets: 3, reps: 10, fixedLoadKg: 20, blockGroup: 2 },
+      { exerciseId: "v_ups", exerciseName: "V-Ups", type: "CORE", bondarchukCategory: "ABDOMINAL", sets: 3, reps: 12, fixedLoadKg: 0, blockGroup: 2 },
     ],
   },
 ];
@@ -119,6 +144,7 @@ const PHASE_MODULATION: Record<TrainingPhase, PhaseModulation> = {
   TRANSMUTATION: { setsMultiplier: 0.90, restMultiplier: 1.0 },   // slight volume reduction
   REALIZATION:   { setsMultiplier: 0.75, restMultiplier: 1.15 },   // reduced volume, more rest
   COMPETITION:   { setsMultiplier: 0.50, restMultiplier: 1.25 },   // maintenance only
+  CLEANSE:       { setsMultiplier: 0,    restMultiplier: 1.0 },    // no strength — bodyweight circuits only
 };
 
 // ── Main Function ───────────────────────────────────────────────────
@@ -229,6 +255,8 @@ function selectComplexTemplate(
         return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_3") ?? BONDARCHUK_COMPLEXES[0];
       case "COMPETITION":
         return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_2") ?? BONDARCHUK_COMPLEXES[0];
+      case "CLEANSE":
+        return null; // No strength complex during cleanse — bodyweight circuits only
     }
   }
 

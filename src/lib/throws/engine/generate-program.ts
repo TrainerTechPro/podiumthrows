@@ -55,7 +55,8 @@ export function generateProgram(config: ProgramConfig): GeneratedProgram {
   const totalWeeks = Math.max(4, Math.floor(totalDays / 7));
 
   // Plan phase durations
-  const phaseplan = planPhases(totalWeeks, config.adaptationGroup);
+  const includeCleanse = config.includeCleanseWeeks ?? (totalWeeks >= 12);
+  const phaseplan = planPhases(totalWeeks, config.adaptationGroup, includeCleanse);
 
   // Generate each phase
   const phases: GeneratedPhase[] = [];
@@ -128,9 +129,15 @@ interface PlannedPhase {
  * - Short programs (4-8 wk): Single pass through all 4 phases
  * - Medium programs (8-16 wk): Full cycle with adequate phase lengths
  * - Long programs (16+ wk): Repeat ACCUM→TRANS cycles before final peak
+ * - CLEANSE weeks inserted between repeated development cycles (Bondarchuk Rest/Cleanse)
  */
-function planPhases(totalWeeks: number, adaptationGroup: number): PlannedPhase[] {
+function planPhases(
+  totalWeeks: number,
+  adaptationGroup: number,
+  includeCleanse: boolean,
+): PlannedPhase[] {
   const scale = ADAPTATION_PHASE_SCALE[adaptationGroup] ?? 1.0;
+  const CLEANSE_WEEKS = 1; // Bondarchuk cleanse/rest cycle duration
 
   // Get base durations from PHASE_CONFIGS (use midpoints, scaled)
   const baseDurations: Record<TrainingPhase, number> = {
@@ -138,9 +145,11 @@ function planPhases(totalWeeks: number, adaptationGroup: number): PlannedPhase[]
     TRANSMUTATION: 0,
     REALIZATION: 0,
     COMPETITION: 0,
+    CLEANSE: CLEANSE_WEEKS,
   };
 
   for (const pc of PHASE_CONFIGS) {
+    if (pc.phase === "CLEANSE") continue; // Cleanse duration is fixed
     const mid = (pc.durationWeeksMin + pc.durationWeeksMax) / 2;
     baseDurations[pc.phase] = Math.round(mid * scale);
   }
@@ -182,11 +191,19 @@ function planPhases(totalWeeks: number, adaptationGroup: number): PlannedPhase[]
     plan.push({ phase: "TRANSMUTATION", weeks: transWeeks, order: order++ });
   } else {
     // Multi-cycle: repeated ACCUMULATION → TRANSMUTATION blocks
+    // Insert CLEANSE weeks between cycles (Bondarchuk Rest/Cleanse protocol)
     let remainingBuild = buildWeeks;
-    let _cycleNum = 0;
+    let cycleNum = 0;
 
     while (remainingBuild > 0) {
-      _cycleNum++;
+      cycleNum++;
+
+      // Insert CLEANSE between development cycles (not before the first cycle)
+      if (includeCleanse && cycleNum > 1 && remainingBuild > CLEANSE_WEEKS + 4) {
+        plan.push({ phase: "CLEANSE", weeks: CLEANSE_WEEKS, order: order++ });
+        remainingBuild -= CLEANSE_WEEKS;
+      }
+
       const isLastCycle =
         remainingBuild <=
         baseDurations.ACCUMULATION + baseDurations.TRANSMUTATION;

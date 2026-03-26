@@ -13,8 +13,9 @@ import type {
 
 // ── Configuration ─────────────────────────────────────────────────────
 
-/** Minimum proportion of exercises that must change in a rotation */
-const MIN_CHANGE_RATIO = 0.4;
+/** Minimum proportion of exercises that must change in a rotation.
+ * Authentic Bondarchuk: 7-8 of 10 exercises change per rotation. */
+const MIN_CHANGE_RATIO = 0.75;
 
 /** Maximum exercises to retain from previous complex (continuity) */
 const MAX_RETAINED = 2;

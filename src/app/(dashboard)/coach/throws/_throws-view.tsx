@@ -92,6 +92,7 @@ const PHASE_COLORS: Record<TrainingPhase, string> = {
  TRANSMUTATION: "#10b981",
  REALIZATION: "#f97316",
  COMPETITION: "#ef4444",
+ CLEANSE: "#8b5cf6",
 };
 
 const PHASE_SHORT: Record<string, string> = {

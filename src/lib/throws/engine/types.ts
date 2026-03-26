@@ -5,11 +5,16 @@
 import type {
   TrainingPhase,
   Classification,
+  BondarchukStrengthCategory,
+  MovementPlane,
   EventCode,
   GenderCode,
   ThrowEvent,
   Gender,
 } from "../constants";
+
+// Re-export Bondarchuk taxonomy types for engine consumers
+export type { BondarchukStrengthCategory, MovementPlane };
 
 // ── Onboarding Data ─────────────────────────────────────────────────
 
@@ -151,6 +156,9 @@ export interface ProgramConfig {
 
   // Gap 3: Adaptive waves — historical session data
   trainingHistory?: TrainingHistory;
+
+  // Cleanse/Rest cycles between development blocks
+  includeCleanseWeeks?: boolean;
 
   // Gap 4: Elite taper
   competitionImportance?: CompetitionImportance;
