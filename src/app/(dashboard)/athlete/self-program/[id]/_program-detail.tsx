@@ -283,7 +283,9 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
       );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to regenerate program");
+        const msg = data.error || "Failed to regenerate program";
+        const details = data.validationErrors;
+        throw new Error(details?.length ? `${msg}: ${details.join(", ")}` : msg);
       }
       success("Program Regenerated", "Your new program is ready.");
       router.refresh();

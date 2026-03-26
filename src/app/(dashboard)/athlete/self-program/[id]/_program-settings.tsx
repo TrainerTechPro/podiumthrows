@@ -193,7 +193,9 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
       );
       if (!genRes.ok) {
         const data = await genRes.json().catch(() => null);
-        throw new Error(data?.error ?? "Failed to regenerate program");
+        const msg = data?.error ?? "Failed to regenerate program";
+        const details = data?.validationErrors;
+        throw new Error(details?.length ? `${msg}: ${details.join(", ")}` : msg);
       }
 
       toast.success("Program Regenerated", "Your new program is ready.");

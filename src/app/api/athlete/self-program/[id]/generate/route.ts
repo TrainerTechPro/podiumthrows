@@ -229,7 +229,10 @@ export async function POST(
         metadata: { errors: engineValidation.errors },
       });
       return NextResponse.json(
-        { error: "Program generation produced invalid output" },
+        {
+          error: "Program generation produced invalid output",
+          validationErrors: engineValidation.errors,
+        },
         { status: 500 },
       );
     }
