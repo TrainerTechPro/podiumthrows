@@ -139,6 +139,7 @@ export const ReadinessCheckInSchema = z.object({
   whoopStrain: z.number().optional(),
   ouraReadiness: z.number().optional(),
   ouraActivityScore: z.number().optional(),
+  ouraSleepScore: z.number().optional(),
   temperatureDeviation: z.number().optional(),
   source: z.enum(["MANUAL", "WHOOP_AUTO", "WHOOP_ASSISTED", "OURA_AUTO", "OURA_ASSISTED"]).optional(),
 });
@@ -156,6 +157,113 @@ export const AthleteCreateSchema = z.object({
 });
 
 export const AthleteUpdateSchema = AthleteCreateSchema.partial();
+
+// ── Competition ─────────────────────────────────────────────────────────
+
+export const CompetitionCreateSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  name: z.string().min(1, "Competition name is required"),
+  date: z.string().min(1, "Date is required"),
+  event: z.string().min(1, "Event is required"),
+  priority: z.enum(["A", "B", "C"]).optional(),
+  result: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const CompetitionUpdateSchema = z.object({
+  id: z.string().min(1, "Competition ID is required"),
+  result: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  resultBy: z.string().nullable().optional(),
+});
+
+// ── Athlete Throws Session ──────────────────────────────────────────────
+
+const DrillLogSchema = z.object({
+  drillType: z.string().min(1),
+  implementWeight: z.number().nullable().optional(),
+  implementWeightUnit: z.string().nullable().optional(),
+  implementWeightOriginal: z.number().nullable().optional(),
+  wireLength: z.string().nullable().optional(),
+  throwCount: z.number().int().min(0).optional(),
+  bestMark: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const AthleteThrowsSessionCreateSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  event: z.string().min(1, "Event is required"),
+  date: z.string().min(1, "Date is required"),
+  notes: z.string().nullable().optional(),
+  drillLogs: z.array(DrillLogSchema).optional(),
+});
+
+// ── Throws Check-In ─────────────────────────────────────────────────────
+
+export const ThrowsCheckInSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  date: z.string().min(1, "Date is required"),
+  selfFeeling: z.number().min(1).max(10),
+  sleepHours: z.number().min(0).max(24).optional(),
+  sleepQuality: z.number().min(1).max(10).optional(),
+  energy: z.number().min(1).max(10).optional(),
+  sorenessGeneral: z.number().min(1).max(10).optional(),
+  sorenessShoulder: z.number().min(0).max(10).optional(),
+  sorenessBack: z.number().min(0).max(10).optional(),
+  sorenessHip: z.number().min(0).max(10).optional(),
+  sorenessKnee: z.number().min(0).max(10).optional(),
+  sorenessElbow: z.number().min(0).max(10).optional(),
+  sorenessWrist: z.number().min(0).max(10).optional(),
+  lightImplFeeling: z.number().min(1).max(10).optional(),
+  heavyImplFeeling: z.number().min(1).max(10).optional(),
+  notes: z.string().nullable().optional(),
+  source: z.enum(["ATHLETE", "COACH"]).optional(),
+});
+
+// ── Bondarchuk Typing ───────────────────────────────────────────────────
+
+export const TypingSubmitSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  quizResponses: z.record(z.string(), z.unknown()).refine(
+    (v) => Object.keys(v).length > 0,
+    "At least one quiz response is required"
+  ),
+});
+
+// ── Coach Add Athlete ───────────────────────────────────────────────────
+
+export const CoachAddAthleteSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  events: z
+    .array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]))
+    .min(1, "At least one event is required"),
+});
+
+// ── Lifting Program ─────────────────────────────────────────────────────
+
+const LiftingPhaseSchema = z.object({
+  name: z.string().min(1),
+  weeks: z.number().int().min(1),
+  exercises: z.array(z.unknown()).optional(),
+});
+
+export const LiftingProgramCreateSchema = z.object({
+  name: z.string().min(1, "Program name is required"),
+  goals: z.string().optional(),
+  workoutsPerWeek: z.number().int().min(1, "Must have at least 1 workout per week"),
+  totalWeeks: z.number().int().min(1, "Must have at least 1 week"),
+  rpeTargets: z.unknown().optional(),
+  startDate: z.string().optional(),
+  phases: z.array(LiftingPhaseSchema).min(1, "At least one phase is required"),
+});
+
+export const LiftingWorkoutCreateSchema = z.object({
+  programId: z.string().min(1, "Program ID is required"),
+  weekNumber: z.number().int().min(1, "Week number must be positive"),
+  workoutNumber: z.number().int().min(1, "Workout number must be positive"),
+  date: z.string().min(1, "Date is required"),
+});
 
 // ── Throws Session ──────────────────────────────────────────────────────
 

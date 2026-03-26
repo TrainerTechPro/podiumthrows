@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       whoopStrain,
       ouraReadiness,
       ouraActivityScore,
+      ouraSleepScore,
       temperatureDeviation,
       source,
     } = parsed;
@@ -102,6 +103,7 @@ export async function POST(req: NextRequest) {
         whoopStrain: whoopStrain ?? null,
         ouraReadiness: ouraReadiness ?? null,
         ouraActivityScore: ouraActivityScore ?? null,
+        ouraSleepScore: ouraSleepScore ?? null,
         temperatureDeviation: temperatureDeviation ?? null,
         source: source ?? "MANUAL",
       },
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest) {
     if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
     return NextResponse.json(
-      { id: checkIn.id, overallScore: checkIn.overallScore, date: checkIn.date.toISOString() },
+      { id: checkIn.id, overallScore: checkIn.overallScore, date: checkIn.date.toISOString(), streak: newStreak },
       { status: 201 }
     );
   } catch (err) {
