@@ -967,10 +967,12 @@ function CompletionScreen({
   assignmentId,
   blockStates,
   elapsed,
+  sessionName,
 }: {
   assignmentId: string;
   blockStates: Map<string, BlockState>;
   elapsed: number;
+  sessionName: string;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -979,17 +981,23 @@ function CompletionScreen({
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Aggregate stats
-  const allThrows: LoggedThrow[] = [];
-  const allSets: LoggedSet[] = [];
-  for (const [, state] of blockStates) {
-    allThrows.push(...state.throws);
-    allSets.push(...state.sets);
-  }
-  const totalThrows = allThrows.length;
-  const bestMark = allThrows.reduce((max, t) => Math.max(max, t.distance!), 0); // TODO: Task 4 will add proper null guard
+  // Aggregate stats — null-guarded
+  const allThrows = [...blockStates.values()].flatMap((s) => s.throws);
+  const markedThrows = allThrows.filter((t) => t.distance !== null);
+  const bestMark =
+    markedThrows.length > 0
+      ? Math.max(...markedThrows.map((t) => t.distance as number))
+      : 0;
+  const totalThrowCount = allThrows.length;
+  const markedCount = markedThrows.length;
+
+  const allSets = [...blockStates.values()].flatMap((s) => s.sets);
   const totalVolume = allSets.reduce((sum, s) => sum + s.weight * s.reps, 0);
-  const prCount = allThrows.filter((t) => t.isPersonalBest).length;
+
+  const chamfer =
+    "polygon(0 0,calc(100% - 3px) 0,100% 3px,100% 100%,3px 100%,0 calc(100% - 3px))";
+  const chamferLg =
+    "polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))";
 
   async function submit() {
     setSubmitting(true);
@@ -1020,64 +1028,197 @@ function CompletionScreen({
 
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2 py-4">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto">
-          <Trophy size={28} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />
-        </div>
-        <h2 className="text-xl font-heading font-bold text-[var(--foreground)]">Session Complete!</h2>
-        <p className="text-sm text-muted">{formatElapsed(elapsed)} total</p>
+      {/* ── Hero Text ── */}
+      <div className="text-center pt-4 pb-2 space-y-2">
+        <p
+          className="text-[8px] uppercase font-semibold"
+          style={{ letterSpacing: "4px", color: "#00FF8888" }}
+        >
+          Session Complete
+        </p>
+        <h2
+          className="text-2xl font-heading font-bold"
+          style={{
+            color: "#FFC800",
+            textShadow: "0 0 32px #FFC80055, 0 0 64px #FFC80022",
+          }}
+        >
+          {sessionName}
+        </h2>
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="card p-3 text-center">
-          <p className="text-xs text-muted uppercase tracking-wider">Throws</p>
-          <AnimatedNumber value={totalThrows} className="text-xl font-heading font-bold text-[var(--foreground)]" />
+      {/* ── Stat Cards 2×2 ── */}
+      <div className="grid grid-cols-2 gap-2">
+        {/* Total Throws */}
+        <div
+          className="p-3 text-center"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #1a1a1e",
+            clipPath: chamferLg,
+          }}
+        >
+          <p
+            className="text-[8px] uppercase font-semibold mb-1"
+            style={{ letterSpacing: "2px", color: "#555" }}
+          >
+            Total Throws
+          </p>
+          <span style={{ color: "#FFC800" }}>
+            <AnimatedNumber
+              value={totalThrowCount}
+              className="text-xl font-heading font-bold tabular-nums"
+            />
+          </span>
         </div>
-        <div className="card p-3 text-center">
-          <p className="text-xs text-muted uppercase tracking-wider">Best Mark</p>
-          <p className="text-xl font-heading font-bold text-[var(--foreground)] tabular-nums">
-            {bestMark > 0 ? `${bestMark.toFixed(2)}m` : "—"}
+
+        {/* Marked Throws */}
+        <div
+          className="p-3 text-center"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #1a1a1e",
+            clipPath: chamferLg,
+          }}
+        >
+          <p
+            className="text-[8px] uppercase font-semibold mb-1"
+            style={{ letterSpacing: "2px", color: "#555" }}
+          >
+            Marked
+          </p>
+          <span style={{ color: "#FFC800" }}>
+            <AnimatedNumber
+              value={markedCount}
+              className="text-xl font-heading font-bold tabular-nums"
+            />
+          </span>
+        </div>
+
+        {/* Best Mark */}
+        <div
+          className="p-3 text-center"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #1a1a1e",
+            clipPath: chamferLg,
+          }}
+        >
+          <p
+            className="text-[8px] uppercase font-semibold mb-1"
+            style={{ letterSpacing: "2px", color: "#555" }}
+          >
+            Best Mark
+          </p>
+          {bestMark > 0 ? (
+            <span
+              className="text-xl font-heading font-bold tabular-nums"
+              style={{ color: "#FFC800" }}
+            >
+              <AnimatedNumber value={bestMark} decimals={2} className="text-xl font-heading font-bold tabular-nums" />
+              <span className="text-sm font-semibold ml-0.5" style={{ color: "#FFC80088" }}>m</span>
+            </span>
+          ) : (
+            <span
+              className="text-xl font-heading font-bold"
+              style={{ color: "#FFC80044" }}
+            >
+              —
+            </span>
+          )}
+        </div>
+
+        {/* Duration */}
+        <div
+          className="p-3 text-center"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #1a1a1e",
+            clipPath: chamferLg,
+          }}
+        >
+          <p
+            className="text-[8px] uppercase font-semibold mb-1"
+            style={{ letterSpacing: "2px", color: "#555" }}
+          >
+            Duration
+          </p>
+          <p
+            className="text-xl font-heading font-bold tabular-nums"
+            style={{ color: "#FFC800" }}
+          >
+            {formatElapsed(elapsed)}
           </p>
         </div>
-        {totalVolume > 0 && (
-          <div className="card p-3 text-center">
-            <p className="text-xs text-muted uppercase tracking-wider">Volume</p>
-            <p className="text-xl font-heading font-bold text-[var(--foreground)] tabular-nums">
-              {totalVolume.toLocaleString()}kg
-            </p>
-          </div>
-        )}
-        {prCount > 0 && (
-          <div className="card p-3 text-center bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800">
-            <p className="text-xs text-amber-600 dark:text-amber-400 uppercase tracking-wider">PRs Hit</p>
-            <AnimatedNumber value={prCount} className="text-xl font-heading font-bold text-amber-600 dark:text-amber-400" />
-          </div>
-        )}
       </div>
 
-      {/* RPE slider */}
+      {/* Volume row — only if strength work logged */}
+      {totalVolume > 0 && (
+        <div
+          className="p-3 text-center"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #1a1a1e",
+            clipPath: chamferLg,
+          }}
+        >
+          <p
+            className="text-[8px] uppercase font-semibold mb-1"
+            style={{ letterSpacing: "2px", color: "#555" }}
+          >
+            Strength Volume
+          </p>
+          <p
+            className="text-xl font-heading font-bold tabular-nums"
+            style={{ color: "#FFC800" }}
+          >
+            {totalVolume.toLocaleString()}
+            <span className="text-sm font-semibold ml-0.5" style={{ color: "#FFC80088" }}>kg</span>
+          </p>
+        </div>
+      )}
+
+      {/* ── RPE Slider ── */}
       <div className="space-y-2">
-        <label className="text-xs text-muted uppercase tracking-wider block">
-          Session RPE
+        <label
+          className="text-[9px] uppercase font-semibold block"
+          style={{ letterSpacing: "3px", color: "#888" }}
+        >
+          Session RPE —{" "}
+          <span style={{ color: "#FFC800" }}>{rpe}</span>
         </label>
-        <div className="flex items-center gap-3">
-          <input
-            type="range"
-            min={1}
-            max={10}
-            step={1}
-            value={rpe}
-            onChange={(e) => setRpe(parseInt(e.target.value))}
-            className="flex-1 accent-primary-500"
-          />
-          <NumberFlow value={rpe} className="text-xl font-bold text-[var(--foreground)] w-8 text-center" />
+        <input
+          type="range"
+          min={1}
+          max={10}
+          step={1}
+          value={rpe}
+          onChange={(e) => setRpe(parseInt(e.target.value))}
+          className="w-full h-2 appearance-none cursor-pointer"
+          style={{
+            accentColor: "#FFC800",
+            background: `linear-gradient(to right, #FFC800 ${(rpe - 1) * 11.1}%, #1a1a1e ${(rpe - 1) * 11.1}%)`,
+          }}
+        />
+        <div className="flex justify-between">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
+            <span
+              key={v}
+              className="text-[9px] font-semibold tabular-nums"
+              style={{ color: v === rpe ? "#FFC800" : "#444" }}
+            >
+              {v}
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* Self-feeling */}
+      {/* ── Feeling Selector ── */}
       <div className="space-y-2">
-        <label className="text-xs text-muted uppercase tracking-wider block">
+        <label
+          className="text-[9px] uppercase font-semibold block"
+          style={{ letterSpacing: "3px", color: "#888" }}
+        >
           How did you feel?
         </label>
         <div className="flex gap-1.5">
@@ -1085,22 +1226,30 @@ function CompletionScreen({
             <button
               key={opt.value}
               onClick={() => setFeeling(opt.value)}
-              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
-                feeling === opt.value
-                  ? "bg-primary-500 text-white"
-                  : "bg-surface-100 dark:bg-surface-800 text-muted hover:bg-surface-200 dark:hover:bg-surface-700"
-              }`}
+              className="flex-1 py-2 text-xs font-medium transition-all min-h-[52px] flex flex-col items-center gap-0.5"
+              style={{
+                backgroundColor:
+                  feeling === opt.value ? "#FFC80008" : "#08080a",
+                border: `1px solid ${feeling === opt.value ? "#FFC800" : "#1a1a1e"}`,
+                color: feeling === opt.value ? "#FFC800" : "#666",
+                clipPath: chamfer,
+              }}
             >
-              <span className="block text-base">{opt.emoji}</span>
-              {opt.label}
+              <span className="text-base leading-tight">{opt.emoji}</span>
+              <span className="text-[9px] uppercase font-semibold" style={{ letterSpacing: "1px" }}>
+                {opt.label}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Notes */}
+      {/* ── Notes ── */}
       <div className="space-y-2">
-        <label className="text-xs text-muted uppercase tracking-wider block">
+        <label
+          className="text-[9px] uppercase font-semibold block"
+          style={{ letterSpacing: "3px", color: "#888" }}
+        >
           Notes (optional)
         </label>
         <textarea
@@ -1108,11 +1257,16 @@ function CompletionScreen({
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           placeholder="Any observations, aches, or breakthroughs..."
-          className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+          className="w-full px-3 py-3 text-sm resize-none focus:outline-none transition-colors"
+          style={{
+            backgroundColor: "#08080a",
+            border: "1px solid #1a1a1e",
+            color: "#E8E8E8",
+          }}
         />
       </div>
 
-      {/* Submit — SlideToConfirm on mobile, button on desktop */}
+      {/* ── Submit ── */}
       <div className="sm:hidden">
         <SlideToConfirm
           label="Slide to Submit Session"
@@ -1122,14 +1276,19 @@ function CompletionScreen({
         />
       </div>
       <div className="hidden sm:block">
-        <Button
-          variant="primary"
-          className="w-full"
+        <button
           onClick={submit}
           disabled={submitting}
+          className="w-full min-h-[52px] font-bold text-[11px] uppercase disabled:opacity-40 transition-opacity"
+          style={{
+            letterSpacing: "3px",
+            backgroundColor: "#FFC800",
+            color: "#000",
+            clipPath: chamferLg,
+          }}
         >
           {submitting ? "Submitting..." : "Submit Session"}
-        </Button>
+        </button>
       </div>
     </div>
   );
@@ -1305,6 +1464,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
           assignmentId={data.assignmentId}
           blockStates={blockStates}
           elapsed={elapsed}
+          sessionName={data.sessionName}
         />
       </div>
     );
