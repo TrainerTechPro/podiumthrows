@@ -45,6 +45,23 @@ export default async function ProgramSessionPage({
     redirect(`/athlete/self-program/${configId}`);
   }
 
+  // If IN_PROGRESS, redirect to the live workout view
+  if (programSession.status === "IN_PROGRESS") {
+    const throwsSession = await prisma.throwsSession.findFirst({
+      where: { tags: { contains: `selfProgram:${sessionId}` } },
+      include: {
+        assignments: {
+          where: { athleteId: athlete.id, status: "IN_PROGRESS" },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    });
+    if (throwsSession?.assignments[0]) {
+      redirect(`/athlete/throws/live/${throwsSession.assignments[0].id}`);
+    }
+  }
+
   // Compute scheduled date if not set
   let scheduledDate = programSession.scheduledDate;
   if (!scheduledDate && programSession.program.startDate) {
