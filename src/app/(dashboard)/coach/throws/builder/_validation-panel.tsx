@@ -257,7 +257,8 @@ export function ValidationBadge({
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] shadow-lg"
+        className="fixed right-4 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] shadow-lg"
+        style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {okCount > 0 && (
           <span className="flex items-center gap-1 text-xs font-bold text-emerald-500">

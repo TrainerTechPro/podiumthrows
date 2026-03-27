@@ -336,6 +336,7 @@ export function DashboardLayout({
               "px-4 sm:px-6 lg:px-8 py-6",
               className
             )}
+            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
           >
             {children}
           </main>

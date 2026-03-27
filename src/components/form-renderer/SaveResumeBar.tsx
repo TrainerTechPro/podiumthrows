@@ -65,7 +65,7 @@ export function SaveResumeBar({
   if (!enabled || status === "idle") return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] shadow-card text-xs text-muted flex items-center gap-2 animate-fade-in">
+    <div className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] shadow-card text-xs text-muted flex items-center gap-2 animate-fade-in" style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}>
       {status === "saving" && (
         <>
           <div className="w-3 h-3 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />

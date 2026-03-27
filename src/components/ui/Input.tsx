@@ -40,6 +40,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     const inputType = isPassword ? (showPassword ? "text" : "password") : type;
 
+    // Auto-set inputMode for mobile numeric keyboards
+    const autoInputMode =
+      props.inputMode ??
+      (type === "number"
+        ? (props.step && String(props.step).includes(".")) || type === "number"
+          ? "decimal"
+          : "numeric"
+        : undefined);
+
     return (
       <div className="w-full space-y-1.5">
         {label && (
@@ -72,6 +81,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             type={inputType}
+            inputMode={autoInputMode}
             disabled={disabled}
             aria-invalid={!!error}
             aria-describedby={

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Chakra_Petch, IBM_Plex_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
@@ -21,6 +21,13 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "Podium Throws — Elite Throws Coaching Platform",
