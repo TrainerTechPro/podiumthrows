@@ -43,7 +43,7 @@ export async function POST(
 
     const assignment = await prisma.throwsAssignment.findUnique({
       where: { id: assignmentId },
-      select: { id: true, athleteId: true, status: true, session: { select: { event: true } } },
+      select: { id: true, athleteId: true, status: true, sessionId: true, session: { select: { event: true } } },
     });
 
     if (!assignment || assignment.athleteId !== user.athleteProfile.id) {
@@ -84,6 +84,11 @@ export async function POST(
 
     if (!block) {
       return NextResponse.json({ success: false, error: "Block not found" }, { status: 404 });
+    }
+
+    // Verify block belongs to this assignment's session
+    if (block.sessionId !== assignment.sessionId) {
+      return NextResponse.json({ success: false, error: "Block does not belong to this session" }, { status: 403 });
     }
 
     // Create the throw log

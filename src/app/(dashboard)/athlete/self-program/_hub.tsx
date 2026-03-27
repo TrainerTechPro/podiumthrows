@@ -82,6 +82,7 @@ interface SelfProgramHubProps {
   config?: ActiveConfig | null;
   draft?: DraftConfig | null;
   eventMismatch?: boolean;
+  liveAssignmentId?: string | null;
 }
 
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
@@ -292,9 +293,11 @@ function DraftView({ draft }: { draft: DraftConfig }) {
 function ActiveView({
   config,
   eventMismatch,
+  liveAssignmentId,
 }: {
   config: ActiveConfig;
   eventMismatch: boolean;
+  liveAssignmentId?: string | null;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -502,7 +505,11 @@ function ActiveView({
         {/* Next Session / Continue Workout */}
         {nextSession ? (
           <Link
-            href={`/athlete/self-program/${config.id}/session/${nextSession.id}`}
+            href={
+              nextSession.status === "IN_PROGRESS" && liveAssignmentId
+                ? `/athlete/throws/live/${liveAssignmentId}`
+                : `/athlete/self-program/${config.id}/session/${nextSession.id}`
+            }
             className="card card-interactive p-5 space-y-3 block"
           >
             <div className="flex items-center justify-between">
@@ -664,6 +671,7 @@ export function SelfProgramHub({
   config,
   draft,
   eventMismatch = false,
+  liveAssignmentId,
 }: SelfProgramHubProps) {
   switch (state) {
     case "blocked":
@@ -674,7 +682,7 @@ export function SelfProgramHub({
       return draft ? <DraftView draft={draft} /> : <EmptyView />;
     case "active":
       return config ? (
-        <ActiveView config={config} eventMismatch={eventMismatch} />
+        <ActiveView config={config} eventMismatch={eventMismatch} liveAssignmentId={liveAssignmentId} />
       ) : (
         <EmptyView />
       );

@@ -188,8 +188,8 @@ export async function PUT(
           await prisma.programSession.update({
             where: { id: programSessionId },
             data: {
-              status: action === "complete" ? "COMPLETED" : "IN_PROGRESS",
-              completedAt: action === "complete" ? new Date() : undefined,
+              status: "COMPLETED",
+              completedAt: new Date(),
               actualThrows: updated.throwLogs.length,
               bestMark: bestMark > 0 ? bestMark : undefined,
               rpe: (rpe as number) ?? undefined,

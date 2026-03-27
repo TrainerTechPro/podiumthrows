@@ -64,11 +64,25 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       if (!ALLOWED_STATUSES.includes(newStatus)) {
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
       }
-      if (programSession.status === "COMPLETED") {
-        return NextResponse.json({ error: "Cannot modify a completed session" }, { status: 400 });
+      if (programSession.status === "COMPLETED" || programSession.status === "SKIPPED") {
+        return NextResponse.json({ error: "Cannot modify a completed or skipped session" }, { status: 400 });
       }
       data.status = newStatus;
       if (newStatus === "COMPLETED") data.completedAt = new Date();
+
+      // Reset: clean up ThrowsSession when going back to PLANNED
+      // Cascade deletes will remove ThrowsBlocks, ThrowsAssignments, and ThrowsBlockLogs
+      if (newStatus === "PLANNED" && programSession.status === "IN_PROGRESS") {
+        const throwsSession = await prisma.throwsSession.findFirst({
+          where: { tags: { contains: `selfProgram:${sessionId}` } },
+          select: { id: true },
+        });
+        if (throwsSession) {
+          await prisma.throwsSession.delete({
+            where: { id: throwsSession.id },
+          });
+        }
+      }
     }
 
     // Reschedule

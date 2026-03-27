@@ -126,42 +126,48 @@ export async function POST(
       });
     }
 
-    // Throwing blocks
-    for (const tp of throwsPrescription) {
-      blocks.push({
-        blockType: "THROWING",
-        position: position++,
-        config: JSON.stringify({
-          exerciseName: `${tp.implement} ${tp.drillType}`.trim(),
-          implement: tp.implement,
-          implementWeightKg: tp.implementKg,
-          classification: tp.category,
-          drillType: tp.drillType,
-          throwCount: tp.sets * tp.repsPerSet,
-          sets: tp.sets,
-          repsPerSet: tp.repsPerSet,
-          restSeconds: tp.restSeconds,
-          notes: tp.notes,
-        }),
-      });
-    }
+    // Interleave throwing and strength blocks per Bondarchuk methodology:
+    // Throwing Block 1 → Strength Block → Throwing Block 2 → Strength Block
+    // Never two consecutive throwing blocks.
+    const throwBlocks = throwsPrescription.map((tp) => ({
+      blockType: "THROWING" as const,
+      config: JSON.stringify({
+        exerciseName: `${tp.implement} ${tp.drillType}`.trim(),
+        implement: tp.implement,
+        implementWeightKg: tp.implementKg,
+        classification: tp.category,
+        drillType: tp.drillType,
+        throwCount: tp.sets * tp.repsPerSet,
+        sets: tp.sets,
+        repsPerSet: tp.repsPerSet,
+        restSeconds: tp.restSeconds,
+        notes: tp.notes,
+      }),
+    }));
 
-    // Strength blocks
-    for (const sp of strengthPrescription) {
-      blocks.push({
-        blockType: "STRENGTH",
-        position: position++,
-        config: JSON.stringify({
-          exerciseName: sp.exerciseName,
-          classification: sp.classification,
-          sets: sp.sets,
-          reps: sp.reps,
-          intensityPercent: sp.intensityPercent,
-          loadKg: sp.loadKg,
-          restSeconds: sp.restSeconds,
-          notes: sp.notes,
-        }),
-      });
+    const strengthBlocks = strengthPrescription.map((sp) => ({
+      blockType: "STRENGTH" as const,
+      config: JSON.stringify({
+        exerciseName: sp.exerciseName,
+        classification: sp.classification,
+        sets: sp.sets,
+        reps: sp.reps,
+        intensityPercent: sp.intensityPercent,
+        loadKg: sp.loadKg,
+        restSeconds: sp.restSeconds,
+        notes: sp.notes,
+      }),
+    }));
+
+    // Interleave: throw, strength, throw, strength, ... then remaining
+    const maxLen = Math.max(throwBlocks.length, strengthBlocks.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < throwBlocks.length) {
+        blocks.push({ ...throwBlocks[i], position: position++ });
+      }
+      if (i < strengthBlocks.length) {
+        blocks.push({ ...strengthBlocks[i], position: position++ });
+      }
     }
 
     // Create ThrowsSession + ThrowsBlocks + ThrowsAssignment in a transaction

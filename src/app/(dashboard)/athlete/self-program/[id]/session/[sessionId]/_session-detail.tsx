@@ -146,7 +146,9 @@ const CLASSIFICATION_LABELS: Record<string, { label: string; color: string }> = 
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  // Add noon time to prevent timezone shift for YYYY-MM-DD strings
+  const dateStr = iso.length === 10 ? `${iso}T12:00:00` : iso;
+  return new Date(dateStr).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -184,6 +186,8 @@ export function SessionDetail({
   const [showModify, setShowModify] = useState(false);
   const [modNotes, setModNotes] = useState(session.modificationNotes ?? "");
   const [savingMod, setSavingMod] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const modNotesRef = useRef<HTMLTextAreaElement>(null);
 
   const throws: ThrowPrescription[] = JSON.parse(session.throwsPrescription || "[]");
@@ -222,7 +226,6 @@ export function SessionDetail({
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.assignmentId) {
-        setStatus("IN_PROGRESS");
         success("Workout started", "Launching live view...");
         router.push(`/athlete/throws/live/${data.assignmentId}`);
       } else if (res.status === 409) {
@@ -300,6 +303,28 @@ export function SessionDetail({
     }
   }
 
+  // ── Reset Workout ──────────────────────────────────────────────────
+
+  async function handleResetWorkout() {
+    setResetting(true);
+    try {
+      const res = await patchSession({ status: "PLANNED" });
+      if (res.ok) {
+        setStatus("PLANNED");
+        success("Workout Reset", "Session cleared — you can start fresh.");
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toastError("Error", data.error || "Failed to reset workout");
+      }
+    } catch {
+      toastError("Error", "Something went wrong");
+    } finally {
+      setResetting(false);
+      setShowResetConfirm(false);
+    }
+  }
+
   // ── Render ─────────────────────────────────────────────────────────
 
   return (
@@ -328,9 +353,9 @@ export function SessionDetail({
                 <ChevronLeft size={18} strokeWidth={1.75} aria-hidden="true" />
               </Link>
             ) : (
-              <span className="p-2 opacity-30">
+              <button disabled className="p-2 opacity-30 cursor-default" aria-label="No previous session" aria-disabled="true">
                 <ChevronLeft size={18} strokeWidth={1.75} aria-hidden="true" />
-              </span>
+              </button>
             )}
             {nextSessionId ? (
               <Link
@@ -341,9 +366,9 @@ export function SessionDetail({
                 <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </Link>
             ) : (
-              <span className="p-2 opacity-30">
+              <button disabled className="p-2 opacity-30 cursor-default" aria-label="No next session" aria-disabled="true">
                 <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
-              </span>
+              </button>
             )}
           </div>
         </div>
@@ -407,23 +432,25 @@ export function SessionDetail({
 
       {/* In-Progress banner */}
       {status === "IN_PROGRESS" && (
-        <div className="mb-6 card p-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-center">
-          <div className="flex items-center justify-center gap-2 mb-1">
+        <div className="mb-6 card p-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-center space-y-3">
+          <div className="flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">Workout In Progress</p>
           </div>
-          <p className="text-xs text-amber-600 dark:text-amber-500 mb-2">Complete your session, then mark it done below</p>
+          <Button
+            variant="primary"
+            size="md"
+            className="w-full"
+            onClick={handleStartWorkout}
+            loading={starting}
+            leftIcon={!starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined}
+          >
+            {starting ? "Resuming..." : "Resume Workout"}
+          </Button>
           <button
             type="button"
-            onClick={async () => {
-              const res = await patchSession({ status: "PLANNED" });
-              if (res.ok) {
-                setStatus("PLANNED");
-                success("Session Reset", "Moved back to planned.");
-              } else {
-                toastError("Error", "Failed to reset session");
-              }
-            }}
+            disabled={resetting}
+            onClick={() => setShowResetConfirm(true)}
             className="text-xs text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
           >
             <Undo2 size={12} strokeWidth={1.75} aria-hidden="true" />
@@ -600,67 +627,32 @@ export function SessionDetail({
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-2">Actions</h2>
 
-          {/* Complete Workout (only when IN_PROGRESS) */}
+          {/* Resume Workout (when IN_PROGRESS — navigate to live view via start-live which is idempotent) */}
           {status === "IN_PROGRESS" && (
-            <>
-              {/* Desktop */}
-              <div className="hidden sm:block">
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="w-full"
-                  onClick={async () => {
-                    const res = await patchSession({ status: "COMPLETED" });
-                    if (res.ok) {
-                      setStatus("COMPLETED");
-                      success("Workout complete!", "Great work today.");
-                    } else {
-                      toastError("Error", "Failed to complete session");
-                    }
-                  }}
-                  leftIcon={<CheckCircle2 size={16} strokeWidth={1.75} aria-hidden="true" />}
-                >
-                  Complete Workout
-                </Button>
-              </div>
-              {/* Mobile */}
-              <div className="sm:hidden">
-                <SlideToConfirm
-                  label="Slide to Complete Workout"
-                  onConfirm={async () => {
-                    const res = await patchSession({ status: "COMPLETED" });
-                    if (res.ok) {
-                      setStatus("COMPLETED");
-                      success("Workout complete!", "Great work today.");
-                    } else {
-                      toastError("Error", "Failed to complete session");
-                    }
-                  }}
-                  variant="confirm"
-                />
-              </div>
-            </>
+            <Button
+              variant="primary"
+              size="md"
+              className="w-full"
+              onClick={handleStartWorkout}
+              loading={starting}
+              leftIcon={!starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined}
+            >
+              {starting ? "Resuming..." : "Resume Workout"}
+            </Button>
           )}
 
-          {/* Cancel / Reset (only when IN_PROGRESS) */}
+          {/* Reset Workout (visible when IN_PROGRESS) */}
           {status === "IN_PROGRESS" && (
             <button
               type="button"
-              onClick={async () => {
-                const res = await patchSession({ status: "PLANNED" });
-                if (res.ok) {
-                  setStatus("PLANNED");
-                  success("Session Reset", "Moved back to planned.");
-                } else {
-                  toastError("Error", "Failed to reset session");
-                }
-              }}
+              disabled={resetting}
+              onClick={() => setShowResetConfirm(true)}
               className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
             >
               <Undo2 size={18} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
               <div>
-                <div className="text-sm font-medium">Cancel Workout</div>
-                <div className="text-xs text-muted">Reset to planned — started by accident</div>
+                <div className="text-sm font-medium">Reset Workout</div>
+                <div className="text-xs text-muted">Clear progress and start over — accidentally started</div>
               </div>
             </button>
           )}
@@ -742,6 +734,17 @@ export function SessionDetail({
         confirmLabel="Skip"
       />
 
+      {/* ── Reset Confirm Dialog ─────────────────────────────────────── */}
+      <ConfirmDialog
+        open={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        title="Reset this workout?"
+        description="This will clear all progress and throw logs for this session. You'll be able to start the workout fresh."
+        onConfirm={handleResetWorkout}
+        variant="danger"
+        confirmLabel={resetting ? "Resetting…" : "Reset Workout"}
+      />
+
       {/* ── Reschedule Dialog ────────────────────────────────────────── */}
       {showReschedule && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
@@ -769,7 +772,6 @@ export function SessionDetail({
                 type="date"
                 value={rescheduleDate}
                 onChange={(e) => setRescheduleDate(e.target.value)}
-                min={new Date().toISOString().slice(0, 10)}
                 className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary-500/40"
               />
             </div>
@@ -817,7 +819,7 @@ export function SessionDetail({
             </div>
 
             <p className="text-sm text-muted">
-              Describe how you plan to adjust today&apos;s session. Your notes will be saved alongside the original prescription.
+              Add notes about planned adjustments. The live workout prescription stays the same — these notes are for your reference and coach visibility.
             </p>
 
             {/* Current prescription summary */}

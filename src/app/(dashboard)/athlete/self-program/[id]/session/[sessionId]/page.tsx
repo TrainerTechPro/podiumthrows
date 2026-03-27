@@ -45,21 +45,36 @@ export default async function ProgramSessionPage({
     redirect(`/athlete/self-program/${configId}`);
   }
 
-  // If IN_PROGRESS, redirect to the live workout view
+  // If IN_PROGRESS, redirect to live workout or auto-fix status
   if (programSession.status === "IN_PROGRESS") {
     const throwsSession = await prisma.throwsSession.findFirst({
       where: { tags: { contains: `selfProgram:${sessionId}` } },
       include: {
         assignments: {
-          where: { athleteId: athlete.id, status: "IN_PROGRESS" },
-          select: { id: true },
+          where: { athleteId: athlete.id },
+          select: { id: true, status: true },
           take: 1,
         },
       },
     });
-    if (throwsSession?.assignments[0]) {
-      redirect(`/athlete/throws/live/${throwsSession.assignments[0].id}`);
+
+    const assignment = throwsSession?.assignments[0];
+    if (assignment) {
+      if (assignment.status === "IN_PROGRESS" || assignment.status === "ASSIGNED") {
+        // Active workout — redirect to live view
+        redirect(`/athlete/throws/live/${assignment.id}`);
+      } else {
+        // Assignment is COMPLETED/PARTIAL/SKIPPED but ProgramSession wasn't updated — auto-fix
+        await prisma.programSession.update({
+          where: { id: sessionId },
+          data: { status: "COMPLETED", completedAt: new Date() },
+        });
+        // Refresh to show completed state
+        programSession.status = "COMPLETED";
+      }
     }
+    // If no ThrowsSession exists at all, fall through to show session detail
+    // (the Reset button is the escape hatch)
   }
 
   // Compute scheduled date if not set

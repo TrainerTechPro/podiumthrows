@@ -51,12 +51,36 @@ export default async function SelfProgramPage() {
     activeConfig != null &&
     !athlete.events.includes(activeConfig.event as (typeof athlete.events)[number]);
 
+  // Resolve live assignment for any IN_PROGRESS session (so hub can link directly)
+  let liveAssignmentId: string | null = null;
+  if (activeConfig?.trainingProgram) {
+    const inProgressSession = activeConfig.trainingProgram.sessions.find(
+      (s) => s.status === "IN_PROGRESS"
+    );
+    if (inProgressSession) {
+      const throwsSession = await prisma.throwsSession.findFirst({
+        where: { tags: { contains: `selfProgram:${inProgressSession.id}` } },
+        include: {
+          assignments: {
+            where: { athleteId: athlete.id, status: "IN_PROGRESS" },
+            select: { id: true },
+            take: 1,
+          },
+        },
+      });
+      if (throwsSession?.assignments[0]) {
+        liveAssignmentId = throwsSession.assignments[0].id;
+      }
+    }
+  }
+
   return (
     <SelfProgramHub
       state={activeConfig ? "active" : draft ? "draft" : "empty"}
       config={activeConfig ? JSON.parse(JSON.stringify(activeConfig)) : null}
       draft={draft ? JSON.parse(JSON.stringify(draft)) : null}
       eventMismatch={eventMismatch ?? false}
+      liveAssignmentId={liveAssignmentId}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { LiveWorkout } from "./_live-workout";
@@ -31,9 +31,9 @@ export default async function LiveWorkoutPage({
 
   if (!assignment || assignment.athleteId !== user.athleteProfile.id) notFound();
 
-  // Reject completed/skipped assignments
+  // Redirect completed/skipped assignments to dashboard (session is done)
   if (assignment.status === "COMPLETED" || assignment.status === "SKIPPED") {
-    notFound();
+    redirect("/athlete/self-program");
   }
 
   // Serialize for client
@@ -55,6 +55,7 @@ export default async function LiveWorkoutPage({
       throwNumber: tl.throwNumber,
       distance: tl.distance,
       implement: tl.implement,
+      notes: tl.notes,
     })),
     startedAt: assignment.startedAt?.toISOString() ?? null,
   };

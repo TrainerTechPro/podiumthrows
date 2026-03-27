@@ -29,6 +29,7 @@ type ExistingThrowLog = {
   throwNumber: number;
   distance: number | null;
   implement: string;
+  notes: string | null;
 };
 
 type WorkoutData = {
@@ -78,14 +79,17 @@ function getThrowCount(cfg: Record<string, unknown>): number {
 }
 
 function getImplement(cfg: Record<string, unknown>): string {
-  return (cfg.implementWeight as string) || (cfg.implement as string) || "";
+  return (cfg.implement as string) || "";
 }
 
 function getImplementKg(cfg: Record<string, unknown>): number {
+  // start-live stores implementWeightKg as a numeric field
   const w = cfg.implementWeightKg as number;
   if (w && w > 0) return w;
+  // Fallback: parse from implement string (e.g. "7.26kg")
   const str = getImplement(cfg);
-  return parseFloat(str.replace("kg", "")) || 0;
+  const parsed = parseFloat(str.replace(/[^0-9.]/g, ""));
+  return isNaN(parsed) ? 0 : parsed;
 }
 
 function getRestSeconds(cfg: Record<string, unknown>): number {
@@ -277,7 +281,22 @@ function ThrowingBlockView({
     }
   }
 
-  function skipThrow() {
+  async function skipThrow() {
+    try {
+      await fetch(`/api/throws/assignments/${assignmentId}/log-throw`, {
+        method: "POST",
+        headers: csrfHeaders(),
+        body: JSON.stringify({
+          blockId: block.id,
+          distance: null,
+          implement: implement || `${implementKg}kg`,
+          throwNumber: current + 1,
+          event,
+        }),
+      });
+    } catch {
+      // Best-effort — still advance locally even if persistence fails
+    }
     onThrowLogged({ throwNumber: current + 1, distance: null });
   }
 
@@ -577,10 +596,12 @@ function StrengthBlockView({
   block,
   state,
   onSetLogged,
+  assignmentId,
 }: {
   block: BlockData;
   state: BlockState;
   onSetLogged: (s: LoggedSet) => void;
+  assignmentId: string;
 }) {
   const { toast } = useToast();
   const accent = getBlockAccent(block);
@@ -592,19 +613,45 @@ function StrengthBlockView({
   const [reps, setReps] = useState("");
   const [rpe, setRpe] = useState<number | null>(null);
   const [showRest, setShowRest] = useState(false);
+  const [logging, setLogging] = useState(false);
 
   const chamferLg =
     "polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))";
 
-  function logSet() {
+  async function logSet() {
     const w = parseFloat(weight);
     const r = parseInt(reps);
     if (!r || r <= 0) {
       toast("Enter reps completed", "error");
       return;
     }
+
+    setLogging(true);
+    const setNumber = state.sets.length + 1;
+    const exerciseName = exercises[0]?.exerciseName as string || "Strength";
+
+    try {
+      // Persist to DB via log-throw — repurpose fields for strength:
+      // throwNumber → setNumber, distance → weight, implement → exerciseName, notes → {reps, rpe}
+      await fetch(`/api/throws/assignments/${assignmentId}/log-throw`, {
+        method: "POST",
+        headers: csrfHeaders(),
+        body: JSON.stringify({
+          blockId: block.id,
+          distance: w || null,
+          implement: exerciseName,
+          throwNumber: setNumber,
+          notes: JSON.stringify({ reps: r, rpe, type: "strength" }),
+        }),
+      });
+    } catch {
+      // Best-effort — still advance locally
+    } finally {
+      setLogging(false);
+    }
+
     onSetLogged({
-      setNumber: state.sets.length + 1,
+      setNumber,
       reps: r,
       weight: w || 0,
       rpe,
@@ -786,7 +833,7 @@ function StrengthBlockView({
         {/* Log Set button */}
         <button
           onClick={logSet}
-          disabled={!reps}
+          disabled={!reps || logging}
           className="w-full min-h-[52px] font-bold text-[11px] uppercase disabled:opacity-40 transition-opacity"
           style={{
             letterSpacing: "3px",
@@ -1055,7 +1102,7 @@ function CompletionScreen({
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [rpe, setRpe] = useState(7);
+  const [rpe, setRpe] = useState<number | null>(null);
   const [feeling, setFeeling] = useState<string>("GOOD");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -1098,7 +1145,8 @@ function CompletionScreen({
         return;
       }
       toast("Session complete!", "celebration");
-      router.push("/athlete/dashboard");
+      router.refresh();
+      router.push("/athlete/self-program");
     } catch {
       toast("Network error", "error");
       setSubmitting(false);
@@ -1264,19 +1312,21 @@ function CompletionScreen({
           style={{ letterSpacing: "3px", color: "#888" }}
         >
           Session RPE —{" "}
-          <span style={{ color: "#FFC800" }}>{rpe}</span>
+          <span style={{ color: "#FFC800" }}>{rpe ?? "—"}</span>
         </label>
         <input
           type="range"
           min={1}
           max={10}
           step={1}
-          value={rpe}
+          value={rpe ?? 5}
           onChange={(e) => setRpe(parseInt(e.target.value))}
           className="w-full h-2 appearance-none cursor-pointer"
           style={{
             accentColor: "#FFC800",
-            background: `linear-gradient(to right, #FFC800 ${(rpe - 1) * 11.1}%, #1a1a1e ${(rpe - 1) * 11.1}%)`,
+            background: rpe != null
+              ? `linear-gradient(to right, #FFC800 ${(rpe - 1) * 11.1}%, #1a1a1e ${(rpe - 1) * 11.1}%)`
+              : "#1a1a1e",
           }}
         />
         <div className="flex justify-between">
@@ -1377,7 +1427,7 @@ function CompletionScreen({
 /*  WORKOUT OVERVIEW (all blocks at a glance)                              */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
-function WorkoutOverview({ data }: { data: WorkoutData }) {
+function WorkoutOverview({ data, blockStates }: { data: WorkoutData; blockStates: Map<string, BlockState> }) {
   const chamferLg =
     "polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))";
 
@@ -1407,13 +1457,33 @@ function WorkoutOverview({ data }: { data: WorkoutData }) {
           </p>
         </div>
         <div className="text-center">
-          <span className="text-xl font-bold tabular-nums" style={{ color: "#FFC800" }}>
-            {data.blocks
+          {(() => {
+            const loggedThrows = Array.from(blockStates.values())
+              .reduce((sum, s) => sum + s.throws.filter((t) => t.distance !== null && t.distance > 0).length, 0);
+            const totalThrows = data.blocks
               .filter((b) => b.blockType === "THROWING")
-              .reduce((sum, b) => sum + getThrowCount(parseConfig(b.config)), 0)}
+              .reduce((sum, b) => sum + getThrowCount(parseConfig(b.config)), 0);
+            return (
+              <>
+                <span className="text-xl font-bold tabular-nums" style={{ color: loggedThrows > 0 ? "#00FF88" : "#FFC800" }}>
+                  {loggedThrows}
+                </span>
+                <span className="text-sm font-medium tabular-nums" style={{ color: "#ffffff33" }}>
+                  /{totalThrows}
+                </span>
+              </>
+            );
+          })()}
+          <p className="text-[9px] uppercase tracking-widest" style={{ color: "#ffffff44" }}>
+            Throws Logged
+          </p>
+        </div>
+        <div className="text-center">
+          <span className="text-xl font-bold tabular-nums" style={{ color: "#FFC800" }}>
+            {Array.from(blockStates.values()).reduce((sum, s) => sum + s.sets.length, 0)}
           </span>
           <p className="text-[9px] uppercase tracking-widest" style={{ color: "#ffffff44" }}>
-            Throws
+            Sets
           </p>
         </div>
       </div>
@@ -1423,6 +1493,9 @@ function WorkoutOverview({ data }: { data: WorkoutData }) {
         const cfg = parseConfig(block.config);
         const accent = getBlockAccent(block);
         const bt = block.blockType.toUpperCase();
+        const state = blockStates.get(block.id);
+        const loggedCount = state ? state.throws.length + state.sets.length + state.warmupChecked.size : 0;
+        const hasProgress = loggedCount > 0;
 
         return (
           <div key={block.id} className="space-y-2">
@@ -1437,7 +1510,10 @@ function WorkoutOverview({ data }: { data: WorkoutData }) {
                   ? getExerciseName(block)
                   : bt}
               </span>
-              <span className="text-[9px] text-white/30 ml-auto">
+              <span className="text-[9px] text-white/30 ml-auto flex items-center gap-1.5">
+                {hasProgress && (
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent }} />
+                )}
                 Block {i + 1}
               </span>
             </div>
@@ -1544,22 +1620,53 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
   const totalBlocks = data.blocks.length;
   const activeBlock = data.blocks[activeBlockIdx];
 
-  // Block states
+  // Block states — reconstruct from persisted logs on reload
   const [blockStates, setBlockStates] = useState<Map<string, BlockState>>(() => {
     const map = new Map<string, BlockState>();
     for (const block of data.blocks) {
-      const existingThrows = data.existingThrowLogs
-        .filter((tl) => tl.blockId === block.id)
-        .map((tl) => ({
-          throwNumber: tl.throwNumber,
-          distance: tl.distance ?? 0,
-          id: tl.id,
-        }));
+      const blockLogs = data.existingThrowLogs.filter((tl) => tl.blockId === block.id);
+      const bt = block.blockType?.toUpperCase();
+
+      // Reconstruct warmup drill checks from persisted logs
+      const warmupChecked = new Set<number>();
+      // Reconstruct strength sets from persisted logs
+      const sets: LoggedSet[] = [];
+      // Regular throws (non-warmup, non-strength)
+      const throws: LoggedThrow[] = [];
+
+      for (const tl of blockLogs) {
+        let parsed: Record<string, unknown> | null = null;
+        try { parsed = tl.notes ? JSON.parse(tl.notes) : null; } catch { /* not JSON */ }
+
+        if (parsed?.type === "warmup_drill") {
+          warmupChecked.add(tl.throwNumber);
+        } else if (parsed?.type === "strength") {
+          sets.push({
+            setNumber: tl.throwNumber,
+            reps: (parsed.reps as number) || 0,
+            weight: tl.distance ?? 0,
+            rpe: (parsed.rpe as number) || null,
+          });
+        } else if (bt === "THROWING" || bt === "PLYOMETRIC") {
+          throws.push({
+            throwNumber: tl.throwNumber,
+            distance: tl.distance ?? 0,
+            id: tl.id,
+          });
+        } else {
+          // Default: treat as throw data
+          throws.push({
+            throwNumber: tl.throwNumber,
+            distance: tl.distance ?? 0,
+            id: tl.id,
+          });
+        }
+      }
 
       map.set(block.id, {
-        throws: existingThrows,
-        sets: [],
-        warmupChecked: new Set<number>(),
+        throws,
+        sets,
+        warmupChecked,
         completed: false,
       });
     }
@@ -1626,10 +1733,25 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         const state = { ...next.get(blockId)! };
         state.sets = [...state.sets, s];
         next.set(blockId, state);
+
+        // Check if this strength block just completed
+        const block = data.blocks.find((b) => b.id === blockId);
+        if (block) {
+          const cfg = parseConfig(block.config);
+          const exercises = (cfg.exercises as Array<Record<string, unknown>>) ?? [];
+          const targetSets = (exercises[0]?.sets as number) || (cfg.sets as number) || 0;
+          if (targetSets > 0 && state.sets.length >= targetSets) {
+            const blockIdx = data.blocks.indexOf(block);
+            if (blockIdx < data.blocks.length - 1) {
+              setShowBlockTransition(true);
+            }
+          }
+        }
+
         return next;
       });
     },
-    [],
+    [data.blocks],
   );
 
   const handleToggleDrill = useCallback(
@@ -1638,25 +1760,47 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         const next = new Map(prev);
         const state = { ...next.get(blockId)! };
         const checked = new Set(state.warmupChecked);
-        if (checked.has(idx)) checked.delete(idx);
-        else checked.add(idx);
+        const isChecking = !checked.has(idx);
+        if (isChecking) checked.add(idx);
+        else checked.delete(idx);
         state.warmupChecked = checked;
         next.set(blockId, state);
+
+        // Persist drill check to DB (fire-and-forget)
+        if (isChecking) {
+          fetch(`/api/throws/assignments/${data.assignmentId}/log-throw`, {
+            method: "POST",
+            headers: csrfHeaders(),
+            body: JSON.stringify({
+              blockId,
+              distance: null,
+              implement: "warmup",
+              throwNumber: idx,
+              notes: JSON.stringify({ type: "warmup_drill", checked: true }),
+            }),
+          }).catch(() => {});
+        }
+
         return next;
       });
     },
-    [],
+    [data.assignmentId],
   );
 
   async function endEarly() {
     try {
-      await fetch(`/api/throws/assignments/${data.assignmentId}`, {
+      const res = await fetch(`/api/throws/assignments/${data.assignmentId}`, {
         method: "PUT",
         headers: csrfHeaders(),
         body: JSON.stringify({ action: "partial" }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast(errData.error || "Failed to end session", "error");
+        return;
+      }
       toast("Session ended", "info");
-      router.push("/athlete/dashboard");
+      router.push("/athlete/self-program");
     } catch {
       toast("Network error", "error");
     }
@@ -1734,7 +1878,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
             onClick={handleEndSession}
             className="text-xs text-white/50 flex items-center gap-1 min-h-[44px]"
           >
-            <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" /> END SESSION
+            <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" /> FINISH EARLY
           </button>
 
           {/* Classification badge — center */}
@@ -1792,7 +1936,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
       {/* ── Overview Mode ── */}
       {viewMode === "overview" ? (
         <div className="flex-1 overflow-y-auto pb-20 px-5">
-          <WorkoutOverview data={data} />
+          <WorkoutOverview data={data} blockStates={blockStates} />
         </div>
       ) : (
       <>
@@ -1800,7 +1944,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
       <div className="flex items-center justify-center gap-4 py-2 px-5">
         {activeBlockIdx > 0 && (
           <button
-            onClick={() => setActiveBlockIdx((i) => i - 1)}
+            onClick={() => { setShowBlockTransition(false); setActiveBlockIdx((i) => i - 1); }}
             className="text-white/30 text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             ‹
@@ -1876,6 +2020,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
                 block={activeBlock}
                 state={currentState}
                 onSetLogged={(s) => handleSetLogged(activeBlock.id, s)}
+                assignmentId={data.assignmentId}
               />
             )}
             {(bt === "WARMUP" || bt === "COOLDOWN") && (
