@@ -228,7 +228,12 @@ export function Sidebar({
       >
         {/* Header slot */}
         {header && (
-          <div className="px-4 py-4 border-b border-[var(--card-border)] shrink-0">{header}</div>
+          <div
+            className="px-4 py-4 border-b border-[var(--card-border)] shrink-0"
+            style={{ paddingTop: "calc(1rem + env(safe-area-inset-top, 0px))" }}
+          >
+            {header}
+          </div>
         )}
 
         {/* Mode toggle (coach training mode) */}

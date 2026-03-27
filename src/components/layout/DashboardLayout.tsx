@@ -215,7 +215,10 @@ function TopBar({
   notificationCount?: number;
 }) {
   return (
-    <header className="sticky top-0 z-20 bg-[var(--background)]/90 backdrop-blur-sm border-b border-[var(--card-border)] px-4 sm:px-6 h-14 flex items-center gap-4 shrink-0">
+    <header
+      className="sticky top-0 z-20 bg-[var(--background)]/90 backdrop-blur-sm border-b border-[var(--card-border)] px-4 sm:px-6 min-h-[3.5rem] flex items-center gap-4 shrink-0"
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
       {/* Hamburger (mobile) */}
       <HamburgerButton open={sidebarOpen} onClick={onToggleSidebar} />
 
