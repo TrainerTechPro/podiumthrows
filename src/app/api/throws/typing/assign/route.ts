@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, TypingAssignSchema } from "@/lib/api-schemas";
 
 // POST /api/throws/typing/assign
 // Coach assigns the typing quiz to an athlete so it appears on their dashboard.
@@ -13,10 +14,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
     }
 
-    const { athleteId } = await request.json();
-    if (!athleteId) {
-      return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, TypingAssignSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, PracticeSessionCreateSchema } from "@/lib/api-schemas";
 
 // GET /api/throws/practice — list all practice sessions for the coach
 export async function GET() {
@@ -48,12 +49,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { name, date, notes } = body;
-
-    if (!name || !date) {
-      return NextResponse.json({ success: false, error: "Name and date are required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, PracticeSessionCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, date, notes } = parsed;
 
     const session = await prisma.practiceSession.create({
       data: {

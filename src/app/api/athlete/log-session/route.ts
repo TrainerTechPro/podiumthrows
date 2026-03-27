@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
 
 /* ── GET — list athlete's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -59,27 +60,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Athlete profile not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-
+    const parsed = await parseBody(request, LogSessionSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       event,
       date,
       focus,
       notes,
-      // Readiness
       sleepQuality,
       sorenessLevel,
       energyLevel,
-      // Post-session feedback
       sessionRpe,
       sessionFeeling,
       techniqueRating,
       mentalFocus,
       bestPart,
       improvementArea,
-      // Drills
       drills,
-    } = body as {
+    } = parsed as {
       event: string;
       date: string;
       focus?: string;

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, ComplexCreateSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,12 +12,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { athleteId, startDate, exercises, event } = body;
-
-    if (!athleteId || !startDate || !exercises || !event) {
-      return NextResponse.json({ success: false, error: "athleteId, startDate, exercises, and event are required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, ComplexCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, startDate, exercises, event } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });

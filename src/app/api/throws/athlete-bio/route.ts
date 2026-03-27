@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, AthleteBioUpdateSchema } from "@/lib/api-schemas";
 
 /** PATCH — coach updates athlete bio fields (gender, sport, height, weight, dateOfBirth) */
 export async function PATCH(request: NextRequest) {
@@ -12,12 +13,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { athleteId, gender, sport, height, weight, dateOfBirth } = body;
-
-    if (!athleteId) {
-      return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, AthleteBioUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, gender, sport, height, weight, dateOfBirth } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });

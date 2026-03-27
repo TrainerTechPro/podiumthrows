@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, TeamCreateSchema } from "@/lib/api-schemas";
 
 /* ── GET — list all event groups for the authenticated coach ── */
 export async function GET() {
@@ -73,12 +74,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { name, description } = body;
+    const parsed = await parseBody(request, TeamCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, description } = parsed;
 
-    if (!name?.trim()) {
-      return NextResponse.json({ error: "Group name is required" }, { status: 400 });
-    }
     if (name.trim().length > 100) {
       return NextResponse.json(
         { error: "Group name must be 100 characters or less" },

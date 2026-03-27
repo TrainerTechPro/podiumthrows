@@ -271,6 +271,88 @@ export const LiftingWorkoutCreateSchema = z.object({
   date: z.string().min(1, "Date is required"),
 });
 
+// ── Log Session (athlete + coach) ────────────────────────────────────
+
+const LogSessionDrillSchema = z.object({
+  drillType: z.string().min(1),
+  implementWeight: z.number().nullable().optional(),
+  implementWeightUnit: z.string().nullable().optional(),
+  implementWeightOriginal: z.number().nullable().optional(),
+  wireLength: z.string().nullable().optional(),
+  throwCount: z.number().int().min(0).optional(),
+  bestMark: z.number().nullable().optional(),
+  averageMark: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  marks: z.array(z.number()).optional(),
+});
+
+export const LogSessionSchema = z.object({
+  event: z.string().min(1, "Event is required"),
+  date: z.string().min(1, "Date is required"),
+  focus: z.string().optional(),
+  notes: z.string().optional(),
+  sleepQuality: z.number().min(1).max(10).optional(),
+  sorenessLevel: z.number().min(1).max(10).optional(),
+  energyLevel: z.number().min(1).max(10).optional(),
+  sessionRpe: z.number().min(1).max(10).optional(),
+  sessionFeeling: z.string().optional(),
+  techniqueRating: z.number().min(1).max(10).optional(),
+  mentalFocus: z.number().min(1).max(10).optional(),
+  bestPart: z.string().optional(),
+  improvementArea: z.string().optional(),
+  drills: z.array(LogSessionDrillSchema),
+});
+
+// ── Practice Session ────────────────────────────────────────────────────
+
+export const PracticeSessionCreateSchema = z.object({
+  name: z.string().min(1, "Session name is required"),
+  date: z.string().min(1, "Date is required"),
+  notes: z.string().nullable().optional(),
+});
+
+// ── Exercise Complex ────────────────────────────────────────────────────
+
+export const ComplexCreateSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  startDate: z.string().min(1, "Start date is required"),
+  exercises: z.array(z.unknown()).min(1, "At least one exercise is required"),
+  event: z.string().min(1, "Event is required"),
+});
+
+// ── Athlete Bio ─────────────────────────────────────────────────────────
+
+export const AthleteBioUpdateSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  sport: z.string().optional(),
+  height: z.union([z.number(), z.string()]).nullable().optional(),
+  weight: z.union([z.number(), z.string()]).nullable().optional(),
+  dateOfBirth: z.string().nullable().optional(),
+});
+
+// ── Coach Teams ─────────────────────────────────────────────────────────
+
+export const TeamCreateSchema = z.object({
+  name: z.string().min(1, "Team name is required"),
+  description: z.string().optional(),
+});
+
+// ── Event Groups ────────────────────────────────────────────────────────
+
+export const EventGroupCreateSchema = z.object({
+  name: z.string().min(1, "Group name is required"),
+  events: z.array(z.string()).min(1, "At least one event is required"),
+  color: z.string().optional(),
+  description: z.string().optional(),
+});
+
+// ── Typing Assign ───────────────────────────────────────────────────────
+
+export const TypingAssignSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+});
+
 // ── Throws Session ──────────────────────────────────────────────────────
 
 const ThrowsBlockSchema = z.object({

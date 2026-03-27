@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getEventGroups, createEventGroup } from "@/lib/data/event-groups";
 import type { EventType } from "@prisma/client";
 import { logger } from "@/lib/logger";
+import { parseBody, EventGroupCreateSchema } from "@/lib/api-schemas";
 
 const VALID_EVENT_TYPES = new Set<string>(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
 
@@ -47,16 +48,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Coach not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { name, events, color, description } = body;
-
-    if (!name?.trim()) {
-      return NextResponse.json({ error: "Group name is required" }, { status: 400 });
-    }
-
-    if (!Array.isArray(events) || events.length === 0) {
-      return NextResponse.json({ error: "At least one event is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, EventGroupCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, events, color, description } = parsed;
 
     const invalidEvents = events.filter(
       (e: unknown) => typeof e !== "string" || !VALID_EVENT_TYPES.has(e)

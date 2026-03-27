@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { checkAndSetCoachPR } from "@/lib/coach-throws";
 import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
+import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
 
 /* ── GET — list coach's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -58,14 +59,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
     }
 
-    const body = await request.json();
+    const parsed = await parseBody(request, LogSessionSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       event, date, focus, notes,
       sleepQuality, sorenessLevel, energyLevel,
       sessionRpe, sessionFeeling, techniqueRating, mentalFocus,
       bestPart, improvementArea,
       drills,
-    } = body as {
+    } = parsed as {
       event: string;
       date: string;
       focus?: string;
