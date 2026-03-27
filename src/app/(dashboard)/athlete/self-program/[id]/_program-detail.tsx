@@ -5,9 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  CalendarDays,
-  ChevronRight,
-  Clock,
   Dumbbell,
   RefreshCw,
   Sparkles,
@@ -15,14 +12,11 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { StatCard } from "@/components/ui/StatCard";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
-import { NumberFlow } from "@/components/ui/NumberFlow";
 import {
   Tabs,
   TabList,
@@ -32,42 +26,10 @@ import {
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { ProgramSettings } from "./_program-settings";
+import { PhaseTimeline } from "./_phase-timeline";
+import type { ProgramPhase } from "./_week-expansion";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
-
-interface ProgramSession {
-  id: string;
-  weekNumber: number;
-  dayOfWeek: number;
-  dayType: string;
-  scheduledDate: string | null;
-  sessionType: string;
-  focusLabel: string;
-  totalThrowsTarget: number;
-  estimatedDuration: number | null;
-  status: string;
-  completedAt: string | null;
-  actualThrows: number | null;
-  bestMark: number | null;
-  rpe: number | null;
-}
-
-interface ProgramPhase {
-  id: string;
-  phase: string;
-  phaseOrder: number;
-  startWeek: number;
-  endWeek: number;
-  durationWeeks: number;
-  throwsPerWeekTarget: number;
-  strengthDaysTarget: number;
-  cePercent: number;
-  sdPercent: number;
-  spPercent: number;
-  gpPercent: number;
-  status: string;
-  sessions: ProgramSession[];
-}
 
 interface TrainingProgram {
   id: string;
@@ -119,99 +81,6 @@ function formatEventName(event: string): string {
     .replace(/_/g, " ")
     .toLowerCase()
     .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function formatSessionType(type: string): string {
-  return type
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-const DAY_NAMES: Record<number, string> = {
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-  7: "Sunday",
-};
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-/* ─── Phase Colors ───────────────────────────────────────────────────────── */
-
-const PHASE_COLORS: Record<
-  string,
-  { bg: string; text: string; border: string; dot: string }
-> = {
-  ACCUMULATION: {
-    bg: "bg-blue-50 dark:bg-blue-500/10",
-    text: "text-blue-700 dark:text-blue-300",
-    border: "border-blue-200 dark:border-blue-500/30",
-    dot: "bg-blue-500",
-  },
-  TRANSMUTATION: {
-    bg: "bg-amber-50 dark:bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-300",
-    border: "border-amber-200 dark:border-amber-500/30",
-    dot: "bg-amber-500",
-  },
-  REALIZATION: {
-    bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-300",
-    border: "border-emerald-200 dark:border-emerald-500/30",
-    dot: "bg-emerald-500",
-  },
-  COMPETITION: {
-    bg: "bg-red-50 dark:bg-red-500/10",
-    text: "text-red-700 dark:text-red-300",
-    border: "border-red-200 dark:border-red-500/30",
-    dot: "bg-red-500",
-  },
-};
-
-function getPhaseColor(phase: string) {
-  return PHASE_COLORS[phase] ?? PHASE_COLORS.ACCUMULATION;
-}
-
-const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  PLANNED: {
-    bg: "bg-surface-100 dark:bg-surface-800",
-    text: "text-surface-600 dark:text-surface-400",
-  },
-  SCHEDULED: {
-    bg: "bg-surface-100 dark:bg-surface-800",
-    text: "text-surface-600 dark:text-surface-400",
-  },
-  IN_PROGRESS: {
-    bg: "bg-amber-50 dark:bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-300",
-  },
-  ACTIVE: {
-    bg: "bg-amber-50 dark:bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-300",
-  },
-  COMPLETED: {
-    bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-300",
-  },
-  SKIPPED: {
-    bg: "bg-surface-100 dark:bg-surface-800",
-    text: "text-surface-500 dark:text-surface-500",
-  },
-};
-
-function getStatusStyle(status: string) {
-  return STATUS_STYLES[status] ?? STATUS_STYLES.PLANNED;
 }
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
@@ -321,9 +190,6 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
       setGenerating(false);
     }
   };
-
-  // Default tab to current phase
-  const defaultTabId = currentPhase?.id ?? phases[0]?.id ?? "";
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
@@ -479,63 +345,17 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 
         {/* ── Program Tab ─────────────────────────────────────────────── */}
         <TabPanel id="program" className="mt-6 space-y-6">
-          {/* Phase Timeline (Tabs) */}
+          {/* Phase Timeline */}
           {phases.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
                 Phase Timeline
               </h2>
-
-              <Tabs defaultTab={defaultTabId}>
-                <TabList variant="underline" className="overflow-x-auto custom-scrollbar">
-                  {phases.map((phase) => {
-                    const colors = getPhaseColor(phase.phase);
-                    const isCurrent = phase.id === currentPhase?.id;
-
-                    return (
-                      <TabTrigger
-                        key={phase.id}
-                        id={phase.id}
-                        variant="underline"
-                        icon={
-                          <span
-                            className={cn(
-                              "w-2 h-2 rounded-full shrink-0",
-                              isCurrent ? colors.dot : "bg-surface-300 dark:bg-surface-600",
-                            )}
-                          />
-                        }
-                        badge={
-                          <span
-                            className={cn(
-                              "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase",
-                              getStatusStyle(phase.status).bg,
-                              getStatusStyle(phase.status).text,
-                            )}
-                          >
-                            {phase.status}
-                          </span>
-                        }
-                      >
-                        <span className="flex flex-col items-start leading-tight">
-                          <span className="text-xs font-semibold">
-                            {phase.phase}
-                          </span>
-                          <span className="text-[10px] text-muted tabular-nums">
-                            Wk {phase.startWeek}&ndash;{phase.endWeek}
-                          </span>
-                        </span>
-                      </TabTrigger>
-                    );
-                  })}
-                </TabList>
-
-                {phases.map((phase) => (
-                  <TabPanel key={phase.id} id={phase.id} className="mt-4">
-                    <PhaseContent phase={phase} programStartDate={program.startDate} configId={config.id} />
-                  </TabPanel>
-                ))}
-              </Tabs>
+              <PhaseTimeline
+                phases={phases}
+                programStartDate={program.startDate}
+                configId={config.id}
+              />
             </section>
           )}
 
@@ -584,191 +404,5 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
         </TabPanel>
       </Tabs>
     </div>
-  );
-}
-
-/* ─── Phase Content ──────────────────────────────────────────────────────── */
-
-function PhaseContent({
-  phase,
-  programStartDate,
-  configId,
-}: {
-  phase: ProgramPhase;
-  programStartDate: string;
-  configId: string;
-}) {
-  const colors = getPhaseColor(phase.phase);
-
-  // Group sessions by week
-  const weekGroups = useMemo(() => {
-    const groups = new Map<number, ProgramSession[]>();
-    for (const session of phase.sessions) {
-      const existing = groups.get(session.weekNumber) ?? [];
-      existing.push(session);
-      groups.set(session.weekNumber, existing);
-    }
-    return Array.from(groups.entries()).sort(([a], [b]) => a - b);
-  }, [phase.sessions]);
-
-  // Phase-level stats
-  const completedInPhase = phase.sessions.filter(
-    (s) => s.status === "COMPLETED",
-  ).length;
-  const totalInPhase = phase.sessions.length;
-  const _phaseThrowsTarget = phase.sessions.reduce(
-    (sum, s) => sum + s.totalThrowsTarget,
-    0,
-  );
-  const phaseProgress =
-    totalInPhase > 0 ? Math.round((completedInPhase / totalInPhase) * 100) : 0;
-
-  return (
-    <div className="space-y-5">
-      {/* Phase summary bar */}
-      <div
-        className={cn(
-          "rounded-xl border p-4 space-y-3",
-          colors.bg,
-          colors.border,
-        )}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className={cn("w-2.5 h-2.5 rounded-full", colors.dot)} />
-            <span className={cn("text-sm font-bold uppercase tracking-wider", colors.text)}>
-              {phase.phase}
-            </span>
-            <span className="text-xs text-muted tabular-nums">
-              {phase.durationWeeks} weeks
-            </span>
-          </div>
-          <div className="flex items-center gap-4 text-xs text-muted">
-            <span className="tabular-nums">
-              <NumberFlow value={phase.throwsPerWeekTarget} /> throws/wk target
-            </span>
-            <span className="tabular-nums">
-              {phase.strengthDaysTarget} strength days
-            </span>
-          </div>
-        </div>
-        <ProgressBar
-          value={phaseProgress}
-          variant="primary"
-          size="sm"
-          showLabel
-          label={`${completedInPhase}/${totalInPhase} sessions`}
-        />
-        {/* Exercise distribution */}
-        <div className="flex flex-wrap gap-3 text-[11px] text-muted">
-          <span>
-            CE <strong className={colors.text}>{Math.round(phase.cePercent)}%</strong>
-          </span>
-          <span>
-            SDE <strong className={colors.text}>{Math.round(phase.sdPercent)}%</strong>
-          </span>
-          <span>
-            SPE <strong className={colors.text}>{Math.round(phase.spPercent)}%</strong>
-          </span>
-          <span>
-            GPE <strong className={colors.text}>{Math.round(phase.gpPercent)}%</strong>
-          </span>
-        </div>
-      </div>
-
-      {/* Session list grouped by week */}
-      {weekGroups.map(([weekNum, sessions]) => (
-        <div key={weekNum} className="space-y-2">
-          <h3 className="text-xs font-semibold text-muted uppercase tracking-wider pl-1">
-            Week {weekNum}
-          </h3>
-          <StaggeredList className="grid grid-cols-1 gap-2">
-            {sessions.map((session) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                programStartDate={programStartDate}
-                configId={configId}
-              />
-            ))}
-          </StaggeredList>
-        </div>
-      ))}
-
-      {phase.sessions.length === 0 && (
-        <p className="text-sm text-muted text-center py-6">
-          No sessions in this phase yet.
-        </p>
-      )}
-    </div>
-  );
-}
-
-/* ─── Session Card ───────────────────────────────────────────────────────── */
-
-function SessionCard({
-  session,
-  programStartDate: _programStartDate,
-  configId,
-}: {
-  session: ProgramSession;
-  programStartDate: string;
-  configId: string;
-}) {
-  const statusStyle = getStatusStyle(session.status);
-  const dayName = DAY_NAMES[session.dayOfWeek] ?? `Day ${session.dayOfWeek}`;
-
-  return (
-    <Link
-      href={`/athlete/self-program/${configId}/session/${session.id}`}
-      className="card card-interactive p-4 flex items-center gap-4"
-    >
-      {/* Day + type */}
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-[var(--foreground)]">
-            {dayName}
-          </span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-surface-100 dark:bg-surface-800 text-muted uppercase">
-            {formatSessionType(session.sessionType)}
-          </span>
-          <span
-            className={cn(
-              "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold",
-              statusStyle.bg,
-              statusStyle.text,
-            )}
-          >
-            {session.status}
-          </span>
-        </div>
-        <p className="text-xs text-muted truncate">{session.focusLabel}</p>
-        {session.scheduledDate && (
-          <p className="text-[11px] text-muted flex items-center gap-1">
-            <CalendarDays size={12} strokeWidth={1.75} aria-hidden="true" />
-            {formatDate(session.scheduledDate)}
-          </p>
-        )}
-      </div>
-
-      {/* Throws target */}
-      <div className="text-right shrink-0 space-y-0.5">
-        <p className="text-lg font-bold font-heading text-[var(--foreground)] tabular-nums">
-          <NumberFlow value={session.totalThrowsTarget} />
-        </p>
-        <p className="text-[10px] text-muted uppercase tracking-wider">throws</p>
-      </div>
-
-      {/* Duration */}
-      {session.estimatedDuration != null && (
-        <div className="hidden sm:flex items-center gap-1 text-xs text-muted shrink-0">
-          <Clock size={12} strokeWidth={1.75} aria-hidden="true" />
-          <span className="tabular-nums">{session.estimatedDuration}min</span>
-        </div>
-      )}
-
-      {/* Chevron */}
-      <ChevronRight size={16} strokeWidth={1.75} className="text-muted shrink-0" aria-hidden="true" />
-    </Link>
   );
 }
