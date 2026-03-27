@@ -2228,6 +2228,116 @@ export async function getTeamReadinessTrends(
   return results;
 }
 
+/* ─── Team Readiness Detail (for wellness dashboard) ──────────────────────── */
+
+export type ReadinessHistoryPoint = {
+  date: string;
+  score: number;
+};
+
+export type ReadinessCategories = {
+  sleep: number | null;
+  soreness: number | null;
+  stress: number | null;
+  energy: number | null;
+};
+
+export type TeamReadinessDetail = {
+  athleteId: string;
+  athleteName: string;
+  avatarUrl: string | null;
+  events: string[];
+  latestScore: number | null;
+  trend: number | null; // delta vs 7 days ago
+  history: ReadinessHistoryPoint[];
+  categories: ReadinessCategories;
+};
+
+export async function getTeamReadinessDetail(
+  coachId: string
+): Promise<TeamReadinessDetail[]> {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const athletes = await prisma.athleteProfile.findMany({
+    where: { coachId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+      events: true,
+      readinessCheckIns: {
+        where: { date: { gte: sevenDaysAgo } },
+        orderBy: { date: "desc" },
+        select: {
+          date: true,
+          overallScore: true,
+          sleepQuality: true,
+          soreness: true,
+          stressLevel: true,
+          energyMood: true,
+        },
+      },
+    },
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+  });
+
+  const results: TeamReadinessDetail[] = [];
+
+  for (const athlete of athletes) {
+    const checkIns = athlete.readinessCheckIns;
+    const latest = checkIns[0] ?? null;
+
+    // 7-day history (most recent first from DB, reverse for chronological)
+    const history: ReadinessHistoryPoint[] = checkIns
+      .map((c) => ({
+        date: c.date.toISOString(),
+        score: c.overallScore,
+      }))
+      .reverse();
+
+    // Category averages from all check-ins in the window
+    let categories: ReadinessCategories = {
+      sleep: null,
+      soreness: null,
+      stress: null,
+      energy: null,
+    };
+    if (latest) {
+      categories = {
+        sleep: latest.sleepQuality,
+        soreness: latest.soreness,
+        stress: latest.stressLevel,
+        energy: latest.energyMood,
+      };
+    }
+
+    // Trend: compare latest score to oldest in window
+    let trend: number | null = null;
+    if (checkIns.length >= 2 && latest) {
+      const oldest = checkIns[checkIns.length - 1];
+      trend = Math.round((latest.overallScore - oldest.overallScore) * 10) / 10;
+    }
+
+    results.push({
+      athleteId: athlete.id,
+      athleteName: `${athlete.firstName} ${athlete.lastName}`,
+      avatarUrl: athlete.avatarUrl,
+      events: athlete.events as string[],
+      latestScore: latest?.overallScore ?? null,
+      trend,
+      history,
+      categories,
+    });
+  }
+
+  // Sort by score ascending (lowest first — at-risk athletes surface first)
+  results.sort((a, b) => (a.latestScore ?? 0) - (b.latestScore ?? 0));
+
+  return results;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  VIDEO                                                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
