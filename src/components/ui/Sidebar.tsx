@@ -32,6 +32,7 @@ import {
   UsersRound,
   UserPlus,
   ChevronRight,
+  ScanLine,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -374,6 +375,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         matchPaths: [
           "/coach/throws/analyze",
           "/coach/throws/profile",
+          "/coach/video-analysis",
           "/coach/athlete-logs",
           "/coach/goals",
           "/coach/questionnaires",
@@ -384,6 +386,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             href: "/coach/throws/analyze",
             icon: <Clapperboard {...iconSize} />,
             matchPaths: ["/coach/throws/analyze"],
+          },
+          {
+            label: "Pose Analysis",
+            href: "/coach/video-analysis",
+            icon: <ScanLine {...iconSize} />,
+            matchPaths: ["/coach/video-analysis"],
           },
           {
             label: "Throws Profile",

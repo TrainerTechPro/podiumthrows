@@ -195,6 +195,7 @@ model CoachProfile {
   // Throws module relations (from TrainingTracker)
   throwsSessions    ThrowsSession[]
   throwAnalyses     ThrowAnalysis[]
+  videoAnalyses     VideoAnalysis[]
   podiumRoster      ThrowsProfile[]   @relation("ThrowsProfileCoach")
   practiceSessions  PracticeSession[]
   generatedPrograms TrainingProgram[]
@@ -293,6 +294,7 @@ model AthleteProfile {
   throwsCompetitions       ThrowsCompetition[]
   selfLoggedSessions       AthleteThrowsSession[]
   throwAnalyses            ThrowAnalysis[]
+  videoAnalyses            VideoAnalysis[]
   drillVideos              DrillVideo[]
   throwsProfiles           ThrowsProfile[]
   throwsTestingRecords     ThrowsTestingRecord[]
@@ -1670,6 +1672,31 @@ model ThrowAnalysis {
   @@index([coachId])
   @@index([athleteId])
   @@index([event])
+  @@index([coachId, createdAt])
+}
+
+model VideoAnalysis {
+  id            String          @id @default(cuid())
+  athleteId     String
+  athlete       AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  coachId       String
+  coach         CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  event         String          // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  videoUrl      String          // URL to uploaded video file
+  thumbnailUrl  String?         // Auto-generated thumbnail
+  duration      Float?          // Video duration in seconds
+  fps           Float?          // Detected frames per second
+  status        String          @default("UPLOADED") // UPLOADED, ANALYZING, COMPLETED, FAILED
+  annotations   Json?           // Saved pose landmarks + angles per frame { frames: [{ timestamp, landmarks, angles }] }
+  keyPositions  Json?           // Coach-marked key positions { positions: [{ timestamp, label, angles, notes }] }
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([athleteId])
+  @@index([coachId])
   @@index([coachId, createdAt])
 }
 
