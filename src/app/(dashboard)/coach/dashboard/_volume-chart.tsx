@@ -25,7 +25,7 @@ export function VolumeChart({ data }: { data: WeeklyVolume }) {
         </h3>
       </div>
 
-      <div className="flex items-end gap-2 h-[160px]">
+      <div className="flex items-end gap-2 h-[160px] overflow-x-auto custom-scrollbar min-w-0">
         {data.days.map((day, i) => {
           const pct = maxThrows > 0 ? (day.throws / maxThrows) * 100 : 0;
           const isToday = i === data.todayIndex;
@@ -34,7 +34,7 @@ export function VolumeChart({ data }: { data: WeeklyVolume }) {
           return (
             <div
               key={day.label}
-              className="flex-1 flex flex-col items-center gap-1.5 min-w-0"
+              className="flex-1 flex flex-col items-center gap-1.5 min-w-[36px]"
               onMouseEnter={() => setHoveredIdx(i)}
               onMouseLeave={() => setHoveredIdx(null)}
             >

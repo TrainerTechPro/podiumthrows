@@ -58,10 +58,11 @@ export function AnalyticsSection({
         <AnalyticsPeriodSelector period={period} />
       </div>
 
-      {/* Stat cards */}
-      <StaggeredList className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Stat cards — horizontal scroll on mobile, 3-col grid on sm+ */}
+      <StaggeredList className="flex sm:grid sm:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-2 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 custom-scrollbar">
         {/* Distance Delta */}
         <StatCard
+          className="min-w-[220px] snap-start shrink-0 sm:min-w-0 sm:shrink"
           label="Distance Δ"
           value={
             hasDelta ? (
@@ -106,6 +107,7 @@ export function AnalyticsSection({
 
         {/* Compliance Rate */}
         <StatCard
+          className="min-w-[220px] snap-start shrink-0 sm:min-w-0 sm:shrink"
           label="Compliance"
           value={complianceRate ?? 0}
           unit="%"
@@ -125,6 +127,7 @@ export function AnalyticsSection({
 
         {/* Avg Readiness */}
         <StatCard
+          className="min-w-[220px] snap-start shrink-0 sm:min-w-0 sm:shrink"
           label="Avg Readiness"
           value={avgReadiness > 0 ? Number(avgReadiness.toFixed(1)) : 0}
           unit="/ 10"

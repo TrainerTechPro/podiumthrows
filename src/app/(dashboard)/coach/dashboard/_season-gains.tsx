@@ -53,7 +53,7 @@ export function SeasonGains({
             <Link
               key={entry.athleteId}
               href={`/coach/athletes/${entry.athleteId}`}
-              className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+              className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1 rounded-lg px-2 py-2 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
             >
               {/* Rank */}
               <span
@@ -85,7 +85,8 @@ export function SeasonGains({
                 {entry.athleteName}
               </span>
 
-              <span className="text-sm font-bold tabular-nums text-emerald-500 shrink-0">
+              {/* Delta + badge — wraps below on narrow screens */}
+              <span className="text-sm font-bold tabular-nums text-emerald-500 shrink-0 ml-8 sm:ml-0">
                 +{entry.deltaMeters.toFixed(2)}m
               </span>
 
