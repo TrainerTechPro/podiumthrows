@@ -15,6 +15,7 @@ import {
   Timer,
   Flame,
   RotateCcw,
+  Undo2,
   Calendar,
   CheckCircle2,
   Pencil,
@@ -411,7 +412,23 @@ export function SessionDetail({
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">Workout In Progress</p>
           </div>
-          <p className="text-xs text-amber-600 dark:text-amber-500">Complete your session, then mark it done below</p>
+          <p className="text-xs text-amber-600 dark:text-amber-500 mb-2">Complete your session, then mark it done below</p>
+          <button
+            type="button"
+            onClick={async () => {
+              const res = await patchSession({ status: "PLANNED" });
+              if (res.ok) {
+                setStatus("PLANNED");
+                success("Session Reset", "Moved back to planned.");
+              } else {
+                toastError("Error", "Failed to reset session");
+              }
+            }}
+            className="text-xs text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
+          >
+            <Undo2 size={12} strokeWidth={1.75} aria-hidden="true" />
+            Started by accident? Reset to planned
+          </button>
         </div>
       )}
 
@@ -623,6 +640,29 @@ export function SessionDetail({
                 />
               </div>
             </>
+          )}
+
+          {/* Cancel / Reset (only when IN_PROGRESS) */}
+          {status === "IN_PROGRESS" && (
+            <button
+              type="button"
+              onClick={async () => {
+                const res = await patchSession({ status: "PLANNED" });
+                if (res.ok) {
+                  setStatus("PLANNED");
+                  success("Session Reset", "Moved back to planned.");
+                } else {
+                  toastError("Error", "Failed to reset session");
+                }
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
+            >
+              <Undo2 size={18} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
+              <div>
+                <div className="text-sm font-medium">Cancel Workout</div>
+                <div className="text-xs text-muted">Reset to planned — started by accident</div>
+              </div>
+            </button>
           )}
 
           {/* Modify */}
