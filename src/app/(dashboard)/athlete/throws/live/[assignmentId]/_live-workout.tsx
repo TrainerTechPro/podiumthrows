@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
   Check,
   Trophy,
+  Video,
+  X as XIcon,
 } from "lucide-react";
 import { AnimatedNumber, RestTimer } from "@/components";
 import { NumberFlow } from "@/components/ui/NumberFlow";
@@ -180,6 +182,8 @@ function ThrowingBlockView({
   const [logging, setLogging] = useState(false);
   const [showRest, setShowRest] = useState(false);
   const [inputExpanded, setInputExpanded] = useState(false);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const accent = getBlockAccent(block);
   const cfg = parseConfig(block.config);
@@ -237,6 +241,24 @@ function ThrowingBlockView({
       onThrowLogged(logged);
       setDistance("");
       setInputExpanded(false);
+
+      // Upload video to codex in the background if captured
+      if (videoFile) {
+        const formData = new FormData();
+        formData.append("video", videoFile);
+        formData.append("event", event);
+        formData.append("implement", implement || `${implementKg}kg`);
+        formData.append("distance", String(d));
+        fetch("/api/codex", {
+          method: "POST",
+          body: formData,
+        }).then(() => {
+          toast("Video saved to Codex", "success");
+        }).catch(() => {
+          toast("Video upload failed", "error");
+        });
+        setVideoFile(null);
+      }
 
       // Show rest timer if restSeconds configured and throws remain
       if (restSeconds > 0 && current + 1 < target) {
@@ -411,6 +433,47 @@ function ThrowingBlockView({
               >
                 Distance (m) — Throw #{current + 1}
               </label>
+              {/* Hidden video input */}
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 200 * 1024 * 1024) {
+                      toast("Video too large (max 200MB)", "error");
+                      return;
+                    }
+                    setVideoFile(file);
+                  }
+                  e.target.value = "";
+                }}
+              />
+
+              {/* Video attached indicator */}
+              {videoFile && (
+                <div
+                  className="flex items-center justify-between px-3 py-2 mb-1"
+                  style={{ backgroundColor: `${accent}11`, border: `1px solid ${accent}22` }}
+                >
+                  <span className="text-[10px] uppercase font-semibold flex items-center gap-1.5" style={{ color: `${accent}88`, letterSpacing: "1px" }}>
+                    <Video size={12} strokeWidth={1.75} aria-hidden="true" />
+                    Video attached
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setVideoFile(null)}
+                    className="p-1 min-h-[28px] min-w-[28px] flex items-center justify-center"
+                    style={{ color: `${accent}66` }}
+                  >
+                    <XIcon size={12} strokeWidth={2} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+
               <div className="flex gap-2 items-end">
                 <input
                   type="number"
@@ -432,6 +495,19 @@ function ThrowingBlockView({
                   autoFocus
                   inputMode="decimal"
                 />
+                <button
+                  onClick={() => videoInputRef.current?.click()}
+                  type="button"
+                  className="min-h-[48px] min-w-[48px] flex items-center justify-center transition-opacity"
+                  style={{
+                    backgroundColor: videoFile ? `${accent}33` : "#111117",
+                    border: `1px solid ${videoFile ? accent : `${accent}33`}`,
+                    clipPath: chamferLg,
+                  }}
+                  aria-label="Record video"
+                >
+                  <Video size={18} strokeWidth={1.75} style={{ color: videoFile ? accent : `${accent}88` }} aria-hidden="true" />
+                </button>
                 <button
                   onClick={logThrow}
                   disabled={logging || !distance}
@@ -811,10 +887,14 @@ function WarmupCooldownView({
   block,
   state,
   onToggleDrill,
+  onAdvance,
+  isLastBlock,
 }: {
   block: BlockData;
   state: BlockState;
   onToggleDrill: (idx: number) => void;
+  onAdvance?: () => void;
+  isLastBlock?: boolean;
 }) {
   const accent = getBlockAccent(block);
   const cfg = parseConfig(block.config);
@@ -934,6 +1014,21 @@ function WarmupCooldownView({
                 </span>
               </div>
             </div>
+          )}
+
+          {/* CONTINUE button — shown when all drills checked */}
+          {state.warmupChecked.size >= drills.length && drills.length > 0 && onAdvance && (
+            <button
+              onClick={onAdvance}
+              className="w-full mt-4 py-4 text-sm font-bold tracking-widest animate-fade-slide-in"
+              style={{
+                background: isLastBlock ? "#00FF88" : accent,
+                color: "#000",
+                clipPath: chamferLg,
+              }}
+            >
+              {isLastBlock ? "FINISH SESSION" : "CONTINUE →"}
+            </button>
           )}
         </div>
       ) : (
@@ -1614,6 +1709,12 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
                 block={activeBlock}
                 state={currentState}
                 onToggleDrill={(idx) => handleToggleDrill(activeBlock.id, idx)}
+                onAdvance={
+                  activeBlockIdx < totalBlocks - 1
+                    ? () => setActiveBlockIdx((i) => i + 1)
+                    : () => setShowCompletion(true)
+                }
+                isLastBlock={activeBlockIdx === totalBlocks - 1}
               />
             )}
           </>
