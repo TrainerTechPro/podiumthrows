@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
 const mockFindUnique = vi.fn();
-const mockFindFirst = vi.fn();
+const _mockFindFirst = vi.fn();
 const mockCreate = vi.fn();
 const mockUpdate = vi.fn();
 const mockUpsert = vi.fn();
