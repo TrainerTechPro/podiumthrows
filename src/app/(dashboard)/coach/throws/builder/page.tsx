@@ -396,17 +396,23 @@ export default function ThrowsSessionBuilder() {
  Top Correlations
  </p>
  <div className="space-y-1">
- {rankedExercises.slice(0, 5).map((ex, i) => (
+ {rankedExercises.slice(0, 5).map((ex, i) => {
+ const absR = Math.abs(ex.correlation);
+ const dotColor = absR >= 0.75 ? "bg-emerald-500" : absR >= 0.60 ? "bg-amber-500" : "bg-blue-500";
+ const textColor = absR >= 0.75 ? "text-emerald-500" : absR >= 0.60 ? "text-amber-500" : "text-blue-500";
+ return (
  <div key={i} className="flex items-center gap-1.5">
  <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${CLASSIFICATION_COLORS[ex.type as Classification] || CLASSIFICATION_COLORS.SP}`}>
  {ex.type}
  </span>
  <span className="text-[10px] text-surface-700 dark:text-surface-300 truncate flex-1">{ex.exercise}</span>
- <span className="text-[10px] font-mono text-muted">
- {ex.correlation.toFixed(2)}
+ <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
+ <span className={`text-[10px] font-mono tabular-nums font-semibold ${textColor}`}>
+ {absR.toFixed(3)}
  </span>
  </div>
- ))}
+ );
+ })}
  </div>
  </div>
  )}

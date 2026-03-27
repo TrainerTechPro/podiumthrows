@@ -6,6 +6,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { TrendingUp } from "lucide-react";
 
 /* ─── Option Data ─────────────────────────────────────────────────────────── */
 
@@ -35,6 +37,11 @@ const EQUIPMENT_OPTIONS = [
   { value: "bodyweight", label: "Bodyweight" },
 ];
 
+const TYPE_LABELS: Record<string, string> = {
+  SD: "Special Developmental",
+  SP: "Special Preparatory",
+};
+
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
 type ExerciseFormData = {
@@ -60,12 +67,28 @@ const EMPTY_FORM: ExerciseFormData = {
   defaultReps: "",
 };
 
+/* ─── Correlation Helpers ─────────────────────────────────────────────────── */
+
+function correlationVariant(absR: number): "success" | "warning" | "info" {
+  if (absR >= 0.75) return "success";
+  if (absR >= 0.60) return "warning";
+  return "info";
+}
+
+function correlationTierClasses(absR: number): { dot: string; text: string } {
+  if (absR >= 0.75) return { dot: "bg-emerald-500", text: "text-emerald-500" };
+  if (absR >= 0.60) return { dot: "bg-amber-500", text: "text-amber-500" };
+  return { dot: "bg-blue-500", text: "text-blue-500" };
+}
+
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
 export function ExerciseModal({
   open,
   onClose,
   exercise,
+  correlationMap,
+  filterContext,
 }: {
   open: boolean;
   onClose: () => void;
@@ -80,6 +103,8 @@ export function ExerciseModal({
     defaultSets: number | null;
     defaultReps: string | null;
   } | null;
+  correlationMap?: Map<string, { correlation: number; absCorrelation: number; type: string }>;
+  filterContext?: { event: string; gender: string; band: string };
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -154,6 +179,11 @@ export function ExerciseModal({
 
   const showImplementWeight = form.category === "CE" || form.category === "SDE";
 
+  // Look up correlation for the current exercise name
+  const corrMatch = exercise && correlationMap
+    ? correlationMap.get(exercise.name.toLowerCase())
+    : undefined;
+
   return (
     <Modal
       open={open}
@@ -205,6 +235,48 @@ export function ExerciseModal({
             className="input w-full resize-none"
           />
         </div>
+
+        {/* Transfer Coefficient Section */}
+        {isEditing && corrMatch && filterContext && (
+          <div className="rounded-lg border border-[var(--card-border)] bg-surface-50 dark:bg-surface-800/30 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={14} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
+              <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                Transfer Coefficient
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              <div>
+                <span className="text-muted text-xs">Event</span>
+                <p className="text-[var(--foreground)]">{filterContext.event} ({filterContext.gender})</p>
+              </div>
+              <div>
+                <span className="text-muted text-xs">Band</span>
+                <p className="text-[var(--foreground)]">{filterContext.band}</p>
+              </div>
+              <div>
+                <span className="text-muted text-xs">Type</span>
+                <p className="text-[var(--foreground)]">{TYPE_LABELS[corrMatch.type] ?? corrMatch.type}</p>
+              </div>
+              <div>
+                <span className="text-muted text-xs">Correlation</span>
+                <p className={`font-semibold tabular-nums ${correlationTierClasses(corrMatch.absCorrelation).text}`}>
+                  {corrMatch.absCorrelation.toFixed(3)}
+                </p>
+              </div>
+            </div>
+
+            <ProgressBar
+              value={corrMatch.absCorrelation * 100}
+              variant={correlationVariant(corrMatch.absCorrelation)}
+              size="sm"
+              showLabel
+              label={`${(corrMatch.absCorrelation * 100).toFixed(1)}%`}
+              animate={false}
+            />
+          </div>
+        )}
 
         {/* Category + Event row */}
         <div className="grid grid-cols-2 gap-3">
