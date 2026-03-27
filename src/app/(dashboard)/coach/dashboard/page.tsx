@@ -29,7 +29,14 @@ import {
 } from "@/lib/cache";
 import { withTiming } from "@/lib/perf";
 import { getCoachingActions } from "@/lib/data/coaching-actions";
-import { getRecentTeamPRs, getTeamLoadOverview, getUpcomingCompetitions } from "@/lib/data/dashboard-intel";
+import {
+  getRecentTeamPRs,
+  getTeamLoadOverview,
+  getUpcomingCompetitions,
+  getTeamDistanceDelta,
+  getWeeklyVolumeBreakdown,
+  getSeasonGains,
+} from "@/lib/data/dashboard-intel";
 import { OnboardingChecklist } from "./_onboarding-checklist";
 import { CheckoutTrigger } from "./_checkout-trigger";
 import { UpgradeBanner } from "./_upgrade-banner";
@@ -43,6 +50,7 @@ import { CompetitionCountdown } from "./_competition-countdown";
 import { PeakingStatus } from "./_peaking-status";
 import { AdaptationProgress } from "./_adaptation-progress";
 import type { AdaptationRow } from "./_adaptation-progress";
+import { AnalyticsSection } from "./_analytics-section";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -346,6 +354,7 @@ export default async function CoachDashboardPage() {
   const cookieStore = cookies();
   const mode = (cookieStore.get("dashboard-mode")?.value ?? "training") as DashboardMode;
   const depth = (cookieStore.get("dashboard-depth")?.value ?? "standard") as DashboardDepth;
+  const analyticsPeriod = Number(cookieStore.get("dashboard-analytics-period")?.value) || 30;
 
   const [
     statsResult,
@@ -357,6 +366,9 @@ export default async function CoachDashboardPage() {
     prsResult,
     loadResult,
     competitionsResult,
+    distanceDeltaResult,
+    weeklyVolumeResult,
+    seasonGainsResult,
   ] = await withTiming("coach-dashboard-data", () => Promise.allSettled([
     cachedGetCoachStats(coach.id),
     cachedGetRecentActivity(coach.id, 20, true),
@@ -367,6 +379,9 @@ export default async function CoachDashboardPage() {
     getRecentTeamPRs(coach.id),
     getTeamLoadOverview(coach.id),
     mode === "competition" ? getUpcomingCompetitions(coach.id) : Promise.resolve([]),
+    getTeamDistanceDelta(coach.id, analyticsPeriod),
+    getWeeklyVolumeBreakdown(coach.id),
+    getSeasonGains(coach.id, analyticsPeriod),
   ]));
 
   const stats: CoachStats = statsResult.status === "fulfilled"
@@ -382,6 +397,13 @@ export default async function CoachDashboardPage() {
   const teamPRs = prsResult.status === "fulfilled" ? prsResult.value : [];
   const teamLoad = loadResult.status === "fulfilled" ? loadResult.value : [];
   const competitions = competitionsResult.status === "fulfilled" ? competitionsResult.value : [];
+  const distanceDelta = distanceDeltaResult.status === "fulfilled"
+    ? distanceDeltaResult.value
+    : { avgDeltaPercent: 0, athleteCount: 0, totalAthletes: 0 };
+  const weeklyVolume = weeklyVolumeResult.status === "fulfilled"
+    ? weeklyVolumeResult.value
+    : { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((l) => ({ label: l, throws: 0, date: "" })), todayIndex: 0 };
+  const seasonGains = seasonGainsResult.status === "fulfilled" ? seasonGainsResult.value : [];
 
   // Adaptation progress — Training Block + Advanced depth only
   const adaptationRows: AdaptationRow[] = [];
@@ -565,6 +587,32 @@ export default async function CoachDashboardPage() {
       {mode === "competition" && (
         <PeakingStatus competitions={competitions} readiness={readiness} />
       )}
+
+      {/* ═══ ZONE 4: PERFORMANCE LAB ═══ */}
+
+      {(() => {
+        const scored = readiness.filter((e) => e.latestScore !== null);
+        const avgReadiness =
+          scored.length > 0
+            ? scored.reduce((sum, e) => sum + e.latestScore!, 0) / scored.length
+            : 0;
+        const ups = readiness.filter((e) => e.trend === "up").length;
+        const downs = readiness.filter((e) => e.trend === "down").length;
+        const readinessTrend: "up" | "down" | "flat" =
+          ups > downs ? "up" : downs > ups ? "down" : "flat";
+
+        return (
+          <AnalyticsSection
+            period={analyticsPeriod}
+            distanceDelta={distanceDelta}
+            complianceRate={stats.complianceRate}
+            avgReadiness={avgReadiness}
+            readinessTrend={readinessTrend}
+            weeklyVolume={weeklyVolume}
+            seasonGains={seasonGains}
+          />
+        );
+      })()}
 
       {/* First-visit contextual hints */}
       <FirstVisitHints />
