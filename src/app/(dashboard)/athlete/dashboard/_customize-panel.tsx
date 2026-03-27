@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   X,
@@ -100,7 +101,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
 
         const res = await fetch("/api/athlete/dashboard-config", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify(body),
         });
 
