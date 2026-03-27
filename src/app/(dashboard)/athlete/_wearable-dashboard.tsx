@@ -604,7 +604,9 @@ function HistoryTable({
       <p className="text-sm font-semibold text-muted uppercase tracking-wider px-4 pt-4 pb-2">
         History
       </p>
-      <div className="overflow-x-auto custom-scrollbar">
+
+      {/* Desktop table */}
+      <div className="hidden sm:block overflow-x-auto custom-scrollbar">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[var(--card-border)]">
@@ -670,6 +672,137 @@ function HistoryTable({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="sm:hidden divide-y divide-[var(--card-border)]">
+        {history.map((row) => {
+          if (isWhoop) {
+            const w = row as WhoopRow;
+            return (
+              <div key={row.id} className="px-4 py-3 space-y-2">
+                {/* Date + Recovery score header */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[var(--foreground)]">
+                    {formatDate(w.date)}
+                  </span>
+                  <span className={`text-sm font-semibold tabular-nums ${scoreColor(w.recoveryScore)}`}>
+                    {w.recoveryScore !== null ? `${w.recoveryScore}%` : "--"}
+                  </span>
+                </div>
+                {/* Vitals grid */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">HRV</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {w.hrvMs !== null ? `${w.hrvMs.toFixed(0)} ms` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">RHR</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {w.restingHR !== null ? `${w.restingHR.toFixed(0)} bpm` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">SpO2</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {w.spo2 !== null ? `${w.spo2.toFixed(1)}%` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Skin Temp</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {w.skinTempC !== null
+                        ? `${w.skinTempC >= 0 ? "+" : ""}${w.skinTempC.toFixed(1)}\u00B0C`
+                        : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Sleep</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {w.sleepDurationMs !== null ? formatMs(w.sleepDurationMs) : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Efficiency</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {w.sleepEfficiency !== null ? `${w.sleepEfficiency.toFixed(0)}%` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Strain</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {w.strain !== null ? w.strain.toFixed(1) : "--"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          } else {
+            const o = row as OuraRow;
+            return (
+              <div key={row.id} className="px-4 py-3 space-y-2">
+                {/* Date + Readiness score header */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[var(--foreground)]">
+                    {formatDate(o.date)}
+                  </span>
+                  <span className={`text-sm font-semibold tabular-nums ${scoreColor(o.readinessScore)}`}>
+                    {o.readinessScore !== null ? `${o.readinessScore}` : "--"}
+                  </span>
+                </div>
+                {/* Vitals grid */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">HRV</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {o.hrvMs !== null ? `${o.hrvMs.toFixed(0)} ms` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">RHR</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {o.restingHR !== null ? `${o.restingHR.toFixed(0)} bpm` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">SpO2</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {o.spo2 !== null ? `${o.spo2.toFixed(1)}%` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Temp Dev</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {o.temperatureDeviation !== null
+                        ? `${o.temperatureDeviation >= 0 ? "+" : ""}${o.temperatureDeviation.toFixed(1)}\u00B0C`
+                        : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Sleep Score</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {o.sleepScore !== null ? `${o.sleepScore}` : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Sleep Dur</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {o.sleepDurationSec !== null ? formatSec(o.sleepDurationSec) : "--"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted">Activity</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {o.activityScore !== null ? `${o.activityScore}` : "--"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+        })}
       </div>
     </div>
   );
