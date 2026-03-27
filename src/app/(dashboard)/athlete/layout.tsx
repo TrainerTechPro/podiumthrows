@@ -6,8 +6,6 @@ import { getUnreadCount } from "@/lib/notifications";
 import { WhoopAutoSync } from "./_whoop-auto-sync";
 import { OuraAutoSync } from "./_oura-auto-sync";
 
-const WHOOP_STALE_MS = 15 * 60 * 1000; // 15 minutes
-const OURA_STALE_MS = 15 * 60 * 1000; // 15 minutes
 
 export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -33,16 +31,9 @@ export default async function AthleteLayout({ children }: { children: React.Reac
     redirect(isCoachTraining ? "/coach/dashboard" : "/login");
   }
 
-  // Auto-sync WHOOP if connected and data is stale (>1 hour since last sync)
-  const whoopStale =
-    athlete.whoopConnection != null &&
-    (!athlete.whoopConnection.lastSyncAt ||
-      Date.now() - athlete.whoopConnection.lastSyncAt.getTime() > WHOOP_STALE_MS);
-
-  const ouraStale =
-    athlete.ouraConnection != null &&
-    (!athlete.ouraConnection.lastSyncAt ||
-      Date.now() - athlete.ouraConnection.lastSyncAt.getTime() > OURA_STALE_MS);
+  // Always mount auto-sync when connected — the component handles its own interval
+  const hasWhoop = athlete.whoopConnection != null;
+  const hasOura = athlete.ouraConnection != null;
 
   const notificationCount = await getUnreadCount(athlete.id, "ATHLETE");
 
@@ -57,8 +48,8 @@ export default async function AthleteLayout({ children }: { children: React.Reac
 
   return (
     <DashboardLayout user={user} notificationCount={notificationCount}>
-      {whoopStale && <WhoopAutoSync />}
-      {ouraStale && <OuraAutoSync />}
+      {hasWhoop && <WhoopAutoSync />}
+      {hasOura && <OuraAutoSync />}
       {children}
     </DashboardLayout>
   );
