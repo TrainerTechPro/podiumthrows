@@ -74,10 +74,10 @@ export const ExerciseComplexEntrySchema = z.object({
   implementKg: z.number().optional(),
   drillType: z.string().optional(),
   correlationR: z.number().optional(),
-  setsMin: z.number().int().min(1),
-  setsMax: z.number().int().min(1),
-  repsMin: z.number().int().min(1),
-  repsMax: z.number().int().min(1),
+  setsMin: z.number().int().min(0),
+  setsMax: z.number().int().min(0),
+  repsMin: z.number().int().min(0),
+  repsMax: z.number().int().min(0),
 });
 
 export const GeneratedPhaseSchema = z.object({
