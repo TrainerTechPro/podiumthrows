@@ -7,7 +7,6 @@ import {
   Check,
   Trophy,
   Video,
-  X as XIcon,
 } from "lucide-react";
 import { AnimatedNumber, RestTimer } from "@/components";
 import { NumberFlow } from "@/components/ui/NumberFlow";
@@ -453,27 +452,7 @@ function ThrowingBlockView({
                 }}
               />
 
-              {/* Video attached indicator */}
-              {videoFile && (
-                <div
-                  className="flex items-center justify-between px-3 py-2 mb-1"
-                  style={{ backgroundColor: `${accent}11`, border: `1px solid ${accent}22` }}
-                >
-                  <span className="text-[10px] uppercase font-semibold flex items-center gap-1.5" style={{ color: `${accent}88`, letterSpacing: "1px" }}>
-                    <Video size={12} strokeWidth={1.75} aria-hidden="true" />
-                    Video attached
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setVideoFile(null)}
-                    className="p-1 min-h-[28px] min-w-[28px] flex items-center justify-center"
-                    style={{ color: `${accent}66` }}
-                  >
-                    <XIcon size={12} strokeWidth={2} aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-
+              {/* Distance + LOG row */}
               <div className="flex gap-2 items-end">
                 <input
                   type="number"
@@ -496,22 +475,9 @@ function ThrowingBlockView({
                   inputMode="decimal"
                 />
                 <button
-                  onClick={() => videoInputRef.current?.click()}
-                  type="button"
-                  className="min-h-[48px] min-w-[48px] flex items-center justify-center transition-opacity"
-                  style={{
-                    backgroundColor: videoFile ? `${accent}33` : "#111117",
-                    border: `1px solid ${videoFile ? accent : `${accent}33`}`,
-                    clipPath: chamferLg,
-                  }}
-                  aria-label="Record video"
-                >
-                  <Video size={18} strokeWidth={1.75} style={{ color: videoFile ? accent : `${accent}88` }} aria-hidden="true" />
-                </button>
-                <button
                   onClick={logThrow}
                   disabled={logging || !distance}
-                  className="px-5 min-h-[48px] font-bold text-xs uppercase disabled:opacity-40 transition-opacity"
+                  className="px-6 min-h-[48px] font-bold text-xs uppercase disabled:opacity-40 transition-opacity"
                   style={{
                     letterSpacing: "2px",
                     backgroundColor: accent,
@@ -522,6 +488,26 @@ function ThrowingBlockView({
                   {logging ? "..." : "LOG"}
                 </button>
               </div>
+
+              {/* Video capture row */}
+              <button
+                onClick={() => videoInputRef.current?.click()}
+                type="button"
+                className="w-full min-h-[44px] flex items-center justify-center gap-2 transition-opacity"
+                style={{
+                  backgroundColor: videoFile ? `${accent}11` : "transparent",
+                  border: `1px solid ${videoFile ? accent : `${accent}22`}`,
+                  clipPath: chamferLg,
+                }}
+              >
+                <Video size={14} strokeWidth={1.75} style={{ color: videoFile ? accent : `${accent}66` }} aria-hidden="true" />
+                <span
+                  className="text-[10px] font-bold uppercase"
+                  style={{ letterSpacing: "2px", color: videoFile ? accent : `${accent}66` }}
+                >
+                  {videoFile ? "Video Attached ✓" : "Add Video"}
+                </span>
+              </button>
             </div>
           )}
         </>
