@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -53,25 +53,25 @@ interface QuickActionsProps {
 /* ─── Action Definitions ─────────────────────────────────────────────────── */
 
 const ATHLETE_ACTIONS: QuickActionDef[] = [
-  { id: "start-session", label: "Start Session", icon: Play, href: "/athlete/quick-start", color: "text-emerald-500" },
-  { id: "wellness", label: "Health Check-in", icon: Heart, href: "/athlete/wellness", color: "text-rose-500" },
-  { id: "log-throw", label: "Log Throw", icon: Target, href: "/athlete/throws/log", color: "text-primary-500" },
-  { id: "tools", label: "Tools", icon: Wrench, href: "/athlete/tools", color: "text-blue-500" },
-  { id: "codex", label: "Throws Codex", icon: BookOpen, href: "/athlete/codex", color: "text-purple-500" },
-  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-amber-500" },
-  { id: "videos", label: "My Videos", icon: Video, href: "/athlete/videos", color: "text-cyan-500" },
-  { id: "profile", label: "Profile", icon: User, href: "/athlete/profile", color: "text-indigo-500" },
+  { id: "start-session", label: "Start Session", icon: Play, href: "/athlete/quick-start", color: "text-emerald-400" },
+  { id: "wellness", label: "Health Check-in", icon: Heart, href: "/athlete/wellness", color: "text-rose-400" },
+  { id: "log-throw", label: "Log Throw", icon: Target, href: "/athlete/throws/log", color: "text-amber-300" },
+  { id: "tools", label: "Tools", icon: Wrench, href: "/athlete/tools", color: "text-blue-400" },
+  { id: "codex", label: "Throws Codex", icon: BookOpen, href: "/athlete/codex", color: "text-purple-400" },
+  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-amber-400" },
+  { id: "videos", label: "My Videos", icon: Video, href: "/athlete/videos", color: "text-cyan-400" },
+  { id: "profile", label: "Profile", icon: User, href: "/athlete/profile", color: "text-indigo-400" },
 ];
 
 const COACH_ACTIONS: QuickActionDef[] = [
-  { id: "practice", label: "Live Practice", icon: Radio, href: "/coach/throws/practice", color: "text-emerald-500" },
-  { id: "log-session", label: "Log Session", icon: ClipboardList, href: "/coach/log-session", color: "text-primary-500" },
-  { id: "builder", label: "Session Builder", icon: Layers, href: "/coach/throws/builder", color: "text-blue-500" },
-  { id: "video-analysis", label: "Video Analysis", icon: ScanLine, href: "/coach/video-analysis", color: "text-purple-500" },
-  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-500" },
-  { id: "programs", label: "Programs", icon: FileText, href: "/coach/plans", color: "text-amber-500" },
-  { id: "tools", label: "Tools", icon: Wrench, href: "/coach/tools", color: "text-indigo-500" },
-  { id: "wellness", label: "Team Wellness", icon: Activity, href: "/coach/wellness", color: "text-rose-500" },
+  { id: "practice", label: "Live Practice", icon: Radio, href: "/coach/throws/practice", color: "text-emerald-400" },
+  { id: "log-session", label: "Log Session", icon: ClipboardList, href: "/coach/log-session", color: "text-amber-300" },
+  { id: "builder", label: "Session Builder", icon: Layers, href: "/coach/throws/builder", color: "text-blue-400" },
+  { id: "video-analysis", label: "Video Analysis", icon: ScanLine, href: "/coach/video-analysis", color: "text-purple-400" },
+  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-400" },
+  { id: "programs", label: "Programs", icon: FileText, href: "/coach/plans", color: "text-amber-400" },
+  { id: "tools", label: "Tools", icon: Wrench, href: "/coach/tools", color: "text-indigo-400" },
+  { id: "wellness", label: "Team Wellness", icon: Activity, href: "/coach/wellness", color: "text-rose-400" },
 ];
 
 const ATHLETE_DEFAULTS = ["start-session", "wellness", "log-throw", "tools"];
@@ -88,26 +88,17 @@ const EXCLUDED_PATHS = [
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 /**
- * Compute the (x, y) offset for item `index` out of `total` items,
- * arranged in a quarter-circle arc.
- *
- * Bottom-right: arc sweeps from 90° (up) → 180° (left)
- * Bottom-left:  arc sweeps from 0° (right) → 90° (up)
+ * Position items in a full circle around center.
+ * Starts from top (−90°) and distributes evenly.
  */
-function getItemPosition(
-  index: number,
-  total: number,
-  position: "left" | "right",
-) {
-  const radius = 90;
-  const startDeg = position === "right" ? 90 : 0;
-  const endDeg = position === "right" ? 180 : 90;
-  const deg =
-    total > 1
-      ? startDeg + (index * (endDeg - startDeg)) / (total - 1)
-      : (startDeg + endDeg) / 2;
-  const rad = (deg * Math.PI) / 180;
-  return { x: Math.cos(rad) * radius, y: -Math.sin(rad) * radius };
+function getItemPosition(index: number, total: number) {
+  const radius = 120;
+  const angleDeg = (360 / total) * index - 90;
+  const angleRad = (angleDeg * Math.PI) / 180;
+  return {
+    x: Math.cos(angleRad) * radius,
+    y: Math.sin(angleRad) * radius,
+  };
 }
 
 function loadPrefs(role: string): QuickActionsPrefs {
@@ -154,19 +145,17 @@ function savePrefs(role: string, prefs: QuickActionsPrefs) {
   }
 }
 
-/* ─── Customizer Panel ───────────────────────────────────────────────────── */
+/* ─── Customizer Panel (centered overlay) ────────────────────────────────── */
 
 function CustomizerPanel({
   prefs,
   allActions,
-  position,
   onChange,
   onClose,
   reduced,
 }: {
   prefs: QuickActionsPrefs;
   allActions: QuickActionDef[];
-  position: "left" | "right";
   onChange: (update: Partial<QuickActionsPrefs>) => void;
   onClose: () => void;
   reduced: boolean;
@@ -183,19 +172,21 @@ function CustomizerPanel({
 
   return (
     <motion.div
-      initial={reduced ? false : { opacity: 0, scale: 0.85, y: 20 }}
+      initial={reduced ? false : { opacity: 0, scale: 0.9, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.85, y: 20 }}
+      exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 30 }}
       transition={
         reduced
           ? { duration: 0.15 }
           : { type: "spring", stiffness: 400, damping: 28 }
       }
-      className={cn(
-        "absolute bottom-[72px] w-64",
-        position === "right" ? "right-0" : "left-0",
-        "card p-4 space-y-4 shadow-2xl",
-      )}
+      className="fixed z-[9996] w-72 max-h-[70vh] overflow-y-auto custom-scrollbar card p-5 space-y-5 shadow-2xl"
+      style={{
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+      }}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -229,19 +220,11 @@ function CustomizerPanel({
               )}
             >
               {side === "left" && (
-                <ChevronLeft
-                  size={12}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                />
+                <ChevronLeft size={12} strokeWidth={2} aria-hidden="true" />
               )}
               {side === "left" ? "Left" : "Right"}
               {side === "right" && (
-                <ChevronRight
-                  size={12}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                />
+                <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />
               )}
             </button>
           ))}
@@ -253,7 +236,7 @@ function CustomizerPanel({
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
           Actions ({prefs.items.length}/{MAX_ITEMS})
         </p>
-        <div className="space-y-1 max-h-52 overflow-y-auto custom-scrollbar">
+        <div className="space-y-1">
           {allActions.map((action) => {
             const isSelected = selectedSet.has(action.id);
             const isDisabled = !isSelected && prefs.items.length >= MAX_ITEMS;
@@ -322,14 +305,16 @@ export function QuickActions({ role }: QuickActionsProps) {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [prefs, setPrefs] = useState<QuickActionsPrefs>(() => loadPrefs(role));
   const [mounted, setMounted] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [delta, setDelta] = useState({ x: 0, y: 0 });
 
-  // Mount guard (avoid SSR hydration mismatch for localStorage-driven state)
+  // Mount guard
   useEffect(() => {
     setMounted(true);
     setPrefs(loadPrefs(role));
   }, [role]);
 
-  // Listen for pref changes from settings page (same-tab custom event)
+  // Listen for pref changes from settings page
   useEffect(() => {
     function onPrefsChange() {
       setPrefs(loadPrefs(role));
@@ -369,6 +354,22 @@ export function QuickActions({ role }: QuickActionsProps) {
     [role],
   );
 
+  /** Compute how far the button must travel to reach viewport center. */
+  function handleToggle() {
+    if (showCustomizer) {
+      setShowCustomizer(false);
+      return;
+    }
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDelta({
+        x: window.innerWidth / 2 - rect.left - rect.width / 2,
+        y: window.innerHeight / 2 - rect.top - rect.height / 2,
+      });
+    }
+    setOpen((v) => !v);
+  }
+
   /* ─── Render guards ──────────────────────────────────────────────────── */
 
   if (!mounted) return null;
@@ -382,16 +383,40 @@ export function QuickActions({ role }: QuickActionsProps) {
 
   const { position } = prefs;
 
-  // Animation presets
-  const spring = prefersReduced
-    ? { duration: 0.1 }
-    : { type: "spring" as const, stiffness: 400, damping: 22 };
-  const springSlow = prefersReduced
+  // Spring presets
+  const fastSpring = prefersReduced
     ? { duration: 0.1 }
     : { type: "spring" as const, stiffness: 400, damping: 28 };
+  const gooSpring = prefersReduced
+    ? { duration: 0.1 }
+    : { type: "spring" as const, stiffness: 280, damping: 18 };
 
   return (
     <>
+      {/* ── SVG goo filter (hidden, referenced by CSS) ──────────────────── */}
+      <svg
+        aria-hidden="true"
+        className="absolute"
+        style={{ width: 0, height: 0, pointerEvents: "none" }}
+      >
+        <defs>
+          <filter id="goo-filter">
+            <feGaussianBlur
+              in="SourceGraphic"
+              stdDeviation="10"
+              result="blur"
+            />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
+              result="goo"
+            />
+            <feBlend in="SourceGraphic" in2="goo" />
+          </filter>
+        </defs>
+      </svg>
+
       {/* ── Backdrop ────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {open && (
@@ -399,8 +424,8 @@ export function QuickActions({ role }: QuickActionsProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: prefersReduced ? 0.05 : 0.2 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[9990]"
+            transition={{ duration: prefersReduced ? 0.05 : 0.25 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990]"
             onClick={() => {
               setOpen(false);
               setShowCustomizer(false);
@@ -410,162 +435,202 @@ export function QuickActions({ role }: QuickActionsProps) {
         )}
       </AnimatePresence>
 
-      {/* ── FAB Container ───────────────────────────────────────────────── */}
-      <div
+      {/* ── Goo blob layer (filtered circles, no content) ───────────────── */}
+      <AnimatePresence>
+        {open && !showCustomizer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[9991] pointer-events-none"
+            style={{ filter: "url(#goo-filter)" }}
+          >
+            {/* Center blob */}
+            <motion.div
+              className="absolute w-16 h-16 rounded-full bg-primary-500"
+              style={{
+                top: "50%",
+                left: "50%",
+                marginLeft: -32,
+                marginTop: -32,
+              }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={fastSpring}
+            />
+
+            {/* Item blobs */}
+            {activeActions.map((action, i) => {
+              const pos = getItemPosition(i, activeActions.length);
+              return (
+                <motion.div
+                  key={`blob-${action.id}`}
+                  className="absolute w-14 h-14 rounded-full bg-primary-500"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    marginLeft: -28,
+                    marginTop: -28,
+                  }}
+                  initial={{ x: 0, y: 0, scale: 0 }}
+                  animate={{ x: pos.x, y: pos.y, scale: 1 }}
+                  exit={{ x: 0, y: 0, scale: 0 }}
+                  transition={{
+                    ...gooSpring,
+                    delay: prefersReduced ? 0 : 0.08 + i * 0.06,
+                  }}
+                />
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Content layer (icons + labels, not filtered) ─────────────────── */}
+      <AnimatePresence>
+        {open && !showCustomizer && (
+          <div className="fixed inset-0 z-[9992] pointer-events-none">
+            {activeActions.map((action, i) => {
+              const pos = getItemPosition(i, activeActions.length);
+              const Icon = action.icon;
+              const isAbove = pos.y <= 0;
+              return (
+                <motion.div
+                  key={action.id}
+                  className="absolute pointer-events-auto"
+                  style={{
+                    top: "50%",
+                    left: "50%",
+                    marginLeft: -28,
+                    marginTop: -28,
+                    width: 56,
+                    height: 56,
+                  }}
+                  initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                  animate={{ x: pos.x, y: pos.y, scale: 1, opacity: 1 }}
+                  exit={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                  transition={{
+                    ...gooSpring,
+                    delay: prefersReduced ? 0 : 0.08 + i * 0.06,
+                  }}
+                >
+                  <Link
+                    href={action.href}
+                    onClick={() => setOpen(false)}
+                    className="w-14 h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+                    aria-label={action.label}
+                  >
+                    <Icon
+                      size={22}
+                      strokeWidth={1.75}
+                      className="text-white drop-shadow-sm"
+                      aria-hidden="true"
+                    />
+                  </Link>
+
+                  {/* Label — outside the circle (above for bottom items, below for top) */}
+                  <motion.span
+                    className={cn(
+                      "absolute left-1/2 -translate-x-1/2",
+                      "whitespace-nowrap text-[11px] font-semibold text-white/90",
+                      "pointer-events-none select-none",
+                      isAbove ? "top-full mt-2" : "bottom-full mb-2",
+                    )}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{
+                      delay: prefersReduced ? 0 : 0.25 + i * 0.04,
+                      duration: 0.2,
+                    }}
+                  >
+                    {action.label}
+                  </motion.span>
+                </motion.div>
+              );
+            })}
+
+            {/* Settings gear — below the center close button */}
+            <motion.button
+              className="absolute pointer-events-auto w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors"
+              style={{
+                top: "50%",
+                left: "50%",
+                marginLeft: -18,
+                marginTop: 44,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowCustomizer(true);
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{
+                ...fastSpring,
+                delay: prefersReduced ? 0 : 0.3,
+              }}
+              aria-label="Customize quick actions"
+            >
+              <Settings
+                size={15}
+                strokeWidth={1.75}
+                className="text-white/70"
+                aria-hidden="true"
+              />
+            </motion.button>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Customizer panel (centered modal) ───────────────────────────── */}
+      <AnimatePresence>
+        {open && showCustomizer && (
+          <CustomizerPanel
+            prefs={prefs}
+            allActions={allActions}
+            onChange={updatePrefs}
+            onClose={() => setShowCustomizer(false)}
+            reduced={prefersReduced}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── FAB button (animates from corner → center) ──────────────────── */}
+      <motion.button
+        ref={buttonRef}
+        onClick={handleToggle}
+        animate={
+          open
+            ? { x: delta.x, y: delta.y, scale: 1.14 }
+            : { x: 0, y: 0, scale: 1 }
+        }
+        transition={fastSpring}
         className={cn(
-          "fixed z-[9991]",
+          "fixed z-[9995] w-14 h-14 rounded-full shadow-xl",
+          "flex items-center justify-center",
+          "bg-primary-500 hover:bg-primary-600 active:scale-95",
+          "text-white",
+          "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
+          "focus:ring-offset-2 focus:ring-offset-[var(--background)]",
+          "transition-colors",
           position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
         )}
         style={{
           bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
         }}
+        aria-label={open ? "Close quick actions" : "Open quick actions"}
+        aria-expanded={open}
+        aria-haspopup="true"
       >
-        {/* ── Radial action items ───────────────────────────────────────── */}
-        <AnimatePresence>
-          {open &&
-            !showCustomizer &&
-            activeActions.map((action, index) => {
-              const pos = getItemPosition(
-                index,
-                activeActions.length,
-                position,
-              );
-              const Icon = action.icon;
-              return (
-                <motion.div
-                  key={action.id}
-                  className="absolute"
-                  style={{ left: 6, bottom: 6 }}
-                  initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    x: pos.x,
-                    y: pos.y,
-                  }}
-                  exit={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                  transition={{
-                    ...spring,
-                    delay: prefersReduced ? 0 : index * 0.05,
-                  }}
-                >
-                  <div className="relative">
-                    {/* Icon circle */}
-                    <Link
-                      href={action.href}
-                      onClick={() => setOpen(false)}
-                      className={cn(
-                        "w-11 h-11 rounded-full flex items-center justify-center",
-                        "bg-[var(--card-bg)] border border-[var(--card-border)]",
-                        "shadow-lg shadow-black/10 dark:shadow-black/30",
-                        "hover:scale-110 active:scale-95 transition-transform",
-                      )}
-                      aria-label={action.label}
-                    >
-                      <Icon
-                        size={20}
-                        strokeWidth={1.75}
-                        className={action.color}
-                        aria-hidden="true"
-                      />
-                    </Link>
-
-                    {/* Label pill */}
-                    <span
-                      className={cn(
-                        "absolute top-1/2 -translate-y-1/2",
-                        "whitespace-nowrap text-[11px] font-semibold",
-                        "px-2.5 py-1 rounded-lg",
-                        "bg-[var(--card-bg)] border border-[var(--card-border)]",
-                        "shadow-sm text-[var(--foreground)]",
-                        "pointer-events-none select-none",
-                        position === "right"
-                          ? "right-full mr-2.5"
-                          : "left-full ml-2.5",
-                      )}
-                    >
-                      {action.label}
-                    </span>
-                  </div>
-                </motion.div>
-              );
-            })}
-        </AnimatePresence>
-
-        {/* ── Customizer panel ──────────────────────────────────────────── */}
-        <AnimatePresence>
-          {showCustomizer && (
-            <CustomizerPanel
-              prefs={prefs}
-              allActions={allActions}
-              position={position}
-              onChange={updatePrefs}
-              onClose={() => setShowCustomizer(false)}
-              reduced={prefersReduced}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* ── Settings gear (visible when open) ─────────────────────────── */}
-        <AnimatePresence>
-          {open && (
-            <motion.button
-              initial={prefersReduced ? false : { opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              transition={{ ...springSlow, delay: prefersReduced ? 0 : 0.15 }}
-              onClick={() => setShowCustomizer((v) => !v)}
-              className={cn(
-                "absolute w-8 h-8 rounded-full",
-                "bg-surface-200 dark:bg-surface-700",
-                "flex items-center justify-center shadow-md",
-                "hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors",
-                position === "right"
-                  ? "-left-2 bottom-1"
-                  : "-right-2 bottom-1",
-              )}
-              aria-label="Customize quick actions"
-            >
-              <Settings
-                size={14}
-                strokeWidth={2}
-                className="text-muted"
-                aria-hidden="true"
-              />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* ── Main FAB button ───────────────────────────────────────────── */}
-        <motion.button
-          onClick={() => {
-            if (showCustomizer) {
-              setShowCustomizer(false);
-              return;
-            }
-            setOpen((v) => !v);
-          }}
-          className={cn(
-            "relative z-10 w-14 h-14 rounded-full shadow-xl",
-            "flex items-center justify-center",
-            "bg-primary-500 hover:bg-primary-600 active:scale-95",
-            "text-white",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
-            "focus:ring-offset-2 focus:ring-offset-[var(--background)]",
-            "transition-colors",
-          )}
-          aria-label={open ? "Close quick actions" : "Open quick actions"}
-          aria-expanded={open}
-          aria-haspopup="true"
+        <motion.div
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={fastSpring}
         >
-          <motion.div
-            animate={{ rotate: open ? 45 : 0 }}
-            transition={spring}
-          >
-            <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
-          </motion.div>
-        </motion.button>
-      </div>
+          <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
+        </motion.div>
+      </motion.button>
     </>
   );
 }
