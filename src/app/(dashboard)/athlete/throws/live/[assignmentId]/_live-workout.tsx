@@ -818,8 +818,12 @@ function WarmupCooldownView({
 }) {
   const accent = getBlockAccent(block);
   const cfg = parseConfig(block.config);
-  const drills = (cfg.drills as string[]) ?? [];
-  const duration = cfg.duration as number | undefined;
+  // Drills can be strings (legacy) or objects { name, duration, notes } (from start-live)
+  const rawDrills = (cfg.drills as Array<string | { name: string; duration?: number; notes?: string }>) ?? [];
+  const drills = rawDrills.map((d) =>
+    typeof d === "string" ? { name: d, duration: undefined as number | undefined } : d,
+  );
+  const duration = (cfg.duration ?? cfg.totalDuration) as number | undefined;
 
   const chamfer =
     "polygon(0 0,calc(100% - 3px) 0,100% 3px,100% 100%,3px 100%,0 calc(100% - 3px))";
@@ -888,15 +892,25 @@ function WarmupCooldownView({
                   )}
                 </div>
                 {/* Drill text */}
-                <span
-                  className="text-sm font-medium transition-all"
-                  style={{
-                    color: checked ? `${accent}55` : "#E8E8E8",
-                    textDecoration: checked ? "line-through" : "none",
-                  }}
-                >
-                  {drill}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <span
+                    className="text-sm font-medium transition-all block"
+                    style={{
+                      color: checked ? `${accent}55` : "#E8E8E8",
+                      textDecoration: checked ? "line-through" : "none",
+                    }}
+                  >
+                    {drill.name}
+                  </span>
+                  {drill.duration && (
+                    <span
+                      className="text-[10px] tabular-nums"
+                      style={{ color: `${accent}44` }}
+                    >
+                      {drill.duration}min
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
