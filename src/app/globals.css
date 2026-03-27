@@ -57,6 +57,13 @@
     @apply antialiased;
   }
 
+  /* Touch device detection — show controls that are hidden behind hover */
+  @media (hover: none) and (pointer: coarse) {
+    .touch-device\:opacity-100 {
+      opacity: 1 !important;
+    }
+  }
+
   body {
     @apply bg-[var(--background)] text-[var(--foreground)] font-body;
   }

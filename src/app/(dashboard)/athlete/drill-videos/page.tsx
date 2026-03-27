@@ -82,8 +82,10 @@ export default function AthleteDrillVideosPage() {
   }, []);
   /* eslint-enable react-hooks/exhaustive-deps */
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   async function handleDelete(id: string) {
-    if (!confirm("Delete this drill video? This cannot be undone.")) return;
+    setConfirmDeleteId(null);
     setDeletingId(id);
     try {
       const res = await fetch(`/api/drill-videos/${id}`, {
@@ -258,10 +260,19 @@ export default function AthleteDrillVideosPage() {
                     {video.title}
                   </h3>
                   <button
-                    onClick={() => handleDelete(video.id)}
+                    onClick={() =>
+                      confirmDeleteId === video.id
+                        ? handleDelete(video.id)
+                        : setConfirmDeleteId(video.id)
+                    }
+                    onBlur={() => setTimeout(() => setConfirmDeleteId(null), 200)}
                     disabled={deletingId === video.id}
-                    className="text-muted hover:text-red-500 dark:hover:text-red-400 shrink-0 transition-colors p-0.5"
-                    title="Delete video"
+                    className={`shrink-0 transition-colors p-2 rounded-lg ${
+                      confirmDeleteId === video.id
+                        ? "text-red-500 bg-red-500/10"
+                        : "text-muted hover:text-red-500 dark:hover:text-red-400"
+                    }`}
+                    title={confirmDeleteId === video.id ? "Tap again to confirm" : "Delete video"}
                   >
                     {deletingId === video.id ? (
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

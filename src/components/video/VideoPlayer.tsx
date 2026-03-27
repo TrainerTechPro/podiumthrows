@@ -296,7 +296,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
 
         {/* Controls — hidden when showControls=false (master control bar takes over) */}
         {showControls && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pt-8 pb-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent pt-8 px-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 touch-device:opacity-100 transition-opacity" style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0px))" }}>
             {/* Precision scrub slider (replaces click-only progress bar) */}
             <div className="relative mb-2 group/scrub">
               {/* Background track */}
@@ -325,7 +325,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
               {/* Play/Pause */}
               <button
                 onClick={togglePlay}
-                className="p-1 hover:bg-white/10 rounded transition-colors"
+                className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
                 title={playing ? "Pause (Space)" : "Play (Space)"}
               >
                 {playing ? <PauseIcon /> : <PlayIcon />}
@@ -334,14 +334,14 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
               {/* Frame step */}
               <button
                 onClick={() => frameStep(-1)}
-                className="p-1 hover:bg-white/10 rounded transition-colors"
+                className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
                 title="Previous frame (,)"
               >
                 <FrameBackIcon />
               </button>
               <button
                 onClick={() => frameStep(1)}
-                className="p-1 hover:bg-white/10 rounded transition-colors"
+                className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
                 title="Next frame (.)"
               >
                 <FrameForwardIcon />
@@ -361,7 +361,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
                     e.stopPropagation();
                     setShowSpeedMenu(!showSpeedMenu);
                   }}
-                  className="px-2 py-0.5 hover:bg-white/10 rounded transition-colors font-mono"
+                  className="px-3 py-2 hover:bg-white/10 rounded-lg transition-colors font-mono"
                   title="Playback speed"
                 >
                   {speed}x
@@ -375,7 +375,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
                           e.stopPropagation();
                           changeSpeed(s);
                         }}
-                        className={`block w-full text-left px-3 py-1 text-xs hover:bg-white/10 ${
+                        className={`block w-full text-left px-3 py-2 text-xs hover:bg-white/10 ${
                           speed === s ? "text-primary-400" : "text-white"
                         }`}
                       >
@@ -389,7 +389,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
               {/* Volume */}
               <button
                 onClick={toggleMute}
-                className="p-1 hover:bg-white/10 rounded transition-colors"
+                className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
                 title="Mute (M)"
               >
                 {muted || volume === 0 ? <MuteIcon /> : <VolumeIcon />}
@@ -407,7 +407,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
               {/* Fullscreen */}
               <button
                 onClick={toggleFullscreen}
-                className="p-1 hover:bg-white/10 rounded transition-colors"
+                className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
                 title="Fullscreen (F)"
               >
                 {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
