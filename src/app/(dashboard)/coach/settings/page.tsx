@@ -7,6 +7,7 @@ import { useToast } from "@/components/toast";
 import { useAccessibility } from "@/components/accessibility-provider";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 
 const ProfilePictureEditor = dynamic(
   () => import("@/components/profile-picture-editor"),
@@ -1093,6 +1094,9 @@ export default function CoachSettingsPage() {
                 </button>
               )}
             </div>
+
+            {/* Quick Actions */}
+            <QuickActionsSettings role="COACH" />
 
             {prefSaving && (
               <div className="text-xs text-muted flex items-center gap-1.5">

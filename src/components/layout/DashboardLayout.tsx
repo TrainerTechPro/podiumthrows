@@ -18,6 +18,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { NotificationBell } from "@/components/ui/NotificationBell";
+import { QuickActions } from "@/components/ui/QuickActions";
 
 /* ─── Theme toggle ───────────────────────────────────────────────────────── */
 
@@ -344,6 +345,9 @@ export function DashboardLayout({
             {children}
           </main>
         </div>
+
+        {/* Quick Actions FAB */}
+        <QuickActions role={isTrainingMode ? "ATHLETE" : user.role} />
       </div>
     </ToastProvider>
   );

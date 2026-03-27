@@ -6,6 +6,7 @@ import { getAthleteProfileFull } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import { Avatar } from "@/components";
 import { AthleteSettingsForm } from "./_form";
+import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -80,6 +81,9 @@ export default async function AthleteSettingsPage() {
 
       {/* Edit form */}
       <AthleteSettingsForm profile={profile} />
+
+      {/* Quick Actions */}
+      <QuickActionsSettings role="ATHLETE" />
 
       {/* Integrations link */}
       <section className="space-y-3">
