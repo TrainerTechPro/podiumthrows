@@ -35,8 +35,8 @@ import {
  type StrengthBlockConfig,
  type WarmupCooldownConfig,
  type NotesBlockConfig,
- type ValidationIssue,
 } from "@/lib/throws/validation";
+import { ValidationPanel, ValidationBadge } from "./_validation-panel";
 
 // ── Local block state type ──────────────────────────────────────────
 
@@ -51,32 +51,6 @@ let blockIdCounter = 0;
 function nextBlockId() {
  return `block-${++blockIdCounter}-${Date.now()}`;
 }
-
-// ── Severity styling ────────────────────────────────────────────────
-
-const SEVERITY_STYLES = {
- CRITICAL: {
- bg: "bg-red-50 dark:bg-red-900/20",
- border: "border-red-300 dark:border-red-800",
- text: "text-red-700 dark:text-red-400",
- icon: "text-red-500",
- label: "BLOCKS ASSIGNMENT",
- },
- WARNING: {
- bg: "bg-amber-50 dark:bg-amber-900/20",
- border: "border-amber-300 dark:border-amber-800",
- text: "text-amber-700 dark:text-amber-400",
- icon: "text-amber-500",
- label: "WARNING",
- },
- INFO: {
- bg: "bg-blue-50 dark:bg-blue-900/20",
- border: "border-blue-300 dark:border-blue-800",
- text: "text-blue-700 dark:text-blue-400",
- icon: "text-blue-500",
- label: "INFO",
- },
-};
 
 // ── Block type border colors ────────────────────────────────────────
 
@@ -417,40 +391,6 @@ export default function ThrowsSessionBuilder() {
  </div>
  )}
 
- {/* Validation summary */}
- {blocks.length > 0 && (
- <div className="mt-4 pt-4 border-t border-[var(--card-border)]">
- <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
- Validation
- </p>
- {validationResult.issues.length === 0 ? (
- <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
- <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
- </svg>
- All 7 rules pass
- </div>
- ) : (
- <div className="space-y-1">
- {validationResult.issues.filter((i) => i.severity === "CRITICAL").length > 0 && (
- <div className="text-xs text-red-600 dark:text-red-400 font-medium">
- {validationResult.issues.filter((i) => i.severity === "CRITICAL").length} critical
- </div>
- )}
- {validationResult.issues.filter((i) => i.severity === "WARNING").length > 0 && (
- <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
- {validationResult.issues.filter((i) => i.severity === "WARNING").length} warning(s)
- </div>
- )}
- {validationResult.issues.filter((i) => i.severity === "INFO").length > 0 && (
- <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
- {validationResult.issues.filter((i) => i.severity === "INFO").length} info
- </div>
- )}
- </div>
- )}
- </div>
- )}
  </div>
 
  {/* ── Center: Main canvas ─────────────────────────────────── */}
@@ -553,11 +493,6 @@ export default function ThrowsSessionBuilder() {
  </div>
  </div>
 
- {/* Validation banners */}
- {validationResult.issues.map((issue, i) => (
- <ValidationBanner key={i} issue={issue} onAutoFix={handleAutoFix} />
- ))}
-
  {/* Block canvas */}
  {blocks.length === 0 ? (
  <div className="card text-center py-16">
@@ -604,6 +539,7 @@ export default function ThrowsSessionBuilder() {
  {blocks.map((block, index) => (
  <div
  key={block.id}
+ id={`builder-block-${index}`}
  draggable
  onDragStart={() => handleDragStart(index)}
  onDragOver={(e) => handleDragOver(e, index)}
@@ -641,49 +577,27 @@ export default function ThrowsSessionBuilder() {
  </div>
  )}
  </div>
- </div>
- </div>
- );
-}
 
-// ── Validation Banner Component ─────────────────────────────────────
+ {/* ── Right: Validation Panel ──────────────────────────── */}
+ <div className="hidden lg:block w-64 flex-shrink-0">
+ <div className="sticky top-4">
+ <ValidationPanel
+ validation={validationResult}
+ blockCount={blocks.length}
+ onAutoFix={handleAutoFix}
+ />
+ </div>
+ </div>
+ </div>
 
-function ValidationBanner({ issue, onAutoFix }: { issue: ValidationIssue; onAutoFix: () => void }) {
- const style = SEVERITY_STYLES[issue.severity];
-
- return (
- <div className={`rounded-lg border-l-4 ${style.border} ${style.bg} p-3 flex items-start gap-3`}>
- <div className={`${style.icon} flex-shrink-0 mt-0.5`}>
- {issue.severity === "CRITICAL" ? (
- <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
- </svg>
- ) : issue.severity === "WARNING" ? (
- <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
- </svg>
- ) : (
- <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
- </svg>
- )}
+ {/* Mobile validation badge */}
+ <div className="lg:hidden">
+ <ValidationBadge
+ validation={validationResult}
+ blockCount={blocks.length}
+ onAutoFix={handleAutoFix}
+ />
  </div>
- <div className="flex-1 min-w-0">
- <div className="flex items-center gap-2 mb-0.5">
- <span className={`text-[10px] font-bold uppercase ${style.text}`}>Rule {issue.rule}</span>
- <span className={`text-sm font-semibold ${style.text}`}>{issue.title}</span>
- </div>
- <p className={`text-sm ${style.text} opacity-90`}>{issue.message}</p>
- </div>
- {issue.autoFixable && (
- <button
- type="button"
- onClick={onAutoFix}
- className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-[var(--card-bg)] text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
- >
- Auto-Fix
- </button>
- )}
  </div>
  );
 }
