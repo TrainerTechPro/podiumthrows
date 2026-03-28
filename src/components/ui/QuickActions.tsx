@@ -85,14 +85,17 @@ const EXCLUDED_PATHS = [
   "/coach/throws/practice/live",
 ];
 
+/**
+ * Anchor point — bottom-third of viewport.
+ * Items radiate from here so the menu feels reachable on mobile.
+ */
+const ANCHOR_Y_PERCENT = 0.6;
+
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
-/**
- * Position items in a full circle around center.
- * Starts from top (−90°) and distributes evenly.
- */
+/** Full-circle distribution starting from the top (−90°). */
 function getItemPosition(index: number, total: number) {
-  const radius = 120;
+  const radius = 110;
   const angleDeg = (360 / total) * index - 90;
   const angleRad = (angleDeg * Math.PI) / 180;
   return {
@@ -124,7 +127,7 @@ function loadPrefs(role: string): QuickActionsPrefs {
       };
     }
   } catch {
-    /* corrupted — fall through */
+    /* corrupted */
   }
   return {
     enabled: true,
@@ -141,11 +144,11 @@ function savePrefs(role: string, prefs: QuickActionsPrefs) {
     );
     window.dispatchEvent(new CustomEvent("quick-actions-prefs-change"));
   } catch {
-    /* quota exceeded or private mode */
+    /* quota / private */
   }
 }
 
-/* ─── Customizer Panel (centered overlay) ────────────────────────────────── */
+/* ─── Customizer Panel ───────────────────────────────────────────────────── */
 
 function CustomizerPanel({
   prefs,
@@ -181,11 +184,7 @@ function CustomizerPanel({
           : { type: "spring", stiffness: 400, damping: 28 }
       }
       className="fixed z-[9996] w-72 max-h-[70vh] overflow-y-auto custom-scrollbar card p-5 space-y-5 shadow-2xl"
-      style={{
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-      }}
+      style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
@@ -202,7 +201,7 @@ function CustomizerPanel({
         </button>
       </div>
 
-      {/* Position toggle */}
+      {/* Position */}
       <div className="space-y-1.5">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
           Position
@@ -219,19 +218,15 @@ function CustomizerPanel({
                   : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]",
               )}
             >
-              {side === "left" && (
-                <ChevronLeft size={12} strokeWidth={2} aria-hidden="true" />
-              )}
+              {side === "left" && <ChevronLeft size={12} strokeWidth={2} aria-hidden="true" />}
               {side === "left" ? "Left" : "Right"}
-              {side === "right" && (
-                <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />
-              )}
+              {side === "right" && <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Action list */}
+      {/* Actions */}
       <div className="space-y-1.5">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
           Actions ({prefs.items.length}/{MAX_ITEMS})
@@ -261,22 +256,12 @@ function CustomizerPanel({
                   className={cn(isSelected ? action.color : "text-muted")}
                   aria-hidden="true"
                 />
-                <span
-                  className={cn(
-                    "text-xs font-medium flex-1",
-                    isSelected ? "text-[var(--foreground)]" : "text-muted",
-                  )}
-                >
+                <span className={cn("text-xs font-medium flex-1", isSelected ? "text-[var(--foreground)]" : "text-muted")}>
                   {action.label}
                 </span>
                 {isSelected && (
                   <div className="w-4 h-4 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
-                    <Check
-                      size={10}
-                      strokeWidth={3}
-                      className="text-white"
-                      aria-hidden="true"
-                    />
+                    <Check size={10} strokeWidth={3} className="text-white" aria-hidden="true" />
                   </div>
                 )}
               </button>
@@ -285,7 +270,6 @@ function CustomizerPanel({
         </div>
       </div>
 
-      {/* Disable button */}
       <button
         onClick={() => onChange({ enabled: false })}
         className="w-full text-center text-[11px] text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors py-1"
@@ -308,13 +292,11 @@ export function QuickActions({ role }: QuickActionsProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [delta, setDelta] = useState({ x: 0, y: 0 });
 
-  // Mount guard
   useEffect(() => {
     setMounted(true);
     setPrefs(loadPrefs(role));
   }, [role]);
 
-  // Listen for pref changes from settings page
   useEffect(() => {
     function onPrefsChange() {
       setPrefs(loadPrefs(role));
@@ -324,13 +306,11 @@ export function QuickActions({ role }: QuickActionsProps) {
       window.removeEventListener("quick-actions-prefs-change", onPrefsChange);
   }, [role]);
 
-  // Close menu on route change
   useEffect(() => {
     setOpen(false);
     setShowCustomizer(false);
   }, [pathname]);
 
-  // Escape key
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -354,7 +334,6 @@ export function QuickActions({ role }: QuickActionsProps) {
     [role],
   );
 
-  /** Compute how far the button must travel to reach viewport center. */
   function handleToggle() {
     if (showCustomizer) {
       setShowCustomizer(false);
@@ -362,15 +341,17 @@ export function QuickActions({ role }: QuickActionsProps) {
     }
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const targetX = window.innerWidth / 2;
+      const targetY = window.innerHeight * ANCHOR_Y_PERCENT;
       setDelta({
-        x: window.innerWidth / 2 - rect.left - rect.width / 2,
-        y: window.innerHeight / 2 - rect.top - rect.height / 2,
+        x: targetX - rect.left - rect.width / 2,
+        y: targetY - rect.top - rect.height / 2,
       });
     }
     setOpen((v) => !v);
   }
 
-  /* ─── Render guards ──────────────────────────────────────────────────── */
+  /* ── Guards ──────────────────────────────────────────────────────────── */
 
   if (!mounted) return null;
   if (EXCLUDED_PATHS.some((p) => pathname.startsWith(p))) return null;
@@ -383,49 +364,30 @@ export function QuickActions({ role }: QuickActionsProps) {
 
   const { position } = prefs;
 
-  // Spring presets
-  const fastSpring = prefersReduced
-    ? { duration: 0.1 }
-    : { type: "spring" as const, stiffness: 400, damping: 28 };
-  const gooSpring = prefersReduced
-    ? { duration: 0.1 }
-    : { type: "spring" as const, stiffness: 280, damping: 18 };
+  /* ── Animation presets ───────────────────────────────────────────────── */
+
+  // GPU-only properties: transform + opacity.  No filter, no blur.
+  const btnSpring = prefersReduced
+    ? { duration: 0.05 }
+    : { type: "spring" as const, stiffness: 380, damping: 26 };
+  const itemSpring = prefersReduced
+    ? { duration: 0.05 }
+    : { type: "spring" as const, stiffness: 320, damping: 22 };
+
+  /** Anchor point expressed as CSS top% for absolutely-positioned children. */
+  const anchorTop = `${ANCHOR_Y_PERCENT * 100}%`;
 
   return (
     <>
-      {/* ── SVG goo filter (hidden, referenced by CSS) ──────────────────── */}
-      <svg
-        aria-hidden="true"
-        className="absolute"
-        style={{ width: 0, height: 0, pointerEvents: "none" }}
-      >
-        <defs>
-          <filter id="goo-filter">
-            <feGaussianBlur
-              in="SourceGraphic"
-              stdDeviation="10"
-              result="blur"
-            />
-            <feColorMatrix
-              in="blur"
-              type="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
-              result="goo"
-            />
-            <feBlend in="SourceGraphic" in2="goo" />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* ── Backdrop ────────────────────────────────────────────────────── */}
+      {/* ── Backdrop (no blur — pure opacity for perf) ──────────────────── */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: prefersReduced ? 0.05 : 0.25 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990]"
+            transition={{ duration: prefersReduced ? 0.05 : 0.2 }}
+            className="fixed inset-0 bg-black/70 z-[9990]"
             onClick={() => {
               setOpen(false);
               setShowCustomizer(false);
@@ -435,156 +397,102 @@ export function QuickActions({ role }: QuickActionsProps) {
         )}
       </AnimatePresence>
 
-      {/* ── Goo blob layer (filtered circles, no content) ───────────────── */}
+      {/* ── Items (single layer, GPU-composited) ────────────────────────── */}
       <AnimatePresence>
-        {open && !showCustomizer && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[9991] pointer-events-none"
-            style={{ filter: "url(#goo-filter)" }}
-          >
-            {/* Center blob */}
-            <motion.div
-              className="absolute w-16 h-16 rounded-full bg-primary-500"
-              style={{
-                top: "50%",
-                left: "50%",
-                marginLeft: -32,
-                marginTop: -32,
-              }}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              transition={fastSpring}
-            />
+        {open &&
+          !showCustomizer &&
+          activeActions.map((action, i) => {
+            const pos = getItemPosition(i, activeActions.length);
+            const Icon = action.icon;
+            const isAbove = pos.y <= 0;
+            return (
+              <motion.div
+                key={action.id}
+                className="fixed z-[9992] pointer-events-auto"
+                style={{
+                  top: anchorTop,
+                  left: "50%",
+                  marginLeft: -28,
+                  marginTop: -28,
+                  width: 56,
+                  height: 56,
+                  willChange: "transform, opacity",
+                }}
+                initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                animate={{ x: pos.x, y: pos.y, scale: 1, opacity: 1 }}
+                exit={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                transition={{
+                  ...itemSpring,
+                  delay: prefersReduced ? 0 : 0.04 + i * 0.055,
+                }}
+              >
+                <Link
+                  href={action.href}
+                  onClick={() => setOpen(false)}
+                  className="w-14 h-14 rounded-full bg-primary-500 flex items-center justify-center shadow-lg shadow-primary-500/30 hover:brightness-110 active:scale-90 transition-[transform,filter] duration-150"
+                  aria-label={action.label}
+                >
+                  <Icon
+                    size={22}
+                    strokeWidth={1.75}
+                    className="text-white"
+                    aria-hidden="true"
+                  />
+                </Link>
 
-            {/* Item blobs */}
-            {activeActions.map((action, i) => {
-              const pos = getItemPosition(i, activeActions.length);
-              return (
-                <motion.div
-                  key={`blob-${action.id}`}
-                  className="absolute w-14 h-14 rounded-full bg-primary-500"
-                  style={{
-                    top: "50%",
-                    left: "50%",
-                    marginLeft: -28,
-                    marginTop: -28,
-                  }}
-                  initial={{ x: 0, y: 0, scale: 0 }}
-                  animate={{ x: pos.x, y: pos.y, scale: 1 }}
-                  exit={{ x: 0, y: 0, scale: 0 }}
+                <motion.span
+                  className={cn(
+                    "absolute left-1/2 -translate-x-1/2",
+                    "whitespace-nowrap text-[11px] font-semibold text-white/90",
+                    "pointer-events-none select-none",
+                    isAbove ? "top-full mt-2.5" : "bottom-full mb-2.5",
+                  )}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{
-                    ...gooSpring,
-                    delay: prefersReduced ? 0 : 0.08 + i * 0.06,
-                  }}
-                />
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Content layer (icons + labels, not filtered) ─────────────────── */}
-      <AnimatePresence>
-        {open && !showCustomizer && (
-          <div className="fixed inset-0 z-[9992] pointer-events-none">
-            {activeActions.map((action, i) => {
-              const pos = getItemPosition(i, activeActions.length);
-              const Icon = action.icon;
-              const isAbove = pos.y <= 0;
-              return (
-                <motion.div
-                  key={action.id}
-                  className="absolute pointer-events-auto"
-                  style={{
-                    top: "50%",
-                    left: "50%",
-                    marginLeft: -28,
-                    marginTop: -28,
-                    width: 56,
-                    height: 56,
-                  }}
-                  initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                  animate={{ x: pos.x, y: pos.y, scale: 1, opacity: 1 }}
-                  exit={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                  transition={{
-                    ...gooSpring,
-                    delay: prefersReduced ? 0 : 0.08 + i * 0.06,
+                    delay: prefersReduced ? 0 : 0.2 + i * 0.04,
+                    duration: 0.15,
                   }}
                 >
-                  <Link
-                    href={action.href}
-                    onClick={() => setOpen(false)}
-                    className="w-14 h-14 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
-                    aria-label={action.label}
-                  >
-                    <Icon
-                      size={22}
-                      strokeWidth={1.75}
-                      className="text-white drop-shadow-sm"
-                      aria-hidden="true"
-                    />
-                  </Link>
+                  {action.label}
+                </motion.span>
+              </motion.div>
+            );
+          })}
+      </AnimatePresence>
 
-                  {/* Label — outside the circle (above for bottom items, below for top) */}
-                  <motion.span
-                    className={cn(
-                      "absolute left-1/2 -translate-x-1/2",
-                      "whitespace-nowrap text-[11px] font-semibold text-white/90",
-                      "pointer-events-none select-none",
-                      isAbove ? "top-full mt-2" : "bottom-full mb-2",
-                    )}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{
-                      delay: prefersReduced ? 0 : 0.25 + i * 0.04,
-                      duration: 0.2,
-                    }}
-                  >
-                    {action.label}
-                  </motion.span>
-                </motion.div>
-              );
-            })}
-
-            {/* Settings gear — below the center close button */}
-            <motion.button
-              className="absolute pointer-events-auto w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors"
-              style={{
-                top: "50%",
-                left: "50%",
-                marginLeft: -18,
-                marginTop: 44,
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCustomizer(true);
-              }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              transition={{
-                ...fastSpring,
-                delay: prefersReduced ? 0 : 0.3,
-              }}
-              aria-label="Customize quick actions"
-            >
-              <Settings
-                size={15}
-                strokeWidth={1.75}
-                className="text-white/70"
-                aria-hidden="true"
-              />
-            </motion.button>
-          </div>
+      {/* ── Settings gear ───────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {open && !showCustomizer && (
+          <motion.button
+            className="fixed z-[9992] pointer-events-auto w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+            style={{
+              top: anchorTop,
+              left: "50%",
+              marginLeft: -18,
+              marginTop: 42,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCustomizer(true);
+            }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            transition={{ ...btnSpring, delay: prefersReduced ? 0 : 0.25 }}
+            aria-label="Customize quick actions"
+          >
+            <Settings
+              size={15}
+              strokeWidth={1.75}
+              className="text-white/60"
+              aria-hidden="true"
+            />
+          </motion.button>
         )}
       </AnimatePresence>
 
-      {/* ── Customizer panel (centered modal) ───────────────────────────── */}
+      {/* ── Customizer panel ─────────────────────────────────────────────── */}
       <AnimatePresence>
         {open && showCustomizer && (
           <CustomizerPanel
@@ -597,7 +505,7 @@ export function QuickActions({ role }: QuickActionsProps) {
         )}
       </AnimatePresence>
 
-      {/* ── FAB button (animates from corner → center) ──────────────────── */}
+      {/* ── FAB button (springs corner → bottom-third center) ────────────── */}
       <motion.button
         ref={buttonRef}
         onClick={handleToggle}
@@ -606,27 +514,28 @@ export function QuickActions({ role }: QuickActionsProps) {
             ? { x: delta.x, y: delta.y, scale: 1.14 }
             : { x: 0, y: 0, scale: 1 }
         }
-        transition={fastSpring}
+        transition={btnSpring}
+        style={{
+          bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+          willChange: "transform",
+        }}
         className={cn(
-          "fixed z-[9995] w-14 h-14 rounded-full shadow-xl",
+          "fixed z-[9995] w-14 h-14 rounded-full",
           "flex items-center justify-center",
-          "bg-primary-500 hover:bg-primary-600 active:scale-95",
-          "text-white",
+          "bg-primary-500 text-white shadow-xl shadow-primary-500/25",
+          "hover:bg-primary-600 active:scale-95",
           "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
           "focus:ring-offset-2 focus:ring-offset-[var(--background)]",
           "transition-colors",
           position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
         )}
-        style={{
-          bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
-        }}
         aria-label={open ? "Close quick actions" : "Open quick actions"}
         aria-expanded={open}
         aria-haspopup="true"
       >
         <motion.div
           animate={{ rotate: open ? 45 : 0 }}
-          transition={fastSpring}
+          transition={btnSpring}
         >
           <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
         </motion.div>
