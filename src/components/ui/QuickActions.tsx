@@ -161,8 +161,7 @@ function CustomizerPanel({
           ? { duration: 0.15 }
           : { type: "spring", stiffness: 400, damping: 28 }
       }
-      className="fixed z-[9998] w-72 max-h-[70vh] overflow-y-auto custom-scrollbar card p-5 space-y-5 shadow-2xl"
-      style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
+      className="w-72 max-h-[70vh] overflow-y-auto custom-scrollbar card p-5 space-y-5 shadow-2xl"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between">
@@ -345,8 +344,9 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
           <motion.div
             className={cn(
               "fixed z-[9994] w-[240px] rounded-2xl overflow-hidden",
-              "bg-surface-900 border border-surface-700/60",
-              "shadow-2xl shadow-black/50",
+              "bg-white dark:bg-surface-900",
+              "border border-surface-200 dark:border-surface-700/60",
+              "shadow-2xl shadow-black/20 dark:shadow-black/50",
               position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
             )}
             style={{
@@ -400,7 +400,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center px-4 py-2.5 border-t border-surface-700/60">
+            <div className="flex items-center px-4 py-2.5 border-t border-surface-200 dark:border-surface-700/60">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -417,16 +417,21 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
         )}
       </AnimatePresence>
 
-      {/* ── Customizer modal ─────────────────────────────────────────────── */}
+      {/* ── Customizer modal (flex-centered wrapper avoids transform conflicts) */}
       <AnimatePresence>
         {open && showCustomizer && (
-          <CustomizerPanel
-            prefs={prefs}
-            allActions={allActions}
-            onChange={updatePrefs}
-            onClose={() => setShowCustomizer(false)}
-            reduced={prefersReduced}
-          />
+          <div
+            className="fixed inset-0 z-[9998] flex items-center justify-center p-4"
+            onClick={() => setShowCustomizer(false)}
+          >
+            <CustomizerPanel
+              prefs={prefs}
+              allActions={allActions}
+              onChange={updatePrefs}
+              onClose={() => setShowCustomizer(false)}
+              reduced={prefersReduced}
+            />
+          </div>
         )}
       </AnimatePresence>
 
