@@ -345,8 +345,8 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
           <motion.div
             className={cn(
               "fixed z-[9994] w-[240px] rounded-2xl overflow-hidden",
-              "bg-[var(--card-bg)] border border-[var(--card-border)]",
-              "shadow-2xl shadow-black/40",
+              "bg-surface-900 border border-surface-700/60",
+              "shadow-2xl shadow-black/50",
               position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
             )}
             style={{
@@ -400,7 +400,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center px-4 py-2.5 border-t border-[var(--card-border)]">
+            <div className="flex items-center px-4 py-2.5 border-t border-surface-700/60">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
