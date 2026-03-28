@@ -56,7 +56,7 @@ export function ImmersiveAnnotationToolbar({
   const [showWidths, setShowWidths] = useState(false);
 
   return (
-    <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1 bg-black/50 backdrop-blur-xl rounded-2xl p-1.5">
+    <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1 bg-black/70 rounded-2xl p-1.5">
       {/* ── Drawing Tools ─────────────────────────────────────────── */}
       {TOOLS.map(({ tool, label, icon }) => (
         <button
@@ -93,7 +93,7 @@ export function ImmersiveAnnotationToolbar({
         </button>
 
         {showColors && (
-          <div className="absolute right-full mr-2 top-0 flex flex-col gap-1 bg-black/70 backdrop-blur-xl rounded-xl p-1.5">
+          <div className="absolute right-full mr-2 top-0 flex flex-col gap-1 bg-black/80 rounded-xl p-1.5">
             {ANNOTATION_COLORS.map((color) => (
               <button
                 key={color}
@@ -133,7 +133,7 @@ export function ImmersiveAnnotationToolbar({
         </button>
 
         {showWidths && (
-          <div className="absolute right-full mr-2 top-0 flex flex-col gap-1 bg-black/70 backdrop-blur-xl rounded-xl p-1.5">
+          <div className="absolute right-full mr-2 top-0 flex flex-col gap-1 bg-black/80 rounded-xl p-1.5">
             {STROKE_WIDTHS.map(({ label, value }) => (
               <button
                 key={value}

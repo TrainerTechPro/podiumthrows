@@ -65,50 +65,14 @@ export default function HeroSection() {
     >
       {/* ── Background effects ─────────────────────────────────────────── */}
 
-      {/* Floating gradient orbs */}
+      {/* Static ambient gradient — no animation */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        {/* Orb 1 — amber, top-left */}
         <div
-          className="absolute animate-float"
           style={{
-            width: 550,
-            height: 550,
-            top: "-10%",
-            left: "-5%",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%)",
-            filter: "blur(100px)",
-            animationDuration: "22s",
-          }}
-        />
-        {/* Orb 2 — indigo, center-right */}
-        <div
-          className="absolute animate-float"
-          style={{
-            width: 650,
-            height: 650,
-            top: "20%",
-            right: "-10%",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%)",
-            filter: "blur(100px)",
-            animationDuration: "22s",
-            animationDelay: "-7s",
-          }}
-        />
-        {/* Orb 3 — amber, bottom-center */}
-        <div
-          className="absolute animate-float"
-          style={{
-            width: 450,
-            height: 450,
-            bottom: "-5%",
-            left: "30%",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)",
-            filter: "blur(100px)",
-            animationDuration: "22s",
-            animationDelay: "-14s",
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            background: "radial-gradient(ellipse 60% 50% at 30% 30%, rgba(245,158,11,0.05) 0%, transparent 70%)",
           }}
         />
       </div>

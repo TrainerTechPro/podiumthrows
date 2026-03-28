@@ -61,7 +61,7 @@ export function ZoomableVideoContainer({
 
       {/* ── Zoom indicator (top-left, shown when zoomed) ── */}
       {showIndicator && isZoomed && (
-        <div className="absolute top-3 left-3 z-50 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-2.5 py-1.5 pointer-events-auto">
+        <div className="absolute top-3 left-3 z-50 flex items-center gap-2 bg-black/70 rounded-lg px-2.5 py-1.5 pointer-events-auto">
           {/* Zoom level */}
           <span className="text-[11px] font-mono text-white/90 tabular-nums">
             {state.scale.toFixed(1)}×

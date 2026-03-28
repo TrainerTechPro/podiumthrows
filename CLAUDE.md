@@ -17,7 +17,7 @@ This is **Podium Throws**, a subscription coaching SaaS for Olympic-level track 
 - Tailwind CSS 3.4 with custom theme
 - Custom component library (~23 components) — NO shadcn, NO Material UI, NO Chakra, NO new UI dependencies
 - Dark mode via `darkMode: "class"`
-- Fonts: Outfit (headings) + DM Sans (body)
+- Fonts: Chakra Petch (headings) + DM Sans (body) + IBM Plex Mono (data/numbers only)
 - Primary color: warm amber/gold
 - Custom components: RPE slider, plate calculator, rest timer, voice recorder/player, video annotator, shimmer skeletons
 
@@ -154,16 +154,20 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 - Add `aria-hidden="true"` to decorative icons.
 
 ### Color Tokens
+- One brand accent (amber/gold `#FFC800`) + semantic status colors + neutral dark surfaces.
 - Use CSS custom properties: `var(--card-bg)`, `var(--card-border)`, `var(--foreground)`, `var(--muted)`.
-- Semantic colors via Tailwind: `text-muted`, `bg-surface-100`, `text-primary-500`, etc.
-- Status colors: success (emerald), warning (amber), danger (red), info (blue).
+- Brand/accent: `text-primary-500`, `bg-primary-500`, or `text-brand` for the single gold accent.
+- Surfaces: `bg-surface-100` through `bg-surface-950` for neutral dark tones.
+- Status colors: success (green `#00FF88`), warning (amber `#FF8800`), danger (red `#FF2222`), info (blue `#4488FF`).
 - **Never hardcode hex colors** — use the theme tokens.
 
 ### Typography
-- Headings: `font-heading` (Outfit) — applied automatically to h1-h6.
+- Headings: `font-heading` (Chakra Petch) — applied automatically to h1-h6.
 - Body: `font-body` (DM Sans) — applied automatically to body.
+- Data/numbers: `font-mono` (IBM Plex Mono) — distances, timestamps, statistics, IDs, code only.
 - Section headers: `text-sm font-semibold text-muted uppercase tracking-wider`.
 - Numeric values: `tabular-nums` for alignment.
+- **Never use `font-mono` for prose, labels, descriptions, or marketing copy** — only for data values.
 
 ### Responsive
 - Mobile-first approach with `sm:`, `md:`, `lg:` breakpoints.

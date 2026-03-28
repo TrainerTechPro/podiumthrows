@@ -553,7 +553,7 @@ export function ImmersiveVideoOverlay({
             onClick={togglePlay}
             className="absolute inset-0 z-30 flex items-center justify-center bg-black/10 transition-colors hover:bg-black/20"
           >
-            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
               <svg
                 width="28"
                 height="28"
@@ -569,7 +569,7 @@ export function ImmersiveVideoOverlay({
 
         {/* Narration recording indicator */}
         {narrationBlob && (
-          <div className="absolute top-3 left-3 z-40 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
+          <div className="absolute top-3 left-3 z-40 flex items-center gap-2 bg-black/70 rounded-lg px-3 py-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-success-500" strokeWidth="2">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
             </svg>
@@ -579,7 +579,7 @@ export function ImmersiveVideoOverlay({
 
         {/* Pose detection error indicator */}
         {poseDetection.error && (
-          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-red-500/80 backdrop-blur-sm rounded-lg px-3 py-1.5">
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-red-500/90 rounded-lg px-3 py-1.5">
             <span className="text-[10px] text-white font-medium">
               Pose detection error: {poseDetection.error}
             </span>
@@ -672,7 +672,7 @@ export function ImmersiveVideoOverlay({
               {speed}x
             </button>
             {showSpeedMenu && (
-              <div className="absolute bottom-full right-0 mb-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl py-1 shadow-2xl z-10">
+              <div className="absolute bottom-full right-0 mb-2 bg-black/90 border border-white/10 rounded-xl py-1 shadow-2xl z-10">
                 {PLAYBACK_SPEEDS.map((s) => (
                   <button
                     key={s}

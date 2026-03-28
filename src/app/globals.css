@@ -81,9 +81,12 @@
 @layer components {
   /* ── Cyberpunk Card System ──────────────────────────────────────────── */
   .card {
-    @apply bg-[var(--card-bg)] border border-[var(--card-border)] shadow-card;
+    @apply border border-[var(--card-border)] shadow-card;
+    background: rgba(255, 255, 255, 0.97);
     clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
-    backdrop-filter: blur(12px);
+  }
+  .dark .card {
+    background: rgba(20, 20, 24, 0.95);
   }
 
   .card-rounded {
@@ -140,31 +143,6 @@
     opacity: 0.6;
   }
 
-  /* ── Scanline Overlay ────────────────────────────────────────────── */
-  .scanlines::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px
-    );
-    z-index: 1;
-  }
-  .dark .scanlines::after {
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(255, 255, 255, 0.015) 2px,
-      rgba(255, 255, 255, 0.015) 4px
-    );
-  }
-
   /* ── Diamond Indicator ───────────────────────────────────────────── */
   .diamond {
     width: 8px;
@@ -183,13 +161,6 @@
     height: 12px;
     transform: rotate(45deg);
     flex-shrink: 0;
-  }
-
-  /* ── Cyberpunk Label (section headers) ───────────────────────────── */
-  .cyber-label {
-    @apply text-xs font-semibold uppercase tracking-[0.15em];
-    color: var(--gold);
-    opacity: 0.7;
   }
 
   .btn-primary {

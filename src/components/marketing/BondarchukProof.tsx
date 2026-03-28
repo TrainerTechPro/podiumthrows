@@ -8,8 +8,8 @@
    Right: research quote, citation, and event tags.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-import { motion, useReducedMotion } from "framer-motion";
 import ScrollReveal from "./ScrollReveal";
+import MonoLabel from "./MonoLabel";
 
 // ─── Event tags ───────────────────────────────────────────────────────────────
 
@@ -18,8 +18,6 @@ const EVENTS = ["Shot Put", "Discus", "Hammer", "Javelin"] as const;
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function BondarchukProof() {
-  const shouldReduce = useReducedMotion();
-
   return (
     <section
       className="bondarchuk-section"
@@ -88,33 +86,23 @@ export default function BondarchukProof() {
                 2–4m
               </div>
 
-              {/* Animated stat */}
-              <motion.div
-                className="font-heading"
-                initial={
-                  shouldReduce
-                    ? undefined
-                    : { opacity: 0, scale: 0.8, filter: "blur(12px)" }
-                }
-                whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 15,
-                }}
-                style={{
-                  fontSize: "clamp(9rem, 18vw, 16rem)",
-                  fontWeight: 900,
-                  lineHeight: 0.75,
-                  letterSpacing: "-0.07em",
-                  color: "#f59e0b",
-                  whiteSpace: "nowrap",
-                  position: "relative",
-                }}
-              >
-                2–4m
-              </motion.div>
+              {/* Stat — simple fade-in via ScrollReveal */}
+              <ScrollReveal>
+                <div
+                  className="font-heading"
+                  style={{
+                    fontSize: "clamp(9rem, 18vw, 16rem)",
+                    fontWeight: 900,
+                    lineHeight: 0.75,
+                    letterSpacing: "-0.07em",
+                    color: "#f59e0b",
+                    whiteSpace: "nowrap",
+                    position: "relative",
+                  }}
+                >
+                  2–4m
+                </div>
+              </ScrollReveal>
             </div>
           </div>
 
@@ -122,31 +110,8 @@ export default function BondarchukProof() {
           <ScrollReveal delay={0.15}>
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {/* Section label */}
-              <div
-                className="flex items-center"
-                style={{ gap: 12, marginBottom: 28 }}
-              >
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: 20,
-                    height: 2,
-                    background: "#f59e0b",
-                    borderRadius: 1,
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  className="font-heading"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: "0.3em",
-                    textTransform: "uppercase",
-                    color: "#f59e0b",
-                  }}
-                >
-                  The Research
-                </span>
+              <div style={{ marginBottom: 28 }}>
+                <MonoLabel>The Science</MonoLabel>
               </div>
 
               {/* Quote */}

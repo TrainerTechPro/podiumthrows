@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import MarketingNav from "@/components/marketing/Nav";
 import HeroSection from "@/components/marketing/HeroSection";
-import TrustMarquee from "@/components/marketing/TrustMarquee";
+import DataStrip from "@/components/marketing/DataStrip";
+import BondarchukProof from "@/components/marketing/BondarchukProof";
 import StickyFeatures from "@/components/marketing/StickyFeatures";
 import BentoFeatures from "@/components/marketing/BentoFeatures";
-import BondarchukProof from "@/components/marketing/BondarchukProof";
 import DeficitFinderCTA from "@/components/marketing/DeficitFinderCTA";
 import PricingPreview from "@/components/marketing/PricingPreview";
-import FinalCTA from "@/components/marketing/FinalCTA";
 import MarketingFooter from "@/components/marketing/Footer";
 
 export const metadata: Metadata = {
@@ -53,24 +52,43 @@ export default function HomePage() {
       style={{
         backgroundColor: "var(--landing-bg)",
         color: "var(--landing-text)",
+        position: "relative",
       }}
     >
-      <MarketingNav />
-      <HeroSection />
-      <TrustMarquee />
-      <Divider />
-      <StickyFeatures />
-      <Divider />
-      <BentoFeatures />
-      <Divider />
-      <BondarchukProof />
-      <Divider />
-      <DeficitFinderCTA />
-      <Divider />
-      <PricingPreview />
-      <Divider />
-      <FinalCTA />
-      <MarketingFooter />
+      {/* Engineering grid background */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: "none",
+          backgroundImage:
+            "linear-gradient(rgba(245,158,11,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.06) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
+          maskImage:
+            "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%)",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <MarketingNav />
+        <HeroSection />
+        <DataStrip />
+        <Divider />
+        <BondarchukProof />
+        <Divider />
+        <StickyFeatures />
+        <Divider />
+        <BentoFeatures />
+        <Divider />
+        <DeficitFinderCTA />
+        <Divider />
+        <PricingPreview />
+        <MarketingFooter />
+      </div>
     </div>
   );
 }

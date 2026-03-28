@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Chakra_Petch, IBM_Plex_Mono } from "next/font/google";
+import { Chakra_Petch, DM_Sans, IBM_Plex_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
 import { Analytics } from "@vercel/analytics/next";
@@ -13,11 +13,18 @@ const chakraPetch = Chakra_Petch({
   weight: ["400", "500", "600", "700"],
 });
 
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+  weight: ["400", "500", "600"],
+});
+
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   variable: "--font-ibm-plex-mono",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -75,7 +82,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${chakraPetch.variable} ${ibmPlexMono.variable}${darkClass}`}
+      className={`${chakraPetch.variable} ${dmSans.variable} ${ibmPlexMono.variable}${darkClass}`}
       suppressHydrationWarning
     >
       <head>

@@ -2,7 +2,6 @@ import { requireAthleteSession, getAthleteAchievements } from "@/lib/data/athlet
 import { redirect } from "next/navigation";
 import { ALL_BADGE_DEFINITIONS } from "@/lib/achievements";
 import { Badge } from "@/components";
-import { HoloBadge } from "@/components/ui/HoloBadge";
 
 export const metadata = { title: "Achievements — Podium Throws" };
 
@@ -87,54 +86,53 @@ export default async function AthleteAchievementsPage() {
                 const isEarned = achievement !== undefined;
 
                 return (
-                  <HoloBadge key={badge.badgeKey} earned={isEarned}>
+                  <div
+                    key={badge.badgeKey}
+                    className={`card p-4 flex flex-col items-center text-center gap-2 transition-all ${
+                      isEarned
+                        ? "ring-1 ring-amber-400/30 dark:ring-amber-500/20"
+                        : "opacity-50 grayscale"
+                    }`}
+                  >
+                    {/* Badge emoji */}
                     <div
-                      className={`card p-4 flex flex-col items-center text-center gap-2 transition-all ${
-                        isEarned
-                          ? "ring-1 ring-amber-400/30 dark:ring-amber-500/20"
-                          : ""
+                      className={`text-4xl leading-none select-none ${
+                        !isEarned ? "filter blur-[1px]" : ""
                       }`}
+                      aria-hidden="true"
                     >
-                      {/* Badge emoji */}
-                      <div
-                        className={`text-4xl leading-none select-none ${
-                          !isEarned ? "filter blur-[1px]" : ""
-                        }`}
-                        aria-hidden="true"
-                      >
-                        {"emoji" in badge ? badge.emoji : "🏅"}
-                      </div>
-
-                      {/* Title */}
-                      <p className={`text-xs font-semibold leading-snug ${
-                        isEarned ? "text-[var(--foreground)]" : "text-muted"
-                      }`}>
-                        {badge.title.replace(/[\uD800-\uDFFF\u2600-\u27BF]/g, "").trim()}
-                      </p>
-
-                      {/* Description */}
-                      <p className="text-[10px] text-muted leading-snug line-clamp-2">
-                        {badge.description}
-                      </p>
-
-                      {/* Earned date or locked */}
-                      <div className="mt-auto pt-1">
-                        {isEarned ? (
-                          <Badge variant="success">
-                            {new Date(achievement.earnedAt).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </Badge>
-                        ) : (
-                          <span className="text-[10px] text-surface-400 dark:text-surface-600">
-                            Not yet earned
-                          </span>
-                        )}
-                      </div>
+                      {"emoji" in badge ? badge.emoji : "🏅"}
                     </div>
-                  </HoloBadge>
+
+                    {/* Title */}
+                    <p className={`text-xs font-semibold leading-snug ${
+                      isEarned ? "text-[var(--foreground)]" : "text-muted"
+                    }`}>
+                      {badge.title.replace(/[\uD800-\uDFFF\u2600-\u27BF]/g, "").trim()}
+                    </p>
+
+                    {/* Description */}
+                    <p className="text-[10px] text-muted leading-snug line-clamp-2">
+                      {badge.description}
+                    </p>
+
+                    {/* Earned date or locked */}
+                    <div className="mt-auto pt-1">
+                      {isEarned ? (
+                        <Badge variant="success">
+                          {new Date(achievement.earnedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </Badge>
+                      ) : (
+                        <span className="text-[10px] text-surface-400 dark:text-surface-600">
+                          Not yet earned
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>

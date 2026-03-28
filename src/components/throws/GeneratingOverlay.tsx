@@ -33,7 +33,7 @@ export function GeneratingOverlay({ isGenerating }: { isGenerating: boolean }) {
   if (!isGenerating) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="w-full max-w-md mx-4 rounded-xl bg-surface-900/95 border border-surface-700 shadow-2xl p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">

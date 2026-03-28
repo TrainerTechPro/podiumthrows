@@ -74,7 +74,7 @@ export function ExerciseNameLink({ name, className, children }: Props) {
       {open && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/50"
             onClick={() => setOpen(false)}
           />
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">

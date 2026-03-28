@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
+import MonoLabel from "./MonoLabel";
+import CornerMark from "./CornerMark";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -194,6 +196,14 @@ function BentoCard({ card, spotlightEnabled }: BentoCardProps) {
         transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.4s cubic-bezier(0.16,1,0.3,1)",
       }}
     >
+      {/* Corner marks on featured card */}
+      {card.featured && (
+        <>
+          <CornerMark position="top-right" />
+          <CornerMark position="bottom-left" />
+        </>
+      )}
+
       {/* Spotlight pseudo-element — implemented via inline ::after simulation */}
       {spotlightEnabled && (
         <div
@@ -284,33 +294,7 @@ export default function BentoFeatures() {
       {/* ── Section header ─────────────────────────────────────────────── */}
       <ScrollReveal>
         <div style={{ marginBottom: 48 }}>
-          {/* Label */}
-          <div
-            className="flex items-center"
-            style={{ gap: 12, marginBottom: 16 }}
-          >
-            <div
-              aria-hidden="true"
-              style={{
-                width: 20,
-                height: 2,
-                background: "#f59e0b",
-                borderRadius: 1,
-                flexShrink: 0,
-              }}
-            />
-            <span
-              className="font-heading"
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.3em",
-                textTransform: "uppercase",
-                color: "#f59e0b",
-              }}
-            >
-              Everything Else
-            </span>
-          </div>
+          <MonoLabel>Core Systems</MonoLabel>
 
           {/* Title */}
           <h2

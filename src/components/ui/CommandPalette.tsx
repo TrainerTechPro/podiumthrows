@@ -166,7 +166,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-[6px] animate-fade-in"
+        className="absolute inset-0 bg-black/70 animate-fade-in"
         aria-hidden="true"
       />
 

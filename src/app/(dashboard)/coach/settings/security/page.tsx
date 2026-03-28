@@ -350,7 +350,7 @@ export default function SecuritySettingsPage() {
 
       {/* Disable Modal */}
       {showDisableModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="card p-6 w-full max-w-md mx-4 space-y-4">
             <h3 className="text-lg font-semibold font-display">
               Disable Two-Factor Authentication

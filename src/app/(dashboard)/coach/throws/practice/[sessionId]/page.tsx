@@ -300,7 +300,7 @@ function LogAttemptPanel({ athlete, sessionId, athleteAttemptCount, onSave, onCa
  }
 
  return (
- <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm">
+ <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50">
  <div className="w-full sm:max-w-lg bg-[var(--card-bg)] rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
  {/* Header */}
  <div className="sticky top-0 bg-[var(--card-bg)] px-5 pt-5 pb-3 border-b border-[var(--card-border)] flex items-center justify-between">

@@ -76,7 +76,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-safe animate-spring-up">
-      <div className="mx-auto max-w-md rounded-2xl border border-amber-200/20 dark:border-amber-700/30 bg-[var(--card-bg)]/95 backdrop-blur-xl shadow-2xl shadow-black/20">
+      <div className="mx-auto max-w-md rounded-2xl border border-amber-200/20 dark:border-amber-700/30 bg-white dark:bg-surface-900 shadow-2xl shadow-black/20">
         <div className="p-4">
           <div className="flex items-start gap-3">
             {/* App icon */}

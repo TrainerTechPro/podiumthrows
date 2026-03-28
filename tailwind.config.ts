@@ -40,16 +40,9 @@ const config: Config = {
           900: "#0a0a0e",
           950: "#06060a",
         },
-        // Cyberpunk accent colors
-        cyber: {
-          gold: "#FFC800",
-          orange: "#FF8800",
-          green: "#00FF88",
-          blue: "#4488FF",
-          red: "#FF2222",
-          purple: "#AA44FF",
-        },
-        // Semantic colors (cyberpunk-tinted)
+        // Brand accent (same as primary-500)
+        brand: "#FFC800",
+        // Semantic status colors
         success: {
           50: "#0a1a10",
           500: "#00FF88",
@@ -77,7 +70,8 @@ const config: Config = {
       },
       fontFamily: {
         heading: ["var(--font-chakra-petch)", "system-ui", "sans-serif"],
-        body: ["var(--font-ibm-plex-mono)", "monospace"],
+        body: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-ibm-plex-mono)", "ui-monospace", "monospace"],
       },
       fontSize: {
         // Strict type scale (per design system)
@@ -165,28 +159,14 @@ const config: Config = {
           "60%": { transform: "translateY(-2px) scale(1.02)", opacity: "1" },
           "100%": { transform: "translateY(0) scale(1)", opacity: "1" },
         },
-        "draw-in": {
-          "0%": { strokeDashoffset: "100%", opacity: "0.3" },
-          "100%": { strokeDashoffset: "0%", opacity: "1" },
-        },
         "bar-grow": {
           "0%": { transform: "scaleY(0)", transformOrigin: "bottom" },
           "60%": { transform: "scaleY(1.03)", transformOrigin: "bottom" },
           "100%": { transform: "scaleY(1)", transformOrigin: "bottom" },
         },
-        "holographic": {
-          "0%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-          "100%": { backgroundPosition: "0% 50%" },
-        },
         "shimmer-fast": {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
-        },
-        "pulse-ring": {
-          "0%": { transform: "scale(1)", opacity: "1" },
-          "50%": { transform: "scale(1.15)", opacity: "0" },
-          "100%": { transform: "scale(1)", opacity: "0" },
         },
         "chip-in": {
           "0%": { transform: "translateY(8px) scale(0.95)", opacity: "0" },
@@ -201,10 +181,6 @@ const config: Config = {
           "50%": { transform: "scaleY(0.95) rotate(2deg)" },
           "75%": { transform: "scaleY(1.05) rotate(-1deg)" },
         },
-        "float": {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-6px)" },
-        },
         "danger-pulse": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.85" },
@@ -212,14 +188,6 @@ const config: Config = {
         "fade-slide-in": {
           "0%": { opacity: "0", transform: "translateY(-4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        "gold-pulse": {
-          "0%, 100%": { boxShadow: "0 0 8px rgba(255, 200, 0, 0.1)" },
-          "50%": { boxShadow: "0 0 20px rgba(255, 200, 0, 0.25)" },
-        },
-        "scanline": {
-          "0%": { transform: "translateY(-100%)" },
-          "100%": { transform: "translateY(100%)" },
         },
         "step-slide-in-right": {
           "0%": { opacity: "0", transform: "translateX(24px)" },
@@ -245,18 +213,13 @@ const config: Config = {
         "spring-up": "spring-up 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
         "scale-spring": "scale-spring 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both",
         "count-up-spring": "count-up-spring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "draw-in": "draw-in 1.2s ease-out both",
         "bar-grow": "bar-grow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "holographic": "holographic 3s ease-in-out infinite",
         "shimmer-fast": "shimmer-fast 1.5s ease-in-out infinite",
-        "pulse-ring": "pulse-ring 2s ease-out infinite",
         "chip-in": "chip-in 0.3s ease-out both",
         "progress-fill": "progress-fill 1s ease-out both",
         "streak-flame": "streak-flame 2s ease-in-out infinite",
-        "float": "float 3s ease-in-out infinite",
         "danger-pulse": "danger-pulse 2s ease-in-out infinite",
         "fade-slide-in": "fade-slide-in 0.4s ease-out both",
-        "gold-pulse": "gold-pulse 3s ease-in-out infinite",
         "slide-in-right": "step-slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
         "slide-in-left": "step-slide-in-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
       },

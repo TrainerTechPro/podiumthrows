@@ -10,6 +10,8 @@
 
 import Link from "next/link";
 import ScrollReveal from "./ScrollReveal";
+import MonoLabel from "./MonoLabel";
+import CornerMark from "./CornerMark";
 
 // ─── Pricing data ─────────────────────────────────────────────────────────────
 
@@ -142,10 +144,11 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         transitionProperty: "transform, box-shadow",
       }}
     >
-      {/* Animated border beam — Pro only */}
+      {/* Corner marks + tag — Pro only */}
       {tier.featured && (
         <>
-          <div aria-hidden="true" className="border-beam" />
+          <CornerMark position="top-right" />
+          <CornerMark position="bottom-left" />
           {/* "Most Popular" tag */}
           <div
             className="font-heading"
@@ -287,33 +290,7 @@ export default function PricingPreview() {
       {/* ── Section header ──────────────────────────────────────────────── */}
       <ScrollReveal>
         <div style={{ marginBottom: 56 }}>
-          {/* Label */}
-          <div
-            className="flex items-center"
-            style={{ gap: 12, marginBottom: 16 }}
-          >
-            <div
-              aria-hidden="true"
-              style={{
-                width: 20,
-                height: 2,
-                background: "#f59e0b",
-                borderRadius: 1,
-                flexShrink: 0,
-              }}
-            />
-            <span
-              className="font-heading"
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.3em",
-                textTransform: "uppercase",
-                color: "#f59e0b",
-              }}
-            >
-              Pricing
-            </span>
-          </div>
+          <MonoLabel>Pricing</MonoLabel>
 
           {/* Title */}
           <h2
@@ -407,38 +384,7 @@ export default function PricingPreview() {
           box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 48px rgba(245,158,11,0.18);
         }
 
-        /* Animated spinning border beam */
-        @keyframes border-spin {
-          to { transform: rotate(360deg); }
-        }
-
-        .border-beam {
-          position: absolute;
-          inset: -1px;
-          border-radius: 17px;
-          background: conic-gradient(
-            from 0deg,
-            transparent 0deg,
-            #f59e0b 60deg,
-            transparent 120deg
-          );
-          z-index: 0;
-          animation: border-spin 4s linear infinite;
-          -webkit-mask:
-            linear-gradient(#fff 0 0) content-box,
-            linear-gradient(#fff 0 0);
-          mask:
-            linear-gradient(#fff 0 0) content-box,
-            linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          padding: 1px;
-        }
-
         @media (prefers-reduced-motion: reduce) {
-          .border-beam {
-            animation: none;
-          }
           .pricing-card,
           .pricing-card--featured {
             transition: none;
