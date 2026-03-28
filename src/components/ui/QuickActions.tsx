@@ -37,7 +37,6 @@ interface QuickActionDef {
   label: string;
   icon: LucideIcon;
   href: string;
-  color: string;
 }
 
 interface QuickActionsPrefs {
@@ -53,25 +52,25 @@ interface QuickActionsProps {
 /* ─── Action Definitions ─────────────────────────────────────────────────── */
 
 const ATHLETE_ACTIONS: QuickActionDef[] = [
-  { id: "start-session", label: "Start Session", icon: Play, href: "/athlete/quick-start", color: "text-emerald-400" },
-  { id: "wellness", label: "Health Check-in", icon: Heart, href: "/athlete/wellness", color: "text-rose-400" },
-  { id: "log-throw", label: "Log Throw", icon: Target, href: "/athlete/throws/log", color: "text-amber-300" },
-  { id: "tools", label: "Tools", icon: Wrench, href: "/athlete/tools", color: "text-blue-400" },
-  { id: "codex", label: "Throws Codex", icon: BookOpen, href: "/athlete/codex", color: "text-purple-400" },
-  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-amber-400" },
-  { id: "videos", label: "My Videos", icon: Video, href: "/athlete/videos", color: "text-cyan-400" },
-  { id: "profile", label: "Profile", icon: User, href: "/athlete/profile", color: "text-indigo-400" },
+  { id: "start-session", label: "Start Session", icon: Play, href: "/athlete/quick-start" },
+  { id: "wellness", label: "Health Check-in", icon: Heart, href: "/athlete/wellness" },
+  { id: "log-throw", label: "Log Throw", icon: Target, href: "/athlete/throws/log" },
+  { id: "tools", label: "Tools", icon: Wrench, href: "/athlete/tools" },
+  { id: "codex", label: "Throws Codex", icon: BookOpen, href: "/athlete/codex" },
+  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals" },
+  { id: "videos", label: "My Videos", icon: Video, href: "/athlete/videos" },
+  { id: "profile", label: "Profile", icon: User, href: "/athlete/profile" },
 ];
 
 const COACH_ACTIONS: QuickActionDef[] = [
-  { id: "practice", label: "Live Practice", icon: Radio, href: "/coach/throws/practice", color: "text-emerald-400" },
-  { id: "log-session", label: "Log Session", icon: ClipboardList, href: "/coach/log-session", color: "text-amber-300" },
-  { id: "builder", label: "Session Builder", icon: Layers, href: "/coach/throws/builder", color: "text-blue-400" },
-  { id: "video-analysis", label: "Video Analysis", icon: ScanLine, href: "/coach/video-analysis", color: "text-purple-400" },
-  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-400" },
-  { id: "programs", label: "Programs", icon: FileText, href: "/coach/plans", color: "text-amber-400" },
-  { id: "tools", label: "Tools", icon: Wrench, href: "/coach/tools", color: "text-indigo-400" },
-  { id: "wellness", label: "Team Wellness", icon: Activity, href: "/coach/wellness", color: "text-rose-400" },
+  { id: "practice", label: "Live Practice", icon: Radio, href: "/coach/throws/practice" },
+  { id: "log-session", label: "Log Session", icon: ClipboardList, href: "/coach/log-session" },
+  { id: "builder", label: "Session Builder", icon: Layers, href: "/coach/throws/builder" },
+  { id: "video-analysis", label: "Video Analysis", icon: ScanLine, href: "/coach/video-analysis" },
+  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes" },
+  { id: "programs", label: "Programs", icon: FileText, href: "/coach/plans" },
+  { id: "tools", label: "Tools", icon: Wrench, href: "/coach/tools" },
+  { id: "wellness", label: "Team Wellness", icon: Activity, href: "/coach/wellness" },
 ];
 
 const ATHLETE_DEFAULTS = ["start-session", "wellness", "log-throw", "tools"];
@@ -79,30 +78,25 @@ const COACH_DEFAULTS = ["practice", "log-session", "builder", "video-analysis"];
 const STORAGE_KEY = "podium-quick-actions";
 const MAX_ITEMS = 6;
 
-/** Paths where FAB should not appear (immersive flows) */
 const EXCLUDED_PATHS = [
   "/athlete/throws/live/",
   "/coach/throws/practice/live",
 ];
 
-/**
- * Anchor point — bottom-third of viewport.
- * Items radiate from here so the menu feels reachable on mobile.
- */
-const ANCHOR_Y_PERCENT = 0.6;
+/* ─── Sizing ─────────────────────────────────────────────────────────────── */
+
+const FAB_SIZE = 56;
+const EXPANDED_W = 234;
+const ITEM_H = 52;
+const FOOTER_H = 52;
+const PAD_TOP = 8;
+const PAD_BOTTOM = 4;
+
+function expandedHeight(count: number) {
+  return PAD_TOP + count * ITEM_H + FOOTER_H + PAD_BOTTOM;
+}
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
-
-/** Full-circle distribution starting from the top (−90°). */
-function getItemPosition(index: number, total: number) {
-  const radius = 110;
-  const angleDeg = (360 / total) * index - 90;
-  const angleRad = (angleDeg * Math.PI) / 180;
-  return {
-    x: Math.cos(angleRad) * radius,
-    y: Math.sin(angleRad) * radius,
-  };
-}
 
 function loadPrefs(role: string): QuickActionsPrefs {
   if (typeof window === "undefined") {
@@ -183,11 +177,10 @@ function CustomizerPanel({
           ? { duration: 0.15 }
           : { type: "spring", stiffness: 400, damping: 28 }
       }
-      className="fixed z-[9996] w-72 max-h-[70vh] overflow-y-auto custom-scrollbar card p-5 space-y-5 shadow-2xl"
+      className="fixed z-[9998] w-72 max-h-[70vh] overflow-y-auto custom-scrollbar card p-5 space-y-5 shadow-2xl"
       style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold font-heading text-[var(--foreground)]">
           Quick Actions
@@ -201,7 +194,6 @@ function CustomizerPanel({
         </button>
       </div>
 
-      {/* Position */}
       <div className="space-y-1.5">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
           Position
@@ -226,7 +218,6 @@ function CustomizerPanel({
         </div>
       </div>
 
-      {/* Actions */}
       <div className="space-y-1.5">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
           Actions ({prefs.items.length}/{MAX_ITEMS})
@@ -253,7 +244,7 @@ function CustomizerPanel({
                 <Icon
                   size={16}
                   strokeWidth={1.75}
-                  className={cn(isSelected ? action.color : "text-muted")}
+                  className={cn(isSelected ? "text-primary-500" : "text-muted")}
                   aria-hidden="true"
                 />
                 <span className={cn("text-xs font-medium flex-1", isSelected ? "text-[var(--foreground)]" : "text-muted")}>
@@ -289,8 +280,7 @@ export function QuickActions({ role }: QuickActionsProps) {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [prefs, setPrefs] = useState<QuickActionsPrefs>(() => loadPrefs(role));
   const [mounted, setMounted] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [delta, setDelta] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -334,23 +324,6 @@ export function QuickActions({ role }: QuickActionsProps) {
     [role],
   );
 
-  function handleToggle() {
-    if (showCustomizer) {
-      setShowCustomizer(false);
-      return;
-    }
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const targetX = window.innerWidth / 2;
-      const targetY = window.innerHeight * ANCHOR_Y_PERCENT;
-      setDelta({
-        x: targetX - rect.left - rect.width / 2,
-        y: targetY - rect.top - rect.height / 2,
-      });
-    }
-    setOpen((v) => !v);
-  }
-
   /* ── Guards ──────────────────────────────────────────────────────────── */
 
   if (!mounted) return null;
@@ -363,23 +336,17 @@ export function QuickActions({ role }: QuickActionsProps) {
     .filter((a): a is QuickActionDef => a != null);
 
   const { position } = prefs;
+  const expH = expandedHeight(activeActions.length);
 
-  /* ── Animation presets ───────────────────────────────────────────────── */
+  /* ── Springs ─────────────────────────────────────────────────────────── */
 
-  // GPU-only properties: transform + opacity.  No filter, no blur.
-  const btnSpring = prefersReduced
-    ? { duration: 0.05 }
-    : { type: "spring" as const, stiffness: 380, damping: 26 };
-  const itemSpring = prefersReduced
-    ? { duration: 0.05 }
-    : { type: "spring" as const, stiffness: 320, damping: 22 };
-
-  /** Anchor point expressed as CSS top% for absolutely-positioned children. */
-  const anchorTop = `${ANCHOR_Y_PERCENT * 100}%`;
+  const containerSpring = prefersReduced
+    ? { duration: 0.1 }
+    : { type: "spring" as const, stiffness: 420, damping: 28 };
 
   return (
     <>
-      {/* ── Backdrop (no blur — pure opacity for perf) ──────────────────── */}
+      {/* ── Backdrop ────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -387,7 +354,7 @@ export function QuickActions({ role }: QuickActionsProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: prefersReduced ? 0.05 : 0.2 }}
-            className="fixed inset-0 bg-black/70 z-[9990]"
+            className="fixed inset-0 bg-black/50 z-[9990]"
             onClick={() => {
               setOpen(false);
               setShowCustomizer(false);
@@ -397,102 +364,132 @@ export function QuickActions({ role }: QuickActionsProps) {
         )}
       </AnimatePresence>
 
-      {/* ── Items (single layer, GPU-composited) ────────────────────────── */}
-      <AnimatePresence>
-        {open &&
-          !showCustomizer &&
-          activeActions.map((action, i) => {
-            const pos = getItemPosition(i, activeActions.length);
-            const Icon = action.icon;
-            const isAbove = pos.y <= 0;
-            return (
-              <motion.div
-                key={action.id}
-                className="fixed z-[9992] pointer-events-auto"
-                style={{
-                  top: anchorTop,
-                  left: "50%",
-                  marginLeft: -28,
-                  marginTop: -28,
-                  width: 56,
-                  height: 56,
-                  willChange: "transform, opacity",
-                }}
-                initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                animate={{ x: pos.x, y: pos.y, scale: 1, opacity: 1 }}
-                exit={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                transition={{
-                  ...itemSpring,
-                  delay: prefersReduced ? 0 : 0.04 + i * 0.055,
-                }}
-              >
-                <Link
-                  href={action.href}
-                  onClick={() => setOpen(false)}
-                  className="w-14 h-14 rounded-full bg-primary-500 flex items-center justify-center shadow-lg shadow-primary-500/30 hover:brightness-110 active:scale-90 transition-[transform,filter] duration-150"
-                  aria-label={action.label}
-                >
-                  <Icon
-                    size={22}
-                    strokeWidth={1.75}
-                    className="text-white"
-                    aria-hidden="true"
-                  />
-                </Link>
+      {/* ── Morphing container ───────────────────────────────────────────── */}
+      <motion.div
+        ref={containerRef}
+        className={cn(
+          "fixed z-[9995] bg-primary-500 overflow-hidden shadow-xl shadow-primary-900/30",
+          position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
+        )}
+        style={{
+          bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
+          willChange: "width, height, border-radius",
+        }}
+        animate={{
+          width: open ? EXPANDED_W : FAB_SIZE,
+          height: open ? expH : FAB_SIZE,
+          borderRadius: open ? 22 : FAB_SIZE / 2,
+        }}
+        transition={containerSpring}
+        aria-expanded={open}
+        role="region"
+        aria-label="Quick actions"
+      >
+        {/* ── Collapsed: + icon (always rendered, fades) ─────────────────── */}
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          animate={{ opacity: open ? 0 : 1, scale: open ? 0.5 : 1 }}
+          transition={{ duration: 0.15 }}
+        >
+          <Plus
+            size={24}
+            strokeWidth={2.5}
+            className="text-white"
+            aria-hidden="true"
+          />
+        </motion.div>
 
-                <motion.span
-                  className={cn(
-                    "absolute left-1/2 -translate-x-1/2",
-                    "whitespace-nowrap text-[11px] font-semibold text-white/90",
-                    "pointer-events-none select-none",
-                    isAbove ? "top-full mt-2.5" : "bottom-full mb-2.5",
-                  )}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+        {/* ── Expanded content ───────────────────────────────────────────── */}
+        <motion.div
+          className="flex flex-col h-full"
+          animate={{ opacity: open ? 1 : 0 }}
+          transition={{ duration: 0.12, delay: open ? 0.1 : 0 }}
+        >
+          {/* Items */}
+          <div className="flex-1 pt-2 pb-1">
+            {activeActions.map((action, i) => {
+              const Icon = action.icon;
+              return (
+                <motion.div
+                  key={action.id}
+                  animate={{
+                    opacity: open ? 1 : 0,
+                    x: open ? 0 : position === "right" ? 20 : -20,
+                  }}
                   transition={{
-                    delay: prefersReduced ? 0 : 0.2 + i * 0.04,
-                    duration: 0.15,
+                    duration: prefersReduced ? 0.05 : 0.2,
+                    delay: open ? (prefersReduced ? 0 : 0.12 + i * 0.04) : 0,
+                    ease: "easeOut",
                   }}
                 >
-                  {action.label}
-                </motion.span>
-              </motion.div>
-            );
-          })}
-      </AnimatePresence>
+                  <Link
+                    href={action.href}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-2xl hover:bg-white/[0.12] active:bg-white/[0.18] active:scale-[0.98] transition-all duration-150"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-white/[0.15] flex items-center justify-center shrink-0">
+                      <Icon
+                        size={18}
+                        strokeWidth={1.75}
+                        className="text-white"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <span className="text-[13px] font-semibold text-white">
+                      {action.label}
+                    </span>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
 
-      {/* ── Settings gear ───────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {open && !showCustomizer && (
-          <motion.button
-            className="fixed z-[9992] pointer-events-auto w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-            style={{
-              top: anchorTop,
-              left: "50%",
-              marginLeft: -18,
-              marginTop: 42,
+          {/* Footer: customize + close */}
+          <motion.div
+            className="flex items-center justify-between px-4 h-[52px] border-t border-white/[0.12]"
+            animate={{ opacity: open ? 1 : 0 }}
+            transition={{
+              duration: 0.15,
+              delay: open ? (prefersReduced ? 0 : 0.2) : 0,
             }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowCustomizer(true);
-            }}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            transition={{ ...btnSpring, delay: prefersReduced ? 0 : 0.25 }}
-            aria-label="Customize quick actions"
           >
-            <Settings
-              size={15}
-              strokeWidth={1.75}
-              className="text-white/60"
-              aria-hidden="true"
-            />
-          </motion.button>
-        )}
-      </AnimatePresence>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowCustomizer(true);
+              }}
+              className="flex items-center gap-1.5 text-white/50 hover:text-white/80 transition-colors"
+              aria-label="Customize quick actions"
+            >
+              <Settings
+                size={13}
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+              <span className="text-[11px] font-medium">Customize</span>
+            </button>
 
-      {/* ── Customizer panel ─────────────────────────────────────────────── */}
+            <button
+              onClick={() => setOpen(false)}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.12] transition-colors"
+              aria-label="Close quick actions"
+            >
+              <X size={16} strokeWidth={2} aria-hidden="true" />
+            </button>
+          </motion.div>
+        </motion.div>
+
+        {/* ── Click target when collapsed ─────────────────────────────────── */}
+        {!open && (
+          <button
+            className="absolute inset-0 w-full h-full cursor-pointer"
+            onClick={() => setOpen(true)}
+            aria-label="Open quick actions"
+          />
+        )}
+      </motion.div>
+
+      {/* ── Customizer modal ─────────────────────────────────────────────── */}
       <AnimatePresence>
         {open && showCustomizer && (
           <CustomizerPanel
@@ -504,42 +501,6 @@ export function QuickActions({ role }: QuickActionsProps) {
           />
         )}
       </AnimatePresence>
-
-      {/* ── FAB button (springs corner → bottom-third center) ────────────── */}
-      <motion.button
-        ref={buttonRef}
-        onClick={handleToggle}
-        animate={
-          open
-            ? { x: delta.x, y: delta.y, scale: 1.14 }
-            : { x: 0, y: 0, scale: 1 }
-        }
-        transition={btnSpring}
-        style={{
-          bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
-          willChange: "transform",
-        }}
-        className={cn(
-          "fixed z-[9995] w-14 h-14 rounded-full",
-          "flex items-center justify-center",
-          "bg-primary-500 text-white shadow-xl shadow-primary-500/25",
-          "hover:bg-primary-600 active:scale-95",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
-          "focus:ring-offset-2 focus:ring-offset-[var(--background)]",
-          "transition-colors",
-          position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
-        )}
-        aria-label={open ? "Close quick actions" : "Open quick actions"}
-        aria-expanded={open}
-        aria-haspopup="true"
-      >
-        <motion.div
-          animate={{ rotate: open ? 45 : 0 }}
-          transition={btnSpring}
-        >
-          <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
-        </motion.div>
-      </motion.button>
     </>
   );
 }
