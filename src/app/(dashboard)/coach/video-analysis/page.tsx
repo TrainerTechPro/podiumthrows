@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Video, Upload } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VideoAnalysisCard } from "@/components/video-analysis/VideoAnalysisCard";
+import { AthleteFilter } from "./_athlete-filter";
 
 export const metadata = { title: "Video Analysis — Podium Throws" };
 
@@ -84,22 +85,12 @@ export default async function VideoAnalysisPage({
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Athlete filter */}
-        <select
-          defaultValue={searchParams.athleteId || ""}
-          onChange={() => {
-            // Server component — use link-based filtering via event pills
-          }}
-          className="input text-sm w-44"
-          aria-label="Filter by athlete"
-        >
-          <option value="">All Athletes</option>
-          {athletes.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.firstName} {a.lastName}
-            </option>
-          ))}
-        </select>
+        {/* Athlete filter (client component — needs onChange for navigation) */}
+        <AthleteFilter
+          athletes={athletes}
+          currentAthleteId={searchParams.athleteId || ""}
+          currentEvent={searchParams.event || ""}
+        />
 
         {/* Event pills */}
         <div className="flex items-center gap-1.5">
