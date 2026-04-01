@@ -228,7 +228,7 @@ export function usePoseDetection(): UsePoseDetectionReturn {
               "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task",
             delegate: "GPU",
           },
-          runningMode: "IMAGE",
+          runningMode: "VIDEO",
           numPoses: 1,
           minPoseDetectionConfidence: 0.5,
           minPosePresenceConfidence: 0.5,
@@ -259,7 +259,9 @@ export function usePoseDetection(): UsePoseDetectionReturn {
       if (!landmarkerRef.current) return null;
 
       try {
-        const result = landmarkerRef.current.detect(video);
+        // Use detectForVideo with monotonic timestamp (performance.now())
+        // so temporal tracking works even when scrubbing backward
+        const result = landmarkerRef.current.detectForVideo(video, performance.now());
 
         if (result.landmarks && result.landmarks.length > 0) {
           const landmarks: PoseLandmark[] = result.landmarks[0].map(

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireCoachApi } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
+import { deleteFile } from "@/lib/r2";
 
 /* ── GET — fetch single analysis ── */
 export async function GET(
@@ -89,16 +90,38 @@ export async function DELETE(
     const { coach } = await requireCoachApi();
     const { id } = params;
 
-    // Verify ownership
+    // Fetch full record to get file URLs for cleanup
     const existing = await prisma.videoAnalysis.findUnique({
       where: { id },
-      select: { coachId: true },
+      select: { coachId: true, videoUrl: true, thumbnailUrl: true },
     });
     if (!existing || existing.coachId !== coach.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    // Delete DB record first, then clean up files (best-effort)
     await prisma.videoAnalysis.delete({ where: { id } });
+
+    // Clean up stored files — extract storage key from URL
+    const extractKey = (url: string): string | null => {
+      const match = url.match(/(video-analysis\/[^?#]+)/);
+      return match ? match[1] : null;
+    };
+
+    const videoKey = extractKey(existing.videoUrl);
+    if (videoKey) {
+      try { await deleteFile(videoKey); } catch (err) {
+        logger.error("Failed to delete video file", { context: "api", metadata: { key: videoKey }, error: err });
+      }
+    }
+    if (existing.thumbnailUrl) {
+      const thumbKey = extractKey(existing.thumbnailUrl);
+      if (thumbKey) {
+        try { await deleteFile(thumbKey); } catch (err) {
+          logger.error("Failed to delete thumbnail file", { context: "api", metadata: { key: thumbKey }, error: err });
+        }
+      }
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

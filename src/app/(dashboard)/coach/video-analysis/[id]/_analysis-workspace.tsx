@@ -16,6 +16,7 @@ import {
   Save,
 } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { useToast } from "@/components/ui/Toast";
 import { VideoPlayer, type VideoPlayerHandle } from "@/components/video/VideoPlayer";
 import { PoseOverlay } from "@/components/video/PoseOverlay";
 import { usePoseDetection, type PoseResult } from "@/components/video/usePoseDetection";
@@ -73,6 +74,7 @@ const TABS: { id: TabId; label: string }[] = [
 
 export function AnalysisWorkspace({ analysis }: Props) {
   const router = useRouter();
+  const { success, error: showError } = useToast();
   const videoRef = useRef<VideoPlayerHandle>(null);
 
   // Playback state
@@ -229,7 +231,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
   async function handleSave() {
     setSaving(true);
     try {
-      await fetch(`/api/video-analysis/${analysis.id}`, {
+      const res = await fetch(`/api/video-analysis/${analysis.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
@@ -239,8 +241,13 @@ export function AnalysisWorkspace({ analysis }: Props) {
           fps,
         }),
       });
-    } catch {
-      // Silent — we'll add toast later
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Save failed");
+      }
+      success("Analysis saved");
+    } catch (err) {
+      showError("Failed to save", err instanceof Error ? err.message : "Please try again");
     } finally {
       setSaving(false);
     }
@@ -252,12 +259,18 @@ export function AnalysisWorkspace({ analysis }: Props) {
     if (!confirm("Delete this video analysis? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      await fetch(`/api/video-analysis/${analysis.id}`, {
+      const res = await fetch(`/api/video-analysis/${analysis.id}`, {
         method: "DELETE",
         headers: csrfHeaders(),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Delete failed");
+      }
+      success("Analysis deleted");
       router.push("/coach/video-analysis");
-    } catch {
+    } catch (err) {
+      showError("Failed to delete", err instanceof Error ? err.message : "Please try again");
       setDeleting(false);
     }
   }
