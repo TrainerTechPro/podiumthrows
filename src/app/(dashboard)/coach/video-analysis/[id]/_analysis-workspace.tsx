@@ -15,6 +15,7 @@ import {
   Trash2,
   Save,
   Check,
+  Pencil,
 } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
@@ -79,6 +80,11 @@ export function AnalysisWorkspace({ analysis }: Props) {
   const router = useRouter();
   const { success, error: showError } = useToast();
   const videoRef = useRef<VideoPlayerHandle>(null);
+
+  // Editable metadata
+  const [title, setTitle] = useState(analysis.title);
+  const [description, setDescription] = useState(analysis.description || "");
+  const [editingTitle, setEditingTitle] = useState(false);
 
   // Playback state
   const [currentTime, setCurrentTime] = useState(0);
@@ -363,6 +369,28 @@ export function AnalysisWorkspace({ analysis }: Props) {
     }
   }
 
+  /* ── Save title/description ─────────────────────────────────────────── */
+
+  async function handleSaveTitle() {
+    setEditingTitle(false);
+    if (title.trim() === analysis.title && description.trim() === (analysis.description || "")) return;
+    try {
+      const res = await fetch(`/api/video-analysis/${analysis.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({
+          title: title.trim() || analysis.title,
+          description: description.trim() || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+    } catch {
+      showError("Failed to update title");
+      setTitle(analysis.title);
+      setDescription(analysis.description || "");
+    }
+  }
+
   /* ── Delete analysis ────────────────────────────────────────────────── */
 
   async function handleDelete() {
@@ -449,12 +477,13 @@ export function AnalysisWorkspace({ analysis }: Props) {
             aria-label="Delete analysis"
           >
             <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+            <span className="sm:hidden">Delete</span>
           </button>
           <ConfirmDialog
             open={showDeleteConfirm}
             onClose={() => setShowDeleteConfirm(false)}
             onConfirm={handleDelete}
-            title="Delete Video Analysis"
+            title="Delete Analysis"
             description="This will permanently delete the analysis, annotations, and key positions. This cannot be undone."
             confirmLabel="Delete"
             variant="danger"
@@ -463,13 +492,48 @@ export function AnalysisWorkspace({ analysis }: Props) {
         </div>
       </div>
 
-      {/* Header */}
+      {/* Header — inline editable title + description */}
       <div>
-        <h1 className="text-xl font-bold text-[var(--foreground)]">{analysis.title}</h1>
-        <p className="text-sm text-muted mt-0.5">
-          {analysis.athlete.firstName} {analysis.athlete.lastName} · {EVENT_LABELS[analysis.event] || analysis.event}
-          {analysis.description && ` · ${analysis.description}`}
-        </p>
+        {editingTitle ? (
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleSaveTitle}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(); if (e.key === "Escape") { setTitle(analysis.title); setDescription(analysis.description || ""); setEditingTitle(false); } }}
+              className="input text-xl font-bold w-full"
+              maxLength={200}
+              autoFocus
+            />
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              onBlur={handleSaveTitle}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(); if (e.key === "Escape") { setTitle(analysis.title); setDescription(analysis.description || ""); setEditingTitle(false); } }}
+              placeholder="Add a description…"
+              className="input text-sm w-full"
+              maxLength={2000}
+            />
+          </div>
+        ) : (
+          <div className="group">
+            <button
+              type="button"
+              onClick={() => setEditingTitle(true)}
+              className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+              aria-label="Edit title and description"
+            >
+              <h1 className="text-xl font-bold text-[var(--foreground)]">{title}</h1>
+              <Pencil size={14} strokeWidth={2} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
+            </button>
+            <p className="text-sm text-muted mt-0.5">
+              {analysis.athlete.firstName} {analysis.athlete.lastName} · {EVENT_LABELS[analysis.event] || analysis.event}
+              {description && ` · ${description}`}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Main Layout: Video + Panel */}
@@ -593,7 +657,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
                           key={s}
                           type="button"
                           onClick={() => handleSpeedChange(s)}
-                          className={`block w-full px-3 py-1 text-xs text-left font-mono transition-colors ${
+                          className={`block w-full px-3 py-2 text-xs text-left font-mono transition-colors ${
                             speed === s
                               ? "text-primary-500 bg-primary-500/10"
                               : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"

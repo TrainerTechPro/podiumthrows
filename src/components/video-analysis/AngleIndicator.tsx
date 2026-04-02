@@ -70,7 +70,7 @@ export function AngleIndicator({ label, degrees, status, compact = false, optima
   return (
     <div className={`rounded-lg p-3 ${colors.bg} ${colors.glow} transition-all duration-200`} aria-label={`${label}: ${degrees}° (${status})${rangeText ? `, ${rangeText}` : ""}`}>
       <div className="flex items-center justify-between mb-1">
-        <p className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+        <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">
           {label}
         </p>
         <span className={`text-[10px] font-bold ${colors.text}`} aria-hidden="true">{colors.label}</span>

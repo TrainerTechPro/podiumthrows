@@ -337,6 +337,7 @@ export function VideoUploadForm({ athletes }: Props) {
                 Drag & drop a video, or click to browse
               </p>
               <p className="text-xs text-muted">MP4, MOV, or WebM — up to 200MB</p>
+              <p className="text-xs text-surface-500 mt-0.5">Best results with 720p or 1080p at 30–60fps</p>
             </div>
           )}
         </div>

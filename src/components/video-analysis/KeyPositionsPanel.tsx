@@ -58,7 +58,7 @@ export function KeyPositionsPanel({
     <div className="space-y-4">
       {/* Mark Position Controls */}
       <div className="space-y-2">
-        <p className="text-[10px] font-bold text-muted uppercase tracking-wider">
+        <p className="text-[11px] font-bold text-muted uppercase tracking-wider">
           Mark Position
         </p>
 
@@ -101,7 +101,7 @@ export function KeyPositionsPanel({
       {/* Saved Positions */}
       {positions.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[10px] font-bold text-muted uppercase tracking-wider">
+          <p className="text-[11px] font-bold text-muted uppercase tracking-wider">
             Saved Positions ({positions.length})
           </p>
 
@@ -183,7 +183,7 @@ export function KeyPositionsPanel({
                       <div>
                         <div className="flex items-center gap-1 mb-1">
                           <MessageSquare size={12} strokeWidth={2} className="text-muted" aria-hidden="true" />
-                          <span className="text-[10px] text-muted uppercase font-semibold tracking-wider">Notes</span>
+                          <span className="text-[11px] text-muted uppercase font-semibold tracking-wider">Notes</span>
                         </div>
                         <textarea
                           value={pos.notes}

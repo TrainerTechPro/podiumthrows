@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { VideoUploadForm } from "@/components/video-analysis/VideoUploadForm";
 
-export const metadata = { title: "Upload Video — Video Analysis — Podium Throws" };
+export const metadata = { title: "Upload Video — Pose Analysis — Podium Throws" };
 
 export default async function VideoAnalysisUploadPage() {
   let coach;
@@ -28,7 +28,7 @@ export default async function VideoAnalysisUploadPage() {
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-sm text-muted">
         <Link href="/coach/video-analysis" className="hover:text-[var(--foreground)] transition-colors">
-          Video Analysis
+          Pose Analysis
         </Link>
         <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
         <span className="text-[var(--foreground)]">Upload</span>

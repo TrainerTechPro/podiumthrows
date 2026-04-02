@@ -9,7 +9,7 @@ import { AnalysisSummary, type LatestInsight } from "@/components/video-analysis
 import { getAnglesWithStatus, type ThrowAngles } from "@/lib/pose-angles";
 import { AthleteFilter } from "./_athlete-filter";
 
-export const metadata = { title: "Video Analysis — Podium Throws" };
+export const metadata = { title: "Pose Analysis — Podium Throws" };
 
 type SearchParams = {
   athleteId?: string;
@@ -126,7 +126,7 @@ export default async function VideoAnalysisPage({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Video Analysis</h1>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">Pose Analysis</h1>
         </div>
         <Link href="/coach/video-analysis/upload" className="btn-primary flex items-center gap-1.5">
           <Upload size={16} strokeWidth={2} aria-hidden="true" />

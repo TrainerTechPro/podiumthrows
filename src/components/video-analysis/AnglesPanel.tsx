@@ -69,7 +69,7 @@ export function AnglesPanel({ angles, isDetecting, onEnablePose }: Props) {
     <div className="space-y-4">
       {/* Primary biomechanical angles */}
       <div>
-        <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2">
+        <p className="text-[11px] font-bold text-muted uppercase tracking-wider mb-2">
           Biomechanics
         </p>
         <div className="grid grid-cols-2 gap-2">
@@ -87,7 +87,7 @@ export function AnglesPanel({ angles, isDetecting, onEnablePose }: Props) {
 
       {/* Secondary joint angles */}
       <div>
-        <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-2">
+        <p className="text-[11px] font-bold text-muted uppercase tracking-wider mb-2">
           Joint Angles
         </p>
         <div className="space-y-1">

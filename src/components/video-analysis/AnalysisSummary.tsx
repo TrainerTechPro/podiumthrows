@@ -80,7 +80,7 @@ export function AnalysisSummary({
 
           {/* ── Zone 1: Activity ── */}
           <div className="md:pr-6 md:border-r md:border-surface-200 md:dark:border-surface-700/60">
-            <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">
+            <p className="text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">
               Activity
             </p>
             <div className="flex items-baseline gap-1.5">
@@ -109,7 +109,7 @@ export function AnalysisSummary({
 
           {/* ── Zone 2: Event Distribution ── */}
           <div className="md:px-6 md:border-r md:border-surface-200 md:dark:border-surface-700/60">
-            <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">
+            <p className="text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">
               By Event
             </p>
             {activeEvents.length > 0 ? (
@@ -142,7 +142,7 @@ export function AnalysisSummary({
 
           {/* ── Zone 3: Latest Insight ── */}
           <div className="md:pl-6">
-            <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1.5">
+            <p className="text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">
               Latest Analysis
             </p>
             {latestInsight ? (

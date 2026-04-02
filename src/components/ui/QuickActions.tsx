@@ -63,7 +63,7 @@ const COACH_ACTIONS: QuickActionDef[] = [
   { id: "practice", label: "Live Practice", icon: Radio, href: "/coach/throws/practice", color: "text-emerald-500" },
   { id: "log-session", label: "Log Session", icon: ClipboardList, href: "/coach/log-session", color: "text-primary-500" },
   { id: "builder", label: "Session Builder", icon: Layers, href: "/coach/throws/builder", color: "text-blue-500" },
-  { id: "video-analysis", label: "Video Analysis", icon: ScanLine, href: "/coach/video-analysis", color: "text-purple-500" },
+  { id: "video-analysis", label: "Pose Analysis", icon: ScanLine, href: "/coach/video-analysis", color: "text-purple-500" },
   { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-500" },
   { id: "programs", label: "Programs", icon: FileText, href: "/coach/plans", color: "text-amber-500" },
   { id: "tools", label: "Tools", icon: Wrench, href: "/coach/tools", color: "text-indigo-500" },
