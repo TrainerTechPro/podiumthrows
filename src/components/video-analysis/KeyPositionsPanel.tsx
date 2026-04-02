@@ -173,6 +173,7 @@ export function KeyPositionsPanel({
                             label={angle.label}
                             degrees={angle.degrees}
                             status={angle.status}
+                            optimalRange={angle.optimalRange}
                             compact
                           />
                         ))}

@@ -9,6 +9,7 @@ type Props = {
   degrees: number;
   status: AngleStatus;
   compact?: boolean;
+  optimalRange?: { min: number; max: number };
 };
 
 /* ─── Status Colors ────────────────────────────────────────────────────────── */
@@ -36,12 +37,16 @@ const STATUS_COLORS: Record<AngleStatus, { text: string; bg: string; glow: strin
 
 /* ─── Component ────────────────────────────────────────────────────────────── */
 
-export function AngleIndicator({ label, degrees, status, compact = false }: Props) {
+export function AngleIndicator({ label, degrees, status, compact = false, optimalRange }: Props) {
   const colors = STATUS_COLORS[status];
+  const rangeText = optimalRange ? `optimal: ${optimalRange.min}°–${optimalRange.max}°` : undefined;
 
   if (compact) {
     return (
-      <div className={`flex items-center justify-between px-2 py-1 rounded ${colors.bg}`} aria-label={`${label}: ${degrees}° (${status})`}>
+      <div
+        className={`group relative flex items-center justify-between px-2 py-1 rounded ${colors.bg}`}
+        aria-label={`${label}: ${degrees}° (${status})${rangeText ? `, ${rangeText}` : ""}`}
+      >
         <span className="text-xs text-muted truncate">{label}</span>
         <span className="flex items-center gap-1">
           <span className={`text-[10px] font-bold ${colors.text}`} aria-hidden="true">{colors.label}</span>
@@ -49,12 +54,21 @@ export function AngleIndicator({ label, degrees, status, compact = false }: Prop
             {degrees}°
           </span>
         </span>
+        {/* Tooltip on hover/focus */}
+        {rangeText && (
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute right-0 -top-7 z-10 whitespace-nowrap rounded bg-surface-800 px-2 py-0.5 text-[10px] text-surface-200 opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+          >
+            {rangeText}
+          </span>
+        )}
       </div>
     );
   }
 
   return (
-    <div className={`rounded-lg p-3 ${colors.bg} ${colors.glow} transition-all duration-200`} aria-label={`${label}: ${degrees}° (${status})`}>
+    <div className={`rounded-lg p-3 ${colors.bg} ${colors.glow} transition-all duration-200`} aria-label={`${label}: ${degrees}° (${status})${rangeText ? `, ${rangeText}` : ""}`}>
       <div className="flex items-center justify-between mb-1">
         <p className="text-[10px] font-semibold text-muted uppercase tracking-wider">
           {label}
@@ -64,6 +78,11 @@ export function AngleIndicator({ label, degrees, status, compact = false }: Prop
       <p className={`text-xl font-bold tabular-nums font-mono ${colors.text}`}>
         {degrees}°
       </p>
+      {rangeText && (
+        <p className="text-[10px] text-surface-500 mt-0.5 font-mono tabular-nums">
+          {rangeText}
+        </p>
+      )}
     </div>
   );
 }

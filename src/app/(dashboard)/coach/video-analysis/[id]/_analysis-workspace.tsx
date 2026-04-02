@@ -24,6 +24,7 @@ import { PLAYBACK_SPEEDS, formatTimestamp } from "@/components/video/types";
 import { calculateThrowAngles, type ThrowAngles } from "@/lib/pose-angles";
 import { AnglesPanel } from "@/components/video-analysis/AnglesPanel";
 import { KeyPositionsPanel, type KeyPosition } from "@/components/video-analysis/KeyPositionsPanel";
+import { MiniPlayer } from "@/components/video-analysis/MiniPlayer";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
@@ -91,6 +92,28 @@ export function AnalysisWorkspace({ analysis }: Props) {
   const [currentPose, setCurrentPose] = useState<PoseResult | null>(null);
   const [throwAngles, setThrowAngles] = useState<ThrowAngles | null>(null);
   const detectingRef = useRef(false);
+
+  // Mini-player (mobile): show when video scrolls out of view
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const [showMiniPlayer, setShowMiniPlayer] = useState(false);
+
+  useEffect(() => {
+    const videoEl = videoContainerRef.current;
+    if (!videoEl) return;
+
+    // Use the <main> scroll container as observer root
+    const scrollRoot = document.getElementById("main-content");
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowMiniPlayer(!entry.isIntersecting);
+      },
+      { root: scrollRoot, threshold: 0.3 }
+    );
+
+    observer.observe(videoEl);
+    return () => observer.disconnect();
+  }, []);
 
   // Panel state
   const [activeTab, setActiveTab] = useState<TabId>("angles");
@@ -291,6 +314,20 @@ export function AnalysisWorkspace({ analysis }: Props) {
 
   return (
     <div className="space-y-4 animate-spring-up">
+      {/* Sticky mini-player for mobile — appears when video scrolls out of view */}
+      <MiniPlayer
+        visible={showMiniPlayer}
+        isPlaying={isPlaying}
+        currentTime={currentTime}
+        duration={duration}
+        frameStep={frameStep}
+        thumbnailUrl={analysis.thumbnailUrl || undefined}
+        onPlayPause={handlePlayPause}
+        onStepForward={handleStepForward}
+        onStepBackward={handleStepBackward}
+        onSeek={handleSeek}
+      />
+
       {/* Breadcrumbs + Actions */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <nav className="flex items-center gap-1.5 text-sm text-muted">
@@ -349,7 +386,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
         {/* Video Section (60%) */}
         <div className="lg:w-[60%] space-y-3">
           {/* Video with Pose Overlay */}
-          <div className="relative rounded-xl overflow-hidden bg-black border border-surface-200 dark:border-surface-700">
+          <div ref={videoContainerRef} className="relative rounded-xl overflow-hidden bg-black border border-surface-200 dark:border-surface-700">
             <VideoPlayer
               ref={videoRef}
               src={analysis.videoUrl}

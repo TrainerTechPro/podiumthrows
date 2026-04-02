@@ -64,6 +64,7 @@ export function AnglesPanel({ angles, isDetecting }: Props) {
               label={angle.label}
               degrees={angle.degrees}
               status={angle.status}
+              optimalRange={angle.optimalRange}
             />
           ))}
         </div>
@@ -81,6 +82,7 @@ export function AnglesPanel({ angles, isDetecting }: Props) {
               label={angle.label}
               degrees={angle.degrees}
               status={angle.status}
+              optimalRange={angle.optimalRange}
               compact
             />
           ))}

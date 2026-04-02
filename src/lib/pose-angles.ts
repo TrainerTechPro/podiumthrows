@@ -23,6 +23,7 @@ export type ThrowAngleResult = {
   label: string;
   degrees: number;
   status: AngleStatus;
+  optimalRange: { min: number; max: number };
 };
 
 export type ThrowAngles = {
@@ -270,5 +271,6 @@ export function getAnglesWithStatus(angles: ThrowAngles): ThrowAngleResult[] {
     label: ANGLE_LABELS[key] || key,
     degrees: Math.round(degrees),
     status: getAngleStatus(key, degrees),
+    optimalRange: DEFAULT_RANGES[key]?.optimal ?? { min: 0, max: 360 },
   }));
 }
