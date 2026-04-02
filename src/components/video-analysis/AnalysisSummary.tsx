@@ -49,6 +49,12 @@ const STATUS_DOT: Record<string, string> = {
   concerning: "bg-danger-500",
 };
 
+const STATUS_SYMBOL: Record<string, string> = {
+  optimal: "✓",
+  marginal: "~",
+  concerning: "!",
+};
+
 /* ─── Component ────────────────────────────────────────────────────────────── */
 
 export function AnalysisSummary({
@@ -167,7 +173,8 @@ export function AnalysisSummary({
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     {latestInsight.angles.map((angle) => (
                       <div key={angle.key} className="flex items-center gap-1.5">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[angle.status]}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[angle.status]}`} aria-hidden="true" />
+                        <span className={`text-[10px] font-bold ${angle.status === "optimal" ? "text-success-500" : angle.status === "marginal" ? "text-warning-500" : "text-danger-500"}`} aria-hidden="true">{STATUS_SYMBOL[angle.status]}</span>
                         <span className="text-[11px] text-muted">{angle.label}</span>
                         <span className="text-xs font-mono tabular-nums text-[var(--foreground)]">
                           {angle.degrees}°

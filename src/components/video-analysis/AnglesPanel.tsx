@@ -108,15 +108,15 @@ export function AnglesPanel({ angles, isDetecting, onEnablePose }: Props) {
       {/* Legend */}
       <div className="flex items-center gap-3 pt-2 border-t border-surface-200 dark:border-surface-700">
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-success-500" />
+          <span className="text-[10px] font-bold text-success-500" aria-hidden="true">✓</span>
           <span className="text-[10px] text-muted">Optimal</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-warning-500" />
+          <span className="text-[10px] font-bold text-warning-500" aria-hidden="true">~</span>
           <span className="text-[10px] text-muted">Marginal</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-danger-500" />
+          <span className="text-[10px] font-bold text-danger-500" aria-hidden="true">!</span>
           <span className="text-[10px] text-muted">Concerning</span>
         </div>
       </div>
