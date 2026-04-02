@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Video, Upload } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VideoAnalysisCard } from "@/components/video-analysis/VideoAnalysisCard";
+import { AnalysisSummary, type LatestInsight } from "@/components/video-analysis/AnalysisSummary";
+import { getAnglesWithStatus, type ThrowAngles } from "@/lib/pose-angles";
 import { AthleteFilter } from "./_athlete-filter";
 
 export const metadata = { title: "Video Analysis — Podium Throws" };
@@ -59,6 +61,58 @@ export default async function VideoAnalysisPage({
     { value: "JAVELIN", label: "Javelin" },
   ];
 
+  // ── Summary stats ──────────────────────────────────────────────────────
+  const completedCount = analyses.filter((a) => a.status === "COMPLETED").length;
+  const eventCounts: Record<string, number> = {};
+  for (const a of analyses) {
+    eventCounts[a.event] = (eventCounts[a.event] || 0) + 1;
+  }
+
+  // Latest completed analysis with key angle data
+  const SUMMARY_ANGLE_KEYS = ["shoulderSeparation", "hipShoulderDifferential", "blockLegKnee"];
+  const SUMMARY_LABELS: Record<string, string> = {
+    shoulderSeparation: "Shldr Sep",
+    hipShoulderDifferential: "Hip-Shldr",
+    blockLegKnee: "Block Knee",
+  };
+
+  let latestInsight: LatestInsight | null = null;
+  const latestCompleted = analyses.find(
+    (a) => a.status === "COMPLETED" && a.keyPositions,
+  );
+
+  if (latestCompleted) {
+    type KPJson = { positions?: Array<{ label: string; angles?: Record<string, number> }> };
+    const kp = latestCompleted.keyPositions as KPJson | null;
+    const positions = kp?.positions || [];
+    const bestPos = positions.find((p) => p.label === "Release") || positions[positions.length - 1];
+
+    let keyAngles: LatestInsight["angles"] = null;
+    if (bestPos?.angles) {
+      try {
+        const allAngles = getAnglesWithStatus(bestPos.angles as ThrowAngles);
+        keyAngles = allAngles
+          .filter((a) => SUMMARY_ANGLE_KEYS.includes(a.key))
+          .map((a) => ({
+            key: a.key,
+            label: SUMMARY_LABELS[a.key] || a.label,
+            degrees: a.degrees,
+            status: a.status,
+          }));
+      } catch {
+        // Malformed angle data in JSON — skip silently
+      }
+    }
+
+    latestInsight = {
+      id: latestCompleted.id,
+      title: latestCompleted.title,
+      event: latestCompleted.event,
+      athleteName: `${latestCompleted.athlete.firstName} ${latestCompleted.athlete.lastName}`,
+      angles: keyAngles,
+    };
+  }
+
   function buildFilterUrl(overrides: Record<string, string>) {
     const params = new URLSearchParams();
     const merged = { ...searchParams, ...overrides };
@@ -73,9 +127,6 @@ export default async function VideoAnalysisPage({
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Video Analysis</h1>
-          <p className="text-sm text-muted mt-0.5">
-            {analyses.length} analys{analyses.length === 1 ? "is" : "es"}
-          </p>
         </div>
         <Link href="/coach/video-analysis/upload" className="btn-primary flex items-center gap-1.5">
           <Upload size={16} strokeWidth={2} aria-hidden="true" />
@@ -112,6 +163,16 @@ export default async function VideoAnalysisPage({
           })}
         </div>
       </div>
+
+      {/* Summary — coaching intelligence brief */}
+      {analyses.length > 0 && (
+        <AnalysisSummary
+          totalCount={analyses.length}
+          completedCount={completedCount}
+          eventCounts={eventCounts}
+          latestInsight={latestInsight}
+        />
+      )}
 
       {/* Grid */}
       {analyses.length === 0 ? (
