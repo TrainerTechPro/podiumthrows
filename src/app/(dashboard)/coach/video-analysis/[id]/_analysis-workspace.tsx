@@ -14,6 +14,7 @@ import {
   Ruler,
   Trash2,
   Save,
+  Check,
 } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
@@ -123,9 +124,19 @@ export function AnalysisWorkspace({ analysis }: Props) {
     const kp = analysis.keyPositions as { positions?: KeyPosition[] } | null;
     return kp?.positions || [];
   });
-  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Auto-save state
+  const positionsRef = useRef(positions);
+  positionsRef.current = positions;
+  const durationRef = useRef(duration);
+  durationRef.current = duration;
+  const lastSavedJson = useRef(JSON.stringify(positions));
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const isSavingRef = useRef(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const isDirty = JSON.stringify(positions) !== lastSavedJson.current;
 
   // Frame step size
   const fps = analysis.fps || 30;
@@ -268,30 +279,87 @@ export function AnalysisWorkspace({ analysis }: Props) {
     );
   }
 
-  /* ── Save to API ────────────────────────────────────────────────────── */
+  /* ── Auto-save + Navigation Guard ───────────────────────────────────── */
 
-  async function handleSave() {
-    setSaving(true);
+  // Core save function — shared by auto-save, manual save, and visibility save
+  const performSave = useCallback(async (): Promise<boolean> => {
+    if (isSavingRef.current) return false;
+
+    const currentPositions = positionsRef.current;
+    const json = JSON.stringify(currentPositions);
+    if (json === lastSavedJson.current) return true; // Already saved
+
+    isSavingRef.current = true;
+    setSaveStatus("saving");
     try {
       const res = await fetch(`/api/video-analysis/${analysis.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
-          keyPositions: { positions },
+          keyPositions: { positions: currentPositions },
           status: "COMPLETED",
-          duration,
+          duration: durationRef.current,
           fps,
         }),
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error || "Save failed");
-      }
-      success("Analysis saved");
-    } catch (err) {
-      showError("Failed to save", err instanceof Error ? err.message : "Please try again");
+      if (!res.ok) throw new Error("Save failed");
+      lastSavedJson.current = json;
+      setSaveStatus("saved");
+      return true;
+    } catch {
+      setSaveStatus("idle");
+      return false;
     } finally {
-      setSaving(false);
+      isSavingRef.current = false;
+    }
+  }, [analysis.id, fps]);
+
+  // Auto-save: debounced 30s after positions change
+  useEffect(() => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+
+    if (JSON.stringify(positions) === lastSavedJson.current) return;
+
+    setSaveStatus("idle"); // Mark as unsaved
+
+    autoSaveTimer.current = setTimeout(() => {
+      performSave();
+    }, 30_000);
+
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [positions, performSave]);
+
+  // Save on visibility change (tab switch, app background)
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.hidden && JSON.stringify(positionsRef.current) !== lastSavedJson.current) {
+        performSave();
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [performSave]);
+
+  // beforeunload guard — warn on unsaved changes (browser close, refresh, external nav)
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (JSON.stringify(positionsRef.current) === lastSavedJson.current) return;
+      e.preventDefault();
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
+  // Manual save — flushes the auto-save timer and saves immediately
+  async function handleManualSave() {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    const ok = await performSave();
+    if (ok) {
+      success("Analysis saved");
+    } else if (!isSavingRef.current) {
+      showError("Failed to save", "Please try again");
     }
   }
 
@@ -350,12 +418,28 @@ export function AnalysisWorkspace({ analysis }: Props) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary text-sm flex items-center gap-1.5"
+            onClick={handleManualSave}
+            disabled={saveStatus === "saving" || !isDirty}
+            className={`text-sm flex items-center gap-1.5 transition-colors ${
+              isDirty ? "btn-primary" : "btn-secondary text-success-500"
+            }`}
           >
-            <Save size={14} strokeWidth={2} aria-hidden="true" />
-            {saving ? "Saving…" : "Save"}
+            {saveStatus === "saving" ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                Saving…
+              </>
+            ) : isDirty ? (
+              <>
+                <Save size={14} strokeWidth={2} aria-hidden="true" />
+                Save
+              </>
+            ) : (
+              <>
+                <Check size={14} strokeWidth={2} aria-hidden="true" />
+                Saved
+              </>
+            )}
           </button>
           <button
             type="button"
