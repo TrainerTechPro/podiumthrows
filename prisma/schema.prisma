@@ -323,12 +323,46 @@ model AthleteProfile {
   invitations      Invitation[]
   notifications    Notification[]
 
+  // Availability
+  availability          AthleteAvailability[]
+  availabilityOverrides AvailabilityOverride[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([coachId])
   @@index([userId])
   @@index([coachId, createdAt])
+}
+
+model AthleteAvailability {
+  id        String         @id @default(cuid())
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  dayOfWeek Int            // 0=Sunday...6=Saturday
+  startTime String         // "14:00" (24h format)
+  endTime   String         // "17:30"
+  type      String         // AVAILABLE | UNAVAILABLE | CONDITIONAL
+  label     String?        // "Class", "Work", "Open"
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([athleteId, dayOfWeek])
+}
+
+model AvailabilityOverride {
+  id        String         @id @default(cuid())
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  date      String         // "2026-04-15" (YYYY-MM-DD)
+  startTime String?        // null = whole day
+  endTime   String?
+  type      String         // AVAILABLE | UNAVAILABLE
+  reason    String?
+  createdAt DateTime       @default(now())
+
+  @@index([athleteId, date])
 }
 
 // ─── EXERCISES ──────────────────────────────────────────────────────────────
