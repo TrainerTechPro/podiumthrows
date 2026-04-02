@@ -258,6 +258,9 @@ async function createCommentNotification(
   try {
     const preview = commentText.length > 80 ? commentText.slice(0, 77) + "..." : commentText;
 
+    // Enriched metadata — includes IDs the URL resolver needs for navigation
+    const metadata: Record<string, string> = { targetField, targetId, type: "throw_comment" };
+
     if (authorRole === "ATHLETE") {
       // Find the athlete's coach and notify them
       const athlete = await prisma.athleteProfile.findUnique({
@@ -266,6 +269,17 @@ async function createCommentNotification(
       });
       if (!athlete?.coachId) return;
 
+      metadata.athleteId = athlete.id;
+
+      // For practice attempts, include parent session ID for coach navigation
+      if (targetField === "practiceAttemptId") {
+        const attempt = await prisma.practiceAttempt.findUnique({
+          where: { id: targetId },
+          select: { sessionId: true },
+        });
+        if (attempt) metadata.practiceSessionId = attempt.sessionId;
+      }
+
       await prisma.notification.create({
         data: {
           coachId: athlete.coachId,
@@ -273,7 +287,7 @@ async function createCommentNotification(
           type: "COMMENT_ADDED",
           title: `${athlete.firstName} left a comment`,
           body: preview,
-          metadata: JSON.stringify({ targetField, targetId, type: "throw_comment" }),
+          metadata: JSON.stringify(metadata),
         },
       });
     }
@@ -297,9 +311,10 @@ async function createCommentNotification(
       } else if (targetField === "practiceAttemptId") {
         const attempt = await prisma.practiceAttempt.findUnique({
           where: { id: targetId },
-          select: { athleteId: true },
+          select: { athleteId: true, sessionId: true },
         });
         athleteProfileId = attempt?.athleteId ?? null;
+        if (attempt?.sessionId) metadata.practiceSessionId = attempt.sessionId;
       } else if (targetField === "trainingSessionId") {
         const ts = await prisma.trainingSession.findUnique({
           where: { id: targetId },
@@ -309,6 +324,8 @@ async function createCommentNotification(
       }
 
       if (!athleteProfileId) return;
+
+      metadata.athleteId = athleteProfileId;
 
       const coach = await prisma.coachProfile.findUnique({
         where: { userId: authorUserId },
@@ -322,7 +339,7 @@ async function createCommentNotification(
           type: "COMMENT_ADDED",
           title: `${coachName} left a comment`,
           body: preview,
-          metadata: JSON.stringify({ targetField, targetId, type: "throw_comment" }),
+          metadata: JSON.stringify(metadata),
         },
       });
     }

@@ -125,8 +125,49 @@ function getNotificationUrl(n: NotificationItem, role: "COACH" | "ATHLETE"): str
       return `${prefix}/dashboard`;
     case "INVITATION_EXPIRED":
       return "/coach/invitations";
+    case "COMMENT_ADDED":
+      return resolveCommentUrl(n, meta, role);
     default:
       return null;
+  }
+}
+
+function resolveCommentUrl(
+  n: NotificationItem,
+  meta: Record<string, unknown> | null,
+  role: "COACH" | "ATHLETE"
+): string | null {
+  const targetField = meta?.targetField as string | undefined;
+  const targetId = meta?.targetId as string | undefined;
+  const athleteId = n.athleteId || (meta?.athleteId as string | undefined);
+
+  if (role === "COACH") {
+    switch (targetField) {
+      case "throwsAssignmentId":
+        return athleteId && targetId
+          ? `/coach/athletes/${athleteId}/sessions/${targetId}`
+          : "/coach/athletes";
+      case "practiceAttemptId": {
+        const sessionId = meta?.practiceSessionId as string | undefined;
+        return sessionId
+          ? `/coach/throws/practice/${sessionId}`
+          : "/coach/throws/practice";
+      }
+      case "trainingSessionId":
+        return "/coach/sessions";
+      case "throwLogId":
+        return athleteId ? `/coach/athletes/${athleteId}` : "/coach/athletes";
+      default:
+        return "/coach/notifications";
+    }
+  }
+
+  // Athlete
+  switch (targetField) {
+    case "trainingSessionId":
+      return targetId ? `/athlete/sessions/${targetId}` : "/athlete/sessions";
+    default:
+      return "/athlete/throws";
   }
 }
 
