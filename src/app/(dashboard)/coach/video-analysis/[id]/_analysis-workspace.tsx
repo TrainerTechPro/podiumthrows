@@ -63,12 +63,11 @@ const EVENT_LABELS: Record<string, string> = {
 
 /* ─── Tabs ─────────────────────────────────────────────────────────────────── */
 
-type TabId = "angles" | "positions" | "compare";
+type TabId = "angles" | "positions";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "angles", label: "Angles" },
   { id: "positions", label: "Key Positions" },
-  { id: "compare", label: "Compare" },
 ];
 
 /* ─── Component ────────────────────────────────────────────────────────────── */
@@ -567,17 +566,6 @@ export function AnalysisWorkspace({ analysis }: Props) {
               />
             )}
 
-            {activeTab === "compare" && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-12 h-12 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center mb-3">
-                  <Ruler size={20} strokeWidth={1.5} className="text-surface-400" aria-hidden="true" />
-                </div>
-                <p className="text-sm font-medium text-[var(--foreground)]">Compare View</p>
-                <p className="text-xs text-muted mt-1 max-w-[200px]">
-                  Side-by-side comparison of key positions coming soon
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>

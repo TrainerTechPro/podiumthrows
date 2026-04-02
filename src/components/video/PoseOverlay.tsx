@@ -166,13 +166,20 @@ export function PoseOverlay({
 
         ctx.fillStyle = POSE_COLORS.labelBg;
         ctx.beginPath();
-        ctx.roundRect(
-          labelX - pillW / 2,
-          labelY - pillH / 2,
-          pillW,
-          pillH,
-          4
-        );
+        const rx = labelX - pillW / 2;
+        const ry = labelY - pillH / 2;
+        const r = 4;
+        if (ctx.roundRect) {
+          ctx.roundRect(rx, ry, pillW, pillH, r);
+        } else {
+          // Fallback for older browsers without roundRect
+          ctx.moveTo(rx + r, ry);
+          ctx.arcTo(rx + pillW, ry, rx + pillW, ry + pillH, r);
+          ctx.arcTo(rx + pillW, ry + pillH, rx, ry + pillH, r);
+          ctx.arcTo(rx, ry + pillH, rx, ry, r);
+          ctx.arcTo(rx, ry, rx + pillW, ry, r);
+          ctx.closePath();
+        }
         ctx.fill();
 
         // Label text

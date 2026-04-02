@@ -156,40 +156,57 @@ export function VideoUploadForm({ athletes }: Props) {
     }
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(0);
     setError("");
 
-    try {
-      const formData = new FormData();
-      formData.append("video", videoFile);
-      formData.append("athleteId", athleteId);
-      formData.append("event", event);
-      formData.append("title", title.trim());
-      if (description.trim()) formData.append("description", description.trim());
-      if (thumbnailBlob) formData.append("thumbnail", thumbnailBlob, "thumbnail.jpg");
+    const formData = new FormData();
+    formData.append("video", videoFile);
+    formData.append("athleteId", athleteId);
+    formData.append("event", event);
+    formData.append("title", title.trim());
+    if (description.trim()) formData.append("description", description.trim());
+    if (thumbnailBlob) formData.append("thumbnail", thumbnailBlob, "thumbnail.jpg");
 
-      setUploadProgress(30);
+    // Use XHR for real upload progress tracking
+    const xhr = new XMLHttpRequest();
+    const csrf = csrfHeaders();
 
-      const res = await fetch("/api/video-analysis/upload", {
-        method: "POST",
-        headers: csrfHeaders(),
-        body: formData,
-      });
-
-      setUploadProgress(90);
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Upload failed");
+    xhr.upload.addEventListener("progress", (ev) => {
+      if (ev.lengthComputable) {
+        // Reserve last 5% for server processing
+        setUploadProgress(Math.round((ev.loaded / ev.total) * 95));
       }
+    });
 
-      setUploadProgress(100);
-      router.push(`/coach/video-analysis/${data.data.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+    xhr.addEventListener("load", () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+          setUploadProgress(100);
+          router.push(`/coach/video-analysis/${data.data.id}`);
+        } else {
+          setError(data.error || "Upload failed");
+          setUploading(false);
+          setUploadProgress(0);
+        }
+      } catch {
+        setError("Upload failed — invalid response");
+        setUploading(false);
+        setUploadProgress(0);
+      }
+    });
+
+    xhr.addEventListener("error", () => {
+      setError("Upload failed — network error");
       setUploading(false);
       setUploadProgress(0);
+    });
+
+    xhr.open("POST", "/api/video-analysis/upload");
+    for (const [key, value] of Object.entries(csrf)) {
+      xhr.setRequestHeader(key, value);
     }
+    xhr.send(formData);
   }
 
   const isValid = videoFile && athleteId && event && title.trim();
