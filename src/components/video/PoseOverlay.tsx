@@ -49,6 +49,7 @@ export function PoseOverlay({
   className,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   /* ── Resize observer ─────────────────────────────────────────────── */
@@ -75,7 +76,8 @@ export function PoseOverlay({
   const render = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    if (!ctxRef.current) ctxRef.current = canvas.getContext("2d");
+    const ctx = ctxRef.current;
     if (!ctx) return;
 
     const w = canvas.width;

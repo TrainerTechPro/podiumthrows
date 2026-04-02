@@ -200,13 +200,15 @@ export function usePoseDetection(): UsePoseDetectionReturn {
 
   const landmarkerRef = useRef<PoseLandmarkerType | null>(null);
   const initializedRef = useRef(false);
+  const loadingRef = useRef(false);
 
   /* ── Lazy initialization ─────────────────────────────────────────── */
 
   const initialize = useCallback(async () => {
     if (initializedRef.current && landmarkerRef.current) return;
-    if (loading) return;
+    if (loadingRef.current) return;
 
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -247,9 +249,10 @@ export function usePoseDetection(): UsePoseDetectionReturn {
           : "Failed to load pose detection model"
       );
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [loading]);
+  }, []);
 
   /* ── Detect pose on a single frame ─────────────────────────────── */
 

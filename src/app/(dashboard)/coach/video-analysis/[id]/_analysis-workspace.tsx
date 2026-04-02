@@ -108,8 +108,9 @@ export function AnalysisWorkspace({ analysis }: Props) {
 
   /* ── Pose detection on frame change ──────────────────────────────────── */
 
+  // Use a ref for the detect function so effects don't rebuild on every detection
   const detectCurrentFrame = useCallback(async () => {
-    if (!pose.active || detectingRef.current) return;
+    if (detectingRef.current) return;
     const video = videoRef.current?.getVideoElement();
     if (!video || video.readyState < 2) return;
 
@@ -125,7 +126,8 @@ export function AnalysisWorkspace({ analysis }: Props) {
     } finally {
       detectingRef.current = false;
     }
-  }, [pose]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable ref: pose.detectFrame identity is stable via useCallback
+  }, []);
 
   // Detect pose when time changes (scrubbing or stepping)
   useEffect(() => {
@@ -134,15 +136,24 @@ export function AnalysisWorkspace({ analysis }: Props) {
     }
   }, [currentTime, pose.active, isPlaying, detectCurrentFrame]);
 
-  // Detect pose during playback at frame rate
+  // Detect pose during playback using rAF with frame-rate throttle
   useEffect(() => {
     if (!pose.active || !isPlaying) return;
 
-    const interval = setInterval(() => {
-      detectCurrentFrame();
-    }, 1000 / Math.min(fps, 15)); // Cap at 15fps for performance
+    let rafId: number;
+    let lastDetect = 0;
+    const minInterval = 1000 / Math.min(fps, 15); // Cap at 15fps
 
-    return () => clearInterval(interval);
+    function tick(now: number) {
+      if (now - lastDetect >= minInterval) {
+        lastDetect = now;
+        detectCurrentFrame();
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(rafId);
   }, [pose.active, isPlaying, fps, detectCurrentFrame]);
 
   /* ── Initialize pose detection on toggle ──────────────────────────── */

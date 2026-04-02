@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Video, Clock } from "lucide-react";
 
@@ -54,6 +52,8 @@ export function VideoAnalysisCard({ analysis }: { analysis: Analysis }) {
           <img
             src={analysis.thumbnailUrl}
             alt={analysis.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
