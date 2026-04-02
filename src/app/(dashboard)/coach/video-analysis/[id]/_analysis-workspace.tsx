@@ -381,8 +381,8 @@ export function AnalysisWorkspace({ analysis }: Props) {
               step={frameStep}
               value={currentTime}
               onChange={(e) => handleSeek(parseFloat(e.target.value))}
-              className="w-full h-1.5 rounded-full appearance-none bg-surface-200 dark:bg-surface-700 cursor-pointer
-                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
+              className="w-full h-2 rounded-full appearance-none bg-surface-200 dark:bg-surface-700 cursor-pointer
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
                 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-500 [&::-webkit-slider-thumb]:shadow-glow
                 [&::-webkit-slider-thumb]:cursor-pointer"
             />
@@ -394,8 +394,8 @@ export function AnalysisWorkspace({ analysis }: Props) {
                 <button
                   type="button"
                   onClick={handleStepBackward}
-                  className="p-1.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-                  title="Previous frame"
+                  className="p-2.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                  aria-label="Previous frame"
                 >
                   <SkipBack size={16} strokeWidth={2} aria-hidden="true" />
                 </button>
@@ -417,8 +417,8 @@ export function AnalysisWorkspace({ analysis }: Props) {
                 <button
                   type="button"
                   onClick={handleStepForward}
-                  className="p-1.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-                  title="Next frame"
+                  className="p-2.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                  aria-label="Next frame"
                 >
                   <SkipForward size={16} strokeWidth={2} aria-hidden="true" />
                 </button>
@@ -464,12 +464,12 @@ export function AnalysisWorkspace({ analysis }: Props) {
                 <button
                   type="button"
                   onClick={handleTogglePose}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-2.5 rounded-lg transition-colors ${
                     pose.active
                       ? "text-primary-500 bg-primary-500/10"
                       : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
                   }`}
-                  title={pose.active ? "Disable pose detection" : "Enable pose detection"}
+                  aria-label={pose.active ? "Disable pose detection" : "Enable pose detection"}
                 >
                   {showOverlay ? (
                     <Eye size={16} strokeWidth={2} aria-hidden="true" />
@@ -483,12 +483,12 @@ export function AnalysisWorkspace({ analysis }: Props) {
                   <button
                     type="button"
                     onClick={() => setShowAngles(!showAngles)}
-                    className={`p-1.5 rounded-lg transition-colors ${
+                    className={`p-2.5 rounded-lg transition-colors ${
                       showAngles
                         ? "text-primary-500 bg-primary-500/10"
                         : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
                     }`}
-                    title={showAngles ? "Hide angle labels" : "Show angle labels"}
+                    aria-label={showAngles ? "Hide angle labels" : "Show angle labels"}
                   >
                     <Ruler size={16} strokeWidth={2} aria-hidden="true" />
                   </button>
@@ -499,12 +499,12 @@ export function AnalysisWorkspace({ analysis }: Props) {
                   <button
                     type="button"
                     onClick={() => setShowOverlay(!showOverlay)}
-                    className={`p-1.5 rounded-lg transition-colors ${
+                    className={`p-2.5 rounded-lg transition-colors ${
                       showOverlay
                         ? "text-success-500 bg-success-500/10"
                         : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
                     }`}
-                    title={showOverlay ? "Hide skeleton" : "Show skeleton"}
+                    aria-label={showOverlay ? "Hide skeleton" : "Show skeleton"}
                   >
                     {showOverlay ? (
                       <Eye size={16} strokeWidth={2} aria-hidden="true" />

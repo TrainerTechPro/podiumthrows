@@ -199,51 +199,52 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
         )
           return;
 
+        const v = videoRef.current;
+        if (!v) return;
+
         switch (e.key) {
           case " ":
           case "k":
             e.preventDefault();
-            togglePlay();
+            if (v.paused) { v.play(); } else { v.pause(); }
             break;
           case "ArrowLeft":
             e.preventDefault();
-            if (videoRef.current)
-              videoRef.current.currentTime = Math.max(
-                0,
-                videoRef.current.currentTime - 5
-              );
+            v.currentTime = Math.max(0, v.currentTime - 5);
             break;
           case "ArrowRight":
             e.preventDefault();
-            if (videoRef.current)
-              videoRef.current.currentTime = Math.min(
-                duration,
-                videoRef.current.currentTime + 5
-              );
+            v.currentTime = Math.min(v.duration || 0, v.currentTime + 5);
             break;
           case ",":
             e.preventDefault();
-            frameStep(-1);
+            v.pause();
+            v.currentTime += -1 / 30;
             break;
           case ".":
             e.preventDefault();
-            frameStep(1);
+            v.pause();
+            v.currentTime += 1 / 30;
             break;
           case "f":
             e.preventDefault();
-            toggleFullscreen();
+            if (!document.fullscreenElement) {
+              containerRef.current?.requestFullscreen();
+            } else {
+              document.exitFullscreen();
+            }
             break;
           case "m":
             e.preventDefault();
-            toggleMute();
+            v.muted = !v.muted;
+            setMuted(v.muted);
             break;
         }
       }
 
       document.addEventListener("keydown", handleKey);
       return () => document.removeEventListener("keydown", handleKey);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [duration, muted, showControls]);
+    }, [showControls]);
 
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -326,7 +327,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
               <button
                 onClick={togglePlay}
                 className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
-                title={playing ? "Pause (Space)" : "Play (Space)"}
+                aria-label={playing ? "Pause (Space)" : "Play (Space)"}
               >
                 {playing ? <PauseIcon /> : <PlayIcon />}
               </button>
@@ -335,14 +336,14 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
               <button
                 onClick={() => frameStep(-1)}
                 className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
-                title="Previous frame (,)"
+                aria-label="Previous frame (,)"
               >
                 <FrameBackIcon />
               </button>
               <button
                 onClick={() => frameStep(1)}
                 className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
-                title="Next frame (.)"
+                aria-label="Next frame (.)"
               >
                 <FrameForwardIcon />
               </button>
@@ -390,7 +391,7 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
               <button
                 onClick={toggleMute}
                 className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
-                title="Mute (M)"
+                aria-label={muted ? "Unmute (M)" : "Mute (M)"}
               >
                 {muted || volume === 0 ? <MuteIcon /> : <VolumeIcon />}
               </button>
@@ -401,14 +402,15 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, Props>(
                 step={0.05}
                 value={muted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-16 h-1 accent-primary-500 cursor-pointer"
+                className="w-20 h-2 accent-primary-500 cursor-pointer"
+                aria-label="Volume"
               />
 
               {/* Fullscreen */}
               <button
                 onClick={toggleFullscreen}
                 className="p-2.5 hover:bg-white/10 rounded-lg transition-colors"
-                title="Fullscreen (F)"
+                aria-label={isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
               >
                 {isFullscreen ? <ExitFullscreenIcon /> : <FullscreenIcon />}
               </button>

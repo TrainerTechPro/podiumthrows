@@ -184,10 +184,13 @@ export type UsePoseDetectionReturn = {
 
 /* ─── Hook ────────────────────────────────────────────────────────────────── */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let PoseLandmarkerClass: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let FilesetResolverClass: any = null;
+// MediaPipe types — loaded dynamically to avoid bundling WASM at build time
+type PoseLandmarkerType = import("@mediapipe/tasks-vision").PoseLandmarker;
+type PoseLandmarkerStatic = typeof import("@mediapipe/tasks-vision").PoseLandmarker;
+type FilesetResolverStatic = typeof import("@mediapipe/tasks-vision").FilesetResolver;
+
+let PoseLandmarkerClass: PoseLandmarkerStatic | null = null;
+let FilesetResolverClass: FilesetResolverStatic | null = null;
 
 export function usePoseDetection(): UsePoseDetectionReturn {
   const [loading, setLoading] = useState(false);
@@ -195,8 +198,7 @@ export function usePoseDetection(): UsePoseDetectionReturn {
   const [pose, setPose] = useState<PoseResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const landmarkerRef = useRef<any>(null);
+  const landmarkerRef = useRef<PoseLandmarkerType | null>(null);
   const initializedRef = useRef(false);
 
   /* ── Lazy initialization ─────────────────────────────────────────── */
@@ -265,8 +267,7 @@ export function usePoseDetection(): UsePoseDetectionReturn {
 
         if (result.landmarks && result.landmarks.length > 0) {
           const landmarks: PoseLandmark[] = result.landmarks[0].map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (lm: any) => ({
+            (lm) => ({
               x: lm.x,
               y: lm.y,
               z: lm.z ?? 0,

@@ -200,6 +200,8 @@ export function PoseOverlay({
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full"
+        role="img"
+        aria-label="Pose detection overlay showing joint landmarks and angles"
       />
     </div>
   );

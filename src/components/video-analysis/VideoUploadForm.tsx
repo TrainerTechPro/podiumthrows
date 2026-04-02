@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { Upload, X, Video, Check } from "lucide-react";
@@ -84,6 +84,19 @@ export function VideoUploadForm({ athletes }: Props) {
 
   // Drag state
   const [dragOver, setDragOver] = useState(false);
+
+  // Track ObjectURLs for cleanup on unmount
+  const videoPreviewRef = useRef(videoPreview);
+  const thumbnailPreviewRef = useRef(thumbnailPreview);
+  videoPreviewRef.current = videoPreview;
+  thumbnailPreviewRef.current = thumbnailPreview;
+
+  useEffect(() => {
+    return () => {
+      if (videoPreviewRef.current) URL.revokeObjectURL(videoPreviewRef.current);
+      if (thumbnailPreviewRef.current) URL.revokeObjectURL(thumbnailPreviewRef.current);
+    };
+  }, []);
 
   const handleFileSelect = useCallback(async (file: File) => {
     const validTypes = ["video/mp4", "video/quicktime", "video/webm"];
