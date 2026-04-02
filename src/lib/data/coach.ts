@@ -72,6 +72,9 @@ export type AthleteRosterItem = {
   events: string[];
   avatarUrl: string | null;
   currentStreak: number;
+  gender: string | null;
+  classStanding: string | null;
+  availabilityCount: number;
   latestReadiness: {
     score: number;
     injuryStatus: string;
@@ -589,6 +592,9 @@ export async function getAthleteRoster(coachId: string): Promise<AthleteRosterIt
       events: true,
       avatarUrl: true,
       currentStreak: true,
+      gender: true,
+      classStanding: true,
+      _count: { select: { availability: true } },
       readinessCheckIns: {
         orderBy: { date: "desc" },
         take: 1,
@@ -611,6 +617,9 @@ export async function getAthleteRoster(coachId: string): Promise<AthleteRosterIt
     events: a.events as string[],
     avatarUrl: a.avatarUrl,
     currentStreak: a.currentStreak,
+    gender: a.gender as string | null,
+    classStanding: a.classStanding,
+    availabilityCount: a._count.availability,
     latestReadiness: a.readinessCheckIns[0]
       ? {
           score: a.readinessCheckIns[0].overallScore,

@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { InviteAthleteButton } from "./_invite";
-import { AthletesTable } from "./_table";
+import { RosterClient } from "./_roster-client";
 import {
   requireCoachSession,
   getAthleteRoster,
@@ -118,7 +119,9 @@ export default async function AthletesPage({
               </p>
             </div>
           )}
-          <AthletesTable data={sorted} />
+          <Suspense fallback={null}>
+            <RosterClient data={sorted} />
+          </Suspense>
         </>
       )}
 
