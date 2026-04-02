@@ -98,7 +98,7 @@ export function PoseDetectionOverlay({ onEnable, onSkip }: Props) {
           <h3 className="text-base font-heading font-bold text-white tracking-wide">
             Pose Detection
           </h3>
-          <p className="text-[13px] text-white/55 leading-relaxed mt-1.5 mb-5">
+          <p className="text-[13px] text-white/60 leading-relaxed mt-1.5 mb-5">
             Detect joint positions and measure biomechanical angles in real-time
           </p>
 
@@ -110,7 +110,8 @@ export function PoseDetectionOverlay({ onEnable, onSkip }: Props) {
               bg-primary-500 text-black font-heading font-bold text-sm tracking-wide
               shadow-[0_0_24px_rgba(255,200,0,0.25)]
               hover:shadow-[0_0_32px_rgba(255,200,0,0.4)] hover:bg-primary-400
-              active:scale-[0.97] transition-all duration-200"
+              active:scale-[0.97] transition-all duration-200
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             <Scan size={16} strokeWidth={1.75} aria-hidden="true" />
             Enable Pose Detection
@@ -120,8 +121,9 @@ export function PoseDetectionOverlay({ onEnable, onSkip }: Props) {
           <button
             type="button"
             onClick={handleSkip}
-            className="block mx-auto text-[11px] text-white/25 hover:text-white/45
-              transition-colors duration-200 mt-3"
+            className="block mx-auto text-[11px] text-white/35 hover:text-white/55
+              transition-colors duration-200 mt-3 py-1.5 rounded
+              focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
           >
             Skip for now
           </button>

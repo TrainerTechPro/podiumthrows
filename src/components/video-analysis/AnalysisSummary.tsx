@@ -181,7 +181,8 @@ export function AnalysisSummary({
 
                 <Link
                   href={`/coach/video-analysis/${latestInsight.id}`}
-                  className="inline-block mt-2 text-[11px] text-primary-500 hover:underline"
+                  className="inline-block mt-2 text-[11px] text-primary-500 hover:underline
+                    focus-visible:outline-none focus-visible:underline"
                 >
                   View analysis →
                 </Link>

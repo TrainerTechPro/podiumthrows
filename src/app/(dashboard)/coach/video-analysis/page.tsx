@@ -16,6 +16,15 @@ type SearchParams = {
   event?: string;
 };
 
+/* ─── Summary constants (module-level to avoid per-request allocation) ──── */
+
+const SUMMARY_ANGLE_KEYS = ["shoulderSeparation", "hipShoulderDifferential", "blockLegKnee"];
+const SUMMARY_LABELS: Record<string, string> = {
+  shoulderSeparation: "Shldr Sep",
+  hipShoulderDifferential: "Hip-Shldr",
+  blockLegKnee: "Block Knee",
+};
+
 export default async function VideoAnalysisPage({
   searchParams,
 }: {
@@ -69,13 +78,6 @@ export default async function VideoAnalysisPage({
   }
 
   // Latest completed analysis with key angle data
-  const SUMMARY_ANGLE_KEYS = ["shoulderSeparation", "hipShoulderDifferential", "blockLegKnee"];
-  const SUMMARY_LABELS: Record<string, string> = {
-    shoulderSeparation: "Shldr Sep",
-    hipShoulderDifferential: "Hip-Shldr",
-    blockLegKnee: "Block Knee",
-  };
-
   let latestInsight: LatestInsight | null = null;
   const latestCompleted = analyses.find(
     (a) => a.status === "COMPLETED" && a.keyPositions,
