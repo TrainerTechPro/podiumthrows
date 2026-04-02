@@ -1405,6 +1405,83 @@ export async function getAthletePickerList(coachId: string): Promise<AthletePick
   }));
 }
 
+/* ─── Competition Meets ─────────────────────────────────────────────────── */
+
+export type MeetEntry = {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  avatarUrl: string | null;
+  gender: string;
+  event: string;
+  result: number | null;
+  resultBy: string | null;
+  notes: string | null;
+};
+
+export type MeetSummary = {
+  name: string;
+  date: string;
+  priority: string;
+  events: string[];
+  totalEntries: number;
+  totalResults: number;
+  entries: MeetEntry[];
+};
+
+export async function getCoachMeets(coachId: string): Promise<MeetSummary[]> {
+  const competitions = await prisma.throwsCompetition.findMany({
+    where: { athlete: { coachId } },
+    include: {
+      athlete: {
+        select: { id: true, firstName: true, lastName: true, avatarUrl: true, gender: true },
+      },
+    },
+    orderBy: { date: "desc" },
+  });
+
+  const meetMap = new Map<string, MeetSummary & { eventSet: Set<string> }>();
+
+  for (const c of competitions) {
+    const key = `${c.name}::${c.date}`;
+    if (!meetMap.has(key)) {
+      meetMap.set(key, {
+        name: c.name,
+        date: c.date,
+        priority: c.priority,
+        events: [],
+        totalEntries: 0,
+        totalResults: 0,
+        entries: [],
+        eventSet: new Set(),
+      });
+    }
+    const meet = meetMap.get(key)!;
+    meet.entries.push({
+      id: c.id,
+      athleteId: c.athleteId,
+      athleteName: `${c.athlete.firstName} ${c.athlete.lastName}`,
+      avatarUrl: c.athlete.avatarUrl,
+      gender: c.athlete.gender,
+      event: c.event,
+      result: c.result,
+      resultBy: c.resultBy,
+      notes: c.notes,
+    });
+    meet.totalEntries++;
+    if (c.result != null) meet.totalResults++;
+    meet.eventSet.add(c.event);
+    if (c.priority === "A" || (c.priority === "B" && meet.priority === "C")) {
+      meet.priority = c.priority;
+    }
+  }
+
+  return Array.from(meetMap.values()).map(({ eventSet, ...m }) => ({
+    ...m,
+    events: Array.from(eventSet),
+  }));
+}
+
 /* ─── Throw Analytics ────────────────────────────────────────────────────── */
 
 export type ThrowStatsByEvent = {

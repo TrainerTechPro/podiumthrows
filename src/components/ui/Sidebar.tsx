@@ -33,6 +33,7 @@ import {
   UserPlus,
   ChevronRight,
   ScanLine,
+  Trophy,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -295,6 +296,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/invitations",
           "/coach/event-groups",
           "/coach/wellness",
+          "/coach/competitions",
         ],
         children: [
           {
@@ -310,6 +312,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             icon: <UsersRound {...iconSize} />,
           },
           { label: "Wellness", href: "/coach/wellness", icon: <Heart {...iconSize} /> },
+          {
+            label: "Competitions",
+            href: "/coach/competitions",
+            icon: <Trophy {...iconSize} />,
+            matchPaths: ["/coach/competitions"],
+          },
         ],
       },
 
