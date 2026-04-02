@@ -115,7 +115,7 @@ async function getInjuryActions(coachId: string): Promise<CoachingAction[]> {
         title: `${name} — Active Injury`,
         description: `${ti.bodyPart}${ti.side ? ` (${ti.side})` : ""} — ${ti.severity}.${banStr}`,
         timestamp: ti.updatedAt.toISOString(),
-        href: `/coach/athletes/${ti.athleteId}/injuries`,
+        href: `/coach/athletes/${ti.athleteId}#overview`,
         meta: { source: "throwsInjury", bodyPart: ti.bodyPart, severity: ti.severity },
       });
     }
@@ -135,7 +135,7 @@ async function getInjuryActions(coachId: string): Promise<CoachingAction[]> {
         title: `${name} — Active Injury`,
         description: `${inj.bodyPart} — ${inj.severity}.`,
         timestamp: inj.updatedAt.toISOString(),
-        href: `/coach/athletes/${inj.athleteId}/injuries`,
+        href: `/coach/athletes/${inj.athleteId}#overview`,
         meta: { source: "injury", bodyPart: inj.bodyPart, severity: inj.severity },
       });
     }
@@ -155,7 +155,7 @@ async function getInjuryActions(coachId: string): Promise<CoachingAction[]> {
         title: `${name} — Reported Injury in Check-in`,
         description: ci.injuryNotes || "Injury flagged during readiness check-in.",
         timestamp: ci.date.toISOString(),
-        href: `/coach/athletes/${ci.athleteId}/readiness`,
+        href: `/coach/athletes/${ci.athleteId}#readiness`,
         meta: { source: "readinessCheckIn" },
       });
     }
@@ -199,7 +199,7 @@ async function getAcwrActions(coachId: string): Promise<CoachingAction[]> {
       title: `${name} — High Training Load`,
       description: `ACWR ${ra.acwr.toFixed(2)} (${ra.riskLevel}).${ra.monotony ? ` Monotony: ${ra.monotony.toFixed(2)}.` : ""}`,
       timestamp: ra.createdAt.toISOString(),
-      href: `/coach/athletes/${ra.athleteId}/load`,
+      href: `/coach/athletes/${ra.athleteId}#training`,
       meta: { acwr: ra.acwr, riskLevel: ra.riskLevel, monotony: ra.monotony },
     };
   });
@@ -248,7 +248,7 @@ async function getAdaptationActions(coachId: string): Promise<CoachingAction[]> 
         title: `${name} — Adaptation: ${recLabel}`,
         description: `Week ${cp.weekNumber}, Complex ${cp.complexNumber}. Marks ${cp.markTrend.toLowerCase()}.`,
         timestamp: cp.createdAt.toISOString(),
-        href: `/coach/athletes/${athlete.id}/program`,
+        href: `/coach/athletes/${athlete.id}#training`,
         meta: {
           recommendation: cp.recommendation,
           markTrend: cp.markTrend,
@@ -286,7 +286,7 @@ async function getSportsFormActions(coachId: string): Promise<CoachingAction[]> 
       title: `${name} — Entered Sports Form`,
       description: `${event}${cx.peakMark ? ` — peak ${cx.peakMark.toFixed(2)}m` : ""}.${cx.sessionsToForm ? ` Took ${cx.sessionsToForm} sessions.` : ""}`,
       timestamp: cx.updatedAt.toISOString(),
-      href: `/coach/athletes/${cx.athleteId}/program`,
+      href: `/coach/athletes/${cx.athleteId}#training`,
       meta: { event: cx.event, peakMark: cx.peakMark, sessionsToForm: cx.sessionsToForm },
     };
   });
@@ -330,7 +330,7 @@ async function getReadinessActions(coachId: string): Promise<CoachingAction[]> {
         title: `${name} — Readiness Declining`,
         description: `3 consecutive check-ins below 5.0 (avg ${avgScore.toFixed(1)}).`,
         timestamp: recentCheckins[0].date.toISOString(),
-        href: `/coach/athletes/${athlete.id}/readiness`,
+        href: `/coach/athletes/${athlete.id}#readiness`,
         meta: { avgScore, scores: recentCheckins.map((c) => c.overallScore) },
       });
     }
@@ -375,7 +375,7 @@ async function getMissedSessionActions(coachId: string): Promise<CoachingAction[
         title: `${name} — Missed Sessions`,
         description: `${skippedCount} of last 5 sessions skipped.`,
         timestamp: last5[0].updatedAt.toISOString(),
-        href: `/coach/athletes/${athlete.id}/sessions`,
+        href: `/coach/athletes/${athlete.id}#training`,
         meta: { skippedCount, totalChecked: 5 },
       });
     }
@@ -439,7 +439,7 @@ async function getAutoregActions(coachId: string): Promise<CoachingAction[]> {
         title: `${name} — Autoregulation Suggestion`,
         description: `${timescaleLabel}: ${s.reasoning.slice(0, 120)}${s.reasoning.length > 120 ? "..." : ""}`,
         timestamp: s.createdAt.toISOString(),
-        href: `/coach/athletes/${athlete.id}/program`,
+        href: `/coach/athletes/${athlete.id}#training`,
         meta: {
           suggestedChange: s.suggestedChange,
           timescale: s.timescale,
@@ -489,7 +489,7 @@ async function getGoalAtRiskActions(coachId: string): Promise<CoachingAction[]> 
         title: `${name} — Goal at Risk`,
         description: `"${g.title}" — ${progress}% complete${daysLeft !== null ? `, ${daysLeft} days left` : ""}.`,
         timestamp: g.updatedAt.toISOString(),
-        href: `/coach/athletes/${g.athleteId}/goals`,
+        href: `/coach/athletes/${g.athleteId}#goals`,
         meta: { goalTitle: g.title, progress, targetValue: g.targetValue, currentValue: g.currentValue, daysLeft },
       };
     });
@@ -545,7 +545,7 @@ async function getNoCheckinActions(coachId: string): Promise<CoachingAction[]> {
           ? `Last check-in ${daysSince} days ago.`
           : "No check-ins recorded.",
         timestamp: lastDate?.toISOString() ?? new Date().toISOString(),
-        href: `/coach/athletes/${a.id}/readiness`,
+        href: `/coach/athletes/${a.id}#readiness`,
         meta: { daysSince },
       };
     });
