@@ -4,17 +4,19 @@ import { useMemo } from "react";
 import type { ThrowAngles } from "@/lib/pose-angles";
 import { getAnglesWithStatus } from "@/lib/pose-angles";
 import { AngleIndicator } from "./AngleIndicator";
+import { Scan } from "lucide-react";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
 type Props = {
   angles: ThrowAngles | null;
   isDetecting: boolean;
+  onEnablePose?: () => void;
 };
 
 /* ─── Component ────────────────────────────────────────────────────────────── */
 
-export function AnglesPanel({ angles, isDetecting }: Props) {
+export function AnglesPanel({ angles, isDetecting, onEnablePose }: Props) {
   const angleResults = useMemo(() => {
     if (!angles) return [];
     return getAnglesWithStatus(angles);
@@ -26,9 +28,22 @@ export function AnglesPanel({ angles, isDetecting }: Props) {
         <p className="text-sm text-muted">
           Enable pose detection to see real-time angle measurements
         </p>
-        <p className="text-xs text-surface-500 mt-1">
-          Click the skeleton toggle above the video
-        </p>
+        {onEnablePose ? (
+          <button
+            type="button"
+            onClick={onEnablePose}
+            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+              bg-primary-500/10 text-primary-500 text-xs font-medium
+              hover:bg-primary-500/20 transition-colors"
+          >
+            <Scan size={14} strokeWidth={1.75} aria-hidden="true" />
+            Enable
+          </button>
+        ) : (
+          <p className="text-xs text-surface-500 mt-1">
+            Click the skeleton toggle above the video
+          </p>
+        )}
       </div>
     );
   }

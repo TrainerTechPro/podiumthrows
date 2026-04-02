@@ -26,6 +26,7 @@ import { AnglesPanel } from "@/components/video-analysis/AnglesPanel";
 import { KeyPositionsPanel, type KeyPosition } from "@/components/video-analysis/KeyPositionsPanel";
 import { MiniPlayer } from "@/components/video-analysis/MiniPlayer";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { PoseDetectionOverlay } from "@/components/video-analysis/PoseDetectionOverlay";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -92,6 +93,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
   const [currentPose, setCurrentPose] = useState<PoseResult | null>(null);
   const [throwAngles, setThrowAngles] = useState<ThrowAngles | null>(null);
   const detectingRef = useRef(false);
+  const [hasActivatedPose, setHasActivatedPose] = useState(false);
 
   // Mini-player (mobile): show when video scrolls out of view
   const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -182,6 +184,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
   /* ── Initialize pose detection on toggle ──────────────────────────── */
 
   async function handleTogglePose() {
+    setHasActivatedPose(true);
     if (!pose.active && !pose.loading) {
       await pose.initialize();
       pose.toggle();
@@ -194,6 +197,10 @@ export function AnalysisWorkspace({ analysis }: Props) {
         setThrowAngles(null);
       }
     }
+  }
+
+  function handleOverlaySkip() {
+    setHasActivatedPose(true);
   }
 
   /* ── Playback controls ──────────────────────────────────────────────── */
@@ -399,6 +406,14 @@ export function AnalysisWorkspace({ analysis }: Props) {
               onVideoClick={handlePlayPause}
             />
 
+            {/* First-time pose detection prompt */}
+            {!hasActivatedPose && !pose.active && (
+              <PoseDetectionOverlay
+                onEnable={handleTogglePose}
+                onSkip={handleOverlaySkip}
+              />
+            )}
+
             {/* Pose skeleton overlay */}
             {showOverlay && pose.active && (
               <PoseOverlay
@@ -598,6 +613,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
               <AnglesPanel
                 angles={throwAngles}
                 isDetecting={pose.active}
+                onEnablePose={handleTogglePose}
               />
             )}
 
