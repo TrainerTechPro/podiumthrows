@@ -10,26 +10,14 @@ import {
   Users,
   Calendar,
   Target,
-  Zap,
-  FileText,
   Dumbbell,
-  Video,
   Heart,
-  ClipboardList,
-  Crosshair,
   Settings,
-  Award,
   Bell,
-  BookOpen,
-  PenLine,
   Radio,
   CalendarRange,
-  Wrench,
   UserCircle,
-  ListChecks,
-  Clapperboard,
   BarChart3,
-  UsersRound,
   UserPlus,
   ChevronRight,
   ScanLine,
@@ -294,8 +282,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         matchPaths: [
           "/coach/athletes",
           "/coach/invitations",
-          "/coach/event-groups",
-          "/coach/wellness",
           "/coach/competitions",
         ],
         children: [
@@ -306,12 +292,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             matchPaths: ["/coach/athletes"],
           },
           { label: "Invitations", href: "/coach/invitations", icon: <UserPlus {...iconSize} /> },
-          {
-            label: "Event Groups",
-            href: "/coach/event-groups",
-            icon: <UsersRound {...iconSize} />,
-          },
-          { label: "Wellness", href: "/coach/wellness", icon: <Heart {...iconSize} /> },
           {
             label: "Competitions",
             href: "/coach/competitions",
@@ -328,10 +308,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         icon: <Dumbbell {...iconSize} />,
         matchPaths: [
           "/coach/throws",
-          "/coach/sessions",
-          "/coach/log-session",
-          "/coach/exercises",
-          "/coach/plans",
           "/coach/programming",
         ],
         children: [
@@ -353,97 +329,24 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             icon: <Radio {...iconSize} />,
             matchPaths: ["/coach/throws/practice"],
           },
-          {
-            label: "Sessions",
-            href: "/coach/sessions",
-            icon: <Calendar {...iconSize} />,
-            matchPaths: ["/coach/sessions"],
-          },
-          {
-            label: "Session Builder",
-            href: "/coach/throws/builder",
-            icon: <FileText {...iconSize} />,
-          },
-          { label: "Log Session", href: "/coach/log-session", icon: <PenLine {...iconSize} /> },
-          { label: "Exercises", href: "/coach/exercises", icon: <Dumbbell {...iconSize} /> },
-          { label: "Programs", href: "/coach/plans", icon: <ListChecks {...iconSize} /> },
-          {
-            label: "Program Builder",
-            href: "/coach/throws/program-builder",
-            icon: <Zap {...iconSize} />,
-          },
         ],
       },
 
       // ── Analyze ──
       {
         label: "Analyze",
-        href: "/coach/throws/analyze",
+        href: "/coach/video-analysis",
         icon: <BarChart3 {...iconSize} />,
         matchPaths: [
-          "/coach/throws/analyze",
-          "/coach/throws/profile",
           "/coach/video-analysis",
-          "/coach/athlete-logs",
-          "/coach/goals",
-          "/coach/questionnaires",
         ],
         children: [
-          {
-            label: "Video Analysis",
-            href: "/coach/throws/analyze",
-            icon: <Clapperboard {...iconSize} />,
-            matchPaths: ["/coach/throws/analyze"],
-          },
           {
             label: "Pose Analysis",
             href: "/coach/video-analysis",
             icon: <ScanLine {...iconSize} />,
             matchPaths: ["/coach/video-analysis"],
           },
-          {
-            label: "Throws Profile",
-            href: "/coach/throws/profile",
-            icon: <UserCircle {...iconSize} />,
-            matchPaths: ["/coach/throws/profile"],
-          },
-          { label: "Athlete Logs", href: "/coach/athlete-logs", icon: <PenLine {...iconSize} /> },
-          { label: "Goals", href: "/coach/goals", icon: <Crosshair {...iconSize} /> },
-          {
-            label: "Questionnaires",
-            href: "/coach/questionnaires",
-            icon: <ClipboardList {...iconSize} />,
-            matchPaths: ["/coach/questionnaires"],
-          },
-        ],
-      },
-
-      // ── Library ──
-      {
-        label: "Library",
-        href: "/coach/codex",
-        icon: <BookOpen {...iconSize} />,
-        matchPaths: [
-          "/coach/videos",
-          "/coach/throws/drills",
-          "/coach/drill-videos",
-          "/coach/codex",
-          "/coach/tools",
-        ],
-        children: [
-          {
-            label: "Videos",
-            href: "/coach/videos",
-            icon: <Video {...iconSize} />,
-            matchPaths: ["/coach/videos"],
-          },
-          {
-            label: "Drill Videos",
-            href: "/coach/throws/drills",
-            icon: <Clapperboard {...iconSize} />,
-          },
-          { label: "Codex", href: "/coach/codex", icon: <BookOpen {...iconSize} /> },
-          { label: "Tools", href: "/coach/tools", icon: <Wrench {...iconSize} /> },
         ],
       },
     ],
@@ -451,7 +354,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
-      { label: "Integrations", href: "/coach/integrations", icon: <Zap {...iconSize} />, matchPaths: ["/coach/integrations"] },
       {
         label: "Settings",
         href: "/coach/settings",
@@ -470,13 +372,6 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
         href: "/athlete/dashboard",
         icon: <LayoutDashboard {...iconSize} />,
       },
-      { label: "Log Session", href: "/athlete/log-session", icon: <PenLine {...iconSize} /> },
-      {
-        label: "Self Program",
-        href: "/athlete/self-program",
-        icon: <Dumbbell {...iconSize} />,
-        matchPaths: ["/athlete/self-program"],
-      },
       {
         label: "Training",
         href: "/athlete/sessions",
@@ -489,28 +384,12 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
         icon: <Target {...iconSize} />,
         matchPaths: ["/athlete/throws"],
       },
-      { label: "Throws Codex", href: "/athlete/codex", icon: <BookOpen {...iconSize} /> },
     ],
   },
   {
     title: "Insights",
     items: [
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
-      { label: "Integrations", href: "/athlete/integrations", icon: <Zap {...iconSize} />, matchPaths: ["/athlete/integrations", "/athlete/whoop", "/athlete/oura"] },
-      { label: "Assessments", href: "/athlete/assessments", icon: <BarChart3 {...iconSize} /> },
-      {
-        label: "Questionnaires",
-        href: "/athlete/questionnaires",
-        icon: <ClipboardList {...iconSize} />,
-        matchPaths: ["/athlete/questionnaires"],
-      },
-      {
-        label: "My Videos",
-        href: "/athlete/videos",
-        icon: <Video {...iconSize} />,
-        matchPaths: ["/athlete/videos"],
-      },
-      { label: "Tools", href: "/athlete/tools", icon: <Wrench {...iconSize} /> },
     ],
   },
   {
@@ -518,8 +397,6 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Notifications", href: "/athlete/notifications", icon: <Bell {...iconSize} /> },
       { label: "Profile", href: "/athlete/profile", icon: <UserCircle {...iconSize} /> },
-      { label: "Goals", href: "/athlete/goals", icon: <Crosshair {...iconSize} /> },
-      { label: "Achievements", href: "/athlete/achievements", icon: <Award {...iconSize} /> },
       { label: "Settings", href: "/athlete/settings", icon: <Settings {...iconSize} /> },
     ],
   },
