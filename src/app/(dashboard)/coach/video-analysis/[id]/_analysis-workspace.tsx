@@ -24,6 +24,7 @@ import { PLAYBACK_SPEEDS, formatTimestamp } from "@/components/video/types";
 import { calculateThrowAngles, type ThrowAngles } from "@/lib/pose-angles";
 import { AnglesPanel } from "@/components/video-analysis/AnglesPanel";
 import { KeyPositionsPanel, type KeyPosition } from "@/components/video-analysis/KeyPositionsPanel";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -100,6 +101,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Frame step size
   const fps = analysis.fps || 30;
@@ -256,7 +258,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
   /* ── Delete analysis ────────────────────────────────────────────────── */
 
   async function handleDelete() {
-    if (!confirm("Delete this video analysis? This cannot be undone.")) return;
+    setShowDeleteConfirm(false);
     setDeleting(true);
     try {
       const res = await fetch(`/api/video-analysis/${analysis.id}`, {
@@ -303,12 +305,23 @@ export function AnalysisWorkspace({ analysis }: Props) {
           </button>
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             disabled={deleting}
             className="btn-secondary text-sm text-danger-500 hover:text-danger-600 flex items-center gap-1.5"
+            aria-label="Delete analysis"
           >
             <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
           </button>
+          <ConfirmDialog
+            open={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={handleDelete}
+            title="Delete Video Analysis"
+            description="This will permanently delete the analysis, annotations, and key positions. This cannot be undone."
+            confirmLabel="Delete"
+            variant="danger"
+            loading={deleting}
+          />
         </div>
       </div>
 

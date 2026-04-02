@@ -117,30 +117,31 @@ export function KeyPositionsPanel({
                   key={pos.id}
                   className="rounded-lg border border-surface-200 dark:border-surface-700 overflow-hidden"
                 >
-                  {/* Header — click to jump */}
-                  <button
-                    type="button"
-                    onClick={() => onSeek(pos.timestamp)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-                  >
-                    <MapPin size={14} strokeWidth={2} className="text-primary-500 shrink-0" aria-hidden="true" />
-                    <div className="flex-1 min-w-0">
+                  {/* Header row */}
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    {/* Click to jump to position */}
+                    <button
+                      type="button"
+                      onClick={() => onSeek(pos.timestamp)}
+                      className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-50 dark:hover:bg-surface-800/50 rounded transition-colors px-1 py-0.5"
+                      aria-label={`Jump to ${pos.label} at ${formatTimestamp(pos.timestamp)}`}
+                    >
+                      <MapPin size={14} strokeWidth={2} className="text-primary-500 shrink-0" aria-hidden="true" />
                       <span className="text-sm font-medium text-[var(--foreground)]">
                         {pos.label}
                       </span>
-                      <span className="text-xs text-muted ml-2 tabular-nums font-mono">
+                      <span className="text-xs text-muted tabular-nums font-mono">
                         {formatTimestamp(pos.timestamp)}
                       </span>
-                    </div>
+                    </button>
 
                     {/* Expand/collapse */}
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedId(isExpanded ? null : pos.id);
-                      }}
+                      onClick={() => setExpandedId(isExpanded ? null : pos.id)}
                       className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors"
+                      aria-label={isExpanded ? "Collapse details" : "Expand details"}
+                      aria-expanded={isExpanded}
                     >
                       <ChevronDown
                         size={14}
@@ -153,15 +154,13 @@ export function KeyPositionsPanel({
                     {/* Delete */}
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(pos.id);
-                      }}
+                      onClick={() => onDelete(pos.id)}
                       className="p-1 rounded hover:bg-danger-500/10 text-surface-400 hover:text-danger-500 transition-colors"
+                      aria-label={`Delete ${pos.label} position`}
                     >
                       <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
                     </button>
-                  </button>
+                  </div>
 
                   {/* Expanded content */}
                   {isExpanded && (

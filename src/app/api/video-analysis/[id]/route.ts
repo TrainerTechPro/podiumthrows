@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { requireCoachApi } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { deleteFile } from "@/lib/r2";
+
+const patchSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
+  annotations: z.array(z.record(z.string(), z.unknown())).optional(),
+  keyPositions: z.array(z.record(z.string(), z.unknown())).optional(),
+  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED"]).optional(),
+  duration: z.number().positive().optional(),
+  fps: z.number().positive().optional(),
+}).strict();
 
 /* ── GET — fetch single analysis ── */
 export async function GET(
@@ -54,17 +65,20 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = patchSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
-    // Only allow updating specific fields
-    const updateData: Record<string, unknown> = {};
-    if (body.title !== undefined) updateData.title = body.title;
-    if (body.description !== undefined) updateData.description = body.description;
-    if (body.annotations !== undefined) updateData.annotations = body.annotations;
-    if (body.keyPositions !== undefined) updateData.keyPositions = body.keyPositions;
-    if (body.status !== undefined) updateData.status = body.status;
-    if (body.duration !== undefined) updateData.duration = body.duration;
-    if (body.fps !== undefined) updateData.fps = body.fps;
+    // Build update with only provided fields; cast JSON arrays for Prisma
+    const { annotations, keyPositions, ...rest } = parsed.data;
+    const updateData: Record<string, unknown> = { ...rest };
+    if (annotations !== undefined) updateData.annotations = annotations;
+    if (keyPositions !== undefined) updateData.keyPositions = keyPositions;
 
     const updated = await prisma.videoAnalysis.update({
       where: { id },

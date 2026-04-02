@@ -248,10 +248,19 @@ export function VideoUploadForm({ athletes }: Props) {
       <div>
         <label className="label">Video *</label>
         <div
+          role={!videoFile && !uploading ? "button" : undefined}
+          tabIndex={!videoFile && !uploading ? 0 : undefined}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => !uploading && !videoFile && fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && !uploading && !videoFile) {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          aria-label={videoFile ? `Selected: ${videoFile.name}` : "Drop a video file or press Enter to browse"}
           className={`mt-1 border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
             videoFile
               ? "border-success-500/50 bg-success-50"

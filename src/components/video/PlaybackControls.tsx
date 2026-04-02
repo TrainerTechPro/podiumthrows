@@ -251,6 +251,7 @@ export function PlaybackControls() {
           onClick={stepBackward}
           className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
           title="Previous frame (,)"
+          aria-label="Previous frame"
         >
           <FrameBackIcon />
         </button>
@@ -260,6 +261,7 @@ export function PlaybackControls() {
           onClick={togglePlay}
           className="w-8 h-8 rounded-full bg-primary-500 hover:bg-primary-400 flex items-center justify-center transition-colors shrink-0"
           title={isPlaying ? "Pause (Space)" : "Play (Space)"}
+          aria-label={isPlaying ? "Pause" : "Play"}
         >
           {isPlaying ? <PauseIcon /> : <PlayIcon />}
         </button>
@@ -269,6 +271,7 @@ export function PlaybackControls() {
           onClick={stepForward}
           className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
           title="Next frame (.)"
+          aria-label="Next frame"
         >
           <FrameFwdIcon />
         </button>
@@ -305,14 +308,22 @@ export function PlaybackControls() {
             }}
             className="px-2 py-0.5 hover:bg-white/10 rounded transition-colors text-xs font-mono text-surface-300"
             title="Playback speed"
+            aria-label={`Playback speed: ${playbackSpeed}x`}
+            aria-haspopup="menu"
+            aria-expanded={showSpeedMenu}
           >
             {playbackSpeed}x
           </button>
           {showSpeedMenu && (
-            <div className="absolute bottom-full right-0 mb-1 bg-surface-800 border border-surface-600 rounded-lg py-1 shadow-xl z-20">
+            <div
+              role="menu"
+              aria-label="Playback speed options"
+              className="absolute bottom-full right-0 mb-1 bg-surface-800 border border-surface-600 rounded-lg py-1 shadow-xl z-20"
+            >
               {speedOptions.map((s) => (
                 <button
                   key={s}
+                  role="menuitem"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSpeed(s);
@@ -320,6 +331,7 @@ export function PlaybackControls() {
                   className={`block w-full text-left px-3 py-1 text-xs hover:bg-white/10 ${
                     playbackSpeed === s ? "text-primary-400" : "text-white"
                   }`}
+                  aria-current={playbackSpeed === s ? "true" : undefined}
                 >
                   {s}x
                 </button>
