@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Search, User, Calendar, ListChecks, Trophy, Clock } from "lucide-react";
+import { Search, User, Calendar, ListChecks, Trophy, Clock, X } from "lucide-react";
 import type { NavSection } from "./Sidebar";
 import type { SearchResultItem } from "@/app/api/search/route";
 
@@ -352,6 +352,14 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
             ESC
           </kbd>
+          <button
+            type="button"
+            onClick={close}
+            className="sm:hidden -mr-1 p-1.5 rounded-lg text-surface-400 hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            aria-label="Close search"
+          >
+            <X size={18} strokeWidth={1.75} />
+          </button>
         </div>
 
         {/* Results */}
