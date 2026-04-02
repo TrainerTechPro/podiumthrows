@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, useCallback, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { Search, User, Calendar, ListChecks, Trophy, Clock } from "lucide-react";
 import type { NavSection } from "./Sidebar";
+import type { SearchResultItem } from "@/app/api/search/route";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -19,6 +20,26 @@ interface FlatItem {
 export interface CommandPaletteProps {
   sections: NavSection[];
 }
+
+/* ─── Open trigger (call from any component) ─────────────────────────────── */
+
+const OPEN_EVENT = "podium:open-command-palette";
+
+export function openCommandPalette() {
+  window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+}
+
+/* ─── Constants ──────────────────────────────────────────────────────────── */
+
+const RECENT_KEY = "podium-search-recent";
+const MAX_RECENT = 5;
+
+const CATEGORY_META: Record<string, { label: string; icon: ReactNode }> = {
+  athlete: { label: "Athletes", icon: <User size={15} strokeWidth={1.75} /> },
+  session: { label: "Sessions", icon: <Calendar size={15} strokeWidth={1.75} /> },
+  program: { label: "Programs", icon: <ListChecks size={15} strokeWidth={1.75} /> },
+  pr: { label: "Personal Records", icon: <Trophy size={15} strokeWidth={1.75} /> },
+};
 
 /* ─── Flatten nav sections ───────────────────────────────────────────────── */
 
@@ -59,23 +80,139 @@ function matches(query: string, item: FlatItem): boolean {
   );
 }
 
+/* ─── Recent searches (localStorage) ─────────────────────────────────────── */
+
+function getRecentSearches(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function addRecentSearch(query: string) {
+  try {
+    const recent = getRecentSearches().filter((r) => r !== query);
+    recent.unshift(query);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+/* ─── Debounce hook ──────────────────────────────────────────────────────── */
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
+/* ─── Unified result item type ───────────────────────────────────────────── */
+
+type UnifiedItem = {
+  key: string;
+  label: string;
+  subtitle?: string;
+  href: string;
+  icon: ReactNode;
+  group: string;
+};
+
 /* ─── CommandPalette ─────────────────────────────────────────────────────── */
 
 export function CommandPalette({ sections }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [dataResults, setDataResults] = useState<SearchResultItem[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const router = useRouter();
 
   const allItems = flattenSections(sections);
-  const filtered = query.trim()
-    ? allItems.filter((item) => matches(query, item))
-    : allItems;
+  const debouncedQuery = useDebouncedValue(query, 300);
 
-  /* ── Global keyboard shortcut (Cmd+K / Ctrl+K) ──────────────────────── */
+  // Page results (client-side filter)
+  const filteredPages: UnifiedItem[] = query.trim()
+    ? allItems
+        .filter((item) => matches(query, item))
+        .slice(0, 5)
+        .map((item) => ({
+          key: `page:${item.href}`,
+          label: item.label,
+          href: item.href,
+          icon: item.icon,
+          group: "Pages",
+        }))
+    : [];
+
+  // Data results (from API)
+  const dataItems: UnifiedItem[] = dataResults.map((r) => ({
+    key: `data:${r.category}:${r.id}`,
+    label: r.title,
+    subtitle: r.subtitle,
+    href: r.href,
+    icon: CATEGORY_META[r.category]?.icon ?? <Search size={15} strokeWidth={1.75} />,
+    group: CATEGORY_META[r.category]?.label ?? r.category,
+  }));
+
+  // Combine all results
+  const allResults: UnifiedItem[] = [...filteredPages, ...dataItems];
+
+  // Group results for rendering
+  const grouped = new Map<string, UnifiedItem[]>();
+  for (const item of allResults) {
+    if (!grouped.has(item.group)) grouped.set(item.group, []);
+    grouped.get(item.group)!.push(item);
+  }
+
+  const flatResults = allResults; // for keyboard navigation
+
+  /* ── Fetch data results on debounced query ─────────────────────────── */
+  useEffect(() => {
+    if (!debouncedQuery || debouncedQuery.length < 2) {
+      setDataResults([]);
+      setSearching(false);
+      return;
+    }
+
+    // Abort previous request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setSearching(true);
+
+    fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setDataResults(data.results ?? []);
+          setSearching(false);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setDataResults([]);
+          setSearching(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [debouncedQuery]);
+
+  /* ── Global keyboard shortcut (Cmd+K / Ctrl+K) + custom event ────────── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -83,8 +220,15 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
         setOpen((v) => !v);
       }
     }
+    function onCustomOpen() {
+      setOpen(true);
+    }
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    window.addEventListener(OPEN_EVENT, onCustomOpen);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener(OPEN_EVENT, onCustomOpen);
+    };
   }, []);
 
   /* ── Reset state on open ────────────────────────────────────────────── */
@@ -92,6 +236,8 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     if (open) {
       setQuery("");
       setActiveIndex(0);
+      setDataResults([]);
+      setRecentSearches(getRecentSearches());
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);
@@ -107,13 +253,14 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
   /* ── Reset active index when results change ─────────────────────────── */
   useEffect(() => {
     setActiveIndex(0);
-  }, [query]);
+  }, [query, dataResults]);
 
   /* ── Scroll active item into view ───────────────────────────────────── */
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
-    const active = list.children[activeIndex] as HTMLElement | undefined;
+    const items = list.querySelectorAll("[role='option']");
+    const active = items[activeIndex] as HTMLElement | undefined;
     active?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);
 
@@ -121,10 +268,11 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
 
   const navigate = useCallback(
     (href: string) => {
+      if (query.trim().length >= 2) addRecentSearch(query.trim());
       close();
       router.push(href);
     },
-    [close, router]
+    [close, router, query]
   );
 
   /* ── Keyboard navigation inside palette ─────────────────────────────── */
@@ -132,15 +280,15 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setActiveIndex((i) => (i + 1) % filtered.length);
+        setActiveIndex((i) => (i + 1) % Math.max(flatResults.length, 1));
         break;
       case "ArrowUp":
         e.preventDefault();
-        setActiveIndex((i) => (i - 1 + filtered.length) % filtered.length);
+        setActiveIndex((i) => (i - 1 + Math.max(flatResults.length, 1)) % Math.max(flatResults.length, 1));
         break;
       case "Enter":
         e.preventDefault();
-        if (filtered[activeIndex]) navigate(filtered[activeIndex].href);
+        if (flatResults[activeIndex]) navigate(flatResults[activeIndex].href);
         break;
       case "Escape":
         e.preventDefault();
@@ -155,6 +303,11 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
 
   if (!open) return null;
 
+  const hasQuery = query.trim().length > 0;
+  const noResults = hasQuery && flatResults.length === 0 && !searching;
+
+  let flatIndex = 0;
+
   return createPortal(
     <div
       ref={overlayRef}
@@ -162,7 +315,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
       className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Command palette"
+      aria-label="Search"
     >
       {/* Backdrop */}
       <div
@@ -188,11 +341,14 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search pages..."
+            placeholder="Search athletes, sessions, programs..."
             className="flex-1 bg-transparent py-3.5 text-sm text-[var(--foreground)] placeholder:text-surface-400 outline-none font-heading"
             autoComplete="off"
             spellCheck={false}
           />
+          {searching && (
+            <div className="w-4 h-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
+          )}
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
             ESC
           </kbd>
@@ -204,42 +360,78 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
           className="max-h-[50vh] overflow-y-auto custom-scrollbar py-2"
           role="listbox"
         >
-          {filtered.length === 0 && (
+          {/* Recent searches (when no query) */}
+          {!hasQuery && recentSearches.length > 0 && (
+            <>
+              <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Clock size={12} strokeWidth={1.75} aria-hidden="true" />
+                Recent
+              </div>
+              {recentSearches.map((term) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => setQuery(term)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 text-left transition-colors"
+                >
+                  <Search size={15} strokeWidth={1.75} className="text-surface-400 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{term}</span>
+                </button>
+              ))}
+            </>
+          )}
+
+          {/* No results */}
+          {noResults && (
             <p className="px-4 py-6 text-sm text-center text-surface-400">
-              No results found
+              No results for &ldquo;{query}&rdquo; — try a different search term
             </p>
           )}
-          {filtered.map((item, i) => (
-            <button
-              key={item.href}
-              type="button"
-              role="option"
-              aria-selected={i === activeIndex}
-              onClick={() => navigate(item.href)}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left",
-                i === activeIndex
-                  ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
-                  : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
-              )}
-            >
-              <span
-                className={cn(
-                  "w-5 h-5 shrink-0",
-                  i === activeIndex
-                    ? "text-primary-600 dark:text-primary-400"
-                    : "text-surface-400 dark:text-surface-500"
-                )}
-              >
-                {item.icon}
-              </span>
-              <span className="flex-1 truncate">{item.label}</span>
-              {item.group && (
-                <span className="text-xs text-surface-400 dark:text-surface-500 truncate max-w-[120px]">
-                  {item.group}
-                </span>
-              )}
-            </button>
+
+          {/* Grouped results */}
+          {Array.from(grouped.entries()).map(([group, items]) => (
+            <div key={group}>
+              <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider">
+                {group}
+              </div>
+              {items.map((item) => {
+                const idx = flatIndex++;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    role="option"
+                    aria-selected={idx === activeIndex}
+                    onClick={() => navigate(item.href)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left",
+                      idx === activeIndex
+                        ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
+                        : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-5 h-5 shrink-0 flex items-center justify-center",
+                        idx === activeIndex
+                          ? "text-primary-600 dark:text-primary-400"
+                          : "text-surface-400 dark:text-surface-500"
+                      )}
+                    >
+                      {item.icon}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="truncate block">{item.label}</span>
+                      {item.subtitle && (
+                        <span className="text-xs text-surface-400 dark:text-surface-500 truncate block">
+                          {item.subtitle}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           ))}
         </div>
 
@@ -263,3 +455,4 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     document.body
   );
 }
+

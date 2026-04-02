@@ -5,14 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
-import { Sun, Moon, Menu, X, LogOut } from "lucide-react";
+import { Sun, Moon, Menu, X, LogOut, Search } from "lucide-react";
 import {
   Sidebar,
   COACH_NAV_SECTIONS,
   ATHLETE_NAV_SECTIONS,
   NavSection,
 } from "@/components/ui/Sidebar";
-import { CommandPalette } from "@/components/ui/CommandPalette";
+import { CommandPalette, openCommandPalette } from "@/components/ui/CommandPalette";
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -237,6 +237,20 @@ function TopBar({
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Search trigger */}
+      <button
+        type="button"
+        onClick={openCommandPalette}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors border border-transparent hover:border-[var(--card-border)]"
+        aria-label="Search"
+      >
+        <Search size={16} strokeWidth={2} aria-hidden="true" />
+        <span className="hidden sm:inline text-surface-400">Search</span>
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+          ⌘K
+        </kbd>
+      </button>
 
       {/* Actions */}
       {actions && <div className="flex items-center gap-2">{actions}</div>}
