@@ -26,6 +26,7 @@ import {
   type GoalItem,
 } from "@/lib/data/coach";
 import { SectionNav } from "./_section-nav";
+import { DistanceTrend } from "./_distance-trend";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -622,7 +623,7 @@ function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionIt
 
 /* ─── Throws Tab ─────────────────────────────────────────────────────────── */
 
-function ThrowsTab({ throws }: { throws: ThrowLogItem[] }) {
+function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrows: ThrowLogItem[] }) {
   // Compute per-event summary
   const eventMap = throws.reduce<Record<string, { count: number; best: number }>>((acc, t) => {
     if (!acc[t.event]) acc[t.event] = { count: 0, best: 0 };
@@ -654,6 +655,9 @@ function ThrowsTab({ throws }: { throws: ThrowLogItem[] }) {
           ))}
         </div>
       )}
+
+      {/* Distance Trend Chart */}
+      <DistanceTrend throws={chartThrows} />
 
       {/* Log table */}
       <div className="space-y-3">
@@ -1303,6 +1307,7 @@ export default async function AthleteProfilePage({
     getAthleteGoals(athlete.id),
     getLatestBondarchukAssessment(athlete.id),
     getAthleteThrowsAssignments(athlete.id, 25),
+    getAthleteThrowHistory(athlete.id, undefined, 500), // chart data — wider window
   ]);
 
   const acwr = results[0].status === "fulfilled" ? results[0].value as AthleteACWR : null as AthleteACWR;
@@ -1313,6 +1318,7 @@ export default async function AthleteProfilePage({
   const goals = results[5].status === "fulfilled" ? results[5].value as GoalItem[] : [] as GoalItem[];
   const latestAssessment = results[6].status === "fulfilled" ? results[6].value : null;
   const throwsAssignments = results[7].status === "fulfilled" ? results[7].value as ThrowsAssignmentItem[] : [] as ThrowsAssignmentItem[];
+  const chartThrows = results[8].status === "fulfilled" ? results[8].value as ThrowLogItem[] : [] as ThrowLogItem[];
 
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
@@ -1346,7 +1352,7 @@ export default async function AthleteProfilePage({
 
       <section id="throws" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Throws</h2>
-        <ThrowsTab throws={throws} />
+        <ThrowsTab throws={throws} chartThrows={chartThrows} />
       </section>
 
       <section id="readiness" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">

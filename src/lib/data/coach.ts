@@ -680,7 +680,8 @@ export async function getAthleteReadinessTrend(
 
 export async function getAthleteThrowHistory(
   athleteId: string,
-  event?: string
+  event?: string,
+  limit = 100
 ): Promise<ThrowLogItem[]> {
   const throws = await prisma.throwLog.findMany({
     where: {
@@ -688,7 +689,7 @@ export async function getAthleteThrowHistory(
       ...(event ? { event: event as never } : {}),
     },
     orderBy: { date: "desc" },
-    take: 100,
+    take: limit,
     select: {
       id: true,
       date: true,

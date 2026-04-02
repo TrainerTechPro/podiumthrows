@@ -411,3 +411,12 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ─── Print ────────────────────────────────────────────────────────────── */
+@media print {
+  html, body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; -webkit-print-color-adjust: exact; }
+  aside, header, .no-print { display: none !important; }
+  #main-content { overflow: visible !important; padding: 0 0.5cm !important; height: auto !important; flex: none !important; }
+  #main-content > * { max-width: 100% !important; }
+  .flex.h-screen { display: block !important; height: auto !important; overflow: visible !important; }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { CHART_DEFAULT_COLOR } from "@/lib/design-tokens";
 
@@ -15,6 +15,18 @@ export interface LineChartSeries {
   data: LineChartDataPoint[];
   color: string;
   label?: string;
+}
+
+export interface PointHoverInfo {
+  seriesIndex: number;
+  pointIndex: number;
+  value: number;
+  label: string;
+  color: string;
+  /** SVG x coordinate (within viewBox) */
+  svgX: number;
+  /** SVG y coordinate (within viewBox) */
+  svgY: number;
 }
 
 export interface LineChartProps {
@@ -35,6 +47,12 @@ export interface LineChartProps {
   /** Called per x-label. Return "" to hide. */
   formatX?: (label: string, index: number, total: number) => string;
   emptyMessage?: string;
+  /** Custom dot renderer per point. Return null for default circle. */
+  renderDot?: (info: PointHoverInfo) => ReactNode;
+  /** Fired when user hovers a data point */
+  onPointHover?: (info: PointHoverInfo, event: React.MouseEvent) => void;
+  /** Fired when user leaves a data point */
+  onPointLeave?: () => void;
 }
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
@@ -94,6 +112,9 @@ export function LineChart({
   formatY = (v) => String(Math.round(v)),
   formatX = (label) => label,
   emptyMessage = "No data yet",
+  renderDot,
+  onPointHover,
+  onPointLeave,
 }: LineChartProps) {
   const chartW = VIEWBOX_W - PAD.left - PAD.right;
   const chartH = height - PAD.top - PAD.bottom;
@@ -208,17 +229,44 @@ export function LineChart({
                 />
               )}
               {showDots &&
-                s.points.map((p, pi) => (
-                  <circle
-                    key={pi}
-                    cx={p.x}
-                    cy={p.y}
-                    r="3"
-                    fill="var(--card-bg)"
-                    stroke={s.color}
-                    strokeWidth="2"
-                  />
-                ))}
+                s.points.map((p, pi) => {
+                  const info: PointHoverInfo = {
+                    seriesIndex: si,
+                    pointIndex: pi,
+                    value: p.value,
+                    label: p.label,
+                    color: s.color,
+                    svgX: p.x,
+                    svgY: p.y,
+                  };
+                  const customDot = renderDot?.(info);
+                  return (
+                    <g key={pi}>
+                      {customDot ?? (
+                        <circle
+                          cx={p.x}
+                          cy={p.y}
+                          r="3"
+                          fill="var(--card-bg)"
+                          stroke={s.color}
+                          strokeWidth="2"
+                        />
+                      )}
+                      {/* Larger invisible hit area for hover/touch */}
+                      {(onPointHover || onPointLeave) && (
+                        <circle
+                          cx={p.x}
+                          cy={p.y}
+                          r="12"
+                          fill="transparent"
+                          style={{ cursor: "crosshair" }}
+                          onMouseEnter={(e) => onPointHover?.(info, e)}
+                          onMouseLeave={() => onPointLeave?.()}
+                        />
+                      )}
+                    </g>
+                  );
+                })}
             </g>
           );
         })}

@@ -9,7 +9,8 @@ import { Tabs, TabList, TabTrigger } from "@/components/ui/Tabs";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { WeekCalendar } from "./_week-calendar";
 import { SessionSidebar } from "./_session-sidebar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
+import Link from "next/link";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────── */
 
@@ -188,15 +189,27 @@ export default function ProgrammingPage() {
           </Button>
         </div>
 
-        {!isCurrentWeek && (
-          <button
-            type="button"
-            onClick={goToToday}
-            className="text-sm text-primary-500 hover:underline font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded"
+        <div className="flex items-center gap-3">
+          {!isCurrentWeek && (
+            <button
+              type="button"
+              onClick={goToToday}
+              className="text-sm text-primary-500 hover:underline font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded"
+            >
+              Today
+            </button>
+          )}
+
+          <Link
+            href={`/coach/programming/print?start=${toDateStr(weekStart)}`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+            aria-label="Print this week's program"
           >
-            Today
-          </button>
-        )}
+            <Printer size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span className="hidden sm:inline">Print Week</span>
+          </Link>
+        </div>
       </div>
 
       {/* Filter tabs — groups */}
