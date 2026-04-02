@@ -332,8 +332,8 @@ export function VideoUploadForm({ athletes }: Props) {
             </div>
           ) : (
             <div className="space-y-2">
-              <Upload size={32} strokeWidth={1.5} className="mx-auto text-surface-400" aria-hidden="true" />
-              <p className="text-sm font-medium text-surface-400 dark:text-surface-300">
+              <Upload size={32} strokeWidth={1.5} className="mx-auto text-muted" aria-hidden="true" />
+              <p className="text-sm font-medium text-muted">
                 Drag & drop a video, or click to browse
               </p>
               <p className="text-xs text-muted">MP4, MOV, or WebM — up to 200MB</p>

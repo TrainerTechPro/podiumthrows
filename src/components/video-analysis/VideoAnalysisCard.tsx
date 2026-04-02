@@ -21,9 +21,9 @@ type Analysis = {
 
 const EVENT_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   SHOT_PUT: { bg: "bg-[#E85D26]/15", text: "text-[#E85D26]", label: "Shot Put" },
-  DISCUS: { bg: "bg-[#2980B9]/15", text: "text-[#2980B9]", label: "Discus" },
-  HAMMER: { bg: "bg-[#C0392B]/15", text: "text-[#C0392B]", label: "Hammer" },
-  JAVELIN: { bg: "bg-[#2D8A4E]/15", text: "text-[#2D8A4E]", label: "Javelin" },
+  DISCUS: { bg: "bg-[#3a90c8]/15", text: "text-[#3a90c8]", label: "Discus" },
+  HAMMER: { bg: "bg-[#d55042]/15", text: "text-[#d55042]", label: "Hammer" },
+  JAVELIN: { bg: "bg-[#34a05a]/15", text: "text-[#34a05a]", label: "Javelin" },
 };
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {

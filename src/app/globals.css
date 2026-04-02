@@ -33,7 +33,7 @@
     --foreground: #e8e8ea;
     --card-bg: rgba(255, 255, 255, 0.04);
     --card-border: rgba(255, 200, 0, 0.12);
-    --muted: #6a6a74;
+    --muted: #838390;
     --muted-bg: #101016;
     --gold: #FFC800;
     --gold-dim: rgba(255, 200, 0, 0.08);
@@ -197,7 +197,7 @@
   .input {
     @apply w-full px-3.5 py-2.5 text-sm font-body
       bg-white dark:bg-surface-900 border border-surface-100 dark:border-surface-600
-      text-[var(--foreground)] placeholder:text-surface-200 dark:placeholder:text-surface-400
+      text-[var(--foreground)] placeholder:text-surface-200 dark:placeholder:text-surface-200
       focus:outline-none focus:ring-[2px] focus:ring-primary-500/40 focus:border-primary-500
       focus:shadow-[0_0_12px_rgb(255_200_0/0.1)]
       disabled:opacity-50 disabled:cursor-not-allowed
