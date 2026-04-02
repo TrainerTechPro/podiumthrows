@@ -8,7 +8,7 @@ import {
 } from "remotion";
 import { Background } from "../components/Background";
 import { DeviceFrame } from "../components/DeviceFrame";
-import { SkeletonWireframe } from "../components/SkeletonWireframe";
+import { ThrowingFigure3D } from "../components/ThrowingFigure3D";
 import { AngleReadout } from "../components/AngleReadout";
 import { COLORS } from "../lib/tokens";
 import { FONT_HEADING, FONT_BODY } from "../lib/fonts";
@@ -116,21 +116,20 @@ export const PoseAnalysisScene: React.FC = () => {
               </div>
             </div>
 
-            {/* Skeleton in the "video area" */}
+            {/* 3D figure in the "video area" */}
             <div
               style={{
                 marginTop: 20,
-                padding: "8px 12px",
                 borderRadius: 8,
-                backgroundColor: "rgba(255,255,255,0.02)",
-                border: `1px solid rgba(255,200,0,0.06)`,
+                overflow: "hidden",
               }}
             >
-              <SkeletonWireframe
-                width={180}
-                height={260}
+              <ThrowingFigure3D
+                width={240}
+                height={340}
                 enterDelay={8}
-                pose="throwing"
+                rotateSpeed={0.005}
+                showArcs={true}
               />
             </div>
 
