@@ -93,7 +93,7 @@ export default function HeroSection() {
       />
 
       {/* ── Content grid ───────────────────────────────────────────────── */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-5 sm:px-8 lg:px-12 py-24 sm:py-28 lg:py-0">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-5 sm:px-8 lg:px-12 pt-32 pb-24 sm:pt-36 sm:pb-28 lg:py-0">
         <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-12 sm:gap-16 lg:gap-20 items-center">
 
           {/* ── Left column: text ──────────────────────────────────────── */}
@@ -130,7 +130,7 @@ export default function HeroSection() {
               className="font-heading font-black mb-6 sm:mb-8"
               style={{
                 fontSize: "clamp(3.2rem, 6.5vw, 5.8rem)",
-                lineHeight: 0.88,
+                lineHeight: 0.95,
                 letterSpacing: "-0.05em",
                 color: "var(--landing-text)",
               }}
