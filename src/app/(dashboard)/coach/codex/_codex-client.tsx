@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -430,21 +430,24 @@ export function CodexView() {
   }
 
   // Client-side search over notes, implement, distance
-  const filtered = search.trim()
-    ? entries.filter((e) => {
-        const q = search.toLowerCase();
-        return (
-          e.implement.toLowerCase().includes(q) ||
-          e.distance.toFixed(2).includes(q) ||
-          (e.notes && e.notes.toLowerCase().includes(q)) ||
-          eventLabel(e.event).toLowerCase().includes(q)
-        );
-      })
-    : entries;
+  const filtered = useMemo(() => {
+    if (!search.trim()) return entries;
+    const q = search.toLowerCase();
+    return entries.filter((e) =>
+      e.implement.toLowerCase().includes(q) ||
+      e.distance.toFixed(2).includes(q) ||
+      (e.notes && e.notes.toLowerCase().includes(q)) ||
+      eventLabel(e.event).toLowerCase().includes(q)
+    );
+  }, [entries, search]);
 
   // Stats
-  const uniqueImplements = [...new Set(entries.map((e) => e.implement))].sort(
-    (a, b) => parseFloat(b) - parseFloat(a)
+  const uniqueImplements = useMemo(
+    () =>
+      [...new Set(entries.map((e) => e.implement))].sort(
+        (a, b) => parseFloat(b) - parseFloat(a)
+      ),
+    [entries]
   );
   const bestThrow = entries.length > 0 ? Math.max(...entries.map((e) => e.distance)) : 0;
 

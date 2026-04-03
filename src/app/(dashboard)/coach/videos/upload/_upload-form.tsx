@@ -644,6 +644,7 @@ export function UploadForm({ athleteOptions }: Props) {
                     src={thumbnailPreviewUrl}
                     alt="Thumbnail preview"
                     className="w-16 h-10 object-cover rounded border border-surface-200 dark:border-surface-700"
+                    loading="lazy"
                   />
                   <button
                     type="button"

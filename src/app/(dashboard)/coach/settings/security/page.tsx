@@ -232,6 +232,7 @@ export default function SecuritySettingsPage() {
                 src={qrCodeDataUrl}
                 alt="MFA QR Code"
                 className="w-48 h-48 rounded-lg bg-white p-2"
+                loading="lazy"
               />
             </div>
             <details className="text-sm">

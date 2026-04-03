@@ -507,7 +507,7 @@ export default function ThrowFlowAnalyzePage() {
  }).slice(0, 16).map((frame, i) => (
  <div key={i} className="aspect-video rounded overflow-hidden bg-[var(--muted-bg)]">
  {/* eslint-disable-next-line @next/next/no-img-element */}
- <img src={frame} alt={`Frame ${i}`} className="w-full h-full object-cover" />
+ <img src={frame} alt={`Frame ${i}`} className="w-full h-full object-cover" loading="lazy" />
  </div>
  ))}
  </div>
