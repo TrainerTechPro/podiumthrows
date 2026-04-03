@@ -81,22 +81,11 @@ export function DashboardWidget({
     <div
       className={cn(
         "relative rounded-3xl overflow-hidden p-6",
-        "bg-gradient-to-br from-amber-500/10 via-surface-900/80 to-surface-950",
+        "bg-surface-900",
         "border border-surface-800/50",
         className
       )}
     >
-      {/* Subtle dot pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, currentColor 1px, transparent 1px)",
-          backgroundSize: "16px 16px",
-        }}
-        aria-hidden="true"
-      />
-
       {loading ? (
         /* Skeleton state */
         <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-4">

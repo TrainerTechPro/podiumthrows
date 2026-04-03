@@ -66,7 +66,7 @@ export function PRCelebration({
         }
         @keyframes prBadgeIn {
           0%   { transform: scale(0.6) translateY(20px); opacity: 0; }
-          60%  { transform: scale(1.08) translateY(-4px); opacity: 1; }
+          60%  { transform: scale(1) translateY(0); opacity: 1; }
           100% { transform: scale(1) translateY(0); opacity: 1; }
         }
         @keyframes prFadeOut {
@@ -111,7 +111,7 @@ export function PRCelebration({
           <div
             className="bg-white dark:bg-surface-900 rounded-2xl shadow-2xl px-8 py-7 flex flex-col items-center gap-2 text-center"
             style={{
-              animation: "prBadgeIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+              animation: "prBadgeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
               maxWidth: "320px",
               border: `2px solid ${BRAND.primary}`,
             }}

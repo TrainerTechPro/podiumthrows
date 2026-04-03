@@ -110,7 +110,7 @@ function InteractiveWrapper({
   const onTouchEnd = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    el.style.transition = "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease-out";
+    el.style.transition = "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease-out";
     el.style.transform = "";
   }, []);
 

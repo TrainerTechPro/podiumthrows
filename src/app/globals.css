@@ -134,13 +134,13 @@
   /* ── Gold Glow Divider ───────────────────────────────────────────── */
   .glow-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
-    opacity: 0.3;
+    background: var(--card-border);
+    opacity: 0.5;
   }
   .glow-divider-strong {
     height: 1px;
-    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
-    opacity: 0.6;
+    background: var(--card-border);
+    opacity: 0.8;
   }
 
   /* ── Diamond Indicator ───────────────────────────────────────────── */
@@ -366,8 +366,7 @@
 /* ─── Button Bounce ────────────────────────────────────────────────────── */
 @keyframes btnBounceSpring {
   0%   { transform: scale(1); }
-  16%  { transform: scale(0.95); }
-  55%  { transform: scale(1.03); }
+  20%  { transform: scale(0.96); }
   100% { transform: scale(1); }
 }
 @keyframes btnBounceSubtle {
@@ -376,7 +375,7 @@
   100% { transform: scale(1); }
 }
 .btn-bounce-spring {
-  animation: btnBounceSpring 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: btnBounceSpring 250ms ease-out both;
 }
 .btn-bounce-subtle {
   animation: btnBounceSubtle 200ms ease-out both;
