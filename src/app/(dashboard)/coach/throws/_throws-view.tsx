@@ -604,7 +604,7 @@ export function ThrowsView({
        })}
       </div>
       {/* Desktop table */}
-      <div className="hidden sm:block overflow-x-auto">
+      <div className="hidden sm:block overflow-x-auto custom-scrollbar">
        <table className="w-full min-w-[760px]">
        <thead>
         <tr className="border-b border-[var(--card-border)] bg-[var(--muted-bg)]/30">

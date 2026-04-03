@@ -851,7 +851,7 @@ export default function CoachSettingsPage() {
                     </svg>
                   </div>
                   <p className="text-sm font-semibold text-[var(--foreground)]">No invitations sent</p>
-                  <p className="text-xs text-muted max-w-[220px]">Invite athletes from the Athletes page to grow your roster.</p>
+                  <p className="text-xs text-muted max-w-full sm:max-w-[220px]">Invite athletes from the Athletes page to grow your roster.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -914,7 +914,7 @@ export default function CoachSettingsPage() {
                     </svg>
                   </div>
                   <p className="text-sm font-semibold text-[var(--foreground)]">No activity yet</p>
-                  <p className="text-xs text-muted max-w-[220px]">Account actions like sign-ins and athlete changes will appear here.</p>
+                  <p className="text-xs text-muted max-w-full sm:max-w-[220px]">Account actions like sign-ins and athlete changes will appear here.</p>
                 </div>
               ) : (
                 <div className="space-y-3">

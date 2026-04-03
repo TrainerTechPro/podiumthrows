@@ -351,7 +351,7 @@ export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
   // Read mode/depth preferences from cookies
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const mode = (cookieStore.get("dashboard-mode")?.value ?? "training") as DashboardMode;
   const depth = (cookieStore.get("dashboard-depth")?.value ?? "standard") as DashboardDepth;
   const analyticsPeriod = Number(cookieStore.get("dashboard-analytics-period")?.value) || 30;
@@ -544,7 +544,7 @@ export default async function CoachDashboardPage() {
       )}
 
       {/* Two-column: Activity Feed + Readiness */}
-      <div className="grid lg:grid-cols-5 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {/* Activity Feed — timeline, left column */}
         <section className="lg:col-span-3 space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
