@@ -110,12 +110,12 @@ export default function MarketingNav() {
 
           {/* Mobile menu — dropdown inside the pill */}
           {menuOpen && (
-            <div className="md:hidden border-t border-white/[0.06] px-4 pt-3 pb-4 flex flex-col gap-1">
+            <div className="md:hidden border-t border-white/[0.06] px-4 pt-3 pb-4 flex flex-col gap-1 bg-[var(--landing-surface)] rounded-b-[14px]">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="font-body text-[14px] text-surface-400 hover:text-white transition-colors py-2.5 border-b border-white/[0.04] last:border-0"
+                  className="font-body text-[14px] text-surface-200 hover:text-white transition-colors py-2.5 border-b border-white/[0.06] last:border-0"
                 >
                   {link.label}
                 </Link>
@@ -123,7 +123,7 @@ export default function MarketingNav() {
               <div className="flex flex-col gap-2 pt-3">
                 <Link
                   href="/login"
-                  className="font-body text-center text-[14px] text-surface-400 py-2.5 border border-white/[0.08] rounded-lg hover:text-white hover:border-white/[0.16] transition-colors"
+                  className="font-body text-center text-[14px] text-surface-200 py-2.5 border border-white/[0.12] rounded-lg hover:text-white hover:border-white/[0.2] transition-colors"
                 >
                   Sign In
                 </Link>
