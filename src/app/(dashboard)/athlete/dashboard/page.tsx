@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Zap, ChevronRight } from "lucide-react";
 import { requireAthleteSession, getAthleteStats } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import {
@@ -109,6 +110,9 @@ export default async function AthleteDashboardPage() {
     day: "numeric",
   });
 
+  // Practice hours: 2pm–8pm local (server-side)
+  const isPracticeHours = hour >= 14 && hour < 20;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
@@ -126,6 +130,43 @@ export default async function AthleteDashboardPage() {
         </div>
         <CustomizeTrigger config={config} />
       </div>
+
+      {/* Quick Log CTA */}
+      <Link
+        href="/athlete/quick-log"
+        className="group relative block rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 p-6 shadow-lg transition-transform active:scale-[0.98]"
+        aria-label="Quick Log — tap to log a throw in seconds"
+      >
+        {/* Pulse ring during practice hours */}
+        {isPracticeHours && (
+          <span
+            className="absolute inset-0 rounded-2xl ring-2 ring-primary-400 animate-pulse pointer-events-none"
+            aria-hidden="true"
+          />
+        )}
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <Zap size={28} strokeWidth={2} className="text-white" aria-hidden="true" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-heading text-2xl font-bold text-white">Quick Log</h2>
+            <p className="text-sm text-white/80">Tap to log a throw in seconds</p>
+          </div>
+          <ChevronRight
+            size={24}
+            strokeWidth={1.75}
+            className="text-white/60 group-hover:text-white transition-colors shrink-0"
+            aria-hidden="true"
+          />
+        </div>
+        {isPracticeHours && (
+          <div className="mt-3 flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-semibold">
+              🎯 Practice time
+            </span>
+          </div>
+        )}
+      </Link>
 
       {/* Tabbed view: Training + Health */}
       {hasWearable ? (
