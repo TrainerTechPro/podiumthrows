@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { createNotification } from "@/lib/notifications";
+import { emitSessionComplete } from "@/lib/team-activity";
 
 // PUT /api/throws/assignments/[id] — update assignment status (start, complete, skip)
 export async function PUT(
@@ -172,6 +173,18 @@ export async function PUT(
           },
         }).catch((err) => logger.error("Workout completion notification failed", { error: err }));
       }
+
+      // Emit team feed SESSION entry (fire-and-forget). PR events for individual
+      // throws were already emitted at log-throw time — this row covers the
+      // session completion itself.
+      void emitSessionComplete(updated.athleteId, {
+        throwCount: updated.throwLogs.length,
+        bestDistance: updated.throwLogs.reduce(
+          (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
+          0
+        ) || null,
+        sessionId: updated.id,
+      }).catch((err) => logger.error("Team activity session emit failed", { error: err }));
     }
 
     // ── Update self-program ProgramSession if this was auto-created ───

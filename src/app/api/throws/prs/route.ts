@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { emitPR } from "@/lib/team-activity";
 
 // GET /api/throws/prs — get PRs for the current athlete (or by athleteId for coaches)
 export async function GET(req: NextRequest) {
@@ -119,6 +120,15 @@ export async function POST(req: NextRequest) {
           source: source || "TRAINING",
         },
       });
+
+      // Emit team feed PR entry. implementWeight parsed from implement string (e.g. "7.26kg").
+      const implementKg = parseFloat(String(implement).replace("kg", "")) || 0;
+      void emitPR(athleteId, {
+        event,
+        implementWeight: implementKg,
+        distance,
+        previousDistance: existingPR?.distance ?? null,
+      }).catch((err) => logger.error("Team activity PR emit failed", { context: "throws/prs", error: err }));
 
       return NextResponse.json({
         success: true,

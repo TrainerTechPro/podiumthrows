@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { checkAndSetPR } from "@/lib/throws";
 import { notifyCoachPR } from "@/lib/notifications";
 import { awardPRAchievement } from "@/lib/achievements";
+import { emitPR } from "@/lib/team-activity";
 
 /**
  * POST /api/throws/assignments/[id]/log-throw
@@ -161,6 +162,14 @@ export async function POST(
             user.athleteProfile.id,
             event,
           ).catch((err) => logger.error("PR achievement failed", { error: err }));
+
+          // Emit team activity feed entry (fire-and-forget)
+          void emitPR(user.athleteProfile.id, {
+            event,
+            implementWeight: implementKg,
+            distance,
+            previousDistance: null, // checkAndSetPR doesn't return previous
+          }).catch((err) => logger.error("Team activity PR emit failed", { error: err }));
         }
       }
     }

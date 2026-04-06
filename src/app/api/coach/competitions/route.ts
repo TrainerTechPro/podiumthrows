@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { COMPETITION_WEIGHTS } from "@/lib/throws";
+import { emitPR } from "@/lib/team-activity";
 
 /* ─── GET — list all meets for coach's roster ─────────────────────────────── */
 
@@ -275,6 +276,16 @@ export async function PATCH(req: NextRequest) {
               distance: r.result,
               previousBest: existingPR?.distance ?? null,
             });
+
+            // Emit team feed PR entry (fire-and-forget)
+            void emitPR(comp.athleteId, {
+              event: comp.event,
+              implementWeight: compWeight,
+              distance: r.result,
+              previousDistance: existingPR?.distance ?? null,
+            }).catch((err) =>
+              logger.error("Team activity PR emit failed", { context: "coach/competitions", error: err })
+            );
           }
         }
       }
