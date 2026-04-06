@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 import { Avatar } from "@/components";
 import { AthleteSettingsForm } from "./_form";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
+import { FeedPrivacySettings } from "@/components/feedback/FeedPrivacySettings";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -84,6 +85,9 @@ export default async function AthleteSettingsPage() {
 
       {/* Quick Actions */}
       <QuickActionsSettings role="ATHLETE" />
+
+      {/* Team Feed Privacy */}
+      <FeedPrivacySettings />
 
       {/* Integrations link */}
       <section className="space-y-3">
