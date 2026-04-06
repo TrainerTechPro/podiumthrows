@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { checkAndSetPR, COMPETITION_WEIGHTS } from "@/lib/throws";
 import { updateThrowsStreak } from "@/lib/streak";
+import { logger } from "@/lib/logger";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -121,297 +122,321 @@ async function getCurrentImplement(
 // ── GET — current Quick Log state ─────────────────────────────────────────────
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const athlete = await prisma.athleteProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true, gender: true, events: true },
+    });
+
+    if (!athlete) {
+      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+    }
+
+    const today = todayDateString();
+    const events = athlete.events as string[];
+    const primaryEvent = events[0] ?? "SHOT_PUT";
+    const gender = athlete.gender as string;
+
+    // Today's AthleteThrowsSession (most recent for primary event)
+    const todaySession = await prisma.athleteThrowsSession.findFirst({
+      where: { athleteId: athlete.id, date: today },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, event: true, date: true },
+    });
+
+    // Last 3 ThrowLogs today
+    const recentThrowsRaw = await prisma.throwLog.findMany({
+      where: {
+        athleteId: athlete.id,
+        date: { gte: startOfToday() },
+      },
+      orderBy: { date: "desc" },
+      take: 3,
+      select: { id: true, distance: true, notes: true, date: true },
+    });
+
+    const recentThrows = recentThrowsRaw.map((t) => {
+      const { feeling, text } = deserializeNotes(t.notes);
+      return {
+        id: t.id,
+        distance: t.distance ?? null,
+        feeling,
+        notes: text,
+        createdAt: t.date.toISOString(),
+      };
+    });
+
+    // Total throw count today
+    const throwCount = await prisma.throwLog.count({
+      where: {
+        athleteId: athlete.id,
+        date: { gte: startOfToday() },
+      },
+    });
+
+    const currentImplement = await getCurrentImplement(athlete.id, primaryEvent, gender);
+    const availableImplements = buildAvailableImplements(events, gender);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        session: todaySession
+          ? { id: todaySession.id, event: todaySession.event, date: todaySession.date }
+          : null,
+        currentImplement,
+        recentThrows,
+        throwCount,
+        availableImplements,
+      },
+    });
+  } catch (err) {
+    logger.error("GET /api/athlete/quick-log", { context: "api", error: err });
+    return NextResponse.json(
+      { error: "Failed to load quick-log state." },
+      { status: 500 }
+    );
   }
-
-  const athlete = await prisma.athleteProfile.findUnique({
-    where: { userId: session.userId },
-    select: { id: true, gender: true, events: true },
-  });
-
-  if (!athlete) {
-    return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
-  }
-
-  const today = todayDateString();
-  const events = athlete.events as string[];
-  const primaryEvent = events[0] ?? "SHOT_PUT";
-  const gender = athlete.gender as string;
-
-  // Today's AthleteThrowsSession (most recent for primary event)
-  const todaySession = await prisma.athleteThrowsSession.findFirst({
-    where: { athleteId: athlete.id, date: today },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, event: true, date: true },
-  });
-
-  // Last 3 ThrowLogs today
-  const recentThrowsRaw = await prisma.throwLog.findMany({
-    where: {
-      athleteId: athlete.id,
-      date: { gte: startOfToday() },
-    },
-    orderBy: { date: "desc" },
-    take: 3,
-    select: { id: true, distance: true, notes: true, date: true },
-  });
-
-  const recentThrows = recentThrowsRaw.map((t) => {
-    const { feeling, text } = deserializeNotes(t.notes);
-    return {
-      id: t.id,
-      distance: t.distance ?? null,
-      feeling,
-      notes: text,
-      createdAt: t.date.toISOString(),
-    };
-  });
-
-  // Total throw count today
-  const throwCount = await prisma.throwLog.count({
-    where: {
-      athleteId: athlete.id,
-      date: { gte: startOfToday() },
-    },
-  });
-
-  const currentImplement = await getCurrentImplement(athlete.id, primaryEvent, gender);
-  const availableImplements = buildAvailableImplements(events, gender);
-
-  return NextResponse.json({
-    success: true,
-    data: {
-      session: todaySession
-        ? { id: todaySession.id, event: todaySession.event, date: todaySession.date }
-        : null,
-      currentImplement,
-      recentThrows,
-      throwCount,
-      availableImplements,
-    },
-  });
 }
 
 // ── POST — log a new throw ────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const athlete = await prisma.athleteProfile.findUnique({
-    where: { userId: session.userId },
-    select: { id: true, gender: true, events: true },
-  });
+    const athlete = await prisma.athleteProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true, gender: true, events: true },
+    });
 
-  if (!athlete) {
-    return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
-  }
+    if (!athlete) {
+      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+    }
 
-  const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-  const { event, implementWeight, distance, feeling, notes } = body;
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    const { event, implementWeight, distance, feeling, notes } = body;
 
-  // Validate required fields
-  if (typeof event !== "string" || !["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-    return NextResponse.json({ error: "Invalid event" }, { status: 400 });
-  }
-  if (typeof implementWeight !== "number" || implementWeight <= 0) {
-    return NextResponse.json({ error: "Invalid implementWeight" }, { status: 400 });
-  }
-  if (distance !== undefined && distance !== null && typeof distance !== "number") {
-    return NextResponse.json({ error: "distance must be a number if provided" }, { status: 400 });
-  }
-  if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
-    return NextResponse.json({ error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
-  }
+    // Validate required fields
+    if (typeof event !== "string" || !["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
+      return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+    }
+    if (typeof implementWeight !== "number" || implementWeight <= 0) {
+      return NextResponse.json({ error: "Invalid implementWeight" }, { status: 400 });
+    }
+    if (distance !== undefined && distance !== null && typeof distance !== "number") {
+      return NextResponse.json({ error: "distance must be a number if provided" }, { status: 400 });
+    }
+    if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
+      return NextResponse.json({ error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
+    }
 
-  const distanceNum = typeof distance === "number" ? distance : null;
-  const feelingVal = typeof feeling === "string" ? (feeling as Feeling) : null;
-  const notesText = typeof notes === "string" ? notes.trim() || null : null;
+    const distanceNum = typeof distance === "number" ? distance : null;
+    const feelingVal = typeof feeling === "string" ? (feeling as Feeling) : null;
+    const notesText = typeof notes === "string" ? notes.trim() || null : null;
 
-  // 1. Find or create today's AthleteThrowsSession for this event
-  const today = todayDateString();
+    // 1. Find or create today's AthleteThrowsSession for this event
+    const today = todayDateString();
 
-  let throwsSession = await prisma.athleteThrowsSession.findFirst({
-    where: { athleteId: athlete.id, date: today, event },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
-  });
-
-  if (!throwsSession) {
-    throwsSession = await prisma.athleteThrowsSession.create({
-      data: {
-        athleteId: athlete.id,
-        event,
-        date: today,
-        focus: "Quick Log",
-      },
+    let throwsSession = await prisma.athleteThrowsSession.findFirst({
+      where: { athleteId: athlete.id, date: today, event },
+      orderBy: { createdAt: "desc" },
       select: { id: true },
     });
-  }
 
-  // 2. Create ThrowLog — sessionId is left null (Quick Log is standalone from TrainingSession)
-  const serializedNotes = serializeNotes(feelingVal, notesText);
-
-  const throwLog = await prisma.throwLog.create({
-    data: {
-      athleteId: athlete.id,
-      sessionId: null,
-      event: event as never,
-      implementWeight,
-      implementWeightUnit: "kg",
-      distance: distanceNum,
-      date: new Date(),
-      isPersonalBest: false,
-      notes: serializedNotes,
-    },
-    select: { id: true, distance: true, notes: true, isPersonalBest: true, date: true },
-  });
-
-  // 3. PR detection — only when distance is provided
-  let isPersonalBest = false;
-  if (distanceNum != null && distanceNum > 0) {
-    const prResult = await checkAndSetPR(athlete.id, event, implementWeight, distanceNum);
-    isPersonalBest = prResult.isPersonalBest;
-
-    if (isPersonalBest) {
-      await prisma.throwLog.update({
-        where: { id: throwLog.id },
-        data: { isPersonalBest: true },
+    if (!throwsSession) {
+      throwsSession = await prisma.athleteThrowsSession.create({
+        data: {
+          athleteId: athlete.id,
+          event,
+          date: today,
+          focus: "Quick Log",
+        },
+        select: { id: true },
       });
     }
-  }
 
-  // 4. Update the throws-based streak. Recomputes from history, so this is
-  // self-healing against any drift from the sessions/complete or readiness
-  // writers. Errors are swallowed inside the helper.
-  await updateThrowsStreak(athlete.id);
+    // 2. Create ThrowLog — sessionId is left null (Quick Log is standalone from TrainingSession)
+    const serializedNotes = serializeNotes(feelingVal, notesText);
 
-  // 5. Get updated throw count for today
-  const throwCount = await prisma.throwLog.count({
-    where: {
-      athleteId: athlete.id,
-      date: { gte: startOfToday() },
-    },
-  });
-
-  const { feeling: parsedFeeling, text: parsedText } = deserializeNotes(throwLog.notes);
-
-  return NextResponse.json({
-    success: true,
-    data: {
-      throw: {
-        id: throwLog.id,
-        distance: throwLog.distance,
-        feeling: parsedFeeling,
-        notes: parsedText,
-        isPersonalBest,
-        createdAt: throwLog.date.toISOString(),
+    const throwLog = await prisma.throwLog.create({
+      data: {
+        athleteId: athlete.id,
+        sessionId: null,
+        event: event as never,
+        implementWeight,
+        implementWeightUnit: "kg",
+        distance: distanceNum,
+        date: new Date(),
+        isPersonalBest: false,
+        notes: serializedNotes,
       },
-      throwCount,
-      sessionId: throwsSession.id,
-    },
-  });
+      select: { id: true, distance: true, notes: true, isPersonalBest: true, date: true },
+    });
+
+    // 3. PR detection — only when distance is provided
+    let isPersonalBest = false;
+    if (distanceNum != null && distanceNum > 0) {
+      const prResult = await checkAndSetPR(athlete.id, event, implementWeight, distanceNum);
+      isPersonalBest = prResult.isPersonalBest;
+
+      if (isPersonalBest) {
+        await prisma.throwLog.update({
+          where: { id: throwLog.id },
+          data: { isPersonalBest: true },
+        });
+      }
+    }
+
+    // 4. Update the throws-based streak. Recomputes from history, so this is
+    // self-healing against any drift from the sessions/complete or readiness
+    // writers. Errors are swallowed inside the helper.
+    await updateThrowsStreak(athlete.id);
+
+    // 5. Get updated throw count for today
+    const throwCount = await prisma.throwLog.count({
+      where: {
+        athleteId: athlete.id,
+        date: { gte: startOfToday() },
+      },
+    });
+
+    const { feeling: parsedFeeling, text: parsedText } = deserializeNotes(throwLog.notes);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        throw: {
+          id: throwLog.id,
+          distance: throwLog.distance,
+          feeling: parsedFeeling,
+          notes: parsedText,
+          isPersonalBest,
+          createdAt: throwLog.date.toISOString(),
+        },
+        throwCount,
+        sessionId: throwsSession.id,
+      },
+    });
+  } catch (err) {
+    logger.error("POST /api/athlete/quick-log", { context: "api", error: err });
+    return NextResponse.json(
+      { error: "Failed to log throw." },
+      { status: 500 }
+    );
+  }
 }
 
 // ── PATCH — edit an existing throw ───────────────────────────────────────────
 
 export async function PATCH(req: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const athlete = await prisma.athleteProfile.findUnique({
-    where: { userId: session.userId },
-    select: { id: true },
-  });
-
-  if (!athlete) {
-    return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
-  }
-
-  const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-  const { id, distance, feeling, notes } = body;
-
-  if (typeof id !== "string") {
-    return NextResponse.json({ error: "id is required" }, { status: 400 });
-  }
-
-  // Find and verify ownership
-  const existing = await prisma.throwLog.findUnique({
-    where: { id },
-    select: { id: true, athleteId: true, event: true, implementWeight: true, distance: true, notes: true, isPersonalBest: true },
-  });
-
-  if (!existing) {
-    return NextResponse.json({ error: "Throw not found" }, { status: 404 });
-  }
-  if (existing.athleteId !== athlete.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  // Validate incoming fields
-  if (distance !== undefined && distance !== null && typeof distance !== "number") {
-    return NextResponse.json({ error: "distance must be a number if provided" }, { status: 400 });
-  }
-  if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
-    return NextResponse.json({ error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
-  }
-
-  const newDistance = distance === null ? null : typeof distance === "number" ? distance : existing.distance;
-  const newFeeling = feeling === null ? null : typeof feeling === "string" ? (feeling as Feeling) : null;
-  const newNotesText = notes === null ? null : typeof notes === "string" ? notes.trim() || null : null;
-
-  // Re-parse existing notes to preserve feeling if only text changes (and vice versa)
-  const prevParsed = deserializeNotes(existing.notes);
-  const resolvedFeeling = feeling !== undefined ? newFeeling : prevParsed.feeling;
-  const resolvedText = notes !== undefined ? newNotesText : prevParsed.text;
-  const serializedNotes = serializeNotes(resolvedFeeling, resolvedText);
-
-  // Determine if we need to re-run PR detection
-  const distanceChanged = newDistance !== existing.distance;
-
-  const updated = await prisma.throwLog.update({
-    where: { id },
-    data: {
-      distance: newDistance,
-      notes: serializedNotes,
-      // Reset PR flag if distance is being cleared
-      ...(newDistance == null ? { isPersonalBest: false } : {}),
-    },
-    select: { id: true, distance: true, notes: true, isPersonalBest: true, date: true },
-  });
-
-  // Re-run PR detection if distance changed and is now a positive number
-  let isPersonalBest = updated.isPersonalBest;
-  if (distanceChanged && newDistance != null && newDistance > 0) {
-    const prResult = await checkAndSetPR(athlete.id, existing.event as string, existing.implementWeight, newDistance);
-    isPersonalBest = prResult.isPersonalBest;
-    if (isPersonalBest !== updated.isPersonalBest) {
-      await prisma.throwLog.update({
-        where: { id },
-        data: { isPersonalBest },
-      });
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-  }
 
-  const { feeling: parsedFeeling, text: parsedText } = deserializeNotes(updated.notes);
+    const athlete = await prisma.athleteProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
+    });
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      throw: {
-        id: updated.id,
-        distance: updated.distance,
-        feeling: parsedFeeling,
-        notes: parsedText,
-        isPersonalBest,
-        createdAt: updated.date.toISOString(),
+    if (!athlete) {
+      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+    }
+
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    const { id, distance, feeling, notes } = body;
+
+    if (typeof id !== "string") {
+      return NextResponse.json({ error: "id is required" }, { status: 400 });
+    }
+
+    // Find and verify ownership
+    const existing = await prisma.throwLog.findUnique({
+      where: { id },
+      select: { id: true, athleteId: true, event: true, implementWeight: true, distance: true, notes: true, isPersonalBest: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Throw not found" }, { status: 404 });
+    }
+    if (existing.athleteId !== athlete.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Validate incoming fields
+    if (distance !== undefined && distance !== null && typeof distance !== "number") {
+      return NextResponse.json({ error: "distance must be a number if provided" }, { status: 400 });
+    }
+    if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
+      return NextResponse.json({ error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
+    }
+
+    const newDistance = distance === null ? null : typeof distance === "number" ? distance : existing.distance;
+    const newFeeling = feeling === null ? null : typeof feeling === "string" ? (feeling as Feeling) : null;
+    const newNotesText = notes === null ? null : typeof notes === "string" ? notes.trim() || null : null;
+
+    // Re-parse existing notes to preserve feeling if only text changes (and vice versa)
+    const prevParsed = deserializeNotes(existing.notes);
+    const resolvedFeeling = feeling !== undefined ? newFeeling : prevParsed.feeling;
+    const resolvedText = notes !== undefined ? newNotesText : prevParsed.text;
+    const serializedNotes = serializeNotes(resolvedFeeling, resolvedText);
+
+    // Determine if we need to re-run PR detection
+    const distanceChanged = newDistance !== existing.distance;
+
+    const updated = await prisma.throwLog.update({
+      where: { id },
+      data: {
+        distance: newDistance,
+        notes: serializedNotes,
+        // Reset PR flag if distance is being cleared
+        ...(newDistance == null ? { isPersonalBest: false } : {}),
       },
-    },
-  });
+      select: { id: true, distance: true, notes: true, isPersonalBest: true, date: true },
+    });
+
+    // Re-run PR detection if distance changed and is now a positive number
+    let isPersonalBest = updated.isPersonalBest;
+    if (distanceChanged && newDistance != null && newDistance > 0) {
+      const prResult = await checkAndSetPR(athlete.id, existing.event as string, existing.implementWeight, newDistance);
+      isPersonalBest = prResult.isPersonalBest;
+      if (isPersonalBest !== updated.isPersonalBest) {
+        await prisma.throwLog.update({
+          where: { id },
+          data: { isPersonalBest },
+        });
+      }
+    }
+
+    const { feeling: parsedFeeling, text: parsedText } = deserializeNotes(updated.notes);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        throw: {
+          id: updated.id,
+          distance: updated.distance,
+          feeling: parsedFeeling,
+          notes: parsedText,
+          isPersonalBest,
+          createdAt: updated.date.toISOString(),
+        },
+      },
+    });
+  } catch (err) {
+    logger.error("PATCH /api/athlete/quick-log", { context: "api", error: err });
+    return NextResponse.json(
+      { error: "Failed to update throw." },
+      { status: 500 }
+    );
+  }
 }
