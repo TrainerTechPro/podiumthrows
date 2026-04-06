@@ -12,6 +12,15 @@ import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { CustomizeTrigger } from "./_customize-trigger";
 import { StaleSessionChecker } from "./_stale-session-checker";
+import { StreakReminder } from "@/components/notifications/StreakReminder";
+import {
+  fetchThisWeekData,
+  fetchPRTrackerData,
+  fetchWeeklyGoalData,
+  type ThisWeekData,
+  type PRTrackerData,
+  type WeeklyGoalData,
+} from "@/lib/data/dashboard-progress";
 import { WearableDashboard } from "../_wearable-dashboard";
 import { avg, type WhoopRow, type OuraRow } from "../_wearable-helpers";
 
@@ -51,6 +60,9 @@ import { TrainingVolumeWidget } from "./_widgets/training-volume";
 import { UpcomingSessionsWidget } from "./_widgets/upcoming-sessions";
 import { RecentVideosWidget } from "./_widgets/recent-videos";
 import { PendingQuestionnairesWidget } from "./_widgets/pending-questionnaires";
+import { ThisWeekWidget } from "./_widgets/this-week";
+import { PRTrackerWidget } from "./_widgets/pr-tracker";
+import { WeeklyGoalWidget } from "./_widgets/weekly-goal";
 
 /* ─── Fetcher map ───────────────────────────────────────────────────────── */
 
@@ -65,6 +77,9 @@ const FETCHERS: Record<WidgetId, (id: string) => Promise<unknown>> = {
   "upcoming-sessions": fetchUpcomingSessionsData,
   videos: fetchVideosData,
   questionnaires: fetchQuestionnairesData,
+  "this-week": fetchThisWeekData,
+  "pr-tracker": fetchPRTrackerData,
+  "weekly-goal": fetchWeeklyGoalData,
 };
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
@@ -117,6 +132,7 @@ export default async function AthleteDashboardPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <StaleSessionChecker />
+      <StreakReminder currentStreak={stats.currentStreak} />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -346,6 +362,12 @@ function WidgetRenderer({ id, data }: { id: WidgetId; data: unknown }) {
       return <RecentVideosWidget videos={data as VideoItem[]} />;
     case "questionnaires":
       return <PendingQuestionnairesWidget data={data as QuestionnairesData} />;
+    case "this-week":
+      return <ThisWeekWidget data={data as ThisWeekData} />;
+    case "pr-tracker":
+      return <PRTrackerWidget data={data as PRTrackerData} />;
+    case "weekly-goal":
+      return <WeeklyGoalWidget data={data as WeeklyGoalData} />;
     default:
       return null;
   }

@@ -10,6 +10,13 @@ interface PRCelebrationProps {
   event?: string;
   distance?: number;
   unit?: string;
+  /** Override the default "New Personal Best!" headline. */
+  title?: string;
+  /** Override the default numeric distance subtitle. When provided, `event`,
+   *  `distance`, and `unit` are ignored for display purposes. */
+  subtitle?: string;
+  /** Emoji shown above the headline. Default: trophy. */
+  icon?: string;
 }
 
 // Stable seeded random for deterministic confetti positions (avoids hydration issues)
@@ -29,6 +36,9 @@ export function PRCelebration({
   event,
   distance,
   unit = "m",
+  title = "New Personal Best!",
+  subtitle,
+  icon = "🏆",
 }: PRCelebrationProps) {
   const rand = seededRandom(42);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -116,19 +126,27 @@ export function PRCelebration({
               border: `2px solid ${BRAND.primary}`,
             }}
           >
-            <span style={{ fontSize: "3rem", lineHeight: 1 }}>🏆</span>
+            <span style={{ fontSize: "3rem", lineHeight: 1 }}>{icon}</span>
             <p className="text-xl font-bold text-[var(--foreground)] mt-1">
-              New Personal Best!
+              {title}
             </p>
-            {event && (
-              <p className="text-sm font-medium text-amber-500">
-                {formatEventType(event)}
-              </p>
-            )}
-            {distance !== undefined && (
+            {subtitle ? (
               <p className="text-3xl font-bold text-amber-500 tabular-nums">
-                {distance.toFixed(2)}{unit}
+                {subtitle}
               </p>
+            ) : (
+              <>
+                {event && (
+                  <p className="text-sm font-medium text-amber-500">
+                    {formatEventType(event)}
+                  </p>
+                )}
+                {distance !== undefined && (
+                  <p className="text-3xl font-bold text-amber-500 tabular-nums">
+                    {distance.toFixed(2)}{unit}
+                  </p>
+                )}
+              </>
             )}
             <p className="text-xs text-muted mt-1">
               Tap anywhere to continue

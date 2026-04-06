@@ -12,7 +12,10 @@ export type WidgetId =
   | "volume"
   | "upcoming-sessions"
   | "videos"
-  | "questionnaires";
+  | "questionnaires"
+  | "this-week"
+  | "pr-tracker"
+  | "weekly-goal";
 
 export const WIDGET_IDS: WidgetId[] = [
   "readiness",
@@ -25,6 +28,9 @@ export const WIDGET_IDS: WidgetId[] = [
   "upcoming-sessions",
   "videos",
   "questionnaires",
+  "this-week",
+  "pr-tracker",
+  "weekly-goal",
 ];
 
 export type WidgetMeta = {
@@ -46,6 +52,9 @@ export const WIDGET_CATALOG: WidgetMeta[] = [
   { id: "upcoming-sessions", name: "Upcoming Sessions", description: "Next 5 scheduled sessions", icon: "CalendarDays" },
   { id: "videos", name: "Recent Videos", description: "Latest coaching videos", icon: "Video" },
   { id: "questionnaires", name: "Pending Questionnaires", description: "Unanswered coach questionnaires", icon: "ClipboardList" },
+  { id: "this-week", name: "This Week", description: "Totals and comparison to last week", icon: "Calendar" },
+  { id: "pr-tracker", name: "PR Tracker", description: "PRs per implement with next target", icon: "Trophy" },
+  { id: "weekly-goal", name: "Weekly Goal", description: "Set a throws target and track progress", icon: "Target" },
 ];
 
 /* ─── Dashboard Config ───────────────────────────────────────────────────── */
@@ -66,13 +75,13 @@ export const PRESETS: Record<PresetId, DashboardConfig> = {
   },
   performance: {
     preset: "performance",
-    widgets: ["readiness", "today-workout", "calendar", "prs", "quick-stats"],
-    order: ["readiness", "today-workout", "calendar", "prs", "quick-stats"],
+    widgets: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats"],
+    order: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats"],
   },
   detailed: {
     preset: "detailed",
-    widgets: ["readiness", "today-workout", "calendar", "prs", "quick-stats", "goals", "volume", "upcoming-sessions"],
-    order: ["readiness", "today-workout", "calendar", "prs", "quick-stats", "goals", "volume", "upcoming-sessions"],
+    widgets: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats", "goals", "volume", "upcoming-sessions"],
+    order: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats", "goals", "volume", "upcoming-sessions"],
   },
   recovery: {
     preset: "recovery",
