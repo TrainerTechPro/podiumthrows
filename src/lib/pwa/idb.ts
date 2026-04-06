@@ -1,9 +1,12 @@
-// Minimal IndexedDB helper — shared by video cache + sync queue
-// Database: podium-pwa, version 1
-// Stores: sync-queue (keyPath: id), offline-videos (keyPath: videoId)
+// Minimal IndexedDB helper — shared by video cache + sync queue + quick-log queue
+// Database: podium-pwa, version 2
+// Stores:
+//   sync-queue       (keyPath: id)       — session throw attempts
+//   offline-videos   (keyPath: videoId)  — cached video blobs
+//   quick-log-queue  (keyPath: clientId) — Quick Log throws pending sync
 
 const DB_NAME = "podium-pwa";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -11,11 +14,17 @@ export function openDB(): Promise<IDBDatabase> {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      // v1 stores
       if (!db.objectStoreNames.contains("sync-queue")) {
         db.createObjectStore("sync-queue", { keyPath: "id" });
       }
       if (!db.objectStoreNames.contains("offline-videos")) {
         db.createObjectStore("offline-videos", { keyPath: "videoId" });
+      }
+      // v2: quick-log queue
+      if (!db.objectStoreNames.contains("quick-log-queue")) {
+        const store = db.createObjectStore("quick-log-queue", { keyPath: "clientId" });
+        store.createIndex("createdAt", "createdAt", { unique: false });
       }
     };
 

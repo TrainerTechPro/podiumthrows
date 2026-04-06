@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { checkAndSetPR, COMPETITION_WEIGHTS, IMPLEMENT_PRESETS } from "@/lib/throws";
+import { checkAndSetPR, COMPETITION_WEIGHTS } from "@/lib/throws";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
