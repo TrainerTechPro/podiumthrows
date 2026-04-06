@@ -29,6 +29,7 @@ import {
 } from "@/lib/cache";
 import { withTiming } from "@/lib/perf";
 import { getCoachingActions } from "@/lib/data/coaching-actions";
+import { getTeamAttendanceStats } from "@/lib/data/practices";
 import {
   getRecentTeamPRs,
   getTeamLoadOverview,
@@ -74,7 +75,22 @@ function formatEventName(event: string): string {
 
 /* ─── Stat Bar ───────────────────────────────────────────────────────────── */
 
-function StatBar({ stats }: { stats: CoachStats }) {
+function StatBar({
+  stats,
+  teamAttendance,
+}: {
+  stats: CoachStats;
+  teamAttendance: { rate: number; totalPractices: number; flaggedAthletes: Array<{ id: string; firstName: string; lastName: string; avatarUrl: string | null; rate: number }> } | null;
+}) {
+  const attendanceColor =
+    teamAttendance === null || teamAttendance.totalPractices === 0
+      ? "text-[var(--foreground)]"
+      : teamAttendance.rate >= 90
+      ? "text-emerald-600 dark:text-emerald-400"
+      : teamAttendance.rate >= 75
+      ? "text-amber-500 dark:text-amber-400"
+      : "text-red-600 dark:text-red-400";
+
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted border-b border-[var(--card-border)] pb-6">
       <span>
@@ -128,6 +144,23 @@ function StatBar({ stats }: { stats: CoachStats }) {
         <Badge variant="danger">
           {stats.injured} injured
         </Badge>
+      )}
+
+      {teamAttendance !== null && teamAttendance.totalPractices > 0 && (
+        <span>
+          <span className={cn("font-semibold tabular-nums", attendanceColor)}>
+            <AnimatedNumber value={teamAttendance.rate} />%
+          </span>
+          {" team attendance this week"}
+        </span>
+      )}
+
+      {teamAttendance !== null && teamAttendance.flaggedAthletes.length > 0 && (
+        <Link href="/coach/athletes" className="inline-flex">
+          <Badge variant="warning">
+            {teamAttendance.flaggedAthletes.length} below 75% attendance
+          </Badge>
+        </Link>
       )}
     </div>
   );
@@ -369,6 +402,7 @@ export default async function CoachDashboardPage() {
     distanceDeltaResult,
     weeklyVolumeResult,
     seasonGainsResult,
+    teamAttendanceResult,
   ] = await withTiming("coach-dashboard-data", () => Promise.allSettled([
     cachedGetCoachStats(coach.id),
     cachedGetRecentActivity(coach.id, 20, true),
@@ -382,6 +416,7 @@ export default async function CoachDashboardPage() {
     getTeamDistanceDelta(coach.id, analyticsPeriod),
     getWeeklyVolumeBreakdown(coach.id),
     getSeasonGains(coach.id, analyticsPeriod),
+    getTeamAttendanceStats(coach.id, 7),
   ]));
 
   const stats: CoachStats = statsResult.status === "fulfilled"
@@ -404,6 +439,7 @@ export default async function CoachDashboardPage() {
     ? weeklyVolumeResult.value
     : { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((l) => ({ label: l, throws: 0, date: "" })), todayIndex: 0 };
   const seasonGains = seasonGainsResult.status === "fulfilled" ? seasonGainsResult.value : [];
+  const teamAttendance = teamAttendanceResult.status === "fulfilled" ? teamAttendanceResult.value : null;
 
   // Adaptation progress — Training Block + Advanced depth only
   const adaptationRows: AdaptationRow[] = [];
@@ -530,7 +566,7 @@ export default async function CoachDashboardPage() {
           </div>
           <ModeSelector mode={mode} depth={depth} />
         </div>
-        <StatBar stats={stats} />
+        <StatBar stats={stats} teamAttendance={teamAttendance} />
       </div>
 
       {/* Coaching Action Cards */}
