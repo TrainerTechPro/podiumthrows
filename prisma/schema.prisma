@@ -246,6 +246,10 @@ model AthleteProfile {
   longestStreak    Int       @default(0)
   lastActivityDate DateTime?
 
+  // Client-side notification preferences.
+  // Shape: { streakReminder: { enabled: bool, promptDismissed: bool } }
+  notificationPreferences Json?
+
   // Performance benchmarks (stored as JSON string)
   // e.g. { squat1RM, bench1RM, deadlift1RM, cleanAndJerk1RM, snatch1RM, overheadPress1RM, ... }
   performanceBenchmarks String? @db.Text

@@ -87,13 +87,28 @@ const FETCHERS: Record<WidgetId, (id: string) => Promise<unknown>> = {
 export default async function AthleteDashboardPage() {
   const { athlete } = await requireAthleteSession();
 
-  // Fetch dashboard config from athlete profile
+  // Fetch dashboard config + notification prefs from athlete profile
   const profile = await prisma.athleteProfile.findUnique({
     where: { id: athlete.id },
-    select: { dashboardConfig: true },
+    select: { dashboardConfig: true, notificationPreferences: true },
   });
 
   const config: DashboardConfig = resolveConfig(profile?.dashboardConfig);
+
+  // Parse notification preferences defensively — the JSON shape is
+  // { streakReminder: { enabled, promptDismissed } } but the column is
+  // nullable and could hold anything. Default both flags to false.
+  const streakReminderPrefs = (() => {
+    const raw = profile?.notificationPreferences as
+      | { streakReminder?: { enabled?: unknown; promptDismissed?: unknown } }
+      | null
+      | undefined;
+    const s = raw?.streakReminder;
+    return {
+      enabled: s?.enabled === true,
+      promptDismissed: s?.promptDismissed === true,
+    };
+  })();
   const enabled = config.order.filter((w) => config.widgets.includes(w));
 
   // Parallel fetch: enabled widgets + header stats + wearable connections
@@ -132,7 +147,11 @@ export default async function AthleteDashboardPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <StaleSessionChecker />
-      <StreakReminder currentStreak={stats.currentStreak} />
+      <StreakReminder
+        currentStreak={stats.currentStreak}
+        initialEnabled={streakReminderPrefs.enabled}
+        initialPromptDismissed={streakReminderPrefs.promptDismissed}
+      />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
