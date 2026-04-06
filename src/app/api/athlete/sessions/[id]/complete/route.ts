@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { updateThrowsStreak } from "@/lib/streak";
 
 /* ─── PATCH — mark session as completed ──────────────────────────────────── */
 
@@ -69,8 +70,8 @@ export async function PATCH(
       },
     });
 
-    // Update streak
-    await updateAthleteStreak(athlete.id);
+    // Update streak — throws-based helper recomputes from ThrowLog history
+    await updateThrowsStreak(athlete.id);
 
     // Compute summary stats
     const totalExercises = updated.logs.length;
@@ -115,40 +116,3 @@ export async function PATCH(
   }
 }
 
-async function updateAthleteStreak(athleteId: string) {
-  try {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const yesterdaySession = await prisma.trainingSession.findFirst({
-      where: {
-        athleteId,
-        status: "COMPLETED",
-        completedDate: { gte: yesterday, lt: today },
-      },
-      select: { id: true },
-    });
-
-    const athlete = await prisma.athleteProfile.findUnique({
-      where: { id: athleteId },
-      select: { currentStreak: true, longestStreak: true },
-    });
-    if (!athlete) return;
-
-    const newStreak = yesterdaySession ? athlete.currentStreak + 1 : 1;
-
-    await prisma.athleteProfile.update({
-      where: { id: athleteId },
-      data: {
-        currentStreak: newStreak,
-        longestStreak: Math.max(newStreak, athlete.longestStreak),
-        lastActivityDate: new Date(),
-      },
-    });
-  } catch {
-    // Non-critical
-  }
-}

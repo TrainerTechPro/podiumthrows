@@ -6,6 +6,7 @@ import { awardStreakAchievements, awardFirstCheckInAchievement } from "@/lib/ach
 import { notifyCoachLowReadiness } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
 import { parseBody, ReadinessCheckInSchema } from "@/lib/api-schemas";
+import { updateThrowsStreak } from "@/lib/streak";
 
 /* ─── POST — submit readiness check-in ───────────────────────────────────── */
 
@@ -110,8 +111,12 @@ export async function POST(req: NextRequest) {
       select: { id: true, overallScore: true, date: true },
     });
 
-    // Update streak + fire achievement/notification side effects
-    const newStreak = await updateAthleteStreak(athlete.id);
+    // Update streak + fire achievement/notification side effects.
+    // updateThrowsStreak returns null on failure, or the new throws-based
+    // streak count. Readiness check-ins alone no longer advance the streak —
+    // throws are the source of truth — but we still surface the current
+    // value for achievement eligibility checks.
+    const newStreak = (await updateThrowsStreak(athlete.id)) ?? 0;
     if (newStreak > 0) {
       void awardStreakAchievements(athlete.id, newStreak).catch((err) =>
         logger.error("Async operation failed", { context: "api", error: err })
@@ -142,42 +147,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function updateAthleteStreak(athleteId: string): Promise<number> {
-  try {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const yesterdayCheckIn = await prisma.readinessCheckIn.findFirst({
-      where: {
-        athleteId,
-        date: { gte: yesterday, lt: today },
-      },
-      select: { id: true },
-    });
-
-    const athleteData = await prisma.athleteProfile.findUnique({
-      where: { id: athleteId },
-      select: { currentStreak: true, longestStreak: true },
-    });
-    if (!athleteData) return 0;
-
-    const newStreak = yesterdayCheckIn ? athleteData.currentStreak + 1 : 1;
-
-    await prisma.athleteProfile.update({
-      where: { id: athleteId },
-      data: {
-        currentStreak: newStreak,
-        longestStreak: Math.max(newStreak, athleteData.longestStreak),
-        lastActivityDate: new Date(),
-      },
-    });
-
-    return newStreak;
-  } catch {
-    // Non-critical — don't fail the request
-    return 0;
-  }
-}
