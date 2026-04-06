@@ -193,6 +193,7 @@ model CoachProfile {
   invitations    Invitation[]
   drills         Drill[]
   notifications  Notification[]
+  teamActivities TeamActivity[]
 
   // Throws module relations (from TrainingTracker)
   throwsSessions    ThrowsSession[]
@@ -289,6 +290,7 @@ model AthleteProfile {
   videoUploads             VideoUpload[]
   eventGroupMemberships    EventGroupMember[]
   programmedSessions       ProgrammedSession[]
+  teamActivities           TeamActivity[]
 
   // Throws module relations (from TrainingTracker)
   throwsAssignments        ThrowsAssignment[]
@@ -930,6 +932,56 @@ model ProgrammedSession {
 }
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+
+/// Team Activity Feed — chronological social feed scoped to a coach's
+/// roster. Athletes under the same coach see each other's PRs, session
+/// completions, streak milestones, goal hits, and coach posts.
+///
+/// Privacy: athletes can opt out of emitting specific event types via
+/// AthleteProfile.notificationPreferences.feedPrivacy (JSON prefs bag).
+/// When opted out, the emit helper skips the insert entirely — no
+/// "hidden" rows in the database.
+model TeamActivity {
+  id        String         @id @default(cuid())
+  coachId   String         // the "team" — all athletes under this coach see it
+  coach     CoachProfile   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId String?        // the actor. Null for COACH_POST rows.
+  athlete   AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  /// "PR" | "SESSION" | "STREAK_MILESTONE" | "GOAL_COMPLETED" | "COACH_POST"
+  type     String
+  /// Shape varies per type. See src/lib/team-activity.ts for typed builders.
+  ///   PR:               { event, implementWeight, distance, previousDistance? }
+  ///   SESSION:          { throwCount?, bestDistance? }   (counts omitted if sharePrivacy)
+  ///   STREAK_MILESTONE: { days, badgeKey }
+  ///   GOAL_COMPLETED:   { goalId, targetValue, unit }
+  ///   COACH_POST:       { body }
+  metadata Json
+
+  createdAt DateTime @default(now())
+
+  reactions TeamActivityReaction[]
+
+  @@index([coachId, createdAt])
+  @@index([athleteId])
+  @@index([type])
+}
+
+/// Per-(activity, user, emoji) reaction row. The composite unique
+/// prevents a user from double-tapping the same emoji; tapping again
+/// is a DELETE. Users CAN tap multiple different emojis on the same
+/// activity (fire + 100, say).
+model TeamActivityReaction {
+  id         String       @id @default(cuid())
+  activityId String
+  activity   TeamActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  userId     String       // User.id (coach or athlete)
+  emoji      String       // "fire" | "lift" | "hundred"
+  createdAt  DateTime     @default(now())
+
+  @@unique([activityId, userId, emoji])
+  @@index([activityId])
+}
 
 /// Web Push browser subscription for a given user. One row per
 /// (user, browser, device) — each subscribe call creates a new row
