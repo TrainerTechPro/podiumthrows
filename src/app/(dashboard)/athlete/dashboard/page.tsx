@@ -13,6 +13,7 @@ import { StreakBadge } from "@/components/ui/StreakBadge";
 import { CustomizeTrigger } from "./_customize-trigger";
 import { StaleSessionChecker } from "./_stale-session-checker";
 import { StreakReminder } from "@/components/notifications/StreakReminder";
+import { FeedbackInboxBadge } from "@/components/feedback/FeedbackInboxBadge";
 import {
   fetchThisWeekData,
   fetchPRTrackerData,
@@ -165,7 +166,10 @@ export default async function AthleteDashboardPage() {
           </div>
           <p className="text-sm text-muted mt-0.5">{today}</p>
         </div>
-        <CustomizeTrigger config={config} />
+        <div className="flex items-center gap-1">
+          <FeedbackInboxBadge />
+          <CustomizeTrigger config={config} />
+        </div>
       </div>
 
       {/* Quick Log CTA */}
