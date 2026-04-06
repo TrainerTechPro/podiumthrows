@@ -171,7 +171,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
                 (tl.implementWeight == null && ex.implementKg == null)
             )
             .map((tl, i) => ({
-              distance: tl.distance,
+              distance: tl.distance ?? 0,
               throwNumber: i + 1,
             }));
           if (matchingThrows.length > 0) {

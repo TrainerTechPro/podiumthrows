@@ -77,6 +77,7 @@ function processThrows(
     const key = `${dayKey}|${t.event}`;
     const existing = grouped.get(key);
 
+    if (t.distance == null) continue; // skip Quick Log entries with no distance
     if (!existing || t.distance > existing.distance) {
       grouped.set(key, {
         date: dayKey,

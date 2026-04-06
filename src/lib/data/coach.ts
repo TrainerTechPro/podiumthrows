@@ -116,7 +116,7 @@ export type ThrowLogItem = {
   date: string;
   event: string;
   implementWeight: number;
-  distance: number;
+  distance: number | null;
   isPersonalBest: boolean;
   isCompetition: boolean;
   notes: string | null;
@@ -479,7 +479,7 @@ export async function getRecentActivity(
       athleteAvatar: p.athlete.avatarUrl,
       date: p.date.toISOString(),
       event: p.event,
-      distance: p.distance,
+      distance: p.distance ?? undefined,
     })),
     ...completedSessions.map((s) => ({
       id: s.id,
@@ -1507,7 +1507,7 @@ export type ThrowsByImplement = {
   throws: {
     id: string;
     date: string;
-    distance: number;
+    distance: number | null;
     isPersonalBest: boolean;
     isCompetition: boolean;
     rpe: number | null;
@@ -1522,7 +1522,7 @@ export type TeamThrowSummaryItem = {
   avatarUrl: string | null;
   events: string[];
   totalThrows: number;
-  latestPR: { event: string; distance: number; date: string; implementWeight: number } | null;
+  latestPR: { event: string; distance: number | null; date: string; implementWeight: number } | null;
   recentThrowCount: number; // last 7 days
   bondarchukType: string | null;
 };
@@ -1533,7 +1533,7 @@ export type PRLeaderboardEntry = {
   lastName: string;
   avatarUrl: string | null;
   event: string;
-  distance: number;
+  distance: number | null;
   implementWeight: number;
   date: string;
 };

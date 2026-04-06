@@ -128,7 +128,7 @@ type ThrowItem = {
   id: string;
   event: string;
   implementWeight: number;
-  distance: number;
+  distance: number | null;
   isPersonalBest: boolean;
   notes: string | null;
 };
@@ -168,7 +168,7 @@ function ThrowLogTable({ throws }: { throws: ThrowItem[] }) {
                 {formatImplementWeight(t.implementWeight)}
               </td>
               <td className="py-2.5 pr-4 text-right tabular-nums font-semibold text-[var(--foreground)]">
-                {t.distance.toFixed(2)}m
+                {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
               </td>
               <td className="py-2.5 text-right">
                 {t.isPersonalBest && <Badge variant="warning">PR</Badge>}

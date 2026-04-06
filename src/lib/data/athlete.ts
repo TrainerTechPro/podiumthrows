@@ -52,7 +52,7 @@ export type AthleteStats = {
   activeGoalsCount: number;
   personalBests: {
     event: string;
-    distance: number;
+    distance: number | null;
     date: string;
   }[];
 };
@@ -81,7 +81,7 @@ export type SessionDetailItem = {
     id: string;
     event: string;
     implementWeight: number;
-    distance: number;
+    distance: number | null;
     isPersonalBest: boolean;
     notes: string | null;
   }[];
@@ -498,6 +498,7 @@ export async function getAthleteImplementComparison(
 
   const byWeight: Record<number, { date: string; distance: number }[]> = {};
   for (const t of throws) {
+    if (t.distance == null) continue; // skip Quick Log entries with no distance
     if (!byWeight[t.implementWeight]) byWeight[t.implementWeight] = [];
     byWeight[t.implementWeight].push({
       date: t.date.toISOString(),

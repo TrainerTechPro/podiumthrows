@@ -633,6 +633,7 @@ export async function fetchPRsData(athleteId: string): Promise<PRItem[]> {
   for (const pr of throwLogPRs) {
     const event = pr.event as string;
     const dist = pr.distance;
+    if (dist == null) continue; // skip Quick Log entries with no distance
     const existing = bestByEvent.get(event);
     if (!existing || dist > existing.distance) {
       bestByEvent.set(event, { id: pr.id, event, distance: dist, date: pr.date.toISOString() });

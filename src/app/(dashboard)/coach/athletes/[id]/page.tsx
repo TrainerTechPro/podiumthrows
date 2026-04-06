@@ -415,7 +415,7 @@ function OverviewTab({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[var(--foreground)] tabular-nums">
-                      {pr.distance.toFixed(2)}m
+                      {pr.distance != null ? `${pr.distance.toFixed(2)}m` : "—"}
                     </p>
                     <p className="text-xs text-muted">
                       {formatEventName(pr.event)} · {formatImplementWeight(pr.implementWeight)}
@@ -628,7 +628,7 @@ function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrow
   const eventMap = throws.reduce<Record<string, { count: number; best: number }>>((acc, t) => {
     if (!acc[t.event]) acc[t.event] = { count: 0, best: 0 };
     acc[t.event].count++;
-    if (t.distance > acc[t.event].best) acc[t.event].best = t.distance;
+    if (t.distance != null && t.distance > acc[t.event].best) acc[t.event].best = t.distance;
     return acc;
   }, {});
 
@@ -732,7 +732,7 @@ function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrow
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-[var(--foreground)]"
                         )}>
-                          {t.distance.toFixed(2)}m
+                          {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
                         </span>
                       </td>
                       <td className="px-5 py-3">
