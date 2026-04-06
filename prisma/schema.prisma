@@ -470,6 +470,10 @@ model TrainingSession {
   coachNotes    String?
   rpe           Float? // Overall session RPE
 
+  // Post-session wellness check-in (filled on the recap screen)
+  // Shape: { legs: 1|2|3, energy: 1|2|3, focus: 1|2|3, submittedAt: ISO string }
+  wellnessCheckin Json?
+
   logs       SessionLog[]
   throwLogs  ThrowLog[]
   voiceNotes VoiceNote[]

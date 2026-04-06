@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CompletionSummary, type SessionSummary } from "./_completion-summary";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
@@ -12,7 +11,6 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
   const [rpe, setRpe] = useState<number>(7);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<{ data: SessionSummary; rpe: number | null } | null>(null);
 
   async function handleComplete() {
     setError(null);
@@ -30,24 +28,13 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
           return;
         }
 
-        const data = await res.json();
-
-        // Show summary if available
-        if (data.summary) {
-          setSummary({ data: data.summary, rpe: data.rpe });
-          setShowForm(false);
-        }
-
-        router.refresh();
+        // Navigate to the full-screen recap — it will read the final state
+        // from the database, so we don't need to thread the summary through.
+        router.push(`/athlete/sessions/${sessionId}/recap`);
       } catch {
         setError("Failed to complete session. Please try again.");
       }
     });
-  }
-
-  // Show summary after completion
-  if (summary) {
-    return <CompletionSummary summary={summary.data} rpe={summary.rpe} />;
   }
 
   if (showForm) {

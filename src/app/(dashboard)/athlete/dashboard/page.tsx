@@ -11,6 +11,7 @@ import { StaggeredList } from "@/components";
 import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { CustomizeTrigger } from "./_customize-trigger";
+import { StaleSessionChecker } from "./_stale-session-checker";
 import { WearableDashboard } from "../_wearable-dashboard";
 import { avg, type WhoopRow, type OuraRow } from "../_wearable-helpers";
 
@@ -115,6 +116,7 @@ export default async function AthleteDashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <StaleSessionChecker />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
