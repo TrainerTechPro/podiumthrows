@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { updateThrowsStreak } from "@/lib/streak";
+import { emitSessionComplete } from "@/lib/team-activity";
 
 /* ─── PATCH — mark session as completed ──────────────────────────────────── */
 
@@ -90,6 +91,16 @@ export async function PATCH(
       ? throwsWithDistance.reduce((best, t) => (t.distance ?? 0) > (best.distance ?? 0) ? t : best)
       : null;
     const prCount = updated.throwLogs.filter((t) => t.isPersonalBest).length;
+
+    // Fire team feed SESSION event. Fire-and-forget — a failed emit
+    // cannot break the session-complete response. PR feed events for
+    // throws logged inside this session were emitted at their
+    // creation site (quick-log POST), not here, to avoid duplicates.
+    void emitSessionComplete(athlete.id, {
+      throwCount,
+      bestDistance: bestThrow?.distance ?? null,
+      sessionId: updated.id,
+    }).catch(() => null);
 
     return NextResponse.json({
       id: updated.id,

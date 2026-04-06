@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { emitGoalCompleted } from "@/lib/team-activity";
 
 export const maxDuration = 60;
 
@@ -45,7 +46,9 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         athleteId: true,
+        title: true,
         targetValue: true,
+        unit: true,
         createdAt: true,
         deadline: true,
       },
@@ -79,8 +82,21 @@ export async function GET(req: NextRequest) {
         },
       });
 
-      if (hit) completed += 1;
-      else missed += 1;
+      if (hit) {
+        completed += 1;
+        // Fire team feed GOAL_COMPLETED event. Fire-and-forget in
+        // sequence (inside the for loop) is fine because the cron is
+        // not latency-sensitive — we're running it at 01:00 UTC and
+        // scanning at most a few dozen goals per run.
+        void emitGoalCompleted(goal.athleteId, {
+          goalId: goal.id,
+          title: goal.title,
+          targetValue: goal.targetValue,
+          unit: goal.unit,
+        }).catch(() => null);
+      } else {
+        missed += 1;
+      }
     }
 
     return NextResponse.json({

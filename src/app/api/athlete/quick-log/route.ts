@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { checkAndSetPR, COMPETITION_WEIGHTS } from "@/lib/throws";
 import { updateThrowsStreak } from "@/lib/streak";
+import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -284,6 +285,19 @@ export async function POST(req: NextRequest) {
     // 3. PR detection — only when distance is provided
     let isPersonalBest = false;
     if (distanceNum != null && distanceNum > 0) {
+      // Capture the previous best distance BEFORE checkAndSetPR runs so
+      // the team feed row can show the delta. checkAndSetPR unmarks the
+      // old PR when a new one is set, so we have to read first.
+      const priorBest = await prisma.throwLog.findFirst({
+        where: {
+          athleteId: athlete.id,
+          event: event as never,
+          implementWeight,
+          isPersonalBest: true,
+        },
+        select: { distance: true },
+      });
+
       const prResult = await checkAndSetPR(athlete.id, event, implementWeight, distanceNum);
       isPersonalBest = prResult.isPersonalBest;
 
@@ -292,6 +306,15 @@ export async function POST(req: NextRequest) {
           where: { id: throwLog.id },
           data: { isPersonalBest: true },
         });
+
+        // Fire-and-forget team feed emission. Swallowed errors cannot
+        // break the throw-log response.
+        void emitPR(athlete.id, {
+          event,
+          implementWeight,
+          distance: distanceNum,
+          previousDistance: priorBest?.distance ?? null,
+        }).catch(() => null);
       }
     }
 

@@ -19,6 +19,7 @@
 
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { emitStreakMilestoneIfCrossed } from "@/lib/team-activity";
 
 const LOOKBACK_DAYS = 100;
 
@@ -52,13 +53,15 @@ export async function updateThrowsStreak(athleteId: string): Promise<number | nu
     // Count backward from today
     const streak = countConsecutiveDays(daySet, now);
 
-    // Read the existing longestStreak so we can update it if the new streak
-    // broke the record
+    // Read the existing currentStreak + longestStreak. currentStreak is
+    // the "previous" value used below for milestone-crossing detection;
+    // longestStreak is for updating the record.
     const athlete = await prisma.athleteProfile.findUnique({
       where: { id: athleteId },
-      select: { longestStreak: true },
+      select: { currentStreak: true, longestStreak: true },
     });
     if (!athlete) return null;
+    const previousStreak = athlete.currentStreak;
 
     await prisma.athleteProfile.update({
       where: { id: athleteId },
@@ -68,6 +71,13 @@ export async function updateThrowsStreak(athleteId: string): Promise<number | nu
         lastActivityDate: streak > 0 ? now : undefined,
       },
     });
+
+    // Fire team-feed streak milestone emission. CROSSING-based — fires
+    // only when the new streak passes a STREAK_BADGE threshold that the
+    // previous value hadn't reached. Fire-and-forget.
+    void emitStreakMilestoneIfCrossed(athleteId, previousStreak, streak).catch(
+      () => null
+    );
 
     return streak;
   } catch (err) {
