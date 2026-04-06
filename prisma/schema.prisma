@@ -56,6 +56,7 @@ enum GoalStatus {
   ACTIVE
   COMPLETED
   ABANDONED
+  MISSED
 }
 
 enum InvitationStatus {

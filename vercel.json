@@ -19,6 +19,10 @@
     {
       "path": "/api/cron/oura-sync",
       "schedule": "7,22,37,52 * * * *"
+    },
+    {
+      "path": "/api/cron/weekly-goal-transitions",
+      "schedule": "0 1 * * *"
     }
   ]
 }
