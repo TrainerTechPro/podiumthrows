@@ -562,6 +562,12 @@ model ThrowComment {
   audioUrl         String?  // R2 URL or local /uploads/ path
   audioDurationSec Int?     // duration of the voice note, rounded up
 
+  // Recipient-side acknowledgment fields. Populated when the OTHER party
+  // (not the author) opens/reads/reacts.
+  readAt    DateTime?
+  reaction  String?   // "THUMBS_UP" | "THUMBS_DOWN"
+  replyText String?   // one-word or very short acknowledgment
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -570,6 +576,7 @@ model ThrowComment {
   @@index([trainingSessionId, createdAt])
   @@index([throwsAssignmentId, createdAt])
   @@index([authorId])
+  @@index([authorRole, readAt])
 }
 
 // ─── BONDARCHUK ASSESSMENT ──────────────────────────────────────────────────
