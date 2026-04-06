@@ -217,6 +217,9 @@ model CoachProfile {
   voiceNotes   VoiceNote[]
   activityLogs ActivityLog[]
 
+  // Practice scheduling
+  scheduledPractices ScheduledPractice[] @relation("CoachScheduledPractices")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -335,6 +338,9 @@ model AthleteProfile {
   availability          AthleteAvailability[]
   availabilityOverrides AvailabilityOverride[]
 
+  // Practice scheduling
+  practiceAttendance ScheduledPracticeAttendance[] @relation("AthleteScheduledPracticeAttendance")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -371,6 +377,45 @@ model AvailabilityOverride {
   createdAt DateTime       @default(now())
 
   @@index([athleteId, date])
+}
+
+// ─── PRACTICE SCHEDULING ────────────────────────────────────────────────────
+
+model ScheduledPractice {
+  id          String                        @id @default(cuid())
+  coachId     String
+  coach       CoachProfile                  @relation("CoachScheduledPractices", fields: [coachId], references: [id], onDelete: Cascade)
+  title       String
+  date        String                        // YYYY-MM-DD
+  startTime   String                        // "15:00" (24h)
+  endTime     String                        // "17:00"
+  location    String?
+  notes       String?
+  status      String                        @default("SCHEDULED") // SCHEDULED | CANCELLED | COMPLETED
+  groupId     String?                       // null = all athletes on coach's roster
+  group       EventGroup?                   @relation("EventGroupScheduledPractices", fields: [groupId], references: [id], onDelete: SetNull)
+  recurringId String?                       // shared id for instances of a recurring series
+  createdAt   DateTime                      @default(now())
+  updatedAt   DateTime                      @updatedAt
+  attendance  ScheduledPracticeAttendance[]
+
+  @@index([coachId, date])
+  @@index([recurringId])
+}
+
+model ScheduledPracticeAttendance {
+  id         String            @id @default(cuid())
+  practiceId String
+  practice   ScheduledPractice @relation(fields: [practiceId], references: [id], onDelete: Cascade)
+  athleteId  String
+  athlete    AthleteProfile    @relation("AthleteScheduledPracticeAttendance", fields: [athleteId], references: [id], onDelete: Cascade)
+  status     String            // PRESENT | ABSENT | EXCUSED | LATE
+  markedBy   String            // coachId who marked it
+  markedAt   DateTime          @default(now())
+  notes      String?
+
+  @@unique([practiceId, athleteId])
+  @@index([athleteId, markedAt])
 }
 
 // ─── EXERCISES ──────────────────────────────────────────────────────────────
@@ -877,8 +922,9 @@ model EventGroup {
   color       String?
   order       Int          @default(0)
 
-  members  EventGroupMember[]
-  sessions ProgrammedSession[]
+  members            EventGroupMember[]
+  sessions           ProgrammedSession[]
+  scheduledPractices ScheduledPractice[] @relation("EventGroupScheduledPractices")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
