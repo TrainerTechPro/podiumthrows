@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Zap, ChevronRight } from "lucide-react";
+import { Bell, Zap, ChevronRight } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { getAthleteProfileFull } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
@@ -85,6 +85,24 @@ export default async function AthleteSettingsPage() {
 
       {/* Quick Actions */}
       <QuickActionsSettings role="ATHLETE" />
+
+      {/* Notifications */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Notifications</h2>
+        <Link
+          href="/athlete/settings/notifications"
+          className="card card-interactive p-4 flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
+            <Bell size={20} className="text-primary-500" strokeWidth={1.75} aria-hidden="true" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[var(--foreground)]">Notifications</p>
+            <p className="text-xs text-muted">Manage push notification preferences</p>
+          </div>
+          <ChevronRight size={20} className="text-muted" strokeWidth={1.75} aria-hidden="true" />
+        </Link>
+      </section>
 
       {/* Team Feed Privacy */}
       <FeedPrivacySettings />
