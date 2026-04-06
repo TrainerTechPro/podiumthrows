@@ -285,6 +285,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/competitions",
           "/coach/availability",
           "/coach/team",
+          "/coach/practices",
         ],
         children: [
           {
@@ -305,6 +306,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             href: "/coach/availability",
             icon: <Calendar {...iconSize} />,
             matchPaths: ["/coach/availability"],
+          },
+          {
+            label: "Practices",
+            href: "/coach/practices",
+            icon: <Calendar {...iconSize} />,
+            matchPaths: ["/coach/practices"],
           },
           {
             label: "Team Feed",
