@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatImplementWeight } from "@/lib/throws";
 import { Avatar, Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Flame } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { parseSorenessArea } from "@/lib/readiness/parse-soreness";
 import { LineChart, type LineChartDataPoint } from "@/components/charts/LineChart";
@@ -25,6 +25,7 @@ import {
   type ReadinessTrendPoint,
   type GoalItem,
 } from "@/lib/data/coach";
+import { getAthleteAttendanceStats } from "@/lib/data/practices";
 import { SectionNav } from "./_section-nav";
 import { DistanceTrend } from "./_distance-trend";
 
@@ -220,6 +221,103 @@ function DecisionHero({
   );
 }
 
+/* ─── Attendance Section ─────────────────────────────────────────────────── */
+
+type AttendanceStats = {
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+  excused: number;
+  rate: number;
+  currentStreak: number;
+};
+
+function AttendanceSection({ stats }: { stats: AttendanceStats }) {
+  const rateColor =
+    stats.rate >= 90
+      ? "text-emerald-600 dark:text-emerald-400"
+      : stats.rate >= 75
+      ? "text-amber-500 dark:text-amber-400"
+      : "text-red-600 dark:text-red-400";
+
+  const rateBg =
+    stats.rate >= 90
+      ? "bg-emerald-500/10 border-emerald-500/20"
+      : stats.rate >= 75
+      ? "bg-amber-500/10 border-amber-500/20"
+      : "bg-red-500/10 border-red-500/20";
+
+  const breakdown = [
+    { label: "Present", value: stats.present, color: "text-emerald-600 dark:text-emerald-400" },
+    { label: "Late",    value: stats.late,    color: "text-amber-500 dark:text-amber-400" },
+    { label: "Absent",  value: stats.absent,  color: "text-red-600 dark:text-red-400" },
+    { label: "Excused", value: stats.excused, color: "text-blue-600 dark:text-blue-400" },
+  ];
+
+  return (
+    <div className="card p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
+            Practice Attendance
+          </h3>
+          <p className="text-xs text-muted mt-0.5">Last 30 days</p>
+        </div>
+        {stats.total === 0 && (
+          <span className="text-xs text-muted">No practices recorded</span>
+        )}
+      </div>
+
+      {stats.total > 0 && (
+        <>
+          {/* Hero: rate + streak */}
+          <div className="flex items-center gap-4">
+            <div className={cn("rounded-xl border px-4 py-2.5 text-center", rateBg)}>
+              <p className={cn("text-3xl font-bold tabular-nums font-heading", rateColor)}>
+                <AnimatedNumber value={stats.rate} />%
+              </p>
+              <p className="text-[11px] text-muted mt-0.5">Attendance rate</p>
+            </div>
+
+            {stats.currentStreak > 0 && (
+              <div className="flex items-center gap-2">
+                <Flame
+                  size={20}
+                  strokeWidth={1.75}
+                  className="text-amber-500 shrink-0"
+                  aria-hidden="true"
+                />
+                <div>
+                  <p className="text-xl font-bold tabular-nums font-heading text-[var(--foreground)]">
+                    <AnimatedNumber value={stats.currentStreak} />
+                  </p>
+                  <p className="text-[11px] text-muted">practice streak</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Breakdown: 2x2 on mobile, 4-col on sm+ */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {breakdown.map(({ label, value, color }) => (
+              <div
+                key={label}
+                className="rounded-xl bg-surface-50 dark:bg-surface-800/50 px-3 py-2.5 text-center"
+              >
+                <p className={cn("text-lg font-bold tabular-nums font-heading", color)}>
+                  <AnimatedNumber value={value} />
+                </p>
+                <p className="text-[11px] text-muted mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ─── Overview Tab ───────────────────────────────────────────────────────── */
 
 function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
@@ -296,12 +394,14 @@ function OverviewTab({
   recentPRs,
   bondarchukType,
   lastAssessmentDate,
+  attendanceStats,
 }: {
   athlete: AthleteProfile;
   acwr: AthleteACWR;
   recentPRs: ThrowLogItem[];
   bondarchukType: string | null;
   lastAssessmentDate: string | null;
+  attendanceStats: AttendanceStats;
 }) {
   const infoRows = [
     { label: "Age",        value: calcAge(athlete.dateOfBirth) },
@@ -432,6 +532,8 @@ function OverviewTab({
             </div>
           )}
         </div>
+
+        <AttendanceSection stats={attendanceStats} />
       </div>
     </div>
   );
@@ -1308,6 +1410,7 @@ export default async function AthleteProfilePage({
     getLatestBondarchukAssessment(athlete.id),
     getAthleteThrowsAssignments(athlete.id, 25),
     getAthleteThrowHistory(athlete.id, undefined, 500), // chart data — wider window
+    getAthleteAttendanceStats(athlete.id, 30),
   ]);
 
   const acwr = results[0].status === "fulfilled" ? results[0].value as AthleteACWR : null as AthleteACWR;
@@ -1319,6 +1422,9 @@ export default async function AthleteProfilePage({
   const latestAssessment = results[6].status === "fulfilled" ? results[6].value : null;
   const throwsAssignments = results[7].status === "fulfilled" ? results[7].value as ThrowsAssignmentItem[] : [] as ThrowsAssignmentItem[];
   const chartThrows = results[8].status === "fulfilled" ? results[8].value as ThrowLogItem[] : [] as ThrowLogItem[];
+  const attendanceStats: AttendanceStats = results[9].status === "fulfilled"
+    ? (results[9].value as AttendanceStats)
+    : { total: 0, present: 0, late: 0, absent: 0, excused: 0, rate: 0, currentStreak: 0 };
 
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
@@ -1342,7 +1448,7 @@ export default async function AthleteProfilePage({
       {/* All sections — single scrollable page */}
       <section id="overview" className="scroll-mt-20">
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Overview</h2>
-        <OverviewTab athlete={athlete} acwr={acwr} recentPRs={recentPRs} bondarchukType={bondarchukType} lastAssessmentDate={lastAssessmentDate} />
+        <OverviewTab athlete={athlete} acwr={acwr} recentPRs={recentPRs} bondarchukType={bondarchukType} lastAssessmentDate={lastAssessmentDate} attendanceStats={attendanceStats} />
       </section>
 
       <section id="training" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
