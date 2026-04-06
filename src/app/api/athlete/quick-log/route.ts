@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { checkAndSetPR, COMPETITION_WEIGHTS } from "@/lib/throws";
+import { updateThrowsStreak } from "@/lib/streak";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -284,7 +285,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 4. Get updated throw count for today
+  // 4. Update the throws-based streak. Recomputes from history, so this is
+  // self-healing against any drift from the sessions/complete or readiness
+  // writers. Errors are swallowed inside the helper.
+  await updateThrowsStreak(athlete.id);
+
+  // 5. Get updated throw count for today
   const throwCount = await prisma.throwLog.count({
     where: {
       athleteId: athlete.id,
