@@ -147,6 +147,7 @@ model User {
   athleteProfile      AthleteProfile?
   passwordResetTokens PasswordResetToken[]
   codexEntries        CodexEntry[]
+  pushSubscriptions   PushSubscription[]
 
   @@index([email])
   @@index([role])
@@ -929,6 +930,24 @@ model ProgrammedSession {
 }
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+
+/// Web Push browser subscription for a given user. One row per
+/// (user, browser, device) — each subscribe call creates a new row
+/// unless the same endpoint already exists (upsert on endpoint).
+model PushSubscription {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint       String   @unique @db.Text
+  p256dh         String   @db.Text // browser-generated public key
+  authSecret     String   @db.Text // browser-generated auth secret
+  expirationTime DateTime?
+  userAgent      String?  // best-effort device hint for debugging
+  createdAt      DateTime @default(now())
+  lastUsedAt     DateTime @default(now())
+
+  @@index([userId])
+}
 
 model Notification {
   id               String          @id @default(cuid())

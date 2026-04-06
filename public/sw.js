@@ -203,6 +203,67 @@ self.addEventListener("message", (event) => {
   }
 });
 
+// ── Web Push — receive notifications from the server ───────────────────────
+// Payload shape (from src/lib/push.ts):
+//   { title, body, url?, tag?, data? }
+self.addEventListener("push", (event) => {
+  let payload = { title: "Podium Throws", body: "" };
+  try {
+    if (event.data) {
+      payload = Object.assign(payload, event.data.json());
+    }
+  } catch {
+    // Fall back to the raw text body if JSON parsing fails
+    try {
+      if (event.data) payload.body = event.data.text();
+    } catch {
+      // ignore
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    tag: payload.tag || "podium-throws",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    data: { url: payload.url || "/", ...(payload.data || {}) },
+  };
+
+  event.waitUntil(self.registration.showNotification(payload.title, options));
+});
+
+// ── Notification click — focus an existing tab or open a new one ───────────
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl =
+    (event.notification.data && event.notification.data.url) || "/";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // If a visible tab already exists, focus it and navigate
+        for (const client of clientList) {
+          if ("focus" in client) {
+            client.focus();
+            if ("navigate" in client) {
+              try {
+                client.navigate(targetUrl);
+              } catch {
+                // Cross-origin or other navigation issues — ignore
+              }
+            }
+            return;
+          }
+        }
+        // Otherwise open a new window
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(targetUrl);
+        }
+      })
+  );
+});
+
 // ── IndexedDB helpers (duplicated here because SW can't import modules) ─────
 function openIDB() {
   return new Promise((resolve, reject) => {

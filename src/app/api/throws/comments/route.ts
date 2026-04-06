@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { sendPushToUser } from "@/lib/push";
 
 const TARGET_FIELDS = [
   "throwLogId",
@@ -330,16 +331,34 @@ async function createCommentNotification(
         if (attempt) metadata.practiceSessionId = attempt.sessionId;
       }
 
+      const title = `${athlete.firstName} left a comment`;
       await prisma.notification.create({
         data: {
           coachId: athlete.coachId,
           athleteId: athlete.id,
           type: "COMMENT_ADDED",
-          title: `${athlete.firstName} left a comment`,
+          title,
           body: preview,
           metadata: JSON.stringify(metadata),
         },
       });
+
+      // Fire a Web Push to the coach (best-effort, non-blocking).
+      // Resolve the coach's userId from coachId so sendPushToUser can
+      // look up their subscriptions.
+      const coach = await prisma.coachProfile.findUnique({
+        where: { id: athlete.coachId },
+        select: { userId: true },
+      });
+      if (coach) {
+        void sendPushToUser(coach.userId, {
+          title,
+          body: preview,
+          url: "/coach/feedback-inbox",
+          tag: `comment-${targetField}-${targetId}`,
+          data: metadata,
+        }).catch(() => null);
+      }
     }
 
     if (authorRole === "COACH") {
@@ -382,16 +401,34 @@ async function createCommentNotification(
         select: { firstName: true, lastName: true },
       });
       const coachName = coach ? `${coach.firstName} ${coach.lastName}` : "Your coach";
+      const title = `${coachName} left a comment`;
 
       await prisma.notification.create({
         data: {
           athleteProfileId,
           type: "COMMENT_ADDED",
-          title: `${coachName} left a comment`,
+          title,
           body: preview,
           metadata: JSON.stringify(metadata),
         },
       });
+
+      // Fire a Web Push to the athlete (best-effort, non-blocking).
+      // Resolve the athlete's userId so sendPushToUser can look up
+      // their subscriptions.
+      const athleteRecord = await prisma.athleteProfile.findUnique({
+        where: { id: athleteProfileId },
+        select: { userId: true },
+      });
+      if (athleteRecord) {
+        void sendPushToUser(athleteRecord.userId, {
+          title,
+          body: preview,
+          url: "/athlete/feedback",
+          tag: `comment-${targetField}-${targetId}`,
+          data: metadata,
+        }).catch(() => null);
+      }
     }
   } catch (err) {
     // Non-fatal
