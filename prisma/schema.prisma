@@ -220,6 +220,11 @@ model CoachProfile {
   // Practice scheduling
   scheduledPractices ScheduledPractice[] @relation("CoachScheduledPractices")
 
+  // Team Hub
+  teamLinks         TeamLink[]         @relation("CoachTeamLinks")
+  teamFiles         TeamFile[]         @relation("CoachTeamFiles")
+  teamAnnouncements TeamAnnouncement[] @relation("CoachAnnouncements")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2653,4 +2658,55 @@ model OuraDailySnapshot {
 
   @@unique([connectionId, date])
   @@index([connectionId, date])
+}
+
+// ─── TEAM HUB ───────────────────────────────────────────────────────────────
+
+model TeamLink {
+  id        String       @id @default(cuid())
+  coachId   String
+  coach     CoachProfile @relation("CoachTeamLinks", fields: [coachId], references: [id], onDelete: Cascade)
+  title     String
+  url       String
+  category  String?      // "Facilities" | "Compliance" | "Training" | "Other" — free-form
+  icon      String?      // emoji or lucide icon name
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([coachId, order])
+}
+
+model TeamFile {
+  id        String       @id @default(cuid())
+  coachId   String
+  coach     CoachProfile @relation("CoachTeamFiles", fields: [coachId], references: [id], onDelete: Cascade)
+  name      String
+  fileUrl   String       // R2 public URL
+  fileKey   String       // R2 object key (for deletion)
+  fileSize  Int          // bytes
+  mimeType  String
+  category  String?
+  createdAt DateTime     @default(now())
+
+  @@index([coachId, createdAt])
+}
+
+model TeamAnnouncement {
+  id         String       @id @default(cuid())
+  coachId    String
+  coach      CoachProfile @relation("CoachAnnouncements", fields: [coachId], references: [id], onDelete: Cascade)
+  title      String
+  body       String       @db.Text
+  priority   String       @default("NORMAL") // NORMAL | URGENT
+  pinned     Boolean      @default(false)
+  targetType String       @default("ALL") // ALL | GROUP | INDIVIDUAL
+  targetId   String?      // groupId or athleteId, depending on targetType
+  expiresAt  DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([coachId, createdAt])
+  @@index([coachId, pinned])
+  @@index([targetType, targetId])
 }
