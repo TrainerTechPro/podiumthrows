@@ -381,10 +381,13 @@ export function QuickLogClient() {
 
   const { error: toastError } = useToast();
 
-  // Long-press state
+  // Long-press state. We use `onClick` for the actual tap (most reliable
+  // cross-browser, especially on iOS where pointerup races with framer-motion's
+  // own gesture detection), and pointer events ONLY to time the long-press.
+  // `longPressTriggered` is used to suppress the trailing click after a
+  // long-press has already opened the sheet.
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
-  const isPointerDown = useRef(false);
 
   // Reduced motion
   const prefersReducedMotion =
@@ -570,14 +573,16 @@ export function QuickLogClient() {
     [currentImplement, isOnline, toastError]
   );
 
-  /* ── Long press handlers ─────────────────────────────────────────────── */
+  /* ── Tap + long-press handlers ───────────────────────────────────────── */
 
+  // Start the long-press timer on pointerdown. The actual tap is handled by
+  // `handleClick` below — that gives us a reliable, browser-synthesized
+  // tap event that fires on every platform without racing framer-motion.
   const handlePointerDown = useCallback(() => {
-    isPointerDown.current = true;
     longPressTriggered.current = false;
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
 
     longPressTimer.current = setTimeout(() => {
-      if (!isPointerDown.current) return;
       longPressTriggered.current = true;
       haptic(50);
       setIsNewThrow(true);
@@ -586,26 +591,26 @@ export function QuickLogClient() {
     }, 500);
   }, []);
 
-  const handlePointerUp = useCallback(() => {
-    isPointerDown.current = false;
+  // pointerup / pointercancel / pointerleave: just stop the long-press timer.
+  // We deliberately do NOT call logThrow here — the click event handles taps.
+  const cancelLongPress = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-    // Normal tap — only if long-press didn't trigger
-    if (!longPressTriggered.current) {
-      logThrow();
-    }
-  }, [logThrow]);
-
-  const handlePointerLeave = useCallback(() => {
-    isPointerDown.current = false;
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    // Don't fire logThrow on pointer leave — user just dragged away
   }, []);
+
+  // The actual tap. Click fires after pointerup on the same element (mouse,
+  // touch, or keyboard activation), so this is the universal "tap completed"
+  // event. If the long-press already fired and opened the sheet, we suppress
+  // the trailing click and reset the flag.
+  const handleClick = useCallback(() => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    logThrow();
+  }, [logThrow]);
 
   /* ── Swipe gesture (framer-motion drag) ──────────────────────────────── */
 
@@ -798,11 +803,16 @@ export function QuickLogClient() {
         {/* Big log button */}
         <div className="flex flex-col items-center gap-5 shrink-0 pb-2">
           <motion.button
+            type="button"
             aria-label="Log throw"
-            style={{ touchAction: "none" }}
+            // `manipulation` keeps clicks reliable while still disabling
+            // double-tap zoom and pan-to-scroll on the button itself.
+            style={{ touchAction: "manipulation" }}
+            onClick={handleClick}
             onPointerDown={handlePointerDown}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerLeave}
+            onPointerUp={cancelLongPress}
+            onPointerCancel={cancelLongPress}
+            onPointerLeave={cancelLongPress}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -854,8 +864,8 @@ export function QuickLogClient() {
           <DotIndicator count={implements_.length} current={implementIndex} />
         </div>
 
-        {/* Recent throws chips */}
-        <div className="shrink-0 pb-safe-bottom" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
+        {/* Recent throws chips — bottom safe-area handled by (fullscreen)/layout.tsx */}
+        <div className="shrink-0 pb-2">
           {isLoading ? (
             <div className="flex gap-3 px-5 py-3 overflow-hidden">
               {[0, 1, 2].map((i) => (
