@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { cn, localToday } from "@/lib/utils";
 import { Avatar, Button, ProgressBar } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { EnablePushNotifications } from "@/components/notifications/EnablePushNotifications";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
-type WizardStep = "welcome" | "events" | "pbs" | "physical" | "done";
+type WizardStep = "welcome" | "events" | "pbs" | "physical" | "notifications" | "done";
 
 const EVENTS = [
   { value: "SHOT_PUT", label: "Shot Put", icon: "🏋️" },
@@ -23,7 +24,7 @@ const GENDERS = [
   { value: "OTHER", label: "Prefer not to say" },
 ] as const;
 
-const STEP_LABELS = ["Events", "Competition PBs", "Physical Profile"];
+const STEP_LABELS = ["Events", "Competition PBs", "Physical Profile", "Notifications"];
 
 /* ─── Props ─────────────────────────────────────────────────────────────── */
 
@@ -110,7 +111,15 @@ export function OnboardingWizard({
 
   // Step index for the indicator (welcome & done not counted)
   const stepIndex =
-    step === "events" ? 0 : step === "pbs" ? 1 : step === "physical" ? 2 : 0;
+    step === "events"
+      ? 0
+      : step === "pbs"
+      ? 1
+      : step === "physical"
+      ? 2
+      : step === "notifications"
+      ? 3
+      : 0;
 
   /* ─── Event toggling ──────────────────────────────────────────────── */
 
@@ -153,6 +162,16 @@ export function OnboardingWizard({
   function goToPhysical() {
     setError(null);
     setStep("physical");
+  }
+
+  /* ─── Go to done ─────────────────────────────────────────────────── */
+
+  function goToDone() {
+    setStep("done");
+    setTimeout(() => {
+      router.push("/athlete/dashboard");
+      router.refresh();
+    }, 2000);
   }
 
   /* ─── Submit ──────────────────────────────────────────────────────── */
@@ -203,11 +222,8 @@ export function OnboardingWizard({
           return;
         }
 
-        setStep("done");
-        setTimeout(() => {
-          router.push("/athlete/dashboard");
-          router.refresh();
-        }, 2000);
+        // Go to the notifications step before the final done state
+        setStep("notifications");
       } catch {
         setError("Failed to save profile. Please try again.");
       }
@@ -245,7 +261,7 @@ export function OnboardingWizard({
         <div className="px-6 py-8 sm:px-8 text-center space-y-6">
           <div className="space-y-2">
             <p className="text-[var(--foreground)] font-medium">
-              Let&apos;s set up your athlete profile in 3 quick steps.
+              Let&apos;s set up your athlete profile in 4 quick steps.
             </p>
             <p className="text-sm text-muted max-w-sm mx-auto">
               This helps your coach build a personalised training programme tailored to your events and abilities.
@@ -270,6 +286,21 @@ export function OnboardingWizard({
 
           <p className="text-xs text-muted">Takes about 2 minutes</p>
         </div>
+      </div>
+    );
+  }
+
+  /* ─── Notifications Step ─────────────────────────────────────────── */
+
+  if (step === "notifications") {
+    return (
+      <div>
+        <EnablePushNotifications
+          variant="card"
+          showSkip
+          onComplete={goToDone}
+          onSkip={goToDone}
+        />
       </div>
     );
   }
