@@ -286,6 +286,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/availability",
           "/coach/team",
           "/coach/practices",
+          "/coach/hub",
         ],
         children: [
           {
@@ -318,6 +319,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             href: "/coach/team",
             icon: <Users {...iconSize} />,
             matchPaths: ["/coach/team"],
+          },
+          {
+            label: "Team Hub",
+            href: "/coach/hub",
+            icon: <LayoutDashboard {...iconSize} />,
+            matchPaths: ["/coach/hub"],
           },
         ],
       },
@@ -410,6 +417,12 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
         href: "/athlete/team",
         icon: <Users {...iconSize} />,
         matchPaths: ["/athlete/team"],
+      },
+      {
+        label: "Team Hub",
+        href: "/athlete/hub",
+        icon: <LayoutDashboard {...iconSize} />,
+        matchPaths: ["/athlete/hub"],
       },
       {
         label: "Availability",
