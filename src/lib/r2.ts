@@ -94,8 +94,22 @@ export const ALLOWED_IMAGE_TYPES = [
 
 export const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif"];
 
+export const ALLOWED_AUDIO_TYPES = [
+  "audio/webm",
+  "audio/ogg",
+  "audio/mp4",
+  "audio/mpeg",       // .mp3
+  "audio/x-m4a",
+  "audio/aac",
+];
+
+export const ALLOWED_AUDIO_EXTENSIONS = [".webm", ".ogg", ".mp4", ".m4a", ".mp3", ".aac"];
+
 export const MAX_VIDEO_SIZE_MB = 500;
 export const MAX_IMAGE_SIZE_MB = 15;
+// Voice notes are capped at 30s on the client, but allow a generous server
+// ceiling to accommodate codec differences across browsers.
+export const MAX_AUDIO_SIZE_MB = 5;
 
 export function isAllowedVideoType(contentType: string): boolean {
   return ALLOWED_VIDEO_TYPES.includes(contentType);
@@ -115,6 +129,13 @@ export function isAllowedImageExtension(fileName: string): boolean {
   return ALLOWED_IMAGE_EXTENSIONS.includes(ext);
 }
 
+export function isAllowedAudioType(contentType: string): boolean {
+  // Browsers report audio MIME types with inconsistent casing and trailing
+  // codec parameters (e.g. "audio/webm;codecs=opus"). Strip and lowercase.
+  const base = contentType.split(";")[0].trim().toLowerCase();
+  return ALLOWED_AUDIO_TYPES.includes(base);
+}
+
 /* ─── Generate storage key ─────────────────────────────────────────────────── */
 
 export function generateVideoKey(coachId: string, fileName: string): string {
@@ -129,6 +150,14 @@ export function generateImageKey(userId: string, fileName: string): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
   return `images/${userId}/${timestamp}-${random}${ext}`;
+}
+
+/** Generate an R2 key for a voice note. Coach or athlete can own them. */
+export function generateAudioKey(userId: string, extension = ".webm"): string {
+  const ext = extension.startsWith(".") ? extension : `.${extension}`;
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  return `audio/${userId}/${timestamp}-${random}${ext}`;
 }
 
 /* ─── Presigned upload URL (R2 only) ───────────────────────────────────────── */
@@ -157,7 +186,7 @@ export async function saveFileLocally(
   buffer: Buffer
 ): Promise<string> {
   // Strip common prefixes for local storage
-  const localPath = key.replace(/^(videos|images|uploads)\//, "");
+  const localPath = key.replace(/^(videos|images|audio|uploads)\//, "");
   const fullPath = path.join(process.cwd(), "public", "uploads", localPath);
   await mkdir(path.dirname(fullPath), { recursive: true });
   await writeFile(fullPath, buffer);
@@ -197,7 +226,7 @@ export async function deleteFile(key: string): Promise<void> {
   if (isR2Configured()) {
     await deleteObject(key);
   } else {
-    const localPath = key.replace(/^(videos|images|uploads)\//, "");
+    const localPath = key.replace(/^(videos|images|audio|uploads)\//, "");
     const fullPath = path.join(process.cwd(), "public", "uploads", localPath);
     try {
       await unlink(fullPath);

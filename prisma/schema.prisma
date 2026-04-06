@@ -557,7 +557,11 @@ model ThrowComment {
   trainingSessionId   String?
   throwsAssignmentId  String?
 
-  body      String  @db.Text
+  // Content — either body (text) OR audioUrl (voice note). At least one set.
+  body             String   @db.Text
+  audioUrl         String?  // R2 URL or local /uploads/ path
+  audioDurationSec Int?     // duration of the voice note, rounded up
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

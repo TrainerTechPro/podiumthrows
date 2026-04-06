@@ -66,6 +66,8 @@ export async function GET(req: NextRequest) {
         authorName: profile ? `${profile.firstName} ${profile.lastName}` : user?.email ?? "Unknown",
         authorAvatar: profile?.avatarUrl ?? null,
         body: c.body,
+        audioUrl: c.audioUrl,
+        audioDurationSec: c.audioDurationSec,
         createdAt: c.createdAt.toISOString(),
       };
     });
@@ -87,17 +89,45 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { targetField, targetId, text } = body as Record<string, unknown>;
+    const {
+      targetField,
+      targetId,
+      text,
+      audioUrl,
+      audioDurationSec,
+    } = body as Record<string, unknown>;
 
     if (
       typeof targetField !== "string" ||
       !TARGET_FIELDS.includes(targetField as TargetField) ||
-      typeof targetId !== "string" ||
-      typeof text !== "string" ||
-      !text.trim()
+      typeof targetId !== "string"
     ) {
       return NextResponse.json(
-        { error: "targetField, targetId, and text are required" },
+        { error: "targetField and targetId are required" },
+        { status: 400 }
+      );
+    }
+
+    // A comment needs EITHER text OR audio. Both cannot be empty.
+    const hasText = typeof text === "string" && text.trim().length > 0;
+    const hasAudio =
+      typeof audioUrl === "string" &&
+      audioUrl.trim().length > 0 &&
+      typeof audioDurationSec === "number" &&
+      audioDurationSec > 0;
+
+    if (!hasText && !hasAudio) {
+      return NextResponse.json(
+        { error: "Comment must include either text or a voice note." },
+        { status: 400 }
+      );
+    }
+
+    // Voice notes: enforce 30s cap server-side as a defense in depth
+    // against a crafted client that bypasses the UI limit.
+    if (hasAudio && (audioDurationSec as number) > 30) {
+      return NextResponse.json(
+        { error: "Voice notes are limited to 30 seconds." },
         { status: 400 }
       );
     }
@@ -113,12 +143,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Body is required by the schema (NOT NULL). For voice-only comments,
+    // store a placeholder that's easy to filter/display ("[voice note]").
+    const bodyText = hasText ? (text as string).trim() : "[voice note]";
+
     const comment = await prisma.throwComment.create({
       data: {
         authorId: session.userId,
         authorRole: session.role,
         [targetField]: targetId,
-        body: (text as string).trim(),
+        body: bodyText,
+        audioUrl: hasAudio ? (audioUrl as string) : null,
+        audioDurationSec: hasAudio
+          ? Math.ceil(audioDurationSec as number)
+          : null,
       },
     });
 
@@ -133,8 +171,18 @@ export async function POST(req: NextRequest) {
     });
     const profile = session.role === "COACH" ? user?.coachProfile : user?.athleteProfile;
 
-    // Create notification for the other party
-    await createCommentNotification(session.userId, session.role, targetField as TargetField, targetId, (text as string).trim());
+    // Create notification for the other party — use a voice-note-friendly
+    // preview when the comment has no text content.
+    const notificationPreview = hasText
+      ? (text as string).trim()
+      : `🎙 Voice note (${Math.ceil(audioDurationSec as number)}s)`;
+    await createCommentNotification(
+      session.userId,
+      session.role,
+      targetField as TargetField,
+      targetId,
+      notificationPreview
+    );
 
     return NextResponse.json(
       {
@@ -148,6 +196,8 @@ export async function POST(req: NextRequest) {
             : user?.email ?? "Unknown",
           authorAvatar: profile?.avatarUrl ?? null,
           body: comment.body,
+          audioUrl: comment.audioUrl,
+          audioDurationSec: comment.audioDurationSec,
           createdAt: comment.createdAt.toISOString(),
         },
       },
