@@ -27,6 +27,8 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { STREAK_BADGES } from "@/lib/achievements";
+import { sendPushToUser } from "@/lib/push";
+import { parsePushPreferences } from "@/lib/push/preferences";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -130,6 +132,63 @@ export async function emitPR(
     distance: input.distance,
     previousDistance: input.previousDistance,
   });
+
+  // Push notifications to teammates (fire-and-forget, never throws)
+  void (async () => {
+    try {
+      const teammates = await prisma.athleteProfile.findMany({
+        where: {
+          coachId: ctx.coachId,
+          id: { not: athleteId },
+        },
+        select: {
+          userId: true,
+          notificationPreferences: true,
+        },
+      });
+
+      const eligibleUserIds: string[] = [];
+      for (const t of teammates) {
+        const prefs = parsePushPreferences(t.notificationPreferences);
+        if (prefs.teammatePRs) eligibleUserIds.push(t.userId);
+      }
+
+      if (eligibleUserIds.length === 0) return;
+
+      // Get the athlete's first name for the notification body
+      const athlete = await prisma.athleteProfile.findUnique({
+        where: { id: athleteId },
+        select: { firstName: true },
+      });
+      const name = athlete?.firstName ?? "A teammate";
+
+      const eventLabel = input.event
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      const distanceStr = input.distance.toFixed(2);
+
+      // Use a composite tag so duplicate PR events for the same athlete+event
+      // replace each other on the notification tray rather than stacking.
+      const tag = `pr-${athleteId}-${input.event}`;
+
+      for (const userId of eligibleUserIds) {
+        await sendPushToUser(userId, {
+          title: `\uD83D\uDD25 ${name} hit a PR!`,
+          body: `${distanceStr}m ${eventLabel}`,
+          url: "/athlete/team",
+          tag,
+          data: { type: "teammate_pr", athleteId },
+        });
+      }
+    } catch (err) {
+      logger.error("Failed to send teammate PR push", {
+        context: "team-activity",
+        error: err,
+        metadata: { athleteId },
+      });
+    }
+  })();
 }
 
 /* ─── Emit: Session complete ─────────────────────────────────────────────── */
