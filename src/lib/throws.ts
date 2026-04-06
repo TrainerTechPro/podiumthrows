@@ -142,7 +142,7 @@ export async function checkAndSetPR(
     select: { id: true, distance: true },
   });
 
-  const isPersonalBest = !existingBest || distance > existingBest.distance;
+  const isPersonalBest = !existingBest || existingBest.distance == null || distance > existingBest.distance;
 
   // If new PR, unmark the old one
   if (isPersonalBest && existingBest) {

@@ -118,7 +118,7 @@ export async function GET() {
 
     // From ThrowLog
     for (const tl of throwLogs) {
-      if (tl.distance > 0) {
+      if (tl.distance != null && tl.distance > 0) {
         distanceTrends.push({
           date: tl.date.toISOString().split("T")[0],
           event: tl.event,
@@ -169,7 +169,7 @@ export async function GET() {
 
     // ThrowLog has explicit isCompetition
     for (const tl of throwLogs) {
-      if (tl.distance > 0) {
+      if (tl.distance != null && tl.distance > 0) {
         if (tl.isCompetition) {
           compCount++;
           compTotal += tl.distance;
@@ -244,7 +244,7 @@ export async function GET() {
     }
 
     for (const tl of throwLogs) {
-      if (tl.distance > 0) {
+      if (tl.distance != null && tl.distance > 0) {
         addToImplMap(tl.event, `${tl.implementWeight}kg`, tl.distance);
       }
     }

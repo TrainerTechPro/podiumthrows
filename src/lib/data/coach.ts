@@ -1554,16 +1554,16 @@ export async function getAthleteThrowStats(athleteId: string): Promise<ThrowStat
   }
 
   return Object.entries(byEvent).map(([event, eventThrows]) => {
-    const distances = eventThrows.map((t) => t.distance);
+    const distances = eventThrows.map((t) => t.distance).filter((d): d is number => d != null);
     const recent5 = distances.slice(0, 5);
     const implementWeights = Array.from(new Set(eventThrows.map((t) => t.implementWeight))).sort((a, b) => b - a);
 
     return {
       event,
       totalThrows: eventThrows.length,
-      bestDistance: Math.max(...distances),
-      avgDistance: parseFloat((distances.reduce((s, d) => s + d, 0) / distances.length).toFixed(2)),
-      recentAvgDistance: parseFloat((recent5.reduce((s, d) => s + d, 0) / recent5.length).toFixed(2)),
+      bestDistance: distances.length > 0 ? Math.max(...distances) : 0,
+      avgDistance: distances.length > 0 ? parseFloat((distances.reduce((s, d) => s + d, 0) / distances.length).toFixed(2)) : 0,
+      recentAvgDistance: recent5.length > 0 ? parseFloat((recent5.reduce((s, d) => s + d, 0) / recent5.length).toFixed(2)) : 0,
       implementWeights,
     };
   });

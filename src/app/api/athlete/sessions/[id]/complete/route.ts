@@ -84,8 +84,9 @@ export async function PATCH(
       return sum;
     }, 0);
     const throwCount = updated.throwLogs.length;
-    const bestThrow = updated.throwLogs.length > 0
-      ? updated.throwLogs.reduce((best, t) => t.distance > best.distance ? t : best)
+    const throwsWithDistance = updated.throwLogs.filter((t) => t.distance != null);
+    const bestThrow = throwsWithDistance.length > 0
+      ? throwsWithDistance.reduce((best, t) => (t.distance ?? 0) > (best.distance ?? 0) ? t : best)
       : null;
     const prCount = updated.throwLogs.filter((t) => t.isPersonalBest).length;
 

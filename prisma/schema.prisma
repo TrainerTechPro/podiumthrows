@@ -516,7 +516,7 @@ model ThrowLog {
   implementWeight         Float // kg (always stored in kg for calculations)
   implementWeightUnit     String   @default("kg") // "kg" | "lbs" — what the user entered
   implementWeightOriginal Float? // original value the user typed (e.g. 14 for 14lbs)
-  distance        Float // meters
+  distance        Float? // meters (nullable — Quick Log allows tap-to-count without distance)
   date            DateTime         @default(now())
   isPersonalBest  Boolean          @default(false)
   isCompetition   Boolean          @default(false)
