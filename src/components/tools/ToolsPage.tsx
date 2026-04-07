@@ -4,6 +4,15 @@ import { useState } from "react";
 import { StrengthTab } from "./StrengthCalculators";
 import { BodyStatsTab } from "./BodyStatsCalculators";
 
+/* ── Shared type exported so page wrappers can build it ───────────────────── */
+
+export type ProfileBodyStats = {
+  weightKg: number | null;
+  heightCm: number | null;
+  gender: string | null;
+  age: number | null;
+};
+
 interface TabDef {
   id: string;
   label: string;
@@ -23,12 +32,18 @@ const TABS: TabDef[] = [
   },
 ];
 
-interface ToolsPageProps {
+export interface ToolsPageProps {
   isCoach?: boolean;
+  profileBodyStats?: ProfileBodyStats;
 }
 
-export default function ToolsPage({ isCoach: _isCoach = false }: ToolsPageProps) {
+export default function ToolsPage({
+  isCoach = false,
+  profileBodyStats,
+}: ToolsPageProps) {
   const [activeTab, setActiveTab] = useState("strength");
+
+  const profileLink = isCoach ? "/coach/settings" : "/athlete/profile";
 
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
@@ -71,7 +86,12 @@ export default function ToolsPage({ isCoach: _isCoach = false }: ToolsPageProps)
 
         {/* Tab content */}
         {activeTab === "strength" && <StrengthTab />}
-        {activeTab === "bodystats" && <BodyStatsTab />}
+        {activeTab === "bodystats" && (
+          <BodyStatsTab
+            profileBodyStats={profileBodyStats}
+            profileLink={profileLink}
+          />
+        )}
       </div>
     </div>
   );
