@@ -5,6 +5,7 @@ import { Send, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 const COOLDOWN_MS = 48 * 60 * 60 * 1000;
 
@@ -32,7 +33,10 @@ export function RequestProgramming({
   async function handleRequest() {
     setLoading(true);
     try {
-      const res = await fetch("/api/athlete/request-programming", { method: "POST" });
+      const res = await fetch("/api/athlete/request-programming", {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
       const data = await res.json();
 
       if (res.ok && data.success) {

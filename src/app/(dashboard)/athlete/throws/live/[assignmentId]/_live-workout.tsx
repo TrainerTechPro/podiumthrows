@@ -220,6 +220,7 @@ function ThrowingBlockView({
     try {
       const res = await fetch(`/api/throws/assignments/${assignmentId}/log-throw`, {
         method: "POST",
+        signal: AbortSignal.timeout(8000),
         headers: csrfHeaders(),
         body: JSON.stringify({
           blockId: block.id,
@@ -254,6 +255,7 @@ function ThrowingBlockView({
         formData.append("distance", String(d));
         fetch("/api/codex", {
           method: "POST",
+          headers: { ...csrfHeaders() },
           body: formData,
         }).then(() => {
           toast("Video saved to Codex", "success");
@@ -274,8 +276,12 @@ function ThrowingBlockView({
           highlight: `${d.toFixed(2)}m`,
         });
       }
-    } catch {
-      toast("Network error — try again", "error");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "TimeoutError") {
+        toast("Connection slow — your throw will save when reception improves", "error");
+      } else {
+        toast("Network error — try again", "error");
+      }
     } finally {
       setLogging(false);
     }

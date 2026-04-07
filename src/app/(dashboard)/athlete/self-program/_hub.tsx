@@ -215,14 +215,25 @@ function EmptyView() {
 
 function DraftView({ draft }: { draft: DraftConfig }) {
   const router = useRouter();
+  const toast = useToast();
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await fetch(`/api/athlete/self-program/${draft.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/athlete/self-program/${draft.id}`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? "Failed to delete draft");
+        return;
+      }
       router.refresh();
+    } catch {
+      toast.error("Failed to delete draft");
     } finally {
       setDeleting(false);
     }
