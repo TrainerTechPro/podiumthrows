@@ -3,10 +3,6 @@
 import { useState } from "react";
 import { StrengthTab } from "./StrengthCalculators";
 import { BodyStatsTab } from "./BodyStatsCalculators";
-import { CardioTab } from "./CardioCalculators";
-import { NutritionTab } from "./NutritionCalculators";
-import { RunningTab } from "./RunningCalculators";
-import { ConvertersTab } from "./ConverterCalculators";
 
 interface TabDef {
   id: string;
@@ -25,22 +21,6 @@ const TABS: TabDef[] = [
     label: "Body Stats",
     icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
   },
-  {
-    id: "cardio",
-    label: "Cardio",
-    icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
-  },
-  {
-    id: "nutrition",
-    label: "Nutrition",
-    icon: "M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18",
-  },
-  { id: "running", label: "Running", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
-  {
-    id: "converters",
-    label: "Converters",
-    icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4",
-  },
 ];
 
 interface ToolsPageProps {
@@ -56,10 +36,10 @@ export default function ToolsPage({ isCoach: _isCoach = false }: ToolsPageProps)
         {/* Header */}
         <div className="mb-6">
           <h1 className="font-heading text-display text-gray-900 dark:text-gray-50">
-            Fitness Calculators
+            Tools
           </h1>
           <p className="text-body text-gray-500 dark:text-gray-400 mt-1">
-            Science-backed tools for strength, body composition, cardio and more
+            Strength and body composition tools for throws athletes
           </p>
         </div>
 
@@ -92,10 +72,6 @@ export default function ToolsPage({ isCoach: _isCoach = false }: ToolsPageProps)
         {/* Tab content */}
         {activeTab === "strength" && <StrengthTab />}
         {activeTab === "bodystats" && <BodyStatsTab />}
-        {activeTab === "cardio" && <CardioTab />}
-        {activeTab === "nutrition" && <NutritionTab />}
-        {activeTab === "running" && <RunningTab />}
-        {activeTab === "converters" && <ConvertersTab />}
       </div>
     </div>
   );
