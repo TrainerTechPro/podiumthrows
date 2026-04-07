@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { requireCoachSession } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { Video, Upload } from "lucide-react";
+import { Video, Upload, Radio } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VideoAnalysisCard } from "@/components/video-analysis/VideoAnalysisCard";
 import { AnalysisSummary, type LatestInsight } from "@/components/video-analysis/AnalysisSummary";
@@ -130,10 +130,19 @@ export default async function VideoAnalysisPage({
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Pose Analysis</h1>
         </div>
-        <Link href="/coach/video-analysis/upload" className="btn-primary flex items-center gap-1.5">
-          <Upload size={16} strokeWidth={2} aria-hidden="true" />
-          Upload Video
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/coach/video-analysis/live"
+            className="btn-secondary flex items-center gap-1.5"
+          >
+            <Radio size={16} strokeWidth={2} aria-hidden="true" />
+            Go Live
+          </Link>
+          <Link href="/coach/video-analysis/upload" className="btn-primary flex items-center gap-1.5">
+            <Upload size={16} strokeWidth={2} aria-hidden="true" />
+            Upload Video
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
