@@ -402,8 +402,9 @@ export function QuickLogClient() {
 
     fetch("/api/athlete/quick-log")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: QuickLogData | null) => {
+      .then((raw: { success: boolean; data: QuickLogData } | null) => {
         clearTimeout(loadTimer);
+        const data = raw?.data ?? null;
 
         if (!data) {
           setIsLoading(false);
@@ -543,12 +544,16 @@ export function QuickLogClient() {
 
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-          const { throw: saved } = await res.json();
+          const postPayload = await res.json();
+          const saved = postPayload?.data?.throw;
+          const newCount = postPayload?.data?.throwCount;
 
           // Replace optimistic with real throw
           setRecentThrows((prev) =>
             prev.map((t) => (t.id === tempId ? { ...saved, isOptimistic: false } : t))
           );
+          // Use authoritative count from server (fixes potential drift)
+          if (typeof newCount === "number") setThrowCount(newCount);
         } catch {
           // Roll back
           setThrowCount((c) => c - 1);
@@ -657,7 +662,8 @@ export function QuickLogClient() {
             }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const { throw: updated } = await res.json();
+          const patchPayload = await res.json();
+          const updated = patchPayload?.data?.throw;
           setRecentThrows((prev) =>
             prev.map((t) => (t.id === editingThrow.id ? { ...updated, isOptimistic: false } : t))
           );
