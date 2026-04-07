@@ -177,6 +177,9 @@ model CoachProfile {
   trainingEnabled       Boolean         @default(false)
   events        EventType[] @default([]) // coach's own throwing events for self-training
 
+  // Timezone (IANA name, e.g. "America/New_York"). NULL = not yet detected.
+  timezone  String?
+
   // MFA (multi-factor authentication)
   mfaSecret        String?   // AES-256-GCM encrypted TOTP secret
   mfaEnabled       Boolean   @default(false)
@@ -346,6 +349,9 @@ model AthleteProfile {
 
   // Practice scheduling
   practiceAttendance ScheduledPracticeAttendance[] @relation("AthleteScheduledPracticeAttendance")
+
+  // Timezone (IANA name, e.g. "America/New_York"). NULL = not yet detected.
+  timezone  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
