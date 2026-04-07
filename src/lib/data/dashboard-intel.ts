@@ -12,23 +12,22 @@
 
 import { cache } from "react";
 import prisma from "@/lib/prisma";
+import { getLocalDate, getCoachTimezone } from "@/lib/dates";
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+function todayISO(timezone: string): string {
+  return getLocalDate(timezone);
 }
 
-function daysAgoISO(n: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
+function daysAgoISO(timezone: string, n: number): string {
+  const offset = new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+  return getLocalDate(timezone, offset);
 }
 
-function daysFromNowISO(n: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+function daysFromNowISO(timezone: string, n: number): string {
+  const offset = new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  return getLocalDate(timezone, offset);
 }
 
 /** Number of calendar days between a YYYY-MM-DD string and today. */
@@ -54,7 +53,8 @@ export interface TeamPR {
 
 export const getRecentTeamPRs = cache(
   async (coachId: string, days: number = 14): Promise<TeamPR[]> => {
-    const cutoff = daysAgoISO(days);
+    const tz = await getCoachTimezone(coachId);
+    const cutoff = daysAgoISO(tz, days);
 
     const [throwsPRs, drillPRs] = await Promise.all([
       prisma.throwsPR.findMany({
@@ -371,8 +371,9 @@ export interface UpcomingCompetition {
 
 export const getUpcomingCompetitions = cache(
   async (coachId: string): Promise<UpcomingCompetition[]> => {
-    const today = todayISO();
-    const sixtyDaysOut = daysFromNowISO(60);
+    const tz = await getCoachTimezone(coachId);
+    const today = todayISO(tz);
+    const sixtyDaysOut = daysFromNowISO(tz, 60);
 
     const competitions = await prisma.throwsCompetition.findMany({
       where: {
