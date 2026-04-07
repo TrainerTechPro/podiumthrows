@@ -108,14 +108,55 @@ export function InteractiveBodyMap({
 }: InteractiveBodyMapProps) {
   const [viewSide, setViewSide] = useState<"front" | "back">("front");
 
-  /* Build the data array for the Body component from our selected areas */
+  /* Build the data array for the Body component from our selected areas.
+   *
+   * The library (react-muscle-highlighter) keys its internal map by `slug`
+   * only — so if we pass two entries with the same slug (e.g. left quad +
+   * right quad) the second silently overwrites the first, and only one side
+   * highlights.  Additionally, its left/right path renderer uses `find()` on
+   * the raw data array which also only ever returns one result.
+   *
+   * Fix: when BOTH sides of a bilateral muscle are selected, collapse them
+   * into a single entry with `side` omitted.  The library interprets a missing
+   * `side` as "color both left and right paths", which is exactly what we need.
+   * For single-side selections the entry keeps its `side` so only that half
+   * lights up.
+   */
   const bodyData: ExtendedBodyPart[] = useMemo(() => {
-    return value.map((area) => ({
-      slug: area.slug,
-      side: area.side,
-      color: SEVERITY_COLORS[area.severity],
-      intensity: area.severity,
-    }));
+    // Group entries by slug
+    const bySlug = new Map<string, SoreArea[]>();
+    for (const area of value) {
+      const list = bySlug.get(area.slug) ?? [];
+      list.push(area);
+      bySlug.set(area.slug, list);
+    }
+
+    const result: ExtendedBodyPart[] = [];
+    for (const [, areas] of bySlug) {
+      const hasBilateral = areas.some((a) => a.side === "left") && areas.some((a) => a.side === "right");
+      if (hasBilateral) {
+        // Both sides selected — use the highest severity so the color is
+        // representative, and omit `side` so the library fills both paths.
+        const maxSeverity = Math.max(...areas.map((a) => a.severity)) as 1 | 2 | 3;
+        result.push({
+          slug: areas[0].slug,
+          // side intentionally omitted → library highlights both left & right
+          color: SEVERITY_COLORS[maxSeverity],
+          intensity: maxSeverity,
+        });
+      } else {
+        // Single side (or center/bilateral-agnostic muscle) — pass through as-is
+        for (const area of areas) {
+          result.push({
+            slug: area.slug,
+            side: area.side,
+            color: SEVERITY_COLORS[area.severity],
+            intensity: area.severity,
+          });
+        }
+      }
+    }
+    return result;
   }, [value]);
 
   /* Handle click — cycle severity: none → mild → moderate → severe → none */
