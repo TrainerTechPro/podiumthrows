@@ -121,7 +121,7 @@ function ConnectionChip({ isOnline, pendingCount, isSyncing }: ConnectionChipPro
 
   return (
     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-700/60 border border-surface-600/40 text-xs text-[var(--muted)]">
-      {isSyncing && isOnline ? (
+      {isSyncing && isOnline && pendingCount > 0 ? (
         <Loader2 size={10} className="animate-spin text-warning-500" aria-hidden="true" />
       ) : (
         <span className={cn("w-2 h-2 rounded-full shrink-0", dotClass)} aria-hidden="true" />
@@ -389,11 +389,15 @@ export function QuickLogClient() {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggered = useRef(false);
 
-  // Reduced motion
-  const prefersReducedMotion =
-    typeof window !== "undefined"
-      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      : false;
+  // Reduced motion — reactive to system changes, SSR-safe
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   /* ── Initial data load ───────────────────────────────────────────────── */
 
@@ -583,7 +587,9 @@ export function QuickLogClient() {
   // Start the long-press timer on pointerdown. The actual tap is handled by
   // `handleClick` below — that gives us a reliable, browser-synthesized
   // tap event that fires on every platform without racing framer-motion.
-  const handlePointerDown = useCallback(() => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Keyboard activation (pointerType === "") must not trigger the long-press sheet
+    if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
     longPressTriggered.current = false;
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
 
@@ -640,6 +646,8 @@ export function QuickLogClient() {
   const handleSheetSave = useCallback(
     async (data: { distance: number | null; feeling: FeelingOption | null; notes: string }) => {
       setSheetOpen(false);
+      setIsNewThrow(false);
+      setEditingThrow(null);
 
       if (isNewThrow) {
         // Log new throw with details
@@ -658,7 +666,7 @@ export function QuickLogClient() {
               id: editingThrow.id,
               distance: data.distance,
               feeling: data.feeling,
-              notes: data.notes || undefined,
+              notes: data.notes,
             }),
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -901,7 +909,11 @@ export function QuickLogClient() {
       <QuickEntrySheet
         isOpen={sheetOpen}
         editingThrow={editingThrow}
-        onClose={() => setSheetOpen(false)}
+        onClose={() => {
+          setSheetOpen(false);
+          setIsNewThrow(false);
+          setEditingThrow(null);
+        }}
         onSave={handleSheetSave}
       />
     </>
