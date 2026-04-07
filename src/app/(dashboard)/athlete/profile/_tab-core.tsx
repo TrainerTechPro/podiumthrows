@@ -298,6 +298,16 @@ export function TabCore({ profile }: { profile: ProfileData }) {
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
           Body Measurements
         </h3>
+        <p className="text-xs text-muted">
+          Used to auto-fill the body composition calculators in{" "}
+          <a
+            href="/athlete/tools"
+            className="text-primary-500 hover:underline"
+          >
+            Tools
+          </a>
+          .
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label
