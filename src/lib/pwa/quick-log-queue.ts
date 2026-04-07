@@ -8,6 +8,7 @@
  */
 
 import { openDB, idbGetAll, idbPut, idbDelete, idbCount } from "./idb";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 const STORE = "quick-log-queue";
 
@@ -101,7 +102,7 @@ export async function syncQuickLogQueue(): Promise<SyncResult> {
     try {
       const response = await fetch("/api/athlete/quick-log", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           event: item.event,
           implementWeight: item.implementWeight,
