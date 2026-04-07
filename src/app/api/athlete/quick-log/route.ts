@@ -25,7 +25,7 @@ interface QuickLogNotes {
 
 interface ImplementOption {
   event: string;
-  weightKg: number;
+  implementWeight: number;
   label: string;
 }
 
@@ -82,11 +82,11 @@ function buildAvailableImplements(
 ): ImplementOption[] {
   const genderKey = gender === "FEMALE" ? "female" : "male";
   return events.map((event) => {
-    const weightKg = COMPETITION_WEIGHTS[event]?.[genderKey] ?? 0;
+    const implementWeight = COMPETITION_WEIGHTS[event]?.[genderKey] ?? 0;
     return {
       event,
-      weightKg,
-      label: formatWeight(weightKg, event),
+      implementWeight,
+      label: formatWeight(implementWeight, event),
     };
   });
 }
@@ -106,17 +106,17 @@ async function getCurrentImplement(
   if (recent) {
     return {
       event: recent.event as string,
-      weightKg: recent.implementWeight,
+      implementWeight: recent.implementWeight,
       label: formatWeight(recent.implementWeight, recent.event as string),
     };
   }
 
   const genderKey = gender === "FEMALE" ? "female" : "male";
-  const weightKg = COMPETITION_WEIGHTS[primaryEvent]?.[genderKey] ?? 0;
+  const implementWeight = COMPETITION_WEIGHTS[primaryEvent]?.[genderKey] ?? 0;
   return {
     event: primaryEvent,
-    weightKg,
-    label: formatWeight(weightKg, primaryEvent),
+    implementWeight,
+    label: formatWeight(implementWeight, primaryEvent),
   };
 }
 
@@ -147,7 +147,7 @@ export async function GET() {
     const todaySession = await prisma.athleteThrowsSession.findFirst({
       where: { athleteId: athlete.id, date: today },
       orderBy: { createdAt: "desc" },
-      select: { id: true, event: true, date: true },
+      select: { id: true, event: true, date: true, focus: true },
     });
 
     // Last 3 ThrowLogs today
@@ -158,13 +158,15 @@ export async function GET() {
       },
       orderBy: { date: "desc" },
       take: 3,
-      select: { id: true, distance: true, notes: true, date: true },
+      select: { id: true, event: true, implementWeight: true, distance: true, notes: true, date: true },
     });
 
     const recentThrows = recentThrowsRaw.map((t) => {
       const { feeling, text } = deserializeNotes(t.notes);
       return {
         id: t.id,
+        event: t.event as string,
+        implementWeight: t.implementWeight,
         distance: t.distance ?? null,
         feeling,
         notes: text,
@@ -193,6 +195,7 @@ export async function GET() {
         recentThrows,
         throwCount,
         availableImplements,
+        sessionFocus: todaySession?.focus ?? null,
       },
     });
   } catch (err) {
