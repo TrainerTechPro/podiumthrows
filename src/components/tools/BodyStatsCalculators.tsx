@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import Link from "next/link";
+import { CheckCircle2, Info } from "lucide-react";
 import {
   CalcCard,
   Row,
@@ -15,15 +17,86 @@ import {
   inToCm,
   type UnitSystem,
 } from "./ToolCard";
+import type { ProfileBodyStats } from "./ToolsPage";
 
-function BodyFatGirthCalc() {
-  const [height, setHeight] = useState("");
+/* ── Profile source banner ────────────────────────────────────────────────── */
+
+function ProfileSourceBanner({
+  stats,
+  profileLink,
+}: {
+  stats: ProfileBodyStats;
+  profileLink: string;
+}) {
+  const hasStats =
+    stats.weightKg != null || stats.heightCm != null || stats.gender != null;
+
+  if (!hasStats) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-blue-200/60 dark:border-blue-500/20 bg-blue-50/60 dark:bg-blue-500/5 px-3 py-2 text-sm">
+        <Info
+          className="w-4 h-4 shrink-0 text-blue-500 dark:text-blue-400"
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
+        <span className="text-blue-700 dark:text-blue-300">
+          Set your body stats in Profile for auto-fill.{" "}
+          <Link
+            href={profileLink}
+            className="font-medium underline underline-offset-2 hover:text-blue-900 dark:hover:text-blue-100"
+          >
+            Go to Profile →
+          </Link>
+        </span>
+      </div>
+    );
+  }
+
+  const parts: string[] = [];
+  if (stats.weightKg != null) parts.push(`${stats.weightKg} kg`);
+  if (stats.heightCm != null) parts.push(`${stats.heightCm} cm`);
+  if (stats.gender) parts.push(stats.gender === "MALE" ? "M" : stats.gender === "FEMALE" ? "F" : "Other");
+  if (stats.age != null) parts.push(`${stats.age}y`);
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-lg border border-green-200/60 dark:border-green-500/20 bg-green-50/60 dark:bg-green-500/5 px-3 py-2 text-sm">
+      <div className="flex items-center gap-2">
+        <CheckCircle2
+          className="w-4 h-4 shrink-0 text-green-600 dark:text-green-400"
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
+        <span className="text-green-700 dark:text-green-300">
+          Using your profile: {parts.join(" · ")}
+        </span>
+      </div>
+      <Link
+        href={profileLink}
+        className="text-xs font-medium text-green-700 dark:text-green-300 underline underline-offset-2 hover:text-green-900 dark:hover:text-green-100 shrink-0"
+      >
+        Edit
+      </Link>
+    </div>
+  );
+}
+
+function BodyFatGirthCalc({
+  profileBodyStats,
+  profileLink,
+}: {
+  profileBodyStats?: ProfileBodyStats;
+  profileLink: string;
+}) {
+  // Prefill from profile (metric values from DB → metric initial state)
+  const [height, setHeight] = useState(profileBodyStats?.heightCm?.toString() ?? "");
   const [neck, setNeck] = useState("");
   const [waist, setWaist] = useState("");
   const [hip, setHip] = useState("");
-  const [weight, setWeight] = useState("");
-  const [sex, setSex] = useState("male");
-  const [unit, setUnit] = useState<UnitSystem>("imperial");
+  const [weight, setWeight] = useState(profileBodyStats?.weightKg?.toString() ?? "");
+  const [sex, setSex] = useState(
+    profileBodyStats?.gender === "FEMALE" ? "female" : "male"
+  );
+  const [unit, setUnit] = useState<UnitSystem>("metric");
   const [result, setResult] = useState<{ bf: number; fat: number; lbm: number } | null>(null);
 
   const calc = useCallback(() => {
@@ -62,6 +135,9 @@ function BodyFatGirthCalc() {
       title="Body Fat (Navy Girth Method)"
       icon="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
     >
+      {profileBodyStats !== undefined && (
+        <ProfileSourceBanner stats={profileBodyStats} profileLink={profileLink} />
+      )}
       <div className="flex items-center gap-3 flex-wrap">
         <UnitToggle value={unit} onChange={setUnit} />
         <Select
@@ -135,11 +211,19 @@ function BodyFatGirthCalc() {
   );
 }
 
-function SkinfoldCalc() {
-  const [age, setAge] = useState("");
-  const [sex, setSex] = useState("male");
-  const [weight, setWeight] = useState("");
-  const [unit, setUnit] = useState<UnitSystem>("imperial");
+function SkinfoldCalc({
+  profileBodyStats,
+  profileLink,
+}: {
+  profileBodyStats?: ProfileBodyStats;
+  profileLink: string;
+}) {
+  const [age, setAge] = useState(profileBodyStats?.age?.toString() ?? "");
+  const [sex, setSex] = useState(
+    profileBodyStats?.gender === "FEMALE" ? "female" : "male"
+  );
+  const [weight, setWeight] = useState(profileBodyStats?.weightKg?.toString() ?? "");
+  const [unit, setUnit] = useState<UnitSystem>("metric");
   // Male sites: chest, abdomen, thigh
   const [s1, setS1] = useState("");
   const [s2, setS2] = useState("");
@@ -181,6 +265,9 @@ function SkinfoldCalc() {
       title="Body Composition (3-Site Skinfold)"
       icon="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 10h.01M12 10h.01M15 10h.01M9 13h.01M12 13h.01M15 13h.01M4 6h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10-4H10v4h4V2z"
     >
+      {profileBodyStats !== undefined && (
+        <ProfileSourceBanner stats={profileBodyStats} profileLink={profileLink} />
+      )}
       <div className="flex items-center gap-3 flex-wrap">
         <UnitToggle value={unit} onChange={setUnit} />
         <Select
@@ -290,11 +377,19 @@ const JP7_LABELS: Record<JP7Site, string> = {
   thigh: "Thigh",
 };
 
-function Skinfold7Calc() {
-  const [sex, setSex] = useState<"male" | "female">("male");
-  const [unit, setUnit] = useState<UnitSystem>("imperial");
-  const [age, setAge] = useState("");
-  const [weight, setWeight] = useState("");
+function Skinfold7Calc({
+  profileBodyStats,
+  profileLink,
+}: {
+  profileBodyStats?: ProfileBodyStats;
+  profileLink: string;
+}) {
+  const [sex, setSex] = useState<"male" | "female">(
+    profileBodyStats?.gender === "FEMALE" ? "female" : "male"
+  );
+  const [unit, setUnit] = useState<UnitSystem>("metric");
+  const [age, setAge] = useState(profileBodyStats?.age?.toString() ?? "");
+  const [weight, setWeight] = useState(profileBodyStats?.weightKg?.toString() ?? "");
   const [sites, setSites] = useState<Record<JP7Site, string>>({
     chest: "",
     midaxillary: "",
@@ -329,6 +424,9 @@ function Skinfold7Calc() {
       title="Body Fat — JP 7-Site Skinfold"
       icon="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
     >
+      {profileBodyStats !== undefined && (
+        <ProfileSourceBanner stats={profileBodyStats} profileLink={profileLink} />
+      )}
       <div className="flex gap-3 flex-wrap">
         <Select
           value={sex}
@@ -396,12 +494,18 @@ function Skinfold7Calc() {
   );
 }
 
-export function BodyStatsTab() {
+export function BodyStatsTab({
+  profileBodyStats,
+  profileLink,
+}: {
+  profileBodyStats?: ProfileBodyStats;
+  profileLink: string;
+}) {
   return (
     <div className="space-y-4">
-      <BodyFatGirthCalc />
-      <SkinfoldCalc />
-      <Skinfold7Calc />
+      <BodyFatGirthCalc profileBodyStats={profileBodyStats} profileLink={profileLink} />
+      <SkinfoldCalc profileBodyStats={profileBodyStats} profileLink={profileLink} />
+      <Skinfold7Calc profileBodyStats={profileBodyStats} profileLink={profileLink} />
     </div>
   );
 }
