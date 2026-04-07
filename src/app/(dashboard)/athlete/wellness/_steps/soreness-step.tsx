@@ -72,27 +72,27 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
       </div>
 
       {/* ── Overall Soreness slider ────────────────────────────────────── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="space-y-5 rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] px-5 py-5">
+        <div className="flex items-center justify-between gap-4">
           <label htmlFor="soreness" className="text-sm font-semibold text-[var(--foreground)]">
             Overall Soreness
           </label>
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-2.5">
             <span
-              className="text-xs font-medium transition-colors duration-200"
+              className="text-xs font-medium uppercase tracking-wider transition-colors duration-200"
               style={{ color }}
             >
               {label}
             </span>
             <NumberFlow
               value={data.soreness}
-              className="text-[28px] font-extrabold font-heading leading-none"
+              className="text-[32px] font-extrabold font-heading leading-none tabular-nums"
               style={{ color }}
             />
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative px-1 py-2">
           <input
             id="soreness"
             type="range"
@@ -111,7 +111,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
           />
         </div>
 
-        <div className="flex justify-between text-[10px] text-muted">
+        <div className="flex justify-between text-[11px] text-muted px-1">
           <span>No soreness</span>
           <span>Extremely sore</span>
         </div>
