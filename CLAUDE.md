@@ -140,6 +140,184 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 
 ---
 
+## Code Quality Standards (Lessons From Real Bugs)
+
+These rules exist because each one was violated in a recent bug. Read them before writing code that touches API contracts, form parsing, or error handling.
+
+### 1. No Empty Catch Blocks — Ever
+
+```typescript
+// ❌ NEVER
+try {
+  await save();
+} catch { /* ignore */ }
+
+// ❌ ALSO BAD — silent on the user's side
+try {
+  await save();
+} catch (err) {
+  console.log(err);
+}
+
+// ✅ ALWAYS — log AND surface to user
+try {
+  await save();
+} catch (err) {
+  logger.error("save failed", { error: err });
+  toast.error(err instanceof Error ? err.message : "Network error — please try again");
+}
+```
+
+**Why:** An empty catch block hides bugs from users and developers. The Quick Log offline queue lost user data for weeks because a 403 was caught silently. The throws session save flow felt "stuck on Saving..." because validation failures were swallowed. Every catch block must either re-throw OR surface to the user via toast.
+
+### 2. API Response Shape — One Convention Only
+
+All API routes MUST return one of these two shapes:
+
+```typescript
+// Success
+{ success: true, data: T }
+
+// Failure
+{ success: false, error: string }
+```
+
+NOT:
+- `{ ok: true, data: T }` (the legacy shape — being phased out)
+- `{ success: true, user: T }` or other ad-hoc keys
+- `{ success: true, ...flat fields }`
+
+**Why:** Three separate bugs in this codebase have been "client reads `d.data` but API returns `d.user`" or similar shape mismatches. The fix is always trivial — the cost is debugging time and user-facing breakage.
+
+**When consuming an API response on the client:**
+
+```typescript
+// ✅ Always destructure from data
+const res = await fetch("/api/...");
+const payload = await res.json();
+if (!res.ok || !payload.success) {
+  toast.error(payload.error || `Request failed (${res.status})`);
+  return;
+}
+const result = payload.data; // ← always read from .data
+```
+
+### 3. Numeric Form Inputs — Distinguish "Empty" From "Zero"
+
+```typescript
+// ❌ NEVER — coerces "0" to null
+const weight = parseFloat(input) || null;
+
+// ✅ ALWAYS — preserves 0 as a valid value
+const weight = input === "" || input == null ? null : (() => {
+  const n = parseFloat(input);
+  return Number.isFinite(n) ? n : null;
+})();
+```
+
+**Why:** Athletes use bodyweight (0kg), unweighted implements (0kg), and zero RPE for recovery days. `value || null` silently destroys these values. The throws session save was storing "no implement" for athletes who explicitly entered 0.
+
+**Rule:** For ANY numeric input field, the parser must check the string for empty/null EXPLICITLY before falling through to numeric parsing.
+
+### 4. Zod `.optional()` ≠ `.nullable()`
+
+```typescript
+// ❌ FAILS when client sends null (e.g., from React form state)
+field: z.number().optional()
+
+// ✅ Accepts both null and undefined
+field: z.number().nullable().optional()
+```
+
+**Why:** React form state typically uses `null` for unset values (e.g., `useState<number | null>(null)`). When this hits a Zod schema with `.optional()` (which only accepts `undefined`), validation fails with no obvious error. This has caused at least 3 separate "save doesn't work" bugs in this codebase.
+
+**Rule:** Any Zod numeric/string field that comes from a React form should be `.nullable().optional()`. The schema should only be strict (`.optional()` alone) when the field is constructed server-side.
+
+### 5. Route Handler Params Are Async (Next.js 14.2+)
+
+```typescript
+// ❌ Old sync pattern — works but inconsistent
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await prisma.session.findUnique({ where: { id: params.id } });
+}
+
+// ✅ New async pattern — required by Next.js 15+, used throughout this codebase
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const session = await prisma.session.findUnique({ where: { id } });
+}
+```
+
+**Why:** Next.js 15 requires async params. We're on 14.2 which still accepts both, but every new route uses the async form to ease the upgrade path. Mixing patterns creates confusion when migrating.
+
+### 6. Validate ALL Mutation Endpoints With Zod
+
+POST, PUT, PATCH, DELETE handlers MUST validate the body via `parseBody(request, SomeSchema)` from `@/lib/api-schemas`. Never destructure `await request.json()` directly without a schema.
+
+```typescript
+// ❌ NEVER — malformed body throws at the Prisma layer instead of returning 400
+const body = await request.json();
+const { event, drillLogs } = body;
+await prisma.session.create({ data: { event, drillLogs: { create: drillLogs } } });
+
+// ✅ ALWAYS — clean 400 with field errors on bad input
+const parsed = await parseBody(request, MySchema);
+if (parsed instanceof NextResponse) return parsed;
+const { event, drillLogs } = parsed;
+```
+
+**Why:** Without schema validation, bad input reaches Prisma and produces opaque errors. With schema validation, the user gets a clear "field X is required" error instantly. The PUT handler for athlete sessions had no validation for months — silently wrote whatever the client sent.
+
+### 7. Form Submit Buttons Need User Feedback After Save
+
+After a successful save, the user MUST see feedback through at least TWO of these channels:
+- A toast notification (`toast.success("Saved")`)
+- A visual state change (form replaced by success card, button color flip, etc.)
+- A redirect or navigation
+
+A single channel isn't enough — coaches in the field have looked away when the toast appears, and athletes on slow connections miss subtle visual changes. **Always combine toast + visual change** (or toast + redirect).
+
+```typescript
+// ❌ Insufficient — silent visual swap that's easy to miss
+if (res.ok) setSaved(true);
+
+// ✅ Toast + visual change
+if (res.ok) {
+  toast.success("Session saved");
+  setSaved(true);
+}
+
+// ✅ Or toast + redirect
+if (res.ok) {
+  toast.success("Session saved");
+  router.push("/athlete/throws");
+}
+```
+
+### 8. Guard Mutations With Preconditions
+
+Before any mutation that depends on derived state (like `athleteId` fetched on mount), guard with a precondition check:
+
+```typescript
+async function handleSave() {
+  if (!athleteId) {
+    toast.error("Profile not loaded yet — refresh and try again");
+    return;
+  }
+  // ... proceed
+}
+```
+
+**Why:** Race conditions between mount-time fetches and user clicks WILL happen. Without a guard, the mutation fires with `null`/`undefined` values and the API returns a confusing 400.
+
+---
+
 ## Design System Rules (ALWAYS Follow)
 
 ### Cards
