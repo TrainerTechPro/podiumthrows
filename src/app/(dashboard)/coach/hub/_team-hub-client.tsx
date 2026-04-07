@@ -887,12 +887,19 @@ function FileUploadForm({
         }),
       });
 
-      if (!urlRes.ok) {
-        const json = await urlRes.json();
-        throw new Error(json.error || "Failed to get upload URL");
+      const urlPayload = await urlRes.json();
+      if (!urlRes.ok || !urlPayload.success) {
+        throw new Error(urlPayload.error || "Failed to get upload URL");
       }
 
-      const { uploadUrl, fileKey, fileUrl } = await urlRes.json();
+      // API returns { success: true, data: { uploadUrl, publicUrl, fileKey } }
+      const uploadUrl: string | undefined = urlPayload.data?.uploadUrl;
+      const fileKey: string | undefined = urlPayload.data?.fileKey;
+      const fileUrl: string | undefined = urlPayload.data?.publicUrl;
+
+      if (!uploadUrl || !fileKey || !fileUrl) {
+        throw new Error("Invalid upload URL response");
+      }
 
       // Step 2: Upload to R2
       setUploadProgress("upload");
@@ -903,7 +910,7 @@ function FileUploadForm({
       });
 
       if (!uploadRes.ok) {
-        throw new Error("Upload to storage failed");
+        throw new Error(`Upload to storage failed (${uploadRes.status})`);
       }
 
       // Step 3: Register in DB
