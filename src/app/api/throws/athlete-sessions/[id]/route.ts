@@ -3,11 +3,12 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, AthleteThrowsSessionCreateSchema } from "@/lib/api-schemas";
 
 // GET  /api/throws/athlete-sessions/[id]  — fetch a single session with drill logs
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -15,8 +16,10 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const session = await prisma.athleteThrowsSession.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { drillLogs: { orderBy: { createdAt: "asc" } } },
     });
 
@@ -38,7 +41,7 @@ export async function GET(
 // PUT  /api/throws/athlete-sessions/[id]  — update an existing session + drill logs
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -46,8 +49,10 @@ export async function PUT(
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const existing = await prisma.athleteThrowsSession.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { id: true, athleteId: true },
     });
 
@@ -59,48 +64,25 @@ export async function PUT(
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const {
-      event,
-      date,
-      focus,
-      notes,
-      sleepQuality,
-      sorenessLevel,
-      energyLevel,
-      sessionRpe,
-      sessionFeeling,
-      techniqueRating,
-      mentalFocus,
-      bestPart,
-      improvementArea,
-      drillLogs,
-    } = body;
+    // Reuse the create schema for validation — body shape is identical
+    const parsed = await parseBody(request, AthleteThrowsSessionCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { event, date, notes, drillLogs } = parsed;
 
     // Update session and replace drill logs in a transaction
     const updated = await prisma.$transaction(async (tx) => {
       // Delete all existing drill logs for this session
       await tx.athleteDrillLog.deleteMany({
-        where: { sessionId: params.id },
+        where: { sessionId: id },
       });
 
       // Update session fields and recreate drill logs
       const session = await tx.athleteThrowsSession.update({
-        where: { id: params.id },
+        where: { id },
         data: {
-          event: event ?? undefined,
-          date: date ?? undefined,
-          focus: focus !== undefined ? (focus || null) : undefined,
-          notes: notes !== undefined ? (notes || null) : undefined,
-          sleepQuality: sleepQuality !== undefined ? sleepQuality : undefined,
-          sorenessLevel: sorenessLevel !== undefined ? sorenessLevel : undefined,
-          energyLevel: energyLevel !== undefined ? energyLevel : undefined,
-          sessionRpe: sessionRpe !== undefined ? sessionRpe : undefined,
-          sessionFeeling: sessionFeeling !== undefined ? (sessionFeeling || null) : undefined,
-          techniqueRating: techniqueRating !== undefined ? techniqueRating : undefined,
-          mentalFocus: mentalFocus !== undefined ? mentalFocus : undefined,
-          bestPart: bestPart !== undefined ? (bestPart || null) : undefined,
-          improvementArea: improvementArea !== undefined ? (improvementArea || null) : undefined,
+          event,
+          date,
+          notes: notes ?? null,
           drillLogs: drillLogs?.length
             ? {
                 create: (drillLogs as Array<{

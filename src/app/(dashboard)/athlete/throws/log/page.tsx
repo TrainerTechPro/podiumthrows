@@ -674,18 +674,24 @@ export default function ThrowsLogPage() {
  toast.error("Profile not loaded yet — refresh and try again");
  return;
  }
- setSaving(true);
+ // Parse implement weight preserving 0 as a valid value (not coerced to null)
+ const parseImplementWeight = (raw: string): number | null => {
+ if (raw === "" || raw == null) return null;
+ const n = parseFloat(raw);
+ return Number.isFinite(n) ? n : null;
+ };
  const drillLogs = drills
  .filter((d) => d.throwCount > 0 || d.bestMark)
  .map((d) => {
- const implKg = d.implementUnit === "lbs" && d.implementWeight
- ? parseFloat(d.implementWeight) * LBS_TO_KG
- : parseFloat(d.implementWeight) || null;
+ const original = parseImplementWeight(d.implementWeight);
+ const implKg = original != null && d.implementUnit === "lbs"
+ ? original * LBS_TO_KG
+ : original;
  return {
  drillType: d.drillType,
  implementWeight: implKg,
  implementWeightUnit: d.implementUnit,
- implementWeightOriginal: d.implementWeight ? parseFloat(d.implementWeight) : null,
+ implementWeightOriginal: original,
  wireLength: selectedEvent === "HAMMER" ? d.wireLength : null,
  throwCount: d.throwCount,
  bestMark: d.bestMark ? parseFloat(d.bestMark) : null,
@@ -693,6 +699,13 @@ export default function ThrowsLogPage() {
  };
  });
 
+ // Guard against saving an empty session
+ if (drillLogs.length === 0) {
+ toast.error("Add at least one drill with throws or a mark before saving.");
+ return;
+ }
+
+ setSaving(true);
  try {
  const url = editingSessionId
    ? `/api/throws/athlete-sessions/${editingSessionId}`
@@ -705,6 +718,7 @@ export default function ThrowsLogPage() {
  });
  const data = await res.json();
  if (res.ok && data.success) {
+ toast.success(editingSessionId ? "Session updated" : "Session saved");
  setSaved(true);
  } else {
  toast.error(data.error || `Save failed (${res.status})`);
