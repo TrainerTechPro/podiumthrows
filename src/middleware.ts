@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/pricing",
   "/deficit-finder",
   "/privacy",
+  "/availability",         // public read-only share links /availability/[token]
   "/api/whoop/callback",
   "/api/oura/callback",
 ];
