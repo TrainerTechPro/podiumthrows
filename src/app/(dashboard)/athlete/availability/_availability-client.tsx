@@ -10,6 +10,8 @@ import {
   X,
   Check,
   CalendarClock,
+  CopyCheck,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -256,6 +258,8 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
   const [editSaving, setEditSaving] = useState(false);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [copyingWeek, setCopyingWeek] = useState(false);
+  const [sharingLink, setSharingLink] = useState(false);
 
   // ─── Refresh from server ────────────────────────────────────────────────
 
@@ -493,30 +497,148 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
     }
   };
 
+  // ─── Copy this week's overrides to next week ─────────────────────────────
+
+  const copyWeekOverrides = async () => {
+    // Count overrides in the current Mon–Sun window for the confirm message
+    const now = new Date();
+    const todayDow = now.getDay();
+    const daysToMon = todayDow === 0 ? 6 : todayDow - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - daysToMon);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    const weekStart = fmt(monday);
+    const weekEnd = fmt(sunday);
+    const thisWeekCount = overrides.filter(
+      (o) => o.date >= weekStart && o.date <= weekEnd
+    ).length;
+
+    if (thisWeekCount === 0) return;
+
+    const confirmed = window.confirm(
+      `This will copy ${thisWeekCount} change${thisWeekCount > 1 ? "s" : ""} from this week to next week. Continue?`
+    );
+    if (!confirmed) return;
+
+    setCopyingWeek(true);
+    try {
+      const res = await fetch(
+        "/api/athlete/availability/overrides/copy-week",
+        { method: "POST", headers: csrfHeaders() }
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        error("Copy failed", (json as { error?: string }).error ?? "Please try again.");
+      } else {
+        const created = (json as { created?: number }).created ?? 0;
+        if (created === 0) {
+          success("Already up to date", "Next week already has those overrides.");
+        } else {
+          success(
+            `${created} override${created > 1 ? "s" : ""} copied`,
+            "Next week's schedule updated."
+          );
+          await refresh();
+        }
+      }
+    } catch {
+      error("Network error", "Please try again.");
+    } finally {
+      setCopyingWeek(false);
+    }
+  };
+
+  // ─── Share read-only link ─────────────────────────────────────────────────
+
+  const shareLink = async () => {
+    setSharingLink(true);
+    try {
+      const res = await fetch("/api/athlete/availability/share", {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        error("Could not generate link", (json as { error?: string }).error ?? "Please try again.");
+      } else {
+        const shareUrl = (json as { shareUrl?: string }).shareUrl ?? "";
+        await navigator.clipboard.writeText(shareUrl);
+        success(
+          "Share link copied",
+          "Anyone with this link can view your availability."
+        );
+      }
+    } catch {
+      error("Network error", "Please try again.");
+    } finally {
+      setSharingLink(false);
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────────────────────────
 
   const groups = groupBlocks(blocks);
+
+  // Compute how many overrides fall in the current Mon–Sun week
+  const thisWeekOverrideCount = (() => {
+    const now = new Date();
+    const todayDow = now.getDay();
+    const daysToMon = todayDow === 0 ? 6 : todayDow - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - daysToMon);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const weekStart = monday.toISOString().slice(0, 10);
+    const weekEnd = sunday.toISOString().slice(0, 10);
+    return overrides.filter((o) => o.date >= weekStart && o.date <= weekEnd).length;
+  })();
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <ScrollProgressBar />
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-          My Availability
-        </h1>
-        <p className="text-sm text-muted mt-0.5">
-          Set your weekly schedule so your coach can plan sessions around you.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
+            My Availability
+          </h1>
+          <p className="text-sm text-muted mt-0.5">
+            Set your weekly schedule so your coach can plan sessions around you.
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          loading={sharingLink}
+          onClick={shareLink}
+          leftIcon={<Link2 size={14} strokeWidth={1.75} aria-hidden="true" />}
+        >
+          Share
+        </Button>
       </div>
 
       {/* ── Section 1: Upcoming Changes (Overrides) ──────────────────────── */}
       {overrides.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Upcoming Changes
-          </h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+              Upcoming Changes
+            </h2>
+            {thisWeekOverrideCount > 0 && (
+              <button
+                type="button"
+                onClick={copyWeekOverrides}
+                disabled={copyingWeek}
+                className="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-400 disabled:opacity-50 transition-colors"
+              >
+                <CopyCheck size={13} strokeWidth={1.75} aria-hidden="true" />
+                {copyingWeek ? "Copying…" : "Copy this week's changes →"}
+              </button>
+            )}
+          </div>
           <StaggeredList className="space-y-2">
             {overrides.map((o) => (
               <div
@@ -571,9 +693,11 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
       {/* Add Temporary Change */}
       <section className="space-y-3">
         {overrides.length === 0 && (
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Upcoming Changes
-          </h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+              Upcoming Changes
+            </h2>
+          </div>
         )}
 
         {!showOverrideForm ? (
