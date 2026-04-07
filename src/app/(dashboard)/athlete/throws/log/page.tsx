@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { localToday } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { useToast } from "@/components/ui/Toast";
 import { WIRE_LENGTH_OPTIONS, LBS_TO_KG, formatImplementWeight } from "@/lib/throws";
 import dynamic from "next/dynamic";
 
@@ -553,6 +554,7 @@ function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string |
 
 export default function ThrowsLogPage() {
  const searchParams = useSearchParams();
+ const toast = useToast();
  const [tab, setTab] = useState<"log" | "trends" | "sessions">("log");
  const [step, setStep] = useState<1 | 2 | 3>(1);
  const [athleteId, setAthleteId] = useState<string | null>(null);
@@ -566,7 +568,7 @@ export default function ThrowsLogPage() {
  useEffect(() => {
  fetch("/api/auth/me")
  .then((r) => r.json())
- .then((d) => { if (d.success) setAthleteId(d.data.athleteProfile?.id ?? null); })
+ .then((d) => { if (d.success) setAthleteId(d.user?.athleteProfile?.id ?? null); })
  .catch(() => {});
  }, []);
 
@@ -668,6 +670,10 @@ export default function ThrowsLogPage() {
  })();
 
  async function handleSave() {
+ if (!athleteId) {
+ toast.error("Profile not loaded yet — refresh and try again");
+ return;
+ }
  setSaving(true);
  const drillLogs = drills
  .filter((d) => d.throwCount > 0 || d.bestMark)
@@ -698,9 +704,16 @@ export default function ThrowsLogPage() {
  body: JSON.stringify({ athleteId, event: selectedEvent, date, notes: sessionNotes || null, drillLogs }),
  });
  const data = await res.json();
- if (data.success) setSaved(true);
- } catch { /* ignore */ }
+ if (res.ok && data.success) {
+ setSaved(true);
+ } else {
+ toast.error(data.error || `Save failed (${res.status})`);
+ }
+ } catch (err) {
+ toast.error(err instanceof Error ? err.message : "Network error — please try again");
+ } finally {
  setSaving(false);
+ }
  }
 
  const eventMeta = THROW_EVENTS.find((e) => e.value === selectedEvent);
