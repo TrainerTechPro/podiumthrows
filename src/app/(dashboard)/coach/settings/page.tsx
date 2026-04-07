@@ -227,7 +227,7 @@ export default function CoachSettingsPage() {
     fetch("/api/invitations")
       .then((r) => r.json())
       .then((data) => {
-        if (data.success) setInvitations(data.data);
+        if (data.ok) setInvitations(data.data);
       });
   }
 
@@ -336,7 +336,7 @@ export default function CoachSettingsPage() {
         body: JSON.stringify(inviteForm),
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.ok) {
         setInviteMessage({ type: "success", text: "Invitation sent! Share the link with your athlete." });
         toast("Invitation sent successfully");
         setInviteForm({ email: "", sport: "", position: "" });
@@ -358,11 +358,13 @@ export default function CoachSettingsPage() {
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST", headers: csrfHeaders() });
       const data = await res.json();
-      if (data.success && data.data?.url) {
-        window.location.href = data.data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        toast(data.error || "Could not open billing portal", "error");
       }
     } catch {
-      console.error("Portal error");
+      toast("Network error. Please try again.", "error");
     } finally {
       setPortalLoading(false);
     }
