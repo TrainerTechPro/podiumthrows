@@ -13,6 +13,7 @@ import { checkAndSetPR, COMPETITION_WEIGHTS } from "@/lib/throws";
 import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
+import { resolveTimezone, getLocalDate, startOfToday as startOfTodayForTz } from "@/lib/dates";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,16 +31,6 @@ interface ImplementOption {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function todayDateString(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
 
 function serializeNotes(feeling?: Feeling | null, text?: string | null): string | null {
   if (!feeling && !text) return null;
@@ -131,14 +122,17 @@ export async function GET() {
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true, gender: true, events: true },
+      select: { id: true, gender: true, events: true, timezone: true },
     });
 
     if (!athlete) {
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
     }
 
-    const today = todayDateString();
+    const tz = resolveTimezone(athlete.timezone);
+    const today = getLocalDate(tz);
+    const startOfTodayUtc = startOfTodayForTz(tz);
+
     const events = athlete.events as string[];
     const primaryEvent = events[0] ?? "SHOT_PUT";
     const gender = athlete.gender as string;
@@ -154,7 +148,7 @@ export async function GET() {
     const recentThrowsRaw = await prisma.throwLog.findMany({
       where: {
         athleteId: athlete.id,
-        date: { gte: startOfToday() },
+        date: { gte: startOfTodayUtc },
       },
       orderBy: { date: "desc" },
       take: 3,
@@ -178,7 +172,7 @@ export async function GET() {
     const throwCount = await prisma.throwLog.count({
       where: {
         athleteId: athlete.id,
-        date: { gte: startOfToday() },
+        date: { gte: startOfTodayUtc },
       },
     });
 
@@ -218,12 +212,16 @@ export async function POST(req: NextRequest) {
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true, gender: true, events: true },
+      select: { id: true, gender: true, events: true, timezone: true },
     });
 
     if (!athlete) {
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
     }
+
+    const tz = resolveTimezone(athlete.timezone);
+    const today = getLocalDate(tz);
+    const startOfTodayUtc = startOfTodayForTz(tz);
 
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     const { event, implementWeight, distance, feeling, notes } = body;
@@ -247,8 +245,6 @@ export async function POST(req: NextRequest) {
     const notesText = typeof notes === "string" ? notes.trim() || null : null;
 
     // 1. Find or create today's AthleteThrowsSession for this event
-    const today = todayDateString();
-
     let throwsSession = await prisma.athleteThrowsSession.findFirst({
       where: { athleteId: athlete.id, date: today, event },
       orderBy: { createdAt: "desc" },
@@ -330,7 +326,7 @@ export async function POST(req: NextRequest) {
     const throwCount = await prisma.throwLog.count({
       where: {
         athleteId: athlete.id,
-        date: { gte: startOfToday() },
+        date: { gte: startOfTodayUtc },
       },
     });
 
