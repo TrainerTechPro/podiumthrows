@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/push";
 import { getPushPreferences } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
+import { combineLocalDateTime, resolveTimezone } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -32,16 +33,18 @@ export async function GET(req: NextRequest) {
   try {
     const now = new Date();
 
-    // Build the date strings we need to check — the 25–35 min window could
-    // span a day boundary (e.g. 23:50 → 00:15 next day).
+    // Expand the date window to yesterday + today + tomorrow in UTC so we
+    // don't miss practices near day boundaries for coaches in any timezone.
+    // The precise minutesUntil check below (25–35 min) filters down to the
+    // correct window using the coach's local timezone.
+    const yesterdayStr = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const todayStr = now.toISOString().split("T")[0];
-    const tomorrowMs = now.getTime() + 24 * 60 * 60 * 1000;
-    const tomorrowStr = new Date(tomorrowMs).toISOString().split("T")[0];
+    const tomorrowStr = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     const practices = await prisma.scheduledPractice.findMany({
       where: {
         status: "SCHEDULED",
-        date: { in: [todayStr, tomorrowStr] },
+        date: { in: [yesterdayStr, todayStr, tomorrowStr] },
       },
       select: {
         id: true,
@@ -51,6 +54,7 @@ export async function GET(req: NextRequest) {
         startTime: true,
         location: true,
         groupId: true,
+        coach: { select: { id: true, timezone: true } },
       },
     });
 
@@ -60,11 +64,12 @@ export async function GET(req: NextRequest) {
     let failed = 0;
 
     for (const practice of practices) {
-      // Compute the absolute UTC start time from date (YYYY-MM-DD) + startTime (HH:MM)
-      const [year, month, day] = practice.date.split("-").map(Number);
-      const [hours, minutes] = practice.startTime.split(":").map(Number);
-      const startMs = Date.UTC(year, month - 1, day, hours, minutes);
-      const minutesUntil = Math.round((startMs - now.getTime()) / 60_000);
+      // Compute the absolute UTC start time using the coach's timezone so that
+      // a practice scheduled for "9:00 AM" fires at 9:00 AM the coach's local
+      // time, not 9:00 AM UTC.
+      const coachTz = resolveTimezone(practice.coach.timezone);
+      const start = combineLocalDateTime(practice.date, practice.startTime, coachTz);
+      const minutesUntil = Math.round((start.getTime() - now.getTime()) / 60_000);
 
       // Only act on practices in the 25–35 minute window
       if (minutesUntil < 25 || minutesUntil > 35) continue;
