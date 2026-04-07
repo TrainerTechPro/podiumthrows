@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
+import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
 
 /* ── GET — list athlete's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -165,7 +166,78 @@ export async function POST(request: NextRequest) {
     revalidateTag(`athlete-${athlete.id}`);
     if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
-    return NextResponse.json({ ok: true, data: created }, { status: 201 });
+    // PR detection: check each drill with implementWeight + bestMark > 0
+    type PRResult = { event: string; implement: string; distance: number; previousBest?: number };
+    const prs: PRResult[] = [];
+    for (const dl of created.drillLogs) {
+      if (dl.implementWeight && dl.bestMark && dl.bestMark > 0) {
+        const implementLabel = dl.implementWeightOriginal
+          ? `${dl.implementWeightOriginal}${dl.implementWeightUnit ?? "kg"}`
+          : `${parseFloat(dl.implementWeight.toFixed(2))}kg`;
+
+        const existing = await prisma.throwsPR.findUnique({
+          where: {
+            athleteId_event_implement: {
+              athleteId: athlete.id,
+              event,
+              implement: implementLabel,
+            },
+          },
+          select: { distance: true },
+        });
+
+        const isPersonalBest = !existing || dl.bestMark > existing.distance;
+        if (isPersonalBest) {
+          await prisma.throwsPR.upsert({
+            where: {
+              athleteId_event_implement: {
+                athleteId: athlete.id,
+                event,
+                implement: implementLabel,
+              },
+            },
+            update: {
+              distance: dl.bestMark,
+              achievedAt: date,
+              source: "TRAINING",
+            },
+            create: {
+              athleteId: athlete.id,
+              event,
+              implement: implementLabel,
+              distance: dl.bestMark,
+              achievedAt: date,
+              source: "TRAINING",
+            },
+          });
+          prs.push({
+            event,
+            implement: implementLabel,
+            distance: dl.bestMark,
+            previousBest: existing?.distance,
+          });
+        }
+      }
+    }
+
+    // Bondarchuk validation
+    let warnings: BondarchukWarning[] = [];
+    const throwingBlock: BlockInput = {
+      name: "Throws",
+      blockType: "throwing",
+      exercises: (drills || [])
+        .filter((d: { implementWeight?: number }) => d.implementWeight)
+        .map((d: { drillType: string; implementWeight?: number }) => ({
+          name: d.drillType,
+          implementKg: d.implementWeight,
+        })),
+    };
+    if (throwingBlock.exercises.length > 1) {
+      const result = validateImplementSequence([throwingBlock]);
+      warnings = result.warnings;
+    }
+
+    return NextResponse.json({ ok: true, data: created, prs, warnings }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/athlete/log-session", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
