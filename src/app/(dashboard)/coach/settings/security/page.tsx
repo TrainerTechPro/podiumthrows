@@ -38,10 +38,10 @@ export default function SecuritySettingsPage() {
   useEffect(() => {
     async function fetchStatus() {
       try {
-        const res = await fetch("/api/coach/profile");
+        const res = await fetch("/api/auth/me");
         if (res.ok) {
           const data = await res.json();
-          const enabled = data.profile?.mfaEnabled ?? false;
+          const enabled = data.user?.coachProfile?.mfaEnabled ?? false;
           setMfaEnabled(enabled);
           setPhase(enabled ? "enabled" : "disabled");
         } else {
