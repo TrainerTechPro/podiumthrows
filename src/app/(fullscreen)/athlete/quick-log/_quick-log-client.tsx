@@ -542,6 +542,7 @@ export function QuickLogClient() {
         try {
           const res = await fetch("/api/athlete/quick-log", {
             method: "POST",
+            signal: AbortSignal.timeout(6000),
             headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify(payload),
           });
@@ -558,11 +559,30 @@ export function QuickLogClient() {
           );
           // Use authoritative count from server (fixes potential drift)
           if (typeof newCount === "number") setThrowCount(newCount);
-        } catch {
-          // Roll back
-          setThrowCount((c) => c - 1);
-          setRecentThrows((prev) => prev.filter((t) => t.id !== tempId));
-          toastError("Failed to save throw", "Check your connection and try again.");
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "TimeoutError") {
+            // Treat slow connection as offline — queue for sync instead of rolling back
+            const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            await queueQuickLogThrow({
+              clientId,
+              event: currentImplement.event,
+              implementWeight: currentImplement.implementWeight,
+              distance: opts?.distance ?? undefined,
+              feeling: opts?.feeling ?? undefined,
+              notes: opts?.notes ?? undefined,
+              createdAt: Date.now(),
+            });
+            // Keep optimistic entry but mark it pending, increment pending count
+            setRecentThrows((prev) =>
+              prev.map((t) => (t.id === tempId ? { ...t, isOptimistic: true } : t))
+            );
+            setPendingCount((c) => c + 1);
+          } else {
+            // Roll back
+            setThrowCount((c) => c - 1);
+            setRecentThrows((prev) => prev.filter((t) => t.id !== tempId));
+            toastError("Failed to save throw", "Check your connection and try again.");
+          }
         }
       } else {
         // Queue for offline sync
