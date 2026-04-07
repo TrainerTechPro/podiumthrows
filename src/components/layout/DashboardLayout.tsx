@@ -19,6 +19,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { QuickActions } from "@/components/ui/QuickActions";
+import { useDetectTimezone } from "@/hooks/useDetectTimezone";
 
 /* ─── Theme toggle ───────────────────────────────────────────────────────── */
 
@@ -290,6 +291,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  useDetectTimezone();
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
