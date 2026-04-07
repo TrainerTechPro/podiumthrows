@@ -22,6 +22,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import type { BestWindow, AthleteAvailabilitySummary } from "@/lib/data/availability";
 import type { AthletePickerItem } from "@/lib/data/coach";
 
+const EXCLUDE_INJURED_KEY = "availability:excludeInjured";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TeamAvailabilityData {
@@ -263,6 +265,14 @@ export function AvailabilityDashboard({
   const [data, setData] = useState<TeamAvailabilityData>(initialData);
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [excludeInjured, setExcludeInjured] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem(EXCLUDE_INJURED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
 
   // Build an id → AthletePickerItem map for fast name lookups
   const athleteMap = new Map<string, AthletePickerItem>(
@@ -273,12 +283,14 @@ export function AvailabilityDashboard({
   const athletesWithout = data.totalAthletes - athletesWithAvailability;
   const missingAthletes = data.athletes.filter((a) => a.blocks.length === 0);
 
-  async function handleGroupChange(groupId: string) {
-    setSelectedGroupId(groupId);
+  async function fetchData(groupId: string, injured: boolean) {
     setLoading(true);
     try {
-      const url = groupId
-        ? `/api/coach/availability?groupId=${encodeURIComponent(groupId)}`
+      const params = new URLSearchParams();
+      if (groupId) params.set("groupId", groupId);
+      if (injured) params.set("excludeInjured", "true");
+      const url = params.toString()
+        ? `/api/coach/availability?${params.toString()}`
         : "/api/coach/availability";
       const res = await fetch(url);
       if (res.ok) {
@@ -288,6 +300,21 @@ export function AvailabilityDashboard({
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleGroupChange(groupId: string) {
+    setSelectedGroupId(groupId);
+    await fetchData(groupId, excludeInjured);
+  }
+
+  async function handleExcludeInjuredChange(next: boolean) {
+    setExcludeInjured(next);
+    try {
+      localStorage.setItem(EXCLUDE_INJURED_KEY, String(next));
+    } catch {
+      // localStorage blocked (private browsing etc.) — silently ignore
+    }
+    await fetchData(selectedGroupId, next);
   }
 
   const hasAnyData = data.athletes.some((a) => a.blocks.length > 0);
@@ -307,31 +334,63 @@ export function AvailabilityDashboard({
           </p>
         </div>
 
-        {/* Event group filter */}
-        {eventGroups.length > 0 && (
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="group-filter"
-              className="text-sm text-muted whitespace-nowrap"
-            >
-              Group
-            </label>
-            <select
-              id="group-filter"
-              value={selectedGroupId}
-              onChange={(e) => handleGroupChange(e.target.value)}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Exclude injured toggle */}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={excludeInjured}
+              aria-label="Exclude injured athletes"
               disabled={loading}
-              className="text-sm rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50 transition-opacity"
+              onClick={() => handleExcludeInjuredChange(!excludeInjured)}
+              className={[
+                "relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
+                "disabled:opacity-50",
+                excludeInjured
+                  ? "bg-primary-500"
+                  : "bg-surface-300 dark:bg-surface-600",
+              ].join(" ")}
             >
-              <option value="">All Athletes</option>
-              {eventGroups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+              <span
+                className={[
+                  "inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform duration-200",
+                  excludeInjured ? "translate-x-4.5" : "translate-x-0.5",
+                ].join(" ")}
+              />
+            </button>
+            <span className="text-sm text-muted whitespace-nowrap">
+              Exclude injured
+            </span>
+          </label>
+
+          {/* Event group filter */}
+          {eventGroups.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="group-filter"
+                className="text-sm text-muted whitespace-nowrap"
+              >
+                Group
+              </label>
+              <select
+                id="group-filter"
+                value={selectedGroupId}
+                onChange={(e) => handleGroupChange(e.target.value)}
+                disabled={loading}
+                className="text-sm rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50 transition-opacity"
+              >
+                <option value="">All Athletes</option>
+                {eventGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats row */}

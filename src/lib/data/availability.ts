@@ -337,7 +337,8 @@ export async function deleteAvailabilityOverride(
 
 export async function getTeamAvailability(
   coachId: string,
-  groupId?: string
+  groupId?: string,
+  excludeInjured?: boolean
 ): Promise<{
   athletes: AthleteAvailabilitySummary[];
   bestWindows: BestWindow[];
@@ -350,6 +351,22 @@ export async function getTeamAvailability(
       coachId,
       ...(groupId
         ? { eventGroupMemberships: { some: { groupId } } }
+        : {}),
+      // When excludeInjured is true, filter out athletes with an active Injury
+      // record (no recoveryDate / recovered=false) OR an active ThrowsInjury
+      // (no returnToThrowDate set). We rely on the Injury model since it's the
+      // general-purpose tracker. Athletes who have ANY unresolved injury are
+      // excluded. The readinessCheckIn injuryStatus field is session-scoped and
+      // not used here.
+      ...(excludeInjured
+        ? {
+            injuries: {
+              none: {
+                recovered: false,
+                recoveryDate: null,
+              },
+            },
+          }
         : {}),
     },
     select: {

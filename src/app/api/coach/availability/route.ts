@@ -23,8 +23,9 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const groupId = searchParams.get("groupId") ?? undefined;
+    const excludeInjured = searchParams.get("excludeInjured") === "true";
 
-    const data = await getTeamAvailability(coach.id, groupId);
+    const data = await getTeamAvailability(coach.id, groupId, excludeInjured);
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/coach/availability", { context: "api", error: err });
