@@ -20,6 +20,7 @@
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { emitStreakMilestoneIfCrossed } from "@/lib/team-activity";
+import { getLocalDate, getAthleteTimezone } from "@/lib/dates";
 
 const LOOKBACK_DAYS = 100;
 
@@ -35,6 +36,9 @@ export async function updateThrowsStreak(athleteId: string): Promise<number | nu
     lookback.setDate(lookback.getDate() - LOOKBACK_DAYS);
     lookback.setHours(0, 0, 0, 0);
 
+    // Resolve the athlete's timezone so day boundaries match their local clock
+    const timezone = await getAthleteTimezone(athleteId);
+
     // Pull every throw date in the lookback window
     const throws = await prisma.throwLog.findMany({
       where: {
@@ -47,11 +51,11 @@ export async function updateThrowsStreak(athleteId: string): Promise<number | nu
     // Collapse to a Set of local-date keys "YYYY-MM-DD"
     const daySet = new Set<string>();
     for (const t of throws) {
-      daySet.add(localDayKey(t.date));
+      daySet.add(localDayKey(t.date, timezone));
     }
 
     // Count backward from today
-    const streak = countConsecutiveDays(daySet, now);
+    const streak = countConsecutiveDays(daySet, now, timezone);
 
     // Read the existing currentStreak + longestStreak. currentStreak is
     // the "previous" value used below for milestone-crossing detection;
@@ -92,16 +96,19 @@ export async function updateThrowsStreak(athleteId: string): Promise<number | nu
  * streak is 0. If today and yesterday have activity, the streak is at
  * least 2.
  */
-function countConsecutiveDays(daySet: Set<string>, endDate: Date): number {
+function countConsecutiveDays(daySet: Set<string>, endDate: Date, timezone: string): number {
   let count = 0;
-  const cursor = new Date(endDate);
-  cursor.setHours(0, 0, 0, 0);
+  // Walk backward one calendar day at a time in the athlete's local timezone.
+  // We do this by subtracting 24h from a UTC timestamp and re-keying using
+  // localDayKey (which converts to the athlete's tz). This handles DST
+  // transitions safely because getLocalDate uses Intl.DateTimeFormat.
+  let cursor = new Date(endDate);
 
   // Guard against runaway loops — the lookback window is the hard ceiling
   for (let i = 0; i < LOOKBACK_DAYS + 1; i++) {
-    if (daySet.has(localDayKey(cursor))) {
+    if (daySet.has(localDayKey(cursor, timezone))) {
       count += 1;
-      cursor.setDate(cursor.getDate() - 1);
+      cursor = new Date(cursor.getTime() - 24 * 60 * 60 * 1000);
     } else {
       break;
     }
@@ -109,12 +116,7 @@ function countConsecutiveDays(daySet: Set<string>, endDate: Date): number {
   return count;
 }
 
-/** Local-timezone day key "YYYY-MM-DD". Not UTC — athletes' perceived day
- *  boundaries should match their local clock, and the server runs in the
- *  deployment timezone which we assume matches the athlete's for v1. */
-function localDayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+/** Local-timezone day key "YYYY-MM-DD" for the athlete's own timezone. */
+function localDayKey(date: Date, timezone: string): string {
+  return getLocalDate(timezone, date);
 }
