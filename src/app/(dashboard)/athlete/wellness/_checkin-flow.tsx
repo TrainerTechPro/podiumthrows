@@ -121,7 +121,7 @@ export function CheckinFlow({ whoopData, ouraData, previousScore }: CheckinFlowP
           injuryStatus: data.injuryStatus,
           injuryNotes: data.injuryNotes?.trim() || null,
           notes: data.notes?.trim() || null,
-          ouraSleepScore: data.ouraSleepScore,
+          ouraSleepScore: data.ouraSleepScore ?? undefined,
           // Wearable biometric fields
           hrvMs: whoopData?.hrvMs ?? ouraData?.hrvMs ?? undefined,
           restingHR: whoopData?.restingHR ?? ouraData?.restingHR ?? undefined,
