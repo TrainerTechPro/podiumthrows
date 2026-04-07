@@ -57,6 +57,12 @@ interface ThrowInput {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
+function parseDistance(raw: string): number | null {
+  if (raw == null || String(raw).trim() === "") return null;
+  const n = parseFloat(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 function getStorageKey(assignmentId: string) {
  return `throws_blocks_${assignmentId}`;
 }
@@ -431,7 +437,7 @@ function SessionCard({
  blockId,
  throws: throwsWithDistance.map((t) => ({
  throwNumber: t.throwNumber,
- distance: parseFloat(t.distance) || null,
+ distance: parseDistance(t.distance),
  implement: t.implement || config.implementWeight,
  })),
  }),

@@ -66,6 +66,20 @@ const TIMELINE_STYLES = `
 }
 `;
 
+/* ─── Helper: numeric input parsing ───────────────────────────────────────── */
+
+function parseNum(raw: unknown): number | null {
+  if (raw == null || String(raw).trim() === "") return null;
+  const n = typeof raw === "number" ? raw : parseFloat(String(raw));
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseInt10(raw: unknown): number | null {
+  if (raw == null || String(raw).trim() === "") return null;
+  const n = typeof raw === "number" ? raw : parseInt(String(raw), 10);
+  return Number.isFinite(n) ? n : null;
+}
+
 /* ─── Helper: parse prescription target throws ────────────────────────────── */
 
 function getTargetThrows(exercise: PrescribedExercise): number {
@@ -1092,9 +1106,9 @@ function StrengthInput({
     .join(" \u00B7 ");
 
   function handleLogSet() {
-    const w = weightInput ? parseFloat(String(weightInput)) || null : null;
-    const r = repsInput ? parseInt(String(repsInput), 10) || null : null;
-    const rpe = rpeInput ? parseFloat(rpeInput) || null : null;
+    const w = parseNum(weightInput);
+    const r = parseInt10(repsInput);
+    const rpe = parseNum(rpeInput);
 
     onLog({
       sets: 1,
