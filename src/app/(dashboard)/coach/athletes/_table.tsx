@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { Avatar, Badge, DataTable, type Column } from "@/components";
 import type { AthleteRosterItem } from "@/lib/data/coach";
 
@@ -56,6 +57,58 @@ function EventsCell({ row }: { row: AthleteRosterItem }) {
   );
 }
 
+/**
+ * Mini 4-bar breakdown of readiness sub-scores. Each bar's height represents
+ * the *wellness* value of that dimension on a unified "higher = better" scale:
+ * soreness/stress are inverted (11 - raw) so a coach can glance at a row and
+ * immediately see which factor is dragging the overall score down.
+ */
+function ReadinessBreakdown({
+  sleep,
+  soreness,
+  stress,
+  energy,
+}: {
+  sleep: number;
+  soreness: number;
+  stress: number;
+  energy: number;
+}) {
+  // Normalize: all factors on 1-10 where higher = better.
+  const factors = [
+    { label: "Sleep", raw: sleep, wellness: sleep },
+    { label: "Soreness", raw: soreness, wellness: 11 - soreness },
+    { label: "Stress", raw: stress, wellness: 11 - stress },
+    { label: "Energy", raw: energy, wellness: energy },
+  ];
+
+  return (
+    <div
+      className="flex items-end gap-0.5 h-3.5"
+      aria-hidden="true"
+    >
+      {factors.map((f) => {
+        const color =
+          f.wellness >= 8
+            ? "bg-emerald-500"
+            : f.wellness >= 5
+              ? "bg-amber-500"
+              : "bg-red-500";
+        // Height: min 2px (so zero isn't invisible), scales up to 14px.
+        const heightPx = 2 + Math.round((f.wellness / 10) * 12);
+        return (
+          <span
+            key={f.label}
+            title={`${f.label}: ${f.raw}/10`}
+            className={`w-[3px] rounded-sm ${color}`}
+            style={{ height: `${heightPx}px` }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 function ReadinessCell({ row }: { row: AthleteRosterItem }) {
   const r = row.latestReadiness;
   if (!r) {
@@ -79,6 +132,16 @@ function ReadinessCell({ row }: { row: AthleteRosterItem }) {
     <div className="flex items-center gap-2">
       <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
       <span className="text-sm font-semibold tabular-nums">{r.score.toFixed(1)}</span>
+      <ReadinessBreakdown
+        sleep={r.sleepQuality}
+        soreness={r.soreness}
+        stress={r.stressLevel}
+        energy={r.energyMood}
+      />
+      <span className="sr-only">
+        Sleep {r.sleepQuality} of 10, soreness {r.soreness} of 10, stress{" "}
+        {r.stressLevel} of 10, energy {r.energyMood} of 10.
+      </span>
       {statusBadge}
     </div>
   );
@@ -93,14 +156,16 @@ function StreakCell({ row }: { row: AthleteRosterItem }) {
   );
 }
 
-function ActionCell({ row }: { row: AthleteRosterItem }) {
+function ActionCell() {
+  // Whole row is clickable (see AthletesTable below). This is a visual
+  // affordance only — no own click handler, no Link.
   return (
-    <Link
-      href={`/coach/athletes/${row.id}`}
-      className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium inline-flex items-center justify-center min-h-[44px] min-w-[44px]"
-    >
-      View →
-    </Link>
+    <ChevronRight
+      size={18}
+      strokeWidth={1.75}
+      className="text-muted"
+      aria-hidden="true"
+    />
   );
 }
 
@@ -144,8 +209,8 @@ const columns: Column<AthleteRosterItem>[] = [
   {
     key: "id",
     header: "",
-    cell: (row) => <ActionCell row={row} />,
-    className: "w-20",
+    cell: () => <ActionCell />,
+    className: "w-10 text-right",
   },
 ];
 
@@ -158,6 +223,7 @@ function getRowClassName(row: AthleteRosterItem): string | undefined {
 }
 
 export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
+  const router = useRouter();
   return (
     <DataTable
       data={data}
@@ -167,6 +233,7 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       searchPlaceholder="Search by name…"
       pageSize={25}
       rowClassName={getRowClassName}
+      onRowClick={(row) => router.push(`/coach/athletes/${row.id}`)}
       emptyTitle="No athletes on your roster"
       emptyDescription="Send an invite to get your first athlete set up. They'll appear here once they accept."
     />

@@ -198,9 +198,22 @@ export function DataTable<T extends Record<string, unknown>>({
                   <tr
                     key={String(row[rowKey])}
                     onClick={() => onRowClick?.(row)}
+                    onKeyDown={
+                      onRowClick
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onRowClick(row);
+                            }
+                          }
+                        : undefined
+                    }
+                    tabIndex={onRowClick ? 0 : undefined}
+                    role={onRowClick ? "button" : undefined}
                     className={cn(
                       "transition-colors",
-                      onRowClick && "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50",
+                      onRowClick &&
+                        "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset",
                       rowClassName?.(row)
                     )}
                   >
@@ -456,10 +469,22 @@ export function DataTableBody<T extends Record<string, unknown>>({
           <tr
             key={String(row[rowKey])}
             onClick={() => onRowClick?.(row)}
+            onKeyDown={
+              onRowClick
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick(row);
+                    }
+                  }
+                : undefined
+            }
+            tabIndex={onRowClick ? 0 : undefined}
+            role={onRowClick ? "button" : undefined}
             className={cn(
               "transition-colors",
               onRowClick &&
-                "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50",
+                "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset",
               rowClassName?.(row)
             )}
           >

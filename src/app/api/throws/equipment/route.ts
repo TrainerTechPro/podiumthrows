@@ -38,17 +38,34 @@ export async function GET(_req: NextRequest) {
       });
     }
 
-    // Parse JSON fields
+    // Parse JSON fields. Parse failures fall back to safe defaults but
+    // are logged so corrupted DB rows don't stay invisible.
     let implements_: unknown[] = [];
     let gymEquipment: unknown = null;
     try {
       implements_ = JSON.parse(inventory.implements || "[]");
-    } catch { /* empty */ }
+    } catch (parseErr) {
+      logger.warn("Failed to parse EquipmentInventory.implements JSON", {
+        context: "throws/equipment",
+        metadata: {
+          athleteId: athleteProfile.id,
+          error: String(parseErr),
+        },
+      });
+    }
     try {
       gymEquipment = inventory.gymEquipment
         ? JSON.parse(inventory.gymEquipment)
         : null;
-    } catch { /* empty */ }
+    } catch (parseErr) {
+      logger.warn("Failed to parse EquipmentInventory.gymEquipment JSON", {
+        context: "throws/equipment",
+        metadata: {
+          athleteId: athleteProfile.id,
+          error: String(parseErr),
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

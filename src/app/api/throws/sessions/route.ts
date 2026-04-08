@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getThrowsSessions } from "@/lib/data/throws";
 import { logger } from "@/lib/logger";
+import { parseBody, ThrowsSessionCreateSchema } from "@/lib/api-schemas";
+import { validateSession, type SessionBlock } from "@/lib/throws/validation";
 
 // GET /api/throws/sessions — list all throws sessions for current coach
 export async function GET() {
@@ -28,7 +30,7 @@ export async function GET() {
 }
 
 // POST /api/throws/sessions — create a new throws session
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "COACH") {
@@ -42,14 +44,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { name, sessionType, targetPhase, event, estimatedDuration, tags, notes, blocks } = body;
+    const parsed = await parseBody(req, ThrowsSessionCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, sessionType, targetPhase, event, estimatedDuration, tags, notes, blocks } = parsed;
 
-    if (!name || !sessionType || !event) {
-      return NextResponse.json(
-        { success: false, error: "Name, session type, and event are required" },
-        { status: 400 }
-      );
+    // Server-side Bondarchuk methodology enforcement.
+    // The builder UI validates before save, but any direct API call (mobile, scripts,
+    // integrations) must also pass. A CRITICAL issue (e.g. light→heavy sequence,
+    // Vol IV p.114-117) blocks creation with 422. Warnings are allowed through.
+    if (blocks && blocks.length > 0) {
+      const blocksForValidation: SessionBlock[] = blocks.map((block, index) => ({
+        id: `tmp-${index}`,
+        blockType: block.blockType,
+        position: block.position ?? index,
+        config: block.config as SessionBlock["config"],
+      }));
+
+      const validation = validateSession(blocksForValidation);
+      if (!validation.valid) {
+        const summary = validation.errors.map((e) => e.title).join("; ");
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Session violates Bondarchuk methodology: ${summary}`,
+            issues: validation.errors,
+          },
+          { status: 422 }
+        );
+      }
     }
 
     const session = await prisma.throwsSession.create({
@@ -63,7 +85,7 @@ export async function POST(req: Request) {
         tags: tags ? JSON.stringify(tags) : null,
         notes: notes || null,
         blocks: {
-          create: (blocks || []).map((block: { blockType: string; position: number; config: unknown }, index: number) => ({
+          create: (blocks || []).map((block, index) => ({
             blockType: block.blockType,
             position: block.position ?? index,
             config: JSON.stringify(block.config),

@@ -79,6 +79,12 @@ export type AthleteRosterItem = {
     score: number;
     injuryStatus: string;
     date: string;
+    // Raw sub-scores (1-10). sleepQuality/energyMood: higher is better.
+    // soreness/stressLevel: higher is worse (the UI normalizes for display).
+    sleepQuality: number;
+    soreness: number;
+    stressLevel: number;
+    energyMood: number;
   } | null;
   lastSessionDate: string | null;
 };
@@ -598,7 +604,15 @@ export async function getAthleteRoster(coachId: string): Promise<AthleteRosterIt
       readinessCheckIns: {
         orderBy: { date: "desc" },
         take: 1,
-        select: { date: true, overallScore: true, injuryStatus: true },
+        select: {
+          date: true,
+          overallScore: true,
+          injuryStatus: true,
+          sleepQuality: true,
+          soreness: true,
+          stressLevel: true,
+          energyMood: true,
+        },
       },
       trainingSessions: {
         where: { status: "COMPLETED" },
@@ -625,6 +639,10 @@ export async function getAthleteRoster(coachId: string): Promise<AthleteRosterIt
           score: a.readinessCheckIns[0].overallScore,
           injuryStatus: a.readinessCheckIns[0].injuryStatus as string,
           date: a.readinessCheckIns[0].date.toISOString(),
+          sleepQuality: a.readinessCheckIns[0].sleepQuality,
+          soreness: a.readinessCheckIns[0].soreness,
+          stressLevel: a.readinessCheckIns[0].stressLevel,
+          energyMood: a.readinessCheckIns[0].energyMood,
         }
       : null,
     lastSessionDate:

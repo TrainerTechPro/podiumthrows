@@ -110,6 +110,29 @@ export const ThrowsAssignmentCreateSchema = z.object({
   assignedDate: z.string().min(1, "Assigned date is required"),
 });
 
+// Assignment PUT: discriminated union on `action`. Each variant declares its
+// own field shape; downstream handler code uses `"rpe" in parsed` guards to
+// preserve existing post-completion logic (streak updates, notifications).
+const completionFields = {
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  selfFeeling: z.string().nullable().optional(),
+  feedbackNotes: z.string().nullable().optional(),
+} as const;
+
+export const ThrowsAssignmentUpdateSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("start") }),
+  z.object({ action: z.literal("complete"), ...completionFields }),
+  z.object({ action: z.literal("partial"), ...completionFields }),
+  z.object({
+    action: z.literal("skip"),
+    skipReason: z.string().nullable().optional(),
+  }),
+  z.object({
+    action: z.literal("update_blocks"),
+    completedBlockIds: z.array(z.string()).min(0),
+  }),
+]);
+
 // ── Questionnaire Submission ────────────────────────────────────────────
 
 export const QuestionnaireSubmissionSchema = z.object({
@@ -185,7 +208,7 @@ const DrillLogSchema = z.object({
   implementWeightUnit: z.string().nullable().optional(),
   implementWeightOriginal: z.number().nullable().optional(),
   wireLength: z.string().nullable().optional(),
-  throwCount: z.number().int().min(0).optional(),
+  throwCount: z.number().int().min(0).nullable().optional(),
   bestMark: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
@@ -200,22 +223,29 @@ export const AthleteThrowsSessionCreateSchema = z.object({
 
 // ── Throws Check-In ─────────────────────────────────────────────────────
 
+// NOTE: numeric fields below come from React form state (sliders/number inputs
+// in the throws check-in wizards). Per CLAUDE.md Rule 4, form-originated
+// numerics must be `.nullable().optional()` — `.optional()` alone accepts
+// undefined but rejects null, which silently breaks saves when form state uses
+// `useState<number | null>(null)` for cleared fields. `selfFeeling` stays
+// required; `notes` is already nullable; `source` is a string enum, not a
+// numeric form field.
 export const ThrowsCheckInSchema = z.object({
   athleteId: z.string().min(1, "Athlete ID is required"),
   date: z.string().min(1, "Date is required"),
   selfFeeling: z.number().min(1).max(10),
-  sleepHours: z.number().min(0).max(24).optional(),
-  sleepQuality: z.number().min(1).max(10).optional(),
-  energy: z.number().min(1).max(10).optional(),
-  sorenessGeneral: z.number().min(1).max(10).optional(),
-  sorenessShoulder: z.number().min(0).max(10).optional(),
-  sorenessBack: z.number().min(0).max(10).optional(),
-  sorenessHip: z.number().min(0).max(10).optional(),
-  sorenessKnee: z.number().min(0).max(10).optional(),
-  sorenessElbow: z.number().min(0).max(10).optional(),
-  sorenessWrist: z.number().min(0).max(10).optional(),
-  lightImplFeeling: z.number().min(1).max(10).optional(),
-  heavyImplFeeling: z.number().min(1).max(10).optional(),
+  sleepHours: z.number().min(0).max(24).nullable().optional(),
+  sleepQuality: z.number().min(1).max(10).nullable().optional(),
+  energy: z.number().min(1).max(10).nullable().optional(),
+  sorenessGeneral: z.number().min(1).max(10).nullable().optional(),
+  sorenessShoulder: z.number().min(0).max(10).nullable().optional(),
+  sorenessBack: z.number().min(0).max(10).nullable().optional(),
+  sorenessHip: z.number().min(0).max(10).nullable().optional(),
+  sorenessKnee: z.number().min(0).max(10).nullable().optional(),
+  sorenessElbow: z.number().min(0).max(10).nullable().optional(),
+  sorenessWrist: z.number().min(0).max(10).nullable().optional(),
+  lightImplFeeling: z.number().min(1).max(10).nullable().optional(),
+  heavyImplFeeling: z.number().min(1).max(10).nullable().optional(),
   notes: z.string().nullable().optional(),
   source: z.enum(["ATHLETE", "COACH"]).optional(),
 });
@@ -279,7 +309,7 @@ const LogSessionDrillSchema = z.object({
   implementWeightUnit: z.string().nullable().optional(),
   implementWeightOriginal: z.number().nullable().optional(),
   wireLength: z.string().nullable().optional(),
-  throwCount: z.number().int().min(0).optional(),
+  throwCount: z.number().int().min(0).nullable().optional(),
   bestMark: z.number().nullable().optional(),
   averageMark: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),

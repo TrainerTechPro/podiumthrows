@@ -5,6 +5,7 @@ import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { createNotification } from "@/lib/notifications";
 import { emitSessionComplete } from "@/lib/team-activity";
+import { parseBody, ThrowsAssignmentUpdateSchema } from "@/lib/api-schemas";
 
 // PUT /api/throws/assignments/[id] — update assignment status (start, complete, skip)
 export async function PUT(
@@ -18,8 +19,19 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const body = await req.json();
-    const { action, rpe, selfFeeling, feedbackNotes, skipReason, completedBlockIds } = body;
+
+    const parsed = await parseBody(req, ThrowsAssignmentUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+
+    // Narrow the discriminated union into the legacy variable names so the
+    // post-completion blocks below (streak update, notifications, self-program
+    // sync) can access fields without per-case narrowing.
+    const action = parsed.action;
+    const rpe = "rpe" in parsed ? parsed.rpe : undefined;
+    const selfFeeling = "selfFeeling" in parsed ? parsed.selfFeeling : undefined;
+    const feedbackNotes = "feedbackNotes" in parsed ? parsed.feedbackNotes : undefined;
+    const skipReason = "skipReason" in parsed ? parsed.skipReason : undefined;
+    const completedBlockIds = "completedBlockIds" in parsed ? parsed.completedBlockIds : undefined;
 
     // Verify the assignment belongs to this athlete
     const user = await prisma.user.findUnique({

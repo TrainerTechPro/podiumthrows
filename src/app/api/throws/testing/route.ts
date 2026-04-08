@@ -46,7 +46,14 @@ export async function GET(req: NextRequest) {
     }
 
     let benchmarks = {};
-    try { benchmarks = JSON.parse(athlete.performanceBenchmarks || "{}"); } catch { /* ignore */ }
+    try {
+      benchmarks = JSON.parse(athlete.performanceBenchmarks || "{}");
+    } catch (parseErr) {
+      logger.warn("Failed to parse AthleteProfile.performanceBenchmarks JSON (GET)", {
+        context: "throws/testing",
+        metadata: { athleteId, error: String(parseErr) },
+      });
+    }
 
     return NextResponse.json({ success: true, data: benchmarks });
   } catch (error) {
@@ -97,7 +104,14 @@ export async function PATCH(req: NextRequest) {
     });
 
     let current = {};
-    try { current = JSON.parse(existing?.performanceBenchmarks || "{}"); } catch { /* ignore */ }
+    try {
+      current = JSON.parse(existing?.performanceBenchmarks || "{}");
+    } catch (parseErr) {
+      logger.warn("Failed to parse AthleteProfile.performanceBenchmarks JSON (PATCH merge)", {
+        context: "throws/testing",
+        metadata: { athleteId, error: String(parseErr) },
+      });
+    }
 
     const merged = { ...current, ...benchmarks };
 

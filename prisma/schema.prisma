@@ -1091,7 +1091,7 @@ model Invitation {
   expiresAt DateTime
 
   athleteProfileId String?
-  athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id])
+  athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2118,7 +2118,7 @@ model TrainingProgram {
   athleteId String?
   athlete   AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   coachId   String?
-  coach     CoachProfile?   @relation(fields: [coachId], references: [id])
+  coach     CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: SetNull)
 
   // Coach self-program flag
   isCoachSelfProgram Boolean @default(false)

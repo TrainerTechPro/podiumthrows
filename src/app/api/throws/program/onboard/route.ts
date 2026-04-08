@@ -60,7 +60,15 @@ export async function GET() {
       let implementsList: unknown[] = [];
       try {
         implementsList = JSON.parse(eq.implements || "[]");
-      } catch { /* empty */ }
+      } catch (parseErr) {
+        logger.warn("Failed to parse EquipmentInventory.implements JSON (onboard prefill)", {
+          context: "throws/program/onboard",
+          metadata: {
+            athleteId: athleteProfile.id,
+            error: String(parseErr),
+          },
+        });
+      }
       prefill.implements = implementsList;
 
       const facilities: Record<string, unknown> = {
@@ -72,7 +80,15 @@ export async function GET() {
       if (eq.gymEquipment) {
         try {
           facilities.gymEquipment = JSON.parse(eq.gymEquipment);
-        } catch { /* empty */ }
+        } catch (parseErr) {
+          logger.warn("Failed to parse EquipmentInventory.gymEquipment JSON (onboard prefill)", {
+            context: "throws/program/onboard",
+            metadata: {
+              athleteId: athleteProfile.id,
+              error: String(parseErr),
+            },
+          });
+        }
       }
       prefill.facilities = facilities;
     }
