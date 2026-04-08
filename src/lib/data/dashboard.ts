@@ -4,6 +4,7 @@
  */
 
 import prisma from "@/lib/prisma";
+import { getAthleteTimezone, getLocalDate, startOfToday as startOfTodayTz } from "@/lib/dates";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  TYPES                                                                     */
@@ -93,31 +94,17 @@ export type QuestionnairesData = {
 /*  HELPERS                                                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/** US-Central-ish offset: use America/Chicago as a safe default for D1 athletes.
- *  Ensures the "today" string matches dates stored when coaches/athletes
- *  created sessions from US timezones. */
-function todayYMD(): string {
-  const d = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })
-  );
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+function todayYMD(tz: string): string {
+  return getLocalDate(tz);
 }
 
-function startOfToday(): Date {
-  const d = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })
-  );
-  d.setHours(0, 0, 0, 0);
-  return d;
+function startOfTodayInTz(tz: string): Date {
+  return startOfTodayTz(tz);
 }
 
-function endOfToday(): Date {
-  const d = startOfToday();
-  d.setDate(d.getDate() + 1);
-  return d;
+function endOfTodayInTz(tz: string): Date {
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return startOfTodayTz(tz, tomorrow);
 }
 
 function readinessLabel(score: number): string {
@@ -133,8 +120,9 @@ function readinessLabel(score: number): string {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export async function fetchReadinessData(athleteId: string): Promise<ReadinessData> {
-  const start = startOfToday();
-  const end = endOfToday();
+  const tz = await getAthleteTimezone(athleteId);
+  const start = startOfTodayInTz(tz);
+  const end = endOfTodayInTz(tz);
 
   const checkIn = await prisma.readinessCheckIn.findFirst({
     where: { athleteId, date: { gte: start, lt: end } },
@@ -263,9 +251,10 @@ function inferSessionType(items: TimelineItem[]): "throws" | "lift" | "mixed" {
 export async function fetchTodayWorkoutData(
   athleteId: string
 ): Promise<TodaySession[]> {
-  const today = todayYMD();
-  const dayStart = startOfToday();
-  const dayEnd = endOfToday();
+  const tz = await getAthleteTimezone(athleteId);
+  const today = todayYMD(tz);
+  const dayStart = startOfTodayInTz(tz);
+  const dayEnd = endOfTodayInTz(tz);
 
   const sessions: TodaySession[] = [];
 
@@ -669,8 +658,11 @@ export async function fetchPRsData(athleteId: string): Promise<PRItem[]> {
 
 export async function fetchQuickStatsData(athleteId: string): Promise<QuickStatsData> {
   const now = new Date();
+  // Monday-anchored week (consistent with the rest of the app)
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
+  const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday...
+  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startOfWeek.setDate(now.getDate() + daysToMonday);
   startOfWeek.setHours(0, 0, 0, 0);
   const weekYMD = startOfWeek.getFullYear() + "-" +
     String(startOfWeek.getMonth() + 1).padStart(2, "0") + "-" +

@@ -5,6 +5,7 @@
  */
 
 import prisma from "@/lib/prisma";
+import { getAthleteTimezone, getLocalDate } from "@/lib/dates";
 import {
   fetchTodayWorkoutData,
   fetchReadinessData,
@@ -75,11 +76,8 @@ export type TrainingHubData = {
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
-function todayYMD(): string {
-  const d = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })
-  );
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function todayYMD(timezone: string): string {
+  return getLocalDate(timezone);
 }
 
 /** Get the Monday of the week containing a YYYY-MM-DD date string. */
@@ -103,7 +101,8 @@ const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export async function fetchTrainingHubData(
   athleteId: string
 ): Promise<TrainingHubData> {
-  const today = todayYMD();
+  const tz = await getAthleteTimezone(athleteId);
+  const today = todayYMD(tz);
   const monday = getMondayOf(today);
   const sunday = new Date(monday);
   sunday.setDate(sunday.getDate() + 6);
