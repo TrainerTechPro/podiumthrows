@@ -11,6 +11,10 @@ interface ScheduleParams {
   startDate: Date;
   endDate?: Date | null;
   lastRunAt?: Date | null;
+  /** Override the day-of-week used for SPECIFIC_DAYS/WEEKLY/BIWEEKLY checks.
+   *  Pass the coach's local day-of-week (0=Sun…6=Sat) from the cron handler
+   *  so comparisons aren't pinned to Vercel's UTC clock. */
+  todayDayOfWeek?: number;
 }
 
 /**
@@ -103,7 +107,7 @@ export function calculateNextRunDate(params: ScheduleParams): Date | null {
  * Check if a schedule should run today.
  */
 export function shouldRunToday(params: ScheduleParams): boolean {
-  const { frequency, specificDays, startDate, endDate, lastRunAt } = params;
+  const { frequency, specificDays, startDate, endDate, lastRunAt, todayDayOfWeek } = params;
 
   const today = startOfDay(new Date());
 
@@ -116,23 +120,27 @@ export function shouldRunToday(params: ScheduleParams): boolean {
     return false;
   }
 
+  // Use caller-supplied day-of-week (from coach's local timezone) when available,
+  // otherwise fall back to the UTC day (matches prior behavior for non-cron callers).
+  const effectiveDow = todayDayOfWeek ?? today.getDay();
+
   switch (frequency) {
     case "DAILY":
       return true;
 
     case "SPECIFIC_DAYS":
       if (!specificDays?.length) return false;
-      return specificDays.includes(today.getDay());
+      return specificDays.includes(effectiveDow);
 
     case "WEEKLY": {
       const dayOfWeek = startDate.getDay();
-      if (today.getDay() !== dayOfWeek) return false;
+      if (effectiveDow !== dayOfWeek) return false;
       return true;
     }
 
     case "BIWEEKLY": {
       const dayOfWeek = startDate.getDay();
-      if (today.getDay() !== dayOfWeek) return false;
+      if (effectiveDow !== dayOfWeek) return false;
       const daysSinceStart = daysBetween(startDate, today);
       return daysSinceStart % 14 < 7; // Runs on even weeks
     }

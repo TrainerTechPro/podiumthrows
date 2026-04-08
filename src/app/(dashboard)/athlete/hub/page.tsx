@@ -7,6 +7,7 @@ import {
 } from "@/lib/data/team-hub";
 import prisma from "@/lib/prisma";
 import { TeamHubClient } from "@/app/(dashboard)/coach/hub/_team-hub-client";
+import { getAthleteTimezone, getLocalDate } from "@/lib/dates";
 
 export const metadata = { title: "Team Hub — Podium Throws" };
 export const dynamic = "force-dynamic";
@@ -19,10 +20,9 @@ export default async function AthleteHubPage() {
     redirect("/login");
   }
 
-  const today = new Date().toISOString().split("T")[0];
-  const inThirtyDays = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
+  const tz = await getAthleteTimezone(result.athlete.id);
+  const today = getLocalDate(tz);
+  const inThirtyDays = getLocalDate(tz, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
   // Get athlete's event group memberships for practice filtering
   const memberships = await prisma.eventGroupMember.findMany({

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { shouldRunToday, calculateNextRunDate } from "@/lib/forms/recurring-scheduler";
 import type { RecurrenceFrequency } from "@/lib/forms/types";
 import { logger } from "@/lib/logger";
+import { getCoachTimezone, getLocalDayOfWeek } from "@/lib/dates";
 
 export const maxDuration = 60;
 
@@ -53,6 +54,10 @@ export async function GET(req: NextRequest) {
         // Skip if questionnaire not published
         if (schedule.questionnaire.status !== "published") continue;
 
+        // Determine the coach's local day-of-week for tz-aware schedule matching
+        const coachTz = await getCoachTimezone(schedule.questionnaire.coachId);
+        const localDayOfWeek = getLocalDayOfWeek(coachTz);
+
         // Check if should run today
         const shouldRun = shouldRunToday({
           frequency: schedule.frequency as RecurrenceFrequency,
@@ -60,6 +65,7 @@ export async function GET(req: NextRequest) {
           startDate: schedule.startDate,
           endDate: schedule.endDate,
           lastRunAt: schedule.lastRunAt,
+          todayDayOfWeek: localDayOfWeek,
         });
 
         if (!shouldRun) continue;
