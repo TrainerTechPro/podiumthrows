@@ -18,11 +18,11 @@ const patchSchema = z.object({
 /* ── GET — fetch single analysis ── */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
-    const { id } = params;
+    const { id } = await params;
 
     const analysis = await prisma.videoAnalysis.findUnique({
       where: { id },
@@ -50,11 +50,11 @@ export async function GET(
 /* ── PATCH — update analysis (annotations, key positions, metadata) ── */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
-    const { id } = params;
+    const { id } = await params;
 
     // Verify ownership
     const existing = await prisma.videoAnalysis.findUnique({
@@ -98,11 +98,11 @@ export async function PATCH(
 /* ── DELETE — delete analysis ── */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch full record to get file URLs for cleanup
     const existing = await prisma.videoAnalysis.findUnique({

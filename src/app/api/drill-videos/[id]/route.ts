@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -15,7 +15,9 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const video = await prisma.drillVideo.findUnique({ where: { id: params.id } });
+    const { id } = await params;
+
+    const video = await prisma.drillVideo.findUnique({ where: { id } });
     if (!video) {
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
@@ -61,7 +63,7 @@ export async function GET(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -69,7 +71,9 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const video = await prisma.drillVideo.findUnique({ where: { id: params.id } });
+    const { id } = await params;
+
+    const video = await prisma.drillVideo.findUnique({ where: { id } });
     if (!video) {
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
@@ -114,7 +118,7 @@ export async function DELETE(
       await unlink(video.filePath).catch(() => {});
     }
 
-    await prisma.drillVideo.delete({ where: { id: params.id } });
+    await prisma.drillVideo.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -24,7 +24,7 @@ const ALLOWED_REACTIONS = ["THUMBS_UP", "THUMBS_DOWN"] as const;
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -32,12 +32,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     // Load the comment and verify the current user is the recipient
     // (i.e. NOT the author). Access to the underlying target (throw,
     // session, etc.) was already verified at creation time, so if the
     // user can see the row it's theirs to ack.
     const existing = await prisma.throwComment.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         authorId: true,
@@ -142,7 +144,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.throwComment.update({
-      where: { id: params.id },
+      where: { id },
       data: updates,
       select: {
         id: true,

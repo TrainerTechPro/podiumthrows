@@ -4,14 +4,15 @@ import prisma from "@/lib/prisma";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     // Verify questionnaire ownership and published status
     const questionnaire = await prisma.questionnaire.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id, coachId: coach.id },
       select: { id: true, status: true },
     });
 
@@ -55,7 +56,7 @@ export async function POST(
       athleteIds.map((athleteId: string) =>
         prisma.questionnaireAssignment.create({
           data: {
-            questionnaireId: params.id,
+            questionnaireId: id,
             athleteId,
           },
         })

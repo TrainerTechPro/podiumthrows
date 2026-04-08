@@ -6,7 +6,7 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { noteId: string } }
+  { params }: { params: Promise<{ noteId: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -17,7 +17,7 @@ export async function GET(
       );
     }
 
-    const { noteId } = params;
+    const { noteId } = await params;
 
     if (!(await canAccessVoiceNote(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", noteId))) {
       return NextResponse.json(
@@ -69,7 +69,7 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { noteId: string } }
+  { params }: { params: Promise<{ noteId: string }> }
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -80,7 +80,7 @@ export async function DELETE(
       );
     }
 
-    const { noteId } = params;
+    const { noteId } = await params;
 
     // Fetch the voice note to check ownership
     const voiceNote = await prisma.voiceNote.findUnique({

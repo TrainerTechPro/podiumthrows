@@ -4,13 +4,14 @@ import prisma from "@/lib/prisma";
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     const source = await prisma.questionnaire.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id, coachId: coach.id },
     });
 
     if (!source) {
