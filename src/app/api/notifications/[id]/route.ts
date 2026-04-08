@@ -4,12 +4,13 @@ import { getSession } from "@/lib/auth";
 import { markAsRead } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 /* ─── PATCH — mark a single notification read/unread ─────────────────────── */
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { read } = body as Record<string, unknown>;
     const readValue = typeof read === "boolean" ? read : true;
 
-    const updated = await markAsRead(params.id, profileId, session.role, readValue);
+    const updated = await markAsRead(id, profileId, session.role, readValue);
     if (!updated) {
       return NextResponse.json({ error: "Notification not found." }, { status: 404 });
     }

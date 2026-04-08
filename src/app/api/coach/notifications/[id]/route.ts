@@ -3,12 +3,13 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 /* ─── PATCH — toggle read state on a single notification ─────────────────── */
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     // Verify ownership
     const existing = await prisma.notification.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true, read: true },
     });
     if (!existing) {
@@ -37,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const readValue = typeof read === "boolean" ? read : !existing.read;
 
     const updated = await prisma.notification.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { read: readValue },
       select: {
         id: true,

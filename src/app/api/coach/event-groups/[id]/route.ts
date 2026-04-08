@@ -8,8 +8,9 @@ import { logger } from "@/lib/logger";
 const VALID_EVENT_TYPES = new Set<string>(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
 
 /* ── PUT — update an event group ── */
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -48,7 +49,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     try {
-      const data = await updateEventGroup(params.id, coach.id, {
+      const data = await updateEventGroup(id, coach.id, {
         ...(name !== undefined ? { name } : {}),
         ...(events !== undefined ? { events: events as EventType[] } : {}),
         ...(color !== undefined ? { color } : {}),
@@ -66,8 +67,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 /* ── DELETE — delete an event group ── */
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -82,7 +84,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     }
 
     try {
-      await deleteEventGroup(params.id, coach.id);
+      await deleteEventGroup(id, coach.id);
       return NextResponse.json({ ok: true });
     } catch {
       return NextResponse.json({ error: "Event group not found" }, { status: 404 });

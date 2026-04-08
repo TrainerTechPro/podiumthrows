@@ -5,8 +5,9 @@ import { logger } from "@/lib/logger";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 /* ── PATCH — revoke a pending invitation ── */
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // Verify ownership and that it's still pending
     const invitation = await prisma.invitation.findFirst({
       where: {
-        id: params.id,
+        id: id,
         coachId: coach.id,
         status: "PENDING",
       },
@@ -36,14 +37,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     await prisma.invitation.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: "REVOKED" },
     });
 
     void logAudit({
       userId: session.userId,
       action: "INVITATION_REVOKED",
-      resource: `invitation:${params.id}`,
+      resource: `invitation:${id}`,
       metadata: { email: invitation.email, coachId: coach.id },
       ...auditRequestInfo(req),
     });

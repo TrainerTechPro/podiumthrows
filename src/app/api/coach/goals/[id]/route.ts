@@ -3,12 +3,13 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 /* ─── PATCH — coach updates a goal for one of their athletes ──────────────── */
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     // Verify ownership: goal must belong to an athlete of this coach
     const existing = await prisma.goal.findFirst({
       where: {
-        id: params.id,
+        id: id,
         athlete: { coachId: coach.id },
       },
       select: { id: true, targetValue: true, status: true },
@@ -80,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     const updated = await prisma.goal.update({
-      where: { id: params.id },
+      where: { id: id },
       data,
       select: {
         id: true,
@@ -115,6 +116,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -130,7 +132,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     const existing = await prisma.goal.findFirst({
       where: {
-        id: params.id,
+        id: id,
         athlete: { coachId: coach.id },
       },
       select: { id: true },
@@ -140,7 +142,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     }
 
     await prisma.goal.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: "ABANDONED" },
     });
 

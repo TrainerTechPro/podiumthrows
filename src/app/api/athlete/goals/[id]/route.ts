@@ -3,12 +3,13 @@ import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 /* ─── PATCH — update a goal (progress, title, target, status) ─────────────── */
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     // Verify ownership
     const existing = await prisma.goal.findFirst({
-      where: { id: params.id, athleteId: athlete.id },
+      where: { id: id, athleteId: athlete.id },
       select: { id: true, targetValue: true, status: true },
     });
     if (!existing) {
@@ -80,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     const updated = await prisma.goal.update({
-      where: { id: params.id },
+      where: { id: id },
       data,
       select: {
         id: true,
@@ -115,6 +116,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -129,7 +131,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     }
 
     const existing = await prisma.goal.findFirst({
-      where: { id: params.id, athleteId: athlete.id },
+      where: { id: id, athleteId: athlete.id },
       select: { id: true },
     });
     if (!existing) {
@@ -137,7 +139,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     }
 
     await prisma.goal.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: "ABANDONED" },
     });
 

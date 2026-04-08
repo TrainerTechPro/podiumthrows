@@ -10,9 +10,10 @@ const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +29,7 @@ export async function PATCH(
 
     // Verify ownership — can only edit own, non-global exercises
     const existing = await prisma.exercise.findFirst({
-      where: { id: params.id, coachId: coach.id, isGlobal: false },
+      where: { id: id, coachId: coach.id, isGlobal: false },
       select: { id: true },
     });
     if (!existing) {
@@ -61,7 +62,7 @@ export async function PATCH(
     if (defaultReps !== undefined) data.defaultReps = typeof defaultReps === "string" ? defaultReps.trim() || null : null;
 
     const updated = await prisma.exercise.update({
-      where: { id: params.id },
+      where: { id: id },
       data: data as never,
       select: {
         id: true,
@@ -88,9 +89,10 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -105,7 +107,7 @@ export async function DELETE(
     }
 
     const existing = await prisma.exercise.findFirst({
-      where: { id: params.id, coachId: coach.id, isGlobal: false },
+      where: { id: id, coachId: coach.id, isGlobal: false },
       select: { id: true, _count: { select: { blockExercises: true } } },
     });
     if (!existing) {
@@ -118,7 +120,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.exercise.delete({ where: { id: params.id } });
+    await prisma.exercise.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch (err) {

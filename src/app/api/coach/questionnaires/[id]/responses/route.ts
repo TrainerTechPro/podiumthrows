@@ -3,11 +3,12 @@ import { requireCoachSession, getQuestionnaireResponses } from "@/lib/data/coach
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
-    const responses = await getQuestionnaireResponses(params.id, coach.id);
+    const { id } = await params;
+    const responses = await getQuestionnaireResponses(id, coach.id);
     return NextResponse.json({ responses });
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

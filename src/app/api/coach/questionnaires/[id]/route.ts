@@ -10,11 +10,12 @@ const VALID_STATUSES = ["draft", "published", "archived"];
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
-    const questionnaire = await getQuestionnaireById(params.id, coach.id);
+    const { id } = await params;
+    const questionnaire = await getQuestionnaireById(id, coach.id);
 
     if (!questionnaire) {
       return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
@@ -28,13 +29,14 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     const existing = await prisma.questionnaire.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -87,7 +89,7 @@ export async function PUT(
     }
 
     const questionnaire = await prisma.questionnaire.update({
-      where: { id: params.id },
+      where: { id: id },
       data: updateData as never,
     });
 
@@ -99,13 +101,14 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     const existing = await prisma.questionnaire.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -113,7 +116,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
     }
 
-    await prisma.questionnaire.delete({ where: { id: params.id } });
+    await prisma.questionnaire.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch {

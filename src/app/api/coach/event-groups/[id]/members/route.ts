@@ -5,8 +5,9 @@ import { addMembers } from "@/lib/data/event-groups";
 import { logger } from "@/lib/logger";
 
 /* ── POST — add members to an event group ── */
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     try {
-      await addMembers(params.id, coach.id, athleteIds as string[]);
+      await addMembers(id, coach.id, athleteIds as string[]);
       return NextResponse.json({ ok: true }, { status: 201 });
     } catch {
       return NextResponse.json({ error: "Event group not found" }, { status: 404 });
