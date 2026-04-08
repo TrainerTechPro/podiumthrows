@@ -30,6 +30,18 @@ import type {
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+/**
+ * Format a Date as a YYYY-MM-DD string in the browser's local timezone.
+ * Uses getFullYear/getMonth/getDate (local, not UTC) so it's safe in client
+ * components where we want the user's wall-clock date, not the Vercel UTC date.
+ */
+function localDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 type AvailType = "AVAILABLE" | "UNAVAILABLE" | "CONDITIONAL";
 type OverrideType = "AVAILABLE" | "UNAVAILABLE";
 
@@ -508,9 +520,8 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
     monday.setDate(now.getDate() - daysToMon);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    const fmt = (d: Date) => d.toISOString().slice(0, 10);
-    const weekStart = fmt(monday);
-    const weekEnd = fmt(sunday);
+    const weekStart = localDateStr(monday);
+    const weekEnd = localDateStr(sunday);
     const thisWeekCount = overrides.filter(
       (o) => o.date >= weekStart && o.date <= weekEnd
     ).length;
@@ -590,8 +601,8 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
     monday.setDate(now.getDate() - daysToMon);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    const weekStart = monday.toISOString().slice(0, 10);
-    const weekEnd = sunday.toISOString().slice(0, 10);
+    const weekStart = localDateStr(monday);
+    const weekEnd = localDateStr(sunday);
     return overrides.filter((o) => o.date >= weekStart && o.date <= weekEnd).length;
   })();
 
@@ -1054,7 +1065,7 @@ function OverrideForm({
         <input
           type="date"
           value={form.date}
-          min={new Date().toISOString().slice(0, 10)}
+          min={localDateStr(new Date())}
           onChange={(e) => onChange({ ...form, date: e.target.value })}
           className="input w-full"
         />
