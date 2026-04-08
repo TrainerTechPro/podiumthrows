@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { getAthleteTimezone, startOfYesterday as startOfYesterdayTz, getLocalHour } from "@/lib/dates";
 
 const QUIET_HOURS_START = 10; // local hour, inclusive
 const QUIET_HOURS_END = 20; // local hour, exclusive
@@ -45,15 +46,16 @@ export async function GET() {
     const now = new Date();
     const lastThrowAt = lastThrow?.date ?? null;
 
-    // "Streak active" = they logged at least once yesterday or today
-    const startOfYesterday = new Date(now);
-    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-    startOfYesterday.setHours(0, 0, 0, 0);
+    // Resolve athlete's local timezone for all day/hour math
+    const tz = await getAthleteTimezone(athlete.id);
+
+    // "Streak active" = they logged at least once yesterday or today (in athlete's tz)
+    const startOfYesterdayUtc = startOfYesterdayTz(tz);
 
     const isStreakActive =
       athlete.currentStreak > 0 &&
       lastThrowAt != null &&
-      lastThrowAt >= startOfYesterday;
+      lastThrowAt >= startOfYesterdayUtc;
 
     // Hours since last throw (for the 23h reminder gate)
     const hoursSinceLastThrow =
@@ -61,8 +63,8 @@ export async function GET() {
         ? (now.getTime() - lastThrowAt.getTime()) / (1000 * 60 * 60)
         : Infinity;
 
-    // Eligibility for firing a reminder right now
-    const currentHour = now.getHours();
+    // Eligibility for firing a reminder right now (athlete's local hour)
+    const currentHour = getLocalHour(tz);
     const withinQuietHours =
       currentHour >= QUIET_HOURS_START && currentHour < QUIET_HOURS_END;
 
