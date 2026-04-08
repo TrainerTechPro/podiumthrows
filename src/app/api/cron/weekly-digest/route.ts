@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendWeeklyDigestEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { getLocalDate, getCoachTimezone } from "@/lib/dates";
 
 export const maxDuration = 60;
 
@@ -24,7 +25,6 @@ export async function GET(req: NextRequest) {
   try {
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weekAgoDate = weekAgo.toISOString().slice(0, 10); // YYYY-MM-DD for String date fields
 
     // Fetch all coaches who have at least one athlete, including athlete IDs
     const coaches = await prisma.coachProfile.findMany({
@@ -44,6 +44,11 @@ export async function GET(req: NextRequest) {
     for (const coach of coaches) {
       try {
         const athleteIds = coach.athletes.map((a) => a.id);
+
+        // Compute the week boundary in the coach's local timezone
+        // (used for String date fields like ThrowsPR.achievedAt)
+        const tz = await getCoachTimezone(coach.id);
+        const weekAgoDate = getLocalDate(tz, weekAgo);
 
         // Completed sessions this week
         const sessionsCompleted = await prisma.throwsAssignment.count({

@@ -12,7 +12,7 @@
 
 import { cache } from "react";
 import prisma from "@/lib/prisma";
-import { getLocalDate, getCoachTimezone } from "@/lib/dates";
+import { getLocalDate, getCoachTimezone, combineLocalDateTime, startOfToday } from "@/lib/dates";
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 
@@ -30,12 +30,11 @@ function daysFromNowISO(timezone: string, n: number): string {
   return getLocalDate(timezone, offset);
 }
 
-/** Number of calendar days between a YYYY-MM-DD string and today. */
-function daysBetween(dateStr: string): number {
-  const target = new Date(dateStr + "T00:00:00");
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return Math.round((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+/** Number of calendar days between a YYYY-MM-DD string and today in the given timezone. */
+function daysBetween(dateStr: string, timezone: string): number {
+  const target = combineLocalDateTime(dateStr, "00:00", timezone);
+  const todayStart = startOfToday(timezone);
+  return Math.round((target.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 /* ─── 1. getRecentTeamPRs ─────────────────────────────────────────────────── */
@@ -450,7 +449,7 @@ export const getUpcomingCompetitions = cache(
     const results: UpcomingCompetition[] = [];
 
     for (const entry of grouped.values()) {
-      const daysOut = daysBetween(entry.date);
+      const daysOut = daysBetween(entry.date, tz);
 
       let taperWeek: number | null = null;
       if (daysOut <= 21) {
