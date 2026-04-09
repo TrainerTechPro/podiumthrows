@@ -161,10 +161,24 @@ export async function PUT(
     // Locked fields are only locked on finalized configs that already have a
     // generated program. During wizard flow (drafts or configs without a
     // program yet), all fields must be editable — the user is still choosing.
+    //
+    // On finalized programs, reject the request outright instead of silently
+    // stripping locked fields — that way the client gets a clear error and
+    // the user is told to create a new program if they want to change event,
+    // gender, or their baseline PR.
     const isLocked = !existing.isDraft && !!existing.trainingProgramId;
     if (isLocked) {
-      for (const f of LOCKED_FIELDS) {
-        delete (body as Record<string, unknown>)[f];
+      const lockedAttempt = LOCKED_FIELDS.filter(
+        (f) => f in (body as Record<string, unknown>),
+      );
+      if (lockedAttempt.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Cannot modify locked fields: ${lockedAttempt.join(", ")}. Create a new program instead.`,
+          },
+          { status: 400 },
+        );
       }
     }
 
