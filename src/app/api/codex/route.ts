@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -42,10 +42,10 @@ export async function GET(request: NextRequest) {
       take: 200,
     });
 
-    return NextResponse.json({ ok: true, data: entries });
+    return NextResponse.json({ success: true, data: entries });
   } catch (err) {
     logger.error("GET /api/codex", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch codex entries" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch codex entries" }, { status: 500 });
   }
 }
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const contentType = request.headers.get("content-type") || "";
@@ -85,11 +85,11 @@ export async function POST(request: NextRequest) {
       return handleConfirm(body, user.userId);
     }
 
-    return NextResponse.json({ error: "Invalid step" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid step" }, { status: 400 });
   } catch (err) {
     logger.error("POST /api/codex", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Failed: ${message}` }, { status: 500 });
+    return NextResponse.json({ success: false, error: `Failed: ${message}` }, { status: 500 });
   }
 }
 
@@ -103,7 +103,7 @@ async function handleUploadUrl(
   const fileSizeMb = body.fileSizeMb as number | undefined;
 
   if (!fileName) {
-    return NextResponse.json({ error: "fileName is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "fileName is required" }, { status: 400 });
   }
 
   // Lenient format check — accept any video extension
@@ -125,7 +125,7 @@ async function handleUploadUrl(
   }
 
   if (fileSizeMb && fileSizeMb > 500) {
-    return NextResponse.json({ error: "File too large (max 500MB)" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "File too large (max 500MB)" }, { status: 400 });
   }
 
   const fileKey = `codex/${userId}/${randomUUID()}.${ext || "mp4"}`;
@@ -135,10 +135,10 @@ async function handleUploadUrl(
       fileKey,
       fileContentType || "video/mp4"
     );
-    return NextResponse.json({ mode: "r2", uploadUrl, key: fileKey, publicUrl });
+    return NextResponse.json({ success: true, data: { mode: "r2", uploadUrl, key: fileKey, publicUrl } });
   } else {
     const publicUrl = getPublicUrl(fileKey);
-    return NextResponse.json({ mode: "local", key: fileKey, publicUrl });
+    return NextResponse.json({ success: true, data: { mode: "local", key: fileKey, publicUrl } });
   }
 }
 
@@ -155,10 +155,10 @@ async function handleThumbnailUrl(
       fileKey,
       contentType
     );
-    return NextResponse.json({ mode: "r2", uploadUrl, key: fileKey, publicUrl });
+    return NextResponse.json({ success: true, data: { mode: "r2", uploadUrl, key: fileKey, publicUrl } });
   } else {
     const publicUrl = getPublicUrl(fileKey);
-    return NextResponse.json({ mode: "local", key: fileKey, publicUrl });
+    return NextResponse.json({ success: true, data: { mode: "local", key: fileKey, publicUrl } });
   }
 }
 
@@ -185,11 +185,11 @@ async function handleConfirm(
 
   const distance = typeof distanceStr === "number" ? distanceStr : parseFloat(distanceStr);
   if (isNaN(distance) || distance <= 0) {
-    return NextResponse.json({ error: "Distance must be a positive number" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Distance must be a positive number" }, { status: 400 });
   }
 
   if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-    return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
   }
 
   const thrownAt = thrownAtStr ? new Date(thrownAtStr) : new Date();
@@ -208,7 +208,7 @@ async function handleConfirm(
     },
   });
 
-  return NextResponse.json({ ok: true, data: entry }, { status: 201 });
+  return NextResponse.json({ success: true, data: entry }, { status: 201 });
 }
 
 /* ── Local dev: direct upload via FormData ── */
@@ -233,11 +233,11 @@ async function handleLocalUpload(request: NextRequest, userId: string) {
 
   const distance = parseFloat(distanceStr);
   if (isNaN(distance) || distance <= 0) {
-    return NextResponse.json({ error: "Distance must be a positive number" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Distance must be a positive number" }, { status: 400 });
   }
 
   if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-    return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
   }
 
   const ext = videoBlob.name?.split(".").pop()?.toLowerCase() || "mp4";
@@ -275,5 +275,5 @@ async function handleLocalUpload(request: NextRequest, userId: string) {
     },
   });
 
-  return NextResponse.json({ ok: true, data: entry }, { status: 201 });
+  return NextResponse.json({ success: true, data: entry }, { status: 201 });
 }

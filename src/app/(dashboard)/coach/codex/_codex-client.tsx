@@ -98,13 +98,13 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
       const urlData = await urlRes.json();
       if (!urlRes.ok) throw new Error(urlData.error || "Failed to get upload URL");
 
-      const videoUrl = urlData.publicUrl as string;
+      const videoUrl = urlData.data.publicUrl as string;
 
       // Step 2: Upload video
-      if (urlData.mode === "r2") {
+      if (urlData.data.mode === "r2") {
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("PUT", urlData.uploadUrl);
+          xhr.open("PUT", urlData.data.uploadUrl);
           xhr.upload.onprogress = (ev) => {
             if (ev.lengthComputable) setProgress(Math.round((ev.loaded / ev.total) * 100));
           };
@@ -409,7 +409,7 @@ export function CodexView() {
     fetch(`/api/codex?${params}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.ok) setEntries(data.data);
+        if (data.success) setEntries(data.data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

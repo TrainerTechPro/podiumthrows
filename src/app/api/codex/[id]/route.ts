@@ -12,7 +12,7 @@ export async function DELETE(
     const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const entry = await prisma.codexEntry.findUnique({
@@ -21,18 +21,18 @@ export async function DELETE(
     });
 
     if (!entry) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     if (entry.userId !== user.userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.codexEntry.delete({ where: { id: id } });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/codex/:id", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete entry" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete entry" }, { status: 500 });
   }
 }
