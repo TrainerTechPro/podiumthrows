@@ -25,12 +25,25 @@ export async function getThrowsSessions(coachId: string) {
 
 /* ─── Roster Pulse ──────────────────────────────────────────────────────── */
 
-const IMPLEMENT_STANDARDS: Record<string, { m: number; f: number }> = {
+export const IMPLEMENT_STANDARDS: Record<string, { m: number; f: number }> = {
   SHOT_PUT: { m: 7.26, f: 4 },
   DISCUS: { m: 2, f: 1 },
   HAMMER: { m: 7.26, f: 4 },
   JAVELIN: { m: 0.8, f: 0.6 },
 };
+
+/**
+ * Returns the competition implement weight (in kg) for a given event + gender.
+ * Used by the throws analysis chart to default to comp-weight-only view.
+ */
+export function getCompetitionWeight(
+  event: string,
+  gender: "MALE" | "FEMALE"
+): number | null {
+  const std = IMPLEMENT_STANDARDS[event];
+  if (!std) return null;
+  return gender === "MALE" ? std.m : std.f;
+}
 
 function classifyImplement(
   implement: string,

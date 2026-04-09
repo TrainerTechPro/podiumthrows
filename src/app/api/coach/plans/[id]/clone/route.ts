@@ -7,9 +7,10 @@ import { logger } from "@/lib/logger";
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,7 +26,7 @@ export async function POST(
 
     // Fetch original plan with full structure
     const original = await prisma.workoutPlan.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       include: {
         blocks: {
           orderBy: { order: "asc" },

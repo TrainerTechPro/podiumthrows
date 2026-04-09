@@ -6,8 +6,9 @@ import { logger } from "@/lib/logger";
 
 /* ─── POST — publish a programmed session ───────────────────────────────── */
 
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,7 +20,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     });
     if (!coach) return NextResponse.json({ error: "Coach not found" }, { status: 404 });
 
-    const result = await publishSession(params.id, coach.id);
+    const result = await publishSession(id, coach.id);
 
     return NextResponse.json({
       ok: true,

@@ -10,6 +10,39 @@ interface TrendPoint {
   event: string;
   distance: number;
   source: string;
+  implementKg: number;
+  implementLabel: string;
+}
+
+/**
+ * Parse an implement string like "7.26kg", "800g", "2.0kg" into a numeric kg value.
+ * Javelin weights are stored in grams on some log pages; convert to kg.
+ * Returns null if the string can't be parsed.
+ */
+function parseImplementKg(implement: string): number | null {
+  if (!implement) return null;
+  const trimmed = implement.trim().toLowerCase();
+  const match = trimmed.match(/^([0-9]+(?:\.[0-9]+)?)\s*(kg|g|lb|lbs)?$/);
+  if (!match) {
+    // Fallback: strip non-numeric characters
+    const n = parseFloat(implement.replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  const n = parseFloat(match[1]);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const unit = match[2] ?? "kg";
+  if (unit === "g") return n / 1000;
+  if (unit === "lb" || unit === "lbs") return n * 0.453592;
+  return n;
+}
+
+/**
+ * Produce a stable display label from a kg value. Rounds to 2 decimals and strips
+ * trailing zeros so "7.26kg" stays "7.26kg" but "8.00kg" becomes "8kg".
+ */
+function formatImplementKg(kg: number): string {
+  const rounded = Math.round(kg * 100) / 100;
+  return `${rounded.toString().replace(/\.00?$/, "")}kg`;
 }
 
 type ImplBucket = {
@@ -29,7 +62,7 @@ export async function GET() {
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true },
+      select: { id: true, gender: true },
     });
     if (!athlete) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -107,23 +140,29 @@ export async function GET() {
     // From PracticeAttempt
     for (const pa of practiceAttempts) {
       if (pa.distance != null && pa.distance > 0) {
+        const implementKg = parseImplementKg(pa.implement);
+        if (implementKg == null) continue;
         distanceTrends.push({
           date: pa.createdAt.toISOString().split("T")[0],
           event: pa.event,
           distance: pa.distance,
           source: "practice",
+          implementKg,
+          implementLabel: formatImplementKg(implementKg),
         });
       }
     }
 
     // From ThrowLog
     for (const tl of throwLogs) {
-      if (tl.distance != null && tl.distance > 0) {
+      if (tl.distance != null && tl.distance > 0 && tl.implementWeight > 0) {
         distanceTrends.push({
           date: tl.date.toISOString().split("T")[0],
           event: tl.event,
           distance: tl.distance,
           source: tl.isCompetition ? "competition" : "practice",
+          implementKg: tl.implementWeight,
+          implementLabel: formatImplementKg(tl.implementWeight),
         });
       }
     }
@@ -131,11 +170,15 @@ export async function GET() {
     // From ThrowsBlockLog
     for (const bl of throwsBlockLogs) {
       if (bl.distance != null && bl.distance > 0) {
+        const implementKg = parseImplementKg(bl.implement);
+        if (implementKg == null) continue;
         distanceTrends.push({
           date: bl.createdAt.toISOString().split("T")[0],
           event: bl.assignment.session.event,
           distance: bl.distance,
           source: "session",
+          implementKg,
+          implementLabel: formatImplementKg(implementKg),
         });
       }
     }
@@ -276,6 +319,8 @@ export async function GET() {
     });
 
     return NextResponse.json({
+      athleteId: athlete.id,
+      gender: athlete.gender,
       distanceTrends,
       prTimeline,
       competitionVsPractice,

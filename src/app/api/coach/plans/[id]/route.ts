@@ -10,9 +10,10 @@ const VALID_BLOCK_TYPES = ["throwing", "strength", "warmup", "cooldown"];
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +29,7 @@ export async function PATCH(
 
     // Verify ownership
     const existing = await prisma.workoutPlan.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
     if (!existing) {
@@ -58,14 +59,14 @@ export async function PATCH(
       }
 
       // Delete existing blocks (cascade deletes block exercises)
-      await prisma.workoutBlock.deleteMany({ where: { planId: params.id } });
+      await prisma.workoutBlock.deleteMany({ where: { planId: id } });
 
       // Recreate blocks
       for (let i = 0; i < blocks.length; i++) {
         const block = blocks[i] as Record<string, unknown>;
         await prisma.workoutBlock.create({
           data: {
-            planId: params.id,
+            planId: id,
             name: (block.name as string).trim(),
             order: i,
             blockType: block.blockType as string,
@@ -100,7 +101,7 @@ export async function PATCH(
     if (isTemplate !== undefined) data.isTemplate = isTemplate === true;
 
     const updated = await prisma.workoutPlan.update({
-      where: { id: params.id },
+      where: { id: id },
       data: data as never,
       select: { id: true, name: true },
     });
@@ -116,9 +117,10 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -133,7 +135,7 @@ export async function DELETE(
     }
 
     const plan = await prisma.workoutPlan.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: {
         id: true,
         _count: {
@@ -153,7 +155,7 @@ export async function DELETE(
       );
     }
 
-    await prisma.workoutPlan.delete({ where: { id: params.id } });
+    await prisma.workoutPlan.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch (err) {

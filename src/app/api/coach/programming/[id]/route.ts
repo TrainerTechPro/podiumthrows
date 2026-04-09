@@ -6,8 +6,9 @@ import { logger } from "@/lib/logger";
 
 /* ─── PUT — update a programmed session ─────────────────────────────────── */
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,7 +23,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const body = await req.json().catch(() => ({}));
     const { title, throwsSessionId, notes, scheduledDate } = body as Record<string, unknown>;
 
-    const data = await updateProgrammedSession(params.id, coach.id, {
+    const data = await updateProgrammedSession(id, coach.id, {
       ...(typeof title === "string" ? { title } : {}),
       ...(typeof throwsSessionId === "string" ? { throwsSessionId } : {}),
       ...(typeof notes === "string" ? { notes } : {}),
@@ -38,8 +39,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 /* ─── DELETE — remove a programmed session ───────────────────────────────── */
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -51,7 +53,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     });
     if (!coach) return NextResponse.json({ error: "Coach not found" }, { status: 404 });
 
-    await deleteProgrammedSession(params.id, coach.id);
+    await deleteProgrammedSession(id, coach.id);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

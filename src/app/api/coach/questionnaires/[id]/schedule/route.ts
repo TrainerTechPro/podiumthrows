@@ -8,13 +8,14 @@ import type { RecurrenceFrequency } from "@/lib/forms/types";
  * GET /api/coach/questionnaires/[id]/schedule
  * Get the recurring schedule for a questionnaire.
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     // Verify ownership
     const questionnaire = await prisma.questionnaire.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -23,7 +24,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     }
 
     const schedule = await prisma.recurringSchedule.findUnique({
-      where: { questionnaireId: params.id },
+      where: { questionnaireId: id },
     });
 
     return NextResponse.json({ schedule: schedule ?? null });
@@ -36,12 +37,13 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
  * PUT /api/coach/questionnaires/[id]/schedule
  * Create or update the recurring schedule for a questionnaire.
  */
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     const questionnaire = await prisma.questionnaire.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -76,9 +78,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     });
 
     const schedule = await prisma.recurringSchedule.upsert({
-      where: { questionnaireId: params.id },
+      where: { questionnaireId: id },
       create: {
-        questionnaireId: params.id,
+        questionnaireId: id,
         frequency,
         specificDays: specificDays ?? [],
         timeOfDay: timeOfDay ?? null,
@@ -114,12 +116,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
  * DELETE /api/coach/questionnaires/[id]/schedule
  * Remove the recurring schedule for a questionnaire.
  */
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     const questionnaire = await prisma.questionnaire.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -128,7 +131,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     }
 
     await prisma.recurringSchedule.deleteMany({
-      where: { questionnaireId: params.id },
+      where: { questionnaireId: id },
     });
 
     return NextResponse.json({ ok: true });

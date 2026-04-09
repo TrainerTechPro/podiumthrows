@@ -6,8 +6,9 @@ import { logger } from "@/lib/logger";
 
 /* ─── POST — create a tier override for a programmed session ─────────────── */
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       );
     }
 
-    const data = await createOverride(params.id, coach.id, {
+    const data = await createOverride(id, coach.id, {
       throwsSessionId: throwsSessionId as string,
       tier: tier as "GROUP" | "INDIVIDUAL",
       groupId: typeof groupId === "string" ? groupId : undefined,
