@@ -10,9 +10,10 @@ import { logger } from "@/lib/logger";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +29,7 @@ export async function POST(
 
     // Verify session belongs to this athlete and is active
     const trainingSession = await prisma.trainingSession.findFirst({
-      where: { id: params.id, athleteId: athlete.id },
+      where: { id: id, athleteId: athlete.id },
       select: { id: true, status: true },
     });
 
@@ -43,7 +44,7 @@ export async function POST(
     // Auto-transition SCHEDULED → IN_PROGRESS on first log
     if (trainingSession.status === "SCHEDULED") {
       await prisma.trainingSession.update({
-        where: { id: params.id },
+        where: { id: id },
         data: { status: "IN_PROGRESS" },
       });
     }
@@ -74,7 +75,7 @@ export async function POST(
     // Create the session log
     const log = await prisma.sessionLog.create({
       data: {
-        sessionId: params.id,
+        sessionId: id,
         athleteId: athlete.id,
         exerciseName: (exerciseName as string).trim(),
         sets: sets as number,
@@ -115,7 +116,7 @@ export async function POST(
       throwLog = await prisma.throwLog.create({
         data: {
           athleteId: athlete.id,
-          sessionId: params.id,
+          sessionId: id,
           event: event as never,
           implementWeight: implementKg,
           distance: distance as number,

@@ -16,9 +16,10 @@ import { logger } from "@/lib/logger";
 
 export async function POST(
   _req: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params;
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,7 +39,7 @@ export async function POST(
     }
 
     const trainingSession = await prisma.trainingSession.findFirst({
-      where: { id: params.sessionId, athleteId: athlete.id },
+      where: { id: sessionId, athleteId: athlete.id },
       select: {
         id: true,
         completedDate: true,
@@ -58,7 +59,7 @@ export async function POST(
       where: {
         coachId: athlete.coachId,
         type: "WORKOUT_COMPLETED",
-        metadata: { path: ["sessionId"], equals: params.sessionId },
+        metadata: { path: ["sessionId"], equals: sessionId },
       },
       select: { id: true, createdAt: true },
     });
@@ -102,13 +103,13 @@ export async function POST(
       title: `${athleteName} finished a session`,
       body: bodyParts.join(" · "),
       metadata: {
-        sessionId: params.sessionId,
+        sessionId: sessionId,
         totalThrows,
         bestDistance: bestThrow?.distance ?? null,
         bestEvent: (bestThrow?.event as string | undefined) ?? null,
         prCount,
         athleteName,
-        link: `/coach/athletes/${athlete.id}/sessions/${params.sessionId}`,
+        link: `/coach/athletes/${athlete.id}/sessions/${sessionId}`,
       },
     });
 

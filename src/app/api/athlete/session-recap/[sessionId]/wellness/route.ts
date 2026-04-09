@@ -16,9 +16,10 @@ function isWellnessValue(n: unknown): n is 1 | 2 | 3 {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params;
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,7 +34,7 @@ export async function POST(
     }
 
     const trainingSession = await prisma.trainingSession.findFirst({
-      where: { id: params.sessionId, athleteId: athlete.id },
+      where: { id: sessionId, athleteId: athlete.id },
       select: { id: true },
     });
     if (!trainingSession) {
@@ -58,7 +59,7 @@ export async function POST(
     };
 
     await prisma.trainingSession.update({
-      where: { id: params.sessionId },
+      where: { id: sessionId },
       data: {
         wellnessCheckin: payload as Prisma.InputJsonValue,
       },

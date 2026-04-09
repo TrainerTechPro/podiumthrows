@@ -6,16 +6,17 @@ import { logger } from "@/lib/logger";
 /* ── GET — single session detail ── */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const entry = await prisma.athleteThrowsSession.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         drillLogs: { orderBy: { createdAt: "asc" } },
         athlete: { select: { userId: true, firstName: true, lastName: true, coachId: true } },
@@ -51,9 +52,10 @@ export async function GET(
 /* ── DELETE — remove a self-logged session ── */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -68,7 +70,7 @@ export async function DELETE(
     }
 
     const entry = await prisma.athleteThrowsSession.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { athleteId: true },
     });
 
@@ -76,7 +78,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Not found or unauthorized" }, { status: 404 });
     }
 
-    await prisma.athleteThrowsSession.delete({ where: { id: params.id } });
+    await prisma.athleteThrowsSession.delete({ where: { id: id } });
     return NextResponse.json({ ok: true });
   } catch (err) {
     logger.error("DELETE /api/athlete/log-session/[id]", { context: "api", error: err });

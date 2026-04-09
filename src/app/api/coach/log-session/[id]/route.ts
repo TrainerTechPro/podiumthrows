@@ -7,9 +7,10 @@ import { recalculateCoachPRs } from "@/lib/coach-throws";
 /* ── GET — single coach session detail ── */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +25,7 @@ export async function GET(
     }
 
     const entry = await prisma.coachThrowsSession.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { drillLogs: { orderBy: { createdAt: "asc" } } },
     });
 
@@ -42,9 +43,10 @@ export async function GET(
 /* ── PUT — update a coach self-logged session ── */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,7 +61,7 @@ export async function PUT(
     }
 
     const existing = await prisma.coachThrowsSession.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { coachId: true },
     });
     if (!existing || existing.coachId !== coach.id) {
@@ -75,10 +77,10 @@ export async function PUT(
 
     const updated = await prisma.$transaction(async (tx) => {
       // Delete existing drill logs and recreate
-      await tx.coachDrillLog.deleteMany({ where: { sessionId: params.id } });
+      await tx.coachDrillLog.deleteMany({ where: { sessionId: id } });
 
       return tx.coachThrowsSession.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           ...(event !== undefined && { event }),
           ...(date !== undefined && { date }),
@@ -137,9 +139,10 @@ export async function PUT(
 /* ── DELETE — remove a coach self-logged session ── */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -154,7 +157,7 @@ export async function DELETE(
     }
 
     const entry = await prisma.coachThrowsSession.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         coachId: true,
         event: true,
@@ -175,7 +178,7 @@ export async function DELETE(
       ),
     ];
 
-    await prisma.coachThrowsSession.delete({ where: { id: params.id } });
+    await prisma.coachThrowsSession.delete({ where: { id: id } });
 
     // Recalculate PRs for affected (event, implement) pairs
     if (affectedImplements.length > 0) {

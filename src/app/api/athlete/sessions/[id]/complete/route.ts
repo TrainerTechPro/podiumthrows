@@ -9,9 +9,10 @@ import { emitSessionComplete } from "@/lib/team-activity";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,7 +28,7 @@ export async function PATCH(
 
     // Verify session belongs to this athlete
     const trainingSession = await prisma.trainingSession.findFirst({
-      where: { id: params.id, athleteId: athlete.id },
+      where: { id: id, athleteId: athlete.id },
       select: { id: true, status: true },
     });
 
@@ -43,7 +44,7 @@ export async function PATCH(
     const { rpe, notes } = body as Record<string, unknown>;
 
     const updated = await prisma.trainingSession.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         status: "COMPLETED",
         completedDate: new Date(),

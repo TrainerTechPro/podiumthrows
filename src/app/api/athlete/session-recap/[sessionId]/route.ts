@@ -14,9 +14,10 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params;
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
     }
 
-    const recap = await computeSessionRecap(athlete.id, params.sessionId);
+    const recap = await computeSessionRecap(athlete.id, sessionId);
     if (!recap) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
