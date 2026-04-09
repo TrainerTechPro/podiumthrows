@@ -61,9 +61,10 @@ async function canReact(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -77,7 +78,7 @@ export async function POST(
       );
     }
 
-    if (!(await canReact(session.userId, session.role, params.id))) {
+    if (!(await canReact(session.userId, session.role, id))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -85,7 +86,7 @@ export async function POST(
     const existing = await prisma.teamActivityReaction.findUnique({
       where: {
         activityId_userId_emoji: {
-          activityId: params.id,
+          activityId: id,
           userId: session.userId,
           emoji: body.emoji,
         },
@@ -102,7 +103,7 @@ export async function POST(
 
     await prisma.teamActivityReaction.create({
       data: {
-        activityId: params.id,
+        activityId: id,
         userId: session.userId,
         emoji: body.emoji,
       },
@@ -122,9 +123,10 @@ export async function POST(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -138,13 +140,13 @@ export async function DELETE(
       );
     }
 
-    if (!(await canReact(session.userId, session.role, params.id))) {
+    if (!(await canReact(session.userId, session.role, id))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.teamActivityReaction.deleteMany({
       where: {
-        activityId: params.id,
+        activityId: id,
         userId: session.userId,
         emoji: body.emoji,
       },

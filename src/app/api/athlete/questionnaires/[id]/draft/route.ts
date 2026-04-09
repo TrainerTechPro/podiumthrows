@@ -4,10 +4,11 @@ import prisma from "@/lib/prisma";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { athlete } = await requireAthleteSession();
+    const { id } = await params;
 
     const body = await req.json();
     const { draftAnswers } = body;
@@ -22,7 +23,7 @@ export async function PUT(
     // Find the most recent uncompleted assignment
     const assignment = await prisma.questionnaireAssignment.findFirst({
       where: {
-        questionnaireId: params.id,
+        questionnaireId: id,
         athleteId: athlete.id,
         completedAt: null,
       },

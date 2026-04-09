@@ -8,11 +8,11 @@ import { logger } from "@/lib/logger";
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { coach } = await requireCoachApi();
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: "File ID required" }, { status: 400 });

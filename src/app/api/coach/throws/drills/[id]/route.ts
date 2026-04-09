@@ -9,14 +9,15 @@ const VALID_ATHLETE_TYPES = ["EXPLOSIVE", "SPEED_STRENGTH", "STRENGTH_SPEED", "S
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     // Verify ownership — can only edit own drills
     const existing = await prisma.drill.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { coachId: true, isGlobal: true },
     });
 
@@ -63,7 +64,7 @@ export async function PUT(
     if (athleteTypes !== undefined) updateData.athleteTypes = Array.isArray(athleteTypes) ? athleteTypes : [];
 
     const drill = await prisma.drill.update({
-      where: { id: params.id },
+      where: { id: id },
       data: updateData as never,
     });
 
@@ -75,14 +76,15 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachSession();
+    const { id } = await params;
 
     // Verify ownership
     const existing = await prisma.drill.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { coachId: true, isGlobal: true },
     });
 
@@ -93,7 +95,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Cannot delete this drill" }, { status: 403 });
     }
 
-    await prisma.drill.delete({ where: { id: params.id } });
+    await prisma.drill.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch {

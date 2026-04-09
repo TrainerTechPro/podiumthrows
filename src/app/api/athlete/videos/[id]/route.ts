@@ -6,11 +6,12 @@ import {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { athlete } = await requireAthleteSession();
-    const video = await getAthleteVideoById(params.id, athlete.id);
+    const { id } = await params;
+    const video = await getAthleteVideoById(id, athlete.id);
 
     if (!video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });

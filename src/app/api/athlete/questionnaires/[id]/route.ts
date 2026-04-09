@@ -7,10 +7,11 @@ import type { FormBlock, ScoringConfig } from "@/lib/forms/types";
 import { validateAllAnswers } from "@/lib/forms/validation";
 import { parseBody, QuestionnaireSubmissionSchema } from "@/lib/api-schemas";
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { athlete } = await requireAthleteSession();
-    const questionnaire = await getQuestionnaireForFill(params.id, athlete.id);
+    const { id } = await params;
+    const questionnaire = await getQuestionnaireForFill(id, athlete.id);
 
     if (!questionnaire) {
       return NextResponse.json(
@@ -25,14 +26,15 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { athlete } = await requireAthleteSession();
+    const { id } = await params;
 
     // Verify assignment (find the most recent uncompleted)
     const assignment = await prisma.questionnaireAssignment.findFirst({
       where: {
-        questionnaireId: params.id,
+        questionnaireId: id,
         athleteId: athlete.id,
         completedAt: null,
       },
@@ -48,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     // Get questionnaire for validation — include blocks and scoring fields
     const questionnaire = await prisma.questionnaire.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: {
         id: true,
         questions: true,
@@ -120,7 +122,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const [response] = await prisma.$transaction([
         prisma.questionnaireResponse.create({
           data: {
-            questionnaireId: params.id,
+            questionnaireId: id,
             athleteId: athlete.id,
             assignmentId: assignment.id,
             answers: enrichedAnswers as unknown as never,
@@ -186,7 +188,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const [response] = await prisma.$transaction([
       prisma.questionnaireResponse.create({
         data: {
-          questionnaireId: params.id,
+          questionnaireId: id,
           athleteId: athlete.id,
           assignmentId: assignment.id,
           answers: enrichedAnswers as unknown as never,
