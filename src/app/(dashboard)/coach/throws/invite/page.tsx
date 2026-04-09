@@ -28,7 +28,7 @@ export default function ThrowsInvitePage() {
     fetch("/api/invitations")
       .then((r) => r.json())
       .then((data) => {
-        if (data.ok && Array.isArray(data.data)) {
+        if (data.success && Array.isArray(data.data)) {
           setRecentInvites(data.data.slice(0, 10));
         }
       })

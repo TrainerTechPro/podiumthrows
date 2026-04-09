@@ -11,7 +11,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const { teamId, athleteId } = await params;
@@ -21,7 +21,7 @@ export async function DELETE(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     // Verify team belongs to coach
@@ -29,7 +29,7 @@ export async function DELETE(
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Team not found" }, { status: 404 });
     }
 
     // Delete membership (idempotent — no error if not found)
@@ -37,9 +37,9 @@ export async function DELETE(
       where: { groupId: teamId, athleteId },
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Error removing team member", { context: "api", error });
-    return NextResponse.json({ error: "Failed to remove team member" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to remove team member" }, { status: 500 });
   }
 }

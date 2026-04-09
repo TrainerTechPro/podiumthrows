@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     // Verify ownership and that it's still pending
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     });
     if (!invitation) {
       return NextResponse.json(
-        { error: "Invitation not found or already resolved." },
+        { success: false, error:"Invitation not found or already resolved." },
         { status: 404 }
       );
     }
@@ -49,9 +49,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ...auditRequestInfo(req),
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("PATCH /api/invitations/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to revoke invitation." }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to revoke invitation." }, { status: 500 });
   }
 }

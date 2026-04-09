@@ -227,7 +227,7 @@ export default function CoachSettingsPage() {
     fetch("/api/invitations")
       .then((r) => r.json())
       .then((data) => {
-        if (data.ok) setInvitations(data.data);
+        if (data.success) setInvitations(data.data);
       });
   }
 
@@ -336,7 +336,7 @@ export default function CoachSettingsPage() {
         body: JSON.stringify(inviteForm),
       });
       const data = await res.json();
-      if (data.ok) {
+      if (data.success) {
         setInviteMessage({ type: "success", text: "Invitation sent! Share the link with your athlete." });
         toast("Invitation sent successfully");
         setInviteForm({ email: "", sport: "", position: "" });

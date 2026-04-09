@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -17,7 +17,7 @@ export async function GET() {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const groups = await prisma.eventGroup.findMany({
@@ -51,10 +51,10 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ ok: true, data });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     logger.error("Error listing event groups", { context: "api", error });
-    return NextResponse.json({ error: "Failed to list event groups" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to list event groups" }, { status: 500 });
   }
 }
 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, TeamCreateSchema);
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     if (name.trim().length > 100) {
       return NextResponse.json(
-        { error: "Group name must be 100 characters or less" },
+        { success: false, error:"Group name must be 100 characters or less" },
         { status: 400 }
       );
     }
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       },
     });
     if (existing) {
-      return NextResponse.json({ error: "A group with this name already exists" }, { status: 409 });
+      return NextResponse.json({ success: false, error:"A group with this name already exists" }, { status: 409 });
     }
 
     const group = await prisma.eventGroup.create({
@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: true, data: group }, { status: 201 });
+    return NextResponse.json({ success: true, data: group }, { status: 201 });
   } catch (error) {
     logger.error("Error creating event group", { context: "api", error });
-    return NextResponse.json({ error: "Failed to create event group" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to create event group" }, { status: 500 });
   }
 }

@@ -11,7 +11,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -19,7 +19,7 @@ export async function GET() {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const invitations = await prisma.invitation.findMany({
@@ -36,10 +36,10 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ ok: true, data: invitations });
+    return NextResponse.json({ success: true, data: invitations });
   } catch (err) {
     logger.error("GET /api/invitations", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch invitations." }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to fetch invitations." }, { status: 500 });
   }
 }
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     /* ── Auth ── */
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     /* ── Plan limit (exclude self-coached athlete created by Training Mode) ── */
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     if (mode === "email") {
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return NextResponse.json({ error: "A valid email address is required." }, { status: 400 });
+        return NextResponse.json({ success: false, error:"A valid email address is required." }, { status: 400 });
       }
 
       /* ── Check if athlete already exists for this coach ── */
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       });
       if (existingAthlete) {
         return NextResponse.json(
-          { error: "An athlete with this email is already on your roster." },
+          { success: false, error:"An athlete with this email is already on your roster." },
           { status: 409 }
         );
       }
@@ -165,10 +165,10 @@ export async function POST(req: NextRequest) {
       ...auditRequestInfo(req),
     });
 
-    return NextResponse.json({ ok: true, data: invitation, emailSent });
+    return NextResponse.json({ success: true, data: invitation, emailSent });
   } catch (err) {
     logger.error("POST /api/invitations", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Failed to create invitation: ${message}` }, { status: 500 });
+    return NextResponse.json({ success: false, error:`Failed to create invitation: ${message}` }, { status: 500 });
   }
 }

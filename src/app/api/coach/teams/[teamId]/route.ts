@@ -11,7 +11,7 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const { teamId } = await params;
@@ -21,14 +21,14 @@ export async function PATCH(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const team = await prisma.eventGroup.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Team not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -36,11 +36,11 @@ export async function PATCH(
 
     if (name !== undefined) {
       if (!name?.trim()) {
-        return NextResponse.json({ error: "Team name cannot be empty" }, { status: 400 });
+        return NextResponse.json({ success: false, error:"Team name cannot be empty" }, { status: 400 });
       }
       if (name.trim().length > 100) {
         return NextResponse.json(
-          { error: "Team name must be 100 characters or less" },
+          { success: false, error:"Team name must be 100 characters or less" },
           { status: 400 }
         );
       }
@@ -53,7 +53,7 @@ export async function PATCH(
       });
       if (existing) {
         return NextResponse.json(
-          { error: "A team with this name already exists" },
+          { success: false, error:"A team with this name already exists" },
           { status: 409 }
         );
       }
@@ -67,10 +67,10 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({ ok: true, data: updated });
+    return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     logger.error("Error updating team", { context: "api", error });
-    return NextResponse.json({ error: "Failed to update team" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to update team" }, { status: 500 });
   }
 }
 
@@ -82,7 +82,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const { teamId } = await params;
@@ -92,14 +92,14 @@ export async function DELETE(
       select: { id: true, preferences: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const team = await prisma.eventGroup.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Team not found" }, { status: 404 });
     }
 
     await prisma.eventGroup.delete({ where: { id: teamId } });
@@ -118,9 +118,9 @@ export async function DELETE(
       // Non-critical — preference cleanup is best-effort
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Error deleting team", { context: "api", error });
-    return NextResponse.json({ error: "Failed to delete team" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to delete team" }, { status: 500 });
   }
 }

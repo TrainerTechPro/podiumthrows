@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -21,14 +21,14 @@ export async function GET() {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const data = await getEventGroups(coach.id);
-    return NextResponse.json({ ok: true, data });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     logger.error("Error listing event groups", { context: "api", error });
-    return NextResponse.json({ error: "Failed to list event groups" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to list event groups" }, { status: 500 });
   }
 }
 
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, EventGroupCreateSchema);
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     );
     if (invalidEvents.length > 0) {
       return NextResponse.json(
-        { error: `Invalid event type(s): ${invalidEvents.join(", ")}` },
+        { success: false, error:`Invalid event type(s): ${invalidEvents.join(", ")}` },
         { status: 400 }
       );
     }
@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
       description: description ?? undefined,
     });
 
-    return NextResponse.json({ ok: true, data }, { status: 201 });
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     logger.error("Error creating event group", { context: "api", error });
-    return NextResponse.json({ error: "Failed to create event group" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to create event group" }, { status: 500 });
   }
 }

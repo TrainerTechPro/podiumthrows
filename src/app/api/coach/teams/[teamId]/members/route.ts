@@ -11,7 +11,7 @@ export async function POST(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const { teamId } = await params;
@@ -21,24 +21,24 @@ export async function POST(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const team = await prisma.eventGroup.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Team not found" }, { status: 404 });
     }
 
     const body = await request.json();
     const { athleteIds } = body;
 
     if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
-      return NextResponse.json({ error: "At least one athlete ID is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error:"At least one athlete ID is required" }, { status: 400 });
     }
     if (athleteIds.length > 100) {
-      return NextResponse.json({ error: "Maximum 100 athletes per request" }, { status: 400 });
+      return NextResponse.json({ success: false, error:"Maximum 100 athletes per request" }, { status: 400 });
     }
 
     // Verify all athletes belong to this coach
@@ -63,9 +63,9 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ ok: true, added: toAdd.length });
+    return NextResponse.json({ success: true, added: toAdd.length });
   } catch (error) {
     logger.error("Error adding team members", { context: "api", error });
-    return NextResponse.json({ error: "Failed to add team members" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to add team members" }, { status: 500 });
   }
 }

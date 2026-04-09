@@ -7,12 +7,13 @@ import { logger } from "@/lib/logger";
 /* ── DELETE — remove a member from an event group ── */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string; athleteId: string } }
+  { params }: { params: Promise<{ id: string; athleteId: string }> }
 ) {
   try {
+    const { id, athleteId } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -20,17 +21,17 @@ export async function DELETE(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     try {
-      await removeMember(params.id, coach.id, params.athleteId);
-      return NextResponse.json({ ok: true });
+      await removeMember(id, coach.id, athleteId);
+      return NextResponse.json({ success: true });
     } catch {
-      return NextResponse.json({ error: "Event group not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Event group not found" }, { status: 404 });
     }
   } catch (error) {
     logger.error("Error removing member from event group", { context: "api", error });
-    return NextResponse.json({ error: "Failed to remove member" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to remove member" }, { status: 500 });
   }
 }

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -18,24 +18,24 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
     }
 
     const body = await request.json();
     const { athleteIds } = body;
 
     if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
-      return NextResponse.json({ error: "athleteIds must be a non-empty array" }, { status: 400 });
+      return NextResponse.json({ success: false, error:"athleteIds must be a non-empty array" }, { status: 400 });
     }
 
     try {
       await addMembers(id, coach.id, athleteIds as string[]);
-      return NextResponse.json({ ok: true }, { status: 201 });
+      return NextResponse.json({ success: true }, { status: 201 });
     } catch {
-      return NextResponse.json({ error: "Event group not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Event group not found" }, { status: 404 });
     }
   } catch (error) {
     logger.error("Error adding members to event group", { context: "api", error });
-    return NextResponse.json({ error: "Failed to add members" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to add members" }, { status: 500 });
   }
 }
