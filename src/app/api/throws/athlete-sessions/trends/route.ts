@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { formatImplementWeight } from "@/lib/throws";
 
 // GET /api/throws/athlete-sessions/trends?athleteId=...&event=...
 export async function GET(request: NextRequest) {
@@ -36,7 +37,13 @@ export async function GET(request: NextRequest) {
     for (const session of sessions) {
       for (const log of session.drillLogs) {
         if (log.bestMark == null) continue;
-        const impl = log.implementWeight != null ? `${log.implementWeight}kg` : "?kg";
+        // Display the implement using the original unit+value the user entered.
+        // e.g. user logs 14lbs → stored as 6.3503…kg but rendered as "14lbs".
+        // Using the formatted string as the grouping key also collapses near-duplicates
+        // caused by raw float precision (6.350300732098956kg vs 6.35kg etc).
+        const impl = log.implementWeight != null
+          ? formatImplementWeight(log.implementWeight, log.implementWeightUnit, log.implementWeightOriginal)
+          : "?kg";
         const key = `${log.drillType}|${impl}`;
         if (!seriesMap[key]) seriesMap[key] = [];
         seriesMap[key].push({ date: session.date, bestMark: log.bestMark, throwCount: log.throwCount });

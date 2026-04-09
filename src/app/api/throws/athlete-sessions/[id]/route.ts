@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, AthleteThrowsSessionCreateSchema } from "@/lib/api-schemas";
+import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
 
 // GET  /api/throws/athlete-sessions/[id]  — fetch a single session with drill logs
 export async function GET(
@@ -112,6 +113,23 @@ export async function PUT(
 
       return session;
     });
+
+    // Sync matching active goals from any competition-weight best marks.
+    // Best-effort — failures here must not fail the session edit.
+    try {
+      const athlete = await prisma.athleteProfile.findUnique({
+        where: { id: existing.athleteId },
+        select: { gender: true },
+      });
+      if (athlete) {
+        await syncGoalsFromDrillLogs(existing.athleteId, event, athlete.gender, updated.drillLogs);
+      }
+    } catch (err) {
+      logger.error("goal sync after session edit failed", {
+        context: "throws/athlete-sessions/[id]",
+        error: err,
+      });
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {

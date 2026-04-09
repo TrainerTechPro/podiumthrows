@@ -397,7 +397,7 @@ function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onL
  <div key={series.key} className="py-2.5 flex items-center justify-between">
  <div>
  <p className="text-sm font-semibold text-[var(--foreground)]">{drillLabel(series.drillType)}</p>
- <p className="text-xs text-surface-700 dark:text-surface-300">{series.implement} · {series.points.length} sessions · {totalThrows} throws</p>
+ <p className="text-xs text-surface-700 dark:text-surface-300">{series.implement} · {series.points.length} session{series.points.length === 1 ? "" : "s"} · {totalThrows} throw{totalThrows === 1 ? "" : "s"}</p>
  </div>
  <span className="text-base font-bold font-mono text-orange-600 dark:text-orange-400">{best.toFixed(2)}m</span>
  </div>
