@@ -91,7 +91,7 @@ export default function MfaLoginPage() {
         return;
       }
 
-      router.push(redirect || data.redirectTo || "/coach/dashboard");
+      router.push(redirect || data.data?.redirectTo || "/coach/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -120,7 +120,7 @@ export default function MfaLoginPage() {
         return;
       }
 
-      router.push(redirect || data.redirectTo || "/coach/dashboard");
+      router.push(redirect || data.data?.redirectTo || "/coach/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);

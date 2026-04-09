@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const rl = await rateLimit(`login:${ip}`, { maxAttempts: 5, windowMs: 60_000 });
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { success: false, error:"Too many requests. Please try again later." },
         { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         metadata: { email: email.toLowerCase().trim(), reason: "user_not_found" },
         ...reqInfo,
       });
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
     }
 
     // Unclaimed placeholder accounts have no password — reject login
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         metadata: { email: user.email, reason: "unclaimed_account" },
         ...reqInfo,
       });
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
     }
 
     const passwordValid = await verifyPassword(password, user.passwordHash);
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         metadata: { email: user.email, reason: "wrong_password" },
         ...reqInfo,
       });
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
     }
 
     // MFA check — coaches with MFA enabled get a short-lived token instead of full JWT
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         ...reqInfo,
       });
 
-      return NextResponse.json({ requiresMfa: true, mfaSessionToken });
+      return NextResponse.json({ success: true, data: { requiresMfa: true, mfaSessionToken } });
     }
 
     const token = signToken({
@@ -90,12 +90,15 @@ export async function POST(request: NextRequest) {
     });
 
     const response = NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+        redirectTo: user.role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard",
       },
-      redirectTo: user.role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard",
     });
 
     response.headers.append("Set-Cookie", setAuthCookie(token));
@@ -111,6 +114,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (e) {
     logger.error("login error", { context: "api", error: e });
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
   }
 }

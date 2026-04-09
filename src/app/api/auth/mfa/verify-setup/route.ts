@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const ip =
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     });
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { success: false, error:"Too many requests. Please try again later." },
         {
           status: 429,
           headers: {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const valid = verifyTotpToken(encryptedSecret, token);
     if (!valid) {
       return NextResponse.json(
-        { error: "Invalid code. Please try again." },
+        { success: false, error:"Invalid code. Please try again." },
         { status: 400 }
       );
     }
@@ -70,11 +70,11 @@ export async function POST(request: NextRequest) {
       ...auditRequestInfo(request),
     });
 
-    return NextResponse.json({ backupCodes: plaintextCodes });
+    return NextResponse.json({ success: true, data: { backupCodes: plaintextCodes } });
   } catch (e) {
     logger.error("MFA verify-setup error", { context: "api", error: e });
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { success: false, error:"An unexpected error occurred" },
       { status: 500 }
     );
   }

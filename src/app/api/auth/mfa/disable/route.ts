@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const ip =
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     });
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { success: false, error:"Too many requests. Please try again later." },
         {
           status: 429,
           headers: {
@@ -57,19 +57,19 @@ export async function POST(request: NextRequest) {
       !user.coachProfile.mfaSecret
     ) {
       return NextResponse.json(
-        { error: "MFA is not enabled" },
+        { success: false, error:"MFA is not enabled" },
         { status: 400 }
       );
     }
 
     // Verify password
     if (!user.passwordHash) {
-      return NextResponse.json({ error: "Account not activated" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Account not activated" }, { status: 403 });
     }
     const passwordValid = await verifyPassword(password, user.passwordHash);
     if (!passwordValid) {
       return NextResponse.json(
-        { error: "Invalid password" },
+        { success: false, error:"Invalid password" },
         { status: 401 }
       );
     }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Verify TOTP
     const valid = verifyTotpToken(user.coachProfile.mfaSecret, token);
     if (!valid) {
-      return NextResponse.json({ error: "Invalid code" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid code" }, { status: 400 });
     }
 
     // Disable MFA
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     logger.error("MFA disable error", { context: "api", error: e });
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { success: false, error:"An unexpected error occurred" },
       { status: 500 }
     );
   }

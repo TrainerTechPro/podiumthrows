@@ -68,9 +68,9 @@ export default function SecuritySettingsPage() {
         setLoading(false);
         return;
       }
-      setQrCodeDataUrl(data.qrCodeDataUrl);
-      setManualSecret(data.secret);
-      setEncryptedSecret(data.encryptedSecret);
+      setQrCodeDataUrl(data.data.qrCodeDataUrl);
+      setManualSecret(data.data.secret);
+      setEncryptedSecret(data.data.encryptedSecret);
       setPhase("setup-qr");
       setLoading(false);
     } catch {
@@ -97,7 +97,7 @@ export default function SecuritySettingsPage() {
         setLoading(false);
         return;
       }
-      setBackupCodes(data.backupCodes);
+      setBackupCodes(data.data.backupCodes);
       setMfaEnabled(true);
       setPhase("backup-codes");
       setLoading(false);

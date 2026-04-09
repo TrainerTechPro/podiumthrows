@@ -163,9 +163,9 @@ describe("POST /api/auth/login", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.user.email).toBe("coach@example.com");
-    expect(json.user.role).toBe("COACH");
-    expect(json.redirectTo).toBe("/coach/dashboard");
+    expect(json.data.user.email).toBe("coach@example.com");
+    expect(json.data.user.role).toBe("COACH");
+    expect(json.data.redirectTo).toBe("/coach/dashboard");
 
     const setCookies = res.headers.getSetCookie();
     expect(setCookies.some((c: string) => c.startsWith("auth-token="))).toBe(true);
@@ -249,8 +249,8 @@ describe("POST /api/auth/login", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.requiresMfa).toBe(true);
-    expect(json.mfaSessionToken).toBe("mfa-session-token-123");
+    expect(json.data.requiresMfa).toBe(true);
+    expect(json.data.mfaSessionToken).toBe("mfa-session-token-123");
   });
 
   it("redirects athlete to /athlete/dashboard", async () => {
@@ -266,7 +266,7 @@ describe("POST /api/auth/login", () => {
 
     const res = await loginPOST(makeRequest({ email: "athlete@example.com", password: "password123" }));
     const json = await res.json();
-    expect(json.redirectTo).toBe("/athlete/dashboard");
+    expect(json.data.redirectTo).toBe("/athlete/dashboard");
   });
 });
 

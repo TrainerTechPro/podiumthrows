@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     });
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { success: false, error:"Too many requests. Please try again later." },
         {
           status: 429,
           headers: {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       mfaSession = verifyMfaSessionToken(mfaSessionToken);
     } catch {
       return NextResponse.json(
-        { error: "MFA session expired. Please log in again." },
+        { success: false, error:"MFA session expired. Please log in again." },
         { status: 401 }
       );
     }
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (!user || !user.coachProfile?.mfaEnabled) {
       return NextResponse.json(
-        { error: "MFA not configured" },
+        { success: false, error:"MFA not configured" },
         { status: 400 }
       );
     }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         ...auditRequestInfo(request),
       });
       return NextResponse.json(
-        { error: "Invalid backup code" },
+        { success: false, error:"Invalid backup code" },
         { status: 400 }
       );
     }
@@ -106,9 +106,12 @@ export async function POST(request: NextRequest) {
     });
 
     const response = NextResponse.json({
-      user: { id: user.id, email: user.email, role: user.role },
-      redirectTo: "/coach/dashboard",
-      remainingBackupCodes: remainingCodes.length,
+      success: true,
+      data: {
+        user: { id: user.id, email: user.email, role: user.role },
+        redirectTo: "/coach/dashboard",
+        remainingBackupCodes: remainingCodes.length,
+      },
     });
 
     response.headers.append("Set-Cookie", setAuthCookie(authToken));
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     logger.error("MFA backup verify error", { context: "api", error: e });
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { success: false, error:"An unexpected error occurred" },
       { status: 500 }
     );
   }
