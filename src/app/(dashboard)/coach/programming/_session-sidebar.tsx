@@ -236,8 +236,8 @@ export function SessionSidebar({
       }
 
       const pubJson = await pubRes.json();
-      const created = pubJson.assignmentsCreated ?? 0;
-      const updated = pubJson.assignmentsUpdated ?? 0;
+      const created = pubJson.data?.assignmentsCreated ?? 0;
+      const updated = pubJson.data?.assignmentsUpdated ?? 0;
 
       toastSuccess("Published!", `${created} assigned, ${updated} updated`);
       onSaved();

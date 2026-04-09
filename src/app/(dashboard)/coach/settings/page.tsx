@@ -1065,7 +1065,7 @@ export default function CoachSettingsPage() {
                         headers: { "Content-Type": "application/json", ...csrfHeaders() },
                       });
                       const data = await res.json();
-                      if (data.ok) {
+                      if (data.success) {
                         setTrainingEnabled(true);
                         toast("Training Mode enabled! Use the toggle in the header to switch.", "success");
                       } else {

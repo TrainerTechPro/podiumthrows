@@ -9,7 +9,7 @@ export async function POST() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -25,11 +25,11 @@ export async function POST() {
     });
 
     if (!coach) {
-      return NextResponse.json({ error: "Coach profile not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach profile not found." }, { status: 404 });
     }
 
     if (coach.trainingEnabled) {
-      return NextResponse.json({ error: "Training Mode is already enabled." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Training Mode is already enabled." }, { status: 400 });
     }
 
     // Create self-coached AthleteProfile and enable training mode atomically
@@ -67,13 +67,13 @@ export async function POST() {
     ].join("; ");
 
     const response = NextResponse.json(
-      { ok: true, data: { athleteId: athleteProfile.id } },
+      { success: true, data: { athleteId: athleteProfile.id } },
       { status: 201 }
     );
     response.headers.append("Set-Cookie", cookieValue);
     return response;
   } catch (err) {
     logger.error("POST /api/coach/training-mode", { context: "api", error: err });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }

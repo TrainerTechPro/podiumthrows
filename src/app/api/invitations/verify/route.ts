@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const token = request.nextUrl.searchParams.get("token");
     if (!token) {
-      return NextResponse.json({ ok: false, error: "Token is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Token is required" }, { status: 400 });
     }
 
     const invitation = await prisma.invitation.findUnique({
@@ -30,26 +30,26 @@ export async function GET(request: NextRequest) {
     });
 
     if (!invitation) {
-      return NextResponse.json({ ok: false, error: "Invalid invite token" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Invalid invite token" }, { status: 404 });
     }
 
     if (invitation.status === "ACCEPTED") {
-      return NextResponse.json({ ok: false, error: "This invite has already been used." }, { status: 410 });
+      return NextResponse.json({ success: false, error: "This invite has already been used." }, { status: 410 });
     }
 
     if (invitation.status === "REVOKED") {
-      return NextResponse.json({ ok: false, error: "This invite has been revoked." }, { status: 410 });
+      return NextResponse.json({ success: false, error: "This invite has been revoked." }, { status: 410 });
     }
 
     if (invitation.expiresAt < new Date()) {
       return NextResponse.json(
-        { ok: false, error: "This invite has expired. Ask your coach to send a new one." },
+        { success: false, error: "This invite has expired. Ask your coach to send a new one." },
         { status: 410 }
       );
     }
 
     return NextResponse.json({
-      ok: true,
+      success: true,
       data: {
         invitation: {
           id: invitation.id,
@@ -63,6 +63,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error("Error verifying invitation", { context: "api", error });
-    return NextResponse.json({ ok: false, error: "Failed to verify invitation" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to verify invitation" }, { status: 500 });
   }
 }

@@ -64,14 +64,14 @@ export default function RegisterPage() {
     fetch(`/api/invitations/verify?token=${inviteToken}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.ok && data.data.athleteProfile) {
+        if (data.success && data.data.athleteProfile) {
           const profile = data.data.athleteProfile;
           setClaimProfile(profile);
           setCoachName(data.data.coachName);
           setEditedFirstName(profile.firstName);
           setEditedLastName(profile.lastName);
           setEditedEvents(profile.events);
-        } else if (!data.ok) {
+        } else if (!data.success) {
           setInviteError(data.error);
         }
       })
