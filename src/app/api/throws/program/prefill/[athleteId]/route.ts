@@ -12,7 +12,7 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { athleteId: string } },
+  { params }: { params: Promise<{ athleteId: string }> },
 ) {
   try {
     const user = await getCurrentUser();
@@ -29,7 +29,7 @@ export async function GET(
       );
     }
 
-    const { athleteId } = params;
+    const { athleteId } = await params;
 
     const hasAccess = await canAccessAthlete(
       user.userId,

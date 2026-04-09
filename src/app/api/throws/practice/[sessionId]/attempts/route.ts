@@ -7,9 +7,10 @@ import { logger } from "@/lib/logger";
 // POST /api/throws/practice/[sessionId]/attempts — log a new attempt
 export async function POST(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "COACH") {
       return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
@@ -23,7 +24,7 @@ export async function POST(
     }
 
     const session = await prisma.practiceSession.findUnique({
-      where: { id: params.sessionId },
+      where: { id: sessionId },
     });
     if (!session || session.coachId !== coach.id) {
       return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
@@ -69,7 +70,7 @@ export async function POST(
 
     const attempt = await prisma.practiceAttempt.create({
       data: {
-        sessionId: params.sessionId,
+        sessionId: sessionId,
         athleteId,
         event,
         implement,

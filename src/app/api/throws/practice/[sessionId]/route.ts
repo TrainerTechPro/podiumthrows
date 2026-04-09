@@ -6,9 +6,10 @@ import { logger } from "@/lib/logger";
 // GET /api/throws/practice/[sessionId] — fetch session with all attempts
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "COACH") {
       return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
@@ -22,7 +23,7 @@ export async function GET(
     }
 
     const session = await prisma.practiceSession.findUnique({
-      where: { id: params.sessionId },
+      where: { id: sessionId },
       include: {
         attempts: {
           include: {
@@ -65,9 +66,10 @@ export async function GET(
 // PATCH /api/throws/practice/[sessionId] — update session (close, rename, notes)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
+    const { sessionId } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "COACH") {
       return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
@@ -81,7 +83,7 @@ export async function PATCH(
     }
 
     const existing = await prisma.practiceSession.findUnique({
-      where: { id: params.sessionId },
+      where: { id: sessionId },
     });
     if (!existing || existing.coachId !== coach.id) {
       return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
@@ -91,7 +93,7 @@ export async function PATCH(
     const { status, name, notes } = body;
 
     const updated = await prisma.practiceSession.update({
-      where: { id: params.sessionId },
+      where: { id: sessionId },
       data: {
         ...(status !== undefined && { status }),
         ...(name !== undefined && { name }),

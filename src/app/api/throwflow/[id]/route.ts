@@ -6,9 +6,10 @@ import { logger } from "@/lib/logger";
 // GET /api/throwflow/[id] — get a single analysis with full details
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
@@ -22,7 +23,7 @@ export async function GET(
     }
 
     const analysis = await prisma.throwAnalysis.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         athlete: {
           include: { user: { select: { id: true, email: true } } },
@@ -75,9 +76,10 @@ export async function GET(
 // DELETE /api/throwflow/[id] — delete an analysis
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
@@ -91,7 +93,7 @@ export async function DELETE(
     }
 
     const analysis = await prisma.throwAnalysis.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!analysis) {
@@ -102,7 +104,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
     }
 
-    await prisma.throwAnalysis.delete({ where: { id: params.id } });
+    await prisma.throwAnalysis.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -6,9 +6,10 @@ import { logger } from "@/lib/logger";
 // DELETE /api/throws/practice/[sessionId]/attempts/[attemptId] — remove a logged attempt
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { sessionId: string; attemptId: string } }
+  { params }: { params: Promise<{ sessionId: string; attemptId: string }> }
 ) {
   try {
+    const { sessionId, attemptId } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "COACH") {
       return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
@@ -22,20 +23,20 @@ export async function DELETE(
     }
 
     const session = await prisma.practiceSession.findUnique({
-      where: { id: params.sessionId },
+      where: { id: sessionId },
     });
     if (!session || session.coachId !== coach.id) {
       return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
     const attempt = await prisma.practiceAttempt.findUnique({
-      where: { id: params.attemptId },
+      where: { id: attemptId },
     });
-    if (!attempt || attempt.sessionId !== params.sessionId) {
+    if (!attempt || attempt.sessionId !== sessionId) {
       return NextResponse.json({ success: false, error: "Attempt not found" }, { status: 404 });
     }
 
-    await prisma.practiceAttempt.delete({ where: { id: params.attemptId } });
+    await prisma.practiceAttempt.delete({ where: { id: attemptId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

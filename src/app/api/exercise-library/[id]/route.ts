@@ -5,9 +5,10 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return NextResponse.json(
@@ -17,7 +18,7 @@ export async function GET(
     }
 
     const exercise = await prisma.exerciseLibrary.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!exercise) {
@@ -48,9 +49,10 @@ export async function GET(
 // Update exercise (add video link, edit tips)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "COACH") {
       return NextResponse.json(
@@ -63,7 +65,7 @@ export async function PATCH(
     const { videoUrl, videoEmbed, tips } = body;
 
     const updated = await prisma.exerciseLibrary.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(videoUrl !== undefined && { videoUrl }),
         ...(videoEmbed !== undefined && { videoEmbed }),

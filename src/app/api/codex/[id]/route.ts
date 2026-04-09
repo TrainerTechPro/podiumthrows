@@ -6,16 +6,17 @@ import { logger } from "@/lib/logger";
 /* ── DELETE — remove a codex entry ── */
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const entry = await prisma.codexEntry.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { userId: true },
     });
 
@@ -27,7 +28,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await prisma.codexEntry.delete({ where: { id: params.id } });
+    await prisma.codexEntry.delete({ where: { id: id } });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
