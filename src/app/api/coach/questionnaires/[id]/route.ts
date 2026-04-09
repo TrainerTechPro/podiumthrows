@@ -18,12 +18,12 @@ export async function GET(
     const questionnaire = await getQuestionnaireById(id, coach.id);
 
     if (!questionnaire) {
-      return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ questionnaire });
+    return NextResponse.json({ success: true, data: { questionnaire } });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -41,7 +41,7 @@ export async function PUT(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -55,13 +55,13 @@ export async function PUT(
 
     // Validation
     if (title !== undefined && (typeof title !== "string" || title.trim().length === 0)) {
-      return NextResponse.json({ error: "Title cannot be empty" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Title cannot be empty" }, { status: 400 });
     }
     if (type !== undefined && !VALID_TYPES.includes(type)) {
-      return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid type" }, { status: 400 });
     }
     if (status !== undefined && !VALID_STATUSES.includes(status)) {
-      return NextResponse.json({ error: "Status must be draft, published, or archived" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Status must be draft, published, or archived" }, { status: 400 });
     }
 
     // Build update payload — only include fields that were sent
@@ -93,9 +93,9 @@ export async function PUT(
       data: updateData as never,
     });
 
-    return NextResponse.json({ questionnaire });
+    return NextResponse.json({ success: true, data: { questionnaire } });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -113,13 +113,13 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
     }
 
     await prisma.questionnaire.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

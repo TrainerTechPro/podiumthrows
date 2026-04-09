@@ -17,7 +17,7 @@ export async function POST(
     });
 
     if (!questionnaire) {
-      return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
     }
     if (questionnaire.status !== "published") {
       return NextResponse.json(
@@ -67,11 +67,14 @@ export async function POST(
     const skipped = results.filter((r) => r.status === "rejected").length;
 
     return NextResponse.json({
-      assigned: created,
-      skipped,
-      total: athleteIds.length,
+      success: true,
+      data: {
+        assigned: created,
+        skipped,
+        total: athleteIds.length,
+      },
     });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

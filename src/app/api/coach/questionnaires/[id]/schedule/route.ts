@@ -20,16 +20,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     if (!questionnaire) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     const schedule = await prisma.recurringSchedule.findUnique({
       where: { questionnaireId: id },
     });
 
-    return NextResponse.json({ schedule: schedule ?? null });
+    return NextResponse.json({ success: true, data: { schedule: schedule ?? null } });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -48,7 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     if (!questionnaire) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -65,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     } = body;
 
     if (!frequency || !startDate) {
-      return NextResponse.json({ error: "frequency and startDate are required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "frequency and startDate are required" }, { status: 400 });
     }
 
     // Calculate next run date
@@ -106,9 +106,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
 
-    return NextResponse.json({ schedule });
+    return NextResponse.json({ success: true, data: { schedule } });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -127,15 +127,15 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     });
 
     if (!questionnaire) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     await prisma.recurringSchedule.deleteMany({
       where: { questionnaireId: id },
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

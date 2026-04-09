@@ -12,9 +12,9 @@ export async function GET() {
   try {
     const { coach } = await requireCoachSession();
     const questionnaires = await getCoachQuestionnaires(coach.id);
-    return NextResponse.json({ questionnaires });
+    return NextResponse.json({ success: true, data: { questionnaires } });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     // Basic validation
     if (!title || typeof title !== "string" || title.trim().length === 0) {
-      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Title is required" }, { status: 400 });
     }
     if (!type || !VALID_TYPES.includes(type)) {
       return NextResponse.json(
@@ -94,8 +94,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ questionnaire }, { status: 201 });
+    return NextResponse.json({ success: true, data: { questionnaire } }, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

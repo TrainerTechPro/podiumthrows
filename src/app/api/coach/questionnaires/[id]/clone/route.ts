@@ -40,8 +40,8 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ questionnaire: clone }, { status: 201 });
+    return NextResponse.json({ success: true, data: { questionnaire: clone } }, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

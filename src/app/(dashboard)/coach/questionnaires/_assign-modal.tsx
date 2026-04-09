@@ -58,8 +58,8 @@ export function AssignModal({
       if (res.ok) {
         const data = await res.json();
         setResult(
-          `Assigned to ${data.assigned} athlete${data.assigned !== 1 ? "s" : ""}${
-            data.skipped > 0 ? ` (${data.skipped} already assigned)` : ""
+          `Assigned to ${data.data.assigned} athlete${data.data.assigned !== 1 ? "s" : ""}${
+            data.data.skipped > 0 ? ` (${data.data.skipped} already assigned)` : ""
           }`
         );
         setSelected(new Set());

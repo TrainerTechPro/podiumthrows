@@ -60,7 +60,7 @@ export function QuestionnaireActions({
       );
       if (res.ok) {
         const data = await res.json();
-        router.push(`/coach/questionnaires/${data.questionnaire.id}`);
+        router.push(`/coach/questionnaires/${data.data.questionnaire.id}`);
         router.refresh();
       }
     } catch {

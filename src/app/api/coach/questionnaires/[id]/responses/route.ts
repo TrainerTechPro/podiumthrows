@@ -9,8 +9,8 @@ export async function GET(
     const { coach } = await requireCoachSession();
     const { id } = await params;
     const responses = await getQuestionnaireResponses(id, coach.id);
-    return NextResponse.json({ responses });
+    return NextResponse.json({ success: true, data: { responses } });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
