@@ -7,13 +7,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 
 export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== "COACH") {
       return NextResponse.json(
-        { ok: false, error: "Not authenticated" },
+        { success: false, error: "Not authenticated" },
         { status: 401 },
       );
     }
@@ -23,7 +24,7 @@ export async function PATCH(req: NextRequest) {
 
     if (action !== "complete" && action !== "dismiss") {
       return NextResponse.json(
-        { ok: false, error: "action must be 'complete' or 'dismiss'" },
+        { success: false, error: "action must be 'complete' or 'dismiss'" },
         { status: 400 },
       );
     }
@@ -33,10 +34,11 @@ export async function PATCH(req: NextRequest) {
       data: { onboardingCompletedAt: new Date() },
     });
 
-    return NextResponse.json({ ok: true });
-  } catch {
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    logger.error("PATCH /api/coach/onboarding", { context: "api", error: err });
     return NextResponse.json(
-      { ok: false, error: "Failed to update onboarding status" },
+      { success: false, error: "Failed to update onboarding status" },
       { status: 500 },
     );
   }

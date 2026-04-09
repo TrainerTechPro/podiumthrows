@@ -10,7 +10,7 @@ export async function POST(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { athleteId } = await params;
@@ -21,7 +21,7 @@ export async function POST(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const athlete = await prisma.athleteProfile.findFirst({
@@ -29,7 +29,7 @@ export async function POST(
       select: { id: true, events: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -38,17 +38,17 @@ export async function POST(
     // Validate event is in athlete's events
     if (!event || !athlete.events.includes(event)) {
       return NextResponse.json(
-        { error: `Invalid event. Athlete trains: ${athlete.events.join(", ")}` },
+        { success: false, error: `Invalid event. Athlete trains: ${athlete.events.join(", ")}` },
         { status: 400 }
       );
     }
 
     if (!date) {
-      return NextResponse.json({ error: "Date is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Date is required" }, { status: 400 });
     }
 
     if (!Array.isArray(drillLogs) || drillLogs.length === 0) {
-      return NextResponse.json({ error: "At least one drill log is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "At least one drill log is required" }, { status: 400 });
     }
 
     // Create session with drill logs (limited — no readiness/feedback)
@@ -71,9 +71,9 @@ export async function POST(
       include: { drillLogs: true },
     });
 
-    return NextResponse.json({ ok: true, data: athleteSession }, { status: 201 });
+    return NextResponse.json({ success: true, data: athleteSession }, { status: 201 });
   } catch (error) {
     logger.error("Error logging session for athlete", { context: "api", error });
-    return NextResponse.json({ error: "Failed to log session" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to log session" }, { status: 500 });
   }
 }

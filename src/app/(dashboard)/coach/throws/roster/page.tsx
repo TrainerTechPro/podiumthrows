@@ -190,7 +190,7 @@ export default function ThrowsRosterPage() {
       ])
         .then(([podiumData, athletesData, rosterData]) => {
           // rosterData is already filtered by teamId via the API
-          if (rosterData.ok) setRosterAthletes(rosterData.data);
+          if (rosterData.success) setRosterAthletes(rosterData.data);
           const filteredIds = new Set((rosterData.data ?? []).map((a: { id: string }) => a.id));
 
           // Client-side filter podium and allAthletes to match team selection

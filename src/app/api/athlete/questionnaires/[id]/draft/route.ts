@@ -15,7 +15,7 @@ export async function PUT(
 
     if (!draftAnswers || typeof draftAnswers !== "object") {
       return NextResponse.json(
-        { error: "Invalid draft data" },
+        { success: false, error: "Invalid draft data" },
         { status: 400 }
       );
     }
@@ -32,7 +32,7 @@ export async function PUT(
 
     if (!assignment) {
       return NextResponse.json(
-        { error: "No active assignment found" },
+        { success: false, error: "No active assignment found" },
         { status: 404 }
       );
     }
@@ -42,8 +42,8 @@ export async function PUT(
       data: { draftAnswers },
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -20,7 +20,7 @@ export async function PUT(req: NextRequest) {
 
     if (!mode || !VALID_MODES.includes(mode as ActiveMode)) {
       return NextResponse.json(
-        { error: `mode must be one of: ${VALID_MODES.join(", ")}` },
+        { success: false, error: `mode must be one of: ${VALID_MODES.join(", ")}` },
         { status: 400 }
       );
     }
@@ -36,7 +36,7 @@ export async function PUT(req: NextRequest) {
 
       if (!coach?.trainingEnabled) {
         return NextResponse.json(
-          { error: "Training Mode is not enabled for this account." },
+          { success: false, error: "Training Mode is not enabled for this account." },
           { status: 403 }
         );
       }
@@ -56,11 +56,11 @@ export async function PUT(req: NextRequest) {
       ...(isProduction ? ["Secure"] : []),
     ].join("; ");
 
-    const response = NextResponse.json({ ok: true });
+    const response = NextResponse.json({ success: true });
     response.headers.append("Set-Cookie", cookieValue);
     return response;
   } catch (err) {
     logger.error("PUT /api/user/mode", { context: "api", error: err });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }

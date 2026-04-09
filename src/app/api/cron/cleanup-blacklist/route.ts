@@ -14,17 +14,17 @@ export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
   }
   if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const deleted = await cleanupExpired();
-    return NextResponse.json({ ok: true, deleted, timestamp: new Date().toISOString() });
+    return NextResponse.json({ success: true, data: { deleted, timestamp: new Date().toISOString() } });
   } catch (err) {
     logger.error("Token blacklist cleanup cron error", { context: "api", error: err });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

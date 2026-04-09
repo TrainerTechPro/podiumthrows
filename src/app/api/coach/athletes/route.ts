@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       select: { id: true, plan: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, CoachAddAthleteSchema);
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const limit = PLAN_LIMITS[coach.plan];
     if (limit !== Infinity && athleteCount >= limit) {
       return NextResponse.json(
-        { error: `Your ${coach.plan} plan supports up to ${limit} athletes. Upgrade to add more.` },
+        { success: false, error: `Your ${coach.plan} plan supports up to ${limit} athletes. Upgrade to add more.` },
         { status: 403 }
       );
     }
@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
       return athleteProfile;
     });
 
-    return NextResponse.json({ ok: true, data: result }, { status: 201 });
+    return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (error) {
     logger.error("Error creating athlete", { context: "api", error });
-    return NextResponse.json({ error: "Failed to create athlete" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create athlete" }, { status: 500 });
   }
 }
 
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const teamId = request.nextUrl.searchParams.get("teamId");
@@ -113,9 +113,9 @@ export async function GET(request: NextRequest) {
       orderBy: { firstName: "asc" },
     });
 
-    return NextResponse.json({ ok: true, data: athletes });
+    return NextResponse.json({ success: true, data: athletes });
   } catch (error) {
     logger.error("Error listing athletes", { context: "api", error });
-    return NextResponse.json({ error: "Failed to list athletes" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to list athletes" }, { status: 500 });
   }
 }
