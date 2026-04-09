@@ -25,12 +25,12 @@ export async function GET(req: NextRequest) {
 
   if (!cronSecret) {
     return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
+      { success: false, error: "CRON_SECRET not configured" },
       { status: 500 }
     );
   }
   if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -100,17 +100,19 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      ok: true,
-      scanned: expiredGoals.length,
-      completed,
-      missed,
-      timestamp: now.toISOString(),
+      success: true,
+      data: {
+        scanned: expiredGoals.length,
+        completed,
+        missed,
+        timestamp: now.toISOString(),
+      },
     });
   } catch (err) {
     logger.error("Weekly goal transitions cron error", {
       context: "api",
       error: err,
     });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
