@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -35,13 +35,13 @@ export async function POST(req: NextRequest) {
 
     if (!contentType || !isAllowedAudioType(contentType)) {
       return NextResponse.json(
-        { error: "Unsupported audio type. Supported: webm, ogg, mp4/m4a, mp3, aac." },
+        { success: false, error:"Unsupported audio type. Supported: webm, ogg, mp4/m4a, mp3, aac." },
         { status: 400 }
       );
     }
     if (sizeBytes != null && sizeBytes > MAX_AUDIO_SIZE_MB * 1024 * 1024) {
       return NextResponse.json(
-        { error: `Audio file too large (max ${MAX_AUDIO_SIZE_MB}MB).` },
+        { success: false, error:`Audio file too large (max ${MAX_AUDIO_SIZE_MB}MB).` },
         { status: 400 }
       );
     }
@@ -63,20 +63,26 @@ export async function POST(req: NextRequest) {
       // Dev / local fallback: return a direct POST URL to the local
       // upload endpoint. The client handles both flavors transparently.
       return NextResponse.json({
-        uploadUrl: `/api/throws/comments/audio-upload-url/local?key=${encodeURIComponent(key)}`,
-        publicUrl: getPublicUrl(key),
-        key,
-        mode: "local",
+        success: true,
+        data: {
+          uploadUrl: `/api/throws/comments/audio-upload-url/local?key=${encodeURIComponent(key)}`,
+          publicUrl: getPublicUrl(key),
+          key,
+          mode: "local",
+        },
       });
     }
 
     const { uploadUrl, publicUrl } = await getPresignedUploadUrl(key, contentType);
 
     return NextResponse.json({
-      uploadUrl,
-      publicUrl,
-      key,
-      mode: "r2",
+      success: true,
+      data: {
+        uploadUrl,
+        publicUrl,
+        key,
+        mode: "r2",
+      },
     });
   } catch (err) {
     logger.error("POST /api/throws/comments/audio-upload-url", {
@@ -84,7 +90,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to get upload URL." },
+      { success: false, error:"Failed to get upload URL." },
       { status: 500 }
     );
   }

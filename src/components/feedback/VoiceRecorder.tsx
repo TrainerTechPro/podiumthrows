@@ -267,11 +267,15 @@ export function VoiceRecorder({
         const data = await prep.json().catch(() => ({}));
         throw new Error(data.error ?? "Could not start upload.");
       }
-      const prepData = (await prep.json()) as {
-        uploadUrl: string;
-        publicUrl: string;
-        mode: "r2" | "local";
+      const prepResponse = (await prep.json()) as {
+        success: boolean;
+        data: {
+          uploadUrl: string;
+          publicUrl: string;
+          mode: "r2" | "local";
+        };
       };
+      const prepData = prepResponse.data;
 
       // 2. Upload the blob to R2 (PUT) or the local fallback (POST)
       const uploadRes =
@@ -297,10 +301,10 @@ export function VoiceRecorder({
       // over the prep publicUrl which was precomputed.
       let publicUrl = prepData.publicUrl;
       if (prepData.mode === "local") {
-        const localData = (await uploadRes.json().catch(() => ({}))) as {
-          publicUrl?: string;
+        const localResponse = (await uploadRes.json().catch(() => ({}))) as {
+          data?: { publicUrl?: string };
         };
-        publicUrl = localData.publicUrl ?? prepData.publicUrl;
+        publicUrl = localResponse.data?.publicUrl ?? prepData.publicUrl;
       }
 
       setPhase("done");

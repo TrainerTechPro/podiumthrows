@@ -8,9 +8,9 @@ import { getFlags } from "@/lib/flags";
 export async function GET() {
   const session = await getSession();
   if (!session?.isAdmin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
   }
 
   const flags = await getFlags();
-  return NextResponse.json({ flags });
+  return NextResponse.json({ success: true, data: { flags } });
 }

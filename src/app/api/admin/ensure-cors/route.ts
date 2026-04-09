@@ -15,20 +15,20 @@ export async function POST() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     if (!isR2Configured()) {
       // Local dev — CORS not needed (same-origin)
-      return NextResponse.json({ status: "skipped", reason: "R2 not configured (local dev)" });
+      return NextResponse.json({ success: true, data: { status: "skipped", reason: "R2 not configured (local dev)" } });
     }
 
     await configureR2Cors();
-    return NextResponse.json({ status: "ok" });
+    return NextResponse.json({ success: true, data: { status: "ok" } });
   } catch (err) {
     logger.error("ensure-cors Failed to configure R2 CORS", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to configure CORS", detail: String(err) },
+      { success: false, error: "Failed to configure CORS", detail: String(err) },
       { status: 500 }
     );
   }

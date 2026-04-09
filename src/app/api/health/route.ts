@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   });
   if (!rl.success) {
     return NextResponse.json(
-      { error: "Too many requests" },
+      { success: false, error: "Too many requests" },
       { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
     );
   }
@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
 
   try {
     await prisma.$queryRaw`SELECT 1`;
-    return NextResponse.json({ status: "ok", timestamp, db: "connected" });
+    return NextResponse.json({ success: true, data: { status: "ok", timestamp, db: "connected" } });
   } catch {
     return NextResponse.json(
-      { status: "degraded", timestamp, db: "disconnected" },
+      { success: true, data: { status: "degraded", timestamp, db: "disconnected" } },
       { status: 503 }
     );
   }
