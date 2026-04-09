@@ -181,7 +181,7 @@ export function VideoUploadForm({ athletes }: Props) {
     xhr.addEventListener("load", () => {
       try {
         const data = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+        if (xhr.status >= 200 && xhr.status < 300 && data.success) {
           setUploadProgress(100);
           router.push(`/coach/video-analysis/${data.data.id}`);
         } else {

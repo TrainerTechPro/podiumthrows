@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Validate event type
     if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-      return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
     }
 
     // Validate file type
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Validate file size (200MB max)
     if (videoBlob.size > 200 * 1024 * 1024) {
-      return NextResponse.json({ error: "File too large (max 200MB)" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "File too large (max 200MB)" }, { status: 400 });
     }
 
     // Verify athlete belongs to coach
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Upload video
@@ -107,13 +107,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: true, data: analysis }, { status: 201 });
+    return NextResponse.json({ success: true, data: analysis }, { status: 201 });
   } catch (err) {
     if (err instanceof Error && err.name === "AuthError") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/video-analysis/upload", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Upload failed: ${message}` }, { status: 500 });
+    return NextResponse.json({ success: false, error: `Upload failed: ${message}` }, { status: 500 });
   }
 }

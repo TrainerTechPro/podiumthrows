@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
       take: 100,
     });
 
-    return NextResponse.json({ ok: true, data: analyses });
+    return NextResponse.json({ success: true, data: analyses });
   } catch (err) {
     if (err instanceof Error && err.name === "AuthError") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/video-analysis", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch analyses" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch analyses" }, { status: 500 });
   }
 }

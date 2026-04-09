@@ -34,16 +34,16 @@ export async function GET(
     });
 
     if (!analysis || analysis.coachId !== coach.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ ok: true, data: analysis });
+    return NextResponse.json({ success: true, data: analysis });
   } catch (err) {
     if (err instanceof Error && err.name === "AuthError") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/video-analysis/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch analysis" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch analysis" }, { status: 500 });
   }
 }
 
@@ -62,7 +62,7 @@ export async function PATCH(
       select: { coachId: true },
     });
     if (!existing || existing.coachId !== coach.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     const raw = await request.json();
@@ -85,13 +85,13 @@ export async function PATCH(
       data: updateData,
     });
 
-    return NextResponse.json({ ok: true, data: updated });
+    return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     if (err instanceof Error && err.name === "AuthError") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("PATCH /api/video-analysis/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update analysis" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update analysis" }, { status: 500 });
   }
 }
 
@@ -110,7 +110,7 @@ export async function DELETE(
       select: { coachId: true, videoUrl: true, thumbnailUrl: true },
     });
     if (!existing || existing.coachId !== coach.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     // Delete DB record first, then clean up files (best-effort)
@@ -137,12 +137,12 @@ export async function DELETE(
       }
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof Error && err.name === "AuthError") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("DELETE /api/video-analysis/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete analysis" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete analysis" }, { status: 500 });
   }
 }
