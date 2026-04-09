@@ -9,11 +9,12 @@ const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
-    const video = await getVideoById(params.id, coach.id);
+    const { id } = await params;
+    const video = await getVideoById(id, coach.id);
 
     if (!video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
@@ -32,14 +33,15 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     // Verify ownership
     const existing = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -86,7 +88,7 @@ export async function PUT(
     if (tags !== undefined) data.tags = tags;
 
     await prisma.videoUpload.update({
-      where: { id: params.id },
+      where: { id: id },
       data,
     });
 
@@ -103,13 +105,14 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true, storageKey: true },
     });
 
@@ -127,7 +130,7 @@ export async function DELETE(
       }
     }
 
-    await prisma.videoUpload.delete({ where: { id: params.id } });
+    await prisma.videoUpload.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch (err) {

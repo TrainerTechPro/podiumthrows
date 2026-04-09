@@ -26,14 +26,15 @@ type AnnotationInput = {
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     // Verify ownership
     const existing = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -82,7 +83,7 @@ export async function PUT(
     }
 
     await prisma.videoUpload.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { annotations: annotations as unknown as never },
     });
 

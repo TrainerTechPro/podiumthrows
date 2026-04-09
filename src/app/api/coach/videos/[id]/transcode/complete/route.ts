@@ -22,14 +22,15 @@ import { logger } from "@/lib/logger";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true, transcodeStatus: true },
     });
 
@@ -58,7 +59,7 @@ export async function POST(
     if (!success) {
       // Transcode failed — reset status
       await prisma.videoUpload.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           transcodeStatus: "failed",
         },
@@ -66,7 +67,7 @@ export async function POST(
 
       return NextResponse.json(
         {
-          videoId: params.id,
+          videoId: id,
           transcodeStatus: "failed",
           error: error ?? "Transcode failed",
         },
@@ -83,7 +84,7 @@ export async function POST(
 
     // Mark as ready
     await prisma.videoUpload.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         transcodeStatus: "ready",
         transcodedUrl,
@@ -94,7 +95,7 @@ export async function POST(
     });
 
     return NextResponse.json({
-      videoId: params.id,
+      videoId: id,
       transcodeStatus: "ready",
       transcodedUrl,
       gopInterval: gopInterval ?? 15,

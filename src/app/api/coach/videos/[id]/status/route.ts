@@ -12,13 +12,14 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: {
         id: true,
         status: true,
@@ -64,13 +65,14 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true, status: true },
     });
 
@@ -94,11 +96,11 @@ export async function PATCH(
     }
 
     await prisma.videoUpload.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status },
     });
 
-    return NextResponse.json({ videoId: params.id, status });
+    return NextResponse.json({ videoId: id, status });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

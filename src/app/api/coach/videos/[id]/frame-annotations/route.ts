@@ -7,14 +7,15 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -28,7 +29,7 @@ export async function GET(
     const to = url.searchParams.get("to");
 
     const where: { videoId: string; timestamp?: { gte?: number; lte?: number } } = {
-      videoId: params.id,
+      videoId: id,
     };
 
     if (from || to) {
@@ -57,14 +58,15 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -99,13 +101,13 @@ export async function POST(
     const frameAnnotation = await prisma.frameAnnotation.upsert({
       where: {
         videoId_timestamp_source: {
-          videoId: params.id,
+          videoId: id,
           timestamp,
           source: src,
         },
       },
       create: {
-        videoId: params.id,
+        videoId: id,
         timestamp,
         source: src,
         payload: payload as never,
@@ -130,14 +132,15 @@ export async function POST(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: { id: true },
     });
 
@@ -184,13 +187,13 @@ export async function PUT(
         return prisma.frameAnnotation.upsert({
           where: {
             videoId_timestamp_source: {
-              videoId: params.id,
+              videoId: id,
               timestamp: fa.timestamp,
               source: src,
             },
           },
           create: {
-            videoId: params.id,
+            videoId: id,
             timestamp: fa.timestamp,
             source: src,
             payload: fa.payload as never,

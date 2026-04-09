@@ -44,14 +44,15 @@ import { logger } from "@/lib/logger";
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     // Verify ownership and get source video
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: {
         id: true,
         url: true,
@@ -99,7 +100,7 @@ export async function POST(
 
     // Mark as processing
     await prisma.videoUpload.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { transcodeStatus: "processing" },
     });
 
@@ -120,7 +121,7 @@ export async function POST(
     ];
 
     return NextResponse.json({
-      videoId: params.id,
+      videoId: id,
       sourceDownloadUrl,
       outputUploadUrl,
       outputKey,
@@ -128,7 +129,7 @@ export async function POST(
       ffmpegCommand: ffmpegCommand.join(" "),
       ffmpegArgs: ffmpegCommand,
       gopSize: 15,
-      completeCallbackUrl: `/api/coach/videos/${params.id}/transcode/complete`,
+      completeCallbackUrl: `/api/coach/videos/${id}/transcode/complete`,
     });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -144,13 +145,14 @@ export async function POST(
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { coach } = await requireCoachApi();
+    const { id } = await params;
 
     const video = await prisma.videoUpload.findFirst({
-      where: { id: params.id, coachId: coach.id },
+      where: { id: id, coachId: coach.id },
       select: {
         id: true,
         transcodeStatus: true,
