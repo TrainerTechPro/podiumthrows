@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         context: "api",
         metadata: { body },
       });
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ success: true });
     }
 
     // Look up connection by WHOOP user ID
@@ -31,15 +31,15 @@ export async function POST(request: NextRequest) {
 
     if (!connection) {
       // User may have disconnected — acknowledge silently
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ success: true });
     }
 
     await syncWhoopData(connection.id);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("POST /api/whoop/webhook", { context: "api", error: err });
     // Always return 200 so WHOOP doesn't retry
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   }
 }

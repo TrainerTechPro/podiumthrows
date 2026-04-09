@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     // Find athlete profile — works for ATHLETE role or COACH with Training Mode
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     });
 
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 404 });
     }
 
     const connection = await prisma.whoopConnection.findUnique({
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     });
 
     if (!connection) {
-      return NextResponse.json({ error: "No WHOOP connection found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "No WHOOP connection found" }, { status: 404 });
     }
 
     // Check if this is a sync-mode update (no data sync needed)
@@ -48,18 +48,18 @@ export async function POST(request: Request) {
     if (body.updateSyncMode) {
       const mode = body.updateSyncMode;
       if (mode !== "AUTO" && mode !== "ASSISTED") {
-        return NextResponse.json({ error: "Invalid sync mode" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid sync mode" }, { status: 400 });
       }
       await prisma.whoopConnection.update({
         where: { id: connection.id },
         data: { syncMode: mode },
       });
-      return NextResponse.json({ ok: true, syncMode: mode });
+      return NextResponse.json({ success: true, data: { syncMode: mode } });
     }
 
     await syncWhoopData(connection.id);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     logger.error("POST /api/whoop/sync", { context: "api", error: err, metadata: { message } });
