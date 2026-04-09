@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
       include: { drillLogs: { orderBy: { createdAt: "asc" } } },
     });
 
-    return NextResponse.json({ ok: true, data: sessions });
+    return NextResponse.json({ success: true, data: sessions });
   } catch (err) {
     logger.error("GET /api/coach/log-session", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to fetch sessions" }, { status: 500 });
   }
 }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, LogSessionSchema);
@@ -94,11 +94,11 @@ export async function POST(request: NextRequest) {
     };
 
     if (!event || !date) {
-      return NextResponse.json({ error: "Missing required fields: event, date" }, { status: 400 });
+      return NextResponse.json({ success: false, error:"Missing required fields: event, date" }, { status: 400 });
     }
 
     if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-      return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
+      return NextResponse.json({ success: false, error:"Invalid event type" }, { status: 400 });
     }
 
     const created = await prisma.coachThrowsSession.create({
@@ -199,10 +199,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true, data: created, prs, warnings }, { status: 201 });
+    return NextResponse.json({ success: true, data: created, prs, warnings }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/log-session", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Failed: ${message}` }, { status: 500 });
+    return NextResponse.json({ success: false, error:`Failed: ${message}` }, { status: 500 });
   }
 }

@@ -8,38 +8,39 @@ import { logger } from "@/lib/logger";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; athleteId: string } }
+  { params }: { params: Promise<{ id: string; athleteId: string }> }
 ) {
   try {
+    const { athleteId } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },
     });
-    if (!coach) return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+    if (!coach) return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
 
     const { searchParams } = new URL(req.url);
     const date = searchParams.get("date");
 
     if (!date) {
       return NextResponse.json(
-        { error: "Query param 'date' (YYYY-MM-DD) is required." },
+        { success: false, error: "Query param 'date' (YYYY-MM-DD) is required." },
         { status: 400 }
       );
     }
 
-    const resolved = await resolveEffectiveSession(coach.id, params.athleteId, date);
+    const resolved = await resolveEffectiveSession(coach.id, athleteId, date);
 
     if (!resolved) {
-      return NextResponse.json({ ok: true, data: null });
+      return NextResponse.json({ success: true, data: null });
     }
 
     return NextResponse.json({
-      ok: true,
+      success: true,
       data: {
         effectiveSessionId: resolved.throwsSessionId,
         tier: resolved.tier,
@@ -48,6 +49,6 @@ export async function GET(
     });
   } catch (err) {
     logger.error("[programming resolve GET]", { context: "api", error: err });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

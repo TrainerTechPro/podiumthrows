@@ -253,7 +253,7 @@ export function LogSessionWizard({
     fetch(`${apiEndpoint}/${editSessionId}`)
       .then((r) => r.json())
       .then((data) => {
-        if (!data.ok || !data.data) return;
+        if (!data.success || !data.data) return;
         const s = data.data;
         setEvent(s.event || "");
         setDate(s.date || localToday());

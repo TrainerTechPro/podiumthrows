@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       select: { id: true, coachId: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Athlete profile not found" }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -38,10 +38,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ ok: true, data: sessions });
+    return NextResponse.json({ success: true, data: sessions });
   } catch (err) {
     logger.error("GET /api/athlete/log-session", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to fetch sessions" }, { status: 500 });
   }
 }
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       select: { id: true, coachId: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Athlete profile not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, LogSessionSchema);
@@ -106,13 +106,13 @@ export async function POST(request: NextRequest) {
 
     if (!event || !date) {
       return NextResponse.json(
-        { error: "Missing required fields: event, date" },
+        { success: false, error:"Missing required fields: event, date" },
         { status: 400 }
       );
     }
 
     if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-      return NextResponse.json({ error: "Invalid event type" }, { status: 400 });
+      return NextResponse.json({ success: false, error:"Invalid event type" }, { status: 400 });
     }
 
     const created = await prisma.athleteThrowsSession.create({
@@ -237,10 +237,10 @@ export async function POST(request: NextRequest) {
       warnings = result.warnings;
     }
 
-    return NextResponse.json({ ok: true, data: created, prs, warnings }, { status: 201 });
+    return NextResponse.json({ success: true, data: created, prs, warnings }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/athlete/log-session", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: `Failed: ${message}` }, { status: 500 });
+    return NextResponse.json({ success: false, error:`Failed: ${message}` }, { status: 500 });
   }
 }

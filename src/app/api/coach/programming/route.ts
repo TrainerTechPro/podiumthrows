@@ -10,14 +10,14 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },
     });
-    if (!coach) return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+    if (!coach) return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
 
     const { searchParams } = new URL(req.url);
     const start = searchParams.get("start");
@@ -25,16 +25,16 @@ export async function GET(req: NextRequest) {
 
     if (!start || !end) {
       return NextResponse.json(
-        { error: "Query params 'start' and 'end' (YYYY-MM-DD) are required." },
+        { success: false, error:"Query params 'start' and 'end' (YYYY-MM-DD) are required." },
         { status: 400 }
       );
     }
 
     const data = await getProgrammedSessions(coach.id, start, end);
-    return NextResponse.json({ ok: true, data });
+    return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("[programming GET]", { context: "api", error: err });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Internal server error" }, { status: 500 });
   }
 }
 
@@ -44,31 +44,31 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },
     });
-    if (!coach) return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+    if (!coach) return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
 
     const body = await req.json().catch(() => ({}));
     const { title, scheduledDate, throwsSessionId, tier, groupId, athleteId, parentId, notes } =
       body as Record<string, unknown>;
 
     if (typeof title !== "string" || !title.trim()) {
-      return NextResponse.json({ error: "title is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error:"title is required." }, { status: 400 });
     }
     if (typeof scheduledDate !== "string" || !scheduledDate.trim()) {
-      return NextResponse.json({ error: "scheduledDate is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error:"scheduledDate is required." }, { status: 400 });
     }
     if (typeof throwsSessionId !== "string" || !throwsSessionId.trim()) {
-      return NextResponse.json({ error: "throwsSessionId is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error:"throwsSessionId is required." }, { status: 400 });
     }
     if (tier !== "TEAM" && tier !== "GROUP" && tier !== "INDIVIDUAL") {
       return NextResponse.json(
-        { error: "tier must be 'TEAM', 'GROUP', or 'INDIVIDUAL'." },
+        { success: false, error:"tier must be 'TEAM', 'GROUP', or 'INDIVIDUAL'." },
         { status: 400 }
       );
     }
@@ -84,9 +84,9 @@ export async function POST(req: NextRequest) {
       notes: typeof notes === "string" ? notes : undefined,
     });
 
-    return NextResponse.json({ ok: true, data }, { status: 201 });
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (err) {
     logger.error("[programming POST]", { context: "api", error: err });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Internal server error" }, { status: 500 });
   }
 }

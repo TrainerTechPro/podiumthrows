@@ -12,7 +12,7 @@ export async function GET(
     const { id } = await params;
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const entry = await prisma.athleteThrowsSession.findUnique({
@@ -24,12 +24,12 @@ export async function GET(
     });
 
     if (!entry) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Session not found" }, { status: 404 });
     }
 
     // Allow access if the user is the athlete OR their coach
     if (entry.athlete.userId !== session.userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 403 });
     }
 
     if (session.role === "COACH") {
@@ -38,14 +38,14 @@ export async function GET(
         select: { id: true },
       });
       if (!coach || entry.athlete.coachId !== coach.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 403 });
       }
     }
 
-    return NextResponse.json({ ok: true, data: entry });
+    return NextResponse.json({ success: true, data: entry });
   } catch (err) {
     logger.error("GET /api/athlete/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch session" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to fetch session" }, { status: 500 });
   }
 }
 
@@ -58,7 +58,7 @@ export async function DELETE(
     const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -66,7 +66,7 @@ export async function DELETE(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Athlete profile not found" }, { status: 404 });
     }
 
     const entry = await prisma.athleteThrowsSession.findUnique({
@@ -75,13 +75,13 @@ export async function DELETE(
     });
 
     if (!entry || entry.athleteId !== athlete.id) {
-      return NextResponse.json({ error: "Not found or unauthorized" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Not found or unauthorized" }, { status: 404 });
     }
 
     await prisma.athleteThrowsSession.delete({ where: { id: id } });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/athlete/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to delete" }, { status: 500 });
   }
 }

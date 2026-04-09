@@ -13,7 +13,7 @@ export async function GET(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -21,7 +21,7 @@ export async function GET(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
     }
 
     const entry = await prisma.coachThrowsSession.findUnique({
@@ -30,13 +30,13 @@ export async function GET(
     });
 
     if (!entry || entry.coachId !== coach.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ ok: true, data: entry });
+    return NextResponse.json({ success: true, data: entry });
   } catch (err) {
     logger.error("GET /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch session" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to fetch session" }, { status: 500 });
   }
 }
 
@@ -49,7 +49,7 @@ export async function PUT(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -57,7 +57,7 @@ export async function PUT(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
     }
 
     const existing = await prisma.coachThrowsSession.findUnique({
@@ -65,7 +65,7 @@ export async function PUT(
       select: { coachId: true },
     });
     if (!existing || existing.coachId !== coach.id) {
-      return NextResponse.json({ error: "Not found or unauthorized" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Not found or unauthorized" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -129,10 +129,10 @@ export async function PUT(
       }
     }
 
-    return NextResponse.json({ ok: true, data: updated });
+    return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PUT /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update session" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to update session" }, { status: 500 });
   }
 }
 
@@ -145,7 +145,7 @@ export async function DELETE(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -153,7 +153,7 @@ export async function DELETE(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
     }
 
     const entry = await prisma.coachThrowsSession.findUnique({
@@ -166,7 +166,7 @@ export async function DELETE(
     });
 
     if (!entry || entry.coachId !== coach.id) {
-      return NextResponse.json({ error: "Not found or unauthorized" }, { status: 404 });
+      return NextResponse.json({ success: false, error:"Not found or unauthorized" }, { status: 404 });
     }
 
     // Collect affected implements before deletion
@@ -185,9 +185,9 @@ export async function DELETE(
       await recalculateCoachPRs(coach.id, entry.event, affectedImplements);
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Failed to delete" }, { status: 500 });
   }
 }
