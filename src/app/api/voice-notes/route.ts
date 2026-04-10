@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessSession } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, VoiceNoteCreateSchema } from "@/lib/api-schemas";
+import { isR2Configured, uploadSingleFile, getPublicUrl } from "@/lib/r2";
 
 export async function GET(request: NextRequest) {
   try {
@@ -123,18 +124,43 @@ export async function POST(request: NextRequest) {
       athleteId = athlete.id;
     }
 
+    // Prefer R2 storage over inline Base64 to reduce DB bloat (~33% smaller)
+    let storedAudioData: string | null = audioData;
+    let storedAudioUrl: string | null = null;
+
+    if (isR2Configured()) {
+      try {
+        // Decode Base64 data URI → raw buffer
+        const base64Match = audioData.match(/^data:[^;]+;base64,(.+)$/);
+        const raw = base64Match
+          ? Buffer.from(base64Match[1], "base64")
+          : Buffer.from(audioData, "base64");
+        const key = `audio/${currentUser.userId}/${Date.now()}.webm`;
+        await uploadSingleFile(key, raw, "audio/webm");
+        storedAudioUrl = getPublicUrl(key);
+        storedAudioData = null; // Don't store Base64 inline when R2 is available
+      } catch (r2Err) {
+        // R2 upload failed — fall back to inline Base64
+        logger.warn("Voice note R2 upload failed, falling back to inline storage", {
+          context: "voice-notes",
+          metadata: { error: r2Err },
+        });
+      }
+    }
+
     const voiceNote = await prisma.voiceNote.create({
       data: {
         coachId,
         athleteId,
         sessionId: sessionId || null,
-        audioData,
+        audioData: storedAudioData,
+        audioUrl: storedAudioUrl,
         duration: Math.round(duration),
         transcription: transcription || null,
       },
       select: {
         id: true,
-        audioData: true,
+        audioUrl: true,
         duration: true,
         transcription: true,
         createdAt: true,

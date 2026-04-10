@@ -5,6 +5,7 @@ import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, AthleteThrowsSessionCreateSchema } from "@/lib/api-schemas";
 import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
+import { EventType } from "@prisma/client";
 
 // GET  /api/throws/athlete-sessions/[id]  — fetch a single session with drill logs
 export async function GET(
@@ -81,7 +82,7 @@ export async function PUT(
       const session = await tx.athleteThrowsSession.update({
         where: { id },
         data: {
-          event,
+          event: event as EventType,
           date,
           notes: notes ?? null,
           drillLogs: drillLogs?.length

@@ -5,7 +5,7 @@
  * PATCH — Update profile fields or remove athlete from roster
  */
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
+import { Prisma, EventType } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { parseBody, PodiumRosterPatchSchema } from "@/lib/api-schemas";
@@ -130,7 +130,7 @@ export async function PATCH(
     // For other updates, find the specific profile (by event if provided, else first active)
     const profile = body.event
       ? await prisma.throwsProfile.findUnique({
-          where: { athleteId_event: { athleteId, event: body.event } },
+          where: { athleteId_event: { athleteId, event: body.event as EventType } },
         })
       : await prisma.throwsProfile.findFirst({
           where: { athleteId, status: "active" },

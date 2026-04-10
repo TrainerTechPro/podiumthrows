@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { checkAndSetCoachPR } from "@/lib/coach-throws";
 import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 /* ── GET — list coach's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
     const created = await prisma.coachThrowsSession.create({
       data: {
         coachId: coach.id,
-        event,
+        event: event as EventType,
         date,
         focus: focus || null,
         notes: notes?.trim() || null,

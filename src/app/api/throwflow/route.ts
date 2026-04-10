@@ -5,6 +5,7 @@ import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseAnalysisResponse } from "@/lib/throwflow/schemas";
 import { parseBody, ThrowFlowAnalysisSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 // GET /api/throwflow — list analyses for current coach
 export async function GET() {
@@ -99,7 +100,7 @@ export async function POST(req: Request) {
       data: {
         coachId: coach.id,
         athleteId: athleteId || null,
-        event,
+        event: event as EventType,
         drillType,
         cameraAngle,
         athleteHeight: athleteHeight || null,

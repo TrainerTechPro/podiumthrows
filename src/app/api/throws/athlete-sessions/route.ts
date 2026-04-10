@@ -5,6 +5,7 @@ import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, AthleteThrowsSessionCreateSchema } from "@/lib/api-schemas";
 import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
+import { EventType } from "@prisma/client";
 
 // GET  /api/throws/athlete-sessions?athleteId=...   — list self-logged sessions
 // POST /api/throws/athlete-sessions                  — create a self-logged session
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     const session = await prisma.athleteThrowsSession.create({
       data: {
         athleteId,
-        event,
+        event: event as EventType,
         date,
         notes: notes || null,
         drillLogs: drillLogs?.length

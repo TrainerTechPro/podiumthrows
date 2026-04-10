@@ -2655,7 +2655,7 @@ export async function getCoachNotifications(
       title: true,
       body: true,
       read: true,
-      athleteId: true,
+      athleteProfileId: true,
       metadata: true,
       createdAt: true,
     },
@@ -2667,7 +2667,7 @@ export async function getCoachNotifications(
     title: n.title,
     body: n.body,
     read: n.read,
-    athleteId: n.athleteId,
+    athleteId: n.athleteProfileId,
     metadata: n.metadata as Record<string, unknown> | null,
     createdAt: n.createdAt.toISOString(),
   }));

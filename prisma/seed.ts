@@ -1699,7 +1699,7 @@ async function main() {
     data: [
       {
         coachId: coachProfile.id,
-        athleteId: athlete1.id,
+        athleteProfileId: athlete1.id,
         type: "PR_ALERT",
         title: `New PR — ${athlete1.firstName} ${athlete1.lastName}`,
         body: `${athlete1.firstName} just hit a new Shot Put PR: 18.42m`,
@@ -1709,7 +1709,7 @@ async function main() {
       },
       {
         coachId: coachProfile.id,
-        athleteId: athlete2.id,
+        athleteProfileId: athlete2.id,
         type: "LOW_READINESS",
         title: `Low Readiness — ${athlete2.firstName} ${athlete2.lastName}`,
         body: `${athlete2.firstName} checked in with a readiness score of 3.2/10. Consider adjusting today's training load.`,
@@ -1719,7 +1719,7 @@ async function main() {
       },
       {
         coachId: coachProfile.id,
-        athleteId: athlete1.id,
+        athleteProfileId: athlete1.id,
         type: "WORKOUT_COMPLETED",
         title: `Workout Completed — ${athlete1.firstName}`,
         body: `${athlete1.firstName} completed "AM Throws — Shot Put" session with RPE 7.5`,
@@ -1729,7 +1729,7 @@ async function main() {
       },
       {
         coachId: coachProfile.id,
-        athleteId: athlete1.id,
+        athleteProfileId: athlete1.id,
         type: "QUESTIONNAIRE_COMPLETE",
         title: `Questionnaire Completed — ${athlete1.firstName}`,
         body: `${athlete1.firstName} completed "Weekly Wellness Check".`,

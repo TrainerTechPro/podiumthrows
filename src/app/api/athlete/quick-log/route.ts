@@ -14,6 +14,7 @@ import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
 import { resolveTimezone, getLocalDate, startOfToday as startOfTodayForTz } from "@/lib/dates";
+import { EventType } from "@prisma/client";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -246,7 +247,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Find or create today's AthleteThrowsSession for this event
     let throwsSession = await prisma.athleteThrowsSession.findFirst({
-      where: { athleteId: athlete.id, date: today, event },
+      where: { athleteId: athlete.id, date: today, event: event as EventType },
       orderBy: { createdAt: "desc" },
       select: { id: true },
     });
@@ -255,7 +256,7 @@ export async function POST(req: NextRequest) {
       throwsSession = await prisma.athleteThrowsSession.create({
         data: {
           athleteId: athlete.id,
-          event,
+          event: event as EventType,
           date: today,
           focus: "Quick Log",
         },

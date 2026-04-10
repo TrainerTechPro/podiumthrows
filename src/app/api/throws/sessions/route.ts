@@ -6,6 +6,7 @@ import { getThrowsSessions } from "@/lib/data/throws";
 import { logger } from "@/lib/logger";
 import { parseBody, ThrowsSessionCreateSchema } from "@/lib/api-schemas";
 import { validateSession, type SessionBlock } from "@/lib/throws/validation";
+import { EventType } from "@prisma/client";
 
 // GET /api/throws/sessions — list all throws sessions for current coach
 export async function GET() {
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
         name,
         sessionType,
         targetPhase: targetPhase || null,
-        event,
+        event: event as EventType,
         estimatedDuration: estimatedDuration || null,
         tags: tags ? JSON.stringify(tags) : null,
         notes: notes || null,

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, ComplexCreateSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
         athleteId,
         startDate,
         exercises: JSON.stringify(exercises),
-        event,
+        event: event as EventType,
       },
     });
 

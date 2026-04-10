@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         title: true,
         body: true,
         read: true,
-        athleteId: true,
+        athleteProfileId: true,
         metadata: true,
         createdAt: true,
       },

@@ -6,6 +6,7 @@
  */
 
 import prisma from "@/lib/prisma";
+import { EventType } from "@prisma/client";
 
 /**
  * Check if a distance is a coach PR for the given event + implement combo.
@@ -28,7 +29,7 @@ export async function checkAndSetCoachPR(
 
   const existing = await prisma.coachPR.findUnique({
     where: {
-      coachId_event_implement: { coachId, event, implement },
+      coachId_event_implement: { coachId, event: event as EventType, implement },
     },
     select: { distance: true },
   });
@@ -38,7 +39,7 @@ export async function checkAndSetCoachPR(
   if (isPersonalBest) {
     await prisma.coachPR.upsert({
       where: {
-        coachId_event_implement: { coachId, event, implement },
+        coachId_event_implement: { coachId, event: event as EventType, implement },
       },
       update: {
         distance,
@@ -48,7 +49,7 @@ export async function checkAndSetCoachPR(
       },
       create: {
         coachId,
-        event,
+        event: event as EventType,
         implement,
         distance,
         achievedAt: date,
@@ -78,7 +79,7 @@ export async function recalculateCoachPRs(
     // Find the best remaining drill log for this event + implement
     const best = await prisma.coachDrillLog.findFirst({
       where: {
-        session: { coachId, event },
+        session: { coachId, event: event as EventType },
         implementWeight: weight,
         bestMark: { not: null, gt: 0 },
       },
@@ -101,7 +102,7 @@ export async function recalculateCoachPRs(
     // Delete ALL existing PRs for this coach/event/weight (any label variant)
     // This cleans up stale labels like "6.35kg" when it should be "14lbs"
     const existingPRs = await prisma.coachPR.findMany({
-      where: { coachId, event },
+      where: { coachId, event: event as EventType },
       select: { id: true, implement: true },
     });
     // Find PRs whose implement string represents the same weight (within rounding)
@@ -122,20 +123,20 @@ export async function recalculateCoachPRs(
     if (best && best.bestMark) {
       await prisma.coachPR.upsert({
         where: {
-          coachId_event_implement: { coachId, event, implement },
+          coachId_event_implement: { coachId, event: event as EventType, implement },
         },
         update: {
           distance: best.bestMark,
-          achievedAt: new Date(best.session.date),
+          achievedAt: new Date(best.session!.date),
           sessionId: best.sessionId,
           drillType: best.drillType,
         },
         create: {
           coachId,
-          event,
+          event: event as EventType,
           implement,
           distance: best.bestMark,
-          achievedAt: new Date(best.session.date),
+          achievedAt: new Date(best.session!.date),
           sessionId: best.sessionId,
           drillType: best.drillType,
         },
@@ -143,7 +144,7 @@ export async function recalculateCoachPRs(
     } else {
       // No remaining data — delete all PR records for this weight
       await prisma.coachPR.deleteMany({
-        where: { coachId, event, implement },
+        where: { coachId, event: event as EventType, implement },
       });
     }
   }

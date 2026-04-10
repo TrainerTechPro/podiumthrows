@@ -9,6 +9,7 @@ import {
   getPublicUrl,
   saveFileLocally,
 } from "@/lib/r2";
+import { EventType } from "@prisma/client";
 
 export const maxDuration = 120;
 
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
         coachId: coach.id,
         title: title.trim(),
         description,
-        event,
+        event: event as EventType,
         videoUrl,
         thumbnailUrl,
         status: "UPLOADED",

@@ -5,6 +5,7 @@ import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { emitPR } from "@/lib/team-activity";
 import { parseBody, ThrowsPrCheckSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 // GET /api/throws/prs — get PRs for the current athlete (or by athleteId for coaches)
 export async function GET(req: NextRequest) {
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     // Check existing PR
     const existingPR = await prisma.throwsPR.findUnique({
-      where: { athleteId_event_implement: { athleteId, event, implement } },
+      where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
     });
 
     const isNewPR = !existingPR || distance > existingPR.distance;
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
 
     if (isNewPR) {
       const pr = await prisma.throwsPR.upsert({
-        where: { athleteId_event_implement: { athleteId, event, implement } },
+        where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
         update: {
           distance,
           achievedAt: today,
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
         },
         create: {
           athleteId,
-          event,
+          event: event as EventType,
           implement,
           distance,
           achievedAt: today,

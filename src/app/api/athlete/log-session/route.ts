@@ -5,6 +5,7 @@ import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
 import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
+import { EventType } from "@prisma/client";
 
 /* ── GET — list athlete's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
     const created = await prisma.athleteThrowsSession.create({
       data: {
         athleteId: athlete.id,
-        event,
+        event: event as EventType,
         date,
         focus: focus || null,
         notes: notes?.trim() || null,
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
           where: {
             athleteId_event_implement: {
               athleteId: athlete.id,
-              event,
+              event: event as EventType,
               implement: implementLabel,
             },
           },
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
             where: {
               athleteId_event_implement: {
                 athleteId: athlete.id,
-                event,
+                event: event as EventType,
                 implement: implementLabel,
               },
             },
@@ -203,7 +204,7 @@ export async function POST(request: NextRequest) {
             },
             create: {
               athleteId: athlete.id,
-              event,
+              event: event as EventType,
               implement: implementLabel,
               distance: dl.bestMark,
               achievedAt: date,

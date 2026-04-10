@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, DrillPrCreateSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 // GET /api/throws/drill-prs?athleteId=...
 export async function GET(req: NextRequest) {
@@ -81,20 +82,20 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = await prisma.throwsDrillPR.findUnique({
-      where: { athleteId_event_drillType_implement: { athleteId, event, drillType, implement } },
+      where: { athleteId_event_drillType_implement: { athleteId, event: event as EventType, drillType, implement } },
     });
 
     const isNewPR = !existing || distance > existing.distance;
     const today = new Date().toISOString().split("T")[0];
 
     const pr = await prisma.throwsDrillPR.upsert({
-      where: { athleteId_event_drillType_implement: { athleteId, event, drillType, implement } },
+      where: { athleteId_event_drillType_implement: { athleteId, event: event as EventType, drillType, implement } },
       update: isNewPR
         ? { distance, achievedAt: achievedAt || today, notes: notes ?? existing?.notes }
         : {},
       create: {
         athleteId,
-        event,
+        event: event as EventType,
         drillType,
         implement,
         distance,

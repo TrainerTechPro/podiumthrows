@@ -4,6 +4,7 @@ import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { COMPETITION_WEIGHTS } from "@/lib/throws";
 import { emitPR } from "@/lib/team-activity";
+import { EventType } from "@prisma/client";
 
 /* ─── GET — list all meets for coach's roster ─────────────────────────────── */
 
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
             athleteId: entry.athleteId,
             name: name.trim(),
             date: date.trim(),
-            event: entry.event,
+            event: entry.event as EventType,
             priority: priority || "B",
           },
         }),

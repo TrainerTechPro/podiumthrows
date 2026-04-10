@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, PracticeAttemptCreateSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 // POST /api/throws/practice/[sessionId]/attempts — log a new attempt
 export async function POST(
@@ -48,7 +49,7 @@ export async function POST(
     let isPR = false;
     if (distance !== undefined && distance !== null) {
       const existingPR = await prisma.throwsPR.findUnique({
-        where: { athleteId_event_implement: { athleteId, event, implement } },
+        where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
       });
 
       if (!existingPR || distance > existingPR.distance) {
@@ -56,9 +57,9 @@ export async function POST(
         // Upsert the PR record
         const today = new Date().toISOString().slice(0, 10);
         await prisma.throwsPR.upsert({
-          where: { athleteId_event_implement: { athleteId, event, implement } },
+          where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
           update: { distance, achievedAt: today, source: "TRAINING" },
-          create: { athleteId, event, implement, distance, achievedAt: today, source: "TRAINING" },
+          create: { athleteId, event: event as EventType, implement, distance, achievedAt: today, source: "TRAINING" },
         });
       }
     }
@@ -67,7 +68,7 @@ export async function POST(
       data: {
         sessionId: sessionId,
         athleteId,
-        event,
+        event: event as EventType,
         implement,
         distance: distance ?? null,
         drillType: drillType || null,

@@ -13,6 +13,7 @@ import { computeDistanceBand, syncAdaptationFromTyping } from "@/lib/throws/podi
 import type { EventCode, GenderCode } from "@/lib/throws/constants";
 import { CODE_EVENT_MAP } from "@/lib/throws/constants";
 import { logger } from "@/lib/logger";
+import { EventType } from "@prisma/client";
 
 // ── GET ────────────────────────────────────────────────────────────────────
 
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
       throwEventValues.length > 0
         ? await prisma.throwLog.groupBy({
             by: ["event", "implementWeight"],
-            where: { athleteId: parsed.athleteId, event: { in: throwEventValues } },
+            where: { athleteId: parsed.athleteId, event: { in: throwEventValues as EventType[] } },
             _max: { distance: true },
           })
         : [];
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
           : null;
 
       const profile = await prisma.throwsProfile.upsert({
-        where: { athleteId_event: { athleteId, event } },
+        where: { athleteId_event: { athleteId, event: event as EventType } },
         update: {
           status: "active",
           enrolledBy: coach.id,
@@ -196,7 +197,7 @@ export async function POST(request: NextRequest) {
         create: {
           athleteId,
           enrolledBy: coach.id,
-          event,
+          event: event as EventType,
           gender,
           status: "active",
           ...(effectivePb != null && effectivePb > 0 ? { competitionPb: effectivePb } : {}),

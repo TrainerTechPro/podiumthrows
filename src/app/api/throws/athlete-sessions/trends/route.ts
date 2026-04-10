@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { formatImplementWeight } from "@/lib/throws";
+import { EventType } from "@prisma/client";
 
 // GET /api/throws/athlete-sessions/trends?athleteId=...&event=...
 export async function GET(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     const sessions = await prisma.athleteThrowsSession.findMany({
-      where: { athleteId, ...(event ? { event } : {}) },
+      where: { athleteId, ...(event ? { event: event as EventType } : {}) },
       include: { drillLogs: true },
       orderBy: { date: "asc" },
     });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { EventType } from "@prisma/client";
 
 /**
  * GET /api/throws/past-drills?event=HAMMER
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     if (athleteProfile) {
       const logs = await prisma.athleteDrillLog.findMany({
         where: {
-          session: { athleteId: athleteProfile.id, event },
+          session: { athleteId: athleteProfile.id, event: event as EventType },
         },
         select: { drillType: true, createdAt: true },
         orderBy: { createdAt: "desc" },
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
     } else if (coachProfile) {
       const logs = await prisma.coachDrillLog.findMany({
         where: {
-          session: { coachId: coachProfile.id, event },
+          session: { coachId: coachProfile.id, event: event as EventType },
         },
         select: { drillType: true, createdAt: true },
         orderBy: { createdAt: "desc" },

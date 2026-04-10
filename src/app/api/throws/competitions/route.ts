@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, CompetitionCreateSchema, CompetitionUpdateSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
         athleteId,
         name,
         date,
-        event,
+        event: event as EventType,
         priority: priority || "B",
         result: result ?? null,
         notes: notes ?? null,

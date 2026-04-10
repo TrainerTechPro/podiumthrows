@@ -46,7 +46,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         title: true,
         body: true,
         read: true,
-        athleteId: true,
+        athleteProfileId: true,
         metadata: true,
         createdAt: true,
       },
