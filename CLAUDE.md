@@ -434,11 +434,11 @@ Two components handle numeric animation — choose based on the use case:
 
 ## Known Issues (Fix When Encountered)
 
-1. **Missing back buttons** on quizzes, forms, and multi-step wizards
-2. **Non-clickable cards** that display data but don't navigate to detail views
-3. **Inconsistent profile pages** between coach and athlete
-4. **Readiness check-ins lack context** — single score with no breakdown (sleep, soreness, stress, etc.)
-5. **Rankings/scores shown without context** for what they mean
+1. ~~**Missing back buttons** on quizzes, forms, and multi-step wizards~~ — Fixed (5cc7258): exit links added to athlete log-session, athlete onboarding, and coach session wizards
+2. ~~**Non-clickable cards** that display data but don't navigate to detail views~~ — Fixed (16a03a5): roster athlete cards now clickable with `card-interactive`
+3. **Inconsistent profile pages** between coach and athlete — by design (different user needs), consider unifying navigation patterns
+4. ~~**Readiness check-ins lack context** — single score with no breakdown~~ — Fixed: hero widget shows 2x2 factor grid (sleep, soreness, stress, energy) with color-coded bars
+5. ~~**Rankings/scores shown without context**~~ — Mostly fixed: labels + color coding in place; minor domain explanation gaps remain
 
 ---
 
