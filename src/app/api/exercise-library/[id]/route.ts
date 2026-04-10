@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, ExerciseLibraryPatchSchema } from "@/lib/api-schemas";
 
 export async function GET(
   _request: NextRequest,
@@ -61,8 +62,9 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
-    const { videoUrl, videoEmbed, tips } = body;
+    const parsed = await parseBody(request, ExerciseLibraryPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { videoUrl, videoEmbed, tips } = parsed;
 
     const updated = await prisma.exerciseLibrary.update({
       where: { id: id },

@@ -465,6 +465,14 @@ export const CoachAthleteSessionCreateSchema = z.object({
     .min(1, "At least one drill log is required"),
 });
 
+// ── Exercise Library ────────────────────────────────────────────────────
+
+export const ExerciseLibraryPatchSchema = z.object({
+  videoUrl: z.string().url().nullable().optional(),
+  videoEmbed: z.string().max(2000).nullable().optional(),
+  tips: z.string().max(5000).nullable().optional(),
+});
+
 // ── parseBody Helper ────────────────────────────────────────────────────
 
 /**

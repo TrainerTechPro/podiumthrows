@@ -379,7 +379,7 @@ export function QuickLogClient() {
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const { error: toastError } = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
 
   // Long-press state. We use `onClick` for the actual tap (most reliable
   // cross-browser, especially on iOS where pointerup races with framer-motion's
@@ -455,7 +455,16 @@ export function QuickLogClient() {
 
       setIsSyncing(true);
       syncQuickLogQueue()
-        .then(() => {
+        .then(({ synced, failed }) => {
+          if (failed > 0) {
+            toastError(
+              "Sync incomplete",
+              `${synced} throw${synced !== 1 ? "s" : ""} synced, ${failed} failed — will retry next time you're online.`,
+            );
+          } else if (synced > 0) {
+            toastSuccess("Throws synced", `${synced} throw${synced !== 1 ? "s" : ""} saved.`);
+          }
+
           const poll = setInterval(async () => {
             const remaining = await getPendingQuickLogCount();
             setPendingCount(remaining);
@@ -471,9 +480,12 @@ export function QuickLogClient() {
             setIsSyncing(false);
           }, 60_000);
         })
-        .catch(() => setIsSyncing(false));
+        .catch(() => {
+          toastError("Sync failed", "Couldn\u2019t sync your throws \u2014 will retry when connected.");
+          setIsSyncing(false);
+        });
     });
-  }, [isOnline]);
+  }, [isOnline, toastSuccess, toastError]);
 
   /* ── Current implement ───────────────────────────────────────────────── */
 
