@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, EquipmentInventorySchema } from "@/lib/api-schemas";
 
 // ── GET /api/throws/equipment ────────────────────────────────────────
 // Returns the athlete's equipment inventory.
@@ -116,7 +117,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, EquipmentInventorySchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       implements: implementsList,
       hasCage,
@@ -124,15 +126,7 @@ export async function POST(req: NextRequest) {
       hasFieldAccess,
       hasGym,
       gymEquipment,
-    } = body;
-
-    // Validate implements array
-    if (!Array.isArray(implementsList)) {
-      return NextResponse.json(
-        { success: false, error: "implements must be an array" },
-        { status: 400 },
-      );
-    }
+    } = parsed;
 
     const inventory = await prisma.equipmentInventory.upsert({
       where: { athleteId: athleteProfile.id },

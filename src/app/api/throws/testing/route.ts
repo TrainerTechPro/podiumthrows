@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, TestingBenchmarksPatchSchema } from "@/lib/api-schemas";
 
 // GET /api/throws/testing?athleteId=...
 // Returns the performanceBenchmarks JSON from AthleteProfile
@@ -70,12 +71,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { athleteId: bodyAthleteId, benchmarks } = body;
-
-    if (!benchmarks || typeof benchmarks !== "object") {
-      return NextResponse.json({ success: false, error: "benchmarks object required" }, { status: 400 });
-    }
+    const parsed = await parseBody(req, TestingBenchmarksPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId: bodyAthleteId, benchmarks } = parsed;
 
     const user = await prisma.user.findUnique({
       where: { id: currentUser.userId },

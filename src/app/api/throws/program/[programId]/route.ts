@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, ProgramPatchSchema } from "@/lib/api-schemas";
 
 interface Params {
   params: Promise<{ programId: string }>;
@@ -109,7 +110,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const { programId } = await params;
-    const body = await req.json();
+    const body = await parseBody(req, ProgramPatchSchema);
+    if (body instanceof NextResponse) return body;
 
     const program = await prisma.trainingProgram.findUnique({
       where: { id: programId },

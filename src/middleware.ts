@@ -89,7 +89,7 @@ export async function middleware(request: NextRequest) {
     response = NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
   // Redirect unauthenticated users to login
-  else if (!payload && pathname !== "/" && !PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  else if (!payload && pathname !== "/" && !PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     response = NextResponse.redirect(loginUrl);

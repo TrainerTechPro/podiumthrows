@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, ProgramSessionCompleteSchema } from "@/lib/api-schemas";
 
 interface Params {
   params: Promise<{ programId: string; sessionId: string }>;
@@ -20,7 +21,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const { programId, sessionId } = await params;
-    const body = await req.json();
+    const body = await parseBody(req, ProgramSessionCompleteSchema);
+    if (body instanceof NextResponse) return body;
 
     // Verify session exists and belongs to program
     const session = await prisma.programSession.findUnique({

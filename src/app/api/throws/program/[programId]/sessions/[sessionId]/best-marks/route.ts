@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, ProgramBestMarksSchema } from "@/lib/api-schemas";
 
 interface Params {
   params: Promise<{ programId: string; sessionId: string }>;
@@ -110,7 +111,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const { programId, sessionId } = await params;
-    const body = await req.json();
+    const parsed = await parseBody(req, ProgramBestMarksSchema);
+    if (parsed instanceof NextResponse) return parsed;
 
     // Verify session
     const session = await prisma.programSession.findUnique({
@@ -162,23 +164,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       }
     }
 
-    // Accept single mark or array of marks
-    const marks: BestMarkInput[] = Array.isArray(body.marks)
-      ? body.marks
-      : [body];
-
-    // Validate
-    for (const m of marks) {
-      if (!m.implement || typeof m.distance !== "number" || m.distance <= 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `Invalid mark: implement="${m.implement}", distance=${m.distance}. Both are required and distance must be > 0.`,
-          },
-          { status: 400 },
-        );
-      }
-    }
+    // Normalize: schema accepts single mark or { marks: [...] }
+    const marks: BestMarkInput[] = "marks" in parsed ? parsed.marks : [parsed as BestMarkInput];
 
     // Upsert each best mark
     const results: Awaited<ReturnType<typeof prisma.sessionBestMark.upsert>>[] = [];

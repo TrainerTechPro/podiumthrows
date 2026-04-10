@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachPreferencesPatchSchema } from "@/lib/api-schemas";
 
 export interface CoachPreferences {
   globalDefaultPage?: string;
@@ -66,7 +67,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await parseBody(request, CoachPreferencesPatchSchema);
+    if (body instanceof NextResponse) return body;
     const current = parsePreferences(coach.preferences);
 
     // Merge patch — only update keys present in request body

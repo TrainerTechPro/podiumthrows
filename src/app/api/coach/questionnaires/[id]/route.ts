@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachSession, getQuestionnaireById } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
+import { parseBody, QuestionnaireUpdateSchema } from "@/lib/api-schemas";
 
 const VALID_TYPES = [
   "ONBOARDING", "ASSESSMENT", "CHECK_IN", "READINESS",
@@ -44,25 +45,15 @@ export async function PUT(
       return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, QuestionnaireUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       title, description, type, status,
       blocks, questions,
       displayMode, welcomeScreen, thankYouScreen,
       conditionalLogic, scoringEnabled, scoringRules,
       allowAnonymous, expiresAt,
-    } = body;
-
-    // Validation
-    if (title !== undefined && (typeof title !== "string" || title.trim().length === 0)) {
-      return NextResponse.json({ success: false, error: "Title cannot be empty" }, { status: 400 });
-    }
-    if (type !== undefined && !VALID_TYPES.includes(type)) {
-      return NextResponse.json({ success: false, error: "Invalid type" }, { status: 400 });
-    }
-    if (status !== undefined && !VALID_STATUSES.includes(status)) {
-      return NextResponse.json({ success: false, error: "Status must be draft, published, or archived" }, { status: 400 });
-    }
+    } = parsed;
 
     // Build update payload — only include fields that were sent
     const updateData: Record<string, unknown> = {};

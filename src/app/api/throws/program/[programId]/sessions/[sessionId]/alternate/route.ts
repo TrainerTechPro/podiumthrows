@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { canAccessProgram } from "@/lib/authorize";
+import { parseBody, ProgramAlternateSchema } from "@/lib/api-schemas";
 
 interface Params {
   params: Promise<{ programId: string; sessionId: string }>;
@@ -22,7 +23,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const { programId, sessionId } = await params;
-    const body = await req.json();
+    const body = await parseBody(req, ProgramAlternateSchema);
+    if (body instanceof NextResponse) return body;
 
     // Verify session
     const session = await prisma.programSession.findUnique({
@@ -46,19 +48,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Validate body
-    if (!body.actualPrescription && !body.modificationNotes) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Provide at least actualPrescription (what you did) or modificationNotes (why you changed it)",
-        },
-        { status: 400 },
-      );
-    }
-
-    // Update session as modified
+    // Update session as modified (validation already done by Zod refine)
     const updated = await prisma.programSession.update({
       where: { id: sessionId },
       data: {

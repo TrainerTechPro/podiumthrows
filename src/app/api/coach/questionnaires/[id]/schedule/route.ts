@@ -3,6 +3,7 @@ import { requireCoachSession } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { calculateNextRunDate } from "@/lib/forms/recurring-scheduler";
 import type { RecurrenceFrequency } from "@/lib/forms/types";
+import { parseBody, QuestionnaireScheduleSchema } from "@/lib/api-schemas";
 
 /**
  * GET /api/coach/questionnaires/[id]/schedule
@@ -51,7 +52,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, QuestionnaireScheduleSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       frequency,
       specificDays,
@@ -62,11 +64,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       startDate,
       endDate,
       isActive,
-    } = body;
-
-    if (!frequency || !startDate) {
-      return NextResponse.json({ success: false, error: "frequency and startDate are required" }, { status: 400 });
-    }
+    } = parsed;
 
     // Calculate next run date
     const nextRunAt = calculateNextRunDate({
@@ -77,11 +75,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       lastRunAt: null,
     });
 
+    const freq = frequency as RecurrenceFrequency;
     const schedule = await prisma.recurringSchedule.upsert({
       where: { questionnaireId: id },
       create: {
         questionnaireId: id,
-        frequency,
+        frequency: freq,
         specificDays: specificDays ?? [],
         timeOfDay: timeOfDay ?? null,
         athleteIds: athleteIds ?? [],
@@ -93,7 +92,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         nextRunAt,
       },
       update: {
-        frequency,
+        frequency: freq,
         specificDays: specificDays ?? [],
         timeOfDay: timeOfDay ?? null,
         athleteIds: athleteIds ?? [],

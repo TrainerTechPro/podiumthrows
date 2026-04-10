@@ -713,7 +713,6 @@ model ReadinessCheckIn {
   temperatureDeviation Float?
 
   @@unique([athleteId, date])
-  @@index([athleteId])
   @@index([date])
   @@index([athleteId, date])
 }
@@ -862,7 +861,6 @@ model Achievement {
   earnedAt    DateTime        @default(now())
 
   @@unique([athleteId, badgeKey])
-  @@index([athleteId])
   @@index([type])
   @@index([earnedAt])
 }
@@ -1247,7 +1245,7 @@ model ThrowsSession {
   name              String
   sessionType       String // THROWS_ONLY, THROWS_LIFT, LIFT_ONLY, COMPETITION_SIM
   targetPhase       String? // ACCUMULATION, TRANSMUTATION, REALIZATION, COMPETITION
-  event             String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event             EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   estimatedDuration Int? // minutes
   tags              String? // JSON array of tags
   notes             String?
@@ -1361,7 +1359,7 @@ model PracticeAttempt {
   session       PracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   athleteId     String
   athlete       AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event         String // SHOT_PUT | DISCUS | HAMMER | JAVELIN
+  event         EventType // SHOT_PUT | DISCUS | HAMMER | JAVELIN
   implement     String // e.g. "7.26kg"
   distance      Float? // meters
   drillType     String? // STANDING | POWER_POSITION | HALF_TURN | SOUTH_AFRICAN | GLIDE | SPIN | FULL_THROW | OTHER
@@ -1383,7 +1381,7 @@ model ThrowsPR {
   id         String         @id @default(cuid())
   athleteId  String
   athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event      String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event      EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   implement  String // e.g. "7.26kg", "2kg"
   distance   Float // meters
   achievedAt String // YYYY-MM-DD
@@ -1392,7 +1390,6 @@ model ThrowsPR {
   updatedAt  DateTime       @updatedAt
 
   @@unique([athleteId, event, implement])
-  @@index([athleteId, event])
 }
 
 /// Drill-type-specific personal record per athlete/event/drillType/implement combo.
@@ -1400,7 +1397,7 @@ model ThrowsDrillPR {
   id         String         @id @default(cuid())
   athleteId  String
   athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event      String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event      EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   drillType  String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
   implement  String // e.g. "7.26kg"
   distance   Float // meters
@@ -1410,8 +1407,6 @@ model ThrowsDrillPR {
   updatedAt  DateTime       @updatedAt
 
   @@unique([athleteId, event, drillType, implement])
-  @@index([athleteId])
-  @@index([athleteId, event])
 }
 
 // ─── THROWS ATHLETE PROFILING ───────────────────────────────────────────────
@@ -1448,7 +1443,6 @@ model ThrowsCheckIn {
   updatedAt DateTime @updatedAt
 
   @@unique([athleteId, date])
-  @@index([athleteId, date])
 }
 
 /// Bondarchuk typing classification quiz results and computed profile.
@@ -1509,7 +1503,7 @@ model ThrowsComplex {
   peakMark          Float? // meters
   avgMarkAtForm     Float? // meters
   oscillationBand   Float? // % spread of marks at form
-  event             String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event             EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -1523,7 +1517,7 @@ model ThrowsCompetition {
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   name      String
   date      String // YYYY-MM-DD
-  event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event     EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   priority  String         @default("B") // A, B, C
   result    Float? // meters (filled after competition)
   resultBy  String? // COACH | ATHLETE — who entered the result
@@ -1541,7 +1535,7 @@ model AthleteThrowsSession {
   id        String         @id @default(cuid())
   athleteId String
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event     EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   date      String // YYYY-MM-DD
   focus     String? // e.g. "Technique", "Power", "Speed", "Volume", "Competition Sim"
   notes     String?
@@ -1593,7 +1587,7 @@ model CoachThrowsSession {
   id        String       @id @default(cuid())
   coachId   String
   coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event     EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   date      String // YYYY-MM-DD
   focus     String?
   notes     String?
@@ -1765,7 +1759,7 @@ model CoachPR {
   id              String       @id @default(cuid())
   coachId         String
   coach           CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  event           String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event           EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   implement       String // e.g. "7.26kg"
   distance        Float
   achievedAt      DateTime     @default(now())
@@ -1825,7 +1819,7 @@ model ThrowAnalysis {
   coach       CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
   athleteId   String?
   athlete     AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event       String // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event       EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   drillType   String // FULL_THROW, STANDING, POWER_POSITION, HALF_TURN, GLIDE, SPIN, SOUTH_AFRICAN
   cameraAngle String // SIDE, BEHIND, FRONT, DIAGONAL
 
@@ -1867,7 +1861,7 @@ model VideoAnalysis {
   coach         CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
   title         String
   description   String?
-  event         String          // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event         EventType          // SHOT_PUT, DISCUS, HAMMER, JAVELIN
   videoUrl      String          // URL to uploaded video file
   thumbnailUrl  String?         // Auto-generated thumbnail
   duration      Float?          // Video duration in seconds
@@ -1901,7 +1895,7 @@ model ThrowsProfile {
   coach      CoachProfile?  @relation("ThrowsProfileCoach", fields: [enrolledBy], references: [id], onDelete: SetNull)
 
   // Core classification
-  event  String // SHOT_PUT | DISCUS | HAMMER | JAVELIN
+  event  EventType // SHOT_PUT | DISCUS | HAMMER | JAVELIN
   gender String // MALE | FEMALE
   status String @default("active") // active | inactive
 
@@ -1941,7 +1935,6 @@ model ThrowsProfile {
   throwsInjuries     ThrowsInjury[]
 
   @@unique([athleteId, event])
-  @@index([athleteId])
   @@index([enrolledBy])
   @@index([status])
   @@index([enrolledBy, status])
@@ -1949,8 +1942,8 @@ model ThrowsProfile {
 
 /// Reference KPI table seeded from Bondarchuk Transfer of Training.
 model ThrowsKpiStandard {
-  id           String @id @default(cuid())
-  event        String
+  id           String    @id @default(cuid())
+  event        EventType
   gender       String
   distanceBand String
 
@@ -2126,7 +2119,7 @@ model TrainingProgram {
   source             ProgramSource @default(COACH_PRESCRIBED)
 
   // Classification
-  event  String // HAMMER (future: SHOT_PUT, DISCUS, JAVELIN)
+  event  EventType // HAMMER (future: SHOT_PUT, DISCUS, JAVELIN)
   gender String // MALE | FEMALE
   status String @default("ACTIVE") // ACTIVE | PAUSED | COMPLETED | ARCHIVED
 
@@ -2457,7 +2450,7 @@ model AutoregulationSettings {
 /// Integration point: sync rows to ConvertKit/Mailchimp via webhook or cron.
 model Lead {
   id        String   @id @default(cuid())
-  email     String
+  email     String   @unique
   name      String?
   source    String   @default("deficit-finder") // which lead magnet
   event     String?  // SP, DT, HT, JT
@@ -2470,7 +2463,6 @@ model Lead {
   convertedToUser Boolean @default(false)
   createdAt DateTime @default(now())
 
-  @@index([email])
   @@index([source])
   @@index([createdAt])
 }
@@ -2546,7 +2538,7 @@ model SelfProgramConfig {
 
   // Wizard answers
   programType         String          // "THROWS_ONLY" | "THROWS_AND_LIFTING"
-  event               String          // "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN"
+  event               EventType          // "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN"
   gender              String          // "MALE" | "FEMALE"
   yearsExperience     Int
   competitionLevel    String          // "HIGH_SCHOOL" | "COLLEGIATE" | "POST_COLLEGIATE" | "ELITE"

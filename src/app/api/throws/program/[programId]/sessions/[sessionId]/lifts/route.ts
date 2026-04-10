@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, ProgramLiftsSchema } from "@/lib/api-schemas";
 
 interface Params {
   params: Promise<{ programId: string; sessionId: string }>;
@@ -20,7 +21,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     const { programId, sessionId } = await params;
-    const body = await req.json();
+    const parsed = await parseBody(req, ProgramLiftsSchema);
+    if (parsed instanceof NextResponse) return parsed;
 
     // Verify session
     const session = await prisma.programSession.findUnique({
@@ -72,11 +74,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       }
     }
 
-    // Accept single lift or array of lifts
-    const lifts = Array.isArray(body.lifts) ? body.lifts : [body];
-
     const results = [];
-    for (const l of lifts) {
+    for (const l of parsed.lifts) {
       const result = await prisma.programLiftResult.create({
         data: {
           sessionId,

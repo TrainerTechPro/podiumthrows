@@ -546,6 +546,129 @@ export const DrillPrCreateSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+// ── Program Session Schemas ────────────────────────────────────────────
+
+export const ProgramPatchSchema = z.object({
+  status: z.string().optional(),
+  daysPerWeek: z.number().int().min(1).max(7).optional(),
+  sessionsPerDay: z.number().int().min(1).max(3).optional(),
+  includeLift: z.boolean().optional(),
+});
+
+const LiftInputSchema = z.object({
+  exerciseName: z.string().min(1, "Exercise name is required"),
+  sets: z.number().int().nullable().optional(),
+  reps: z.number().int().nullable().optional(),
+  weight: z.number().nullable().optional(),
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const ProgramLiftsSchema = z.object({
+  lifts: z.array(LiftInputSchema).min(1, "At least one lift is required"),
+});
+
+export const ProgramSessionCompleteSchema = z.object({
+  actualThrows: z.number().int().nullable().optional(),
+  selfFeeling: z.string().nullable().optional(),
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  bestMark: z.number().nullable().optional(),
+  sessionNotes: z.string().nullable().optional(),
+  wasModified: z.boolean().optional(),
+  actualPrescription: z.unknown().optional(),
+  modificationNotes: z.string().nullable().optional(),
+});
+
+const BestMarkInputSchema = z.object({
+  implement: z.string().min(1, "Implement is required"),
+  distance: z.number().positive("Distance must be positive"),
+  drillType: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const ProgramBestMarksSchema = z.object({
+  marks: z.array(BestMarkInputSchema).min(1, "At least one mark is required"),
+}).or(BestMarkInputSchema); // Accepts single mark or { marks: [...] }
+
+export const ProgramAlternateSchema = z.object({
+  actualPrescription: z.unknown().optional(),
+  modificationNotes: z.string().nullable().optional(),
+}).refine(
+  (d) => d.actualPrescription !== undefined || (d.modificationNotes != null && d.modificationNotes.length > 0),
+  "Provide at least actualPrescription or modificationNotes"
+);
+
+// ── Testing / Benchmarks ──────────────────────────────────────────────
+
+export const TestingBenchmarksPatchSchema = z.object({
+  athleteId: z.string().optional().nullable(),
+  benchmarks: z.record(z.string(), z.number().nullable().optional()),
+});
+
+// ── Equipment Inventory ───────────────────────────────────────────────
+
+export const EquipmentInventorySchema = z.object({
+  implements: z.array(z.unknown()).min(0),
+  hasCage: z.boolean().optional(),
+  hasRing: z.boolean().optional(),
+  hasFieldAccess: z.boolean().optional(),
+  hasGym: z.boolean().optional(),
+  gymEquipment: z.array(z.string()).optional(),
+});
+
+// ── Coach Preferences ─────────────────────────────────────────────────
+
+export const CoachPreferencesPatchSchema = z.object({
+  globalDefaultPage: z.string().optional(),
+  workspaceDefaults: z.record(z.string(), z.string()).optional(),
+  dashboardLayout: z.object({
+    widgets: z.array(z.object({
+      id: z.string(),
+      visible: z.boolean(),
+      order: z.number(),
+    })),
+  }).optional(),
+  myTraining: z.object({
+    mode: z.enum(["competitive", "recreational"]).optional(),
+    primaryEvent: z.string().optional(),
+    gender: z.enum(["male", "female"]).optional(),
+  }).optional(),
+  lastTeamId: z.string().nullable().optional(),
+});
+
+// ── Questionnaire Update ──────────────────────────────────────────────
+
+export const QuestionnaireUpdateSchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  type: z.string().optional(),
+  status: z.string().optional(),
+  blocks: z.unknown().optional(),
+  questions: z.unknown().optional(),
+  displayMode: z.string().optional(),
+  welcomeScreen: z.unknown().nullable().optional(),
+  thankYouScreen: z.unknown().nullable().optional(),
+  conditionalLogic: z.unknown().nullable().optional(),
+  scoringEnabled: z.boolean().optional(),
+  scoringRules: z.unknown().nullable().optional(),
+  allowAnonymous: z.boolean().optional(),
+  expiresAt: z.string().nullable().optional(),
+});
+
+// ── Questionnaire Schedule ────────────────────────────────────────────
+
+export const QuestionnaireScheduleSchema = z.object({
+  frequency: z.string().min(1, "Frequency is required"),
+  specificDays: z.array(z.number()).optional(),
+  timeOfDay: z.string().optional(),
+  athleteIds: z.array(z.string()).optional(),
+  groupIds: z.array(z.string()).optional(),
+  assignToAll: z.boolean().optional(),
+  startDate: z.string().min(1, "Start date is required"),
+  endDate: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+});
+
 // ── Typing Override (coach manual classification) ──────────────────────
 
 export const TypingOverrideSchema = z.object({
