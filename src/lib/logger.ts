@@ -69,17 +69,17 @@ function reportToErrorTracking(
 ) {
   if (!process.env.SENTRY_DSN) return;
 
-  try {
-    // eslint-disable-next-line
-    const Sentry = require("@sentry/nextjs");
-    Sentry.captureException(options?.error || new Error(entry.message), {
-      tags: { context: options?.context },
-      user: options?.userId ? { id: options.userId } : undefined,
-      extra: options?.metadata,
+  import("@sentry/nextjs")
+    .then((Sentry) => {
+      Sentry.captureException(options?.error || new Error(entry.message), {
+        tags: { context: options?.context },
+        user: options?.userId ? { id: options.userId } : undefined,
+        extra: options?.metadata,
+      });
+    })
+    .catch(() => {
+      // @sentry/nextjs not installed — skip silently
     });
-  } catch {
-    // @sentry/nextjs not installed — skip silently
-  }
 }
 
 export const logger = {

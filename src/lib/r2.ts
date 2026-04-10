@@ -252,7 +252,10 @@ export async function createMultipartUpload(
       ContentType: contentType,
     })
   );
-  return result.UploadId!;
+  if (!result.UploadId) {
+    throw new Error("R2 did not return an UploadId for multipart upload");
+  }
+  return result.UploadId;
 }
 
 export async function uploadPart(
@@ -270,7 +273,10 @@ export async function uploadPart(
       Body: body,
     })
   );
-  return result.ETag!;
+  if (!result.ETag) {
+    throw new Error("R2 did not return an ETag for upload part");
+  }
+  return result.ETag;
 }
 
 export async function completeMultipartUpload(

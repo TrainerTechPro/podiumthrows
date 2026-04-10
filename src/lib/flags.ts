@@ -76,19 +76,29 @@ export async function getFlags(): Promise<FlagMap> {
 }
 
 /**
- * Check if a specific feature is enabled, optionally for a given tier.
+ * Check if a specific feature is enabled for a given tier.
+ * Tier is required to prevent accidentally granting tier-gated features.
+ * Use `isFeatureEnabledAnyTier` when the tier check is intentionally skipped.
  */
 export async function isFeatureEnabled(
   key: FlagKey,
-  tier?: "free" | "pro" | "elite",
+  tier: "free" | "pro" | "elite",
 ): Promise<boolean> {
   const flags = await getFlags();
   const flag = flags[key];
   if (!flag || !flag.enabled) return false;
-  // Empty tiers array means available to all
   if (flag.tiers.length === 0) return true;
-  if (!tier) return true; // No tier check requested
   return flag.tiers.includes(tier);
+}
+
+/**
+ * Check if a feature is enabled regardless of tier.
+ * Use only when the caller intentionally bypasses tier gating (e.g., admin views).
+ */
+export async function isFeatureEnabledAnyTier(key: FlagKey): Promise<boolean> {
+  const flags = await getFlags();
+  const flag = flags[key];
+  return !!flag?.enabled;
 }
 
 /**

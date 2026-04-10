@@ -2107,6 +2107,9 @@ model ExerciseLibrary {
 // Generates macrocycles → mesocycles → microcycles → daily sessions.
 
 /// Top-level container for a generated Bondarchuk training program (macrocycle).
+/// Invariant: at least one of athleteId or coachId must be non-null.
+/// coachId is nullable (onDelete: SetNull for coach offboarding), but a program
+/// should never have both null. Enforced at application layer in canAccessProgram.
 model TrainingProgram {
   id        String          @id @default(cuid())
   athleteId String?
