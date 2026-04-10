@@ -1064,7 +1064,6 @@ model Notification {
   coach            CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
   athleteProfileId String?
   athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
-  athleteId        String?         // which athlete is relevant (legacy plain-string reference)
   type             String          // notification type key
   title            String
   body             String

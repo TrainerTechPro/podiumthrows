@@ -74,7 +74,7 @@ function getNotificationUrl(n: NotificationItem, role: "COACH" | "ATHLETE"): str
     case "WORKOUT_COMPLETED":
     case "WORKOUT_SKIPPED":
     case "STREAK_BROKEN":
-      return n.athleteId ? `${prefix === "/coach" ? "/coach" : "/athlete"}/athletes/${n.athleteId}` : null;
+      return n.athleteProfileId ? `${prefix === "/coach" ? "/coach" : "/athlete"}/athletes/${n.athleteProfileId}` : null;
     case "WORKOUT_ASSIGNED":
       return `${prefix}/sessions`;
     case "QUESTIONNAIRE_ASSIGNED":
@@ -102,7 +102,7 @@ function resolveCommentUrl(
 ): string | null {
   const targetField = meta?.targetField as string | undefined;
   const targetId = meta?.targetId as string | undefined;
-  const athleteId = n.athleteId || (meta?.athleteId as string | undefined);
+  const athleteId = n.athleteProfileId || (meta?.athleteId as string | undefined);
 
   if (role === "COACH") {
     switch (targetField) {

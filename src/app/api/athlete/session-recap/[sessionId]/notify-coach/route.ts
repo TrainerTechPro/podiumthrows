@@ -99,7 +99,6 @@ export async function POST(
       type: "WORKOUT_COMPLETED",
       coachId: athlete.coachId,
       athleteProfileId: athlete.id,
-      athleteId: athlete.id,
       title: `${athleteName} finished a session`,
       body: bodyParts.join(" · "),
       metadata: {

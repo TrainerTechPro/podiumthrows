@@ -36,7 +36,7 @@ export type NotificationItem = {
   title: string;
   body: string;
   read: boolean;
-  athleteId: string | null;
+  athleteProfileId: string | null;
   metadata: Record<string, unknown> | null;
   createdAt: string;
 };
@@ -49,7 +49,6 @@ interface CreateNotificationInput {
   body: string;
   coachId?: string;
   athleteProfileId?: string;
-  athleteId?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -61,7 +60,6 @@ export async function createNotification(input: CreateNotificationInput): Promis
       body: input.body,
       coachId: input.coachId ?? null,
       athleteProfileId: input.athleteProfileId ?? null,
-      athleteId: input.athleteId ?? null,
       metadata: (input.metadata as Prisma.InputJsonValue) ?? Prisma.JsonNull,
     },
   });
@@ -75,7 +73,7 @@ const NOTIFICATION_SELECT = {
   title: true,
   body: true,
   read: true,
-  athleteId: true,
+  athleteProfileId: true,
   metadata: true,
   createdAt: true,
 } as const;
@@ -86,7 +84,7 @@ function serializeNotification(n: {
   title: string;
   body: string;
   read: boolean;
-  athleteId: string | null;
+  athleteProfileId: string | null;
   metadata: unknown;
   createdAt: Date;
 }): NotificationItem {
@@ -193,7 +191,7 @@ export async function markAllAsRead(
 
 export async function notifyCoachPR(
   coachId: string,
-  athleteId: string,
+  athleteProfileId: string,
   athleteName: string,
   event: string,
   distance: number,
@@ -203,7 +201,7 @@ export async function notifyCoachPR(
   await createNotification({
     type: "PR_ALERT",
     coachId,
-    athleteId,
+    athleteProfileId,
     title: `New PR — ${athleteName}`,
     body: `${athleteName} just hit a new ${eventLabel} PR: ${distance.toFixed(2)}${unit}`,
     metadata: { event, distance, unit, athleteName },
@@ -212,7 +210,7 @@ export async function notifyCoachPR(
 
 export async function notifyCoachLowReadiness(
   coachId: string,
-  athleteId: string,
+  athleteProfileId: string,
   athleteName: string,
   score: number
 ): Promise<void> {
@@ -220,7 +218,7 @@ export async function notifyCoachLowReadiness(
   await createNotification({
     type: "LOW_READINESS",
     coachId,
-    athleteId,
+    athleteProfileId,
     title: `Low Readiness — ${athleteName}`,
     body: `${athleteName} checked in with a readiness score of ${score.toFixed(1)}/10. Consider adjusting today's training load.`,
     metadata: { readinessScore: score, athleteName },
@@ -229,14 +227,14 @@ export async function notifyCoachLowReadiness(
 
 export async function notifyCoachQuestionnaireComplete(
   coachId: string,
-  athleteId: string,
+  athleteProfileId: string,
   athleteName: string,
   questionnaireName: string
 ): Promise<void> {
   await createNotification({
     type: "QUESTIONNAIRE_COMPLETE",
     coachId,
-    athleteId,
+    athleteProfileId,
     title: `Questionnaire Completed — ${athleteName}`,
     body: `${athleteName} completed "${questionnaireName}".`,
     metadata: { questionnaireName, athleteName },

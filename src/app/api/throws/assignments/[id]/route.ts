@@ -172,7 +172,7 @@ export async function PUT(
         void createNotification({
           type: "WORKOUT_COMPLETED",
           coachId,
-          athleteId: updated.athleteId,
+          athleteProfileId: updated.athleteId,
           title: `${athleteName} completed ${updated.session.name}`,
           body: `RPE: ${sessionRpe ?? "—"}/10 | Best: ${bestMark > 0 ? bestMark.toFixed(2) + "m" : "—"} | ${totalThrows} throws`,
           metadata: {
@@ -238,7 +238,7 @@ export async function PUT(
         void createNotification({
           type: "WORKOUT_SKIPPED",
           coachId,
-          athleteId: updated.athleteId,
+          athleteProfileId: updated.athleteId,
           title: `${athleteName} skipped ${updated.session.name}`,
           body: skipReason ? `Reason: ${skipReason}` : "No reason provided",
           metadata: { assignmentId: updated.id, skipReason },

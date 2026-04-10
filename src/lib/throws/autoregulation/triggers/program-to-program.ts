@@ -133,8 +133,8 @@ export async function triggerProgramToProgram(
 
   await prisma.notification.create({
     data: {
-      coachId:   completedProgram.coachId,
-      athleteId: completedProgram.athleteId,
+      coachId:          completedProgram.coachId,
+      athleteProfileId: completedProgram.athleteId,
       type:      'AUTOREG_PROGRAM_COMPLETE',
       title:     'Program complete — carryforward ready',
       body:      `${programName} completed with ${totalSessionsCompleted} sessions. Carryforward context is ready for the next program.`,

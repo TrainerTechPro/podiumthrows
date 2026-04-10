@@ -93,7 +93,7 @@ export async function approveSuggestion(
     await prisma.notification.create({
       data: {
         coachId: program.coachId,
-        athleteId: program.athleteId ?? null,
+        athleteProfileId: program.athleteId ?? null,
         type: 'AUTOREG_SUGGESTION_APPLIED',
         title: 'Autoregulation suggestion applied',
         body: suggestion.reasoning,

@@ -86,8 +86,8 @@ export async function triggerBlockToBlock(
 
   await prisma.notification.create({
     data: {
-      coachId:   checkpoint.program.coachId,
-      athleteId: checkpoint.program.athleteId ?? null,
+      coachId:          checkpoint.program.coachId,
+      athleteProfileId: checkpoint.program.athleteId ?? null,
       type:      'AUTOREG_BLOCK_SUGGESTION',
       title:     'Block transition recommended',
       body:      `${actionLabel} — ${checkpoint.reasoning}`,

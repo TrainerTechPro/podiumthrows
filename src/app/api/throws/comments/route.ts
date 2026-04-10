@@ -335,7 +335,7 @@ async function createCommentNotification(
       await prisma.notification.create({
         data: {
           coachId: athlete.coachId,
-          athleteId: athlete.id,
+          athleteProfileId: athlete.id,
           type: "COMMENT_ADDED",
           title,
           body: preview,
