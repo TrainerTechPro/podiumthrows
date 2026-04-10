@@ -133,17 +133,20 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json(
       {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
+        success: true,
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+          },
+          redirectTo:
+            user.role === "COACH"
+              ? plan
+                ? `/coach/dashboard?checkout=${plan}${interval === "annual" ? "&interval=annual" : ""}`
+                : "/coach/onboarding/welcome"
+              : "/athlete/onboarding",
         },
-        redirectTo:
-          user.role === "COACH"
-            ? plan
-              ? `/coach/dashboard?checkout=${plan}${interval === "annual" ? "&interval=annual" : ""}`
-              : "/coach/onboarding/welcome"
-            : "/athlete/onboarding",
       },
       { status: 201 }
     );

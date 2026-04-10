@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      message: "Password has been reset successfully. You can now log in.",
+      success: true,
+      data: { message: "Password has been reset successfully. You can now log in." },
     });
   } catch (error) {
     logger.error("reset-password Error", { context: "api", error });

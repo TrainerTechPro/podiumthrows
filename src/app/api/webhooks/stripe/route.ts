@@ -81,9 +81,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const planKey = session.metadata?.plan as PlanName | undefined;
 
   if (!coachId || !planKey) {
-    console.warn("[stripe/webhook] checkout.session.completed missing metadata", {
-      coachId,
-      planKey,
+    logger.warn("[stripe/webhook] checkout.session.completed missing metadata", {
+      context: "stripe",
+      metadata: { coachId, planKey },
     });
     return;
   }
@@ -115,7 +115,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
   }
 
-  console.log(`[stripe/webhook] Coach ${coachId} upgraded to ${planKey}`);
+  logger.info(`[stripe/webhook] Coach ${coachId} upgraded to ${planKey}`);
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -157,7 +157,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     data: { status: "REVOKED" },
   });
 
-  console.log(`[stripe/webhook] Coach ${coach.id} downgraded to FREE (subscription deleted)`);
+  logger.info(`[stripe/webhook] Coach ${coach.id} downgraded to FREE (subscription deleted)`);
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
@@ -180,7 +180,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     data: { paymentFailedAt: new Date() },
   });
 
-  console.warn(
+  logger.warn(
     `[stripe/webhook] Invoice payment failed for coach ${coach.id} (customer ${customerId})`
   );
 }
@@ -193,7 +193,7 @@ async function updateCoachFromSubscription(
   const priceId = subscription.items.data[0]?.price?.id;
   const planKey = priceId ? getPlanFromPriceId(priceId) : null;
   if (!planKey) {
-    console.warn(
+    logger.warn(
       `[stripe/webhook] Unrecognized price ID ${priceId} for coach ${coachId}`
     );
     return;
@@ -217,7 +217,7 @@ async function updateCoachFromSubscription(
     },
   });
 
-  console.log(
+  logger.info(
     `[stripe/webhook] Coach ${coachId} plan set to ${isActive ? planKey : "FREE"}`
   );
 }

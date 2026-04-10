@@ -148,7 +148,7 @@ export default function CoachSettingsPage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => {
-        const user = data.user;
+        const user = data.data?.user;
         if (user) {
           const cp = user.coachProfile;
           setProfile({

@@ -598,6 +598,7 @@ model ThrowLog {
   @@index([athleteId])
   @@index([athleteId, event])
   @@index([athleteId, date])
+  @@index([sessionId])
   @@index([event])
   @@index([date])
   @@index([isPersonalBest])

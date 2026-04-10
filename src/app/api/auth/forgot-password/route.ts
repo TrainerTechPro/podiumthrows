@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
 
     // Always return success to prevent email enumeration
     const successResponse = NextResponse.json({
-      message: "If an account with that email exists, a reset link has been sent.",
+      success: true,
+      data: { message: "If an account with that email exists, a reset link has been sent." },
     });
 
     const user = await prisma.user.findUnique({

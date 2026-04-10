@@ -157,7 +157,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
         const res = await fetch("/api/notifications/count");
         if (res.ok && mounted) {
           const data = await res.json();
-          setCount(data.count ?? 0);
+          setCount(data.data?.count ?? 0);
         }
       } catch {
         // Silent

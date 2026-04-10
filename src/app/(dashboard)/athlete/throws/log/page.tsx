@@ -568,7 +568,7 @@ export default function ThrowsLogPage() {
  useEffect(() => {
  fetch("/api/auth/me")
  .then((r) => r.json())
- .then((d) => { if (d.success) setAthleteId(d.user?.athleteProfile?.id ?? null); })
+ .then((d) => { if (d.success) setAthleteId(d.data?.user?.athleteProfile?.id ?? null); })
  .catch(() => {});
  }, []);
 

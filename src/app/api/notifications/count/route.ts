@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ count: 0 }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     let profileId: string | null = null;
@@ -28,12 +28,12 @@ export async function GET() {
     }
 
     if (!profileId) {
-      return NextResponse.json({ count: 0 });
+      return NextResponse.json({ success: true, data: { count: 0 } });
     }
 
     const count = await getUnreadCount(profileId, session.role);
-    return NextResponse.json({ count });
+    return NextResponse.json({ success: true, data: { count } });
   } catch {
-    return NextResponse.json({ count: 0 });
+    return NextResponse.json({ success: true, data: { count: 0 } });
   }
 }

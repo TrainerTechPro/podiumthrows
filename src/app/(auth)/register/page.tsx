@@ -135,7 +135,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push(data.redirectTo);
+      router.push(data.data?.redirectTo || (role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard"));
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);

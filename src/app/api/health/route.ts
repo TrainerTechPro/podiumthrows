@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: { status: "ok", timestamp, db: "connected" } });
   } catch {
     return NextResponse.json(
-      { success: true, data: { status: "degraded", timestamp, db: "disconnected" } },
+      { success: false, error: "Database unreachable", data: { status: "degraded", timestamp, db: "disconnected" } },
       { status: 503 }
     );
   }

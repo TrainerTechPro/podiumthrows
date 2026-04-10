@@ -7,6 +7,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { PasswordChangeSchema, CoachProfileUpdateSchema } from "@/lib/api-schemas";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
 import { blacklistToken } from "@/lib/token-blacklist";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -59,8 +60,9 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, user });
-  } catch {
+    return NextResponse.json({ success: true, data: { user } });
+  } catch (err) {
+    logger.error("GET /api/auth/me", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
   }
 }
@@ -199,7 +201,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json({ success: false, error: "Nothing to update" }, { status: 400 });
-  } catch {
+  } catch (err) {
+    logger.error("PATCH /api/auth/me", { context: "api", error: err });
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred" },
       { status: 500 }

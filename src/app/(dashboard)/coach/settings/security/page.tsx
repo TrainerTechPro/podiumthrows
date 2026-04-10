@@ -41,7 +41,7 @@ export default function SecuritySettingsPage() {
         const res = await fetch("/api/auth/me");
         if (res.ok) {
           const data = await res.json();
-          const enabled = data.user?.coachProfile?.mfaEnabled ?? false;
+          const enabled = data.data?.user?.coachProfile?.mfaEnabled ?? false;
           setMfaEnabled(enabled);
           setPhase(enabled ? "enabled" : "disabled");
         } else {

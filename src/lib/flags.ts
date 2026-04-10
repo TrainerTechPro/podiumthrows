@@ -68,8 +68,9 @@ export async function getFlags(): Promise<FlagMap> {
     if (!flags) return DEFAULT_FLAGS;
     // Merge with defaults so new flags added in code always have a value
     return { ...DEFAULT_FLAGS, ...flags };
-  } catch {
-    // Edge Config unavailable — fall back to defaults
+  } catch (err) {
+    // Edge Config unavailable — fall back to defaults (log for visibility)
+    console.warn("[flags] Edge Config error — serving default flags", err);
     return DEFAULT_FLAGS;
   }
 }
