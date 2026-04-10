@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -137,6 +138,16 @@ export function SessionWizard({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <Link
+        href="/coach/sessions"
+        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+        </svg>
+        Back to Sessions
+      </Link>
+
       {/* Step Indicator */}
       <div className="flex items-center gap-2">
         {STEPS.map((label, i) => (

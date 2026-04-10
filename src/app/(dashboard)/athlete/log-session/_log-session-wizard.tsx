@@ -412,18 +412,17 @@ export function LogSessionWizard({
     }
   }
 
-  /* ── Close button (shared across steps) ── */
-  const closeButton = step !== "done" && (
+  /* ── Back link (shared across steps) ── */
+  const backLink = step !== "done" && (
     <button
       type="button"
       onClick={handleClose}
-      className="absolute top-0 right-0 p-3 text-muted hover:text-[var(--foreground)] transition-colors"
-      aria-label="Close"
+      className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors mb-4"
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
       </svg>
+      Back to Sessions
     </button>
   );
 
@@ -441,7 +440,7 @@ export function LogSessionWizard({
   if (step === "event") {
     return (
       <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
-        {closeButton}
+        {backLink}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
@@ -519,7 +518,7 @@ export function LogSessionWizard({
   if (step === "readiness") {
     return (
       <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
-        {closeButton}
+        {backLink}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
@@ -572,7 +571,7 @@ export function LogSessionWizard({
 
     return (
       <div className="relative max-w-2xl mx-auto space-y-5 animate-spring-up">
-        {closeButton}
+        {backLink}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
@@ -809,7 +808,7 @@ export function LogSessionWizard({
   if (step === "feedback") {
     return (
       <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
-        {closeButton}
+        {backLink}
         <div className="text-center space-y-2">
           <StepIndicator current={step} steps={steps} />
           <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
