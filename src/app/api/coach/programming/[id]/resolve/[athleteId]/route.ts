@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { canAccessAthlete } from "@/lib/authorize";
 import { resolveEffectiveSession } from "@/lib/data/programming";
 import { logger } from "@/lib/logger";
 
@@ -22,6 +23,12 @@ export async function GET(
       select: { id: true },
     });
     if (!coach) return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
+
+    // Verify the coach manages this athlete
+    const hasAccess = await canAccessAthlete(session.userId, "COACH", athleteId);
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, error: "You do not manage this athlete" }, { status: 403 });
+    }
 
     const { searchParams } = new URL(req.url);
     const date = searchParams.get("date");

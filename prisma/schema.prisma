@@ -1896,8 +1896,8 @@ model ThrowsProfile {
   id         String         @id @default(cuid())
   athleteId  String
   athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  enrolledBy String // coachId who enrolled the athlete
-  coach      CoachProfile   @relation("ThrowsProfileCoach", fields: [enrolledBy], references: [id])
+  enrolledBy String? // coachId who enrolled the athlete (nullable for coach offboarding)
+  coach      CoachProfile?  @relation("ThrowsProfileCoach", fields: [enrolledBy], references: [id], onDelete: SetNull)
 
   // Core classification
   event  String // SHOT_PUT | DISCUS | HAMMER | JAVELIN

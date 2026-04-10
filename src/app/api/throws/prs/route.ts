@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { emitPR } from "@/lib/team-activity";
+import { parseBody, ThrowsPrCheckSchema } from "@/lib/api-schemas";
 
 // GET /api/throws/prs — get PRs for the current athlete (or by athleteId for coaches)
 export async function GET(req: NextRequest) {
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: currentUser.userId },
-      include: { athleteProfile: true, coachProfile: true },
+      select: { role: true, athleteProfile: { select: { id: true } } },
     });
 
     if (!user) {
@@ -62,19 +63,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { event, implement, distance, source, athleteId: bodyAthleteId } = body;
-
-    if (!event || !implement || !distance) {
-      return NextResponse.json(
-        { success: false, error: "event, implement, and distance are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, ThrowsPrCheckSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { event, implement, distance, source, athleteId: bodyAthleteId } = parsed;
 
     const user = await prisma.user.findUnique({
       where: { id: currentUser.userId },
-      include: { athleteProfile: true, coachProfile: true },
+      select: { role: true, athleteProfile: { select: { id: true } } },
     });
 
     if (!user) {

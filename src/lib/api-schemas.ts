@@ -3,14 +3,24 @@ import { NextResponse } from "next/server";
 
 // ── Auth Schemas ────────────────────────────────────────────────────────
 
+// Password must be at least 8 characters with at least one uppercase and one digit
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/\d/, "Password must contain at least one digit");
+
+// Login uses a relaxed password check — don't reject existing passwords that were set before complexity rules
+const loginPasswordSchema = z.string().min(1, "Password is required");
+
 export const LoginSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: loginPasswordSchema,
 });
 
 export const RegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: passwordSchema,
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   role: z.enum(["COACH", "ATHLETE"], {
@@ -28,7 +38,7 @@ export const ForgotPasswordSchema = z.object({
 
 export const ResetPasswordSchema = z.object({
   token: z.string().min(1, "Token is required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: passwordSchema,
 });
 
 // ── MFA Schemas ────────────────────────────────────────────────────────
@@ -66,7 +76,7 @@ export const MfaBackupSchema = z.object({
 
 export const PasswordChangeSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "New password must be at least 8 characters"),
+  newPassword: passwordSchema,
 });
 
 export const CoachProfileUpdateSchema = z.object({
@@ -471,6 +481,80 @@ export const ExerciseLibraryPatchSchema = z.object({
   videoUrl: z.string().url().nullable().optional(),
   videoEmbed: z.string().max(2000).nullable().optional(),
   tips: z.string().max(5000).nullable().optional(),
+});
+
+// ── Register Claim ─────────────────────────────────────────────────────
+
+export const RegisterClaimSchema = z.object({
+  token: z.string().min(1, "Invite token is required"),
+  email: z.string().email("Invalid email address"),
+  password: passwordSchema,
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  events: z.array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"])).optional(),
+});
+
+// ── ThrowFlow Analysis ────────────────────────────────────────────────
+
+export const ThrowFlowAnalysisSchema = z.object({
+  event: z.string().min(1, "Event is required"),
+  drillType: z.string().min(1, "Drill type is required"),
+  cameraAngle: z.string().min(1, "Camera angle is required"),
+  athleteId: z.string().optional().nullable(),
+  athleteHeight: z.number().optional().nullable(),
+  implementWeight: z.number().optional().nullable(),
+  knownDistance: z.number().optional().nullable(),
+  frames: z.array(z.string()).optional(),
+  keyFrames: z.array(z.string()).min(1, "At least one key frame is required").max(20, "Maximum 20 key frames"),
+  keyFrameIndices: z.array(z.number()).optional(),
+  totalFrames: z.number().optional(),
+  videoDuration: z.number().optional().nullable(),
+});
+
+// ── Throws Block Logs ──────────────────────────────────────────────────
+
+export const ThrowsBlockLogCreateSchema = z.object({
+  assignmentId: z.string().min(1, "Assignment ID is required"),
+  blockId: z.string().min(1, "Block ID is required"),
+  throws: z.array(z.object({
+    throwNumber: z.number().int().min(1),
+    distance: z.number().nullable(),
+    implement: z.string().min(1, "Implement is required"),
+    notes: z.string().optional().nullable(),
+  })).min(1, "At least one throw is required"),
+});
+
+// ── Throws PRs ─────────────────────────────────────────────────────────
+
+export const ThrowsPrCheckSchema = z.object({
+  event: z.string().min(1, "Event is required"),
+  implement: z.string().min(1, "Implement is required"),
+  distance: z.number().positive("Distance must be positive"),
+  source: z.string().optional(),
+  athleteId: z.string().optional().nullable(),
+});
+
+// ── Drill PRs ──────────────────────────────────────────────────────────
+
+export const DrillPrCreateSchema = z.object({
+  event: z.string().min(1, "Event is required"),
+  drillType: z.string().min(1, "Drill type is required"),
+  implement: z.string().min(1, "Implement is required"),
+  distance: z.number().min(0, "Distance cannot be negative"),
+  athleteId: z.string().optional().nullable(),
+  achievedAt: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
+// ── Typing Override (coach manual classification) ──────────────────────
+
+export const TypingOverrideSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  adaptationGroup: z.union([z.number().int().min(1).max(4), z.string()]).optional().nullable(),
+  transferType: z.string().optional().nullable(),
+  selfFeelingAccuracy: z.string().optional().nullable(),
+  lightImplResponse: z.string().optional().nullable(),
+  recoveryProfile: z.string().optional().nullable(),
 });
 
 // ── parseBody Helper ────────────────────────────────────────────────────

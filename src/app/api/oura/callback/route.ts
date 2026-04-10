@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Identify the user from their auth-token cookie
     const authToken = request.cookies.get("auth-token")?.value;
-    const payload = authToken ? verifyTokenEdge(authToken) : null;
+    const payload = authToken ? await verifyTokenEdge(authToken) : null;
     if (!payload) {
       settingsUrl.searchParams.set("oura", "error");
       settingsUrl.searchParams.set("reason", "not_authenticated");

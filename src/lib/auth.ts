@@ -62,10 +62,7 @@ export async function canActAsAthlete(session: JWTPayload | null): Promise<boole
   if (!session) return false;
   if (session.role === "ATHLETE") return true;
   if (session.role === "COACH") {
-    // Fast path: check cookie
-    const cookieStore = await cookies();
-    if (cookieStore.get("active-mode")?.value === "TRAINING") return true;
-    // Fallback: check if coach has an AthleteProfile (Training Mode enabled)
+    // Always verify via DB — do not trust the client-writable active-mode cookie
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },

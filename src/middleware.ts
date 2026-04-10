@@ -59,7 +59,7 @@ export async function middleware(request: NextRequest) {
         const skipRateLimit = pathname.startsWith("/api/auth/");
         if (!skipRateLimit) {
           const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-          const payload = token ? verifyToken(token) : null;
+          const payload = token ? await verifyToken(token) : null;
           const rlKey = payload ? `api:${payload.userId}` : `api:ip:${ip}`;
           const rl = await rateLimit(rlKey, { maxAttempts: 60, windowMs: 60_000 });
           if (!rl.success) {
@@ -80,7 +80,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Auth routing logic ─────────────────────────────────────────────
-  const payload = token ? verifyToken(token) : null;
+  const payload = token ? await verifyToken(token) : null;
   let response: NextResponse;
 
   // Redirect authenticated users away from auth pages and landing page

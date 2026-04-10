@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, ThrowsBlockLogCreateSchema } from "@/lib/api-schemas";
 
 // POST /api/throws/logs — log throws for a block (batch create/upsert)
 export async function POST(req: NextRequest) {
@@ -12,20 +13,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { assignmentId, blockId, throws } = body;
-
-    if (!assignmentId || !blockId || !throws?.length) {
-      return NextResponse.json(
-        { success: false, error: "assignmentId, blockId, and throws array are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, ThrowsBlockLogCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { assignmentId, blockId, throws } = parsed;
 
     // Verify the assignment belongs to this athlete
     const user = await prisma.user.findUnique({
       where: { id: currentUser.userId },
-      include: { athleteProfile: true },
+      select: { athleteProfile: { select: { id: true } } },
     });
 
     if (!user?.athleteProfile) {
@@ -40,20 +35,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Assignment not found" }, { status: 404 });
     }
 
-    // Delete existing logs for this block+assignment, then create fresh ones
-    await prisma.throwsBlockLog.deleteMany({
-      where: { assignmentId, blockId },
-    });
+    // Atomically delete existing logs and create fresh ones
+    const throwLogs = await prisma.$transaction(async (tx) => {
+      await tx.throwsBlockLog.deleteMany({
+        where: { assignmentId, blockId },
+      });
 
-    const throwLogs = await prisma.throwsBlockLog.createMany({
-      data: throws.map((t: { throwNumber: number; distance: number | null; implement: string; notes?: string }) => ({
-        assignmentId,
-        blockId,
-        throwNumber: t.throwNumber,
-        distance: t.distance,
-        implement: t.implement,
-        notes: t.notes || null,
-      })),
+      return tx.throwsBlockLog.createMany({
+        data: throws.map((t) => ({
+          assignmentId,
+          blockId,
+          throwNumber: t.throwNumber,
+          distance: t.distance,
+          implement: t.implement,
+          notes: t.notes || null,
+        })),
+      });
     });
 
     return NextResponse.json({ success: true, data: { count: throwLogs.count } });

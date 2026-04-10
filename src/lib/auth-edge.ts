@@ -2,31 +2,76 @@
  * Edge-runtime-safe auth utilities.
  *
  * Next.js middleware runs on the Edge Runtime which does NOT support native
- * Node.js modules (bcrypt, node-gyp-build, etc.).  This file contains only
- * Web-API-compatible code so it can be safely imported from middleware.
+ * Node.js modules (bcrypt, node-gyp-build, etc.).  This file uses the
+ * Web Crypto API (available in Edge Runtime) for HMAC-SHA256 JWT signature
+ * verification — the same algorithm used by `jsonwebtoken` in Node.js context.
  *
- * NOTE: This performs a decode-only check (expiry + shape), NOT cryptographic
- * signature verification.  Full signature verification happens in getSession()
- * (Node.js server context) before any data is accessed.  Middleware only needs
- * the role claim for routing/redirect decisions.
+ * Full signature verification happens here AND in getSession() (Node.js server
+ * context). Middleware uses this to make trustworthy routing/role decisions.
  */
 
 import type { JWTPayload } from "./auth";
 
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+
 /**
- * Decode a JWT and return its payload without cryptographic verification.
- * Returns null if the token is malformed or expired.
+ * Base64url decode to Uint8Array.
  */
-export function verifyTokenEdge(token: string): JWTPayload | null {
+function base64UrlDecode(str: string): Uint8Array {
+  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Verify a JWT's HMAC-SHA256 signature and return its payload.
+ * Returns null if the token is malformed, expired, tampered, or wrongly signed.
+ *
+ * Uses Web Crypto API (crypto.subtle) which is available in the Edge Runtime
+ * and performs constant-time signature comparison.
+ */
+export async function verifyTokenEdge(token: string): Promise<JWTPayload | null> {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
 
-    // Base64url → Base64 → JSON
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(base64);
-    const payload = JSON.parse(json);
+    const [headerB64, payloadB64, signatureB64] = parts;
 
+    // Verify the header specifies HS256
+    const headerJson = atob(headerB64.replace(/-/g, "+").replace(/_/g, "/"));
+    const header = JSON.parse(headerJson);
+    if (header.alg !== "HS256") return null;
+
+    // Import the secret as an HMAC key
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(JWT_SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    // Verify signature (constant-time comparison done by crypto.subtle)
+    const data = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+    const signatureBytes = base64UrlDecode(signatureB64);
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      signatureBytes.buffer as ArrayBuffer,
+      data
+    );
+    if (!valid) return null;
+
+    // Decode payload
+    const payloadJson = atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/"));
+    const payload = JSON.parse(payloadJson);
+
+    // Validate required fields
     if (!payload.userId || !payload.email || !payload.role) return null;
 
     // Honour expiry

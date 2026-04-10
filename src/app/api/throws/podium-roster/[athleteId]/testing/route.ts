@@ -180,38 +180,7 @@ export async function POST(
       }
     }
 
-    // ── Create testing record ──────────────────────────────────────────
-    const record = await prisma.throwsTestingRecord.create({
-      data: {
-        throwsProfileId: profile.id,
-        athleteId,
-        testDate,
-        testType,
-        ...(competitionMark != null ? { competitionMark } : {}),
-        ...(heavyImplMark != null ? { heavyImplMark } : {}),
-        ...(heavyImplKg != null ? { heavyImplKg } : {}),
-        ...(lightImplMark != null ? { lightImplMark } : {}),
-        ...(lightImplKg != null ? { lightImplKg } : {}),
-        ...(squatKg != null ? { squatKg } : {}),
-        ...(benchKg != null ? { benchKg } : {}),
-        ...(snatchKg != null ? { snatchKg } : {}),
-        ...(cleanKg != null ? { cleanKg } : {}),
-        ...(ohpKg != null ? { ohpKg } : {}),
-        ...(rdlKg != null ? { rdlKg } : {}),
-        ...(bodyWeightKg != null ? { bodyWeightKg } : {}),
-        ...(notes != null ? { notes } : {}),
-        distanceBandAtTest: resolvedBand,
-        ...(deficitPrimaryAtTest != null
-          ? { deficitPrimaryAtTest }
-          : {}),
-        ...(deficitSecondaryAtTest != null
-          ? { deficitSecondaryAtTest }
-          : {}),
-        ...(overPoweredAtTest != null ? { overPoweredAtTest } : {}),
-      },
-    });
-
-    // ── Update profile: promote PRs if this test sets new bests ───────
+    // ── Build profile update before transaction (reads are safe outside) ─
     const profileUpdate: Record<string, unknown> = {};
 
     // Competition PB
@@ -308,12 +277,47 @@ export async function POST(
       }
     }
 
-    if (Object.keys(profileUpdate).length > 0) {
-      await prisma.throwsProfile.update({
-        where: { id: profile.id },
-        data: profileUpdate as Prisma.ThrowsProfileUpdateInput,
+    // ── Atomically create testing record + update profile ────────────
+    const record = await prisma.$transaction(async (tx) => {
+      const created = await tx.throwsTestingRecord.create({
+        data: {
+          throwsProfileId: profile.id,
+          athleteId,
+          testDate,
+          testType,
+          ...(competitionMark != null ? { competitionMark } : {}),
+          ...(heavyImplMark != null ? { heavyImplMark } : {}),
+          ...(heavyImplKg != null ? { heavyImplKg } : {}),
+          ...(lightImplMark != null ? { lightImplMark } : {}),
+          ...(lightImplKg != null ? { lightImplKg } : {}),
+          ...(squatKg != null ? { squatKg } : {}),
+          ...(benchKg != null ? { benchKg } : {}),
+          ...(snatchKg != null ? { snatchKg } : {}),
+          ...(cleanKg != null ? { cleanKg } : {}),
+          ...(ohpKg != null ? { ohpKg } : {}),
+          ...(rdlKg != null ? { rdlKg } : {}),
+          ...(bodyWeightKg != null ? { bodyWeightKg } : {}),
+          ...(notes != null ? { notes } : {}),
+          distanceBandAtTest: resolvedBand,
+          ...(deficitPrimaryAtTest != null
+            ? { deficitPrimaryAtTest }
+            : {}),
+          ...(deficitSecondaryAtTest != null
+            ? { deficitSecondaryAtTest }
+            : {}),
+          ...(overPoweredAtTest != null ? { overPoweredAtTest } : {}),
+        },
       });
-    }
+
+      if (Object.keys(profileUpdate).length > 0) {
+        await tx.throwsProfile.update({
+          where: { id: profile.id },
+          data: profileUpdate as Prisma.ThrowsProfileUpdateInput,
+        });
+      }
+
+      return created;
+    });
 
     return NextResponse.json({ success: true, data: record }, { status: 201 });
   } catch (error) {

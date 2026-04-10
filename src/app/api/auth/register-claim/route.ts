@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { hashPassword, signToken, setAuthCookie, setCsrfCookie } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { parseBody, RegisterClaimSchema } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,16 +16,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { token, email, password, firstName, lastName, events } = body;
-
-    if (!token || !email || !password) {
-      return NextResponse.json({ success: false, error: "Token, email, and password are required" }, { status: 400 });
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json({ success: false, error: "Password must be at least 8 characters" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, RegisterClaimSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { token, email, password, firstName, lastName, events } = parsed;
 
     const normalizedEmail = email.toLowerCase().trim();
 

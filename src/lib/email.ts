@@ -36,7 +36,8 @@ const transporter = nodemailer.createTransport(
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 if (!APP_URL && process.env.NODE_ENV === "production") {
-  console.warn("[email] NEXT_PUBLIC_APP_URL is not set — email links will use fallback URL");
+  // Use logger if available, but email.ts is imported early so logger may not be ready
+  console.error("[email] CRITICAL: NEXT_PUBLIC_APP_URL is not set — password reset and invite links will point to localhost");
 }
 const baseUrl = APP_URL || "http://localhost:3000";
 const FROM_EMAIL =

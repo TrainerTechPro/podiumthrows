@@ -58,42 +58,60 @@ export async function PATCH(
         }
       }
 
-      // Delete existing blocks (cascade deletes block exercises)
-      await prisma.workoutBlock.deleteMany({ where: { planId: id } });
+      // Atomically delete + recreate blocks and update plan metadata
+      const planData: Record<string, unknown> = {};
+      if (typeof name === "string") planData.name = name.trim();
+      if (description !== undefined) planData.description = typeof description === "string" ? description.trim() || null : null;
+      if (event !== undefined) planData.event = event || null;
+      if (isTemplate !== undefined) planData.isTemplate = isTemplate === true;
 
-      // Recreate blocks
-      for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i] as Record<string, unknown>;
-        await prisma.workoutBlock.create({
-          data: {
-            planId: id,
-            name: (block.name as string).trim(),
-            order: i,
-            blockType: block.blockType as string,
-            restSeconds: typeof block.restSeconds === "number" ? block.restSeconds : null,
-            notes: typeof block.notes === "string" ? block.notes.trim() || null : null,
-            exercises: {
-              create: Array.isArray(block.exercises)
-                ? (block.exercises as Record<string, unknown>[]).map((ex, exIdx) => ({
-                    exerciseId: ex.exerciseId as string,
-                    order: exIdx,
-                    sets: typeof ex.sets === "number" ? ex.sets : null,
-                    reps: typeof ex.reps === "string" ? ex.reps.trim() || null : null,
-                    weight: typeof ex.weight === "string" ? ex.weight.trim() || null : null,
-                    rpe: typeof ex.rpe === "number" ? ex.rpe : null,
-                    distance: typeof ex.distance === "string" ? ex.distance.trim() || null : null,
-                    restSeconds: typeof ex.restSeconds === "number" ? ex.restSeconds : null,
-                    notes: typeof ex.notes === "string" ? ex.notes.trim() || null : null,
-                    implementKg: typeof ex.implementKg === "number" ? ex.implementKg : null,
-                  }))
-                : [],
+      const updated = await prisma.$transaction(async (tx) => {
+        // Delete existing blocks (cascade deletes block exercises)
+        await tx.workoutBlock.deleteMany({ where: { planId: id } });
+
+        // Recreate blocks
+        for (let i = 0; i < blocks.length; i++) {
+          const block = blocks[i] as Record<string, unknown>;
+          await tx.workoutBlock.create({
+            data: {
+              planId: id,
+              name: (block.name as string).trim(),
+              order: i,
+              blockType: block.blockType as string,
+              restSeconds: typeof block.restSeconds === "number" ? block.restSeconds : null,
+              notes: typeof block.notes === "string" ? block.notes.trim() || null : null,
+              exercises: {
+                create: Array.isArray(block.exercises)
+                  ? (block.exercises as Record<string, unknown>[]).map((ex, exIdx) => ({
+                      exerciseId: ex.exerciseId as string,
+                      order: exIdx,
+                      sets: typeof ex.sets === "number" ? ex.sets : null,
+                      reps: typeof ex.reps === "string" ? ex.reps.trim() || null : null,
+                      weight: typeof ex.weight === "string" ? ex.weight.trim() || null : null,
+                      rpe: typeof ex.rpe === "number" ? ex.rpe : null,
+                      distance: typeof ex.distance === "string" ? ex.distance.trim() || null : null,
+                      restSeconds: typeof ex.restSeconds === "number" ? ex.restSeconds : null,
+                      notes: typeof ex.notes === "string" ? ex.notes.trim() || null : null,
+                      implementKg: typeof ex.implementKg === "number" ? ex.implementKg : null,
+                    }))
+                  : [],
+              },
             },
-          },
+          });
+        }
+
+        // Update plan metadata
+        return tx.workoutPlan.update({
+          where: { id: id },
+          data: planData as never,
+          select: { id: true, name: true },
         });
-      }
+      });
+
+      return NextResponse.json(updated);
     }
 
-    // Update plan metadata
+    // No blocks provided — just update plan metadata
     const data: Record<string, unknown> = {};
     if (typeof name === "string") data.name = name.trim();
     if (description !== undefined) data.description = typeof description === "string" ? description.trim() || null : null;

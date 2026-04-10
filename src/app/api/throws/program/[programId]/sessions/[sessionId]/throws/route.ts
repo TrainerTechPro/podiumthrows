@@ -84,34 +84,34 @@ export async function POST(req: NextRequest, { params }: Params) {
       ? body.throws
       : [body];
 
-    const results: Awaited<ReturnType<typeof prisma.programThrowResult.create>>[] = [];
-    for (let i = 0; i < throws.length; i++) {
-      const t = throws[i];
-      const throwResult = await prisma.programThrowResult.create({
-        data: {
+    // Batch insert all throws and update session status atomically
+    const result = await prisma.$transaction(async (tx) => {
+      const created = await tx.programThrowResult.createMany({
+        data: throws.map((t: ThrowInput, i: number) => ({
           sessionId,
           throwNumber: t.throwNumber ?? i + 1,
           implement: t.implement,
           distance: t.distance ?? null,
           drillType: t.drillType ?? null,
           notes: t.notes ?? null,
-        },
+        })),
       });
-      results.push(throwResult);
-    }
 
-    // Update session status to IN_PROGRESS if still PLANNED/SCHEDULED
-    await prisma.programSession.updateMany({
-      where: {
-        id: sessionId,
-        status: { in: ["PLANNED", "SCHEDULED"] },
-      },
-      data: { status: "IN_PROGRESS" },
+      // Update session status to IN_PROGRESS if still PLANNED/SCHEDULED
+      await tx.programSession.updateMany({
+        where: {
+          id: sessionId,
+          status: { in: ["PLANNED", "SCHEDULED"] },
+        },
+        data: { status: "IN_PROGRESS" },
+      });
+
+      return created;
     });
 
     return NextResponse.json({
       success: true,
-      data: { logged: results.length, results },
+      data: { logged: result.count },
     });
   } catch (error) {
     logger.error("Log throws error", {

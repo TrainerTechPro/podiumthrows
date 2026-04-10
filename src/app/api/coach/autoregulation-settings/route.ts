@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { canAccessAthlete } from "@/lib/authorize";
 
 const DEFAULT_TIMESCALES = {
   intraSession: true,
@@ -151,6 +152,17 @@ export async function PATCH(req: NextRequest) {
         athletes: { athleteId: string; mode: string | null; timescales: Record<string, boolean> }[];
       };
 
+      // Verify the coach manages every athlete in the batch
+      for (const a of athletes) {
+        const hasAccess = await canAccessAthlete(user.userId, "COACH", a.athleteId);
+        if (!hasAccess) {
+          return NextResponse.json(
+            { success: false, error: `You do not manage athlete ${a.athleteId}` },
+            { status: 403 },
+          );
+        }
+      }
+
       await Promise.all(
         athletes.map((a) =>
           prisma.autoregulationSettings.upsert({
@@ -174,6 +186,16 @@ export async function PATCH(req: NextRequest) {
 
     if (targetType === "ATHLETE") {
       const { athleteId, mode } = body;
+
+      // Verify the coach manages this athlete
+      const hasAccess = await canAccessAthlete(user.userId, "COACH", athleteId);
+      if (!hasAccess) {
+        return NextResponse.json(
+          { success: false, error: "You do not manage this athlete" },
+          { status: 403 },
+        );
+      }
+
       if (mode === null) {
         // Reset to coach default — delete the override row
         await prisma.autoregulationSettings.deleteMany({

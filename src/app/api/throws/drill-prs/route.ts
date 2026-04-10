@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, DrillPrCreateSchema } from "@/lib/api-schemas";
 
 // GET /api/throws/drill-prs?athleteId=...
 export async function GET(req: NextRequest) {
@@ -55,15 +56,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { athleteId: bodyAthleteId, event, drillType, implement, distance, achievedAt, notes } = body;
-
-    if (!event || !drillType || !implement || distance == null) {
-      return NextResponse.json(
-        { success: false, error: "event, drillType, implement, and distance are required" },
-        { status: 400 },
-      );
-    }
+    const parsed = await parseBody(req, DrillPrCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId: bodyAthleteId, event, drillType, implement, distance, achievedAt, notes } = parsed;
 
     const user = await prisma.user.findUnique({
       where: { id: currentUser.userId },

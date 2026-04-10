@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
-import { parseBody, TypingSubmitSchema } from "@/lib/api-schemas";
+import { parseBody, TypingSubmitSchema, TypingOverrideSchema } from "@/lib/api-schemas";
 import {
   scoreAdaptationSpeed,
   scoreTransferType,
@@ -110,18 +110,15 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { athleteId, adaptationGroup, transferType, selfFeelingAccuracy, lightImplResponse, recoveryProfile } = body;
-
-    if (!athleteId) {
-      return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(request, TypingOverrideSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, adaptationGroup, transferType, selfFeelingAccuracy, lightImplResponse, recoveryProfile } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const adaptGroup = adaptationGroup ? parseInt(adaptationGroup) : undefined;
+    const adaptGroup = adaptationGroup != null ? (typeof adaptationGroup === "number" ? adaptationGroup : parseInt(adaptationGroup)) : undefined;
     const recovProf = recoveryProfile ?? "standard";
     const adaptGrp = adaptGroup ?? 2;
     const methodResult = computeRecommendedMethod(adaptGrp, recovProf);

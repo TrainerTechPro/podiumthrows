@@ -25,14 +25,19 @@ function extractExpiry(token: string): Date {
   return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 }
 
-/** Add a token to the blacklist. Fire-and-forget safe. */
+/** Add a token to the blacklist. Logs errors but re-throws so callers can respond. */
 export async function blacklistToken(token: string): Promise<void> {
   const tokenHash = hashToken(token);
   const expiresAt = extractExpiry(token);
 
-  await prisma.tokenBlacklist.create({
-    data: { tokenHash, expiresAt },
-  });
+  try {
+    await prisma.tokenBlacklist.create({
+      data: { tokenHash, expiresAt },
+    });
+  } catch (err) {
+    logger.error("Failed to blacklist token — logout may not fully invalidate session", { context: "auth", error: err });
+    throw err;
+  }
 }
 
 /** Check whether a token has been blacklisted. */

@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncWhoopData } from "@/lib/whoop/sync";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import crypto from "crypto";
+
+const WHOOP_WEBHOOK_SECRET = process.env.WHOOP_WEBHOOK_SECRET;
+
+/**
+ * Verify the WHOOP webhook signature (HMAC-SHA256).
+ * Returns true if valid or if no secret is configured (local dev).
+ */
+async function verifyWhoopSignature(
+  rawBody: string,
+  signature: string | null
+): Promise<boolean> {
+  if (!WHOOP_WEBHOOK_SECRET) {
+    // No secret configured — skip verification in local dev
+    logger.warn("WHOOP webhook: WHOOP_WEBHOOK_SECRET not set, skipping signature verification", {
+      context: "api",
+    });
+    return true;
+  }
+  if (!signature) return false;
+  const expected = crypto
+    .createHmac("sha256", WHOOP_WEBHOOK_SECRET)
+    .update(rawBody)
+    .digest("hex");
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
+  );
+}
 
 /**
  * POST /api/whoop/webhook
@@ -11,7 +40,17 @@ import { logger } from "@/lib/logger";
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const rawBody = await request.text();
+
+    // Verify HMAC signature before processing
+    const signature = request.headers.get("x-whoop-signature");
+    const isValid = await verifyWhoopSignature(rawBody, signature);
+    if (!isValid) {
+      logger.warn("WHOOP webhook: invalid signature", { context: "api" });
+      return NextResponse.json({ success: false, error: "Invalid signature" }, { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
 
     // WHOOP webhook payload includes user_id (integer) and type
     const whoopUserId = body?.user_id as number | undefined;

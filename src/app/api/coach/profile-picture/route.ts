@@ -31,6 +31,14 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // Only accept data: URIs — reject http/https URLs to prevent SSRF via <img src>
+    if (!avatarUrl.startsWith("data:image/")) {
+      return NextResponse.json(
+        { success: false, error: "Only data:image/ URLs are accepted for profile pictures" },
+        { status: 400 }
+      );
+    }
+
     const updated = await prisma.coachProfile.update({
       where: { userId: session.userId },
       data: { avatarUrl },

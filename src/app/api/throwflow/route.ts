@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseAnalysisResponse } from "@/lib/throwflow/schemas";
+import { parseBody, ThrowFlowAnalysisSchema } from "@/lib/api-schemas";
 
 // GET /api/throwflow — list analyses for current coach
 export async function GET() {
@@ -64,7 +66,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
     }
 
-    const body = await req.json();
+    const parsed = await parseBody(req, ThrowFlowAnalysisSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       event,
       drillType,
@@ -78,20 +81,17 @@ export async function POST(req: Request) {
       keyFrameIndices,
       totalFrames,
       videoDuration,
-    } = body;
+    } = parsed;
 
-    if (!event || !drillType || !cameraAngle) {
-      return NextResponse.json(
-        { success: false, error: "Event, drill type, and camera angle are required" },
-        { status: 400 }
-      );
-    }
-
-    if (!keyFrames || keyFrames.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Video frames are required for analysis" },
-        { status: 400 }
-      );
+    // Verify coach manages this athlete before linking analysis
+    if (athleteId) {
+      const hasAccess = await canAccessAthlete(currentUser.userId, "COACH", athleteId);
+      if (!hasAccess) {
+        return NextResponse.json(
+          { success: false, error: "You do not manage this athlete" },
+          { status: 403 }
+        );
+      }
     }
 
     // Create the analysis record as ANALYZING
@@ -116,12 +116,12 @@ export async function POST(req: Request) {
       event,
       drillType,
       cameraAngle,
-      athleteHeight,
-      implementWeight,
-      knownDistance,
+      athleteHeight: athleteHeight ?? undefined,
+      implementWeight: implementWeight ?? undefined,
+      knownDistance: knownDistance ?? undefined,
       keyFrames,
-      keyFrameIndices,
-      totalFrames,
+      keyFrameIndices: keyFrameIndices ?? [],
+      totalFrames: totalFrames ?? keyFrames.length,
     }).catch((err) => {
       logger.error("ThrowFlow analysis failed", { context: "throwflow", error: err });
     });

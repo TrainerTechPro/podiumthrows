@@ -22,10 +22,12 @@ function getUpstashLimiter(maxAttempts: number, windowMs: number): Ratelimit {
   let limiter = upstashLimiters.get(key);
   if (!limiter) {
     if (!redis) {
-      redis = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL!,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      });
+      const url = process.env.UPSTASH_REDIS_REST_URL;
+      const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+      if (!url || !token) {
+        throw new Error("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set when USE_UPSTASH is enabled");
+      }
+      redis = new Redis({ url, token });
     }
     limiter = new Ratelimit({
       redis,
