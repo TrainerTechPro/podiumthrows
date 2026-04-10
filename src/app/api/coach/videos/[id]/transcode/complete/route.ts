@@ -35,12 +35,12 @@ export async function POST(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     if (video.transcodeStatus !== "processing") {
       return NextResponse.json(
-        { error: "Video is not currently being transcoded" },
+        { success: false, error: "Video is not currently being transcoded" },
         { status: 409 }
       );
     }
@@ -77,7 +77,7 @@ export async function POST(
 
     if (!transcodedUrl) {
       return NextResponse.json(
-        { error: "transcodedUrl is required when success=true" },
+        { success: false, error: "transcodedUrl is required when success=true" },
         { status: 400 }
       );
     }
@@ -103,10 +103,10 @@ export async function POST(
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/transcode/complete POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

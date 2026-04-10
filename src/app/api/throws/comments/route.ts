@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const url = new URL(req.url);
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     if (!targetField || !targetId || !TARGET_FIELDS.includes(targetField)) {
       return NextResponse.json(
-        { error: "targetField and targetId are required" },
+        { success: false, error: "targetField and targetId are required" },
         { status: 400 }
       );
     }
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     // Verify the user has access to this target
     const hasAccess = await verifyAccess(session.userId, session.role, targetField, targetId);
     if (!hasAccess) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const comments = await prisma.throwComment.findMany({
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: enriched });
   } catch (err) {
     logger.error("GET /api/throws/comments", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch comments" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch comments" }, { status: 500 });
   }
 }
 
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       typeof targetId !== "string"
     ) {
       return NextResponse.json(
-        { error: "targetField and targetId are required" },
+        { success: false, error: "targetField and targetId are required" },
         { status: 400 }
       );
     }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     if (!hasText && !hasAudio) {
       return NextResponse.json(
-        { error: "Comment must include either text or a voice note." },
+        { success: false, error: "Comment must include either text or a voice note." },
         { status: 400 }
       );
     }
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
     // against a crafted client that bypasses the UI limit.
     if (hasAudio && (audioDurationSec as number) > 30) {
       return NextResponse.json(
-        { error: "Voice notes are limited to 30 seconds." },
+        { success: false, error: "Voice notes are limited to 30 seconds." },
         { status: 400 }
       );
     }
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
       targetId
     );
     if (!hasAccess) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     // Body is required by the schema (NOT NULL). For voice-only comments,
@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     logger.error("POST /api/throws/comments", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to create comment" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create comment" }, { status: 500 });
   }
 }
 

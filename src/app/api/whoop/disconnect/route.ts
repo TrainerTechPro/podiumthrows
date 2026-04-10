@@ -46,7 +46,7 @@ export async function POST() {
       // Log but don't block — the connection will be deleted regardless
       logger.warn("WHOOP token revocation failed (non-blocking)", {
         context: "api",
-        metadata: { error: String(revokeErr) },
+        metadata: { success: false, error: String(revokeErr) },
       });
     }
 

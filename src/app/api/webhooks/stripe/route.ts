@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
 
   if (!webhookSecret) {
     logger.error("stripe/webhook STRIPE_WEBHOOK_SECRET not set", { context: "api" });
-    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Webhook secret not configured" }, { status: 500 });
   }
   if (!sig) {
-    return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Missing stripe-signature header" }, { status: 400 });
   }
 
   /* ── Verify signature using raw body ── */
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Signature verification failed";
     logger.error("stripe/webhook Signature error", { context: "api", error: err });
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json({ success: false, error: msg }, { status: 400 });
   }
 
   /* ── Idempotency: skip already-processed events ── */
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     logger.error(`stripe/webhook Error handling ${event.type}`, { context: "api", error: err });
-    return NextResponse.json({ error: "Webhook handler error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Webhook handler error" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

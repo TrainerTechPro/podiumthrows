@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     // Only coaches acting as coaches can post. A coach toggled into
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     // from an athlete-mode identity.
     if (session.role !== "COACH" || (await canActAsAthlete(session))) {
       return NextResponse.json(
-        { error: "Only coaches can post team messages." },
+        { success: false, error: "Only coaches can post team messages." },
         { status: 403 }
       );
     }
@@ -38,27 +38,28 @@ export async function POST(req: NextRequest) {
       select: { id: true, firstName: true, lastName: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found." }, { status: 404 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const rawText = body.body;
     if (typeof rawText !== "string") {
       return NextResponse.json(
-        { error: "body is required and must be a string." },
+        { success: false, error: "body is required and must be a string." },
         { status: 400 }
       );
     }
     const trimmed = rawText.trim();
     if (trimmed.length === 0) {
       return NextResponse.json(
-        { error: "Post cannot be empty." },
+        { success: false, error: "Post cannot be empty." },
         { status: 400 }
       );
     }
     if (trimmed.length > MAX_POST_LENGTH) {
       return NextResponse.json(
         {
+          success: false,
           error: `Post too long (max ${MAX_POST_LENGTH} characters).`,
         },
         { status: 400 }
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to create post." },
+      { success: false, error: "Failed to create post." },
       { status: 500 }
     );
   }

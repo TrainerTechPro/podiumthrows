@@ -27,11 +27,11 @@ export async function GET() {
     return NextResponse.json({ success: true, data: files });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/team-files", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to fetch files" },
+      { success: false, error: "Failed to fetch files" },
       { status: 500 },
     );
   }
@@ -60,21 +60,21 @@ export async function POST(req: NextRequest) {
       typeof body.fileSize !== "number"
     ) {
       return NextResponse.json(
-        { error: "name, fileKey, fileUrl, fileSize, mimeType required" },
+        { success: false, error: "name, fileKey, fileUrl, fileSize, mimeType required" },
         { status: 400 },
       );
     }
 
     if (!ALLOWED_MIME_TYPES.includes(body.mimeType)) {
       return NextResponse.json(
-        { error: "File type not allowed" },
+        { success: false, error: "File type not allowed" },
         { status: 400 },
       );
     }
 
     if (body.fileSize > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)` },
+        { success: false, error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)` },
         { status: 400 },
       );
     }
@@ -91,11 +91,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/team-files", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to register file" },
+      { success: false, error: "Failed to register file" },
       { status: 500 },
     );
   }

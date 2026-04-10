@@ -39,13 +39,13 @@ export async function POST(req: NextRequest) {
     }
     if (!type || !VALID_TYPES.includes(type)) {
       return NextResponse.json(
-        { error: "Valid type is required" },
+        { success: false, error: "Valid type is required" },
         { status: 400 }
       );
     }
     if (status && !VALID_STATUSES.includes(status)) {
       return NextResponse.json(
-        { error: "Status must be draft or published" },
+        { success: false, error: "Status must be draft or published" },
         { status: 400 }
       );
     }
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     if (!hasBlocks && !hasQuestions) {
       return NextResponse.json(
-        { error: "At least one block or question is required" },
+        { success: false, error: "At least one block or question is required" },
         { status: 400 }
       );
     }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       for (const block of blocks) {
         if (!block.id || !block.type) {
           return NextResponse.json(
-            { error: "Each block must have an id and type" },
+            { success: false, error: "Each block must have an id and type" },
             { status: 400 }
           );
         }

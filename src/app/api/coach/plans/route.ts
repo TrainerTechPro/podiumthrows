@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -28,23 +28,23 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json({ error: "Plan name is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Plan name is required." }, { status: 400 });
     }
     if (event !== undefined && event !== null && (typeof event !== "string" || !VALID_EVENTS.includes(event))) {
-      return NextResponse.json({ error: "Invalid event." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event." }, { status: 400 });
     }
     if (!Array.isArray(blocks) || blocks.length === 0) {
-      return NextResponse.json({ error: "At least one block is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "At least one block is required." }, { status: 400 });
     }
 
     // Validate blocks
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i] as Record<string, unknown>;
       if (typeof block.name !== "string" || block.name.trim().length === 0) {
-        return NextResponse.json({ error: `Block ${i + 1} needs a name.` }, { status: 400 });
+        return NextResponse.json({ success: false, error: `Block ${i + 1} needs a name.` }, { status: 400 });
       }
       if (typeof block.blockType !== "string" || !VALID_BLOCK_TYPES.includes(block.blockType)) {
-        return NextResponse.json({ error: `Block ${i + 1} has an invalid type.` }, { status: 400 });
+        return NextResponse.json({ success: false, error: `Block ${i + 1} has an invalid type.` }, { status: 400 });
       }
     }
 
@@ -88,6 +88,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(plan, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/plans", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to create workout plan." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create workout plan." }, { status: 500 });
   }
 }

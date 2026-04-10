@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   try {
     if (!isR2Configured()) {
       return NextResponse.json(
-        { error: "File uploads not configured" },
+        { success: false, error: "File uploads not configured" },
         { status: 503 },
       );
     }
@@ -45,21 +45,21 @@ export async function POST(req: NextRequest) {
 
     if (!body.name || !body.mimeType || typeof body.fileSize !== "number") {
       return NextResponse.json(
-        { error: "name, mimeType, and fileSize are required" },
+        { success: false, error: "name, mimeType, and fileSize are required" },
         { status: 400 },
       );
     }
 
     if (!ALLOWED_MIME_TYPES.includes(body.mimeType)) {
       return NextResponse.json(
-        { error: "File type not allowed" },
+        { success: false, error: "File type not allowed" },
         { status: 400 },
       );
     }
 
     if (body.fileSize > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)` },
+        { success: false, error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)` },
         { status: 400 },
       );
     }
@@ -80,14 +80,14 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/team-files/upload-url", {
       context: "api",
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to create upload URL" },
+      { success: false, error: "Failed to create upload URL" },
       { status: 500 },
     );
   }

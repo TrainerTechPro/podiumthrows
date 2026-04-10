@@ -18,7 +18,7 @@ export async function POST(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -26,7 +26,7 @@ export async function POST(
 
     if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
       return NextResponse.json(
-        { error: "athleteIds must be a non-empty array" },
+        { success: false, error: "athleteIds must be a non-empty array" },
         { status: 400 }
       );
     }
@@ -40,7 +40,7 @@ export async function POST(
     const validIds = athletes.map((a) => a.id);
     if (validIds.length === 0) {
       return NextResponse.json(
-        { error: "No valid athletes found" },
+        { success: false, error: "No valid athletes found" },
         { status: 400 }
       );
     }
@@ -60,10 +60,10 @@ export async function POST(
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/share POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

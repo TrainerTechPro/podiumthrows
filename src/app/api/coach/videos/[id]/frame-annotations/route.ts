@@ -20,7 +20,7 @@ export async function GET(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     // Optional timestamp range filter
@@ -46,11 +46,11 @@ export async function GET(
     return NextResponse.json({ frameAnnotations });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/frame-annotations GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -71,7 +71,7 @@ export async function POST(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -83,14 +83,14 @@ export async function POST(
 
     if (typeof timestamp !== "number" || timestamp < 0) {
       return NextResponse.json(
-        { error: "timestamp must be a non-negative number" },
+        { success: false, error: "timestamp must be a non-negative number" },
         { status: 400 }
       );
     }
 
     if (!payload || typeof payload !== "object") {
       return NextResponse.json(
-        { error: "payload must be a JSON object" },
+        { success: false, error: "payload must be a JSON object" },
         { status: 400 }
       );
     }
@@ -120,11 +120,11 @@ export async function POST(
     return NextResponse.json({ frameAnnotation }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/frame-annotations POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -145,7 +145,7 @@ export async function PUT(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -159,7 +159,7 @@ export async function PUT(
 
     if (!Array.isArray(frameAnnotations) || frameAnnotations.length === 0) {
       return NextResponse.json(
-        { error: "frameAnnotations must be a non-empty array" },
+        { success: false, error: "frameAnnotations must be a non-empty array" },
         { status: 400 }
       );
     }
@@ -168,13 +168,13 @@ export async function PUT(
     for (const fa of frameAnnotations) {
       if (typeof fa.timestamp !== "number" || fa.timestamp < 0) {
         return NextResponse.json(
-          { error: "Each entry must have a non-negative timestamp" },
+          { success: false, error: "Each entry must have a non-negative timestamp" },
           { status: 400 }
         );
       }
       if (!fa.payload || typeof fa.payload !== "object") {
         return NextResponse.json(
-          { error: "Each entry must have a payload object" },
+          { success: false, error: "Each entry must have a payload object" },
           { status: 400 }
         );
       }
@@ -211,10 +211,10 @@ export async function PUT(
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/frame-annotations PUT Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

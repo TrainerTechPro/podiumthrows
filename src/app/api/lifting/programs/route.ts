@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -18,7 +18,7 @@ export async function GET() {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const programs = await prisma.liftingProgram.findMany({
@@ -38,7 +38,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/lifting/programs", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to fetch lifting programs." },
+      { success: false, error: "Failed to fetch lifting programs." },
       { status: 500 }
     );
   }
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, LiftingProgramCreateSchema);
@@ -70,13 +70,13 @@ export async function POST(request: NextRequest) {
       const phase = phases[i] as Record<string, unknown>;
       if (typeof phase.name !== "string" || phase.name.trim().length === 0) {
         return NextResponse.json(
-          { error: `Phase ${i + 1} needs a name.` },
+          { success: false, error: `Phase ${i + 1} needs a name.` },
           { status: 400 }
         );
       }
       if (typeof phase.method !== "string" || phase.method.trim().length === 0) {
         return NextResponse.json(
-          { error: `Phase ${i + 1} needs a method.` },
+          { success: false, error: `Phase ${i + 1} needs a method.` },
           { status: 400 }
         );
       }
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     logger.error("POST /api/lifting/programs", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to create lifting program." },
+      { success: false, error: "Failed to create lifting program." },
       { status: 500 }
     );
   }

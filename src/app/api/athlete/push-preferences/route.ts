@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest) {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Accept any subset of PushPreferences keys; ignore unknown keys.
@@ -50,6 +50,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PATCH /api/athlete/push-preferences", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to save preferences." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to save preferences." }, { status: 500 });
   }
 }

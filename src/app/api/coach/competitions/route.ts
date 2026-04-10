@@ -97,10 +97,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: meets });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("coach competitions GET error", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch competitions" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch competitions" }, { status: 500 });
   }
 }
 
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     if (!name?.trim() || !date?.trim() || !entries?.length) {
       return NextResponse.json(
-        { error: "name, date, and entries[] are required" },
+        { success: false, error: "name, date, and entries[] are required" },
         { status: 400 },
       );
     }
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
     const invalidIds = athleteIds.filter((id) => !validIds.has(id));
     if (invalidIds.length > 0) {
       return NextResponse.json(
-        { error: `Athletes not on your roster: ${invalidIds.join(", ")}` },
+        { success: false, error: `Athletes not on your roster: ${invalidIds.join(", ")}` },
         { status: 403 },
       );
     }
@@ -157,10 +157,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: created });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("coach competitions POST error", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to create competition entries" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create competition entries" }, { status: 500 });
   }
 }
 
@@ -175,7 +175,7 @@ export async function PATCH(req: NextRequest) {
     };
 
     if (!results?.length) {
-      return NextResponse.json({ error: "results[] is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "results[] is required" }, { status: 400 });
     }
 
     // Fetch all competition entries to verify ownership + get event/athlete info
@@ -200,10 +200,10 @@ export async function PATCH(req: NextRequest) {
     for (const r of results) {
       const comp = existingMap.get(r.id);
       if (!comp) {
-        return NextResponse.json({ error: `Competition ${r.id} not found` }, { status: 404 });
+        return NextResponse.json({ success: false, error: `Competition ${r.id} not found` }, { status: 404 });
       }
       if (comp.athlete.coachId !== coach.id) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       }
     }
 
@@ -298,9 +298,9 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("coach competitions PATCH error", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update results" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update results" }, { status: 500 });
   }
 }

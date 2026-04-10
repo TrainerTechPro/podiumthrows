@@ -69,7 +69,7 @@ export async function PATCH(
     const parsed = patchSchema.safeParse(raw);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
+        { success: false, error: "Invalid input", details: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }

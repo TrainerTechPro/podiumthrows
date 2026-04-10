@@ -66,13 +66,13 @@ export async function POST(request: Request) {
 
     if (isReauthError(message)) {
       return NextResponse.json(
-        { error: "reauth_required", detail: "Your WHOOP authorization has expired. Please reconnect your WHOOP." },
+        { success: false, error: "reauth_required", detail: "Your WHOOP authorization has expired. Please reconnect your WHOOP." },
         { status: 401 },
       );
     }
 
     return NextResponse.json(
-      { error: "WHOOP sync failed", detail: message },
+      { success: false, error: "WHOOP sync failed", detail: message },
       { status: 500 },
     );
   }

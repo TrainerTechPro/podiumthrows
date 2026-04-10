@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -17,7 +17,7 @@ export async function GET() {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const [testingRecords, assessments] = await Promise.all([
@@ -82,7 +82,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/assessments", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to fetch assessments." },
+      { success: false, error: "Failed to fetch assessments." },
       { status: 500 }
     );
   }

@@ -20,7 +20,7 @@ export async function PATCH(
     const validPriorities = ["NORMAL", "URGENT"];
     if (priority !== undefined && !validPriorities.includes(priority as string)) {
       return NextResponse.json(
-        { error: `priority must be one of: ${validPriorities.join(", ")}` },
+        { success: false, error: `priority must be one of: ${validPriorities.join(", ")}` },
         { status: 400 },
       );
     }
@@ -29,7 +29,7 @@ export async function PATCH(
     const validTargetTypes = ["ALL", "GROUP", "INDIVIDUAL"];
     if (targetType !== undefined && !validTargetTypes.includes(targetType as string)) {
       return NextResponse.json(
-        { error: `targetType must be one of: ${validTargetTypes.join(", ")}` },
+        { success: false, error: `targetType must be one of: ${validTargetTypes.join(", ")}` },
         { status: 400 },
       );
     }
@@ -42,7 +42,7 @@ export async function PATCH(
       } else {
         expiresAtDate = new Date(expiresAt as string);
         if (isNaN(expiresAtDate.getTime())) {
-          return NextResponse.json({ error: "Invalid expiresAt date." }, { status: 400 });
+          return NextResponse.json({ success: false, error: "Invalid expiresAt date." }, { status: 400 });
         }
       }
     }
@@ -60,13 +60,13 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if (err instanceof Error && err.message === "Not found") {
-      return NextResponse.json({ error: "Announcement not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Announcement not found." }, { status: 404 });
     }
     logger.error("PATCH /api/coach/announcements/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update announcement." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update announcement." }, { status: 500 });
   }
 }
 
@@ -84,12 +84,12 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if (err instanceof Error && err.message === "Not found") {
-      return NextResponse.json({ error: "Announcement not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Announcement not found." }, { status: 404 });
     }
     logger.error("DELETE /api/coach/announcements/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete announcement." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete announcement." }, { status: 500 });
   }
 }

@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { id } = await params;
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     // Resolve profile ID
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     if (!profileId) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -42,12 +42,12 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     const updated = await markAsRead(id, profileId, session.role, readValue);
     if (!updated) {
-      return NextResponse.json({ error: "Notification not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Notification not found." }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("PATCH /api/notifications/[id]", { context: "api", metadata: { error: String(err) } });
-    return NextResponse.json({ error: "Failed to update notification." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update notification." }, { status: 500 });
   }
 }

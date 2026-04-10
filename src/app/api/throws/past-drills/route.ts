@@ -13,14 +13,14 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const event = searchParams.get("event");
 
     if (!event || !["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-      return NextResponse.json({ error: "Valid event is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Valid event is required" }, { status: 400 });
     }
 
     // Find the athlete or coach profile
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       : null;
 
     if (!athleteProfile && !coachProfile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
     const drillTypes: string[] = [];
@@ -82,6 +82,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: drillTypes });
   } catch (err) {
     logger.error("GET /api/throws/past-drills", { context: "api", error: err });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }

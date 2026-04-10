@@ -18,7 +18,7 @@ export async function GET() {
   const publicKey = getVapidPublicKey();
   if (!publicKey) {
     return NextResponse.json(
-      { error: "Push notifications are not configured on this server." },
+      { success: false, error: "Push notifications are not configured on this server." },
       { status: 501 }
     );
   }

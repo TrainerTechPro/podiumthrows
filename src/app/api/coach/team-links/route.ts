@@ -12,10 +12,10 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/team-links", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch team links." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch team links." }, { status: 500 });
   }
 }
 
@@ -29,17 +29,17 @@ export async function POST(req: NextRequest) {
     const { title, url, category, icon } = body;
 
     if (typeof title !== "string" || !title.trim()) {
-      return NextResponse.json({ error: "title is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "title is required." }, { status: 400 });
     }
     if (typeof url !== "string" || !url.trim()) {
-      return NextResponse.json({ error: "url is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "url is required." }, { status: 400 });
     }
 
     // Basic URL format validation
     try {
       new URL(url.trim());
     } catch {
-      return NextResponse.json({ error: "Invalid URL format." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid URL format." }, { status: 400 });
     }
 
     const result = await createTeamLink(coach.id, {
@@ -52,9 +52,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/team-links", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to create team link." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create team link." }, { status: 500 });
   }
 }

@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, LiftingWorkoutCreateSchema);
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (!program) {
       return NextResponse.json(
-        { error: "Program not found." },
+        { success: false, error: "Program not found." },
         { status: 404 }
       );
     }
@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
     if (!matchedPhase) {
       return NextResponse.json(
         {
+          success: false,
           error: `No phase covers week ${weekNumber}. Check program phase ranges.`,
         },
         { status: 400 }
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
       err.code === "P2002"
     ) {
       return NextResponse.json(
-        { error: "Workout already started for this slot." },
+        { success: false, error: "Workout already started for this slot." },
         { status: 409 }
       );
     }
@@ -215,7 +216,7 @@ export async function POST(request: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to start workout." },
+      { success: false, error: "Failed to start workout." },
       { status: 500 }
     );
   }

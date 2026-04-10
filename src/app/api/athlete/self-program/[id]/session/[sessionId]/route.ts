@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id: configId, sessionId } = await params;
@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { athleteProfileId: true, trainingProgramId: true },
     });
     if (!config || config.athleteProfileId !== athlete.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     // Verify session belongs to this program
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true, programId: true, status: true },
     });
     if (!programSession || programSession.programId !== config.trainingProgramId) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -62,10 +62,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     // Status change
     if (newStatus !== undefined) {
       if (!ALLOWED_STATUSES.includes(newStatus)) {
-        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid status" }, { status: 400 });
       }
       if (programSession.status === "COMPLETED" || programSession.status === "SKIPPED") {
-        return NextResponse.json({ error: "Cannot modify a completed or skipped session" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Cannot modify a completed or skipped session" }, { status: 400 });
       }
       data.status = newStatus;
       if (newStatus === "COMPLETED") data.completedAt = new Date();
@@ -88,15 +88,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     // Reschedule
     if (scheduledDate !== undefined) {
       if (programSession.status === "COMPLETED") {
-        return NextResponse.json({ error: "Cannot reschedule a completed session" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Cannot reschedule a completed session" }, { status: 400 });
       }
       // Validate YYYY-MM-DD format
       if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) {
-        return NextResponse.json({ error: "scheduledDate must be YYYY-MM-DD" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "scheduledDate must be YYYY-MM-DD" }, { status: 400 });
       }
       const d = new Date(scheduledDate);
       if (isNaN(d.getTime())) {
-        return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid date" }, { status: 400 });
       }
       data.scheduledDate = scheduledDate;
     }
@@ -111,7 +111,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     if (Object.keys(data).length === 0) {
-      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "No valid fields to update" }, { status: 400 });
     }
 
     const updated = await prisma.programSession.update({
@@ -133,6 +133,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       context: "api",
       error: err,
     });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }

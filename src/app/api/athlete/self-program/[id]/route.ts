@@ -43,13 +43,13 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const canAccess = await canAccessSelfProgram(session.userId);
     if (!canAccess) {
       return NextResponse.json(
-        { error: "Self-programming not enabled" },
+        { success: false, error: "Self-programming not enabled" },
         { status: 403 },
       );
     }
@@ -59,7 +59,7 @@ export async function GET(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -96,19 +96,19 @@ export async function GET(
     });
 
     if (!config) {
-      return NextResponse.json({ error: "Config not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Config not found" }, { status: 404 });
     }
 
     // Ownership check
     if (config.athleteProfileId !== athlete.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json({ config });
   } catch (err) {
     logger.error("GET /api/athlete/self-program/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to fetch self-program config." },
+      { success: false, error: "Failed to fetch self-program config." },
       { status: 500 },
     );
   }
@@ -123,13 +123,13 @@ export async function PUT(
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const canAccess = await canAccessSelfProgram(session.userId);
     if (!canAccess) {
       return NextResponse.json(
-        { error: "Self-programming not enabled" },
+        { success: false, error: "Self-programming not enabled" },
         { status: 403 },
       );
     }
@@ -139,7 +139,7 @@ export async function PUT(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -150,10 +150,10 @@ export async function PUT(
       select: { id: true, athleteProfileId: true, isDraft: true, trainingProgramId: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Config not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Config not found" }, { status: 404 });
     }
     if (existing.athleteProfileId !== athlete.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -187,13 +187,13 @@ export async function PUT(
     if ("daysPerWeek" in typedBody) {
       const v = typedBody.daysPerWeek;
       if (typeof v !== "number" || v < 2 || v > 5) {
-        return NextResponse.json({ error: "daysPerWeek must be a number between 2 and 5." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "daysPerWeek must be a number between 2 and 5." }, { status: 400 });
       }
     }
     if ("sessionsPerDay" in typedBody) {
       const v = typedBody.sessionsPerDay;
       if (v !== 1 && v !== 2) {
-        return NextResponse.json({ error: "sessionsPerDay must be 1 or 2." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "sessionsPerDay must be 1 or 2." }, { status: 400 });
       }
     }
     if ("preferredDays" in typedBody) {
@@ -204,13 +204,13 @@ export async function PUT(
       const v = typedBody.preferredDays;
       if (!Array.isArray(v) || v.some((d) => !validDays.includes(d as string))) {
         return NextResponse.json(
-          { error: "preferredDays must be an array of valid day names (Monday–Sunday)." },
+          { success: false, error: "preferredDays must be an array of valid day names (Monday–Sunday)." },
           { status: 400 },
         );
       }
       if ("daysPerWeek" in typedBody && v.length !== (typedBody.daysPerWeek as number)) {
         return NextResponse.json(
-          { error: "preferredDays length must match daysPerWeek." },
+          { success: false, error: "preferredDays length must match daysPerWeek." },
           { status: 400 },
         );
       }
@@ -219,7 +219,7 @@ export async function PUT(
       const v = typedBody.availableImplements;
       if (!Array.isArray(v) || v.length < 1) {
         return NextResponse.json(
-          { error: "availableImplements must be an array with at least 1 item." },
+          { success: false, error: "availableImplements must be an array with at least 1 item." },
           { status: 400 },
         );
       }
@@ -240,7 +240,7 @@ export async function PUT(
       if (key === "startDate" && typeof value === "string") {
         const d = new Date(value);
         if (isNaN(d.getTime())) {
-          return NextResponse.json({ error: "Invalid startDate" }, { status: 400 });
+          return NextResponse.json({ success: false, error: "Invalid startDate" }, { status: 400 });
         }
         data[key] = d;
       } else {
@@ -250,7 +250,7 @@ export async function PUT(
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json(
-        { error: "No valid fields to update." },
+        { success: false, error: "No valid fields to update." },
         { status: 400 },
       );
     }
@@ -264,7 +264,7 @@ export async function PUT(
   } catch (err) {
     logger.error("PUT /api/athlete/self-program/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to update self-program config." },
+      { success: false, error: "Failed to update self-program config." },
       { status: 500 },
     );
   }
@@ -279,13 +279,13 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const canAccess = await canAccessSelfProgram(session.userId);
     if (!canAccess) {
       return NextResponse.json(
-        { error: "Self-programming not enabled" },
+        { success: false, error: "Self-programming not enabled" },
         { status: 403 },
       );
     }
@@ -295,7 +295,7 @@ export async function DELETE(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -305,10 +305,10 @@ export async function DELETE(
       select: { id: true, athleteProfileId: true, trainingProgramId: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Config not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Config not found" }, { status: 404 });
     }
     if (existing.athleteProfileId !== athlete.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.$transaction(async (tx) => {
@@ -334,7 +334,7 @@ export async function DELETE(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to deactivate self-program config." },
+      { success: false, error: "Failed to deactivate self-program config." },
       { status: 500 },
     );
   }

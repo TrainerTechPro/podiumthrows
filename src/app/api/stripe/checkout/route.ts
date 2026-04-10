@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     /* ── Auth ── */
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     /* ── Validate plan + interval params ── */
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const planKey = (body.plan as string)?.toUpperCase() as PlanName | undefined;
     if (!planKey || planKey === "FREE" || !PLANS[planKey]) {
       return NextResponse.json(
-        { error: "Invalid plan. Must be PRO or ELITE." },
+        { success: false, error: "Invalid plan. Must be PRO or ELITE." },
         { status: 400 }
       );
     }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     const priceId = getPriceId(planKey, interval);
     if (!priceId) {
       return NextResponse.json(
-        { error: `Stripe price ID for ${planKey} (${interval}) not configured.` },
+        { success: false, error: `Stripe price ID for ${planKey} (${interval}) not configured.` },
         { status: 500 }
       );
     }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     /* ── Get or create Stripe customer ── */
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/stripe/checkout", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Could not create checkout session." },
+      { success: false, error: "Could not create checkout session." },
       { status: 500 }
     );
   }

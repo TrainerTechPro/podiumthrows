@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -56,12 +56,12 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, user });
   } catch {
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
   }
 }
 

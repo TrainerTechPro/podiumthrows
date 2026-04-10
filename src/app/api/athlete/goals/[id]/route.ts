@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Verify ownership
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true, targetValue: true, status: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Goal not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Goal not found." }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (typeof deadline === "string") {
       const d = deadline.length > 0 ? new Date(deadline) : null;
       if (d && isNaN(d.getTime())) {
-        return NextResponse.json({ error: "Invalid deadline date." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid deadline date." }, { status: 400 });
       }
       data.deadline = d;
     }
@@ -77,7 +77,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     if (Object.keys(data).length === 0) {
-      return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "No valid fields to update." }, { status: 400 });
     }
 
     const updated = await prisma.goal.update({
@@ -108,7 +108,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/goals/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update goal." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update goal." }, { status: 500 });
   }
 }
 
@@ -119,7 +119,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -127,7 +127,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const existing = await prisma.goal.findFirst({
@@ -135,7 +135,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Goal not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Goal not found." }, { status: 404 });
     }
 
     await prisma.goal.update({
@@ -146,6 +146,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/athlete/goals/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete goal." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete goal." }, { status: 500 });
   }
 }

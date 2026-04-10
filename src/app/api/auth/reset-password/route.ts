@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const rl = await rateLimit(`reset-password:${ip}`, { maxAttempts: 5, windowMs: 60_000 });
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { success: false, error: "Too many requests. Please try again later." },
         { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
       );
     }
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     // Validate token (checks expiry and usedAt)
     const tokenData = await getToken(token);
     if (!tokenData) {
-      return NextResponse.json({ error: "Invalid or expired reset token" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid or expired reset token" }, { status: 400 });
     }
 
     // Update password
@@ -50,6 +50,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error("reset-password Error", { context: "api", error });
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
   }
 }

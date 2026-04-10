@@ -16,7 +16,7 @@ export async function POST(
     const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -24,7 +24,7 @@ export async function POST(
       select: { id: true, coachId: true, firstName: true, lastName: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Verify session belongs to this athlete and is active
@@ -34,11 +34,11 @@ export async function POST(
     });
 
     if (!trainingSession) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Session not found." }, { status: 404 });
     }
 
     if (trainingSession.status === "COMPLETED") {
-      return NextResponse.json({ error: "Cannot log to a completed session." }, { status: 409 });
+      return NextResponse.json({ success: false, error: "Cannot log to a completed session." }, { status: 409 });
     }
 
     // Auto-transition SCHEDULED → IN_PROGRESS on first log
@@ -66,10 +66,10 @@ export async function POST(
 
     // Validate common fields
     if (typeof exerciseName !== "string" || exerciseName.trim().length === 0) {
-      return NextResponse.json({ error: "Exercise name is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Exercise name is required." }, { status: 400 });
     }
     if (typeof sets !== "number" || sets < 1) {
-      return NextResponse.json({ error: "Sets must be at least 1." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Sets must be at least 1." }, { status: 400 });
     }
 
     // Create the session log
@@ -165,6 +165,6 @@ export async function POST(
     );
   } catch (err) {
     logger.error("POST /api/athlete/sessions/[id]/log", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to log exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to log exercise." }, { status: 500 });
   }
 }

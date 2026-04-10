@@ -22,7 +22,7 @@ export async function POST(
     const { sessionId } = await params;
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -35,7 +35,7 @@ export async function POST(
       },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const trainingSession = await prisma.trainingSession.findFirst({
@@ -50,7 +50,7 @@ export async function POST(
     });
 
     if (!trainingSession) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
     // Idempotency — look for an existing notification for this session
@@ -123,6 +123,6 @@ export async function POST(
       context: "api",
       error: err,
     });
-    return NextResponse.json({ error: "Failed to notify coach." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to notify coach." }, { status: 500 });
   }
 }

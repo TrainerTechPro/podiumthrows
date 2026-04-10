@@ -67,19 +67,19 @@ export async function POST(
     const { id } = await params;
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     if (!isValidEmoji(body.emoji)) {
       return NextResponse.json(
-        { error: `emoji must be one of ${ALLOWED_EMOJIS.join(", ")}` },
+        { success: false, error: `emoji must be one of ${ALLOWED_EMOJIS.join(", ")}` },
         { status: 400 }
       );
     }
 
     if (!(await canReact(session.userId, session.role, id))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     // Toggle: if the row already exists, delete it. Otherwise create it.
@@ -115,7 +115,7 @@ export async function POST(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to update reaction." },
+      { success: false, error: "Failed to update reaction." },
       { status: 500 }
     );
   }
@@ -129,19 +129,19 @@ export async function DELETE(
     const { id } = await params;
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     if (!isValidEmoji(body.emoji)) {
       return NextResponse.json(
-        { error: `emoji must be one of ${ALLOWED_EMOJIS.join(", ")}` },
+        { success: false, error: `emoji must be one of ${ALLOWED_EMOJIS.join(", ")}` },
         { status: 400 }
       );
     }
 
     if (!(await canReact(session.userId, session.role, id))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.teamActivityReaction.deleteMany({
@@ -159,7 +159,7 @@ export async function DELETE(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to remove reaction." },
+      { success: false, error: "Failed to remove reaction." },
       { status: 500 }
     );
   }

@@ -39,7 +39,7 @@ export async function PUT(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -47,7 +47,7 @@ export async function PUT(
 
     if (!Array.isArray(annotations)) {
       return NextResponse.json(
-        { error: "annotations must be an array" },
+        { success: false, error: "annotations must be an array" },
         { status: 400 }
       );
     }
@@ -56,19 +56,20 @@ export async function PUT(
     for (const ann of annotations) {
       if (!ann.id || typeof ann.id !== "string") {
         return NextResponse.json(
-          { error: "Each annotation must have a string id" },
+          { success: false, error: "Each annotation must have a string id" },
           { status: 400 }
         );
       }
       if (typeof ann.timestamp !== "number" || ann.timestamp < 0) {
         return NextResponse.json(
-          { error: "Each annotation must have a valid timestamp" },
+          { success: false, error: "Each annotation must have a valid timestamp" },
           { status: 400 }
         );
       }
       if (!ann.type || !VALID_ANNOTATION_TYPES.includes(ann.type)) {
         return NextResponse.json(
           {
+            success: false,
             error: `Invalid annotation type. Must be one of: ${VALID_ANNOTATION_TYPES.join(", ")}`,
           },
           { status: 400 }
@@ -76,7 +77,7 @@ export async function PUT(
       }
       if (!Array.isArray(ann.points)) {
         return NextResponse.json(
-          { error: "Each annotation must have a points array" },
+          { success: false, error: "Each annotation must have a points array" },
           { status: 400 }
         );
       }
@@ -90,10 +91,10 @@ export async function PUT(
     return NextResponse.json({ success: true, count: annotations.length });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/annotations PUT Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

@@ -25,7 +25,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -33,7 +33,7 @@ export async function GET() {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const rows = await prisma.$queryRaw<Array<{ count: bigint }>>(Prisma.sql`
@@ -66,7 +66,7 @@ export async function GET() {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to load unread count." },
+      { success: false, error: "Failed to load unread count." },
       { status: 500 }
     );
   }

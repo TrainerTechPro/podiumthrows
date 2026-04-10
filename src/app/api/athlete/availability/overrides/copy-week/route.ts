@@ -16,7 +16,7 @@ export async function POST() {
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -24,7 +24,7 @@ export async function POST() {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Compute Mon–Sun bounds for the current week (local wall-clock dates).
@@ -95,7 +95,7 @@ export async function POST() {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to copy overrides." },
+      { success: false, error: "Failed to copy overrides." },
       { status: 500 }
     );
   }

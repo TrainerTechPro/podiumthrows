@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     if (limit !== Infinity && realAthleteCount >= limit) {
       return NextResponse.json(
         {
+          success: false,
           error: `You have reached the ${coach.plan} plan limit of ${limit} athletes. Upgrade to invite more.`,
         },
         { status: 403 }

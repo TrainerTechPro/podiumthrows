@@ -29,7 +29,7 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -51,11 +51,11 @@ export async function PATCH(
       },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Comment not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Comment not found" }, { status: 404 });
     }
     if (existing.authorId === session.userId) {
       return NextResponse.json(
-        { error: "You cannot acknowledge your own comment." },
+        { success: false, error: "You cannot acknowledge your own comment." },
         { status: 403 }
       );
     }
@@ -69,7 +69,7 @@ export async function PATCH(
       existing
     );
     if (!canAck) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -85,7 +85,7 @@ export async function PATCH(
         const parsed = new Date(body.readAt);
         if (isNaN(parsed.getTime())) {
           return NextResponse.json(
-            { error: "Invalid readAt." },
+            { success: false, error: "Invalid readAt." },
             { status: 400 }
           );
         }
@@ -106,7 +106,7 @@ export async function PATCH(
         updates.reaction = r;
       } else {
         return NextResponse.json(
-          { error: `reaction must be one of ${ALLOWED_REACTIONS.join(", ")} or null` },
+          { success: false, error: `reaction must be one of ${ALLOWED_REACTIONS.join(", ")} or null` },
           { status: 400 }
         );
       }
@@ -122,7 +122,7 @@ export async function PATCH(
           updates.replyText = null;
         } else if (trimmed.length > MAX_REPLY_LENGTH) {
           return NextResponse.json(
-            { error: `replyText must be ${MAX_REPLY_LENGTH} characters or fewer.` },
+            { success: false, error: `replyText must be ${MAX_REPLY_LENGTH} characters or fewer.` },
             { status: 400 }
           );
         } else {
@@ -130,7 +130,7 @@ export async function PATCH(
         }
       } else {
         return NextResponse.json(
-          { error: "replyText must be a string or null." },
+          { success: false, error: "replyText must be a string or null." },
           { status: 400 }
         );
       }
@@ -138,7 +138,7 @@ export async function PATCH(
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "No fields to update." },
+        { success: false, error: "No fields to update." },
         { status: 400 }
       );
     }
@@ -171,7 +171,7 @@ export async function PATCH(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to update comment." },
+      { success: false, error: "Failed to update comment." },
       { status: 500 }
     );
   }

@@ -117,7 +117,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -126,7 +126,7 @@ export async function GET() {
     });
 
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const tz = resolveTimezone(athlete.timezone);
@@ -195,7 +195,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/quick-log", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to load quick-log state." },
+      { success: false, error: "Failed to load quick-log state." },
       { status: 500 }
     );
   }
@@ -207,7 +207,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const tz = resolveTimezone(athlete.timezone);
@@ -228,16 +228,16 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (typeof event !== "string" || !["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-      return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
     }
     if (typeof implementWeight !== "number" || implementWeight <= 0) {
-      return NextResponse.json({ error: "Invalid implementWeight" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid implementWeight" }, { status: 400 });
     }
     if (distance !== undefined && distance !== null && typeof distance !== "number") {
-      return NextResponse.json({ error: "distance must be a number if provided" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "distance must be a number if provided" }, { status: 400 });
     }
     if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
-      return NextResponse.json({ error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
     }
 
     const distanceNum = typeof distance === "number" ? distance : null;
@@ -350,7 +350,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/athlete/quick-log", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to log throw." },
+      { success: false, error: "Failed to log throw." },
       { status: 500 }
     );
   }
@@ -362,7 +362,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -371,14 +371,14 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     const { id, distance, feeling, notes } = body;
 
     if (typeof id !== "string") {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "id is required" }, { status: 400 });
     }
 
     // Find and verify ownership
@@ -388,18 +388,18 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Throw not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Throw not found" }, { status: 404 });
     }
     if (existing.athleteId !== athlete.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     // Validate incoming fields
     if (distance !== undefined && distance !== null && typeof distance !== "number") {
-      return NextResponse.json({ error: "distance must be a number if provided" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "distance must be a number if provided" }, { status: 400 });
     }
     if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
-      return NextResponse.json({ error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
     }
 
     const newDistance = distance === null ? null : typeof distance === "number" ? distance : existing.distance;
@@ -457,7 +457,7 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     logger.error("PATCH /api/athlete/quick-log", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to update throw." },
+      { success: false, error: "Failed to update throw." },
       { status: 500 }
     );
   }

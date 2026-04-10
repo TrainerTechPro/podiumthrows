@@ -15,19 +15,19 @@ export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => ({}))) as { timezone?: string };
     if (!body.timezone || typeof body.timezone !== "string") {
-      return NextResponse.json({ error: "timezone required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "timezone required" }, { status: 400 });
     }
 
     // Validate the IANA zone
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: body.timezone }).format(new Date());
     } catch {
-      return NextResponse.json({ error: "invalid timezone" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "invalid timezone" }, { status: 400 });
     }
 
     if (session.role === "COACH") {
@@ -45,6 +45,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("PATCH /api/user/timezone", { error: err });
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed" }, { status: 500 });
   }
 }

@@ -21,7 +21,7 @@ export async function POST(
     }
     if (questionnaire.status !== "published") {
       return NextResponse.json(
-        { error: "Questionnaire must be published before assigning" },
+        { success: false, error: "Questionnaire must be published before assigning" },
         { status: 400 }
       );
     }
@@ -31,7 +31,7 @@ export async function POST(
 
     if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
       return NextResponse.json(
-        { error: "At least one athlete ID is required" },
+        { success: false, error: "At least one athlete ID is required" },
         { status: 400 }
       );
     }
@@ -46,7 +46,7 @@ export async function POST(
     const invalidIds = athleteIds.filter((id: string) => !validIds.has(id));
     if (invalidIds.length > 0) {
       return NextResponse.json(
-        { error: `Athletes not found: ${invalidIds.join(", ")}` },
+        { success: false, error: `Athletes not found: ${invalidIds.join(", ")}` },
         { status: 400 }
       );
     }

@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     const drills = await getDrillLibrary(coach.id, filters);
     return NextResponse.json({ drills });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -51,21 +51,21 @@ export async function POST(req: NextRequest) {
 
     // Validation
     if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Name is required" }, { status: 400 });
     }
     if (!category || !VALID_CATEGORIES.includes(category)) {
-      return NextResponse.json({ error: "Valid category is required (CE, SDE, SPE, GPE)" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Valid category is required (CE, SDE, SPE, GPE)" }, { status: 400 });
     }
     if (event && !VALID_EVENTS.includes(event)) {
-      return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
     }
     if (difficulty && !VALID_DIFFICULTIES.includes(difficulty)) {
-      return NextResponse.json({ error: "Invalid difficulty" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid difficulty" }, { status: 400 });
     }
     if (athleteTypes && Array.isArray(athleteTypes)) {
       for (const at of athleteTypes) {
         if (!VALID_ATHLETE_TYPES.includes(at)) {
-          return NextResponse.json({ error: `Invalid athlete type: ${at}` }, { status: 400 });
+          return NextResponse.json({ success: false, error: `Invalid athlete type: ${at}` }, { status: 400 });
         }
       }
     }
@@ -88,6 +88,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ drill }, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

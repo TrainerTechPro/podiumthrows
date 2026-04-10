@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -18,7 +18,7 @@ export async function GET() {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const goals = await prisma.goal.findMany({
@@ -78,7 +78,7 @@ export async function GET() {
     return NextResponse.json({ goals: data });
   } catch (err) {
     logger.error("GET /api/athlete/goals", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch goals." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch goals." }, { status: 500 });
   }
 }
 
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -104,19 +104,19 @@ export async function POST(req: NextRequest) {
       body as Record<string, unknown>;
 
     if (typeof title !== "string" || title.trim().length === 0) {
-      return NextResponse.json({ error: "Title is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Title is required." }, { status: 400 });
     }
     if (typeof targetValue !== "number" || targetValue <= 0) {
-      return NextResponse.json({ error: "Target value must be a positive number." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Target value must be a positive number." }, { status: 400 });
     }
     if (typeof unit !== "string" || unit.trim().length === 0) {
-      return NextResponse.json({ error: "Unit is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Unit is required." }, { status: 400 });
     }
 
     const deadlineDate =
       typeof deadline === "string" && deadline.length > 0 ? new Date(deadline) : null;
     if (deadlineDate && isNaN(deadlineDate.getTime())) {
-      return NextResponse.json({ error: "Invalid deadline date." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid deadline date." }, { status: 400 });
     }
 
     const starting =
@@ -163,6 +163,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     logger.error("POST /api/athlete/goals", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to create goal." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create goal." }, { status: 500 });
   }
 }

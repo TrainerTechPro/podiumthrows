@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => ({}))) as SubscribeBody;
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     if (!endpoint || !p256dh || !authSecret) {
       return NextResponse.json(
-        { error: "endpoint, keys.p256dh, and keys.auth are required." },
+        { success: false, error: "endpoint, keys.p256dh, and keys.auth are required." },
         { status: 400 }
       );
     }
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/push/subscribe", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to save subscription." },
+      { success: false, error: "Failed to save subscription." },
       { status: 500 }
     );
   }
@@ -88,13 +88,13 @@ export async function DELETE(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => ({}))) as { endpoint?: unknown };
     const endpoint = typeof body.endpoint === "string" ? body.endpoint : null;
     if (!endpoint) {
-      return NextResponse.json({ error: "endpoint is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "endpoint is required." }, { status: 400 });
     }
 
     // Only delete if the subscription actually belongs to this user
@@ -106,7 +106,7 @@ export async function DELETE(req: NextRequest) {
   } catch (err) {
     logger.error("DELETE /api/push/subscribe", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to remove subscription." },
+      { success: false, error: "Failed to remove subscription." },
       { status: 500 }
     );
   }

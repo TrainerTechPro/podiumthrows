@@ -12,7 +12,7 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -20,7 +20,7 @@ export async function PATCH(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -32,7 +32,7 @@ export async function PATCH(
     });
     if (!existing) {
       return NextResponse.json(
-        { error: "Workout log not found." },
+        { success: false, error: "Workout log not found." },
         { status: 404 }
       );
     }
@@ -49,6 +49,7 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         {
+          success: false,
           error:
             "Invalid status. Must be IN_PROGRESS, COMPLETED, or SKIPPED.",
         },
@@ -154,7 +155,7 @@ export async function PATCH(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to save workout." },
+      { success: false, error: "Failed to save workout." },
       { status: 500 }
     );
   }

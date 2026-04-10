@@ -14,14 +14,14 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },
     });
-    if (!coach) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!coach) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
     const athletes = await prisma.athleteProfile.findMany({
       where: { coachId: coach.id },
@@ -85,6 +85,6 @@ export async function GET() {
     );
   } catch (err) {
     logger.error("GET /api/readiness/team", { context: "api", error: err });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }

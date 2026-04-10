@@ -86,13 +86,13 @@ export async function POST(
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const canAccess = await canAccessSelfProgram(session.userId);
     if (!canAccess) {
       return NextResponse.json(
-        { error: "Self-programming not enabled" },
+        { success: false, error: "Self-programming not enabled" },
         { status: 403 },
       );
     }
@@ -116,7 +116,7 @@ export async function POST(
       },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -137,24 +137,24 @@ export async function POST(
     });
 
     if (!config) {
-      return NextResponse.json({ error: "Config not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Config not found" }, { status: 404 });
     }
 
     // Ownership check
     if (config.athleteProfileId !== athlete.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     if (!config.isActive) {
       return NextResponse.json(
-        { error: "Config has been deactivated." },
+        { success: false, error: "Config has been deactivated." },
         { status: 400 },
       );
     }
 
     if (!config.trainingProgram) {
       return NextResponse.json(
-        { error: "No training program linked. Generate the initial program first." },
+        { success: false, error: "No training program linked. Generate the initial program first." },
         { status: 400 },
       );
     }
@@ -164,7 +164,7 @@ export async function POST(
 
     if (!latestPhase) {
       return NextResponse.json(
-        { error: "No existing phases found in the program." },
+        { success: false, error: "No existing phases found in the program." },
         { status: 400 },
       );
     }
@@ -344,7 +344,7 @@ export async function POST(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to generate next phase." },
+      { success: false, error: "Failed to generate next phase." },
       { status: 500 },
     );
   }

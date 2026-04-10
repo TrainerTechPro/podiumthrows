@@ -27,12 +27,12 @@ export async function POST() {
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athleteId = await getAthleteId(session.userId);
     if (!athleteId) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Return existing token if already set, otherwise generate a new one
@@ -59,7 +59,7 @@ export async function POST() {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to generate share link." },
+      { success: false, error: "Failed to generate share link." },
       { status: 500 }
     );
   }
@@ -69,12 +69,12 @@ export async function DELETE() {
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athleteId = await getAthleteId(session.userId);
     if (!athleteId) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Regenerate token to effectively revoke the old link
@@ -96,7 +96,7 @@ export async function DELETE() {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to revoke share link." },
+      { success: false, error: "Failed to revoke share link." },
       { status: 500 }
     );
   }

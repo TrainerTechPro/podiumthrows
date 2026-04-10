@@ -11,7 +11,7 @@ import {
 export async function PATCH(request: Request) {
   const session = await getSession();
   if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
   const { preset, widgets, order } = body;
@@ -29,7 +29,7 @@ export async function PATCH(request: Request) {
   // Custom config
   if (!Array.isArray(widgets) || !Array.isArray(order)) {
     return NextResponse.json(
-      { error: "widgets and order must be arrays" },
+      { success: false, error: "widgets and order must be arrays" },
       { status: 400 },
     );
   }

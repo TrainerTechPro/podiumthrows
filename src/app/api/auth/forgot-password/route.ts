@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const rl = await rateLimit(`forgot-password:${ip}`, { maxAttempts: 3, windowMs: 60_000 });
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { success: false, error: "Too many requests. Please try again later." },
         { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
       );
     }
@@ -60,6 +60,6 @@ export async function POST(request: NextRequest) {
     return successResponse;
   } catch (error) {
     logger.error("forgot-password Error", { context: "api", error });
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
   }
 }

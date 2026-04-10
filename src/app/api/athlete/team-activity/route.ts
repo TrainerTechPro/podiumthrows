@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       select: { id: true, coachId: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Parse pagination params
@@ -161,7 +161,7 @@ export async function GET(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to load team activity." },
+      { success: false, error: "Failed to load team activity." },
       { status: 500 }
     );
   }

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!videoBlob || !athleteId || !event || !title) {
       return NextResponse.json(
-        { error: "Missing required fields: video, athleteId, event, title" },
+        { success: false, error: "Missing required fields: video, athleteId, event, title" },
         { status: 400 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const validExts = ["mp4", "mov", "webm", "m4v"];
     if (!validExts.includes(ext)) {
       return NextResponse.json(
-        { error: "Unsupported video format. Use MP4, MOV, or WebM." },
+        { success: false, error: "Unsupported video format. Use MP4, MOV, or WebM." },
         { status: 400 }
       );
     }

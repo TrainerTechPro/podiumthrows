@@ -31,17 +31,17 @@ export async function GET(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     return NextResponse.json(video);
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/status GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -77,20 +77,20 @@ export async function PATCH(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     const body = await req.json();
     const { status } = body as { status?: string };
 
     if (!status) {
-      return NextResponse.json({ error: "status is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "status is required" }, { status: 400 });
     }
 
     const allowed = VALID_TRANSITIONS[video.status];
     if (!allowed || !allowed.includes(status)) {
       return NextResponse.json(
-        { error: `Cannot transition from "${video.status}" to "${status}"` },
+        { success: false, error: `Cannot transition from "${video.status}" to "${status}"` },
         { status: 409 }
       );
     }
@@ -103,10 +103,10 @@ export async function PATCH(
     return NextResponse.json({ videoId: id, status });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/status PATCH Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

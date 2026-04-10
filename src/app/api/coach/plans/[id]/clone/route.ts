@@ -13,7 +13,7 @@ export async function POST(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -21,7 +21,7 @@ export async function POST(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     // Fetch original plan with full structure
@@ -38,7 +38,7 @@ export async function POST(
     });
 
     if (!original) {
-      return NextResponse.json({ error: "Plan not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Plan not found." }, { status: 404 });
     }
 
     // Deep clone
@@ -79,6 +79,6 @@ export async function POST(
     return NextResponse.json(clone, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/plans/[id]/clone", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to clone plan." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to clone plan." }, { status: 500 });
   }
 }

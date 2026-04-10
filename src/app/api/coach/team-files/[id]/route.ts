@@ -15,7 +15,7 @@ export async function DELETE(
     const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ error: "File ID required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "File ID required" }, { status: 400 });
     }
 
     // deleteTeamFile verifies ownership and returns the R2 key
@@ -37,17 +37,17 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if (err instanceof Error && err.message === "Not found") {
-      return NextResponse.json({ error: "File not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "File not found" }, { status: 404 });
     }
     logger.error("DELETE /api/coach/team-files/[id]", {
       context: "api",
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to delete file" },
+      { success: false, error: "Failed to delete file" },
       { status: 500 },
     );
   }

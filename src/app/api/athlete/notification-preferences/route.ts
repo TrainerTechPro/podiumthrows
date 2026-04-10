@@ -86,7 +86,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -94,7 +94,7 @@ export async function GET() {
       select: { notificationPreferences: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const prefs = parsePrefs(athlete.notificationPreferences);
@@ -105,7 +105,7 @@ export async function GET() {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to load preferences." },
+      { success: false, error: "Failed to load preferences." },
       { status: 500 }
     );
   }
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
       select: { id: true, notificationPreferences: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to save preferences." },
+      { success: false, error: "Failed to save preferences." },
       { status: 500 }
     );
   }

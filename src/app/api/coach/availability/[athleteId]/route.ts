@@ -14,7 +14,7 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -22,20 +22,20 @@ export async function GET(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const { athleteId } = await params;
 
     const hasAccess = await canAccessAthlete(session.userId, "COACH", athleteId);
     if (!hasAccess) {
-      return NextResponse.json({ error: "Athlete not found or access denied" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found or access denied" }, { status: 404 });
     }
 
     const data = await getAthleteAvailability(athleteId);
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/coach/availability/[athleteId]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch athlete availability." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch athlete availability." }, { status: 500 });
   }
 }

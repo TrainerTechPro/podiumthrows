@@ -161,9 +161,9 @@ export async function GET(req: NextRequest) {
     } satisfies SearchResponse);
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("Search error", { context: "api/search", error: err });
-    return NextResponse.json({ error: "Search failed" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Search failed" }, { status: 500 });
   }
 }

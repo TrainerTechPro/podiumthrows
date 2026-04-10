@@ -21,7 +21,7 @@ export async function PATCH(
       try {
         new URL(url.trim());
       } catch {
-        return NextResponse.json({ error: "Invalid URL format." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid URL format." }, { status: 400 });
       }
     }
 
@@ -35,13 +35,13 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if (err instanceof Error && err.message === "Not found") {
-      return NextResponse.json({ error: "Team link not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Team link not found." }, { status: 404 });
     }
     logger.error("PATCH /api/coach/team-links/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update team link." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update team link." }, { status: 500 });
   }
 }
 
@@ -59,12 +59,12 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if (err instanceof Error && err.message === "Not found") {
-      return NextResponse.json({ error: "Team link not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Team link not found." }, { status: 404 });
     }
     logger.error("DELETE /api/coach/team-links/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete team link." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete team link." }, { status: 500 });
   }
 }

@@ -62,7 +62,7 @@ type WebhookPayload = {
 export async function POST(req: NextRequest) {
   // Authenticate
   if (!verifyWebhookAuth(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -70,12 +70,12 @@ export async function POST(req: NextRequest) {
     const { videoId, status, thumbnailUrl, transcodedUrl, transcodedKey, fps, gopInterval, durationSec, error } = body;
 
     if (!videoId) {
-      return NextResponse.json({ error: "videoId is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "videoId is required" }, { status: 400 });
     }
 
     if (!status || !["ready", "failed"].includes(status)) {
       return NextResponse.json(
-        { error: 'status must be "ready" or "failed"' },
+        { success: false, error: 'status must be "ready" or "failed"' },
         { status: 400 }
       );
     }
@@ -87,13 +87,13 @@ export async function POST(req: NextRequest) {
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     // Only update videos that are currently processing
     if (video.status !== "processing") {
       return NextResponse.json(
-        { error: `Video status is "${video.status}", expected "processing"` },
+        { success: false, error: `Video status is "${video.status}", expected "processing"` },
         { status: 409 }
       );
     }
@@ -136,6 +136,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("video-processing webhook Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

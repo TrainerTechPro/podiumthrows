@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       select: { id: true, coachId: true, firstName: true, lastName: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(req, ReadinessCheckInSchema);
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { error: "You already submitted a check-in today." },
+        { success: false, error: "You already submitted a check-in today." },
         { status: 409 }
       );
     }
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     logger.error("POST /api/athlete/readiness", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to save check-in." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to save check-in." }, { status: 500 });
   }
 }
 

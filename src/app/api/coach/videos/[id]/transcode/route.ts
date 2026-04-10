@@ -62,27 +62,27 @@ export async function POST(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     // Already transcoding or done
     if (video.transcodeStatus === "processing") {
       return NextResponse.json(
-        { error: "Transcode already in progress" },
+        { success: false, error: "Transcode already in progress" },
         { status: 409 }
       );
     }
 
     if (video.transcodeStatus === "ready") {
       return NextResponse.json(
-        { error: "Video already transcoded" },
+        { success: false, error: "Video already transcoded" },
         { status: 409 }
       );
     }
 
     if (!isR2Configured() || !video.storageKey) {
       return NextResponse.json(
-        { error: "R2 not configured or no storage key available" },
+        { success: false, error: "R2 not configured or no storage key available" },
         { status: 400 }
       );
     }
@@ -133,11 +133,11 @@ export async function POST(
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/transcode POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -163,7 +163,7 @@ export async function GET(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -175,10 +175,10 @@ export async function GET(
     });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id]/transcode GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

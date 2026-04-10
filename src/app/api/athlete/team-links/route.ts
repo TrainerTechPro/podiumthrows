@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -18,7 +18,7 @@ export async function GET() {
       select: { coachId: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found." }, { status: 404 });
     }
 
     // Athletes see their coach's links (read-only)
@@ -26,6 +26,6 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/athlete/team-links", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch team links." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch team links." }, { status: 500 });
   }
 }

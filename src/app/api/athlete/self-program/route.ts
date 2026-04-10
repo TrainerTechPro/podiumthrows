@@ -14,13 +14,13 @@ export async function POST() {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const canAccess = await canAccessSelfProgram(session.userId);
     if (!canAccess) {
       return NextResponse.json(
-        { error: "Self-programming not enabled for this account" },
+        { success: false, error: "Self-programming not enabled for this account" },
         { status: 403 },
       );
     }
@@ -30,7 +30,7 @@ export async function POST() {
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Delete any existing draft for this athlete
@@ -70,7 +70,7 @@ export async function POST() {
   } catch (err) {
     logger.error("POST /api/athlete/self-program", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to create self-program config." },
+      { success: false, error: "Failed to create self-program config." },
       { status: 500 },
     );
   }

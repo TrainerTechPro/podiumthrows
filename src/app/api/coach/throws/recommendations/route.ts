@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     if (!event || !VALID_EVENTS.includes(event)) {
       return NextResponse.json(
-        { error: "Valid event parameter required (SHOT_PUT, DISCUS, HAMMER, JAVELIN)" },
+        { success: false, error: "Valid event parameter required (SHOT_PUT, DISCUS, HAMMER, JAVELIN)" },
         { status: 400 }
       );
     }
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ recommendations });
   } catch {
     return NextResponse.json(
-      { error: "Unauthorized" },
+      { success: false, error: "Unauthorized" },
       { status: 401 }
     );
   }

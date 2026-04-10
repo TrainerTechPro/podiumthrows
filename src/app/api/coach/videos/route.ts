@@ -23,11 +23,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ videos });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -65,11 +65,11 @@ export async function POST(req: NextRequest) {
     };
 
     if (!url) {
-      return NextResponse.json({ error: "url is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "url is required" }, { status: 400 });
     }
     if (!title || title.trim().length === 0) {
       return NextResponse.json(
-        { error: "title is required" },
+        { success: false, error: "title is required" },
         { status: 400 }
       );
     }
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     const initialStatus = requestedStatus ?? "ready";
     if (!VALID_STATUSES.includes(initialStatus)) {
       return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
+        { success: false, error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
         { status: 400 }
       );
     }
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     // Validate event if provided
     if (event && !VALID_EVENTS.includes(event)) {
       return NextResponse.json(
-        { error: `Invalid event. Must be one of: ${VALID_EVENTS.join(", ")}` },
+        { success: false, error: `Invalid event. Must be one of: ${VALID_EVENTS.join(", ")}` },
         { status: 400 }
       );
     }
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     // Validate category if provided
     if (category && !VALID_CATEGORIES.includes(category)) {
       return NextResponse.json(
-        { error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}` },
+        { success: false, error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}` },
         { status: 400 }
       );
     }
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       });
       if (!athlete) {
         return NextResponse.json(
-          { error: "Athlete not found" },
+          { success: false, error: "Athlete not found" },
           { status: 404 }
         );
       }
@@ -134,10 +134,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ video: { id: video.id } }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos POST Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

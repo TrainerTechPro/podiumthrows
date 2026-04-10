@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
     if (isR2Configured()) {
       return NextResponse.json(
-        { error: "Local upload is disabled when R2 is configured" },
+        { success: false, error: "Local upload is disabled when R2 is configured" },
         { status: 400 }
       );
     }
@@ -19,13 +19,13 @@ export async function POST(req: NextRequest) {
     const key = formData.get("key") as string | null;
 
     if (!file || !key) {
-      return NextResponse.json({ error: "file and key are required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "file and key are required" }, { status: 400 });
     }
 
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > MAX_IMAGE_SIZE_MB) {
       return NextResponse.json(
-        { error: `Thumbnail too large (max ${MAX_IMAGE_SIZE_MB}MB)` },
+        { success: false, error: `Thumbnail too large (max ${MAX_IMAGE_SIZE_MB}MB)` },
         { status: 400 }
       );
     }
@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ publicUrl });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("upload-thumbnail-local Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

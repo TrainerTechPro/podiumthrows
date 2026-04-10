@@ -20,7 +20,7 @@ export async function GET(
     const { sessionId } = await params;
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -28,12 +28,12 @@ export async function GET(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const recap = await computeSessionRecap(athlete.id, sessionId);
     if (!recap) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
     return NextResponse.json(recap);
@@ -42,6 +42,6 @@ export async function GET(
       context: "api",
       error: err,
     });
-    return NextResponse.json({ error: "Failed to load recap." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to load recap." }, { status: 500 });
   }
 }

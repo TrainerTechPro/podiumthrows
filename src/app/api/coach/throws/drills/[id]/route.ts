@@ -22,10 +22,10 @@ export async function PUT(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Drill not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Drill not found" }, { status: 404 });
     }
     if (existing.isGlobal || existing.coachId !== coach.id) {
-      return NextResponse.json({ error: "Cannot edit this drill" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Cannot edit this drill" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -33,21 +33,21 @@ export async function PUT(
 
     // Validation
     if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
-      return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Name cannot be empty" }, { status: 400 });
     }
     if (category !== undefined && !VALID_CATEGORIES.includes(category)) {
-      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid category" }, { status: 400 });
     }
     if (event !== undefined && event !== null && !VALID_EVENTS.includes(event)) {
-      return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
     }
     if (difficulty !== undefined && difficulty !== null && !VALID_DIFFICULTIES.includes(difficulty)) {
-      return NextResponse.json({ error: "Invalid difficulty" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid difficulty" }, { status: 400 });
     }
     if (athleteTypes !== undefined && Array.isArray(athleteTypes)) {
       for (const at of athleteTypes) {
         if (!VALID_ATHLETE_TYPES.includes(at)) {
-          return NextResponse.json({ error: `Invalid athlete type: ${at}` }, { status: 400 });
+          return NextResponse.json({ success: false, error: `Invalid athlete type: ${at}` }, { status: 400 });
         }
       }
     }
@@ -70,7 +70,7 @@ export async function PUT(
 
     return NextResponse.json({ drill });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -89,16 +89,16 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Drill not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Drill not found" }, { status: 404 });
     }
     if (existing.isGlobal || existing.coachId !== coach.id) {
-      return NextResponse.json({ error: "Cannot delete this drill" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Cannot delete this drill" }, { status: 403 });
     }
 
     await prisma.drill.delete({ where: { id: id } });
 
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

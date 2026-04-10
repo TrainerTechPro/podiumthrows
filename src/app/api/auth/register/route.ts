@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const rl = await rateLimit(`register:${ip}`, { maxAttempts: 3, windowMs: 60_000 });
     if (!rl.success) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
+        { success: false, error: "Too many requests. Please try again later." },
         { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
       );
     }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     });
     if (existingUser) {
       return NextResponse.json(
-        { error: "An account with this email already exists" },
+        { success: false, error: "An account with this email already exists" },
         { status: 409 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!invitation || invitation.status !== "PENDING" || invitation.expiresAt < new Date()) {
-        return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid or expired invitation" }, { status: 400 });
       }
     }
 
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       } else if (role === "ATHLETE") {
         if (!invitation) {
           return NextResponse.json(
-            { error: "Athletes must register via an invitation link from their coach" },
+            { success: false, error: "Athletes must register via an invitation link from their coach" },
             { status: 400 }
           );
         }
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
           : 0;
         if (coach && realAthleteCount >= (PLAN_LIMITS[coach.plan] ?? 3)) {
           return NextResponse.json(
-            { error: "Coach has reached their plan's athlete limit" },
+            { success: false, error: "Coach has reached their plan's athlete limit" },
             { status: 403 }
           );
         }
@@ -176,6 +176,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     logger.error("register Registration failed", { context: "api", error });
-    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
   }
 }

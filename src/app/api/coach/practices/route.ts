@@ -45,11 +45,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: practices });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/practices", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to fetch practices." },
+      { success: false, error: "Failed to fetch practices." },
       { status: 500 }
     );
   }
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     if (!title || !startTime || !endTime) {
       return NextResponse.json(
-        { error: "title, startTime, and endTime are required." },
+        { success: false, error: "title, startTime, and endTime are required." },
         { status: 400 }
       );
     }
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       // Recurring series
       if (!date) {
         return NextResponse.json(
-          { error: "date (startDate) is required for recurring practices." },
+          { success: false, error: "date (startDate) is required for recurring practices." },
           { status: 400 }
         );
       }
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     // Single practice
     if (!date) {
       return NextResponse.json(
-        { error: "date is required." },
+        { success: false, error: "date is required." },
         { status: 400 }
       );
     }
@@ -121,11 +121,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/practices", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to create practice." },
+      { success: false, error: "Failed to create practice." },
       { status: 500 }
     );
   }

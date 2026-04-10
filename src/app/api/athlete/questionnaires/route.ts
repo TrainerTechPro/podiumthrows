@@ -7,6 +7,6 @@ export async function GET() {
     const questionnaires = await getAthleteAssignedQuestionnaires(athlete.id);
     return NextResponse.json({ questionnaires });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

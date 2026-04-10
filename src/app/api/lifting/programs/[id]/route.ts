@@ -12,7 +12,7 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -20,7 +20,7 @@ export async function GET(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -45,7 +45,7 @@ export async function GET(
 
     if (!program) {
       return NextResponse.json(
-        { error: "Program not found." },
+        { success: false, error: "Program not found." },
         { status: 404 }
       );
     }
@@ -57,7 +57,7 @@ export async function GET(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to fetch lifting program." },
+      { success: false, error: "Failed to fetch lifting program." },
       { status: 500 }
     );
   }
@@ -72,7 +72,7 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -80,7 +80,7 @@ export async function PATCH(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -92,7 +92,7 @@ export async function PATCH(
     });
     if (!existing) {
       return NextResponse.json(
-        { error: "Program not found." },
+        { success: false, error: "Program not found." },
         { status: 404 }
       );
     }
@@ -109,7 +109,7 @@ export async function PATCH(
     if (name !== undefined) {
       if (typeof name !== "string" || name.trim().length === 0) {
         return NextResponse.json(
-          { error: "Program name cannot be empty." },
+          { success: false, error: "Program name cannot be empty." },
           { status: 400 }
         );
       }
@@ -122,7 +122,7 @@ export async function PATCH(
         !["ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"].includes(status)
       ) {
         return NextResponse.json(
-          { error: "Invalid status. Must be ACTIVE, PAUSED, COMPLETED, or ARCHIVED." },
+          { success: false, error: "Invalid status. Must be ACTIVE, PAUSED, COMPLETED, or ARCHIVED." },
           { status: 400 }
         );
       }
@@ -145,7 +145,7 @@ export async function PATCH(
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json(
-        { error: "No valid fields to update." },
+        { success: false, error: "No valid fields to update." },
         { status: 400 }
       );
     }
@@ -168,7 +168,7 @@ export async function PATCH(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to update lifting program." },
+      { success: false, error: "Failed to update lifting program." },
       { status: 500 }
     );
   }

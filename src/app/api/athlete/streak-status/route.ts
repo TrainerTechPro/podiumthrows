@@ -21,7 +21,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -34,7 +34,7 @@ export async function GET() {
       },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const lastThrow = await prisma.throwLog.findFirst({
@@ -90,7 +90,7 @@ export async function GET() {
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to load streak status." },
+      { success: false, error: "Failed to load streak status." },
       { status: 500 }
     );
   }

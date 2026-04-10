@@ -17,17 +17,17 @@ export async function GET(
     const video = await getVideoById(id, coach.id);
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     return NextResponse.json({ video });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id] GET Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -46,7 +46,7 @@ export async function PUT(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     const body = await req.json();
@@ -63,7 +63,7 @@ export async function PUT(
     if (title !== undefined) {
       if (!title.trim()) {
         return NextResponse.json(
-          { error: "title cannot be empty" },
+          { success: false, error: "title cannot be empty" },
           { status: 400 }
         );
       }
@@ -72,14 +72,14 @@ export async function PUT(
     if (description !== undefined) data.description = description?.trim() || null;
     if (event !== undefined) {
       if (event && !VALID_EVENTS.includes(event)) {
-        return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
       }
       data.event = event || null;
     }
     if (category !== undefined) {
       if (category && !VALID_CATEGORIES.includes(category)) {
         return NextResponse.json(
-          { error: "Invalid category" },
+          { success: false, error: "Invalid category" },
           { status: 400 }
         );
       }
@@ -95,11 +95,11 @@ export async function PUT(
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id] PUT Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -117,7 +117,7 @@ export async function DELETE(
     });
 
     if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
     // Delete from storage
@@ -135,10 +135,10 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("videos/[id] DELETE Error", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

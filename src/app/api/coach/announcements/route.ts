@@ -12,10 +12,10 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/announcements", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to fetch announcements." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch announcements." }, { status: 500 });
   }
 }
 
@@ -29,17 +29,17 @@ export async function POST(req: NextRequest) {
     const { title, body: bodyText, priority, pinned, targetType, targetId, expiresAt } = body;
 
     if (typeof title !== "string" || !title.trim()) {
-      return NextResponse.json({ error: "title is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "title is required." }, { status: 400 });
     }
     if (typeof bodyText !== "string" || !bodyText.trim()) {
-      return NextResponse.json({ error: "body is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "body is required." }, { status: 400 });
     }
 
     // Validate priority
     const validPriorities = ["NORMAL", "URGENT"];
     if (priority !== undefined && !validPriorities.includes(priority as string)) {
       return NextResponse.json(
-        { error: `priority must be one of: ${validPriorities.join(", ")}` },
+        { success: false, error: `priority must be one of: ${validPriorities.join(", ")}` },
         { status: 400 },
       );
     }
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const validTargetTypes = ["ALL", "GROUP", "INDIVIDUAL"];
     if (targetType !== undefined && !validTargetTypes.includes(targetType as string)) {
       return NextResponse.json(
-        { error: `targetType must be one of: ${validTargetTypes.join(", ")}` },
+        { success: false, error: `targetType must be one of: ${validTargetTypes.join(", ")}` },
         { status: 400 },
       );
     }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (expiresAt !== undefined && expiresAt !== null) {
       expiresAtDate = new Date(expiresAt as string);
       if (isNaN(expiresAtDate.getTime())) {
-        return NextResponse.json({ error: "Invalid expiresAt date." }, { status: 400 });
+        return NextResponse.json({ success: false, error: "Invalid expiresAt date." }, { status: 400 });
       }
     }
 
@@ -75,9 +75,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/announcements", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to create announcement." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create announcement." }, { status: 500 });
   }
 }

@@ -190,7 +190,7 @@ export async function POST(request: Request) {
   } catch (error) {
     logger.error("Lead capture error", { context: "api", error });
     return NextResponse.json(
-      { error: "Failed to save lead" },
+      { success: false, error: "Failed to save lead" },
       { status: 500 }
     );
   }

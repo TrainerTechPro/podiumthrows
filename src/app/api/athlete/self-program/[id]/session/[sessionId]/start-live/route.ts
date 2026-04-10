@@ -17,7 +17,7 @@ export async function POST(
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -25,7 +25,7 @@ export async function POST(
       select: { id: true, coachId: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id: configId, sessionId } = await params;
@@ -36,7 +36,7 @@ export async function POST(
       select: { athleteProfileId: true, event: true },
     });
     if (!config || config.athleteProfileId !== athlete.id) {
-      return NextResponse.json({ error: "Not your program" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Not your program" }, { status: 403 });
     }
 
     // Load the program session
@@ -48,13 +48,13 @@ export async function POST(
       },
     });
     if (!programSession) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
     // Prevent re-starting completed/skipped sessions
     if (programSession.status === "COMPLETED" || programSession.status === "SKIPPED") {
       return NextResponse.json(
-        { error: "Session already completed or skipped" },
+        { success: false, error: "Session already completed or skipped" },
         { status: 409 }
       );
     }
@@ -221,7 +221,7 @@ export async function POST(
       error,
     });
     return NextResponse.json(
-      { error: "Failed to start workout" },
+      { success: false, error: "Failed to start workout" },
       { status: 500 }
     );
   }

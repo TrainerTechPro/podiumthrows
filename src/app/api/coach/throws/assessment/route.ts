@@ -12,7 +12,7 @@ type ValidType = (typeof VALID_TYPES)[number];
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session || session.role !== "COACH") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const coach = await prisma.coachProfile.findUnique({
@@ -20,12 +20,12 @@ export async function GET(req: NextRequest) {
     select: { id: true },
   });
   if (!coach) {
-    return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
   }
 
   const athleteId = req.nextUrl.searchParams.get("athleteId");
   if (!athleteId) {
-    return NextResponse.json({ error: "athleteId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
   }
 
   // Verify athlete belongs to this coach
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     select: { id: true },
   });
   if (!athlete) {
-    return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
   }
 
   const assessments = await prisma.bondarchukAssessment.findMany({
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session || session.role !== "COACH") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const coach = await prisma.coachProfile.findUnique({
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
   if (!coach) {
-    return NextResponse.json({ error: "Coach profile not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
   }
 
   const body = await req.json();
@@ -81,17 +81,17 @@ export async function POST(req: NextRequest) {
 
   // Validate required fields
   if (!athleteId || typeof athleteId !== "string") {
-    return NextResponse.json({ error: "athleteId is required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
   }
   if (!athleteType || !VALID_TYPES.includes(athleteType as ValidType)) {
     return NextResponse.json(
-      { error: `athleteType must be one of: ${VALID_TYPES.join(", ")}` },
+      { success: false, error: `athleteType must be one of: ${VALID_TYPES.join(", ")}` },
       { status: 400 }
     );
   }
   if (!results || typeof results !== "object") {
     return NextResponse.json(
-      { error: "results object is required" },
+      { success: false, error: "results object is required" },
       { status: 400 }
     );
   }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
   if (!athlete) {
-    return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
   }
 
   // Create assessment

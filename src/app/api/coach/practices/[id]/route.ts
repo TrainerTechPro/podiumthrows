@@ -19,17 +19,17 @@ export async function GET(
 
     const detail = await getPracticeDetail(id, coach.id);
     if (!detail) {
-      return NextResponse.json({ error: "Practice not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Practice not found." }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data: detail });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/practices/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to fetch practice." },
+      { success: false, error: "Failed to fetch practice." },
       { status: 500 }
     );
   }
@@ -52,14 +52,14 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: result });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if (err instanceof Error && err.message.includes("not found")) {
-      return NextResponse.json({ error: err.message }, { status: 404 });
+      return NextResponse.json({ success: false, error: err.message }, { status: 404 });
     }
     logger.error("PATCH /api/coach/practices/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to update practice." },
+      { success: false, error: "Failed to update practice." },
       { status: 500 }
     );
   }
@@ -82,14 +82,14 @@ export async function DELETE(
     return NextResponse.json({ success: true, data: result });
   } catch (err) {
     if (err instanceof AuthError) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     if (err instanceof Error && err.message.includes("not found")) {
-      return NextResponse.json({ error: err.message }, { status: 404 });
+      return NextResponse.json({ success: false, error: err.message }, { status: 404 });
     }
     logger.error("DELETE /api/coach/practices/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to delete practice." },
+      { success: false, error: "Failed to delete practice." },
       { status: 500 }
     );
   }

@@ -16,7 +16,7 @@ export async function PATCH(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -24,7 +24,7 @@ export async function PATCH(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     // Verify ownership — can only edit own, non-global exercises
@@ -33,7 +33,7 @@ export async function PATCH(
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Exercise not found or not editable." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Exercise not found or not editable." }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -42,13 +42,13 @@ export async function PATCH(
 
     // Validate optional fields
     if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
-      return NextResponse.json({ error: "Name cannot be empty." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Name cannot be empty." }, { status: 400 });
     }
     if (category !== undefined && (typeof category !== "string" || !VALID_CATEGORIES.includes(category))) {
-      return NextResponse.json({ error: "Invalid category." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid category." }, { status: 400 });
     }
     if (event !== undefined && event !== null && (typeof event !== "string" || !VALID_EVENTS.includes(event))) {
-      return NextResponse.json({ error: "Invalid event." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event." }, { status: 400 });
     }
 
     const data: Record<string, unknown> = {};
@@ -81,7 +81,7 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (err) {
     logger.error("PATCH /api/coach/exercises/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update exercise." }, { status: 500 });
   }
 }
 
@@ -95,7 +95,7 @@ export async function DELETE(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -103,7 +103,7 @@ export async function DELETE(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const existing = await prisma.exercise.findFirst({
@@ -111,11 +111,11 @@ export async function DELETE(
       select: { id: true, _count: { select: { blockExercises: true } } },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Exercise not found or not deletable." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Exercise not found or not deletable." }, { status: 404 });
     }
     if (existing._count.blockExercises > 0) {
       return NextResponse.json(
-        { error: "Cannot delete an exercise that is used in workout plans. Remove it from all plans first." },
+        { success: false, error: "Cannot delete an exercise that is used in workout plans. Remove it from all plans first." },
         { status: 409 }
       );
     }
@@ -125,6 +125,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/exercises/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete exercise." }, { status: 500 });
   }
 }

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -29,19 +29,19 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json({ error: "Name is required." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Name is required." }, { status: 400 });
     }
     if (typeof category !== "string" || !VALID_CATEGORIES.includes(category)) {
-      return NextResponse.json({ error: "Invalid category." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid category." }, { status: 400 });
     }
     if (event !== undefined && event !== null && (typeof event !== "string" || !VALID_EVENTS.includes(event))) {
-      return NextResponse.json({ error: "Invalid event." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event." }, { status: 400 });
     }
     if (implementWeight !== undefined && implementWeight !== null && (typeof implementWeight !== "number" || implementWeight < 0)) {
-      return NextResponse.json({ error: "Invalid implement weight." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid implement weight." }, { status: 400 });
     }
     if (defaultSets !== undefined && defaultSets !== null && (typeof defaultSets !== "number" || defaultSets < 1)) {
-      return NextResponse.json({ error: "Invalid default sets." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid default sets." }, { status: 400 });
     }
 
     const exercise = await prisma.exercise.create({
@@ -74,6 +74,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(exercise, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/exercises", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to create exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to create exercise." }, { status: 500 });
   }
 }

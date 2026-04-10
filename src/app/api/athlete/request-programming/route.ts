@@ -8,7 +8,7 @@ const COOLDOWN_MS = 48 * 60 * 60 * 1000; // 48 hours
 export async function POST() {
   const session = await getSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   const athlete = await prisma.athleteProfile.findUnique({
@@ -23,7 +23,7 @@ export async function POST() {
   });
 
   if (!athlete) {
-    return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
   }
 
   // Check cooldown — find last PROGRAMMING_REQUESTED notification

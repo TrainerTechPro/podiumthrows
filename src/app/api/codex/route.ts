@@ -119,7 +119,7 @@ async function handleUploadUrl(
 
   if (!mimeOk && !extOk) {
     return NextResponse.json(
-      { error: "Unsupported video format. Use MP4, MOV, or WebM." },
+      { success: false, error: "Unsupported video format. Use MP4, MOV, or WebM." },
       { status: 400 }
     );
   }
@@ -178,7 +178,7 @@ async function handleConfirm(
 
   if (!event || !implement || !distanceStr || !videoUrl) {
     return NextResponse.json(
-      { error: "Missing required fields: event, implement, distance, videoUrl" },
+      { success: false, error: "Missing required fields: event, implement, distance, videoUrl" },
       { status: 400 }
     );
   }
@@ -226,7 +226,7 @@ async function handleLocalUpload(request: NextRequest, userId: string) {
 
   if (!videoBlob || !event || !implement || !distanceStr) {
     return NextResponse.json(
-      { error: "Missing required fields: video, event, implement, distance" },
+      { success: false, error: "Missing required fields: video, event, implement, distance" },
       { status: 400 }
     );
   }

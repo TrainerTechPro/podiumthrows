@@ -44,7 +44,7 @@ export async function POST() {
     } catch (revokeErr) {
       logger.warn("Oura token revocation failed (non-blocking)", {
         context: "api",
-        metadata: { error: String(revokeErr) },
+        metadata: { success: false, error: String(revokeErr) },
       });
     }
 

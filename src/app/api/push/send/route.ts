@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-internal-call") === process.env.INTERNAL_API_SECRET;
 
     if (!isCron && !isInternal) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = (await req.json().catch(() => ({}))) as {
@@ -53,13 +53,13 @@ export async function POST(req: NextRequest) {
 
     if (!body.payload || !body.payload.title || !body.payload.body) {
       return NextResponse.json(
-        { error: "payload.title and payload.body required" },
+        { success: false, error: "payload.title and payload.body required" },
         { status: 400 }
       );
     }
     if (!body.preferenceKey) {
       return NextResponse.json(
-        { error: "preferenceKey required" },
+        { success: false, error: "preferenceKey required" },
         { status: 400 }
       );
     }
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (targetUserIds.length === 0) {
-      return NextResponse.json({ error: "no targets" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "no targets" }, { status: 400 });
     }
 
     let sent = 0;
@@ -115,6 +115,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ sent, skipped, failed });
   } catch (err) {
     logger.error("/api/push/send error", { context: "push", error: err });
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed" }, { status: 500 });
   }
 }

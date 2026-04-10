@@ -16,7 +16,7 @@ export async function POST(
 
     if (!source) {
       return NextResponse.json(
-        { error: "Questionnaire not found" },
+        { success: false, error: "Questionnaire not found" },
         { status: 404 }
       );
     }

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       select: { id: true, coachId: true, firstName: true, lastName: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -31,19 +31,19 @@ export async function POST(req: NextRequest) {
     // Validate required fields
     if (!isValidEvent(event)) {
       return NextResponse.json(
-        { error: "Invalid event. Must be SHOT_PUT, DISCUS, HAMMER, or JAVELIN." },
+        { success: false, error: "Invalid event. Must be SHOT_PUT, DISCUS, HAMMER, or JAVELIN." },
         { status: 400 }
       );
     }
     if (typeof implementKg !== "number" || implementKg <= 0) {
       return NextResponse.json(
-        { error: "Implement weight must be a positive number." },
+        { success: false, error: "Implement weight must be a positive number." },
         { status: 400 }
       );
     }
     if (typeof distance !== "number" || distance <= 0) {
       return NextResponse.json(
-        { error: "Distance must be a positive number." },
+        { success: false, error: "Distance must be a positive number." },
         { status: 400 }
       );
     }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/athlete/throws", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to log throw." },
+      { success: false, error: "Failed to log throw." },
       { status: 500 }
     );
   }

@@ -57,7 +57,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -65,7 +65,7 @@ export async function GET() {
       select: { id: true, gender: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     // ── Fetch all data sources in parallel ────────────────────────────────
@@ -329,7 +329,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/throws/analysis", { context: "api", error: err });
     return NextResponse.json(
-      { error: "Failed to fetch analysis data." },
+      { success: false, error: "Failed to fetch analysis data." },
       { status: 500 }
     );
   }

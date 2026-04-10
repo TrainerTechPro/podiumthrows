@@ -15,14 +15,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     if (!questionnaire) {
       return NextResponse.json(
-        { error: "Questionnaire not found or not assigned" },
+        { success: false, error: "Questionnaire not found or not assigned" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({ questionnaire });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (!assignment) {
       return NextResponse.json(
-        { error: "Questionnaire not assigned to you or already completed" },
+        { success: false, error: "Questionnaire not assigned to you or already completed" },
         { status: 403 }
       );
     }
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     if (!questionnaire || questionnaire.status !== "published") {
-      return NextResponse.json({ error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(req, QuestionnaireSubmissionSchema);
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (hasBlocks) {
       if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
         return NextResponse.json(
-          { error: "Answers must be a Record<blockId, value>" },
+          { success: false, error: "Answers must be a Record<blockId, value>" },
           { status: 400 }
         );
       }
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const validationErrors = validateAllAnswers(blocks, answersRecord, allBlockIds);
       if (validationErrors.length > 0) {
         return NextResponse.json(
-          { error: "Validation failed", fieldErrors: validationErrors },
+          { success: false, error: "Validation failed", fieldErrors: validationErrors },
           { status: 400 }
         );
       }
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // ── Legacy question-based form submission ─────────────────────────────
     if (!Array.isArray(answers)) {
-      return NextResponse.json({ error: "Answers must be an array" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Answers must be an array" }, { status: 400 });
     }
 
     const questions = questionnaire.questions as Array<{
@@ -167,7 +167,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           answer.answer === ""
         ) {
           return NextResponse.json(
-            { error: `Required question "${q.text}" must be answered` },
+            { success: false, error: `Required question "${q.text}" must be answered` },
             { status: 400 }
           );
         }
@@ -203,6 +203,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ response }, { status: 201 });
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }

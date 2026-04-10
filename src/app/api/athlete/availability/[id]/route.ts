@@ -16,7 +16,7 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -24,7 +24,7 @@ export async function PATCH(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -36,7 +36,7 @@ export async function PATCH(
     logger.error("PATCH /api/athlete/availability/[id]", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Failed to update availability block.";
     const status = message.includes("not found") || message === "Not found" ? 404 : 500;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }
 
@@ -49,7 +49,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -57,7 +57,7 @@ export async function DELETE(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -67,6 +67,6 @@ export async function DELETE(
     logger.error("DELETE /api/athlete/availability/[id]", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Failed to delete availability block.";
     const status = message.includes("not found") || message === "Not found" ? 404 : 500;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }

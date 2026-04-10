@@ -16,7 +16,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -37,7 +37,7 @@ export async function GET() {
     });
 
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -46,7 +46,7 @@ export async function GET() {
     });
   } catch (err) {
     logger.error("GET /api/athlete/profile", { context: "api", error: err });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }
 
@@ -58,7 +58,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest) {
     if (firstName !== undefined) {
       if (typeof firstName !== "string" || firstName.trim().length === 0) {
         return NextResponse.json(
-          { error: "First name cannot be empty." },
+          { success: false, error: "First name cannot be empty." },
           { status: 400 }
         );
       }
@@ -91,7 +91,7 @@ export async function PATCH(req: NextRequest) {
     if (lastName !== undefined) {
       if (typeof lastName !== "string" || lastName.trim().length === 0) {
         return NextResponse.json(
-          { error: "Last name cannot be empty." },
+          { success: false, error: "Last name cannot be empty." },
           { status: 400 }
         );
       }
@@ -149,7 +149,7 @@ export async function PATCH(req: NextRequest) {
 
     if (!hasProfileUpdates && !hasPBs) {
       return NextResponse.json(
-        { error: "No updatable fields provided." },
+        { success: false, error: "No updatable fields provided." },
         { status: 400 }
       );
     }
@@ -161,7 +161,7 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Only run the update if there are profile fields to change
@@ -240,6 +240,6 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/profile", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update profile." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update profile." }, { status: 500 });
   }
 }

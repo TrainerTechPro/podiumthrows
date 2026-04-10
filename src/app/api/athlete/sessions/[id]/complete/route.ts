@@ -15,7 +15,7 @@ export async function PATCH(
     const { id } = await params;
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -23,7 +23,7 @@ export async function PATCH(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     // Verify session belongs to this athlete
@@ -33,11 +33,11 @@ export async function PATCH(
     });
 
     if (!trainingSession) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Session not found." }, { status: 404 });
     }
 
     if (trainingSession.status === "COMPLETED") {
-      return NextResponse.json({ error: "Session already completed." }, { status: 409 });
+      return NextResponse.json({ success: false, error: "Session already completed." }, { status: 409 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -124,7 +124,7 @@ export async function PATCH(
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/sessions/[id]/complete", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to complete session." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to complete session." }, { status: 500 });
   }
 }
 

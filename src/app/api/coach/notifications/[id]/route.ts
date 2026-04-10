@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     // Verify ownership
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true, read: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Notification not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Notification not found." }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -61,6 +61,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     });
   } catch (err) {
     logger.error("PATCH /api/coach/notifications/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update notification." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update notification." }, { status: 500 });
   }
 }

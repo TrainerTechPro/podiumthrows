@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -25,13 +25,13 @@ export async function GET() {
       },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     return NextResponse.json(coach);
   } catch (err) {
     logger.error("GET /api/coach/settings", { context: "api", error: err });
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }
 
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest) {
       typeof lastName  !== "string" || lastName.trim().length  === 0
     ) {
       return NextResponse.json(
-        { error: "First name and last name are required." },
+        { success: false, error: "First name and last name are required." },
         { status: 400 }
       );
     }
@@ -74,6 +74,6 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(updated);
   } catch (err) {
     logger.error("PATCH /api/coach/settings", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update profile." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update profile." }, { status: 500 });
   }
 }

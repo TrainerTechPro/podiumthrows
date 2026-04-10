@@ -10,7 +10,7 @@ import prisma from "@/lib/prisma";
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
   }
 
   // Check isAdmin on the actual DB record (not just token)
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     select: { isAdmin: true },
   });
   if (!dbUser?.isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   };
 
   if (!email) {
-    return NextResponse.json({ error: "email required" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "email required" }, { status: 400 });
   }
 
   const target = await prisma.user.findUnique({
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     select: { id: true, role: true },
   });
   if (!target) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
   }
 
   const results: Record<string, unknown> = {};

@@ -9,7 +9,7 @@ export async function POST() {
     /* ── Auth ── */
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -17,11 +17,11 @@ export async function POST() {
       select: { stripeCustomerId: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
     if (!coach.stripeCustomerId) {
       return NextResponse.json(
-        { error: "No billing account found. Please upgrade to a paid plan first." },
+        { success: false, error: "No billing account found. Please upgrade to a paid plan first." },
         { status: 400 }
       );
     }
@@ -41,6 +41,6 @@ export async function POST() {
     return NextResponse.json({ url: portalSession.url });
   } catch (err) {
     logger.error("POST /api/stripe/portal", { context: "api", error: err });
-    return NextResponse.json({ error: "Could not create billing portal session." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Could not create billing portal session." }, { status: 500 });
   }
 }

@@ -33,13 +33,13 @@ export async function POST(
   try {
     const session = await getSession();
     if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const canAccess = await canAccessSelfProgram(session.userId);
     if (!canAccess) {
       return NextResponse.json(
-        { error: "Self-programming not enabled" },
+        { success: false, error: "Self-programming not enabled" },
         { status: 403 },
       );
     }
@@ -63,7 +63,7 @@ export async function POST(
       },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const { id } = await params;
@@ -73,18 +73,18 @@ export async function POST(
       where: { id },
     });
     if (!config) {
-      return NextResponse.json({ error: "Config not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Config not found" }, { status: 404 });
     }
 
     // Ownership check
     if (config.athleteProfileId !== athlete.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     // Must not be a draft
     if (config.isDraft) {
       return NextResponse.json(
-        { error: "Config is still a draft. Finalize wizard first." },
+        { success: false, error: "Config is still a draft. Finalize wizard first." },
         { status: 400 },
       );
     }
@@ -92,7 +92,7 @@ export async function POST(
     // Must be active
     if (!config.isActive) {
       return NextResponse.json(
-        { error: "Config has been deactivated." },
+        { success: false, error: "Config has been deactivated." },
         { status: 400 },
       );
     }
@@ -110,6 +110,7 @@ export async function POST(
     if (conflicting) {
       return NextResponse.json(
         {
+          success: false,
           error: "Another active self-program config already exists.",
           conflictingId: conflicting.id,
         },
@@ -207,6 +208,7 @@ export async function POST(
     if (bondarchukErrors.length > 0) {
       return NextResponse.json(
         {
+          success: false,
           error: "Bondarchuk validation failed",
           violations: bondarchukErrors.map((w) => ({
             type: w.type,
@@ -230,6 +232,7 @@ export async function POST(
       });
       return NextResponse.json(
         {
+          success: false,
           error: "Program generation produced invalid output",
           validationErrors: engineValidation.errors,
         },
@@ -381,7 +384,7 @@ export async function POST(
       error: err,
     });
     return NextResponse.json(
-      { error: "Failed to generate self-program." },
+      { success: false, error: "Failed to generate self-program." },
       { status: 500 },
     );
   }

@@ -28,12 +28,12 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const profileId = await resolveProfileId(session.userId, session.role);
     if (!profileId) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     logger.error("GET /api/notifications", { context: "api", metadata: { error: String(err) } });
-    return NextResponse.json({ error: "Failed to fetch notifications." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch notifications." }, { status: 500 });
   }
 }
 
@@ -62,18 +62,18 @@ export async function PATCH() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const profileId = await resolveProfileId(session.userId, session.role);
     if (!profileId) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
     await markAllAsRead(profileId, session.role);
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("PATCH /api/notifications", { context: "api", metadata: { error: String(err) } });
-    return NextResponse.json({ error: "Failed to update notifications." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update notifications." }, { status: 500 });
   }
 }

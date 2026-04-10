@@ -16,7 +16,7 @@ export async function PATCH(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -24,7 +24,7 @@ export async function PATCH(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     // Verify ownership
@@ -33,17 +33,17 @@ export async function PATCH(
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json({ error: "Plan not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Plan not found." }, { status: 404 });
     }
 
     const body = await req.json().catch(() => ({}));
     const { name, description, event, isTemplate, blocks } = body as Record<string, unknown>;
 
     if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
-      return NextResponse.json({ error: "Plan name cannot be empty." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Plan name cannot be empty." }, { status: 400 });
     }
     if (event !== undefined && event !== null && (typeof event !== "string" || !VALID_EVENTS.includes(event))) {
-      return NextResponse.json({ error: "Invalid event." }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event." }, { status: 400 });
     }
 
     // If blocks are provided, replace all blocks (delete + recreate)
@@ -51,10 +51,10 @@ export async function PATCH(
       for (let i = 0; i < blocks.length; i++) {
         const block = blocks[i] as Record<string, unknown>;
         if (typeof block.name !== "string" || block.name.trim().length === 0) {
-          return NextResponse.json({ error: `Block ${i + 1} needs a name.` }, { status: 400 });
+          return NextResponse.json({ success: false, error: `Block ${i + 1} needs a name.` }, { status: 400 });
         }
         if (typeof block.blockType !== "string" || !VALID_BLOCK_TYPES.includes(block.blockType)) {
-          return NextResponse.json({ error: `Block ${i + 1} has an invalid type.` }, { status: 400 });
+          return NextResponse.json({ success: false, error: `Block ${i + 1} has an invalid type.` }, { status: 400 });
         }
       }
 
@@ -109,7 +109,7 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (err) {
     logger.error("PATCH /api/coach/plans/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to update plan." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update plan." }, { status: 500 });
   }
 }
 
@@ -123,7 +123,7 @@ export async function DELETE(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -131,7 +131,7 @@ export async function DELETE(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ error: "Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const plan = await prisma.workoutPlan.findFirst({
@@ -146,11 +146,11 @@ export async function DELETE(
       },
     });
     if (!plan) {
-      return NextResponse.json({ error: "Plan not found." }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Plan not found." }, { status: 404 });
     }
     if (plan._count.sessions > 0) {
       return NextResponse.json(
-        { error: "Cannot delete a plan with active sessions. Complete or skip them first." },
+        { success: false, error: "Cannot delete a plan with active sessions. Complete or skip them first." },
         { status: 409 }
       );
     }
@@ -160,6 +160,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/plans/[id]", { context: "api", error: err });
-    return NextResponse.json({ error: "Failed to delete plan." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete plan." }, { status: 500 });
   }
 }

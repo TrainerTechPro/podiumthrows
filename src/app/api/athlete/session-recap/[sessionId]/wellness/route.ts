@@ -22,7 +22,7 @@ export async function POST(
     const { sessionId } = await params;
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -30,7 +30,7 @@ export async function POST(
       select: { id: true },
     });
     if (!athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
     const trainingSession = await prisma.trainingSession.findFirst({
@@ -38,7 +38,7 @@ export async function POST(
       select: { id: true },
     });
     if (!trainingSession) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -46,7 +46,7 @@ export async function POST(
 
     if (!isWellnessValue(legs) || !isWellnessValue(energy) || !isWellnessValue(focus)) {
       return NextResponse.json(
-        { error: "legs, energy, and focus must each be 1, 2, or 3." },
+        { success: false, error: "legs, energy, and focus must each be 1, 2, or 3." },
         { status: 400 }
       );
     }
@@ -71,6 +71,6 @@ export async function POST(
       context: "api",
       error: err,
     });
-    return NextResponse.json({ error: "Failed to save wellness check-in." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to save wellness check-in." }, { status: 500 });
   }
 }
