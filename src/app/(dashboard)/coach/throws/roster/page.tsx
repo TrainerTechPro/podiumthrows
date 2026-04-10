@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import UserAvatar from "@/components/user-avatar";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { StaggeredList } from "@/components/ui/StaggeredList";
@@ -133,6 +134,7 @@ const EVENT_COLORS: Record<EventCode, string> = {
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function ThrowsRosterPage() {
+  const router = useRouter();
   const [podiumAthletes, setPodiumAthletes] = useState<ThrowsProfileRow[]>([]);
   const [allAthletes, setAllAthletes] = useState<CoachAthlete[]>([]);
   const [loading, setLoading] = useState(true);
@@ -941,7 +943,14 @@ export default function ThrowsRosterPage() {
                 const confirmingRemove = confirmRemoveId === profile.athleteId;
 
                 return (
-                  <div key={profile.id} className="card !p-4 flex items-center gap-3">
+                  <div
+                    key={profile.id}
+                    className="card card-interactive !p-4 flex items-center gap-3"
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(`/coach/throws/profile?athleteId=${profile.athleteId}`)}
+                    onKeyDown={(e) => { if (e.key === "Enter") router.push(`/coach/throws/profile?athleteId=${profile.athleteId}`); }}
+                  >
                     {/* Avatar */}
                     <UserAvatar
                       src={profile.athlete.profilePictureUrl}
@@ -992,15 +1001,8 @@ export default function ThrowsRosterPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Link
-                        href={`/coach/throws/profile?athleteId=${profile.athleteId}`}
-                        className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
-                      >
-                        View Profile
-                      </Link>
-
+                    {/* Actions — stopPropagation so clicks here don't navigate */}
+                    <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                       {confirmingRemove ? (
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs text-surface-700 dark:text-surface-300 whitespace-nowrap">
@@ -1076,7 +1078,11 @@ export default function ThrowsRosterPage() {
                 return (
                   <div
                     key={athlete.id}
-                    className="card !p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap"
+                    className="card card-interactive !p-4 flex items-center gap-3 flex-wrap sm:flex-nowrap"
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(`/coach/athletes/${athlete.id}`)}
+                    onKeyDown={(e) => { if (e.key === "Enter") router.push(`/coach/athletes/${athlete.id}`); }}
                   >
                     <UserAvatar
                       src={athlete.profilePictureUrl}
@@ -1127,7 +1133,7 @@ export default function ThrowsRosterPage() {
                       <span className="text-[11px] text-muted flex-shrink-0">Not enrolled</span>
                     )}
 
-                    <div className="flex gap-2 flex-shrink-0 ml-auto sm:ml-0">
+                    <div className="flex gap-2 flex-shrink-0 ml-auto sm:ml-0" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                       {!isClaimed && rosterMatch && (
                         <button
                           onClick={() => handleInvite(athlete.id)}
