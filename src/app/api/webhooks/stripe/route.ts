@@ -47,32 +47,26 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  /* ── Route events ── */
-  try {
-    switch (event.type) {
-      case "checkout.session.completed":
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
-        break;
+  /* ── Route events — each handler isolated so one failure doesn't block others ── */
+  const handlers: Record<string, () => Promise<void>> = {
+    "checkout.session.completed": () =>
+      handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session),
+    "customer.subscription.updated": () =>
+      handleSubscriptionUpdated(event.data.object as Stripe.Subscription),
+    "customer.subscription.deleted": () =>
+      handleSubscriptionDeleted(event.data.object as Stripe.Subscription),
+    "invoice.payment_failed": () =>
+      handleInvoicePaymentFailed(event.data.object as Stripe.Invoice),
+  };
 
-      case "customer.subscription.updated":
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
-        break;
-
-      case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-        break;
-
-      case "invoice.payment_failed":
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
-        break;
-
-      default:
-        // Unknown event — ignore
-        break;
+  const handler = handlers[event.type];
+  if (handler) {
+    try {
+      await handler();
+    } catch (err) {
+      logger.error(`stripe/webhook Error handling ${event.type}`, { context: "api", error: err });
+      return NextResponse.json({ success: false, error: "Webhook handler error" }, { status: 500 });
     }
-  } catch (err) {
-    logger.error(`stripe/webhook Error handling ${event.type}`, { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Webhook handler error" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

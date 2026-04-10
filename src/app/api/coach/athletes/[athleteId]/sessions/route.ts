@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachAthleteSessionCreateSchema } from "@/lib/api-schemas";
 
 export async function POST(
   request: NextRequest,
@@ -32,34 +33,27 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { event, date, drillLogs } = body;
+    const parsed = await parseBody(request, CoachAthleteSessionCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { event, date, drillLogs } = parsed;
 
     // Validate event is in athlete's events
-    if (!event || !athlete.events.includes(event)) {
+    if (!(athlete.events as string[]).includes(event)) {
       return NextResponse.json(
         { success: false, error: `Invalid event. Athlete trains: ${athlete.events.join(", ")}` },
         { status: 400 }
       );
     }
 
-    if (!date) {
-      return NextResponse.json({ success: false, error: "Date is required" }, { status: 400 });
-    }
-
-    if (!Array.isArray(drillLogs) || drillLogs.length === 0) {
-      return NextResponse.json({ success: false, error: "At least one drill log is required" }, { status: 400 });
-    }
-
     // Create session with drill logs (limited — no readiness/feedback)
     const athleteSession = await prisma.athleteThrowsSession.create({
       data: {
         athleteId,
-        event,
+        event: event as "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN",
         date,
         loggedByCoach: true,
         drillLogs: {
-          create: drillLogs.map((drill: { drillType: string; implementWeight?: number; throwCount?: number; bestMark?: number; notes?: string }) => ({
+          create: drillLogs.map((drill) => ({
             drillType: drill.drillType,
             implementWeight: drill.implementWeight ?? null,
             throwCount: drill.throwCount ?? 0,

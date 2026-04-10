@@ -402,6 +402,69 @@ export const ThrowsSessionCreateSchema = z.object({
   blocks: z.array(ThrowsBlockSchema).optional(),
 });
 
+// ── Throws Roster / Practice Schemas ────────────────────────────────────
+
+export const PodiumRosterEnrollSchema = z
+  .object({
+    athleteId: z.string().min(1, "Athlete ID is required"),
+    events: z.array(z.string()).optional(),
+    event: z.string().optional(),
+    gender: z.string().min(1, "Gender is required"),
+    competitionPb: z.number().nullable().optional(),
+  })
+  .refine((d) => (d.events && d.events.length > 0) || d.event, {
+    message: "At least one event is required",
+    path: ["events"],
+  });
+
+export const PodiumRosterPatchSchema = z.object({
+  status: z.string().optional(),
+  event: z.string().optional(),
+  competitionPb: z.number().nullable().optional(),
+  heavyImplementPr: z.number().nullable().optional(),
+  heavyImplementKg: z.number().nullable().optional(),
+  lightImplementPr: z.number().nullable().optional(),
+  lightImplementKg: z.number().nullable().optional(),
+  strengthBenchmarks: z.unknown().nullable().optional(),
+  adaptationProfile: z.string().nullable().optional(),
+  sessionsToForm: z.number().nullable().optional(),
+  recommendedMethod: z.string().nullable().optional(),
+  coachNotes: z.string().nullable().optional(),
+});
+
+export const PracticeSessionPatchSchema = z.object({
+  status: z.string().optional(),
+  name: z.string().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const PracticeAttemptCreateSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+  event: z.string().min(1, "Event is required"),
+  implement: z.string().min(1, "Implement is required"),
+  distance: z.number().nullable().optional(),
+  drillType: z.string().nullable().optional(),
+  coachNote: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
+  attemptNumber: z.number().nullable().optional(),
+});
+
+export const CoachAthleteSessionCreateSchema = z.object({
+  event: z.string().min(1, "Event is required"),
+  date: z.string().min(1, "Date is required"),
+  drillLogs: z
+    .array(
+      z.object({
+        drillType: z.string(),
+        implementWeight: z.number().optional(),
+        throwCount: z.number().optional(),
+        bestMark: z.number().optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .min(1, "At least one drill log is required"),
+});
+
 // ── parseBody Helper ────────────────────────────────────────────────────
 
 /**
@@ -423,7 +486,7 @@ export async function parseBody<T>(
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
   }
 
   const result = schema.safeParse(body);
@@ -432,7 +495,7 @@ export async function parseBody<T>(
       field: issue.path.join(".") || "_body",
       message: issue.message,
     }));
-    return NextResponse.json({ error: "Validation failed", fieldErrors }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Validation failed", fieldErrors }, { status: 400 });
   }
 
   return result.data;

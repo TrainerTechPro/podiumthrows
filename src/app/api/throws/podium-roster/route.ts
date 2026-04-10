@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
+import { parseBody, PodiumRosterEnrollSchema } from "@/lib/api-schemas";
 import { computeDistanceBand, syncAdaptationFromTyping } from "@/lib/throws/podium-profile";
 import type { EventCode, GenderCode } from "@/lib/throws/constants";
 import { CODE_EVENT_MAP } from "@/lib/throws/constants";
@@ -79,21 +80,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Coaches only" }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { athleteId, gender, competitionPb } = body;
+    const parsed = await parseBody(request, PodiumRosterEnrollSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, gender, competitionPb } = parsed;
     // Accept both single `event` and array `events`
-    const events: string[] = Array.isArray(body.events)
-      ? body.events
-      : body.event
-        ? [body.event]
+    const events: string[] = Array.isArray(parsed.events)
+      ? parsed.events
+      : parsed.event
+        ? [parsed.event]
         : [];
-
-    if (!athleteId || events.length === 0 || !gender) {
-      return NextResponse.json(
-        { success: false, error: "athleteId, event(s), and gender are required" },
-        { status: 400 }
-      );
-    }
 
     if (
       !(await canAccessAthlete(
@@ -124,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     // ── Pull athlete profile data for auto-populate ────────────────
     const athleteData = await prisma.athleteProfile.findUnique({
-      where: { id: body.athleteId },
+      where: { id: parsed.athleteId },
       select: { heightCm: true, weightKg: true, dateOfBirth: true, gender: true },
     });
 
@@ -139,14 +134,14 @@ export async function POST(request: NextRequest) {
       throwEventValues.length > 0
         ? await prisma.throwLog.groupBy({
             by: ["event", "implementWeight"],
-            where: { athleteId: body.athleteId, event: { in: throwEventValues } },
+            where: { athleteId: parsed.athleteId, event: { in: throwEventValues } },
             _max: { distance: true },
           })
         : [];
 
     // ThrowsPR best distance per event (already aggregated PRs)
     const throwsPRBests = await prisma.throwsPR.findMany({
-      where: { athleteId: body.athleteId },
+      where: { athleteId: parsed.athleteId },
       select: { event: true, implement: true, distance: true },
     });
 

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, PracticeAttemptCreateSchema } from "@/lib/api-schemas";
 
 // POST /api/throws/practice/[sessionId]/attempts — log a new attempt
 export async function POST(
@@ -33,15 +34,9 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Session is closed" }, { status: 400 });
     }
 
-    const body = await request.json();
-    const { athleteId, event, implement, distance, drillType, coachNote, videoUrl, attemptNumber } = body;
-
-    if (!athleteId || !event || !implement) {
-      return NextResponse.json(
-        { success: false, error: "athleteId, event, and implement are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, PracticeAttemptCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteId, event, implement, distance, drillType, coachNote, videoUrl, attemptNumber } = parsed;
 
     // Verify coach owns this athlete
     const authorized = await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId);

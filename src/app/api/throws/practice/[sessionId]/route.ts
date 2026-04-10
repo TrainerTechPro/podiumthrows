@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, PracticeSessionPatchSchema } from "@/lib/api-schemas";
 
 // GET /api/throws/practice/[sessionId] — fetch session with all attempts
 export async function GET(
@@ -89,8 +90,9 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
-    const body = await request.json();
-    const { status, name, notes } = body;
+    const parsed = await parseBody(request, PracticeSessionPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { status, name, notes } = parsed;
 
     const updated = await prisma.practiceSession.update({
       where: { id: sessionId },

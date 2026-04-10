@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { parseBody, PodiumRosterPatchSchema } from "@/lib/api-schemas";
 import { canAccessAthlete } from "@/lib/authorize";
 import {
   computeDistanceBand,
@@ -114,7 +115,8 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
+    const body = await parseBody(request, PodiumRosterPatchSchema);
+    if (body instanceof NextResponse) return body;
 
     // ── Status change (remove = set inactive for ALL profiles) ─────
     if (body.status === "inactive") {
