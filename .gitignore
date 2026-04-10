@@ -42,13 +42,19 @@ next-env.d.ts
 # Claude Code local settings
 .claude/settings.local.json
 .claude/worktrees/
+.claude/skills/
 
 # Dev artifacts
 .superpowers/
 .playwright-mcp/
 mobile-date-picker.png
+coach-dashboard.png
+throws-page.png
+style-explorer.html
+ui-ux-pro-max-guide.html
 UI-Effects-Recommendations.md
 ARCHITECTURE.md
+INTERACTION-MAP.md
 tasks/
 public/uploads/test/
 public/uploads/videos/
