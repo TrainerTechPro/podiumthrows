@@ -12,20 +12,56 @@ interface Props {
   children: React.ReactNode;
 }
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function HistoryFilterSheet({ open, variant, onClose, children }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  // Focus trap: on open, focus the close button so ESC works immediately.
+  // Focus the close button when the sheet opens.
   useEffect(() => {
     if (open) closeRef.current?.focus();
   }, [open]);
 
-  // Escape to dismiss.
+  // Handle Escape AND trap focus inside the panel while open.
   useEffect(() => {
     if (!open) return;
+
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+
+      const panel = panelRef.current;
+      if (!panel) return;
+
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      ).filter((el) => el.offsetParent !== null); // visible only
+
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        // Shift-Tab on the first element wraps to last.
+        if (document.activeElement === first || !panel.contains(document.activeElement)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        // Tab on the last element wraps to first.
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -62,6 +98,7 @@ export function HistoryFilterSheet({ open, variant, onClose, children }: Props) 
       />
       {/* Sheet */}
       <div
+        ref={panelRef}
         className={`relative w-full bg-[var(--card-bg)] border-t border-[var(--card-border)] rounded-t-2xl p-5 pb-8 max-h-[75vh] overflow-y-auto ${
           prefersReducedMotion ? "" : "animate-spring-up"
         }`}
@@ -70,6 +107,7 @@ export function HistoryFilterSheet({ open, variant, onClose, children }: Props) 
           <h2 className="text-section font-heading text-[var(--foreground)]">Filter</h2>
           <button
             ref={closeRef}
+            type="button"
             onClick={onClose}
             className="p-2 -m-2 text-muted hover:text-[var(--foreground)]"
             aria-label="Close filter"

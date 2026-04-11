@@ -20,6 +20,7 @@ export function HistoryErrorState({ message, onRetry }: Props) {
       <h3 className="font-semibold text-[var(--foreground)]">Couldn&rsquo;t load history</h3>
       <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">{message}</p>
       <button
+        type="button"
         onClick={onRetry}
         className="mt-4 px-5 py-2 rounded-lg bg-primary-500/15 text-primary-500 text-sm font-semibold hover:bg-primary-500/25 transition-colors"
       >

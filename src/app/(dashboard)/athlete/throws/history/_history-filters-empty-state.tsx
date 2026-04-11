@@ -13,6 +13,7 @@ export function HistoryFiltersEmptyState({ onClear }: Props) {
         Try a wider date range or different events
       </p>
       <button
+        type="button"
         onClick={onClear}
         className="mt-4 px-5 py-2 rounded-lg bg-primary-500/15 text-primary-500 text-sm font-semibold hover:bg-primary-500/25 transition-colors"
       >

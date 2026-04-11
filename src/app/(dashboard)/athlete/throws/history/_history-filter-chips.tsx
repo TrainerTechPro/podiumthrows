@@ -58,6 +58,7 @@ export function HistoryFilterChips({ filter, onOpen, onClear, hasAnyActive }: Pr
       </FilterChip>
       {hasAnyActive && (
         <button
+          type="button"
           onClick={onClear}
           className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs text-muted hover:text-[var(--foreground)] transition-colors"
         >

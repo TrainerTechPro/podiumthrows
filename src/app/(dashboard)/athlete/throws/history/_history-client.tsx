@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/components/ui/Toast";
 import type { HistoryDay, HistoryFilter, HistoryResponse } from "@/lib/throws/history-types";
 import { Skeleton, SkeletonLine } from "@/components/ui/Skeleton";
@@ -60,24 +60,33 @@ function weekLabel(mondayIso: string): string {
 }
 
 export function HistoryClient() {
-  const toast = useToast();
+  const { error: toastError } = useToast();
   const [filter, setFilter] = useState<HistoryFilter>(DEFAULT_FILTER);
   const [days, setDays] = useState<HistoryDay[]>([]);
   const [totals, setTotals] = useState<{ sessions: number; throws: number } | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [sheetVariant, setSheetVariant] = useState<FilterVariant | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchHistory = useCallback(async (f: HistoryFilter) => {
+    // Cancel any in-flight fetch from a previous filter so an older slow
+    // response can't overwrite a newer one.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setStatus("loading");
     setErrorMsg("");
     try {
-      const res = await fetch(`/api/throws/history?${filterToQueryString(f)}`);
+      const res = await fetch(`/api/throws/history?${filterToQueryString(f)}`, {
+        signal: controller.signal,
+      });
       const payload = await res.json();
       if (!res.ok || !payload.success) {
         const msg = payload.error || `Request failed (${res.status})`;
         setErrorMsg(msg);
-        toast.error(msg);
+        toastError(msg);
         setStatus("error");
         return;
       }
@@ -86,12 +95,21 @@ export function HistoryClient() {
       setTotals(data.totals);
       setStatus("ready");
     } catch (err) {
+      // Ignore aborts — they're intentional from a newer fetch starting.
+      if (err instanceof Error && err.name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "Network error";
       setErrorMsg(msg);
-      toast.error(msg);
+      toastError(msg);
       setStatus("error");
     }
-  }, [toast]);
+  }, [toastError]);
+
+  // Cancel the in-flight fetch on unmount.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     fetchHistory(filter);
