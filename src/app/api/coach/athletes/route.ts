@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, CoachAddAthleteSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { firstName, lastName, events } = parsed;
+    const { firstName, lastName, gender, events } = parsed;
 
     // Check plan limits (exclude self-coached athlete created by Training Mode)
     const athleteCount = await prisma.athleteProfile.count({
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           events,
-          gender: "OTHER",
+          gender,
         },
       });
 
