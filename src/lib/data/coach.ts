@@ -7,9 +7,10 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import type { JWTPayload } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import type { SubscriptionPlan } from "@prisma/client";
+import type { AthleteProfile, SubscriptionPlan } from "@prisma/client";
 
 /**
  * Per-request cached coachProfile lookup by userId.
@@ -239,6 +240,35 @@ export async function requireCoachApi() {
   if (!coach) throw new AuthError();
 
   return { session, coach };
+}
+
+/**
+ * Verify coach owns this athlete and return both profiles.
+ * Returns null if auth fails or athlete doesn't belong to coach.
+ */
+export async function requireCoachAthlete(
+  athleteId: string
+): Promise<{
+  session: JWTPayload;
+  coach: { id: string; plan: SubscriptionPlan };
+  athlete: AthleteProfile & { user: { claimedAt: Date | null } };
+} | null> {
+  const session = await getSession();
+  if (!session || session.role !== "COACH") return null;
+
+  const coach = await prisma.coachProfile.findUnique({
+    where: { userId: session.userId },
+    select: { id: true, plan: true },
+  });
+  if (!coach) return null;
+
+  const athlete = await prisma.athleteProfile.findFirst({
+    where: { id: athleteId, coachId: coach.id },
+    include: { user: { select: { claimedAt: true } } },
+  });
+  if (!athlete) return null;
+
+  return { session, coach, athlete };
 }
 
 /* ─── Dashboard Data ──────────────────────────────────────────────────────── */
