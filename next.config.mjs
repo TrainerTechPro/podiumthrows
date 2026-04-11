@@ -56,13 +56,20 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+              // Stripe checkout + Vercel Analytics
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://*.r2.dev https://*.s3.amazonaws.com https://*.s3.*.amazonaws.com https://v2.exercisedb.io",
+              // R2 public assets, S3 public buckets (any region), ExerciseDB GIFs.
+              // CSP wildcards can only appear at the start of a host segment, so
+              // https://*.s3.*.amazonaws.com is invalid and was silently ignored.
+              "img-src 'self' data: blob: https://*.r2.dev https://*.amazonaws.com https://v2.exercisedb.io",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://*.ingest.sentry.io",
+              // Stripe API, Cloudflare R2, Sentry ingest (matches both
+              // o{id}.ingest.sentry.io and o{id}.ingest.us.sentry.io patterns).
+              "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
               "media-src 'self' blob: https://*.r2.dev",
-              "worker-src 'self'",
+              // Sentry Replay uses blob: workers for session replay recording
+              "worker-src 'self' blob:",
               "frame-src 'self' https://js.stripe.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
