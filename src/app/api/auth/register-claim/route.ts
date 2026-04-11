@@ -88,9 +88,20 @@ export async function POST(request: NextRequest) {
       email: result.user.email,
     });
 
+    // Determine redirect target based on coach-populated data.
+    // If the coach populated the basics (events + non-OTHER gender) on the
+    // proxy profile, send the athlete straight to the review page so they can
+    // confirm and edit. Otherwise run them through onboarding to collect those
+    // fields from scratch.
+    const profile = result.profile;
+    const hasEvents = Array.isArray(profile.events) && profile.events.length > 0;
+    const hasGender = !!profile.gender && profile.gender !== "OTHER";
+    const redirectTo =
+      hasEvents && hasGender ? "/athlete/review-profile" : "/athlete/onboarding";
+
     const response = NextResponse.json({
       success: true,
-      data: { userId: result.user.id, role: result.user.role },
+      data: { userId: result.user.id, role: result.user.role, redirectTo },
     });
 
     response.headers.append("Set-Cookie", setAuthCookie(jwt));

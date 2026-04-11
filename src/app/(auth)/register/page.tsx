@@ -184,7 +184,8 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      router.push("/athlete/dashboard");
+      const target = data?.data?.redirectTo ?? "/athlete/onboarding";
+      router.push(target);
     } catch (err: unknown) {
       setClaimError(err instanceof Error ? err.message : "Failed to claim account");
     } finally {
