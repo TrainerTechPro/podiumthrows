@@ -22,6 +22,8 @@ import {
   ChevronRight,
   ScanLine,
   Trophy,
+  PlusCircle,
+  Clock,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -407,10 +409,49 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
         matchPaths: ["/athlete/sessions"],
       },
       {
-        label: "Throw History",
+        label: "Throws",
         href: "/athlete/throws",
         icon: <Target {...iconSize} />,
-        matchPaths: ["/athlete/throws"],
+        matchPaths: [
+          "/athlete/throws",
+          "/athlete/throws/log",
+          "/athlete/throws/history",
+          "/athlete/throws/session",
+          "/athlete/throws/trends",
+          "/athlete/throws/readiness",
+        ],
+        children: [
+          {
+            label: "Today",
+            href: "/athlete/throws",
+            icon: <Target {...iconSize} />,
+            matchPaths: ["/athlete/throws"],
+          },
+          {
+            label: "Log a Throw",
+            href: "/athlete/throws/log",
+            icon: <PlusCircle {...iconSize} />,
+            matchPaths: ["/athlete/throws/log"],
+          },
+          {
+            label: "History",
+            href: "/athlete/throws/history",
+            icon: <Clock {...iconSize} />,
+            matchPaths: ["/athlete/throws/history", "/athlete/throws/session"],
+          },
+          {
+            label: "Trends & PRs",
+            href: "/athlete/throws/trends",
+            icon: <BarChart3 {...iconSize} />,
+            matchPaths: ["/athlete/throws/trends"],
+          },
+          {
+            label: "Readiness",
+            href: "/athlete/throws/readiness",
+            icon: <Heart {...iconSize} />,
+            matchPaths: ["/athlete/throws/readiness"],
+          },
+        ],
       },
       {
         label: "Team",

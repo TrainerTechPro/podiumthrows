@@ -1,23 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { localToday } from "@/lib/utils";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
-import { WIRE_LENGTH_OPTIONS, LBS_TO_KG, formatImplementWeight } from "@/lib/throws";
-import dynamic from "next/dynamic";
-
-const BestMarkChart = dynamic(
-  () => import("./_charts").then((m) => m.BestMarkChart),
-  { ssr: false, loading: () => <div className="shimmer h-60 rounded-xl" /> },
-);
-const VolumeChart = dynamic(
-  () => import("./_charts").then((m) => m.VolumeChart),
-  { ssr: false, loading: () => <div className="shimmer h-40 rounded-xl" /> },
-);
+import { WIRE_LENGTH_OPTIONS, LBS_TO_KG } from "@/lib/throws";
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -62,17 +51,6 @@ interface DrillRow {
 
 function newDrill(drillType = "FULL_THROW"): DrillRow {
  return { id: crypto.randomUUID(), drillType, implementWeight: "", implementUnit: "kg", wireLength: "FULL", throwCount: 0, bestMark: "", notes: "" };
-}
-
-// ── Trend types ────────────────────────────────────────────────────────
-
-interface TrendPoint { date: string; bestMark: number; throwCount: number }
-interface TrendSeries { key: string; drillType: string; implement: string; points: TrendPoint[] }
-
-// ── Format date for display ────────────────────────────────────────────
-
-function fmtDate(d: string) {
- return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 // ── Implement weight quick-pick buttons ────────────────────────────────
@@ -288,274 +266,11 @@ function DrillCard({
  );
 }
 
-// ── Trends View ────────────────────────────────────────────────────────
-
-function TrendsView({ athleteId, onLogSession }: { athleteId: string | null; onLogSession: () => void }) {
- const [trends, setTrends] = useState<TrendSeries[]>([]);
- const [volumeByDate, setVolumeByDate] = useState<Record<string, number>>({});
- const [sessionCount, setSessionCount] = useState(0);
- const [loading, setLoading] = useState(true);
- const [filterEvent, setFilterEvent] = useState("");
- const [filterDrill, setFilterDrill] = useState("");
-
- const loadTrends = useCallback(async () => {
- if (!athleteId) return;
- setLoading(true);
- const params = new URLSearchParams({ athleteId });
- if (filterEvent) params.set("event", filterEvent);
- const url = `/api/throws/athlete-sessions/trends?${params}`;
- try {
- const res = await fetch(url);
- const data = await res.json();
- if (data.success) {
- setTrends(data.data.trends);
- setVolumeByDate(data.data.volumeByDate);
- setSessionCount(data.data.sessionCount);
- }
- } catch { /* ignore */ }
- setLoading(false);
- }, [athleteId, filterEvent]);
-
- useEffect(() => { loadTrends(); }, [loadTrends]);
-
- const drillLabel = (key: string) => DRILL_TYPES.find((d) => d.value === key)?.label ?? key;
-
- const filteredTrends = filterDrill
- ? trends.filter((t) => t.drillType === filterDrill)
- : trends;
-
- // Build unified date list for volume chart
- const volDates = Object.keys(volumeByDate).sort();
- const volData = volDates.map((d) => ({ date: fmtDate(d), throws: volumeByDate[d] }));
-
- if (loading) return (
- <div className="space-y-4">
- {[1,2,3].map((i) => <div key={i} className="skeleton h-40 rounded-xl" />)}
- </div>
- );
-
- if (sessionCount === 0) return (
- <div className="card">
- <EmptyState
- title="No throws logged yet"
- description="Log your first session to see trends"
- action={<button className="btn-primary" onClick={onLogSession}>Log a Session</button>}
- />
- </div>
- );
-
- return (
- <div className="space-y-5">
- {/* Filters */}
- <div className="flex flex-wrap gap-2">
- <select
- value={filterEvent}
- onChange={(e) => setFilterEvent(e.target.value)}
- className="px-3 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
- >
- <option value="">All Events</option>
- {THROW_EVENTS.map((e) => <option key={e.value} value={e.value}>{e.label}</option>)}
- </select>
- <select
- value={filterDrill}
- onChange={(e) => setFilterDrill(e.target.value)}
- className="px-3 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"
- >
- <option value="">All Drills</option>
- {DRILL_TYPES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
- </select>
- <span className="self-center text-xs text-muted">{sessionCount} sessions total</span>
- </div>
-
- {/* Best mark trend chart */}
- {filteredTrends.length > 0 && (
- <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--foreground)]">Best Mark Progression</h3>
- <p className="text-xs text-surface-700 dark:text-surface-300">Best throw per drill type and implement weight over time</p>
- <BestMarkChart series={filteredTrends} drillLabel={drillLabel} fmtDate={fmtDate} />
- </div>
- )}
-
- {/* Volume chart */}
- {volData.length > 0 && (
- <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--foreground)]">Session Volume</h3>
- <p className="text-xs text-surface-700 dark:text-surface-300">Total throws logged per session date</p>
- <VolumeChart data={volData} />
- </div>
- )}
-
- {/* Per-drill best mark table */}
- {filteredTrends.length > 0 && (
- <div className="card !p-4 space-y-3">
- <h3 className="text-sm font-bold text-[var(--foreground)]">All-Time Bests</h3>
- <div className="divide-y divide-gray-100 dark:divide-gray-700/50">
- {filteredTrends.map((series) => {
- const best = Math.max(...series.points.map((p) => p.bestMark));
- const totalThrows = series.points.reduce((s, p) => s + p.throwCount, 0);
- return (
- <div key={series.key} className="py-2.5 flex items-center justify-between">
- <div>
- <p className="text-sm font-semibold text-[var(--foreground)]">{drillLabel(series.drillType)}</p>
- <p className="text-xs text-surface-700 dark:text-surface-300">{series.implement} · {series.points.length} session{series.points.length === 1 ? "" : "s"} · {totalThrows} throw{totalThrows === 1 ? "" : "s"}</p>
- </div>
- <span className="text-base font-bold font-mono text-orange-600 dark:text-orange-400">{best.toFixed(2)}m</span>
- </div>
- );
- })}
- </div>
- </div>
- )}
-
- {filteredTrends.length === 0 && (
- <div className="card text-center py-8">
- <p className="text-sm text-muted">No mark data for the selected filters.</p>
- </div>
- )}
- </div>
- );
-}
-
-// ── Sessions View ──────────────────────────────────────────────────────
-
-function SessionsView({ athleteId, onEdit, onLogSession }: { athleteId: string | null; onEdit: (sessionId: string) => void; onLogSession: () => void }) {
- const [sessions, setSessions] = useState<Array<{
-   id: string;
-   event: string;
-   date: string;
-   notes?: string | null;
-   drillLogs: Array<{
-     throwCount: number;
-     implementWeight?: number | null;
-     implementWeightUnit?: string | null;
-     implementWeightOriginal?: number | null;
-     drillType: string;
-     bestMark?: number | null;
-   }>;
- }>>([]);
- const [loading, setLoading] = useState(true);
-
- useEffect(() => {
-   if (!athleteId) return;
-   fetch(`/api/throws/athlete-sessions?athleteId=${athleteId}`)
-     .then((r) => r.json())
-     .then((d) => { if (d.success) setSessions(d.data); })
-     .catch(() => {})
-     .finally(() => setLoading(false));
- }, [athleteId]);
-
- if (loading) return (
-   <div className="space-y-3">
-     {[1,2,3].map((i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
-   </div>
- );
-
- if (sessions.length === 0) return (
-   <div className="card">
-     <EmptyState
-       title="No sessions yet"
-       description="Log your first throws session to see it here"
-       action={<button className="btn-primary" onClick={onLogSession}>Log a Session</button>}
-     />
-   </div>
- );
-
- return (
-   <div className="space-y-3">
-     {sessions.map((session) => {
-       const eventMeta = THROW_EVENTS.find((e) => e.value === session.event);
-       const totalThrows = session.drillLogs.reduce((s, d) => s + (d.throwCount || 0), 0);
-       const drillCount = session.drillLogs.length;
-       const topMark = session.drillLogs.reduce((best, d) => {
-         const m = d.bestMark ?? 0;
-         return m > best ? m : best;
-       }, 0);
-       const dateStr = new Date(session.date + "T00:00:00").toLocaleDateString("en-US", {
-         weekday: "short",
-         month: "short",
-         day: "numeric",
-       });
-
-       return (
-         <div key={session.id} className="card !p-4">
-           <div className="flex items-center justify-between">
-             <div className="flex items-center gap-3 min-w-0">
-               <span
-                 className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                 style={{ backgroundColor: eventMeta?.color ?? "#666", opacity: 0.9 }}
-               >
-                 <span className="text-white">{eventMeta?.icon}</span>
-               </span>
-               <div className="min-w-0">
-                 <p className="text-sm font-bold text-[var(--foreground)] truncate">
-                   {eventMeta?.label ?? session.event}
-                 </p>
-                 <p className="text-xs text-surface-700 dark:text-surface-300">
-                   {dateStr}
-                 </p>
-               </div>
-             </div>
-
-             <div className="flex items-center gap-3">
-               <div className="text-right">
-                 <p className="text-xs text-surface-700 dark:text-surface-300">
-                   {drillCount} drill{drillCount !== 1 ? "s" : ""} &middot; {totalThrows} throw{totalThrows !== 1 ? "s" : ""}
-                 </p>
-                 {topMark > 0 && (
-                   <p className="text-sm font-bold font-mono text-orange-600 dark:text-orange-400">
-                     {topMark.toFixed(2)}m
-                   </p>
-                 )}
-               </div>
-
-               <button
-                 type="button"
-                 onClick={() => onEdit(session.id)}
-                 className="shrink-0 w-8 h-8 rounded-lg bg-[var(--muted-bg)] hover:bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:text-primary-600 transition-colors"
-                 aria-label="Edit session"
-                 title="Edit session"
-               >
-                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                 </svg>
-               </button>
-             </div>
-           </div>
-
-           {/* Drill breakdown */}
-           {session.drillLogs.length > 0 && (
-             <div className="mt-3 pt-3 border-t border-[var(--card-border)] flex flex-wrap gap-2">
-               {session.drillLogs.map((d, i) => {
-                 const drillMeta = DRILL_TYPES.find((dt) => dt.value === d.drillType);
-                 const weightStr = formatImplementWeight(
-                   d.implementWeight ?? null,
-                   d.implementWeightUnit,
-                   d.implementWeightOriginal
-                 );
-                 return (
-                   <span
-                     key={i}
-                     className="px-2 py-1 text-[10px] font-semibold rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
-                   >
-                     {drillMeta?.short ?? d.drillType} {weightStr !== "\u2014" ? `(${weightStr})` : ""} &times;{d.throwCount}
-                   </span>
-                 );
-               })}
-             </div>
-           )}
-         </div>
-       );
-     })}
-   </div>
- );
-}
-
 // ── Main Page ──────────────────────────────────────────────────────────
 
 export default function ThrowsLogPage() {
  const searchParams = useSearchParams();
  const toast = useToast();
- const [tab, setTab] = useState<"log" | "trends" | "sessions">("log");
  const [step, setStep] = useState<1 | 2 | 3>(1);
  const [athleteId, setAthleteId] = useState<string | null>(null);
  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -637,7 +352,6 @@ export default function ThrowsLogPage() {
        }))
      );
      setStep(2);
-     setTab("log");
    } catch {
      /* ignore */
    }
@@ -732,13 +446,6 @@ export default function ThrowsLogPage() {
 
  const eventMeta = THROW_EVENTS.find((e) => e.value === selectedEvent);
 
- const tabCls = (t: "log" | "trends" | "sessions") =>
- `px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors ${
- tab === t
- ? "bg-orange-500 text-white"
- : "text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
- }`;
-
  return (
  <div className="animate-spring-up space-y-5 max-w-2xl mx-auto pb-8">
  {/* Header */}
@@ -752,31 +459,6 @@ export default function ThrowsLogPage() {
  </Link>
  </div>
 
- {/* Tab switcher */}
- <div className="flex gap-1 bg-[var(--muted-bg)] rounded-xl p-1">
- <button onClick={() => setTab("log")} className={tabCls("log")}>
- <svg className="w-4 h-4 hidden sm:inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
- </svg>
- Log Session
- </button>
- <button onClick={() => setTab("trends")} className={tabCls("trends")}>
- <svg className="w-4 h-4 hidden sm:inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
- </svg>
- Trends
- </button>
- <button onClick={() => setTab("sessions")} className={tabCls("sessions")}>
- <svg className="w-4 h-4 hidden sm:inline -mt-0.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
- </svg>
- Sessions
- </button>
- </div>
-
- {/* ── LOG TAB ──────────────────────────────────────────────── */}
- {tab === "log" && (
- <>
  {saved ? (
  /* Success state */
  <div className="card !p-6 text-center space-y-4">
@@ -795,9 +477,12 @@ export default function ThrowsLogPage() {
  <button onClick={resetForm} className="flex-1 btn-secondary text-sm py-2.5">
  Log Another
  </button>
- <button onClick={() => setTab("trends")} className="flex-1 btn-primary text-sm py-2.5">
+ <Link
+ href="/athlete/throws/trends"
+ className="flex-1 btn-primary text-sm py-2.5 flex items-center justify-center"
+ >
  View Trends →
- </button>
+ </Link>
  </div>
  </div>
  ) : (
@@ -1019,20 +704,6 @@ export default function ThrowsLogPage() {
  </div>
  )}
  </>
- )}
- </>
- )}
-
- {/* ── TRENDS TAB ────────────────────────────────────────────── */}
- {tab === "trends" && <TrendsView athleteId={athleteId} onLogSession={() => setTab("log")} />}
-
- {/* ── SESSIONS TAB ──────────────────────────────────────────── */}
- {tab === "sessions" && (
- <SessionsView
-   athleteId={athleteId}
-   onEdit={loadSessionForEdit}
-   onLogSession={() => setTab("log")}
- />
  )}
  </div>
  );
