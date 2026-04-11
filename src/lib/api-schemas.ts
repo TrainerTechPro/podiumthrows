@@ -281,6 +281,7 @@ export const TypingSubmitSchema = z.object({
 export const CoachAddAthleteSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).default("OTHER"),
   events: z
     .array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]))
     .min(1, "At least one event is required"),
@@ -678,6 +679,59 @@ export const TypingOverrideSchema = z.object({
   selfFeelingAccuracy: z.string().optional().nullable(),
   lightImplResponse: z.string().optional().nullable(),
   recoveryProfile: z.string().optional().nullable(),
+});
+
+// ─── COACH PROXY PROFILE SCHEMAS ────────────────────────────────────────────
+
+export const CoachLogThrowSchema = z.object({
+  event: z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]),
+  implementWeight: z.number().positive("Implement weight must be positive"),
+  implementWeightUnit: z.enum(["kg", "lbs"]).default("kg"),
+  implementWeightOriginal: z.number().positive().nullable().optional(),
+  distance: z.number().positive("Distance must be positive").nullable().optional(),
+  isCompetition: z.boolean().default(false),
+  notes: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  wireLength: z.enum(["FULL", "THREE_QUARTER", "HALF"]).nullable().optional(),
+});
+
+export const CoachNoteSchema = z.object({
+  content: z
+    .string()
+    .min(1, "Note content is required")
+    .max(5000, "Note content is too long"),
+  category: z.enum(["TECHNICAL", "MENTAL", "INJURY", "GENERAL"]).default("GENERAL"),
+  isPrivate: z.boolean().default(false),
+});
+
+export const CoachNoteUpdateSchema = z.object({
+  content: z
+    .string()
+    .min(1, "Note content is required")
+    .max(5000, "Note content is too long")
+    .optional(),
+  category: z.enum(["TECHNICAL", "MENTAL", "INJURY", "GENERAL"]).optional(),
+  isPrivate: z.boolean().optional(),
+});
+
+export const CoachEditProfileSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  events: z.array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"])).min(1).optional(),
+  dateOfBirth: z.string().nullable().optional(),
+  heightCm: z.number().min(100).max(250).nullable().optional(),
+  weightKg: z.number().min(30).max(200).nullable().optional(),
+  classStanding: z.string().nullable().optional(),
+  gradYear: z.number().int().nullable().optional(),
+  turnDirection: z.enum(["LEFT", "RIGHT"]).nullable().optional(),
+  strengthNumbers: z.record(z.string(), z.unknown()).nullable().optional(),
+  technicalProfile: z.record(z.string(), z.unknown()).nullable().optional(),
+  injuryHistory: z.record(z.string(), z.unknown()).nullable().optional(),
+  movementRestrictions: z.record(z.string(), z.unknown()).nullable().optional(),
+  competitionPRs: z.record(z.string(), z.unknown()).nullable().optional(),
+  implementPRs: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 // ── parseBody Helper ────────────────────────────────────────────────────
