@@ -1,20 +1,6 @@
-import { describe, it, vi } from "vitest";
+import { describe, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-
-// Sidebar.tsx uses the classic JSX runtime for its icon elements (e.g.
-// `icon: <LayoutDashboard />`). When Vitest's esbuild loader transforms
-// the file for tests, it inlines `React.createElement(...)` calls — which
-// requires `React` to be in module scope. Our tsconfig uses `jsx: "preserve"`
-// (Next.js owns the JSX transform in real builds), so nothing else puts
-// React on the module scope for the test environment. `vi.hoisted` runs
-// before any static imports are evaluated, so we use it to expose React on
-// globalThis in time for the transformed Sidebar module to find it.
-vi.hoisted(async () => {
-  const React = await import("react");
-  (globalThis as unknown as { React: typeof React }).React = React;
-});
-
 import {
   ATHLETE_NAV_SECTIONS,
   COACH_NAV_SECTIONS,

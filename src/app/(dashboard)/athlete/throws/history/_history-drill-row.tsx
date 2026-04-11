@@ -1,4 +1,3 @@
-import * as React from "react";
 import type { HistoryDrill } from "@/lib/throws/history-types";
 
 interface Props {

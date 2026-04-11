@@ -328,7 +328,10 @@ export default function ThrowsLogPage() {
    try {
      const res = await fetch(`/api/throws/athlete-sessions/${sessionId}`);
      const data = await res.json();
-     if (!data.success) return;
+     if (!res.ok || !data.success) {
+       toast.error(data.error || "Couldn't load session to edit");
+       return;
+     }
      const session = data.data;
 
      setEditingSessionId(sessionId);
@@ -352,8 +355,8 @@ export default function ThrowsLogPage() {
        }))
      );
      setStep(2);
-   } catch {
-     /* ignore */
+   } catch (err) {
+     toast.error(err instanceof Error ? err.message : "Network error loading session");
    }
  }
 
