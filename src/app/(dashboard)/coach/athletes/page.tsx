@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
-import { InviteAthleteButton } from "./_invite";
+import { AddAthleteButton } from "./_invite";
 import { RosterClient } from "./_roster-client";
 import {
   requireCoachSession,
@@ -69,7 +69,7 @@ export default async function AthletesPage({
             {roster.length === 1 ? "athlete" : "athletes"} on your roster
           </p>
         </div>
-        <InviteAthleteButton
+        <AddAthleteButton
           athleteCount={roster.length}
           planLimit={planLimit}
           currentPlan={coach.plan as PlanName}
