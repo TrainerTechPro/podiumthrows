@@ -7,6 +7,7 @@
  */
 
 import prisma from "@/lib/prisma";
+import { getAthletePRs } from "@/lib/data/personal-records";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -172,39 +173,23 @@ export async function fetchThisWeekData(athleteId: string): Promise<ThisWeekData
 const NEXT_TARGET_DELTA_METERS = 0.1;
 
 export async function fetchPRTrackerData(athleteId: string): Promise<PRTrackerData> {
-  // Every throw that's currently marked as a PR. Because checkAndSetPR() keys
-  // PRs on (event, implementWeight), there is at most ONE isPersonalBest=true
-  // throw per (event, implementWeight) combo — no dedupe needed here.
-  const prs = await prisma.throwLog.findMany({
-    where: {
-      athleteId,
-      isPersonalBest: true,
-      distance: { not: null },
-    },
-    orderBy: [
-      { event: "asc" },
-      { implementWeight: "desc" },
-    ],
-    select: {
-      id: true,
-      event: true,
-      implementWeight: true,
-      distance: true,
-      date: true,
-    },
-  });
+  const canonical = await getAthletePRs(athleteId);
 
-  const rows: PRTrackerRow[] = prs.map((p) => {
-    const distance = p.distance as number;
-    return {
-      throwLogId: p.id,
-      event: p.event as string,
-      implementWeight: p.implementWeight,
-      distance,
-      date: p.date.toISOString(),
-      nextTargetDistance: Math.round((distance + NEXT_TARGET_DELTA_METERS) * 100) / 100,
-    };
-  });
+  const rows: PRTrackerRow[] = canonical.events
+    .map((e) => {
+      const primary = e.competitionPR ?? e.practiceBest;
+      if (!primary) return null;
+      const distance = primary.distance;
+      return {
+        throwLogId: primary.throwLogId ?? `manual-${e.event}`,
+        event: e.event as string,
+        implementWeight: e.competitionWeightKg,
+        distance,
+        date: primary.date,
+        nextTargetDistance: Math.round((distance + NEXT_TARGET_DELTA_METERS) * 100) / 100,
+      };
+    })
+    .filter((x): x is PRTrackerRow => x !== null);
 
   return { rows };
 }
