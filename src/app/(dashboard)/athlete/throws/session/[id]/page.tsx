@@ -7,6 +7,35 @@ import { getSession } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { EVENTS, parseEvents } from "@/lib/throws/constants";
 
+// Display labels for enum values rendered to users on this page.
+// These are page-local until a second consumer needs them; promote to
+// src/lib/throws/constants.ts when that happens.
+const STATUS_LABEL: Record<string, string> = {
+  ASSIGNED: "Assigned",
+  NOTIFIED: "Notified",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  PARTIAL: "Partial",
+  SKIPPED: "Skipped",
+};
+
+const BLOCK_TYPE_LABEL: Record<string, string> = {
+  WARMUP: "Warm-up",
+  THROWING: "Throwing",
+  STRENGTH: "Strength",
+  PLYOMETRIC: "Plyometric",
+  COOLDOWN: "Cool-down",
+  NOTES: "Notes",
+};
+
+const FEELING_LABEL: Record<string, string> = {
+  GREAT: "Great",
+  GOOD: "Good",
+  AVERAGE: "Average",
+  POOR: "Poor",
+  VERY_POOR: "Very Poor",
+};
+
 export const metadata = {
   title: "Throws Session",
 };
@@ -47,6 +76,15 @@ export default async function ReadOnlySessionPage({
 
   const events = parseEvents(assignment.session.event);
 
+  // Format the assigned date to match the History page's "Apr 8, 2026" style.
+  // Append T00:00:00 to force local-timezone parsing — bare ISO date strings
+  // are parsed as UTC midnight by `new Date()`, which can shift the day by
+  // one in negative-offset timezones.
+  const formattedDate = new Date(`${assignment.assignedDate}T00:00:00`).toLocaleDateString(
+    "en-US",
+    { month: "short", day: "numeric", year: "numeric" }
+  );
+
   return (
     <div className="max-w-3xl mx-auto pb-12 space-y-6">
       {/* Back link */}
@@ -78,7 +116,7 @@ export default async function ReadOnlySessionPage({
           {assignment.session.name}
         </h1>
         <p className="text-sm text-muted mt-1">
-          <span className="font-mono tabular-nums">{assignment.assignedDate}</span> · {assignment.status}
+          <span className="font-mono tabular-nums">{formattedDate}</span> · {STATUS_LABEL[assignment.status] ?? assignment.status}
         </p>
       </div>
 
@@ -89,7 +127,7 @@ export default async function ReadOnlySessionPage({
           return (
             <div key={block.id} className="card p-4">
               <h2 className="text-section font-heading text-[var(--foreground)]">
-                {block.blockType}
+                {BLOCK_TYPE_LABEL[block.blockType] ?? block.blockType}
               </h2>
               {blockLogs.length === 0 ? (
                 <p className="text-sm text-muted mt-2">No throws logged for this block.</p>
@@ -100,8 +138,10 @@ export default async function ReadOnlySessionPage({
                       key={log.id}
                       className="flex justify-between text-sm text-surface-700 dark:text-surface-300"
                     >
-                      <span className="font-mono tabular-nums">
-                        #{log.throwNumber} · {log.implement}
+                      <span>
+                        <span className="font-mono tabular-nums">#{log.throwNumber}</span>
+                        <span className="text-muted"> · </span>
+                        {log.implement}
                       </span>
                       <span className="text-[var(--foreground)] font-mono tabular-nums font-semibold">
                         {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
@@ -141,7 +181,7 @@ export default async function ReadOnlySessionPage({
             {assignment.selfFeeling && (
               <div>
                 <dt className="text-xs text-muted uppercase tracking-wider">Feeling</dt>
-                <dd className="text-sm text-[var(--foreground)]">{assignment.selfFeeling}</dd>
+                <dd className="text-sm text-[var(--foreground)]">{FEELING_LABEL[assignment.selfFeeling] ?? assignment.selfFeeling}</dd>
               </div>
             )}
           </dl>
