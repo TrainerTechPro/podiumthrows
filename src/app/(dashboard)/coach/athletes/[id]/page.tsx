@@ -1433,7 +1433,7 @@ export default async function AthleteProfilePage({
   const latestReadiness = trend.length > 0 ? trend[trend.length - 1] : null;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 lg:pr-28">
+    <div className="max-w-6xl mx-auto space-y-6 lg:pr-28 pb-24 md:pb-0">
       <ScrollProgressBar />
       {/* Decision Hero */}
       <DecisionHero

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { X, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, Check } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -126,7 +127,10 @@ export function LogThrowModal({
         event,
         implementWeight,
         implementWeightUnit: "kg" as const,
-        distance: distance ? parseFloat(distance) : null,
+        distance: distance === "" ? null : (() => {
+          const n = parseFloat(distance);
+          return Number.isFinite(n) ? n : null;
+        })(),
         isCompetition,
         notes: notes || null,
         videoUrl,
@@ -171,164 +175,13 @@ export function LogThrowModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-      {/* Modal */}
-      <div className="relative w-full md:max-w-lg bg-surface-50 dark:bg-surface-900
-        rounded-t-2xl md:rounded-2xl border border-[var(--card-border)]
-        max-h-[85vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--card-border)]">
-          <h2 className="font-heading text-lg font-semibold">Log Throw</h2>
-          <button onClick={onClose} className="text-[var(--muted)] hover:text-[var(--foreground)]" type="button">
-            <X size={20} strokeWidth={1.75} aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="p-4 space-y-5">
-          {/* Event selector */}
-          {events.length > 1 && (
-            <div>
-              <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
-                Event
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {events.map((e) => (
-                  <button
-                    key={e}
-                    onClick={() => { setEvent(e); setImplementWeight(null); }}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
-                      ${event === e
-                        ? "bg-primary-500 text-black"
-                        : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
-                      }`}
-                    type="button"
-                  >
-                    {EVENT_LABELS[e] || e}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Implement weight presets */}
-          {event && (
-            <div>
-              <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
-                Implement Weight
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {presets.map((p) => (
-                  <button
-                    key={p.kg}
-                    onClick={() => setImplementWeight(p.kg)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
-                      ${implementWeight === p.kg
-                        ? "bg-primary-500 text-black"
-                        : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
-                      }`}
-                    type="button"
-                  >
-                    {getPresetLabel(p)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Distance */}
-          <div>
-            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
-              Distance (m)
-            </label>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={distance}
-              onChange={(e) => setDistance(e.target.value)}
-              placeholder="e.g. 55.42"
-              className="w-full px-4 py-3 rounded-xl text-lg font-mono
-                bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)]
-                text-[var(--foreground)] placeholder:text-[var(--muted)]
-                focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-
-          {/* Video upload */}
-          <div>
-            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
-              Video (optional)
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="video/*"
-              onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
-              className="w-full text-sm text-[var(--muted)]
-                file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0
-                file:text-sm file:font-medium file:bg-surface-100 file:dark:bg-surface-800
-                file:text-[var(--foreground)] file:cursor-pointer"
-            />
-            {videoFile && (
-              <p className="text-xs text-[var(--muted)] mt-1">
-                {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)}MB)
-              </p>
-            )}
-          </div>
-
-          {/* Competition toggle */}
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
-              ${isCompetition
-                ? "bg-primary-500 border-primary-500"
-                : "border-[var(--card-border)] bg-transparent"
-              }`}>
-              {isCompetition && <Check size={14} className="text-black" strokeWidth={2.5} aria-hidden="true" />}
-            </div>
-            <input
-              type="checkbox"
-              checked={isCompetition}
-              onChange={(e) => setIsCompetition(e.target.checked)}
-              className="sr-only"
-            />
-            <span className="text-sm text-[var(--foreground)]">Competition throw</span>
-          </label>
-
-          {/* Notes (collapsible) */}
-          <button
-            onClick={() => setShowNotes(!showNotes)}
-            className="flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
-            type="button"
-          >
-            {showNotes ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
-            Notes / Cues
-          </button>
-          {showNotes && (
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Cues that worked, observations..."
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl text-sm
-                bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)]
-                text-[var(--foreground)] placeholder:text-[var(--muted)]
-                focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-            />
-          )}
-
-          {/* PR indicator */}
-          {prDetected && (
-            <div className="px-4 py-2 rounded-xl bg-primary-500/10 border border-primary-500/30 text-primary-500 text-sm font-medium text-center">
-              New Personal Best!
-            </div>
-          )}
-        </div>
-
-        {/* Footer buttons */}
-        <div className="p-4 border-t border-[var(--card-border)] flex gap-3">
+    <Modal
+      open
+      onClose={onClose}
+      title="Log Throw"
+      size="lg"
+      footer={
+        <>
           <button
             onClick={() => handleSave(true)}
             disabled={saving || !event || implementWeight === null}
@@ -351,8 +204,148 @@ export function LogThrowModal({
           >
             {saving ? "Saving..." : "Save"}
           </button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        {/* Event selector */}
+        {events.length > 1 && (
+          <div>
+            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
+              Event
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {events.map((e) => (
+                <button
+                  key={e}
+                  onClick={() => { setEvent(e); setImplementWeight(null); }}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                    ${event === e
+                      ? "bg-primary-500 text-black"
+                      : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
+                    }`}
+                  type="button"
+                >
+                  {EVENT_LABELS[e] || e}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Implement weight presets */}
+        {event && (
+          <div>
+            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
+              Implement Weight
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {presets.map((p) => (
+                <button
+                  key={p.kg}
+                  onClick={() => setImplementWeight(p.kg)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
+                    ${implementWeight === p.kg
+                      ? "bg-primary-500 text-black"
+                      : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
+                    }`}
+                  type="button"
+                >
+                  {getPresetLabel(p)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Distance */}
+        <div>
+          <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
+            Distance (m)
+          </label>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            value={distance}
+            onChange={(e) => setDistance(e.target.value)}
+            placeholder="e.g. 55.42"
+            className="w-full px-4 py-3 rounded-xl text-lg font-mono
+              bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)]
+              text-[var(--foreground)] placeholder:text-[var(--muted)]
+              focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
         </div>
+
+        {/* Video upload */}
+        <div>
+          <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-2">
+            Video (optional)
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/*"
+            onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+            className="w-full text-sm text-[var(--muted)]
+              file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0
+              file:text-sm file:font-medium file:bg-surface-100 file:dark:bg-surface-800
+              file:text-[var(--foreground)] file:cursor-pointer"
+          />
+          {videoFile && (
+            <p className="text-xs text-[var(--muted)] mt-1">
+              {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)}MB)
+            </p>
+          )}
+        </div>
+
+        {/* Competition toggle */}
+        <label className="flex items-center gap-3 cursor-pointer">
+          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
+            ${isCompetition
+              ? "bg-primary-500 border-primary-500"
+              : "border-[var(--card-border)] bg-transparent"
+            }`}>
+            {isCompetition && <Check size={14} className="text-black" strokeWidth={2.5} aria-hidden="true" />}
+          </div>
+          <input
+            type="checkbox"
+            checked={isCompetition}
+            onChange={(e) => setIsCompetition(e.target.checked)}
+            className="sr-only"
+          />
+          <span className="text-sm text-[var(--foreground)]">Competition throw</span>
+        </label>
+
+        {/* Notes (collapsible) */}
+        <button
+          onClick={() => setShowNotes(!showNotes)}
+          className="flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+          type="button"
+        >
+          {showNotes ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+          Notes / Cues
+        </button>
+        {showNotes && (
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Cues that worked, observations..."
+            rows={3}
+            className="w-full px-4 py-3 rounded-xl text-sm
+              bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)]
+              text-[var(--foreground)] placeholder:text-[var(--muted)]
+              focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+          />
+        )}
+
+        {/* PR indicator */}
+        {prDetected && (
+          <div className="px-4 py-2 rounded-xl bg-primary-500/10 border border-primary-500/30 text-primary-500 text-sm font-medium text-center">
+            New Personal Best!
+          </div>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }
