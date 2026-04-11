@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, UserRoundPlus } from "lucide-react";
 import { Avatar, Badge, DataTable, type Column } from "@/components";
 import type { AthleteRosterItem } from "@/lib/data/coach";
 
@@ -34,8 +35,23 @@ function AthleteCell({ row }: { row: AthleteRosterItem }) {
         size="sm"
       />
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-[var(--foreground)] truncate">
-          {row.firstName} {row.lastName}
+        <p className="text-sm font-semibold text-[var(--foreground)] truncate flex items-center">
+          <span className="truncate">
+            {row.firstName} {row.lastName}
+          </span>
+          {!row.claimedAt && (
+            <span
+              className="ml-1.5 inline-flex shrink-0"
+              title="Profile managed by coach — not yet claimed by athlete"
+            >
+              <UserRoundPlus
+                size={14}
+                strokeWidth={1.75}
+                className="text-[var(--muted)] opacity-60"
+                aria-hidden="true"
+              />
+            </span>
+          )}
         </p>
       </div>
     </div>
@@ -199,11 +215,20 @@ const columns: Column<AthleteRosterItem>[] = [
   {
     key: "lastSessionDate",
     header: "Last Session",
-    cell: (row) => (
-      <span className="text-sm text-muted tabular-nums">
-        {formatRelativeDate(row.lastSessionDate)}
-      </span>
-    ),
+    cell: (row) =>
+      !row.claimedAt && !row.lastSessionDate ? (
+        <Link
+          href={`/coach/athletes/${row.id}`}
+          className="text-xs text-primary-500 hover:underline font-medium"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Invite →
+        </Link>
+      ) : (
+        <span className="text-sm text-muted tabular-nums">
+          {formatRelativeDate(row.lastSessionDate)}
+        </span>
+      ),
     hideOnMobile: true,
   },
   {

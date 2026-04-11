@@ -88,6 +88,7 @@ export type AthleteRosterItem = {
     energyMood: number;
   } | null;
   lastSessionDate: string | null;
+  claimedAt: string | null;
 };
 
 export type FlaggedAthlete = {
@@ -630,6 +631,7 @@ export async function getAthleteRoster(coachId: string): Promise<AthleteRosterIt
       currentStreak: true,
       gender: true,
       classStanding: true,
+      user: { select: { claimedAt: true } },
       _count: { select: { availability: true } },
       readinessCheckIns: {
         orderBy: { date: "desc" },
@@ -677,6 +679,7 @@ export async function getAthleteRoster(coachId: string): Promise<AthleteRosterIt
       : null,
     lastSessionDate:
       a.trainingSessions[0]?.completedDate?.toISOString() ?? null,
+    claimedAt: a.user.claimedAt?.toISOString() ?? null,
   }));
 }
 
