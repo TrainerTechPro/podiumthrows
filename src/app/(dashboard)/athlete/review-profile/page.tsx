@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getAthletePRs } from "@/lib/data/personal-records";
 import { ReviewProfileClient } from "./_review-client";
 
 export default async function ReviewProfilePage() {
@@ -32,6 +33,8 @@ export default async function ReviewProfilePage() {
   });
 
   if (!profile) notFound();
+
+  const canonicalPRs = await getAthletePRs(profile.id);
 
   // Recent throws logged by the coach (most recent 10).
   const recentThrows = await prisma.throwLog.findMany({
@@ -79,9 +82,7 @@ export default async function ReviewProfilePage() {
             strengthNumbers:
               (profile.strengthNumbers as Record<string, number | null> | null) ??
               null,
-            competitionPRs:
-              (profile.competitionPRs as Record<string, number | null> | null) ??
-              null,
+            canonicalPRs: canonicalPRs.events,
           }}
           recentThrows={recentThrows.map((t) => ({
             id: t.id,

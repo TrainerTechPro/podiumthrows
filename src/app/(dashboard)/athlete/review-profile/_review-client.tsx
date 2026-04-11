@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
+import type { AthletePREvent } from "@/lib/data/personal-records";
 
 interface Profile {
   id: string;
@@ -24,7 +25,7 @@ interface Profile {
   classStanding: string | null;
   dateOfBirth: string | null;
   strengthNumbers: Record<string, number | null> | null;
-  competitionPRs: Record<string, number | null> | null;
+  canonicalPRs: AthletePREvent[];
 }
 
 interface ThrowItem {
@@ -114,9 +115,6 @@ export function ReviewProfileClient({
   const hasStrength =
     profile.strengthNumbers &&
     Object.values(profile.strengthNumbers).some((v) => v != null);
-  const hasPRs =
-    profile.competitionPRs &&
-    Object.values(profile.competitionPRs).some((v) => v != null);
 
   return (
     <div className="space-y-5">
@@ -191,29 +189,26 @@ export function ReviewProfileClient({
       </section>
 
       {/* Competition PRs */}
-      {hasPRs && profile.competitionPRs && (
+      {profile.canonicalPRs.some((e) => e.competitionPR || e.practiceBest) && (
         <section className="card p-5 space-y-3">
           <header className="flex items-center gap-2">
-            <Trophy
-              size={18}
-              strokeWidth={1.75}
-              className="text-primary-500"
-              aria-hidden="true"
-            />
-            <h2 className="font-heading text-base font-semibold">
-              Competition PRs
-            </h2>
+            <Trophy size={18} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
+            <h2 className="font-heading text-base font-semibold">Competition PRs</h2>
           </header>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            {Object.entries(profile.competitionPRs).map(([event, distance]) => {
-              if (distance == null) return null;
+            {profile.canonicalPRs.map((e) => {
+              const primary = e.competitionPR ?? e.practiceBest;
+              if (!primary) return null;
               return (
-                <div key={event}>
+                <div key={e.event}>
                   <div className="text-xs text-[var(--muted)] uppercase tracking-wider">
-                    {EVENT_LABELS[event] || event}
+                    {EVENT_LABELS[e.event] || e.event}
+                    {e.competitionPR == null && (
+                      <span className="ml-1 normal-case text-[var(--muted)]/70">(practice)</span>
+                    )}
                   </div>
                   <div className="font-mono tabular-nums text-lg text-primary-500">
-                    {distance}m
+                    {primary.distance}m
                   </div>
                 </div>
               );
