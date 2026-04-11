@@ -39,7 +39,7 @@ export function useAnimatedCounter(
   const { decimals = 0, unit = "", easing = easeOutCubic, disabled = false } = options;
 
   const containerRef = useRef<HTMLElement | null>(null);
-  const prevTarget = useRef(0);
+  const prevTarget = useRef(target);
   const rafId = useRef(0);
   const hasAnimated = useRef(false);
 
@@ -49,7 +49,12 @@ export function useAnimatedCounter(
     prefersReducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  const [current, setCurrent] = useState(0);
+  // Initialize with target so SSR/first-paint shows the correct value.
+  // The count-up animation is a bonus effect that plays on viewport entry —
+  // never on initial render. This prevents a "0.00" flash on elements that
+  // start below the fold on mobile (where the IntersectionObserver doesn't
+  // fire until the user scrolls).
+  const [current, setCurrent] = useState(target);
 
   const animate = useCallback(
     (from: number, to: number) => {
@@ -79,11 +84,13 @@ export function useAnimatedCounter(
     [duration, easing, disabled]
   );
 
-  // Intersection Observer — trigger animation on viewport entry
+  // Intersection Observer — trigger count-up animation on viewport entry.
+  // `current` already starts at `target`, so if this never fires (rare edge
+  // cases like a hidden container or missing ref) the displayed value is
+  // still correct. If it does fire, we play the bonus count-up effect.
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || disabled) {
-      setCurrent(target);
+    if (!el || disabled || prefersReducedMotion.current) {
       return;
     }
 
