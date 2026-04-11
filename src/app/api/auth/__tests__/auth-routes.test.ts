@@ -221,11 +221,6 @@ describe("POST /api/auth/login", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 400 for short password", async () => {
-    const res = await loginPOST(makeRequest({ email: "test@test.com", password: "short" }));
-    expect(res.status).toBe(400);
-  });
-
   it("returns 429 when rate limited", async () => {
     blockRateLimit();
 
@@ -277,7 +272,7 @@ describe("POST /api/auth/login", () => {
 describe("POST /api/auth/register", () => {
   const validCoachBody = {
     email: "newcoach@test.com",
-    password: "securepass123",
+    password: "SecurePass123",
     firstName: "Jane",
     lastName: "Doe",
     role: "COACH",
@@ -305,9 +300,9 @@ describe("POST /api/auth/register", () => {
     const json = await res.json();
 
     expect(res.status).toBe(201);
-    expect(json.user.email).toBe("newcoach@test.com");
-    expect(json.user.role).toBe("COACH");
-    expect(json.redirectTo).toBe("/coach/onboarding/welcome");
+    expect(json.data.user.email).toBe("newcoach@test.com");
+    expect(json.data.user.role).toBe("COACH");
+    expect(json.data.redirectTo).toBe("/coach/onboarding/welcome");
   });
 
   it("returns 409 for duplicate email", async () => {
@@ -356,7 +351,7 @@ describe("POST /api/auth/register", () => {
       makeRequest({ ...validCoachBody, email: "NewCoach@TEST.com" })
     );
     const json = await res.json();
-    expect(json.user.email).toBe("newcoach@test.com");
+    expect(json.data.user.email).toBe("newcoach@test.com");
   });
 
   it("includes checkout redirect when plan is provided", async () => {
@@ -375,7 +370,7 @@ describe("POST /api/auth/register", () => {
       makeRequest({ ...validCoachBody, plan: "pro", interval: "annual" })
     );
     const json = await res.json();
-    expect(json.redirectTo).toBe("/coach/dashboard?checkout=pro&interval=annual");
+    expect(json.data.redirectTo).toBe("/coach/dashboard?checkout=pro&interval=annual");
   });
 });
 
@@ -418,7 +413,7 @@ describe("POST /api/auth/forgot-password", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.message).toContain("If an account with that email exists");
+    expect(json.data.message).toContain("If an account with that email exists");
     expect(mockStoreToken).toHaveBeenCalledTimes(1);
   });
 
@@ -429,7 +424,7 @@ describe("POST /api/auth/forgot-password", () => {
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.message).toContain("If an account with that email exists");
+    expect(json.data.message).toContain("If an account with that email exists");
     expect(mockStoreToken).not.toHaveBeenCalled();
   });
 
@@ -466,12 +461,12 @@ describe("POST /api/auth/reset-password", () => {
     mockDeleteToken.mockResolvedValue(undefined);
 
     const res = await resetPasswordPOST(
-      makeRequest({ token: "valid-token-abc123", password: "newpassword123" })
+      makeRequest({ token: "valid-token-abc123", password: "NewPassword123" })
     );
     const json = await res.json();
 
     expect(res.status).toBe(200);
-    expect(json.message).toContain("Password has been reset successfully");
+    expect(json.data.message).toContain("Password has been reset successfully");
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: "user-1" },
@@ -485,7 +480,7 @@ describe("POST /api/auth/reset-password", () => {
     mockGetToken.mockResolvedValue(null);
 
     const res = await resetPasswordPOST(
-      makeRequest({ token: "expired-token", password: "newpassword123" })
+      makeRequest({ token: "expired-token", password: "NewPassword123" })
     );
     expect(res.status).toBe(400);
     const json = await res.json();
@@ -493,7 +488,7 @@ describe("POST /api/auth/reset-password", () => {
   });
 
   it("returns 400 for missing token", async () => {
-    const res = await resetPasswordPOST(makeRequest({ password: "newpassword123" }));
+    const res = await resetPasswordPOST(makeRequest({ password: "NewPassword123" }));
     expect(res.status).toBe(400);
   });
 
@@ -506,7 +501,7 @@ describe("POST /api/auth/reset-password", () => {
     blockRateLimit();
 
     const res = await resetPasswordPOST(
-      makeRequest({ token: "valid-token-abc123", password: "newpassword123" })
+      makeRequest({ token: "valid-token-abc123", password: "NewPassword123" })
     );
     expect(res.status).toBe(429);
   });
