@@ -3,11 +3,7 @@ import { requireCoachSession, getQuestionnaireById } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { parseBody, QuestionnaireUpdateSchema } from "@/lib/api-schemas";
 
-const VALID_TYPES = [
-  "ONBOARDING", "ASSESSMENT", "CHECK_IN", "READINESS",
-  "COMPETITION", "INJURY", "CUSTOM",
-];
-const VALID_STATUSES = ["draft", "published", "archived"];
+// Validation for type/status now lives in QuestionnaireUpdateSchema.
 
 export async function GET(
   _req: NextRequest,
