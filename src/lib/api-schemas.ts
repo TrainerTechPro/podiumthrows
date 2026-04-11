@@ -769,3 +769,39 @@ export async function parseBody<T>(
 
   return result.data;
 }
+
+/**
+ * Parse and validate URL query parameters against a Zod schema.
+ * Returns the parsed data on success, or a 400 NextResponse on failure.
+ *
+ * Usage:
+ * ```ts
+ * const parsed = parseQuery(request, HistoryQuerySchema);
+ * if (parsed instanceof NextResponse) return parsed;
+ * const { range, prOnly } = parsed;
+ * ```
+ */
+export function parseQuery<T>(
+  request: Request,
+  schema: z.ZodType<T>
+): T | NextResponse {
+  const url = new URL(request.url);
+  const raw: Record<string, string> = {};
+  for (const [k, v] of url.searchParams.entries()) {
+    raw[k] = v;
+  }
+
+  const result = schema.safeParse(raw);
+  if (!result.success) {
+    const fieldErrors = result.error.issues.map((issue) => ({
+      field: issue.path.join(".") || "_query",
+      message: issue.message,
+    }));
+    return NextResponse.json(
+      { success: false, error: "Invalid query parameters", details: fieldErrors },
+      { status: 400 }
+    );
+  }
+
+  return result.data;
+}
