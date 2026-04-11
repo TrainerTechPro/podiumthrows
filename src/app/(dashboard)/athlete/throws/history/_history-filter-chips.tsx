@@ -13,6 +13,13 @@ const RANGE_LABELS: Record<HistoryFilter["range"], string> = {
   custom: "Custom",
 };
 
+const EVENT_SHORT_LABELS: Record<string, string> = {
+  SHOT_PUT: "Shot Put",
+  DISCUS: "Discus",
+  HAMMER: "Hammer",
+  JAVELIN: "Javelin",
+};
+
 interface Props {
   filter: HistoryFilter;
   onOpen: (variant: FilterVariant) => void;
@@ -26,7 +33,7 @@ export function HistoryFilterChips({ filter, onOpen, onClear, hasAnyActive }: Pr
     filter.events.length === 0
       ? "Event"
       : filter.events.length === 1
-        ? filter.events[0]
+        ? EVENT_SHORT_LABELS[filter.events[0]] ?? filter.events[0]
         : `${filter.events.length} events`;
   const implementLabel =
     filter.implementsKg.length === 0

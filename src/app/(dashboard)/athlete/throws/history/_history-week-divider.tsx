@@ -5,7 +5,7 @@ interface Props {
 export function HistoryWeekDivider({ label }: Props) {
   return (
     <div
-      className="flex items-center gap-3 py-3 text-xs font-mono text-muted uppercase tracking-wider"
+      className="flex items-center gap-3 py-3 text-xs text-muted uppercase tracking-wider"
       role="separator"
       aria-label={label}
     >

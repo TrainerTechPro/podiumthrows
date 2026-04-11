@@ -133,8 +133,8 @@ export function HistoryClient() {
 
       {/* Summary line */}
       {status === "ready" && totals && (
-        <div className="text-xs font-mono text-muted uppercase tracking-wider">
-          {totals.sessions} sessions · {totals.throws} throws
+        <div className="text-xs text-muted uppercase tracking-wider">
+          <span className="font-mono tabular-nums text-[var(--foreground)]">{totals.sessions}</span> sessions · <span className="font-mono tabular-nums text-[var(--foreground)]">{totals.throws}</span> throws
         </div>
       )}
 

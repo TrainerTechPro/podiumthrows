@@ -42,7 +42,7 @@ export function HistoryDayCard({ day }: Props) {
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="text-xs font-mono text-muted uppercase tracking-wider">
+            <span className="text-xs text-muted uppercase tracking-wider">
               {day.weekdayShort}
             </span>
           </div>
