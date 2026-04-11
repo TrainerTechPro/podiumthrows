@@ -25,6 +25,7 @@ import {
   type ReadinessTrendPoint,
   type GoalItem,
 } from "@/lib/data/coach";
+import type { AthletePREvent } from "@/lib/data/personal-records";
 import { getAthleteAttendanceStats } from "@/lib/data/practices";
 import { SectionNav } from "./_section-nav";
 import { DistanceTrend } from "./_distance-trend";
@@ -399,7 +400,7 @@ function OverviewTab({
 }: {
   athlete: AthleteProfile;
   acwr: AthleteACWR;
-  recentPRs: ThrowLogItem[];
+  recentPRs: AthletePREvent[];
   bondarchukType: string | null;
   lastAssessmentDate: string | null;
   attendanceStats: AttendanceStats;
@@ -492,7 +493,7 @@ function OverviewTab({
               View all throws →
             </Link>
           </div>
-          {recentPRs.length === 0 ? (
+          {recentPRs.length === 0 || recentPRs.every((e) => !e.competitionPR && !e.practiceBest) ? (
             <EmptyState
               compact
               icon={
@@ -506,30 +507,60 @@ function OverviewTab({
             />
           ) : (
             <div className="space-y-0.5">
-              {recentPRs.map((pr) => (
-                <div
-                  key={pr.id}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 text-base">
-                    🏆
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[var(--foreground)] tabular-nums">
-                      {pr.distance != null ? `${pr.distance.toFixed(2)}m` : "—"}
+              {recentPRs.map((pr) => {
+                const primary = pr.competitionPR ?? pr.practiceBest;
+                if (!primary) {
+                  return (
+                    <div
+                      key={pr.event}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 text-base text-muted">
+                        🏆
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[var(--foreground)]">
+                          {formatEventName(pr.event)}
+                        </p>
+                        <p className="text-xs text-muted">No marks yet</p>
+                      </div>
+                      <p className="text-xs text-muted tabular-nums shrink-0">
+                        {formatImplementWeight(pr.competitionWeightKg)}
+                      </p>
+                    </div>
+                  );
+                }
+                const isComp = pr.competitionPR != null;
+                return (
+                  <div
+                    key={pr.event}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 text-base">
+                      🏆
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[var(--foreground)] tabular-nums">
+                        {primary.distance.toFixed(2)}m
+                      </p>
+                      <p className="text-xs text-muted">
+                        {formatEventName(pr.event)} · {formatImplementWeight(pr.competitionWeightKg)}
+                        {pr.practiceExceedsPR && pr.practiceBest && (
+                          <> · practice {pr.practiceBest.distance.toFixed(2)}m</>
+                        )}
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted tabular-nums shrink-0">
+                      {formatShortDate(primary.date)}
                     </p>
-                    <p className="text-xs text-muted">
-                      {formatEventName(pr.event)} · {formatImplementWeight(pr.implementWeight)}
-                    </p>
+                    {isComp ? (
+                      <Badge variant="primary">Comp</Badge>
+                    ) : (
+                      <Badge variant="neutral">Practice</Badge>
+                    )}
                   </div>
-                  <p className="text-xs text-muted tabular-nums shrink-0">
-                    {formatShortDate(pr.date)}
-                  </p>
-                  {pr.isCompetition && (
-                    <Badge variant="primary">Comp</Badge>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1415,7 +1446,9 @@ export default async function AthleteProfilePage({
   ]);
 
   const acwr = results[0].status === "fulfilled" ? results[0].value as AthleteACWR : null as AthleteACWR;
-  const recentPRs = results[1].status === "fulfilled" ? results[1].value as ThrowLogItem[] : [] as ThrowLogItem[];
+  const recentPRs = results[1].status === "fulfilled"
+    ? (results[1].value as AthletePREvent[])
+    : ([] as AthletePREvent[]);
   const sessions = results[2].status === "fulfilled" ? results[2].value as SessionItem[] : [] as SessionItem[];
   const throws = results[3].status === "fulfilled" ? results[3].value as ThrowLogItem[] : [] as ThrowLogItem[];
   const trend = results[4].status === "fulfilled" ? results[4].value as ReadinessTrendPoint[] : [] as ReadinessTrendPoint[];
