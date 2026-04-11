@@ -39,6 +39,20 @@ const nextConfig = {
       { protocol: 'https', hostname: 'v2.exercisedb.io' },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/athlete/throws/analysis',
+        destination: '/athlete/throws/trends',
+        permanent: true,
+      },
+      {
+        source: '/athlete/throws/profile',
+        destination: '/athlete/throws/readiness',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

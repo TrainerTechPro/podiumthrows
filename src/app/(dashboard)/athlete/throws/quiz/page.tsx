@@ -161,7 +161,7 @@ export default function AthleteTypingQuizPage() {
  Your Bondarchuk athlete type has been determined. Your coach will use this to personalise your training program.
  </p>
  <button
- onClick={() => router.push("/athlete/throws/profile")}
+ onClick={() => router.push("/athlete/throws/readiness")}
  className="btn-primary"
  >
  View My Profile
@@ -192,7 +192,7 @@ export default function AthleteTypingQuizPage() {
  </p>
  </div>
  <Link
- href="/athlete/throws/profile"
+ href="/athlete/throws/readiness"
  className="text-xs text-muted hover:text-surface-700 dark:hover:text-surface-300 transition-colors mt-1"
  >
  Exit Quiz

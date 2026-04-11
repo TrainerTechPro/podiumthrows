@@ -25,7 +25,7 @@ const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const FLAG_GATED_ROUTES: { prefix: string; flag: FlagKey }[] = [
   { prefix: "/athlete/self-program", flag: "selfProgram" },
   { prefix: "/coach/videos", flag: "videoAnnotator" },
-  { prefix: "/athlete/throws/analysis", flag: "throwsAnalysis" },
+  { prefix: "/athlete/throws/trends", flag: "throwsAnalysis" },
   { prefix: "/athlete/oura", flag: "ouraIntegration" },
   { prefix: "/athlete/whoop", flag: "whoopIntegration" },
   { prefix: "/coach/questionnaires", flag: "questionnaireBuilder" },
