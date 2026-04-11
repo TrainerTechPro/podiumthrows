@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { aggregateHistoryDays } from "../history";
 import type { HistoryDay } from "../history-types";
 
@@ -132,5 +132,50 @@ describe("aggregateHistoryDays", () => {
   it("returns empty array when no logs exist", () => {
     const result = aggregateHistoryDays({ throwLogs: [], blockLogs: [] });
     expect(result).toEqual<HistoryDay[]>([]);
+  });
+
+  it("skips ThrowsBlockLog rows with unparseable implement strings", () => {
+    const blockLogs = [
+      {
+        id: "bl-bad",
+        throwNumber: 1,
+        distance: 17.5,
+        implement: "garbage",
+        assignment: {
+          id: "asgn1",
+          assignedDate: "2026-04-08",
+          athleteId: "a1",
+          status: "COMPLETED",
+          session: { event: "SHOT_PUT" as const, name: "Heavy Day" },
+        },
+        block: { blockType: "THROWING", config: JSON.stringify({ drillType: "FULL_THROW" }) },
+      },
+      {
+        id: "bl-good",
+        throwNumber: 2,
+        distance: 18.0,
+        implement: "7.26kg",
+        assignment: {
+          id: "asgn1",
+          assignedDate: "2026-04-08",
+          athleteId: "a1",
+          status: "COMPLETED",
+          session: { event: "SHOT_PUT" as const, name: "Heavy Day" },
+        },
+        block: { blockType: "THROWING", config: JSON.stringify({ drillType: "FULL_THROW" }) },
+      },
+    ];
+
+    // Mute the warning for this test only.
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = aggregateHistoryDays({ throwLogs: [], blockLogs });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].drills).toHaveLength(1);
+    expect(result[0].drills[0].implementKg).toBe(7.26);
+    expect(warnSpy).toHaveBeenCalledOnce();
+
+    warnSpy.mockRestore();
   });
 });

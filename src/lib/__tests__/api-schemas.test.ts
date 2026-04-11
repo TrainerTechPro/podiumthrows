@@ -22,12 +22,19 @@ describe("parseQuery", () => {
     }
   });
 
-  it("returns NextResponse(400) for invalid enum", () => {
+  it("returns NextResponse(400) with fieldErrors for invalid enum", async () => {
     const req = new Request("http://localhost/api/x?range=bogus");
     const result = parseQuery(req, Schema);
     expect(result).toBeInstanceOf(NextResponse);
     if (result instanceof NextResponse) {
       expect(result.status).toBe(400);
+      const body = await result.json();
+      expect(body.success).toBe(false);
+      expect(body.error).toBe("Invalid query parameters");
+      expect(Array.isArray(body.fieldErrors)).toBe(true);
+      expect(body.fieldErrors.length).toBeGreaterThan(0);
+      expect(body.fieldErrors[0]).toHaveProperty("field");
+      expect(body.fieldErrors[0]).toHaveProperty("message");
     }
   });
 

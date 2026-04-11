@@ -34,6 +34,14 @@ const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct"
 
 function isoDay(d: Date | string): string {
   if (typeof d === "string") return d.slice(0, 10); // ISO date already
+  // Known limitation: this slices the UTC date, not the athlete's local calendar
+  // date. For an athlete west of UTC who logs at 11pm, the throw will appear
+  // under the next day in History. Block logs are unaffected because
+  // ThrowsAssignment.assignedDate is already a YYYY-MM-DD string in the
+  // athlete's intended training calendar. Free-log timezone correctness
+  // requires either a schema change (store local calendar date) or a tz query
+  // param wired through the UI — both are out of scope for this commit and
+  // tracked for follow-up.
   return d.toISOString().slice(0, 10);
 }
 
@@ -48,7 +56,9 @@ function labelsFor(isoDate: string): { weekdayShort: string; dateLabel: string }
 
 function parseImplementKg(label: string): number {
   const n = parseFloat(label);
-  return Number.isFinite(n) ? n : 0;
+  // NaN is the parse-failure sentinel; the caller filters these out so a
+  // malformed implement string doesn't masquerade as a valid 0kg drill.
+  return Number.isFinite(n) ? n : Number.NaN;
 }
 
 function parseDrillTypeFromBlockConfig(configJson: string): { drillType: string | null; label: string | null } {
@@ -133,6 +143,18 @@ export function aggregateHistoryDays(input: {
     const event = bl.assignment.session.event;
     const drillInfo = parseDrillTypeFromBlockConfig(bl.block.config);
     const implementKg = parseImplementKg(bl.implement);
+
+    // Skip malformed implement strings — log so we can chase the data quality issue
+    // upstream rather than silently rendering "0kg" or NaN drills in the UI.
+    if (Number.isNaN(implementKg)) {
+      if (typeof console !== "undefined") {
+        console.warn(
+          `[history] Skipping ThrowsBlockLog ${bl.id}: unparseable implement "${bl.implement}"`
+        );
+      }
+      continue;
+    }
+
     const key = `${bl.assignment.id}|${drillInfo.drillType ?? "unknown"}|${bl.implement}`;
 
     const existing = blockGroups.get(key);

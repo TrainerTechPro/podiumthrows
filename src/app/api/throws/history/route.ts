@@ -27,6 +27,7 @@ const HistoryQuerySchema = z.object({
     .union([z.literal("true"), z.literal("false")])
     .optional()
     .transform((v) => v === "true"),
+  // Reserved for Task 12 (cursor-based pagination); ignored by the current handler.
   cursor: z.string().optional(),
 });
 
@@ -44,6 +45,13 @@ function rangeToStartDate(range: z.infer<typeof HistoryQuerySchema>["range"], st
 
 export async function GET(request: NextRequest) {
   try {
+    // This endpoint is athlete-only by design: it returns the currently
+    // signed-in athlete's history. Coach-side history (e.g. for a coach
+    // viewing one of their athletes) is served via a separate route that
+    // accepts an explicit athleteId and runs through canAccessAthlete().
+    // Mixing both shapes in one endpoint would require dropping the
+    // implicit-athlete contract and forcing every athlete-side caller to
+    // pass their own id, which is a worse default.
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
@@ -74,6 +82,9 @@ export async function GET(request: NextRequest) {
           ...(prOnly ? { isPersonalBest: true } : {}),
         },
         orderBy: { date: "desc" },
+        // Sanity cap to prevent OOM on athletes with multi-year history.
+        // TODO(pagination): Task 12 will replace this with cursor-based pagination.
+        take: 2000,
       }),
       prisma.throwsBlockLog.findMany({
         where: {
@@ -96,6 +107,10 @@ export async function GET(request: NextRequest) {
           },
           block: { select: { blockType: true, config: true } },
         },
+        orderBy: { createdAt: "desc" },
+        // Sanity cap to prevent OOM on athletes with multi-year history.
+        // TODO(pagination): Task 12 will replace this with cursor-based pagination.
+        take: 2000,
       }),
     ]);
 

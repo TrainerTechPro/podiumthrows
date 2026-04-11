@@ -798,7 +798,7 @@ export function parseQuery<T>(
       message: issue.message,
     }));
     return NextResponse.json(
-      { success: false, error: "Invalid query parameters", details: fieldErrors },
+      { success: false, error: "Invalid query parameters", fieldErrors },
       { status: 400 }
     );
   }
