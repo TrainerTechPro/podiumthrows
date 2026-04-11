@@ -28,6 +28,7 @@ import {
 import { getAthleteAttendanceStats } from "@/lib/data/practices";
 import { SectionNav } from "./_section-nav";
 import { DistanceTrend } from "./_distance-trend";
+import { CoachActionBar } from "./_action-bar";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -1440,6 +1441,14 @@ export default async function AthleteProfilePage({
         bondarchukType={bondarchukType}
         acwr={acwr}
         latestReadiness={latestReadiness}
+      />
+
+      {/* Coach quick actions */}
+      <CoachActionBar
+        athleteId={athlete.id}
+        athleteName={`${athlete.firstName} ${athlete.lastName}`}
+        events={athlete.events as string[]}
+        gender={athlete.gender}
       />
 
       {/* Floating section nav (desktop only) */}
