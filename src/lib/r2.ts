@@ -148,6 +148,13 @@ export function generateVideoKey(coachId: string, fileName: string): string {
   return `videos/${coachId}/${timestamp}-${random}${ext}`;
 }
 
+export function generateAthleteVideoKey(athleteId: string, fileName: string): string {
+  const ext = path.extname(fileName).toLowerCase();
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  return `videos/athletes/${athleteId}/${timestamp}-${random}${ext}`;
+}
+
 export function generateImageKey(userId: string, fileName: string): string {
   const ext = path.extname(fileName).toLowerCase();
   const timestamp = Date.now();
