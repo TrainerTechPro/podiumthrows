@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonLine } from "@/components/ui/Skeleton";
+import { SkeletonLine } from "@/components/ui/Skeleton";
 
 export default function ThrowsLogLoading() {
   return (
@@ -28,12 +28,6 @@ export default function ThrowsLogLoading() {
           ))}
         </div>
         <SkeletonLine className="w-full h-12 rounded-xl" />
-      </div>
-
-      {/* Chart */}
-      <div className="card p-5 space-y-3">
-        <SkeletonLine className="w-32 h-5" />
-        <Skeleton className="w-full h-40 rounded-lg" />
       </div>
     </div>
   );
