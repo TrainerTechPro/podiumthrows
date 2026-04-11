@@ -691,7 +691,7 @@ export const CoachLogThrowSchema = z.object({
   distance: z.number().positive("Distance must be positive").nullable().optional(),
   isCompetition: z.boolean().default(false),
   notes: z.string().nullable().optional(),
-  videoUrl: z.string().nullable().optional(),
+  videoUrl: z.string().url("Invalid video URL").nullable().optional(),
   rpe: z.number().min(1).max(10).nullable().optional(),
   wireLength: z.enum(["FULL", "THREE_QUARTER", "HALF"]).nullable().optional(),
 });
@@ -720,18 +720,18 @@ export const CoachEditProfileSchema = z.object({
   lastName: z.string().min(1).optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   events: z.array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"])).min(1).optional(),
-  dateOfBirth: z.string().nullable().optional(),
+  dateOfBirth: z.string().datetime({ message: "Date of birth must be a valid ISO datetime" }).nullable().optional(),
   heightCm: z.number().min(100).max(250).nullable().optional(),
   weightKg: z.number().min(30).max(200).nullable().optional(),
   classStanding: z.string().nullable().optional(),
-  gradYear: z.number().int().nullable().optional(),
+  gradYear: z.number().int().min(1950, "Grad year too early").max(2050, "Grad year too late").nullable().optional(),
   turnDirection: z.enum(["LEFT", "RIGHT"]).nullable().optional(),
-  strengthNumbers: z.record(z.string(), z.unknown()).nullable().optional(),
+  strengthNumbers: z.record(z.string(), z.number().nullable()).nullable().optional(),
   technicalProfile: z.record(z.string(), z.unknown()).nullable().optional(),
   injuryHistory: z.record(z.string(), z.unknown()).nullable().optional(),
   movementRestrictions: z.record(z.string(), z.unknown()).nullable().optional(),
-  competitionPRs: z.record(z.string(), z.unknown()).nullable().optional(),
-  implementPRs: z.record(z.string(), z.unknown()).nullable().optional(),
+  competitionPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),
+  implementPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),
 });
 
 // ── parseBody Helper ────────────────────────────────────────────────────
