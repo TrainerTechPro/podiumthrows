@@ -297,6 +297,15 @@ model AthleteProfile {
   // Master Profile — Movement Restrictions (Section 6, coach-managed)
   movementRestrictions Json?
 
+  // Master Profile — Injury History (coach-managed)
+  injuryHistory          Json?
+
+  // Master Profile — Competition PRs (coach-managed)
+  competitionPRs         Json?
+
+  // Master Profile — Implement PRs (coach-managed)
+  implementPRs           Json?
+
   // Core relations (existing PT models)
   trainingSessions         TrainingSession[]
   sessionLogs              SessionLog[]
