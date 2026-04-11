@@ -54,10 +54,27 @@ export async function POST(
     );
   }
 
-  const event = formData.get("event") as string | null;
-  const implementWeight = formData.get("implementWeight");
-  const distance = formData.get("distance");
+  const eventRaw = formData.get("event") as string | null;
+  const implementWeightRaw = formData.get("implementWeight");
+  const distanceRaw = formData.get("distance");
   const notes = formData.get("notes") as string | null;
+
+  const ALLOWED_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
+  type AllowedEvent = (typeof ALLOWED_EVENTS)[number];
+
+  const event: AllowedEvent | null =
+    eventRaw && (ALLOWED_EVENTS as readonly string[]).includes(eventRaw)
+      ? (eventRaw as AllowedEvent)
+      : null;
+
+  function parseFiniteNumber(raw: FormDataEntryValue | null): number | null {
+    if (raw == null || raw === "") return null;
+    const n = parseFloat(String(raw));
+    return Number.isFinite(n) ? n : null;
+  }
+
+  const implementWeight = parseFiniteNumber(implementWeightRaw);
+  const distance = parseFiniteNumber(distanceRaw);
 
   const r2Key = generateAthleteVideoKey(athleteId, file.name);
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -70,9 +87,9 @@ export async function POST(
       uploadedById: ctx.coach.id,
       r2Key,
       url,
-      event: event as "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN" | null,
-      implementWeight: implementWeight ? parseFloat(implementWeight as string) : null,
-      distance: distance ? parseFloat(distance as string) : null,
+      event,
+      implementWeight,
+      distance,
       notes: notes || null,
     },
   });
