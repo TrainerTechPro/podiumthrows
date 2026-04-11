@@ -11,6 +11,7 @@ import type { JWTPayload } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import type { AthleteProfile, SubscriptionPlan } from "@prisma/client";
+import { getAthletePRs, type AthletePREvent } from "@/lib/data/personal-records";
 
 /**
  * Per-request cached coachProfile lookup by userId.
@@ -1016,33 +1017,20 @@ export async function getTeamGoals(coachId: string): Promise<TeamGoalItem[]> {
   });
 }
 
-export async function getAthleteRecentPRs(athleteId: string, limit = 5): Promise<ThrowLogItem[]> {
-  const prs = await prisma.throwLog.findMany({
-    where: { athleteId, isPersonalBest: true },
-    orderBy: { date: "desc" },
-    take: limit,
-    select: {
-      id: true,
-      date: true,
-      event: true,
-      implementWeight: true,
-      distance: true,
-      isPersonalBest: true,
-      isCompetition: true,
-      notes: true,
-    },
-  });
-
-  return prs.map((p) => ({
-    id: p.id,
-    date: p.date.toISOString(),
-    event: p.event as string,
-    implementWeight: p.implementWeight,
-    distance: p.distance,
-    isPersonalBest: p.isPersonalBest,
-    isCompetition: p.isCompetition,
-    notes: p.notes,
-  }));
+/**
+ * Returns the athlete's canonical PR set — one entry per event with
+ * competition PR and practice best. Previously returned a flat list of
+ * recent PR throws; now returns the per-event canonical view.
+ *
+ * The `limit` parameter is retained for API compatibility but ignored
+ * (the canonical view is always per-event, not a rolling window).
+ */
+export async function getAthleteRecentPRs(
+  athleteId: string,
+  _limit = 5
+): Promise<AthletePREvent[]> {
+  const prs = await getAthletePRs(athleteId);
+  return prs.events;
 }
 
 /* ─── Exercise Library ────────────────────────────────────────────────────── */
