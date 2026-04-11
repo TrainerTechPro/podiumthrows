@@ -122,6 +122,7 @@ export async function fetchTrainingHubData(
     allProgramSessions,
     throwsAssignments,
     legacySessions,
+    selfLoggedSessions,
     lastRequest,
     throwsProfile,
     goalsCount,
@@ -199,6 +200,21 @@ export async function fetchTrainingHubData(
         plan: { select: { name: true } },
       },
       orderBy: { scheduledDate: "desc" },
+      take: 50,
+    }),
+
+    // Self-logged AthleteThrowsSessions — editable via /athlete/throws/log?edit=<id>
+    prisma.athleteThrowsSession.findMany({
+      where: { athleteId },
+      select: {
+        id: true,
+        event: true,
+        date: true,
+        focus: true,
+        sessionRpe: true,
+        drillLogs: { select: { throwCount: true } },
+      },
+      orderBy: { date: "desc" },
       take: 50,
     }),
 
@@ -324,6 +340,33 @@ export async function fetchTrainingHubData(
       rpe: ls.rpe as number | null,
       throwCount: null,
       href: `/athlete/sessions/${ls.id}`,
+      completedAt: null,
+    });
+  }
+
+  // Self-logged freestyle sessions — always "throws", editable via deep link
+  const EVENT_LABELS: Record<string, string> = {
+    SHOT_PUT: "Shot Put",
+    DISCUS: "Discus",
+    HAMMER: "Hammer",
+    JAVELIN: "Javelin",
+  };
+  for (const sl of selfLoggedSessions) {
+    const throwCount = sl.drillLogs.reduce(
+      (sum: number, d: { throwCount: number }) => sum + (d.throwCount ?? 0),
+      0
+    );
+    const eventLabel = EVENT_LABELS[sl.event] ?? String(sl.event);
+    const name = sl.focus ? `${eventLabel} · ${sl.focus}` : `${eventLabel} Session`;
+    allResolved.push({
+      id: sl.id,
+      date: sl.date, // already YYYY-MM-DD string
+      name,
+      sessionType: "throws",
+      status: "COMPLETED", // self-logged sessions are always "done"
+      rpe: sl.sessionRpe,
+      throwCount,
+      href: `/athlete/throws/log?edit=${sl.id}`,
       completedAt: null,
     });
   }
