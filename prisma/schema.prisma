@@ -129,6 +129,13 @@ enum ProgramSource {
   ATHLETE_SELF_GENERATED
 }
 
+enum NoteCategory {
+  TECHNICAL
+  MENTAL
+  INJURY
+  GENERAL
+}
+
 // ─── USER & AUTH ────────────────────────────────────────────────────────────
 
 model User {
@@ -219,6 +226,8 @@ model CoachProfile {
   // Utility relations (from TrainingTracker)
   voiceNotes   VoiceNote[]
   activityLogs ActivityLog[]
+  coachNotes     CoachNote[]
+  uploadedVideos AthleteVideo[] @relation("UploadedVideos")
 
   // Practice scheduling
   scheduledPractices ScheduledPractice[] @relation("CoachScheduledPractices")
@@ -341,6 +350,8 @@ model AthleteProfile {
   smartGoals       AthleteGoal[]
   invitations      Invitation[]
   notifications    Notification[]
+  coachNotes       CoachNote[]
+  videos           AthleteVideo[]
 
   // Availability
   availabilityShareToken String?               @unique
@@ -1135,6 +1146,46 @@ model VoiceNote {
   @@index([coachId])
   @@index([athleteId])
   @@index([createdAt])
+}
+
+// ─── COACH NOTES ────────────────────────────────────────────────────────────
+
+model CoachNote {
+  id               String         @id @default(cuid())
+  coachProfileId   String
+  coach            CoachProfile   @relation(fields: [coachProfileId], references: [id], onDelete: Cascade)
+  athleteProfileId String
+  athlete          AthleteProfile @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
+  content          String
+  category         NoteCategory   @default(GENERAL)
+  isPrivate        Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([athleteProfileId])
+  @@index([coachProfileId])
+  @@index([athleteProfileId, createdAt])
+}
+
+// ─── ATHLETE VIDEOS ─────────────────────────────────────────────────────────
+
+model AthleteVideo {
+  id               String         @id @default(cuid())
+  athleteProfileId String
+  athlete          AthleteProfile @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
+  uploadedById     String?
+  uploadedBy       CoachProfile?  @relation("UploadedVideos", fields: [uploadedById], references: [id], onDelete: SetNull)
+  r2Key            String
+  url              String
+  thumbnailUrl     String?
+  event            EventType?
+  implementWeight  Float?
+  distance         Float?
+  notes            String?
+  createdAt        DateTime       @default(now())
+
+  @@index([athleteProfileId])
+  @@index([athleteProfileId, createdAt])
 }
 
 // ─── ACTIVITY LOG ────────────────────────────────────────────────────────────
