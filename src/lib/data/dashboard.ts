@@ -5,6 +5,7 @@
 
 import prisma from "@/lib/prisma";
 import { getAthleteTimezone, getLocalDate, startOfToday as startOfTodayTz } from "@/lib/dates";
+import { getAthletePRs } from "@/lib/data/personal-records";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  TYPES                                                                     */
@@ -569,87 +570,25 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 export async function fetchPRsData(athleteId: string): Promise<PRItem[]> {
-  // PRs can come from multiple sources:
-  // 1. ThrowLog (legacy, has isPersonalBest flag)
-  // 2. ProgramSession.bestMark (Bondarchuk program best marks)
-  // 3. AthleteDrillLog.bestMark (self-logged sessions)
+  const canonical = await getAthletePRs(athleteId);
 
-  const [throwLogPRs, programBests, selfLoggedBests] = await Promise.all([
-    // Source 1: ThrowLog PRs
-    prisma.throwLog.findMany({
-      where: { athleteId, isPersonalBest: true },
-      orderBy: { distance: "desc" },
-      select: { id: true, event: true, distance: true, date: true },
-    }),
-
-    // Source 2: ProgramSession best marks
-    prisma.programSession.findMany({
-      where: {
-        program: { athleteId },
-        status: "COMPLETED",
-        bestMark: { not: null, gt: 0 },
-      },
-      orderBy: { bestMark: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        bestMark: true,
-        completedAt: true,
-        program: { select: { event: true } },
-      },
-    }),
-
-    // Source 3: AthleteDrillLog best marks
-    prisma.athleteDrillLog.findMany({
-      where: {
-        session: { athleteId },
-        bestMark: { not: null, gt: 0 },
-      },
-      orderBy: { bestMark: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        bestMark: true,
-        createdAt: true,
-        session: { select: { event: true } },
-      },
-    }),
-  ]);
-
-  // Merge all into a unified format and deduplicate by event (keep best)
-  const bestByEvent = new Map<string, PRItem>();
-
-  for (const pr of throwLogPRs) {
-    const event = pr.event as string;
-    const dist = pr.distance;
-    if (dist == null) continue; // skip Quick Log entries with no distance
-    const existing = bestByEvent.get(event);
-    if (!existing || dist > existing.distance) {
-      bestByEvent.set(event, { id: pr.id, event, distance: dist, date: pr.date.toISOString() });
-    }
-  }
-
-  for (const ps of programBests) {
-    const event = ps.program.event;
-    const dist = ps.bestMark!;
-    const existing = bestByEvent.get(event);
-    if (!existing || dist > existing.distance) {
-      bestByEvent.set(event, { id: ps.id, event, distance: dist, date: (ps.completedAt ?? new Date()).toISOString() });
-    }
-  }
-
-  for (const dl of selfLoggedBests) {
-    const event = dl.session.event;
-    const dist = dl.bestMark!;
-    const existing = bestByEvent.get(event);
-    if (!existing || dist > existing.distance) {
-      bestByEvent.set(event, { id: dl.id, event, distance: dist, date: dl.createdAt.toISOString() });
-    }
-  }
-
-  return Array.from(bestByEvent.values())
+  const items: PRItem[] = canonical.events
+    .map((e) => {
+      // Prefer competition PR; fall back to practice best if no competition throws yet.
+      const primary = e.competitionPR ?? e.practiceBest;
+      if (!primary) return null;
+      return {
+        id: primary.throwLogId ?? `manual-${e.event}`,
+        event: e.event as string,
+        distance: primary.distance,
+        date: primary.date,
+      };
+    })
+    .filter((x): x is PRItem => x !== null)
     .sort((a, b) => b.distance - a.distance)
     .slice(0, 4);
+
+  return items;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
