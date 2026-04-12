@@ -14,74 +14,9 @@ import { CustomizeTrigger } from "./_customize-trigger";
 import { StaleSessionChecker } from "./_stale-session-checker";
 import { StreakReminder } from "@/components/notifications/StreakReminder";
 import { FeedbackInboxBadge } from "@/components/feedback/FeedbackInboxBadge";
-import {
-  fetchThisWeekData,
-  fetchPRTrackerData,
-  fetchWeeklyGoalData,
-  type ThisWeekData,
-  type PRTrackerData,
-  type WeeklyGoalData,
-} from "@/lib/data/dashboard-progress";
 import { WearableDashboard } from "../_wearable-dashboard";
 import { avg, type WhoopRow, type OuraRow } from "../_wearable-helpers";
-
-/* ─── Fetchers ──────────────────────────────────────────────────────────── */
-
-import {
-  fetchReadinessData,
-  fetchTodayWorkoutData,
-  fetchCalendarData,
-  fetchPRsData,
-  fetchQuickStatsData,
-  fetchGoalsData,
-  fetchVolumeData,
-  fetchUpcomingSessionsData,
-  fetchVideosData,
-  fetchQuestionnairesData,
-  type ReadinessData,
-  type TodaySession,
-  type CalendarDay,
-  type PRItem,
-  type QuickStatsData,
-  type GoalItem,
-  type UpcomingSessionItem,
-  type VideoItem,
-  type QuestionnairesData,
-} from "@/lib/data/dashboard";
-
-/* ─── Widgets ───────────────────────────────────────────────────────────── */
-
-import { ReadinessHeroWidget } from "./_widgets/readiness-hero";
-import { TodayWorkoutWidget } from "./_widgets/today-workout";
-import { WorkoutCalendarWidget } from "./_widgets/workout-calendar";
-import { PersonalBestsWidget } from "./_widgets/personal-bests";
-import { QuickStatsWidget } from "./_widgets/quick-stats";
-import { GoalsProgressWidget } from "./_widgets/goals-progress";
-import { TrainingVolumeWidget } from "./_widgets/training-volume";
-import { UpcomingSessionsWidget } from "./_widgets/upcoming-sessions";
-import { RecentVideosWidget } from "./_widgets/recent-videos";
-import { PendingQuestionnairesWidget } from "./_widgets/pending-questionnaires";
-import { ThisWeekWidget } from "./_widgets/this-week";
-import { PRTrackerWidget } from "./_widgets/pr-tracker";
-import { WeeklyGoalWidget } from "./_widgets/weekly-goal";
-
-/* ─── Fetcher map ───────────────────────────────────────────────────────── */
-
-const FETCHERS: Record<WidgetId, (id: string) => Promise<unknown>> = {
-  readiness: fetchReadinessData,
-  "today-workout": fetchTodayWorkoutData,
-  calendar: fetchCalendarData,
-  prs: fetchPRsData,
-  "quick-stats": fetchQuickStatsData,
-  goals: fetchGoalsData,
-  volume: fetchVolumeData,
-  "upcoming-sessions": fetchUpcomingSessionsData,
-  videos: fetchVideosData,
-  questionnaires: fetchQuestionnairesData,
-  "this-week": fetchThisWeekData,
-  "pr-tracker": fetchPRTrackerData,
-  "weekly-goal": fetchWeeklyGoalData,
-};
+import { FETCHERS, WidgetRenderer } from "../_shared/widget-renderer";
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 
@@ -357,41 +292,3 @@ async function fetchWearableData(
   return result;
 }
 
-/* ─── Widget Renderer ───────────────────────────────────────────────────── */
-
-function WidgetRenderer({ id, data }: { id: WidgetId; data: unknown }) {
-  switch (id) {
-    case "readiness":
-      return <ReadinessHeroWidget data={data as ReadinessData} />;
-    case "today-workout":
-      return <TodayWorkoutWidget data={data as TodaySession[]} />;
-    case "calendar":
-      return <WorkoutCalendarWidget days={data as CalendarDay[]} />;
-    case "prs":
-      return <PersonalBestsWidget prs={data as PRItem[]} />;
-    case "quick-stats":
-      return <QuickStatsWidget data={data as QuickStatsData} />;
-    case "goals":
-      return <GoalsProgressWidget goals={data as GoalItem[]} />;
-    case "volume":
-      return <TrainingVolumeWidget />;
-    case "upcoming-sessions":
-      return (
-        <UpcomingSessionsWidget
-          sessions={data as UpcomingSessionItem[]}
-        />
-      );
-    case "videos":
-      return <RecentVideosWidget videos={data as VideoItem[]} />;
-    case "questionnaires":
-      return <PendingQuestionnairesWidget data={data as QuestionnairesData} />;
-    case "this-week":
-      return <ThisWeekWidget data={data as ThisWeekData} />;
-    case "pr-tracker":
-      return <PRTrackerWidget data={data as PRTrackerData} />;
-    case "weekly-goal":
-      return <WeeklyGoalWidget data={data as WeeklyGoalData} />;
-    default:
-      return null;
-  }
-}

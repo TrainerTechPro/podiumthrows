@@ -24,8 +24,10 @@ function formatScheduledDate(iso: string): string {
 
 export function UpcomingSessionsWidget({
   sessions,
+  linkHrefBuilder = (session) => `/athlete/sessions/${session.id}`,
 }: {
   sessions: UpcomingSessionItem[];
+  linkHrefBuilder?: (session: UpcomingSessionItem) => string;
 }) {
   return (
     <div className="card py-1 shadow-sm md:hover:shadow-md md:transition-shadow">
@@ -70,7 +72,7 @@ export function UpcomingSessionsWidget({
             return (
               <Link
                 key={session.id}
-                href={`/athlete/sessions/${session.id}`}
+                href={linkHrefBuilder(session)}
                 className="flex items-center gap-4 px-4 py-3.5 rounded-xl card-interactive group"
               >
                 <div
