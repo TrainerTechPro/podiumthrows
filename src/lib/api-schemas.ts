@@ -372,11 +372,20 @@ export const AthleteBioUpdateSchema = z.object({
   dateOfBirth: z.string().nullable().optional(),
 });
 
-// ── Coach Teams ─────────────────────────────────────────────────────────
+// ── Coach Teams / Roster Groups ─────────────────────────────────────────────
 
 export const TeamCreateSchema = z.object({
-  name: z.string().min(1, "Team name is required"),
-  description: z.string().optional(),
+  name: z.string().min(1, "Group name is required").max(100).transform((s) => s.trim()),
+  description: z.string().max(500).nullable().optional(),
+});
+
+export const TeamUpdateSchema = z.object({
+  name: z.string().min(1).max(100).transform((s) => s.trim()).optional(),
+  description: z.string().max(500).nullable().optional(),
+});
+
+export const TeamAddMembersSchema = z.object({
+  athleteIds: z.array(z.string().cuid()).min(1).max(100),
 });
 
 // ── Event Groups ────────────────────────────────────────────────────────
