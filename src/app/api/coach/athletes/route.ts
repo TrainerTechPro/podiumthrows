@@ -94,9 +94,9 @@ export async function GET(request: NextRequest) {
     let where: any = { coachId: coach.id };
 
     if (teamId === "unassigned") {
-      where = { coachId: coach.id, eventGroupMemberships: { none: {} } };
+      where = { coachId: coach.id, teamMemberships: { none: {} } };
     } else if (teamId) {
-      where = { coachId: coach.id, eventGroupMemberships: { some: { groupId: teamId } } };
+      where = { coachId: coach.id, teamMemberships: { some: { teamId } } };
     }
 
     const athletes = await prisma.athleteProfile.findMany({
