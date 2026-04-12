@@ -148,34 +148,59 @@ Net effect on the dashboard: ~60 lines shorter, behavior identical. This is the 
 
 ### 2.2 Throws-specific fetchers (new file)
 
-Two of the six widgets need new fetchers because their existing ones are wrong for a throws-focused hub:
+ONE of the six widgets needs a new fetcher. The other widget I originally flagged (`volume`) does NOT need a fetcher because the `VolumeWidget` is a self-fetching CLIENT component.
+
+**Correction from initial analysis — VolumeWidget is client-fetch:**
+
+The existing `WidgetRenderer` dispatches `case "volume": return <TrainingVolumeWidget />;` with NO PROPS (see `dashboard/page.tsx:377`). `TrainingVolumeWidget` is a thin wrapper around `VolumeWidget` (`src/app/(dashboard)/athlete/dashboard/_volume-widget.tsx`), which fetches its own data via `useEffect` → `fetch("/api/athlete/training-volume")`. The server-side `fetchVolumeData` stub in `dashboard.ts` is a NO-OP placeholder that exists only to satisfy the `FETCHERS` map's type — the data it returns is discarded. This means writing `fetchThrowsVolumeData` would be wasted work; the widget ignores anything the server pre-fetches. **For v1, we ship `VolumeWidget` as-is on the Throws Hub.** It hits its existing API route, which queries `trainingSession` + `practiceAttempt` + `athleteThrowsSession` and shows real mixed-source training data. This is documented as a known limitation — a future follow-up could either replace the widget with a throws-specific alternative or add throws-only filtering to the API route.
+
+**The one new fetcher we DO need:**
 
 | Widget | Existing fetcher problem | New fetcher |
 |---|---|---|
-| `volume` | `fetchVolumeData` in `src/lib/data/dashboard.ts:679-683` is a stub that returns `{ athleteId }` with no data | `fetchThrowsVolumeData` |
 | `upcoming-sessions` | `fetchUpcomingSessionsData` in `src/lib/data/dashboard.ts:689` queries the legacy `prisma.trainingSession` model, not `prisma.throwsAssignment` | `fetchUpcomingThrowsAssignments` |
 
 **New file:** `src/lib/data/throws-hub.ts`
 
 Exports:
-- `fetchThrowsVolumeData(athleteId)` — aggregates `prisma.throwLog` rows (filtered to last 30 days) grouped by day, returning the same `VolumeData` shape the widget expects
 - `fetchUpcomingThrowsAssignments(athleteId)` — queries `prisma.throwsAssignment` where `status IN ("ASSIGNED", "NOTIFIED", "IN_PROGRESS")` and `assignedDate >= today`, ordered by `assignedDate ASC`, limited to 3, returning the same `UpcomingSessionItem[]` shape the widget expects
 
-Both return the same data shapes the existing widget components consume — no widget component changes required. This is the "adapter" pattern: new data source, same contract.
+Returns the same data shape the existing widget component consumes — no widget data-consumption changes required. This is the "adapter" pattern: new data source, same contract.
+
+### 2.2a UpcomingSessionsWidget link-href modification (small widget change)
+
+The existing `UpcomingSessionsWidget` hardcodes `href={`/athlete/sessions/${session.id}`}` (line 73 of `upcoming-sessions.tsx`). On the main dashboard this points at the legacy athlete-sessions detail page, which is correct for `trainingSession` rows. On the Throws Hub, upcoming rows are `throwsAssignment` IDs, and that URL would 404.
+
+**Modification:** Add an optional `linkHrefBuilder` prop to `UpcomingSessionsWidget` with a backward-compatible default:
+
+```tsx
+export function UpcomingSessionsWidget({
+  sessions,
+  linkHrefBuilder = (session) => `/athlete/sessions/${session.id}`,
+}: {
+  sessions: UpcomingSessionItem[];
+  linkHrefBuilder?: (session: UpcomingSessionItem) => string;
+}) {
+  // ... existing code, but use linkHrefBuilder(session) instead of the hardcoded string
+}
+```
+
+**Throws Hub usage:** The page passes `linkHrefBuilder={(s) => s.status === "IN_PROGRESS" ? `/athlete/throws/live/${s.id}` : `/athlete/throws/session/${s.id}`}` so IN_PROGRESS assignments open the live player and completed/assigned ones open the read-only view.
+
+**WidgetRenderer change:** Since `WidgetRenderer` doesn't know the page context, the Throws Hub page needs a local override that passes `linkHrefBuilder` directly. This is handled by rendering `UpcomingSessionsWidget` directly from the throws page for that one widget, rather than dispatching through `WidgetRenderer`. A small if-statement in the widget stack handles this.
 
 ### 2.3 Fetcher override pattern
 
-The Throws Hub page builds its fetcher map by spreading the shared `FETCHERS` and overriding exactly the two entries that need throws-specific data:
+The Throws Hub page builds its fetcher map by spreading the shared `FETCHERS` and overriding exactly ONE entry (`upcoming-sessions`):
 
 ```tsx
 // src/app/(dashboard)/athlete/throws/page.tsx
 import { FETCHERS as DASHBOARD_FETCHERS, WidgetRenderer } from "../_shared/widget-renderer";
-import { fetchThrowsVolumeData, fetchUpcomingThrowsAssignments } from "@/lib/data/throws-hub";
+import { fetchUpcomingThrowsAssignments } from "@/lib/data/throws-hub";
 import type { WidgetId } from "../dashboard/_widget-registry";
 
 const THROWS_HUB_FETCHERS = {
   ...DASHBOARD_FETCHERS,
-  volume: fetchThrowsVolumeData,
   "upcoming-sessions": fetchUpcomingThrowsAssignments,
 };
 
@@ -189,7 +214,9 @@ const THROWS_HUB_WIDGETS: WidgetId[] = [
 ];
 ```
 
-**Why a local override instead of modifying the shared map:** The main dashboard still uses the legacy volume stub and legacy upcoming-sessions fetcher. Modifying the shared map would change the dashboard's behavior, which is out of scope and breaks the "don't regress the dashboard" goal. The local override is scoped entirely to the Throws Hub page.
+**Why a local override instead of modifying the shared map:** The main dashboard still uses `fetchUpcomingSessionsData` (legacy `trainingSession` query). Modifying the shared map would change the dashboard's behavior, which is out of scope and breaks the "don't regress the dashboard" goal. The local override is scoped entirely to the Throws Hub page.
+
+**The `volume` entry is NOT overridden** — it continues to call `fetchVolumeData` (the stub), but the `VolumeWidget` ignores the pre-fetched data and does its own client fetch on mount. This is slightly wasteful (one extra server call to a stub) but matches the existing dashboard behavior exactly, and avoids touching the shared `FETCHERS` map.
 
 ### 2.4 Page-level fetch pattern
 
@@ -239,28 +266,30 @@ Before implementing the new fetchers, inspect each type and match exactly.
 
 ### 3.1 Commit sequence
 
-**Commit 1: Extract shared widget infrastructure**
+**Commit 1: Extract shared widget infrastructure + add linkHrefBuilder prop**
 - Create `src/app/(dashboard)/athlete/_shared/widget-renderer.tsx` with `WidgetRenderer` and `FETCHERS` moved from `dashboard/page.tsx`
 - Update `dashboard/page.tsx` to import from the shared module
 - Delete the now-duplicate widget component imports in `dashboard/page.tsx` (those consolidated in the shared file)
-- Verify: `npm run typecheck`, `npm run lint`, dashboard still renders identically on dev server
-- Commit message: `refactor(athlete/dashboard): extract WidgetRenderer + FETCHERS to shared module`
+- Modify `UpcomingSessionsWidget` to accept an optional `linkHrefBuilder` prop with a backward-compatible default
+- Verify: `npm run typecheck`, `npm run lint`, dashboard still renders identically on dev server (upcoming sessions still click through to `/athlete/sessions/[id]` because that's the default)
+- Commit message: `refactor(athlete/dashboard): extract widget infrastructure + pluggable upcoming-sessions link`
 
-**Commit 2: Add throws-specific fetchers**
-- Create `src/lib/data/throws-hub.ts` with `fetchThrowsVolumeData` and `fetchUpcomingThrowsAssignments`
-- Create `src/lib/data/__tests__/throws-hub.test.ts` with 4 tests (shape + empty state + date filter for each fetcher)
+**Commit 2: Add throws-specific upcoming assignments fetcher**
+- Create `src/lib/data/throws-hub.ts` with `fetchUpcomingThrowsAssignments`
+- Create `src/lib/data/__tests__/throws-hub.test.ts` with 3 tests (happy path shape, empty state, status filter correctness)
 - Verify: `npm test -- src/lib/data/__tests__/throws-hub.test.ts`
-- Commit message: `feat(throws-hub): add throws-specific volume + upcoming assignments fetchers`
+- Commit message: `feat(throws-hub): add fetchUpcomingThrowsAssignments fetcher`
 
 **Commit 3: Rewrite `/athlete/throws/page.tsx` as the Throws Hub**
-- Replace the 710-line client component with the new ~80-line server component
+- Replace the 710-line client component with the new server component
 - Delete `SessionCard` and all assignment state/handlers
-- Wire up `THROWS_HUB_WIDGETS` + the override fetcher map
+- Wire up `THROWS_HUB_WIDGETS` + the `THROWS_HUB_FETCHERS` override map (one entry)
+- Render upcoming-sessions directly (not through WidgetRenderer) so the Throws Hub can pass its throws-specific `linkHrefBuilder`
 - Keep the Quick Log CTA + header matching the mobile mockup
 - Verify: `npm run typecheck`, `npm run lint`, dev server renders the new page with real data, sidebar regression test still passes
 - Commit message: `feat(throws-hub): replace /athlete/throws with data-dense widget composition`
 
-Each commit is independently revertible. If Commit 3 fails or has a bug, Commits 1 and 2 are still useful improvements (dashboard refactor + throws fetchers) that can stay on `main`.
+Each commit is independently revertible. If Commit 3 fails or has a bug, Commits 1 and 2 are still useful improvements (dashboard refactor + throws fetcher) that can stay on `main`.
 
 ### 3.2 Risk register
 
@@ -282,10 +311,9 @@ Each commit is independently revertible. If Commit 3 fails or has a bug, Commits
 
 **New tests (Commit 2):**
 - `src/lib/data/__tests__/throws-hub.test.ts`:
-  1. `fetchThrowsVolumeData` groups `throwLog` rows by day correctly
-  2. `fetchThrowsVolumeData` returns the right shape for athletes with no history (empty)
-  3. `fetchUpcomingThrowsAssignments` filters to `ASSIGNED` / `NOTIFIED` / `IN_PROGRESS` only
-  4. `fetchUpcomingThrowsAssignments` returns empty array for athletes with no upcoming assignments
+  1. `fetchUpcomingThrowsAssignments` returns the right shape (array of `UpcomingSessionItem` with id, scheduledDate, status, planName, coachNotes)
+  2. `fetchUpcomingThrowsAssignments` filters to `ASSIGNED` / `NOTIFIED` / `IN_PROGRESS` only — excludes `COMPLETED`, `SKIPPED`, `PARTIAL`
+  3. `fetchUpcomingThrowsAssignments` returns empty array for athletes with no upcoming assignments
 
 **Existing tests that must stay green:**
 - `src/__tests__/nav/sidebar-resolution.test.ts` — the sidebar regression guard
@@ -339,8 +367,9 @@ Explicitly NOT in this design:
 |---|---|---|
 | `WidgetRenderer` + `FETCHERS` in `dashboard/page.tsx` | Exists (private) | Commit 1 extracts to shared — required for the whole design |
 | `fetchReadinessData`, `fetchTodayWorkoutData`, `fetchPRTrackerData`, `fetchThisWeekData` | Exist and return real data (verified) | None — ship as-is |
-| `fetchVolumeData` | Exists but is a stub returning `{athleteId}` | Commit 2 replaces with `fetchThrowsVolumeData` |
+| `fetchVolumeData` | Exists but is a stub returning `{athleteId}` — unused because `VolumeWidget` is self-fetching | None in scope for v1 — `VolumeWidget` fetches its own data client-side from `/api/athlete/training-volume`, ships mixed throws+lifts data (documented limitation) |
 | `fetchUpcomingSessionsData` | Exists but queries legacy `trainingSession` | Commit 2 replaces with `fetchUpcomingThrowsAssignments` |
+| `UpcomingSessionsWidget` hardcoded link | Currently `/athlete/sessions/${id}` | Commit 1 adds optional `linkHrefBuilder` prop; Throws Hub passes a throws-aware builder |
 | Individual widget components in `_widgets/*` | Exist and work | None |
 | `prisma.throwLog`, `prisma.throwsAssignment` with proper indexes | Exist with `@@index([athleteId, date])` and `@@index([athleteId, assignedDate])` respectively | None |
 | `requireAthleteSession` from `@/lib/data/athlete` | Exists, same import the dashboard uses | None |
