@@ -140,8 +140,9 @@ Both are moved verbatim from the current `dashboard/page.tsx`. No behavioral cha
 **Changes to `dashboard/page.tsx`:**
 - Delete the private `WidgetRenderer` function (line 362)
 - Delete the `FETCHERS` const (lines 70-84)
-- Delete the individual widget imports now consolidated in the shared file (lines 54-66) — keep only the widget imports that `dashboard/page.tsx` still uses directly (e.g., for the wearable tabs branch)
+- Delete ALL individual widget component imports (lines 54-66) — every widget used by the dashboard is rendered via `WidgetRenderer` at lines 223 and 264, so after extraction, `dashboard/page.tsx` never references the individual widget components directly. The wearable branch renders `<WearableDashboard>` (a different component, not a widget) and reuses the same `WidgetRenderer` for its training tab, so no widget imports need to stay
 - Add `import { WidgetRenderer, FETCHERS } from "../_shared/widget-renderer";`
+- Run `npm run typecheck` to discover any fetcher data type imports (lines 30-50 region) that become unused after the move. Delete only the ones TypeScript flags. Some type imports may still be used by the wearable data fetcher or other remaining logic — do NOT delete defensively.
 
 Net effect on the dashboard: ~60 lines shorter, behavior identical. This is the "extract" step; it's the only part of the refactor that touches existing dashboard code.
 
