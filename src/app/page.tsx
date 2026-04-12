@@ -7,6 +7,7 @@ import StickyFeatures from "@/components/marketing/StickyFeatures";
 import BentoFeatures from "@/components/marketing/BentoFeatures";
 import DeficitFinderCTA from "@/components/marketing/DeficitFinderCTA";
 import PricingPreview from "@/components/marketing/PricingPreview";
+import FinalCTA from "@/components/marketing/FinalCTA";
 import MarketingFooter from "@/components/marketing/Footer";
 
 export const metadata: Metadata = {
@@ -78,15 +79,17 @@ export default function HomePage() {
         <HeroSection />
         <DataStrip />
         <Divider />
-        <BondarchukProof />
-        <Divider />
         <StickyFeatures />
         <Divider />
         <BentoFeatures />
         <Divider />
+        <BondarchukProof />
+        <Divider />
         <DeficitFinderCTA />
         <Divider />
         <PricingPreview />
+        <Divider />
+        <FinalCTA />
         <MarketingFooter />
       </div>
     </div>
