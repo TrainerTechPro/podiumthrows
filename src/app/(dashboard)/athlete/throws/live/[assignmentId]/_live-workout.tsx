@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Check, ChevronRight } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { WorkoutData, LoggedThrow, LoggedSet, BlockState } from "./_types";
@@ -10,8 +10,9 @@ import {
   parseConfig,
   getThrowCount,
   getBlockAccent,
-  getBlockLabel,
   getExerciseName,
+  getImplement,
+  getImplementKg,
   useElapsedTime,
   formatElapsed,
 } from "./_utils";
@@ -19,10 +20,193 @@ import { ThrowingBlockView } from "./_throwing-block";
 import { StrengthBlockView } from "./_strength-block";
 import { WarmupCooldownView } from "./_warmup-block";
 import { CompletionScreen } from "./_completion-view";
-import { WorkoutOverview } from "./_workout-overview";
+import { TimelineProgressDots } from "./_timeline-progress-dots";
 
 /* ═══════════════════════════════════════════════════════════════════════ */
-/*  MAIN LIVE WORKOUT COMPONENT                                           */
+/*  TIMELINE NODE WRAPPER                                                  */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+type NodeState = "pending" | "active" | "completed";
+
+function TimelineNode({
+  nodeState,
+  accent,
+  title,
+  subtitle,
+  summaryLine,
+  isLast,
+  onTap,
+  children,
+}: {
+  nodeState: NodeState;
+  accent: string;
+  title: string;
+  subtitle?: string;
+  summaryLine?: string;
+  isLast?: boolean;
+  onTap?: () => void;
+  children?: React.ReactNode;
+}) {
+  const nodeRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to active node
+  useEffect(() => {
+    if (nodeState === "active" && nodeRef.current) {
+      // Small delay to let expand animation start
+      const t = setTimeout(() => {
+        nodeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [nodeState]);
+
+  const isExpanded = nodeState === "active";
+  const isCompleted = nodeState === "completed";
+  const isPending = nodeState === "pending";
+
+  return (
+    <div ref={nodeRef} className="relative flex gap-4">
+      {/* ── Timeline dot + connector line ── */}
+      <div className="flex flex-col items-center shrink-0" style={{ width: 24 }}>
+        {/* Dot */}
+        <div
+          className={isExpanded ? "timeline-dot-pulse" : ""}
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            marginTop: 14,
+            backgroundColor: isCompleted
+              ? "#00FF88"
+              : isExpanded
+                ? accent
+                : "rgba(255,255,255,0.08)",
+            boxShadow: isCompleted
+              ? "0 0 8px #00FF8844"
+              : isExpanded
+                ? `0 0 10px ${accent}44`
+                : "none",
+            transition: "background-color 0.4s ease, box-shadow 0.4s ease",
+            flexShrink: 0,
+          }}
+        />
+        {/* Connector line */}
+        {!isLast && (
+          <div
+            style={{
+              width: 2,
+              flex: 1,
+              minHeight: 16,
+              backgroundColor: isCompleted
+                ? "#00FF8833"
+                : "rgba(255,255,255,0.03)",
+              transition: "background-color 0.6s ease",
+            }}
+          />
+        )}
+      </div>
+
+      {/* ── Node card ── */}
+      <div
+        className="flex-1 min-w-0 mb-3"
+        style={{ opacity: isPending ? 0.4 : 1, transition: "opacity 0.3s ease" }}
+      >
+        {/* Collapsed / Completed header — always visible */}
+        <button
+          type="button"
+          onClick={onTap}
+          disabled={isPending}
+          className="w-full text-left rounded-xl px-4 py-3 transition-all"
+          style={{
+            backgroundColor: isExpanded
+              ? "transparent"
+              : isCompleted
+                ? "rgba(0,255,136,0.04)"
+                : "#0c0c10",
+            minHeight: 48,
+            cursor: isPending ? "default" : "pointer",
+          }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p
+                className="text-sm font-semibold truncate"
+                style={{ color: isCompleted ? "#00FF88cc" : isExpanded ? accent : "#E8E8E8" }}
+              >
+                {isCompleted && (
+                  <Check
+                    size={14}
+                    strokeWidth={2}
+                    className="inline mr-1.5 -mt-0.5"
+                    style={{ color: "#00FF88" }}
+                    aria-hidden="true"
+                  />
+                )}
+                {title}
+              </p>
+              {subtitle && !isExpanded && (
+                <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  {subtitle}
+                </p>
+              )}
+            </div>
+            {!isExpanded && !isPending && (
+              <ChevronRight
+                size={14}
+                strokeWidth={1.75}
+                style={{ color: "rgba(255,255,255,0.2)", flexShrink: 0 }}
+                aria-hidden="true"
+              />
+            )}
+          </div>
+          {/* Summary line for completed nodes */}
+          {isCompleted && summaryLine && (
+            <p
+              className="text-[11px] mt-1 font-mono tabular-nums"
+              style={{ color: "#00FF8888" }}
+            >
+              {summaryLine}
+            </p>
+          )}
+        </button>
+
+        {/* Expanded content */}
+        {isExpanded && (
+          <div
+            className="mt-2 rounded-xl px-4 py-5 timeline-node-expanded"
+            style={{
+              background: `linear-gradient(165deg, ${accent}08, transparent 60%)`,
+              boxShadow: `0 2px 40px ${accent}0a, 0 20px 60px rgba(0,0,0,0.3)`,
+            }}
+          >
+            {children}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  BLOCK GROUP LABEL                                                      */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+function BlockGroupLabel({ label, color }: { label: string; color: string }) {
+  return (
+    <div className="flex items-center gap-3 pl-10 py-3">
+      <div style={{ width: 16, height: 1, backgroundColor: `${color}44` }} />
+      <span
+        className="text-[10px] font-semibold uppercase"
+        style={{ letterSpacing: "0.2em", color: `${color}88` }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  MAIN LIVE WORKOUT — TIMELINE LAYOUT                                    */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
 export function LiveWorkout({ data }: { data: WorkoutData }) {
@@ -30,15 +214,9 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
   const { toast } = useToast();
   const elapsed = useElapsedTime(data.startedAt ?? new Date().toISOString());
 
-  // View mode toggle: overview shows all blocks, live shows one-at-a-time
-  const [viewMode, setViewMode] = useState<"overview" | "live">("live");
-
-  // Block navigation
-  const [activeBlockIdx, setActiveBlockIdx] = useState(0);
+  // Which block is expanded (null = none, show completion at bottom)
+  const [expandedBlockId, setExpandedBlockId] = useState<string | null>(null);
   const [showCompletion, setShowCompletion] = useState(false);
-  const [showBlockTransition, setShowBlockTransition] = useState(false);
-  const totalBlocks = data.blocks.length;
-  const activeBlock = data.blocks[activeBlockIdx];
 
   // Block states — reconstruct from persisted logs on reload
   const [blockStates, setBlockStates] = useState<Map<string, BlockState>>(() => {
@@ -47,11 +225,8 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
       const blockLogs = data.existingThrowLogs.filter((tl) => tl.blockId === block.id);
       const bt = block.blockType?.toUpperCase();
 
-      // Reconstruct warmup drill checks from persisted logs
       const warmupChecked = new Set<number>();
-      // Reconstruct strength sets from persisted logs
       const sets: LoggedSet[] = [];
-      // Regular throws (non-warmup, non-strength)
       const throws: LoggedThrow[] = [];
 
       for (const tl of blockLogs) {
@@ -74,7 +249,6 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
             id: tl.id,
           });
         } else {
-          // Default: treat as throw data
           throws.push({
             throwNumber: tl.throwNumber,
             distance: tl.distance ?? 0,
@@ -83,24 +257,32 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         }
       }
 
-      map.set(block.id, {
-        throws,
-        sets,
-        warmupChecked,
-        completed: false,
-      });
+      map.set(block.id, { throws, sets, warmupChecked, completed: false });
     }
     return map;
   });
 
+  // Auto-expand first incomplete block on mount
+  useEffect(() => {
+    if (expandedBlockId === null && !showCompletion) {
+      const firstIncomplete = data.blocks.find((b) => {
+        const state = blockStates.get(b.id);
+        if (!state) return true;
+        return !isBlockComplete(b, state);
+      });
+      if (firstIncomplete) {
+        setExpandedBlockId(firstIncomplete.id);
+      }
+    }
+    // Only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Unsaved changes warning + back button protection
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-    };
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    // Push a dummy history entry so the back button hits our handler first
     window.history.pushState(null, "", window.location.href);
     const handlePopState = () => {
       if (confirm("Leave workout? Your logged throws are saved, but the session won't be marked complete.")) {
@@ -117,7 +299,19 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
     };
   }, []);
 
-  // Handlers
+  // ── Handlers ──────────────────────────────────────────────────────
+
+  const advanceToNextBlock = useCallback((currentBlockId: string) => {
+    const idx = data.blocks.findIndex((b) => b.id === currentBlockId);
+    if (idx < data.blocks.length - 1) {
+      setExpandedBlockId(data.blocks[idx + 1].id);
+    } else {
+      // Last block completed — show completion
+      setExpandedBlockId(null);
+      setShowCompletion(true);
+    }
+  }, [data.blocks]);
+
   const handleThrowLogged = useCallback(
     (blockId: string, t: LoggedThrow) => {
       setBlockStates((prev) => {
@@ -125,17 +319,14 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         const state = { ...next.get(blockId)! };
         state.throws = [...state.throws, t];
 
-        // Check if this throwing block just completed
+        // Auto-advance if block complete
         const block = data.blocks.find((b) => b.id === blockId);
         if (block) {
           const cfg = parseConfig(block.config);
           const target = getThrowCount(cfg);
           if (state.throws.length >= target) {
-            const blockIdx = data.blocks.indexOf(block);
-            if (blockIdx < data.blocks.length - 1) {
-              // There's a next block — show transition card
-              setShowBlockTransition(true);
-            }
+            // Delay advance slightly so the athlete sees the completion
+            setTimeout(() => advanceToNextBlock(blockId), 800);
           }
         }
 
@@ -143,7 +334,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         return next;
       });
     },
-    [data.blocks],
+    [data.blocks, advanceToNextBlock],
   );
 
   const handleSetLogged = useCallback(
@@ -152,26 +343,22 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         const next = new Map(prev);
         const state = { ...next.get(blockId)! };
         state.sets = [...state.sets, s];
-        next.set(blockId, state);
 
-        // Check if this strength block just completed
         const block = data.blocks.find((b) => b.id === blockId);
         if (block) {
           const cfg = parseConfig(block.config);
           const exercises = (cfg.exercises as Array<Record<string, unknown>>) ?? [];
           const targetSets = (exercises[0]?.sets as number) || (cfg.sets as number) || 0;
           if (targetSets > 0 && state.sets.length >= targetSets) {
-            const blockIdx = data.blocks.indexOf(block);
-            if (blockIdx < data.blocks.length - 1) {
-              setShowBlockTransition(true);
-            }
+            setTimeout(() => advanceToNextBlock(blockId), 800);
           }
         }
 
+        next.set(blockId, state);
         return next;
       });
     },
-    [data.blocks],
+    [data.blocks, advanceToNextBlock],
   );
 
   const handleToggleDrill = useCallback(
@@ -186,7 +373,6 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         state.warmupChecked = checked;
         next.set(blockId, state);
 
-        // Persist drill check to DB (fire-and-forget)
         if (isChecking) {
           fetch(`/api/throws/assignments/${data.assignmentId}/log-throw`, {
             method: "POST",
@@ -233,51 +419,52 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Derived values for header
-  const accent = activeBlock ? getBlockAccent(activeBlock) : "#FFC800";
-  const blockLabel = activeBlock ? getBlockLabel(activeBlock) : "";
-  const exerciseName = activeBlock ? getExerciseName(activeBlock) : "";
+  // ── Derived: block group labels ──────────────────────────────────
 
-  const currentState = blockStates.get(activeBlock?.id) ?? {
-    throws: [], sets: [], warmupChecked: new Set<number>(), completed: false,
-  };
+  const blockGroups = useMemo(() => {
+    const groups: { label: string; color: string; startIdx: number }[] = [];
+    let lastType = "";
+    let throwingBlockNum = 0;
+    let strengthBlockNum = 0;
 
-  const bt = activeBlock?.blockType?.toUpperCase();
+    for (let i = 0; i < data.blocks.length; i++) {
+      const bt = data.blocks[i].blockType?.toUpperCase();
+      if (bt !== lastType) {
+        if (bt === "THROWING") {
+          throwingBlockNum++;
+          const cfg = parseConfig(data.blocks[i].config);
+          const impl = getImplement(cfg) || `${getImplementKg(cfg)}kg`;
+          groups.push({
+            label: `Throwing Block ${throwingBlockNum} · ${impl}`,
+            color: getBlockAccent(data.blocks[i]),
+            startIdx: i,
+          });
+        } else if (bt === "STRENGTH") {
+          strengthBlockNum++;
+          groups.push({
+            label: `Strength Block${strengthBlockNum > 1 ? ` ${strengthBlockNum}` : ""}`,
+            color: "#4488FF",
+            startIdx: i,
+          });
+        } else if (bt === "WARMUP") {
+          groups.push({ label: "Warm-Up", color: "#FF8800", startIdx: i });
+        } else if (bt === "COOLDOWN") {
+          groups.push({ label: "Cool-Down", color: "#00BBFF", startIdx: i });
+        }
+        lastType = bt || "";
+      }
+    }
+    return groups;
+  }, [data.blocks]);
 
-  // Completion screen — full-screen dramatic wrapper
-  if (showCompletion) {
-    return (
-      <div className="flex flex-col min-h-screen bg-[#0a0a0c] relative">
-        {/* Scanline overlay */}
-        <div
-          className="pointer-events-none fixed inset-0 z-50 mix-blend-overlay opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(255,200,0,0.1) 1px,rgba(255,200,0,0.1) 2px)",
-          }}
-        />
+  // ── Derived: progress stats ──────────────────────────────────────
 
-        {/* Back header */}
-        <div className="sticky top-0 z-10 px-5 pt-14 pb-3 bg-[#0a0a0c]">
-          <button
-            onClick={() => setShowCompletion(false)}
-            className="text-xs text-white/50 flex items-center gap-1 min-h-[44px]"
-          >
-            <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" /> BACK TO BLOCKS
-          </button>
-        </div>
+  const completedBlocks = data.blocks.filter((b) => {
+    const state = blockStates.get(b.id);
+    return state && isBlockComplete(b, state);
+  }).length;
 
-        <div className="flex-1 overflow-y-auto pb-20 px-5">
-          <CompletionScreen
-            assignmentId={data.assignmentId}
-            blockStates={blockStates}
-            elapsed={elapsed}
-            sessionName={data.sessionName}
-          />
-        </div>
-      </div>
-    );
-  }
+  // ── Render ───────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0a0a0c] relative">
@@ -293,192 +480,269 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
       {/* ── Sticky Header ── */}
       <div className="sticky top-0 z-10 px-5 pt-14 pb-3 bg-[#0a0a0c]">
         <div className="flex items-center justify-between">
-          {/* End Session — left */}
           <button
             onClick={handleEndSession}
             className="text-xs text-white/50 flex items-center gap-1 min-h-[44px]"
           >
-            <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" /> FINISH EARLY
+            <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" /> END
           </button>
 
-          {/* Classification badge — center */}
-          <div className="flex items-center gap-2">
-            <div
-              className="w-1 h-5 rounded-sm"
-              style={{ background: accent }}
-            />
-            <span
-              className="text-[10px] font-bold tracking-widest"
-              style={{ color: accent }}
+          <div className="text-center flex-1">
+            <h1
+              className="text-sm font-heading font-bold tracking-wider"
+              style={{ color: "#FFC800" }}
             >
-              {blockLabel}
-            </span>
+              {data.sessionName}
+            </h1>
+            <p className="text-[10px] text-white/30 tabular-nums">
+              {completedBlocks}/{data.blocks.length} blocks · {formatElapsed(elapsed)}
+            </p>
           </div>
 
-          {/* Live indicator + timer — right */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-[60px] justify-end">
             <span className="text-[9px] tracking-widest font-semibold text-emerald-500/60">
               ● LIVE
             </span>
-            <span className="text-xs tabular-nums text-white/50">
-              {formatElapsed(elapsed)}
-            </span>
           </div>
         </div>
 
-        {/* ── Overview / Live Toggle ── */}
-        <div className="flex gap-1 mt-3 bg-[#111117] rounded-lg p-1">
-          <button
-            type="button"
-            onClick={() => setViewMode("overview")}
-            className="flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all min-h-[40px]"
+        {/* Progress bar */}
+        <div className="mt-3 h-1 bg-white/[0.03] rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700 ease-out"
             style={{
-              backgroundColor: viewMode === "overview" ? "#FFC800" : "transparent",
-              color: viewMode === "overview" ? "#000" : "#ffffff55",
+              width: `${data.blocks.length > 0 ? (completedBlocks / data.blocks.length) * 100 : 0}%`,
+              backgroundColor: "#FFC800",
+              boxShadow: "0 0 8px #FFC80044",
             }}
-          >
-            Overview
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("live")}
-            className="flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all min-h-[40px]"
-            style={{
-              backgroundColor: viewMode === "live" ? "#FFC800" : "transparent",
-              color: viewMode === "live" ? "#000" : "#ffffff55",
-            }}
-          >
-            Live
-          </button>
+          />
         </div>
       </div>
 
-      {/* ── Overview Mode ── */}
-      {viewMode === "overview" ? (
-        <div className="flex-1 overflow-y-auto pb-20 px-5">
-          <WorkoutOverview data={data} blockStates={blockStates} />
-        </div>
-      ) : (
-      <>
-      {/* ── Block Indicator with Nav Arrows ── */}
-      <div className="flex items-center justify-center gap-4 py-2 px-5">
-        {activeBlockIdx > 0 && (
-          <button
-            onClick={() => { setShowBlockTransition(false); setActiveBlockIdx((i) => i - 1); }}
-            className="text-white/30 text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
-          >
-            ‹
-          </button>
-        )}
-        <div className="text-center flex-1">
-          <div className="text-[9px] text-white/30 tracking-widest font-semibold uppercase">
-            Block {activeBlockIdx + 1} / {totalBlocks}
+      {/* ── Timeline Content ── */}
+      <div className="flex-1 overflow-y-auto pb-20 px-4">
+        {data.blocks.map((block, idx) => {
+          const bt = block.blockType?.toUpperCase();
+          const state = blockStates.get(block.id) ?? {
+            throws: [], sets: [], warmupChecked: new Set<number>(), completed: false,
+          };
+          const accent = getBlockAccent(block);
+          const exerciseName = getExerciseName(block);
+          const cfg = parseConfig(block.config);
+
+          const complete = isBlockComplete(block, state);
+          const isExpanded = expandedBlockId === block.id;
+
+          // Determine if this block is tappable (only if previous is complete or this is first)
+          const prevBlock = idx > 0 ? data.blocks[idx - 1] : null;
+          const prevState = prevBlock ? blockStates.get(prevBlock.id) : null;
+          const canExpand = idx === 0
+            || (prevBlock && prevState && isBlockComplete(prevBlock, prevState))
+            || complete;
+
+          const nodeState: NodeState = isExpanded
+            ? "active"
+            : complete
+              ? "completed"
+              : canExpand
+                ? "pending" // visually pending but tappable
+                : "pending";
+
+          // Build subtitle from prescription
+          let subtitle = "";
+          if (bt === "THROWING") {
+            const impl = getImplement(cfg) || `${getImplementKg(cfg)}kg`;
+            const count = getThrowCount(cfg);
+            subtitle = `${count} throws · ${impl}`;
+          } else if (bt === "STRENGTH") {
+            const exercises = (cfg.exercises as Array<Record<string, unknown>>) ?? [];
+            if (exercises.length > 0) {
+              const ex = exercises[0];
+              subtitle = `${ex.sets || "—"} × ${ex.reps || "—"}${ex.percentage ? ` @ ${ex.percentage}%` : ""}`;
+            }
+          } else if (bt === "WARMUP" || bt === "COOLDOWN") {
+            const drills = (cfg.drills as unknown[]) ?? [];
+            subtitle = `${drills.length} drills`;
+          }
+
+          // Build summary line for completed blocks
+          let summaryLine = "";
+          if (complete) {
+            if (bt === "THROWING") {
+              const marked = state.throws.filter((t) => t.distance !== null && t.distance > 0);
+              const best = marked.length > 0 ? Math.max(...marked.map((t) => t.distance!)) : 0;
+              summaryLine = `${state.throws.length} throws${best > 0 ? ` · Best: ${best.toFixed(2)}m` : ""}`;
+            } else if (bt === "STRENGTH") {
+              const best = state.sets.length > 0 ? Math.max(...state.sets.map((s) => s.weight)) : 0;
+              summaryLine = `${state.sets.length} sets${best > 0 ? ` · Top: ${best}kg` : ""}`;
+            } else {
+              summaryLine = `${state.warmupChecked.size} drills done`;
+            }
+          }
+
+          // Check if we should show a block group label before this block
+          const groupLabel = blockGroups.find((g) => g.startIdx === idx);
+
+          return (
+            <div key={block.id}>
+              {groupLabel && (
+                <BlockGroupLabel label={groupLabel.label} color={groupLabel.color} />
+              )}
+              <TimelineNode
+                nodeState={nodeState}
+                accent={accent}
+                title={exerciseName}
+                subtitle={subtitle}
+                summaryLine={summaryLine}
+                isLast={idx === data.blocks.length - 1 && !showCompletion}
+                onTap={() => {
+                  if (complete || canExpand) {
+                    setExpandedBlockId(isExpanded ? null : block.id);
+                    setShowCompletion(false);
+                  }
+                }}
+              >
+                {/* ── Expanded block content ── */}
+                {bt === "THROWING" && (
+                  <>
+                    <TimelineProgressDots
+                      total={getThrowCount(cfg)}
+                      completed={state.throws.length}
+                      accentColor={accent}
+                    />
+                    <ThrowingBlockView
+                      block={block}
+                      state={state}
+                      assignmentId={data.assignmentId}
+                      event={data.event}
+                      onThrowLogged={(t) => handleThrowLogged(block.id, t)}
+                    />
+                  </>
+                )}
+                {bt === "STRENGTH" && (
+                  <StrengthBlockView
+                    block={block}
+                    state={state}
+                    onSetLogged={(s) => handleSetLogged(block.id, s)}
+                    assignmentId={data.assignmentId}
+                  />
+                )}
+                {(bt === "WARMUP" || bt === "COOLDOWN") && (
+                  <WarmupCooldownView
+                    block={block}
+                    state={state}
+                    onToggleDrill={(i) => handleToggleDrill(block.id, i)}
+                    onAdvance={() => advanceToNextBlock(block.id)}
+                    isLastBlock={idx === data.blocks.length - 1}
+                  />
+                )}
+              </TimelineNode>
+            </div>
+          );
+        })}
+
+        {/* ── Completion at bottom of timeline ── */}
+        {showCompletion && (
+          <div className="relative flex gap-4">
+            <div className="flex flex-col items-center shrink-0" style={{ width: 24 }}>
+              <div
+                className="timeline-dot-pulse"
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  marginTop: 14,
+                  backgroundColor: "#00FF88",
+                  boxShadow: "0 0 10px #00FF8844",
+                }}
+              />
+            </div>
+            <div className="flex-1 min-w-0 mb-3 timeline-completion-enter">
+              <CompletionScreen
+                assignmentId={data.assignmentId}
+                blockStates={blockStates}
+                elapsed={elapsed}
+                sessionName={data.sessionName}
+              />
+            </div>
           </div>
-          <h1
-            className="text-[22px] font-heading font-bold tracking-wider"
-            style={{ color: accent }}
-          >
-            {exerciseName}
-          </h1>
-        </div>
-        {activeBlockIdx < totalBlocks - 1 && (
-          <button
-            onClick={() => setActiveBlockIdx((i) => i + 1)}
-            className="text-white/30 text-2xl min-w-[44px] min-h-[44px] flex items-center justify-center"
-          >
-            ›
-          </button>
         )}
-      </div>
 
-      {/* ── Block Content Area ── */}
-      <div className="flex-1 overflow-y-auto pb-20 px-5">
-        {/* Block transition card */}
-        {showBlockTransition && activeBlockIdx < totalBlocks - 1 ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-7 py-20">
-            <div
-              className="text-[8px] tracking-[4px] font-semibold"
-              style={{ color: "#00FF8888" }}
-            >
-              BLOCK COMPLETE
-            </div>
-            <div
-              className="text-lg font-heading font-bold tracking-wider mt-3"
-              style={{ color: accent }}
-            >
-              Next: {getExerciseName(data.blocks[activeBlockIdx + 1])}
-            </div>
+        {/* ── Finish Session button (when all blocks done but completion not shown) ── */}
+        {!showCompletion && completedBlocks === data.blocks.length && (
+          <div className="mt-4 px-2">
             <button
               onClick={() => {
-                setShowBlockTransition(false);
-                setActiveBlockIdx((i) => i + 1);
+                setExpandedBlockId(null);
+                setShowCompletion(true);
               }}
-              className="mt-6 w-full py-4 text-sm font-bold tracking-widest"
-              style={{
-                background: accent,
-                color: "#000",
-                clipPath:
-                  "polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))",
-              }}
-            >
-              CONTINUE
-            </button>
-          </div>
-        ) : (
-          <>
-            {bt === "THROWING" && (
-              <ThrowingBlockView
-                block={activeBlock}
-                state={currentState}
-                assignmentId={data.assignmentId}
-                event={data.event}
-                onThrowLogged={(t) => handleThrowLogged(activeBlock.id, t)}
-              />
-            )}
-            {bt === "STRENGTH" && (
-              <StrengthBlockView
-                block={activeBlock}
-                state={currentState}
-                onSetLogged={(s) => handleSetLogged(activeBlock.id, s)}
-                assignmentId={data.assignmentId}
-              />
-            )}
-            {(bt === "WARMUP" || bt === "COOLDOWN") && (
-              <WarmupCooldownView
-                block={activeBlock}
-                state={currentState}
-                onToggleDrill={(idx) => handleToggleDrill(activeBlock.id, idx)}
-                onAdvance={
-                  activeBlockIdx < totalBlocks - 1
-                    ? () => setActiveBlockIdx((i) => i + 1)
-                    : () => setShowCompletion(true)
-                }
-                isLastBlock={activeBlockIdx === totalBlocks - 1}
-              />
-            )}
-          </>
-        )}
-
-        {/* ── Bottom Nav: Finish Button (last block only) ── */}
-        {!showBlockTransition && activeBlockIdx === totalBlocks - 1 && (
-          <div className="mt-8 px-2">
-            <button
-              onClick={() => setShowCompletion(true)}
-              className="w-full py-4 text-sm font-bold tracking-widest"
-              style={{
-                background: "#00FF88",
-                color: "#000",
-                clipPath:
-                  "polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))",
-              }}
+              className="w-full py-4 text-sm font-bold tracking-widest rounded-xl transition-transform active:scale-[0.97]"
+              style={{ background: "#00FF88", color: "#000" }}
             >
               FINISH SESSION
             </button>
           </div>
         )}
       </div>
-      </>
-      )}
+
+      {/* ── Timeline CSS ── */}
+      <style>{`
+        @keyframes timeline-dot-ring {
+          0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+          50% { box-shadow: 0 0 0 4px transparent; }
+        }
+        .timeline-dot-pulse {
+          animation: timeline-dot-ring 1.8s ease-in-out infinite;
+        }
+
+        @keyframes timeline-shine {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .timeline-node-expanded {
+          background-size: 200% 100%;
+          animation: timeline-shine 6s ease-in-out infinite;
+        }
+
+        @keyframes timeline-completion-in {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .timeline-completion-enter {
+          animation: timeline-completion-in 0.4s ease-out;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .timeline-dot-pulse,
+          .timeline-node-expanded,
+          .timeline-completion-enter {
+            animation: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  HELPERS                                                                */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
+function isBlockComplete(block: { blockType: string; config: string }, state: BlockState): boolean {
+  const bt = block.blockType?.toUpperCase();
+  const cfg = parseConfig(block.config);
+
+  if (bt === "THROWING" || bt === "PLYOMETRIC") {
+    return state.throws.length >= getThrowCount(cfg);
+  }
+  if (bt === "STRENGTH") {
+    const exercises = (cfg.exercises as Array<Record<string, unknown>>) ?? [];
+    const targetSets = (exercises[0]?.sets as number) || (cfg.sets as number) || 0;
+    return targetSets > 0 && state.sets.length >= targetSets;
+  }
+  if (bt === "WARMUP" || bt === "COOLDOWN") {
+    const drills = (cfg.drills as unknown[]) ?? [];
+    return drills.length > 0 && state.warmupChecked.size >= drills.length;
+  }
+  return false;
 }
