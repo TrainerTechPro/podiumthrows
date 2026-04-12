@@ -4,12 +4,12 @@ import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody, TeamCreateSchema } from "@/lib/api-schemas";
 
-/* ── GET — list all event groups for the authenticated coach ── */
+/* ── GET — list all roster groups for the authenticated coach ── */
 export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -17,10 +17,10 @@ export async function GET() {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
-    const groups = await prisma.eventGroup.findMany({
+    const teams = await prisma.team.findMany({
       where: { coachId: coach.id },
       include: {
         members: {
@@ -31,39 +31,39 @@ export async function GET() {
           },
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: { createdAt: "asc" },
     });
 
-    const data = groups.map((group) => {
+    const data = teams.map((team) => {
       const eventBreakdown: Record<string, number> = {};
-      for (const member of group.members) {
+      for (const member of team.members) {
         for (const ev of member.athlete.events) {
           eventBreakdown[ev] = (eventBreakdown[ev] ?? 0) + 1;
         }
       }
       return {
-        id: group.id,
-        name: group.name,
-        description: group.description,
-        memberCount: group.members.length,
+        id: team.id,
+        name: team.name,
+        description: team.description,
+        memberCount: team.members.length,
         eventBreakdown,
-        createdAt: group.createdAt,
+        createdAt: team.createdAt,
       };
     });
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    logger.error("Error listing event groups", { context: "api", error });
-    return NextResponse.json({ success: false, error:"Failed to list event groups" }, { status: 500 });
+    logger.error("Error listing teams", { context: "api", error });
+    return NextResponse.json({ success: false, error: "Failed to list teams" }, { status: 500 });
   }
 }
 
-/* ── POST — create a new event group ── */
+/* ── POST — create a new roster group ── */
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -71,42 +71,38 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, TeamCreateSchema);
     if (parsed instanceof NextResponse) return parsed;
     const { name, description } = parsed;
 
-    if (name.trim().length > 100) {
-      return NextResponse.json(
-        { success: false, error:"Group name must be 100 characters or less" },
-        { status: 400 }
-      );
-    }
-
-    // Check uniqueness (case-insensitive)
-    const existing = await prisma.eventGroup.findFirst({
+    // Case-insensitive name uniqueness check
+    const existing = await prisma.team.findFirst({
       where: {
         coachId: coach.id,
-        name: { equals: name.trim(), mode: "insensitive" },
+        name: { equals: name, mode: "insensitive" },
       },
     });
     if (existing) {
-      return NextResponse.json({ success: false, error:"A group with this name already exists" }, { status: 409 });
+      return NextResponse.json(
+        { success: false, error: "A group with that name already exists" },
+        { status: 409 }
+      );
     }
 
-    const group = await prisma.eventGroup.create({
+    const team = await prisma.team.create({
       data: {
         coachId: coach.id,
-        name: name.trim(),
-        description: description?.trim() || null,
+        name,
+        description: description ?? null,
       },
     });
 
-    return NextResponse.json({ success: true, data: group }, { status: 201 });
+    return NextResponse.json({ success: true, data: team }, { status: 201 });
   } catch (error) {
-    logger.error("Error creating event group", { context: "api", error });
-    return NextResponse.json({ success: false, error:"Failed to create event group" }, { status: 500 });
+    logger.error("Error creating team", { context: "api", error });
+    return NextResponse.json({ success: false, error: "Failed to create team" }, { status: 500 });
   }
 }

@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, TeamUpdateSchema } from "@/lib/api-schemas";
+import type { CoachProfile, Team } from "@prisma/client";
+
+/* ── Helper — fetch coach + verify team ownership ── */
+async function getCoachTeam(
+  teamId: string,
+  userId: string
+): Promise<{ coach: Pick<CoachProfile, "id" | "preferences">; team: Team } | null> {
+  const coach = await prisma.coachProfile.findUnique({
+    where: { userId },
+    select: { id: true, preferences: true },
+  });
+  if (!coach) return null;
+
+  const team = await prisma.team.findFirst({
+    where: { id: teamId, coachId: coach.id },
+  });
+  if (!team) return null;
+
+  return { coach, team };
+}
 
 /* ── PATCH — update team name/description ── */
 export async function PATCH(
@@ -11,70 +32,54 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { teamId } = await params;
 
-    const coach = await prisma.coachProfile.findUnique({
-      where: { userId: session.userId },
-      select: { id: true },
-    });
-    if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+    const ownership = await getCoachTeam(teamId, session.userId);
+    if (!ownership) {
+      return NextResponse.json({ success: false, error: "Team not found" }, { status: 404 });
     }
+    const { coach } = ownership;
 
-    const team = await prisma.eventGroup.findFirst({
-      where: { id: teamId, coachId: coach.id },
-    });
-    if (!team) {
-      return NextResponse.json({ success: false, error:"Team not found" }, { status: 404 });
-    }
+    const parsed = await parseBody(request, TeamUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, description } = parsed;
 
-    const body = await request.json();
-    const { name, description } = body;
-
+    // Name uniqueness check (exclude current team)
     if (name !== undefined) {
-      if (!name?.trim()) {
-        return NextResponse.json({ success: false, error:"Team name cannot be empty" }, { status: 400 });
-      }
-      if (name.trim().length > 100) {
-        return NextResponse.json(
-          { success: false, error:"Team name must be 100 characters or less" },
-          { status: 400 }
-        );
-      }
-      const existing = await prisma.eventGroup.findFirst({
+      const duplicate = await prisma.team.findFirst({
         where: {
           coachId: coach.id,
           id: { not: teamId },
-          name: { equals: name.trim(), mode: "insensitive" },
+          name: { equals: name, mode: "insensitive" },
         },
       });
-      if (existing) {
+      if (duplicate) {
         return NextResponse.json(
-          { success: false, error:"A team with this name already exists" },
+          { success: false, error: "A group with that name already exists" },
           { status: 409 }
         );
       }
     }
 
-    const updated = await prisma.eventGroup.update({
+    const updated = await prisma.team.update({
       where: { id: teamId },
       data: {
-        ...(name !== undefined ? { name: name.trim() } : {}),
-        ...(description !== undefined ? { description: description?.trim() || null } : {}),
+        ...(name !== undefined ? { name } : {}),
+        ...(description !== undefined ? { description: description ?? null } : {}),
       },
     });
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     logger.error("Error updating team", { context: "api", error });
-    return NextResponse.json({ success: false, error:"Failed to update team" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update team" }, { status: 500 });
   }
 }
 
-/* ── DELETE — delete team (cascade removes members, not athletes) ── */
+/* ── DELETE — delete team (cascade removes TeamMember rows, not athletes) ── */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ teamId: string }> }
@@ -82,31 +87,22 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { teamId } = await params;
 
-    const coach = await prisma.coachProfile.findUnique({
-      where: { userId: session.userId },
-      select: { id: true, preferences: true },
-    });
-    if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+    const ownership = await getCoachTeam(teamId, session.userId);
+    if (!ownership) {
+      return NextResponse.json({ success: false, error: "Team not found" }, { status: 404 });
     }
+    const { coach } = ownership;
 
-    const team = await prisma.eventGroup.findFirst({
-      where: { id: teamId, coachId: coach.id },
-    });
-    if (!team) {
-      return NextResponse.json({ success: false, error:"Team not found" }, { status: 404 });
-    }
+    await prisma.team.delete({ where: { id: teamId } });
 
-    await prisma.eventGroup.delete({ where: { id: teamId } });
-
-    // Clear lastTeamId preference if it pointed to the deleted team
+    // Best-effort: clear lastTeamId preference if it pointed to the deleted team
     try {
-      const prefs = JSON.parse(coach.preferences || "{}");
+      const prefs = JSON.parse((coach.preferences as string | null) ?? "{}");
       if (prefs.lastTeamId === teamId) {
         prefs.lastTeamId = null;
         await prisma.coachProfile.update({
@@ -118,9 +114,9 @@ export async function DELETE(
       // Non-critical — preference cleanup is best-effort
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: null });
   } catch (error) {
     logger.error("Error deleting team", { context: "api", error });
-    return NextResponse.json({ success: false, error:"Failed to delete team" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete team" }, { status: 500 });
   }
 }
