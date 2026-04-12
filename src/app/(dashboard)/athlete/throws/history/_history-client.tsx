@@ -67,40 +67,64 @@ export function HistoryClient() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [sheetVariant, setSheetVariant] = useState<FilterVariant | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const fetchHistory = useCallback(async (f: HistoryFilter) => {
+  const fetchHistory = useCallback(async (f: HistoryFilter, cursor?: string) => {
     // Cancel any in-flight fetch from a previous filter so an older slow
-    // response can't overwrite a newer one.
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+    // response can't overwrite a newer one. Don't cancel for load-more
+    // fetches (those use their own flag).
+    if (!cursor) {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+    }
 
-    setStatus("loading");
-    setErrorMsg("");
+    if (!cursor) {
+      setStatus("loading");
+      setErrorMsg("");
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
-      const res = await fetch(`/api/throws/history?${filterToQueryString(f)}`, {
-        signal: controller.signal,
+      const qs = filterToQueryString(f) + (cursor ? `&cursor=${cursor}` : "");
+      const res = await fetch(`/api/throws/history?${qs}`, {
+        signal: cursor ? undefined : abortRef.current?.signal,
       });
       const payload = await res.json();
       if (!res.ok || !payload.success) {
         const msg = payload.error || `Request failed (${res.status})`;
-        setErrorMsg(msg);
+        if (!cursor) {
+          setErrorMsg(msg);
+          setStatus("error");
+        }
         toastError(msg);
-        setStatus("error");
         return;
       }
       const data = payload.data as HistoryResponse;
-      setDays(data.days);
-      setTotals(data.totals);
-      setStatus("ready");
+      if (cursor) {
+        // Append to existing days
+        setDays((prev) => [...prev, ...data.days]);
+      } else {
+        // First page: replace
+        setDays(data.days);
+        if (data.totals) setTotals(data.totals);
+      }
+      setNextCursor(data.nextCursor);
+      if (!cursor) setStatus("ready");
     } catch (err) {
-      // Ignore aborts — they're intentional from a newer fetch starting.
       if (err instanceof Error && err.name === "AbortError") return;
       const msg = err instanceof Error ? err.message : "Network error";
-      setErrorMsg(msg);
+      if (!cursor) {
+        setErrorMsg(msg);
+        setStatus("error");
+      }
       toastError(msg);
-      setStatus("error");
+    } finally {
+      if (cursor) setLoadingMore(false);
     }
   }, [toastError]);
 
@@ -111,9 +135,30 @@ export function HistoryClient() {
     };
   }, []);
 
+  // Reset and fetch when filter changes.
   useEffect(() => {
+    setDays([]);
+    setNextCursor(null);
+    setTotals(null);
     fetchHistory(filter);
   }, [filter, fetchHistory]);
+
+  // Infinite scroll: observe a sentinel div near the bottom of the list.
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && nextCursor && !loadingMore && status === "ready") {
+          fetchHistory(filter, nextCursor);
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [nextCursor, loadingMore, status, filter, fetchHistory]);
 
   const handleClearFilters = () => setFilter(DEFAULT_FILTER);
 
@@ -193,6 +238,18 @@ export function HistoryClient() {
               ))}
             </div>
           ))}
+
+          {/* Loading more spinner */}
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+
+          {/* Infinite scroll sentinel — observed by IntersectionObserver */}
+          {nextCursor && !loadingMore && (
+            <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+          )}
         </div>
       )}
 

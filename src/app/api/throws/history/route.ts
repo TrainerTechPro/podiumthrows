@@ -6,6 +6,8 @@ import { logger } from "@/lib/logger";
 import { parseQuery } from "@/lib/api-schemas";
 import { aggregateHistoryDays } from "@/lib/throws/history";
 
+const DAYS_PER_PAGE = 30;
+
 const EventEnum = z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
 
 const HistoryQuerySchema = z.object({
@@ -27,8 +29,10 @@ const HistoryQuerySchema = z.object({
     .union([z.literal("true"), z.literal("false")])
     .optional()
     .transform((v) => v === "true"),
-  // Reserved for Task 12 (cursor-based pagination); ignored by the current handler.
-  cursor: z.string().optional(),
+  cursor: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 
 function rangeToStartDate(range: z.infer<typeof HistoryQuerySchema>["range"], start?: string): Date {
@@ -45,13 +49,6 @@ function rangeToStartDate(range: z.infer<typeof HistoryQuerySchema>["range"], st
 
 export async function GET(request: NextRequest) {
   try {
-    // This endpoint is athlete-only by design: it returns the currently
-    // signed-in athlete's history. Coach-side history (e.g. for a coach
-    // viewing one of their athletes) is served via a separate route that
-    // accepts an explicit athleteId and runs through canAccessAthlete().
-    // Mixing both shapes in one endpoint would require dropping the
-    // implicit-athlete contract and forcing every athlete-side caller to
-    // pass their own id, which is a worse default.
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
@@ -59,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     const parsed = parseQuery(request, HistoryQuerySchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { range, start, end, events, implements: implementFilter, prOnly } = parsed;
+    const { range, start, end, events, implements: implementFilter, prOnly, cursor } = parsed;
 
     const profile = await prisma.athleteProfile.findUnique({
       where: { userId: currentUser.userId },
@@ -70,30 +67,39 @@ export async function GET(request: NextRequest) {
     }
 
     const startDate = rangeToStartDate(range, start);
-    const endDate = end ? new Date(`${end}T23:59:59`) : new Date();
+
+    // When a cursor is present it's the ISO date of the oldest day on the
+    // previous page. We fetch everything strictly before that date so the
+    // next page picks up where the last one left off.
+    const endDate = cursor
+      ? new Date(`${cursor}T00:00:00`)   // midnight of cursor day = exclusive upper bound
+      : end
+        ? new Date(`${end}T23:59:59`)
+        : new Date();
 
     const startYMD = startDate.toISOString().slice(0, 10);
-    const endYMD = endDate.toISOString().slice(0, 10);
+    // For string-date columns use lt (exclusive) when cursor is set,
+    // lte (inclusive) when not.
+    const endYMD = cursor
+      ? cursor
+      : (end ?? new Date().toISOString().slice(0, 10));
 
     const [throwLogs, blockLogs, selfLoggedSessions] = await Promise.all([
       prisma.throwLog.findMany({
         where: {
           athleteId: profile.id,
-          date: { gte: startDate, lte: endDate },
+          date: { gte: startDate, ...(cursor ? { lt: endDate } : { lte: endDate }) },
           ...(events.length > 0 ? { event: { in: events } } : {}),
           ...(implementFilter.length > 0 ? { implementWeight: { in: implementFilter } } : {}),
           ...(prOnly ? { isPersonalBest: true } : {}),
         },
         orderBy: { date: "desc" },
-        // Sanity cap to prevent OOM on athletes with multi-year history.
-        // TODO(pagination): Task 12 will replace this with cursor-based pagination.
-        take: 2000,
       }),
       prisma.throwsBlockLog.findMany({
         where: {
           assignment: {
             athleteId: profile.id,
-            assignedDate: { gte: startYMD, lte: endYMD },
+            assignedDate: { gte: startYMD, ...(cursor ? { lt: endYMD } : { lte: endYMD }) },
             status: { in: ["IN_PROGRESS", "COMPLETED"] },
             ...(events.length > 0 ? { session: { event: { in: events } } } : {}),
           },
@@ -111,15 +117,11 @@ export async function GET(request: NextRequest) {
           block: { select: { blockType: true, config: true } },
         },
         orderBy: { createdAt: "desc" },
-        // Sanity cap to prevent OOM on athletes with multi-year history.
-        // TODO(pagination): Task 12 will replace this with cursor-based pagination.
-        take: 2000,
       }),
-      // Self-logged AthleteThrowsSession + AthleteDrillLog
       prisma.athleteThrowsSession.findMany({
         where: {
           athleteId: profile.id,
-          date: { gte: startYMD, lte: endYMD },
+          date: { gte: startYMD, ...(cursor ? { lt: endYMD } : { lte: endYMD }) },
           ...(events.length > 0 ? { event: { in: events } } : {}),
         },
         include: {
@@ -134,22 +136,29 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: { date: "desc" },
-        take: 500,
       }),
     ]);
 
-    const days = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions });
+    const allDays = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions });
 
-    const sessions = days.filter((d) => d.assignmentId != null).length;
-    const throws = days.reduce((sum, d) => sum + d.totalThrows, 0);
+    // Paginate: take DAYS_PER_PAGE days, set nextCursor if more remain.
+    const pageDays = allDays.slice(0, DAYS_PER_PAGE);
+    const nextCursor = allDays.length > DAYS_PER_PAGE
+      ? pageDays[pageDays.length - 1].date
+      : null;
+
+    // Compute totals only on the first page (no cursor). On subsequent
+    // pages the client preserves the totals from the initial response.
+    const totals = cursor
+      ? null
+      : {
+          sessions: allDays.filter((d) => d.assignmentId != null || d.selfLoggedSessionId != null).length,
+          throws: allDays.reduce((sum, d) => sum + d.totalThrows, 0),
+        };
 
     return NextResponse.json({
       success: true,
-      data: {
-        days,
-        nextCursor: null,
-        totals: { sessions, throws },
-      },
+      data: { days: pageDays, nextCursor, totals },
     });
   } catch (error) {
     logger.error("GET /api/throws/history error", { context: "throws/history", error });

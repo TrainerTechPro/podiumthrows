@@ -160,6 +160,40 @@ describe("aggregateHistoryDays", () => {
     expect(result).toEqual<HistoryDay[]>([]);
   });
 
+  it("supports cursor-based pagination by slicing aggregated days", () => {
+    // Simulate 5 days of data. With a page size of 3, the route handler
+    // would slice to 3 days and set nextCursor = days[2].date ("2026-04-04").
+    // The second page would then filter to dates < "2026-04-04", getting
+    // the remaining 2 days.
+    const throwLogs = Array.from({ length: 5 }, (_, i) => ({
+      id: `t${i}`,
+      athleteId: "a1",
+      event: "SHOT_PUT" as const,
+      implementWeight: 7.26,
+      distance: 16 + i,
+      date: new Date(`2026-04-0${i + 1}T12:00:00Z`),
+      isPersonalBest: false,
+      isCompetition: false,
+      sessionId: null,
+    }));
+
+    const allDays = aggregateHistoryDays({ throwLogs, blockLogs: [] });
+    expect(allDays).toHaveLength(5);
+    // Days are reverse-chron: 04-05, 04-04, 04-03, 04-02, 04-01
+    expect(allDays[0].date).toBe("2026-04-05");
+    expect(allDays[4].date).toBe("2026-04-01");
+
+    // Page 1: first 3 days
+    const page1 = allDays.slice(0, 3);
+    expect(page1.map((d) => d.date)).toEqual(["2026-04-05", "2026-04-04", "2026-04-03"]);
+    const cursor = page1[page1.length - 1].date; // "2026-04-03"
+
+    // Page 2: simulate filtering to dates before cursor
+    const page2Logs = throwLogs.filter((t) => t.date < new Date(`${cursor}T00:00:00`));
+    const page2Days = aggregateHistoryDays({ throwLogs: page2Logs, blockLogs: [] });
+    expect(page2Days.map((d) => d.date)).toEqual(["2026-04-02", "2026-04-01"]);
+  });
+
   it("skips ThrowsBlockLog rows with unparseable implement strings", () => {
     const blockLogs = [
       {

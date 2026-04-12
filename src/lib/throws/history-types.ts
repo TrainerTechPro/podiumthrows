@@ -51,8 +51,9 @@ export type HistoryFilter = {
 export type HistoryResponse = {
   days: HistoryDay[];
   nextCursor: string | null;
+  /** Totals for the full date range. Only present on the first page (no cursor). */
   totals: {
     sessions: number;
     throws: number;
-  };
+  } | null;
 };
