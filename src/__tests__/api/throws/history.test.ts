@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// React.cache() is server-only and not available in Vitest.
+// Polyfill it as a passthrough so modules that use it can load.
+vi.mock("react", async () => {
+  const actual = await vi.importActual("react");
+  return { ...(actual as object), cache: (fn: unknown) => fn };
+});
+
 vi.mock("@/lib/auth", () => ({
   getCurrentUser: vi.fn(),
 }));
@@ -8,7 +15,11 @@ vi.mock("@/lib/prisma", () => ({
     athleteProfile: { findUnique: vi.fn() },
     throwLog: { findMany: vi.fn() },
     throwsBlockLog: { findMany: vi.fn() },
+    athleteThrowsSession: { findMany: vi.fn() },
   },
+}));
+vi.mock("@/lib/data/personal-records", () => ({
+  getAthletePRs: vi.fn().mockResolvedValue({ athleteId: "", gender: null, events: [] }),
 }));
 vi.mock("@/lib/logger", () => ({
   logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn() },
