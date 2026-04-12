@@ -237,6 +237,9 @@ model CoachProfile {
   teamFiles         TeamFile[]         @relation("CoachTeamFiles")
   teamAnnouncements TeamAnnouncement[] @relation("CoachAnnouncements")
 
+  // Roster Groups
+  teams Team[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -318,6 +321,7 @@ model AthleteProfile {
   questionnaireAssignments QuestionnaireAssignment[]
   videoUploads             VideoUpload[]
   eventGroupMemberships    EventGroupMember[]
+  teamMemberships          TeamMember[]
   programmedSessions       ProgrammedSession[]
   teamActivities           TeamActivity[]
 
@@ -973,6 +977,34 @@ model EventGroupMember {
 
   @@unique([groupId, athleteId])
   @@index([groupId])
+  @@index([athleteId])
+}
+
+// ─── ROSTER GROUPS (Coach-Defined Teams) ────────────────────────────────────
+
+model Team {
+  id          String       @id @default(cuid())
+  coachId     String
+  coach       CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  members     TeamMember[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([coachId])
+}
+
+model TeamMember {
+  id        String         @id @default(cuid())
+  teamId    String
+  team      Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime       @default(now())
+
+  @@unique([teamId, athleteId])
+  @@index([teamId])
   @@index([athleteId])
 }
 
