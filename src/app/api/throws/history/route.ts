@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     const profile = await prisma.athleteProfile.findUnique({
       where: { userId: currentUser.userId },
-      select: { id: true },
+      select: { id: true, gender: true },
     });
     if (!profile) {
       return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 403 });
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const allDays = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions, prContext });
+    const allDays = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions, prContext, gender: profile.gender });
 
     // Paginate: take DAYS_PER_PAGE days, set nextCursor if more remain.
     const pageDays = allDays.slice(0, DAYS_PER_PAGE);

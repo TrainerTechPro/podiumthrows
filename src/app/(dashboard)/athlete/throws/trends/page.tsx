@@ -10,6 +10,7 @@ import {
   DATE_RANGE_LABELS,
   type DateRangeKey,
 } from "@/lib/hooks/useEventChartSettings";
+import { formatImplementDisplay } from "@/lib/throws/display";
 
 const DistanceTrendChart = dynamic(
   () => import("./_distance-chart").then((m) => m.DistanceTrendChart),
@@ -36,16 +37,11 @@ const COMP_WEIGHTS: Record<string, { MALE: number; FEMALE: number }> = {
   JAVELIN: { MALE: 0.8, FEMALE: 0.6 },
 };
 
-function formatImplementKg(kg: number): string {
-  const rounded = Math.round(kg * 100) / 100;
-  return `${rounded.toString().replace(/\.00?$/, "")}kg`;
-}
-
 function compLabelFor(event: string, gender: "MALE" | "FEMALE" | null): string | null {
   if (!gender) return null;
   const std = COMP_WEIGHTS[event];
   if (!std) return null;
-  return formatImplementKg(std[gender]);
+  return formatImplementDisplay(std[gender], event, gender, { showComp: false });
 }
 
 function compKgFor(event: string, gender: "MALE" | "FEMALE" | null): number | null {

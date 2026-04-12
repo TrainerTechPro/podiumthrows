@@ -98,6 +98,11 @@ export function formatImplementWeight(
   return `${display}kg`;
 }
 
+/* ─── Coach-Friendly Display ─────────────────────────────────────────────── */
+
+// Re-export from client-safe module so server code can import from either place
+export { formatImplementDisplay } from "@/lib/throws/display";
+
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 export function isValidEvent(event: unknown): event is string {

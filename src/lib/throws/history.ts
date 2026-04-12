@@ -1,5 +1,6 @@
 import type { EventType } from "@prisma/client";
 import type { HistoryDay, HistoryDrill } from "./history-types";
+import { formatImplementDisplay } from "@/lib/throws/display";
 
 // Narrow shapes — only the fields we read. Keeps tests lightweight.
 export type ThrowLogInput = {
@@ -107,6 +108,7 @@ export function aggregateHistoryDays(input: {
   blockLogs: BlockLogInput[];
   selfLoggedSessions?: SelfLoggedSessionInput[];
   prContext?: PRContext;
+  gender?: string | null;
 }): HistoryDay[] {
   const buckets = new Map<string, DayBucket>();
 
@@ -130,7 +132,7 @@ export function aggregateHistoryDays(input: {
         source: "free",
         event: log.event,
         implementKg: log.implementWeight,
-        implementLabel: `${log.implementWeight}kg`,
+        implementLabel: formatImplementDisplay(log.implementWeight, log.event, input.gender, { compact: true }),
         drillType: null,
         drillTypeLabel: null,
         throwCount: 1,
@@ -190,7 +192,7 @@ export function aggregateHistoryDays(input: {
           source: "assigned",
           event,
           implementKg,
-          implementLabel: bl.implement,
+          implementLabel: formatImplementDisplay(implementKg, event, input.gender, { compact: true }),
           drillType: drillInfo.drillType,
           drillTypeLabel: drillInfo.label,
           throwCount: 1,
@@ -258,7 +260,7 @@ export function aggregateHistoryDays(input: {
         source: "free",
         event: session.event,
         implementKg: implKg,
-        implementLabel: implKg > 0 ? `${implKg}kg` : "BW",
+        implementLabel: implKg > 0 ? formatImplementDisplay(implKg, session.event, input.gender, { compact: true }) : "BW",
         drillType: dl.drillType,
         drillTypeLabel: dl.drillType
           .toLowerCase()

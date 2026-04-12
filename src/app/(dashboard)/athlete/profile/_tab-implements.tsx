@@ -10,6 +10,7 @@ import {
   EVENTS,
 } from "@/lib/throws/constants";
 import type { EventType, Gender } from "@prisma/client";
+import { formatImplementDisplay } from "@/lib/throws/display";
 import type { ThrowsPRRecord } from "./_types";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -209,7 +210,7 @@ export function TabImplements({
                     >
                       <td className="px-5 py-3 font-medium text-[var(--foreground)]">
                         <span className="flex items-center gap-2">
-                          {pr.implement}
+                          {formatImplementDisplay(pr.weightKg, event, gender, { showComp: false })}
                           {pr.isComp && (
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-primary-500/15 text-primary-600 dark:text-primary-400">
                               Comp
