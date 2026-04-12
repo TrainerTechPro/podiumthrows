@@ -29,6 +29,18 @@ export type BlockLogInput = {
   block: { blockType: string; config: string };
 };
 
+export type SelfLoggedSessionInput = {
+  id: string;
+  event: EventType;
+  date: string; // YYYY-MM-DD
+  drillLogs: Array<{
+    drillType: string;
+    implementWeight: number | null;
+    throwCount: number;
+    bestMark: number | null;
+  }>;
+};
+
 const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] as const;
 
@@ -82,11 +94,13 @@ type DayBucket = {
   drills: HistoryDrill[];
   events: Set<EventType>;
   assignmentId: string | null;
+  selfLoggedSessionId: string | null;
 };
 
 export function aggregateHistoryDays(input: {
   throwLogs: ThrowLogInput[];
   blockLogs: BlockLogInput[];
+  selfLoggedSessions?: SelfLoggedSessionInput[];
 }): HistoryDay[] {
   const buckets = new Map<string, DayBucket>();
 
@@ -127,6 +141,7 @@ export function aggregateHistoryDays(input: {
       drills: [],
       events: new Set<EventType>(),
       assignmentId: null,
+      selfLoggedSessionId: null,
     };
     bucket.drills.push(drill);
     bucket.events.add(drill.event);
@@ -189,11 +204,45 @@ export function aggregateHistoryDays(input: {
       drills: [],
       events: new Set<EventType>(),
       assignmentId: null,
+      selfLoggedSessionId: null,
     };
     bucket.drills.push(drill);
     bucket.events.add(drill.event);
     bucket.assignmentId = bucket.assignmentId ?? assignmentId;
     buckets.set(date, bucket);
+  }
+
+  // Bucket self-logged AthleteThrowsSession drills by date
+  for (const session of input.selfLoggedSessions ?? []) {
+    const bucket = buckets.get(session.date) ?? {
+      date: session.date,
+      drills: [],
+      events: new Set<EventType>(),
+      assignmentId: null,
+      selfLoggedSessionId: null,
+    };
+    bucket.selfLoggedSessionId = bucket.selfLoggedSessionId ?? session.id;
+    bucket.events.add(session.event);
+
+    for (const dl of session.drillLogs) {
+      const implKg = dl.implementWeight ?? 0;
+      bucket.drills.push({
+        source: "free",
+        event: session.event,
+        implementKg: implKg,
+        implementLabel: implKg > 0 ? `${implKg}kg` : "BW",
+        drillType: dl.drillType,
+        drillTypeLabel: dl.drillType
+          .toLowerCase()
+          .split("_")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" "),
+        throwCount: dl.throwCount,
+        bestMark: dl.bestMark,
+        isPersonalBest: false,
+      });
+    }
+    buckets.set(session.date, bucket);
   }
 
   const days: HistoryDay[] = Array.from(buckets.values())
@@ -217,6 +266,7 @@ export function aggregateHistoryDays(input: {
         hasPR,
         drills: bucket.drills,
         assignmentId: bucket.assignmentId,
+        selfLoggedSessionId: bucket.selfLoggedSessionId,
       };
     });
 

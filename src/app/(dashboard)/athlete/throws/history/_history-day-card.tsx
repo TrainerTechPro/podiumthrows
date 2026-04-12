@@ -103,7 +103,15 @@ export function HistoryDayCard({ day }: Props) {
           {day.drills.map((drill, idx) => (
             <HistoryDrillRow key={idx} drill={drill} />
           ))}
-          {day.assignmentId && (
+          {day.selfLoggedSessionId && (
+            <Link
+              href={`/athlete/throws/log?edit=${day.selfLoggedSessionId}`}
+              className="mt-2 block text-center py-2 px-3 rounded-lg bg-primary-500/10 text-primary-500 text-sm font-semibold hover:bg-primary-500/20 transition-colors"
+            >
+              Edit session →
+            </Link>
+          )}
+          {!day.selfLoggedSessionId && day.assignmentId && (
             <Link
               href={`/athlete/throws/session/${day.assignmentId}`}
               className="mt-2 block text-center py-2 px-3 rounded-lg bg-primary-500/10 text-primary-500 text-sm font-semibold hover:bg-primary-500/20 transition-colors"

@@ -26,6 +26,7 @@ const sampleDay: HistoryDay = {
     },
   ],
   assignmentId: null,
+  selfLoggedSessionId: null,
 };
 
 describe("HistoryDayCard", () => {
@@ -60,6 +61,16 @@ describe("HistoryDayCard", () => {
     expect(screen.getByRole("link", { name: /View full session/i })).toHaveAttribute(
       "href",
       "/athlete/throws/session/asgn1"
+    );
+  });
+
+  it("shows 'Edit session' link for self-logged sessions", () => {
+    const selfLoggedDay: HistoryDay = { ...sampleDay, selfLoggedSessionId: "sl1" };
+    render(<HistoryDayCard day={selfLoggedDay} />);
+    fireEvent.click(screen.getByRole("button", { name: /Tue.*Apr 8/i }));
+    expect(screen.getByRole("link", { name: /Edit session/i })).toHaveAttribute(
+      "href",
+      "/athlete/throws/log?edit=sl1"
     );
   });
 });

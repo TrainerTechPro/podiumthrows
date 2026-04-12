@@ -38,6 +38,32 @@ describe("aggregateHistoryDays", () => {
     expect(result[0].hasPR).toBe(true);
     expect(result[0].events).toEqual(["SHOT_PUT"]);
     expect(result[0].assignmentId).toBeNull();
+    expect(result[0].selfLoggedSessionId).toBeNull();
+  });
+
+  it("aggregates self-logged AthleteThrowsSession drills into the day bucket", () => {
+    const selfLoggedSessions = [
+      {
+        id: "sl1",
+        event: "HAMMER" as const,
+        date: "2026-04-09",
+        drillLogs: [
+          { drillType: "FULL_THROW", implementWeight: 7.26, throwCount: 12, bestMark: 66.87 },
+          { drillType: "STANDING", implementWeight: 7.26, throwCount: 8, bestMark: null },
+        ],
+      },
+    ];
+
+    const result = aggregateHistoryDays({ throwLogs: [], blockLogs: [], selfLoggedSessions });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].date).toBe("2026-04-09");
+    expect(result[0].selfLoggedSessionId).toBe("sl1");
+    expect(result[0].totalThrows).toBe(20);
+    expect(result[0].bestMarkOverall).toBe(66.87);
+    expect(result[0].events).toEqual(["HAMMER"]);
+    expect(result[0].drills).toHaveLength(2);
+    expect(result[0].drills[0].drillTypeLabel).toBe("Full Throw");
   });
 
   it("aggregates assigned-session throws via their ThrowsAssignment.assignedDate", () => {

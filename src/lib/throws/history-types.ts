@@ -33,6 +33,8 @@ export type HistoryDay = {
   drills: HistoryDrill[];
   /** Assignment ID if this day had an assigned session (for "View full session" link) */
   assignmentId: string | null;
+  /** Self-logged session ID if this day had a self-logged AthleteThrowsSession (for "Edit session" link) */
+  selfLoggedSessionId: string | null;
 };
 
 /** Filter state from the client, sent as query params */

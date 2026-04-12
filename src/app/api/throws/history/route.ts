@@ -72,7 +72,10 @@ export async function GET(request: NextRequest) {
     const startDate = rangeToStartDate(range, start);
     const endDate = end ? new Date(`${end}T23:59:59`) : new Date();
 
-    const [throwLogs, blockLogs] = await Promise.all([
+    const startYMD = startDate.toISOString().slice(0, 10);
+    const endYMD = endDate.toISOString().slice(0, 10);
+
+    const [throwLogs, blockLogs, selfLoggedSessions] = await Promise.all([
       prisma.throwLog.findMany({
         where: {
           athleteId: profile.id,
@@ -90,7 +93,7 @@ export async function GET(request: NextRequest) {
         where: {
           assignment: {
             athleteId: profile.id,
-            assignedDate: { gte: startDate.toISOString().slice(0, 10), lte: endDate.toISOString().slice(0, 10) },
+            assignedDate: { gte: startYMD, lte: endYMD },
             status: { in: ["IN_PROGRESS", "COMPLETED"] },
             ...(events.length > 0 ? { session: { event: { in: events } } } : {}),
           },
@@ -112,9 +115,30 @@ export async function GET(request: NextRequest) {
         // TODO(pagination): Task 12 will replace this with cursor-based pagination.
         take: 2000,
       }),
+      // Self-logged AthleteThrowsSession + AthleteDrillLog
+      prisma.athleteThrowsSession.findMany({
+        where: {
+          athleteId: profile.id,
+          date: { gte: startYMD, lte: endYMD },
+          ...(events.length > 0 ? { event: { in: events } } : {}),
+        },
+        include: {
+          drillLogs: {
+            orderBy: { createdAt: "asc" },
+            select: {
+              drillType: true,
+              implementWeight: true,
+              throwCount: true,
+              bestMark: true,
+            },
+          },
+        },
+        orderBy: { date: "desc" },
+        take: 500,
+      }),
     ]);
 
-    const days = aggregateHistoryDays({ throwLogs, blockLogs });
+    const days = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions });
 
     const sessions = days.filter((d) => d.assignmentId != null).length;
     const throws = days.reduce((sum, d) => sum + d.totalThrows, 0);
