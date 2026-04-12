@@ -11,11 +11,11 @@ export const revalidate = 3600; // ISR: regenerate every hour
 export const metadata: Metadata = {
   title: "Pricing — Podium Throws",
   description:
-    "Simple, transparent pricing for throws coaches. Free plan available. Pro at $100/month for 25 athletes. Elite at $199/month for unlimited athletes.",
+    "Simple, transparent pricing for throws coaches. Free plan available. Pro at $20/month for 25 athletes. Elite at $50/month for unlimited athletes.",
   openGraph: {
     title: "Pricing — Podium Throws",
     description:
-      "Simple, transparent pricing for throws coaches. Free plan available. Pro at $100/month for 25 athletes. Elite at $199/month for unlimited athletes.",
+      "Simple, transparent pricing for throws coaches. Free plan available. Pro at $20/month for 25 athletes. Elite at $50/month for unlimited athletes.",
     type: "website",
     images: [
       {
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Pricing — Podium Throws",
-    description: "Free, Pro ($100/mo), and Elite ($199/mo) plans for throws coaches.",
+    description: "Free, Pro ($20/mo), and Elite ($50/mo) plans for throws coaches.",
   },
 };
 

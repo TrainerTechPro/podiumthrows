@@ -114,8 +114,8 @@ const PLANS: Plan[] = [
   {
     id: "pro",
     name: "Pro",
-    monthlyPrice: 100,
-    annualPrice: 80,
+    monthlyPrice: 20,
+    annualPrice: 16,
     description: "For active collegiate programs",
     athletes: "Up to 25 athletes",
     highlight: true,
@@ -139,8 +139,8 @@ const PLANS: Plan[] = [
   {
     id: "elite",
     name: "Elite",
-    monthlyPrice: 199,
-    annualPrice: 159,
+    monthlyPrice: 50,
+    annualPrice: 40,
     description: "For large programs and pro coaches",
     athletes: "Unlimited athletes",
     highlight: false,

@@ -4,7 +4,7 @@
 
 This is **Podium Throws**, a subscription coaching SaaS for Olympic-level track & field throws coaches. Built on Next.js 14.2 (App Router) + React 18.3 + TypeScript, PostgreSQL via Prisma, deployed on Vercel.
 
-**Target users:** Division I and professional throws coaches managing rosters of athletes across shot put, discus, hammer, and javelin. Coaches pay $100+/month. Every screen must feel like it was built specifically for elite coaching.
+**Target users:** Division I and professional throws coaches managing rosters of athletes across shot put, discus, hammer, and javelin. Coaches pay $20-50/month (Free/Pro/Elite tiers). Every screen must feel like it was built specifically for elite coaching.
 
 **Competitors we must outperform:** BridgeAthletic, TrainHeroic, TeamBuildr, CoachMePlus.
 

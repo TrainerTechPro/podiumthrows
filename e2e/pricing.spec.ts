@@ -15,12 +15,12 @@ test.describe("Pricing Page", () => {
     await expect(page.getByText("Up to 3 athletes")).toBeVisible();
   });
 
-  test("Pro plan shows $100/month", async ({ page }) => {
-    await expect(page.getByText("100")).toBeVisible();
+  test("Pro plan shows $20/month", async ({ page }) => {
+    await expect(page.getByText("20")).toBeVisible();
   });
 
-  test("Elite plan shows $199/month", async ({ page }) => {
-    await expect(page.getByText("199")).toBeVisible();
+  test("Elite plan shows $50/month", async ({ page }) => {
+    await expect(page.getByText("50")).toBeVisible();
   });
 
   test("CTA buttons are visible", async ({ page }) => {

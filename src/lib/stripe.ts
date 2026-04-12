@@ -49,8 +49,8 @@ export const PLANS = {
     maxAthletes: 25,
     monthlyPriceId: process.env.STRIPE_PRICE_PRO || null,
     annualPriceId: process.env.STRIPE_PRICE_PRO_ANNUAL || null,
-    monthlyPrice: 100,
-    annualPrice: 80,
+    monthlyPrice: 20,
+    annualPrice: 16,
     description: "For growing programs up to 25 athletes.",
   },
   ELITE: {
@@ -58,8 +58,8 @@ export const PLANS = {
     maxAthletes: Infinity,
     monthlyPriceId: process.env.STRIPE_PRICE_ELITE || null,
     annualPriceId: process.env.STRIPE_PRICE_ELITE_ANNUAL || null,
-    monthlyPrice: 199,
-    annualPrice: 159,
+    monthlyPrice: 50,
+    annualPrice: 40,
     description: "Unlimited athletes, priority support.",
   },
 } as const;
