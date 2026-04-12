@@ -89,6 +89,11 @@ function parseDrillTypeFromBlockConfig(configJson: string): { drillType: string 
   }
 }
 
+/** Canonical PR distances per event, used to detect PRs for assigned/self-logged drills. */
+export type PRContext = Record<string, { distance: number; weightKg: number }>;
+
+const WEIGHT_TOLERANCE = 0.05; // kg — matches the canonical PR layer's tolerance
+
 type DayBucket = {
   date: string;
   drills: HistoryDrill[];
@@ -101,6 +106,7 @@ export function aggregateHistoryDays(input: {
   throwLogs: ThrowLogInput[];
   blockLogs: BlockLogInput[];
   selfLoggedSessions?: SelfLoggedSessionInput[];
+  prContext?: PRContext;
 }): HistoryDay[] {
   const buckets = new Map<string, DayBucket>();
 
@@ -189,12 +195,29 @@ export function aggregateHistoryDays(input: {
           drillTypeLabel: drillInfo.label,
           throwCount: 1,
           bestMark: bl.distance ?? null,
-          // TODO: assigned-side PR detection comes from Unified PR layer at render time
           isPersonalBest: false,
         },
         date,
         assignmentId: bl.assignment.id,
       });
+    }
+  }
+
+  // PR detection for assigned-session drills via the canonical PR layer.
+  // After grouping, each drill's bestMark is the max distance for that
+  // drill type + implement combo. Compare it against the canonical PR for
+  // the event — but only if the implement is at competition weight.
+  if (input.prContext) {
+    for (const group of blockGroups.values()) {
+      const pr = input.prContext[group.drill.event];
+      if (
+        pr &&
+        group.drill.bestMark != null &&
+        Math.abs(group.drill.implementKg - pr.weightKg) < WEIGHT_TOLERANCE &&
+        group.drill.bestMark >= pr.distance
+      ) {
+        group.drill.isPersonalBest = true;
+      }
     }
   }
 
@@ -226,6 +249,11 @@ export function aggregateHistoryDays(input: {
 
     for (const dl of session.drillLogs) {
       const implKg = dl.implementWeight ?? 0;
+      const pr = input.prContext?.[session.event];
+      const isPR = dl.bestMark != null &&
+        pr != null &&
+        Math.abs(implKg - pr.weightKg) < WEIGHT_TOLERANCE &&
+        dl.bestMark >= pr.distance;
       bucket.drills.push({
         source: "free",
         event: session.event,
@@ -239,7 +267,7 @@ export function aggregateHistoryDays(input: {
           .join(" "),
         throwCount: dl.throwCount,
         bestMark: dl.bestMark,
-        isPersonalBest: false,
+        isPersonalBest: isPR,
       });
     }
     buckets.set(session.date, bucket);

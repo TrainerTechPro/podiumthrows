@@ -64,6 +64,31 @@ describe("aggregateHistoryDays", () => {
     expect(result[0].events).toEqual(["HAMMER"]);
     expect(result[0].drills).toHaveLength(2);
     expect(result[0].drills[0].drillTypeLabel).toBe("Full Throw");
+    // Without prContext, self-logged drills default to isPersonalBest: false
+    expect(result[0].drills[0].isPersonalBest).toBe(false);
+  });
+
+  it("marks self-logged drills as PR when bestMark matches canonical PR", () => {
+    const selfLoggedSessions = [
+      {
+        id: "sl1",
+        event: "HAMMER" as const,
+        date: "2026-04-09",
+        drillLogs: [
+          { drillType: "FULL_THROW", implementWeight: 7.26, throwCount: 12, bestMark: 66.87 },
+          { drillType: "STANDING", implementWeight: 4.0, throwCount: 8, bestMark: 40.0 },
+        ],
+      },
+    ];
+
+    const prContext = { HAMMER: { distance: 66.87, weightKg: 7.26 } };
+    const result = aggregateHistoryDays({ throwLogs: [], blockLogs: [], selfLoggedSessions, prContext });
+
+    // Full Throw at 7.26kg with 66.87m matches the PR → true
+    expect(result[0].drills[0].isPersonalBest).toBe(true);
+    // Standing at 4.0kg is not competition weight (7.26kg) → false
+    expect(result[0].drills[1].isPersonalBest).toBe(false);
+    expect(result[0].hasPR).toBe(true);
   });
 
   it("aggregates assigned-session throws via their ThrowsAssignment.assignedDate", () => {
@@ -91,6 +116,58 @@ describe("aggregateHistoryDays", () => {
     expect(result[0].assignmentId).toBe("asgn1");
     expect(result[0].totalThrows).toBe(1);
     expect(result[0].drills[0].source).toBe("assigned");
+    // Without prContext, assigned drills default to isPersonalBest: false
+    expect(result[0].drills[0].isPersonalBest).toBe(false);
+  });
+
+  it("marks assigned-session drills as PR when bestMark matches canonical PR at competition weight", () => {
+    const blockLogs = [
+      {
+        id: "bl1",
+        throwNumber: 1,
+        distance: 18.42,
+        implement: "7.26kg",
+        assignment: {
+          id: "asgn1",
+          assignedDate: "2026-04-07",
+          athleteId: "a1",
+          status: "COMPLETED",
+          session: { event: "SHOT_PUT" as const, name: "Heavy Day" },
+        },
+        block: { blockType: "THROWING", config: JSON.stringify({ drillType: "FULL_THROW" }) },
+      },
+    ];
+
+    const prContext = { SHOT_PUT: { distance: 18.42, weightKg: 7.26 } };
+    const result = aggregateHistoryDays({ throwLogs: [], blockLogs, prContext });
+
+    expect(result[0].drills[0].isPersonalBest).toBe(true);
+    expect(result[0].hasPR).toBe(true);
+  });
+
+  it("does not mark assigned drills as PR when implement is not competition weight", () => {
+    const blockLogs = [
+      {
+        id: "bl1",
+        throwNumber: 1,
+        distance: 20.0,
+        implement: "9kg",
+        assignment: {
+          id: "asgn1",
+          assignedDate: "2026-04-07",
+          athleteId: "a1",
+          status: "COMPLETED",
+          session: { event: "SHOT_PUT" as const, name: "Heavy Day" },
+        },
+        block: { blockType: "THROWING", config: JSON.stringify({ drillType: "FULL_THROW" }) },
+      },
+    ];
+
+    // PR is at 7.26kg, but the drill used 9kg — not competition weight
+    const prContext = { SHOT_PUT: { distance: 18.0, weightKg: 7.26 } };
+    const result = aggregateHistoryDays({ throwLogs: [], blockLogs, prContext });
+
+    expect(result[0].drills[0].isPersonalBest).toBe(false);
   });
 
   it("merges same-day assigned and free logs into one HistoryDay", () => {

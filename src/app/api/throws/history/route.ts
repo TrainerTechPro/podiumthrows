@@ -4,7 +4,8 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseQuery } from "@/lib/api-schemas";
-import { aggregateHistoryDays } from "@/lib/throws/history";
+import { aggregateHistoryDays, type PRContext } from "@/lib/throws/history";
+import { getAthletePRs } from "@/lib/data/personal-records";
 
 const DAYS_PER_PAGE = 30;
 
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
       ? cursor
       : (end ?? new Date().toISOString().slice(0, 10));
 
-    const [throwLogs, blockLogs, selfLoggedSessions] = await Promise.all([
+    const [throwLogs, blockLogs, selfLoggedSessions, athletePRs] = await Promise.all([
       prisma.throwLog.findMany({
         where: {
           athleteId: profile.id,
@@ -137,9 +138,22 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { date: "desc" },
       }),
+      getAthletePRs(profile.id),
     ]);
 
-    const allDays = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions });
+    // Build PR context: canonical best distance per event at competition weight.
+    const prContext: PRContext = {};
+    for (const e of athletePRs.events) {
+      const best = Math.max(
+        e.competitionPR?.distance ?? 0,
+        e.practiceBest?.distance ?? 0
+      );
+      if (best > 0) {
+        prContext[e.event] = { distance: best, weightKg: e.competitionWeightKg };
+      }
+    }
+
+    const allDays = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions, prContext });
 
     // Paginate: take DAYS_PER_PAGE days, set nextCursor if more remain.
     const pageDays = allDays.slice(0, DAYS_PER_PAGE);
