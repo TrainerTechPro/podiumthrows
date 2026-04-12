@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { AddAthleteButton } from "./_invite";
+import { TeamFilter } from "./_team-filter";
 import { RosterClient } from "./_roster-client";
 import {
   requireCoachSession,
@@ -16,14 +17,39 @@ import { InvitationsClient } from "../invitations/_invitations-client";
 export default async function AthletesPage({
   searchParams,
 }: {
-  searchParams: { tab?: string };
+  searchParams: { tab?: string; teamId?: string };
 }) {
   const { coach } = await requireCoachSession();
   const tab = searchParams.tab === "invitations" ? "invitations" : "roster";
 
+  // Fetch teams for the filter dropdown
+  const teams = await prisma.team.findMany({
+    where: { coachId: coach.id },
+    select: { id: true, name: true, _count: { select: { members: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  const teamOptions = teams.map((t) => ({ id: t.id, name: t.name, memberCount: t._count.members }));
+
+  // Resolve teamId: URL param takes precedence, then saved preference
+  let resolvedTeamId = searchParams.teamId ?? null;
+  if (!resolvedTeamId) {
+    try {
+      const prefs = JSON.parse((coach.preferences as string) || "{}");
+      if (prefs.lastTeamId && teams.some((t) => t.id === prefs.lastTeamId)) {
+        resolvedTeamId = prefs.lastTeamId;
+      } else if (prefs.lastTeamId === "unassigned") {
+        resolvedTeamId = "unassigned";
+      }
+    } catch { /* ignore parse error */ }
+  }
+  // Validate that selected team still exists (might have been deleted)
+  if (resolvedTeamId && resolvedTeamId !== "unassigned" && !teams.some((t) => t.id === resolvedTeamId)) {
+    resolvedTeamId = null;
+  }
+
   let roster: AthleteRosterItem[];
   try {
-    roster = await getAthleteRoster(coach.id);
+    roster = await getAthleteRoster(coach.id, resolvedTeamId ?? undefined);
   } catch {
     roster = [];
   }
@@ -66,14 +92,21 @@ export default async function AthletesPage({
           </h1>
           <p className="text-sm text-muted mt-0.5">
             {roster.length}{" "}
-            {roster.length === 1 ? "athlete" : "athletes"} on your roster
+            {roster.length === 1 ? "athlete" : "athletes"}
+            {resolvedTeamId ? " in this group" : " on your roster"}
           </p>
         </div>
-        <AddAthleteButton
-          athleteCount={roster.length}
-          planLimit={planLimit}
-          currentPlan={coach.plan as PlanName}
-        />
+        <div className="flex items-center gap-2">
+          {teamOptions.length > 0 && (
+            <TeamFilter teams={teamOptions} currentTeamId={resolvedTeamId} />
+          )}
+          <AddAthleteButton
+            athleteCount={roster.length}
+            planLimit={planLimit}
+            currentPlan={coach.plan as PlanName}
+            selectedTeamId={resolvedTeamId && resolvedTeamId !== "unassigned" ? resolvedTeamId : undefined}
+          />
+        </div>
       </div>
 
       {/* Tab bar */}

@@ -31,12 +31,14 @@ interface AddAthleteButtonProps {
   athleteCount: number;
   planLimit: number;
   currentPlan?: PlanName;
+  selectedTeamId?: string;
 }
 
 export function AddAthleteButton({
   athleteCount,
   planLimit,
   currentPlan = "FREE",
+  selectedTeamId,
 }: AddAthleteButtonProps) {
   const router = useRouter();
   const toast = useToast();
@@ -127,6 +129,20 @@ export function AddAthleteButton({
         throw new Error(payload.error ?? `Request failed (${res.status})`);
       }
       const created = payload.data as { id: string; firstName: string; lastName: string };
+
+      // Auto-assign to selected team (best-effort)
+      if (selectedTeamId) {
+        try {
+          await fetch(`/api/coach/teams/${selectedTeamId}/members`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            body: JSON.stringify({ athleteIds: [created.id] }),
+          });
+        } catch {
+          toast.warning("Added to roster but couldn't assign to group");
+        }
+      }
+
       toast.success(`Added ${created.firstName} ${created.lastName} to your roster`);
       modal.onClose();
       resetCreateForm();
