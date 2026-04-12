@@ -235,8 +235,11 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({
-      ...updated,
-      dateOfBirth: updated?.dateOfBirth?.toISOString() ?? null,
+      success: true,
+      data: {
+        ...updated,
+        dateOfBirth: updated?.dateOfBirth?.toISOString() ?? null,
+      },
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/profile", { context: "api", error: err });

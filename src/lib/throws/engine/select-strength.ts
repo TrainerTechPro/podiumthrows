@@ -155,6 +155,7 @@ interface SelectStrengthParams {
   phase: TrainingPhase;
   strengthLevel: string;
   strengthComplexId?: string; // selected complex template ID
+  rotationIndex?: number; // which rotation cycle (0-indexed) — for sequential complex cycling
 }
 
 /**
@@ -171,15 +172,15 @@ interface SelectStrengthParams {
  *   blockGroup 2 = Accessory + Core (goes after second throwing block)
  */
 export function selectStrength(params: SelectStrengthParams): StrengthPrescription[] {
-  const { liftingPrs, phase, strengthLevel, strengthComplexId } = params;
+  const { liftingPrs, phase, strengthLevel, strengthComplexId, rotationIndex } = params;
 
   if (strengthLevel === "None") return [];
 
   const restIntervals = REST_INTERVALS[phase];
   const modulation = PHASE_MODULATION[phase];
 
-  // Select complex template (phase-aware: different complex per phase)
-  const complex = selectComplexTemplate(strengthComplexId, strengthLevel, phase);
+  // Select complex template (rotation-indexed: cycles sequentially with exercise rotation)
+  const complex = selectComplexTemplate(strengthComplexId, strengthLevel, phase, rotationIndex);
   if (!complex) return [];
 
   const prescriptions: StrengthPrescription[] = [];
@@ -217,50 +218,40 @@ export function splitStrengthByBlock(
 // ── Complex Selection ───────────────────────────────────────────────
 
 /**
- * Select a strength complex template based on phase and strength level.
+ * Select a strength complex template.
  *
- * Bondarchuk principle: same complex within a phase, different complex
- * between phases. This provides variety across the macrocycle while
- * maintaining the stability needed for adaptation within each mesocycle.
+ * Bondarchuk principle: the strength complex stays FIXED within a rotation
+ * cycle and changes only when the exercise complex rotates. Sequential
+ * cycling through predefined complexes provides variety across the macrocycle.
  *
- * Phase mapping:
- *   ACCUMULATION  → Complex 1 (Full Body — Heavy Pulls): high volume phase
- *   TRANSMUTATION → Complex 2 (Power Emphasis): transfer phase
- *   REALIZATION   → Complex 3 (Upper Body): reduced volume, maintain power
- *   COMPETITION   → Complex 2 (Power Emphasis): short, explosive maintenance
+ * Priority order:
+ *   1. Explicit complexId override (coach/config)
+ *   2. CLEANSE phase → null (no strength)
+ *   3. Light/Very Low strength level → always Complex 2
+ *   4. Sequential cycling by rotationIndex (0→C1, 1→C2, 2→C3, 3→C1, ...)
  */
 function selectComplexTemplate(
   complexId: string | undefined,
   strengthLevel: string,
   phase?: TrainingPhase,
+  rotationIndex?: number,
 ): StrengthComplexTemplate | null {
   // If a specific complex is requested, use it
   if (complexId) {
     return BONDARCHUK_COMPLEXES.find((c) => c.id === complexId) ?? null;
   }
 
+  // No strength during cleanse — bodyweight circuits only
+  if (phase === "CLEANSE") return null;
+
   // Light/Very Low strength levels → use the shorter complex (Complex 2)
   if (strengthLevel === "Light" || strengthLevel === "Very Low") {
     return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_2") ?? BONDARCHUK_COMPLEXES[0];
   }
 
-  // Phase-based complex rotation
-  if (phase) {
-    switch (phase) {
-      case "ACCUMULATION":
-        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_1") ?? BONDARCHUK_COMPLEXES[0];
-      case "TRANSMUTATION":
-        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_2") ?? BONDARCHUK_COMPLEXES[0];
-      case "REALIZATION":
-        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_3") ?? BONDARCHUK_COMPLEXES[0];
-      case "COMPETITION":
-        return BONDARCHUK_COMPLEXES.find((c) => c.id === "complex_2") ?? BONDARCHUK_COMPLEXES[0];
-      case "CLEANSE":
-        return null; // No strength complex during cleanse — bodyweight circuits only
-    }
-  }
-
-  return BONDARCHUK_COMPLEXES[0];
+  // Sequential cycling by rotation index
+  const idx = (rotationIndex ?? 0) % BONDARCHUK_COMPLEXES.length;
+  return BONDARCHUK_COMPLEXES[idx];
 }
 
 // ── Prescription Builder ────────────────────────────────────────────

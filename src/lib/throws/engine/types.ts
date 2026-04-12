@@ -206,8 +206,11 @@ export interface GeneratedPhase {
   compPercent: number;
   heavyPercent: number;
 
-  // Exercise complex
+  // Exercise complex (last rotation's complex, for backward compat)
   exerciseComplex: ExerciseComplexEntry[];
+
+  // All complexes used within this phase (one per rotation cycle)
+  exerciseComplexHistory?: ExerciseComplexEntry[][];
 
   // Sessions
   weeks: GeneratedWeek[];
@@ -437,6 +440,7 @@ export interface WeekGenConfig {
   strengthDaysTarget: number;
   exerciseComplex: ExerciseComplexEntry[];
   programConfig: ProgramConfig;
+  rotationIndex?: number; // Which rotation cycle (0-indexed), threaded to sessions
 }
 
 // ── Session Generation Config ───────────────────────────────────────
@@ -453,6 +457,7 @@ export interface SessionGenConfig {
   exerciseComplex: ExerciseComplexEntry[];
   includeLift: boolean;
   programConfig: ProgramConfig;
+  rotationIndex?: number; // Which rotation cycle (0-indexed), for strength complex selection
 }
 
 // ── Complex Rotation ────────────────────────────────────────────────

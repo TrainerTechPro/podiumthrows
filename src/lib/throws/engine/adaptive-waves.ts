@@ -50,6 +50,10 @@ export function computeAdaptiveWave(
   // Don't apply to COMPETITION phase (taper handles this)
   if (phase === "COMPETITION") return null;
 
+  // Bondarchuk principle: volume is CONSTANT during ACCUMULATION and TRANSMUTATION.
+  // Adaptive waves only apply to REALIZATION where mild tapering is a hybrid concession.
+  if (phase === "ACCUMULATION" || phase === "TRANSMUTATION") return null;
+
   // Minimum data requirements
   if (history.phasesCompleted < MIN_COMPLETED_PHASES) return null;
 
@@ -75,18 +79,6 @@ export function computeAdaptiveWave(
       // Load week: progressively increasing within cycle
       const loadProgress = positionInCycle / Math.max(1, cycleWeeks - 2);
       baseMultiplier = 0.90 + loadProgress * 0.15; // 0.90 → 1.05
-    }
-
-    // Progressive overload envelope for ACCUMULATION
-    if (phase === "ACCUMULATION" && totalWeeks > 1) {
-      const overallProgress = w / (totalWeeks - 1);
-      const envelope = 0.95 + overallProgress * 0.10; // 0.95 → 1.05
-      baseMultiplier *= envelope;
-    }
-
-    // Slight intensity bump for later cycles in TRANSMUTATION
-    if (phase === "TRANSMUTATION" && cycleIndex > 0) {
-      baseMultiplier *= 1.02;
     }
 
     // REALIZATION: gentle taper across the phase

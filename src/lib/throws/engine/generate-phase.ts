@@ -5,6 +5,7 @@
 import { PHASE_CONFIGS, PHASE_IMPLEMENT_DIST } from "../constants";
 import type { TrainingPhase } from "../constants";
 import { selectExercises } from "./select-exercises";
+import { rotateComplex } from "./complex-manager";
 import { scaleVolume } from "./scale-volume";
 import { generateWeek } from "./generate-week";
 import { computeAdaptiveWave } from "./adaptive-waves";
@@ -12,7 +13,23 @@ import { computeTaper } from "./elite-taper";
 import type {
   GeneratedPhase,
   PhaseGenConfig,
+  ExerciseComplexEntry,
 } from "./types";
+
+// ── Complex Rotation ────────────────────────────────────────────────
+
+/**
+ * Intra-phase rotation interval in weeks by adaptation group.
+ * Bondarchuk methodology: rotate exercises every 8-12 sessions.
+ *   Group 1 (fast): 2 weeks (~8 sessions at 4/wk)
+ *   Group 2 (moderate): 3 weeks (~12 sessions)
+ *   Group 3 (slow): 3 weeks (~12 sessions)
+ */
+const ROTATION_INTERVAL_WEEKS: Record<number, number> = {
+  1: 2,
+  2: 3,
+  3: 3,
+};
 
 // ── Main Function ───────────────────────────────────────────────────
 
@@ -21,7 +38,7 @@ import type {
  *
  * 1. Selects the exercise complex using correlations + deficit bias
  * 2. Calculates scaled volume targets
- * 3. Generates each week within the phase
+ * 3. Generates each week within the phase, rotating complex at intervals
  * 4. Applies progressive overload within the phase
  */
 export function generatePhase(config: PhaseGenConfig): GeneratedPhase {
@@ -36,29 +53,47 @@ export function generatePhase(config: PhaseGenConfig): GeneratedPhase {
   // Get implement distribution for this phase
   const implDist = PHASE_IMPLEMENT_DIST.find((d) => d.phase === phase);
 
-  // ── Select exercise complex ──────────────────────────────────
-  const exerciseComplex = selectExercises(
-    {
-      eventCode: programConfig.eventCode,
-      genderCode: programConfig.genderCode,
-      distanceBand: programConfig.distanceBand,
-      availableImplements: programConfig.availableImplements,
-      deficitPrimary: programConfig.deficitPrimary,
-      deficitSecondary: programConfig.deficitSecondary,
-      transferType: programConfig.transferType,
-      personalCorrelations: programConfig.personalCorrelations,
-    },
-    phase,
-  );
+  // ── Select initial exercise complex ──────────────────────────
+  const selectionParams = {
+    eventCode: programConfig.eventCode,
+    genderCode: programConfig.genderCode,
+    distanceBand: programConfig.distanceBand,
+    availableImplements: programConfig.availableImplements,
+    deficitPrimary: programConfig.deficitPrimary,
+    deficitSecondary: programConfig.deficitSecondary,
+    transferType: programConfig.transferType,
+    personalCorrelations: programConfig.personalCorrelations,
+  };
+
+  let exerciseComplex = selectExercises(selectionParams, phase);
 
   // ── Calculate volume targets ─────────────────────────────────
   const volumeTargets = scaleVolume(phase, programConfig);
+
+  // ── Intra-phase rotation setup ───────────────────────────────
+  const rotationInterval = ROTATION_INTERVAL_WEEKS[programConfig.adaptationGroup] ?? 3;
+  let rotationIndex = 0;
+  const allPreviousComplexes: ExerciseComplexEntry[][] = [];
+  const complexHistory: ExerciseComplexEntry[][] = [exerciseComplex];
 
   // ── Generate weeks ───────────────────────────────────────────
   const weeks = [];
 
   for (let w = 0; w < durationWeeks; w++) {
     const weekNumber = startWeek + w;
+
+    // Rotate exercise complex at interval boundaries
+    if (w > 0 && w % rotationInterval === 0) {
+      allPreviousComplexes.push(exerciseComplex);
+      exerciseComplex = rotateComplex({
+        programConfig,
+        currentComplex: exerciseComplex,
+        allPreviousComplexes,
+        phase,
+      });
+      rotationIndex++;
+      complexHistory.push(exerciseComplex);
+    }
 
     // Progressive overload: taper → adaptive wave → fixed ramp fallback chain
     let progressFactor: number;
@@ -91,6 +126,7 @@ export function generatePhase(config: PhaseGenConfig): GeneratedPhase {
       strengthDaysTarget: volumeTargets.strengthDaysPerWeek,
       exerciseComplex,
       programConfig,
+      rotationIndex,
     });
 
     weeks.push(week);
@@ -118,8 +154,11 @@ export function generatePhase(config: PhaseGenConfig): GeneratedPhase {
     compPercent: implDist?.compPercent ?? 40,
     heavyPercent: implDist?.heavyPercent ?? 35,
 
-    // Exercise complex
+    // Exercise complex (last rotation for backward compat)
     exerciseComplex,
+
+    // Full rotation history
+    exerciseComplexHistory: complexHistory.length > 1 ? complexHistory : undefined,
 
     // Generated weeks
     weeks,

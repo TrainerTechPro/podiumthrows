@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import type {
@@ -328,14 +329,14 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
 
       {/* ── Save button ───────────────────────────────────────────── */}
       <div className="flex justify-end pt-2">
-        <button
-          type="button"
+        <Button
+          variant="primary"
           onClick={handleSave}
           disabled={isPending}
-          className="btn-primary px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
+          className="w-full sm:w-auto"
         >
           {isPending ? "Saving..." : "Save Changes"}
-        </button>
+        </Button>
       </div>
     </div>
   );

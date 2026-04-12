@@ -36,6 +36,7 @@ export function generateSession(config: SessionGenConfig): GeneratedSession {
     exerciseComplex,
     includeLift,
     programConfig,
+    rotationIndex,
   } = config;
 
   // Target throws: midpoint of min/max
@@ -72,6 +73,7 @@ export function generateSession(config: SessionGenConfig): GeneratedSession {
         liftingPrs: programConfig.liftingPrs,
         phase,
         strengthLevel,
+        rotationIndex,
       })
     : [];
 

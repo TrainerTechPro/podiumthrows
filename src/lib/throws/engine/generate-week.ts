@@ -43,6 +43,7 @@ export function generateWeek(config: WeekGenConfig): GeneratedWeek {
     strengthDaysTarget,
     exerciseComplex,
     programConfig,
+    rotationIndex,
   } = config;
 
   // Get base schedule template
@@ -88,6 +89,7 @@ export function generateWeek(config: WeekGenConfig): GeneratedWeek {
       exerciseComplex,
       includeLift,
       programConfig,
+      rotationIndex,
     });
 
     sessions.push(session);
@@ -106,6 +108,7 @@ export function generateWeek(config: WeekGenConfig): GeneratedWeek {
         exerciseComplex,
         includeLift,
         programConfig,
+        rotationIndex,
       });
       sessions.push(pmSession);
     }
