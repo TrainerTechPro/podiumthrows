@@ -620,9 +620,17 @@ export async function getFlaggedAthletes(coachId: string): Promise<FlaggedAthlet
 
 /* ─── Athletes Roster ─────────────────────────────────────────────────────── */
 
-export async function getAthleteRoster(coachId: string): Promise<AthleteRosterItem[]> {
+export async function getAthleteRoster(coachId: string, teamId?: string): Promise<AthleteRosterItem[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let where: any = { coachId };
+  if (teamId === "unassigned") {
+    where = { coachId, teamMemberships: { none: {} } };
+  } else if (teamId) {
+    where = { coachId, teamMemberships: { some: { teamId } } };
+  }
+
   const athletes = await prisma.athleteProfile.findMany({
-    where: { coachId },
+    where,
     select: {
       id: true,
       firstName: true,
