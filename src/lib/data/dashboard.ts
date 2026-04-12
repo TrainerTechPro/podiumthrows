@@ -502,7 +502,7 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
   const firstYMD = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, "0")}-01`;
   const lastYMD = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
 
-  const [allProgramSessions, trainingSessions] = await Promise.all([
+  const [allProgramSessions, trainingSessions, throwsAssignments, selfSessions, standaloneThrows] = await Promise.all([
     // ProgramSession — scheduledDate is nullable String; must also compute from startDate
     prisma.programSession.findMany({
       where: { program: { athleteId } },
@@ -522,6 +522,34 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
         scheduledDate: { gte: firstDay, lte: lastDay },
       },
       select: { scheduledDate: true, status: true },
+    }),
+
+    // ThrowsAssignment — assignedDate is String (YYYY-MM-DD)
+    prisma.throwsAssignment.findMany({
+      where: {
+        athleteId,
+        assignedDate: { gte: firstYMD, lte: lastYMD },
+      },
+      select: { assignedDate: true, status: true },
+    }),
+
+    // AthleteThrowsSession (self-logged) — date is String (YYYY-MM-DD)
+    prisma.athleteThrowsSession.findMany({
+      where: {
+        athleteId,
+        date: { gte: firstYMD, lte: lastYMD },
+      },
+      select: { date: true, sessionRpe: true },
+    }),
+
+    // Standalone ThrowLog entries (Quick Log + coach-logged, no parent session)
+    prisma.throwLog.findMany({
+      where: {
+        athleteId,
+        sessionId: null,
+        date: { gte: firstDay, lte: lastDay },
+      },
+      select: { date: true },
     }),
   ]);
 
@@ -556,6 +584,27 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
     const entry = getOrCreate(ymd);
     if (ts.status === "COMPLETED") entry.hasCompleted = true;
     else entry.hasScheduled = true;
+  }
+
+  for (const ta of throwsAssignments) {
+    const entry = getOrCreate(ta.assignedDate);
+    if (ta.status === "COMPLETED" || ta.status === "PARTIAL") entry.hasCompleted = true;
+    else if (ta.status !== "SKIPPED") entry.hasScheduled = true;
+  }
+
+  for (const ss of selfSessions) {
+    const entry = getOrCreate(ss.date);
+    // Self-logged sessions are always "completed" activity
+    entry.hasCompleted = true;
+  }
+
+  // Standalone throws (Quick Log / coach-logged): mark the date as completed
+  for (const t of standaloneThrows) {
+    const d = t.date;
+    const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (ymd >= firstYMD && ymd <= lastYMD) {
+      getOrCreate(ymd).hasCompleted = true;
+    }
   }
 
   return Array.from(dayMap.entries()).map(([date, flags]) => ({
@@ -607,8 +656,10 @@ export async function fetchQuickStatsData(athleteId: string): Promise<QuickStats
     String(startOfWeek.getMonth() + 1).padStart(2, "0") + "-" +
     String(startOfWeek.getDate()).padStart(2, "0");
 
-  // Count across ALL session types — not just TrainingSession
-  const [athlete, legacyTotal, legacyWeek, programTotal, programWeek, selfLoggedTotal, selfLoggedWeek] = await Promise.all([
+  // Count across ALL session types — not just TrainingSession.
+  // Also count distinct dates with standalone ThrowLog entries (Quick Log +
+  // coach-logged throws that don't belong to a formal session).
+  const [athlete, legacyTotal, legacyWeek, programTotal, programWeek, selfLoggedTotal, selfLoggedWeek, standaloneThrowDates, standaloneThrowDatesWeek] = await Promise.all([
     prisma.athleteProfile.findUnique({
       where: { id: athleteId },
       select: { currentStreak: true },
@@ -637,12 +688,39 @@ export async function fetchQuickStatsData(athleteId: string): Promise<QuickStats
     prisma.athleteThrowsSession.count({
       where: { athleteId, date: { gte: weekYMD } },
     }),
+
+    // Standalone ThrowLog entries (Quick Log / coach-logged, sessionId is null).
+    // Count distinct dates as "training days" so Quick Log activity counts.
+    prisma.throwLog.findMany({
+      where: { athleteId, sessionId: null },
+      select: { date: true },
+      distinct: ["date"],
+    }),
+    prisma.throwLog.findMany({
+      where: { athleteId, sessionId: null, date: { gte: startOfWeek } },
+      select: { date: true },
+      distinct: ["date"],
+    }),
   ]);
 
+  // Distinct dates → count unique days (the "distinct" on DateTime may return
+  // multiple rows for the same calendar day, so normalise to YYYY-MM-DD).
+  function countUniqueDays(rows: { date: Date }[]): number {
+    const s = new Set<string>();
+    for (const r of rows) {
+      const d = r.date;
+      s.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    }
+    return s.size;
+  }
+
+  const standaloneTotal = countUniqueDays(standaloneThrowDates);
+  const standaloneWeek = countUniqueDays(standaloneThrowDatesWeek);
+
   return {
-    sessionsThisWeek: legacyWeek + programWeek + selfLoggedWeek,
+    sessionsThisWeek: legacyWeek + programWeek + selfLoggedWeek + standaloneWeek,
     currentStreak: athlete?.currentStreak ?? 0,
-    totalSessions: legacyTotal + programTotal + selfLoggedTotal,
+    totalSessions: legacyTotal + programTotal + selfLoggedTotal + standaloneTotal,
   };
 }
 
@@ -689,24 +767,62 @@ export async function fetchVolumeData(
 export async function fetchUpcomingSessionsData(
   athleteId: string
 ): Promise<UpcomingSessionItem[]> {
-  const sessions = await prisma.trainingSession.findMany({
-    where: {
-      athleteId,
-      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
-      scheduledDate: { gte: new Date() },
-    },
-    orderBy: { scheduledDate: "asc" },
-    take: 5,
-    include: { plan: { select: { name: true } } },
-  });
+  const now = new Date();
+  const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-  return sessions.map((s) => ({
-    id: s.id,
-    scheduledDate: s.scheduledDate.toISOString(),
-    status: s.status as string,
-    planName: s.plan?.name ?? null,
-    coachNotes: s.coachNotes,
-  }));
+  const [legacySessions, throwsAssignments] = await Promise.all([
+    // Legacy TrainingSession
+    prisma.trainingSession.findMany({
+      where: {
+        athleteId,
+        status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+        scheduledDate: { gte: now },
+      },
+      orderBy: { scheduledDate: "asc" },
+      take: 5,
+      include: { plan: { select: { name: true } } },
+    }),
+
+    // ThrowsAssignment (coach-assigned sessions)
+    prisma.throwsAssignment.findMany({
+      where: {
+        athleteId,
+        assignedDate: { gte: todayYMD },
+        status: { in: ["ASSIGNED", "NOTIFIED", "IN_PROGRESS"] },
+      },
+      orderBy: { assignedDate: "asc" },
+      take: 5,
+      include: {
+        session: { select: { name: true } },
+      },
+    }),
+  ]);
+
+  const items: UpcomingSessionItem[] = [];
+
+  for (const s of legacySessions) {
+    items.push({
+      id: s.id,
+      scheduledDate: s.scheduledDate.toISOString(),
+      status: s.status as string,
+      planName: s.plan?.name ?? null,
+      coachNotes: s.coachNotes,
+    });
+  }
+
+  for (const ta of throwsAssignments) {
+    items.push({
+      id: ta.id,
+      scheduledDate: new Date(ta.assignedDate).toISOString(),
+      status: ta.status,
+      planName: ta.session.name,
+      coachNotes: null,
+    });
+  }
+
+  // Sort by date, take top 5
+  items.sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
+  return items.slice(0, 5);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
