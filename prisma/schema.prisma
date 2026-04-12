@@ -1441,7 +1441,7 @@ model ThrowsPR {
   id         String         @id @default(cuid())
   athleteId  String
   athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event      EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event      String // SHOT_PUT, DISCUS, HAMMER, JAVELIN — stored as text in DB, not the EventType enum
   implement  String // e.g. "7.26kg", "2kg"
   distance   Float // meters
   achievedAt String // YYYY-MM-DD
@@ -1457,7 +1457,7 @@ model ThrowsDrillPR {
   id         String         @id @default(cuid())
   athleteId  String
   athlete    AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event      EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event      String // SHOT_PUT, DISCUS, HAMMER, JAVELIN — stored as text in DB, not the EventType enum
   drillType  String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
   implement  String // e.g. "7.26kg"
   distance   Float // meters
