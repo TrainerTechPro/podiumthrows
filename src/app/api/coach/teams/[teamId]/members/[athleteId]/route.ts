@@ -11,7 +11,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const { teamId, athleteId } = await params;
@@ -21,25 +21,25 @@ export async function DELETE(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
-    // Verify team belongs to coach
-    const team = await prisma.eventGroup.findFirst({
+    // Verify team belongs to this coach
+    const team = await prisma.team.findFirst({
       where: { id: teamId, coachId: coach.id },
     });
     if (!team) {
-      return NextResponse.json({ success: false, error:"Team not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Team not found" }, { status: 404 });
     }
 
-    // Delete membership (idempotent — no error if not found)
-    await prisma.eventGroupMember.deleteMany({
-      where: { groupId: teamId, athleteId },
+    // Delete membership — idempotent (0 deleted is not an error)
+    await prisma.teamMember.deleteMany({
+      where: { teamId, athleteId },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: null });
   } catch (error) {
     logger.error("Error removing team member", { context: "api", error });
-    return NextResponse.json({ success: false, error:"Failed to remove team member" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to remove team member" }, { status: 500 });
   }
 }
