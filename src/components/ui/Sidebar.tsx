@@ -8,6 +8,7 @@ import { ModeToggle } from "@/components/ui/ModeToggle";
 import {
   LayoutDashboard,
   Users,
+  UsersRound,
   Calendar,
   Target,
   Dumbbell,
@@ -289,6 +290,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/team",
           "/coach/practices",
           "/coach/hub",
+          "/coach/teams",
         ],
         children: [
           {
@@ -296,6 +298,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             href: "/coach/athletes",
             icon: <Users {...iconSize} />,
             matchPaths: ["/coach/athletes"],
+          },
+          {
+            label: "Groups",
+            href: "/coach/teams",
+            icon: <UsersRound {...iconSize} />,
+            matchPaths: ["/coach/teams"],
           },
           { label: "Invitations", href: "/coach/invitations", icon: <UserPlus {...iconSize} /> },
           {
