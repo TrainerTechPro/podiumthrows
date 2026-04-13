@@ -552,12 +552,17 @@ export function QuickLogClient() {
 
       if (isOnline) {
         try {
+          // AbortSignal.timeout may not exist on older iOS Safari — fallback to AbortController
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
           const res = await fetch("/api/athlete/quick-log", {
             method: "POST",
-            signal: AbortSignal.timeout(15000),
+            signal: controller.signal,
             headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify(payload),
           });
+          clearTimeout(timeoutId);
 
           if (!res.ok) {
             // Read the actual error from the server for better diagnostics
