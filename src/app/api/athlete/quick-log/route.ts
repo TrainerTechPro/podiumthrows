@@ -246,8 +246,10 @@ export async function POST(req: NextRequest) {
     const notesText = typeof notes === "string" ? notes.trim() || null : null;
 
     // 1. Find or create today's AthleteThrowsSession for this event
+    // Note: the DB column is TEXT (from initial migration), not the EventType enum.
+    // Using `as never` to bypass Prisma's type check while sending a plain string.
     let throwsSession = await prisma.athleteThrowsSession.findFirst({
-      where: { athleteId: athlete.id, date: today, event: event as EventType },
+      where: { athleteId: athlete.id, date: today, event: event as never },
       orderBy: { createdAt: "desc" },
       select: { id: true },
     });
@@ -256,7 +258,7 @@ export async function POST(req: NextRequest) {
       throwsSession = await prisma.athleteThrowsSession.create({
         data: {
           athleteId: athlete.id,
-          event: event as EventType,
+          event: event as never,
           date: today,
           focus: "Quick Log",
         },
