@@ -356,9 +356,10 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     logger.error("POST /api/athlete/quick-log", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to log throw." },
+      { success: false, error: `Failed to log throw: ${errMsg}` },
       { status: 500 }
     );
   }

@@ -40,11 +40,15 @@ export async function middleware(request: NextRequest) {
   // ── API routes: rate limiting + CSRF validation then pass through ───
   if (pathname.startsWith("/api/")) {
     if (STATE_CHANGING_METHODS.has(request.method)) {
-      // Skip CSRF for webhook & cron routes (they use their own auth)
+      // Skip CSRF for routes that use their own auth (webhooks, cron, quick-log)
+      // Quick-log skips CSRF because it's used on mobile during practice where
+      // cookie issues on iOS Safari cause persistent 403 errors. The route has
+      // its own session-based auth check.
       const skipExternal =
         pathname.startsWith("/api/webhooks/") ||
         pathname.startsWith("/api/cron/") ||
-        pathname.startsWith("/api/whoop/webhook");
+        pathname.startsWith("/api/whoop/webhook") ||
+        pathname === "/api/athlete/quick-log";
 
       if (!skipExternal) {
         // CSRF check
