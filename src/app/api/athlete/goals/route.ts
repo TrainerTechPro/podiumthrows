@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true },
+      select: { id: true, coachId: true },
     });
     if (!athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
@@ -148,6 +149,10 @@ export async function POST(req: NextRequest) {
         createdAt: true,
       },
     });
+
+    // Invalidate cached data so other widgets update without a page refresh
+    revalidateTag(`athlete-${athlete.id}`);
+    if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
     return NextResponse.json(
       {

@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { checkAndSetPR, COMPETITION_WEIGHTS, IMPLEMENT_PRESETS } from "@/lib/throws";
@@ -228,7 +229,7 @@ export async function POST(req: NextRequest) {
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true, gender: true, events: true, timezone: true },
+      select: { id: true, coachId: true, gender: true, events: true, timezone: true },
     });
 
     if (!athlete) {
@@ -357,6 +358,10 @@ export async function POST(req: NextRequest) {
 
     const { feeling: parsedFeeling, text: parsedText } = deserializeNotes(throwLog.notes);
 
+    // Invalidate cached data so other widgets update without a page refresh
+    revalidateTag(`athlete-${athlete.id}`);
+    if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -393,7 +398,7 @@ export async function PATCH(req: NextRequest) {
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true },
+      select: { id: true, coachId: true },
     });
 
     if (!athlete) {
@@ -466,6 +471,10 @@ export async function PATCH(req: NextRequest) {
     }
 
     const { feeling: parsedFeeling, text: parsedText } = deserializeNotes(updated.notes);
+
+    // Invalidate cached data so other widgets update without a page refresh
+    revalidateTag(`athlete-${athlete.id}`);
+    if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
     return NextResponse.json({
       success: true,

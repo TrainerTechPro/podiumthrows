@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
@@ -245,6 +246,11 @@ export async function PUT(
         }).catch((err) => logger.error("Workout skip notification failed", { error: err }));
       }
     }
+
+    // Invalidate cached data so other widgets update without a page refresh
+    revalidateTag(`athlete-${updated.athleteId}`);
+    const coachIdForTag = updated.athlete?.coachId ?? updated.session.coach?.id;
+    if (coachIdForTag) revalidateTag(`coach-${coachIdForTag}`);
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

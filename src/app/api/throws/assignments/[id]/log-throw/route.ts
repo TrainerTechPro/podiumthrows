@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
@@ -173,6 +174,10 @@ export async function POST(
         }
       }
     }
+
+    // Invalidate cached data so other widgets update without a page refresh
+    revalidateTag(`athlete-${user.athleteProfile.id}`);
+    if (user.athleteProfile.coachId) revalidateTag(`coach-${user.athleteProfile.coachId}`);
 
     return NextResponse.json({
       success: true,

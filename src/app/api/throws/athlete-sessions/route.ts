@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
@@ -91,12 +92,14 @@ export async function POST(request: NextRequest) {
 
     // Sync matching active goals from any competition-weight best marks in
     // this session. Best-effort — a failure here must not fail the save.
+    let athleteCoachId: string | null = null;
     try {
       const athlete = await prisma.athleteProfile.findUnique({
         where: { id: athleteId },
-        select: { gender: true },
+        select: { gender: true, coachId: true },
       });
       if (athlete) {
+        athleteCoachId = athlete.coachId;
         await syncGoalsFromDrillLogs(athleteId, event, athlete.gender, session.drillLogs);
       }
     } catch (err) {
@@ -105,6 +108,10 @@ export async function POST(request: NextRequest) {
         error: err,
       });
     }
+
+    // Invalidate cached data so other widgets update without a page refresh
+    revalidateTag(`athlete-${athleteId}`);
+    if (athleteCoachId) revalidateTag(`coach-${athleteCoachId}`);
 
     return NextResponse.json({ success: true, data: session });
   } catch (err) {

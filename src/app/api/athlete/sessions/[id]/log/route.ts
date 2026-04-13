@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { isValidEvent, checkAndSetPR } from "@/lib/throws";
@@ -147,6 +148,10 @@ export async function POST(
         }
       }
     }
+
+    // Invalidate cached data so other widgets update without a page refresh
+    revalidateTag(`athlete-${athlete.id}`);
+    if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
     return NextResponse.json(
       {
