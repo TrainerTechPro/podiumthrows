@@ -14,7 +14,7 @@ import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
 import { resolveTimezone, getLocalDate, startOfToday as startOfTodayForTz } from "@/lib/dates";
-import { EventType } from "@prisma/client";
+// EventType enum import removed — DB column is TEXT, not the enum type
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
