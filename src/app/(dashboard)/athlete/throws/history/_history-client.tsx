@@ -30,6 +30,11 @@ function hasAnyActive(f: HistoryFilter): boolean {
   );
 }
 
+// Detect athlete's IANA timezone once for the session
+const ATHLETE_TZ = typeof window !== "undefined"
+  ? Intl.DateTimeFormat().resolvedOptions().timeZone
+  : undefined;
+
 function filterToQueryString(f: HistoryFilter): string {
   const params = new URLSearchParams();
   params.set("range", f.range);
@@ -40,6 +45,7 @@ function filterToQueryString(f: HistoryFilter): string {
   if (f.events.length > 0) params.set("events", f.events.join(","));
   if (f.implementsKg.length > 0) params.set("implements", f.implementsKg.join(","));
   if (f.prOnly) params.set("prOnly", "true");
+  if (ATHLETE_TZ) params.set("tz", ATHLETE_TZ);
   return params.toString();
 }
 

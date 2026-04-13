@@ -1,6 +1,7 @@
 import type { EventType } from "@prisma/client";
 import type { HistoryDay, HistoryDrill } from "./history-types";
 import { formatImplementDisplay } from "@/lib/throws/display";
+import { getLocalDate } from "@/lib/dates";
 
 // Narrow shapes — only the fields we read. Keeps tests lightweight.
 export type ThrowLogInput = {
@@ -45,17 +46,10 @@ export type SelfLoggedSessionInput = {
 const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
 const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] as const;
 
-function isoDay(d: Date | string): string {
+function isoDay(d: Date | string, timezone?: string | null): string {
   if (typeof d === "string") return d.slice(0, 10); // ISO date already
-  // Known limitation: this slices the UTC date, not the athlete's local calendar
-  // date. For an athlete west of UTC who logs at 11pm, the throw will appear
-  // under the next day in History. Block logs are unaffected because
-  // ThrowsAssignment.assignedDate is already a YYYY-MM-DD string in the
-  // athlete's intended training calendar. Free-log timezone correctness
-  // requires either a schema change (store local calendar date) or a tz query
-  // param wired through the UI — both are out of scope for this commit and
-  // tracked for follow-up.
-  return d.toISOString().slice(0, 10);
+  if (timezone) return getLocalDate(timezone, d);
+  return d.toISOString().slice(0, 10); // UTC fallback
 }
 
 function labelsFor(isoDate: string): { weekdayShort: string; dateLabel: string } {
@@ -109,6 +103,7 @@ export function aggregateHistoryDays(input: {
   selfLoggedSessions?: SelfLoggedSessionInput[];
   prContext?: PRContext;
   gender?: string | null;
+  timezone?: string | null;
 }): HistoryDay[] {
   const buckets = new Map<string, DayBucket>();
 
@@ -118,7 +113,7 @@ export function aggregateHistoryDays(input: {
   const freeGroups = new Map<FreeKey, HistoryDrill>();
 
   for (const log of input.throwLogs) {
-    const date = isoDay(log.date);
+    const date = isoDay(log.date, input.timezone);
     const key = `${log.event}|${log.implementWeight}|${date}`;
     const existing = freeGroups.get(key);
     if (existing) {

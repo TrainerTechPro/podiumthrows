@@ -34,6 +34,7 @@ const HistoryQuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
+  tz: z.string().optional(),
 });
 
 function rangeToStartDate(range: z.infer<typeof HistoryQuerySchema>["range"], start?: string): Date {
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     const parsed = parseQuery(request, HistoryQuerySchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { range, start, end, events, implements: implementFilter, prOnly, cursor } = parsed;
+    const { range, start, end, events, implements: implementFilter, prOnly, cursor, tz } = parsed;
 
     const profile = await prisma.athleteProfile.findUnique({
       where: { userId: currentUser.userId },
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const allDays = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions, prContext, gender: profile.gender });
+    const allDays = aggregateHistoryDays({ throwLogs, blockLogs, selfLoggedSessions, prContext, gender: profile.gender, timezone: tz });
 
     // Paginate: take DAYS_PER_PAGE days, set nextCursor if more remain.
     const pageDays = allDays.slice(0, DAYS_PER_PAGE);

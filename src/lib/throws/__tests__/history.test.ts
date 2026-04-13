@@ -315,4 +315,33 @@ describe("aggregateHistoryDays", () => {
 
     warnSpy.mockRestore();
   });
+
+  it("buckets free-log throws by athlete timezone, not UTC", () => {
+    // Throw logged at 11pm Sunday in PDT (UTC-7) = 06:00 Monday UTC
+    const throwLogs = [
+      {
+        id: "tz1",
+        athleteId: "a1",
+        event: "HAMMER" as const,
+        implementWeight: 7.26,
+        distance: 65.0,
+        date: new Date("2026-04-13T06:00:00Z"), // Monday 06:00 UTC = Sunday 11pm PDT
+        isPersonalBest: false,
+        isCompetition: false,
+        sessionId: null,
+      },
+    ];
+
+    // Without timezone — UTC bucketing puts it on Monday
+    const utcResult = aggregateHistoryDays({ throwLogs, blockLogs: [] });
+    expect(utcResult[0].date).toBe("2026-04-13"); // Monday (wrong for PST athlete)
+
+    // With timezone — local bucketing puts it on Sunday
+    const tzResult = aggregateHistoryDays({
+      throwLogs,
+      blockLogs: [],
+      timezone: "America/Los_Angeles",
+    });
+    expect(tzResult[0].date).toBe("2026-04-12"); // Sunday (correct for PST athlete)
+  });
 });
