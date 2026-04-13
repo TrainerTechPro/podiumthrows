@@ -410,13 +410,13 @@ function FilterImplementSheetBody({
             <button
               type="button"
               onClick={() => toggle(kg)}
-              className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between font-mono ${
+              className={`w-full text-left px-3 py-3 rounded-lg flex items-center justify-between ${
                 on
                   ? "bg-primary-500/15 text-primary-500"
                   : "hover:bg-surface-100 dark:hover:bg-surface-800 text-[var(--foreground)]"
               }`}
             >
-              <span>{kg}kg</span>
+              <span><span className="font-mono tabular-nums">{kg}</span>kg</span>
               {on && <span aria-hidden="true">✓</span>}
             </button>
           </li>

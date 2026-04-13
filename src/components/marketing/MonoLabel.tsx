@@ -5,7 +5,7 @@
 export default function MonoLabel({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="font-mono"
+      className="font-heading"
       style={{
         fontSize: 11,
         fontWeight: 500,

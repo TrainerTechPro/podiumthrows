@@ -55,7 +55,7 @@ export default function DataStrip() {
                 >
                   {/* Label */}
                   <div
-                    className="font-mono"
+                    className="font-heading"
                     style={{
                       fontSize: 10,
                       fontWeight: 500,

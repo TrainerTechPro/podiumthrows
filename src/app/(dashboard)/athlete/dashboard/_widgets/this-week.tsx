@@ -92,7 +92,7 @@ export function ThisWeekWidget({ data }: { data: ThisWeekData }) {
           <Calendar className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           This Week
         </h3>
-        <span className="text-[10px] text-muted font-mono uppercase tracking-wider">
+        <span className="text-[10px] text-muted uppercase tracking-wider">
           vs last
         </span>
       </div>

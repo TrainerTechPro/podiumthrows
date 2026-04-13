@@ -424,7 +424,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
           />
           <p className="text-sm text-[var(--foreground)]">
             is on a{" "}
-            <span className="font-bold font-mono tabular-nums">{days}-day</span>{" "}
+            <span className="font-bold"><span className="font-mono tabular-nums">{days}</span>-day</span>{" "}
             streak 🔥
           </p>
         </div>
@@ -442,8 +442,8 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
           />
           <p className="text-sm text-[var(--foreground)]">
             hit their weekly goal:{" "}
-            <span className="font-bold font-mono tabular-nums">
-              {target}/{target} {unit}
+            <span className="font-bold">
+              <span className="font-mono tabular-nums">{target}/{target}</span> {unit}
             </span>{" "}
             ✅
           </p>

@@ -280,7 +280,7 @@ function SessionBlock({
           )}
         </div>
         <div className="flex items-center gap-2 text-xs text-muted print:text-gray-500 shrink-0">
-          <span className="font-mono">{formatEventType(event)}</span>
+          <span>{formatEventType(event)}</span>
           {assignee && <span>&middot; {assignee}</span>}
         </div>
       </div>

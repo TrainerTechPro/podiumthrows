@@ -128,7 +128,7 @@ function ConnectionChip({ isOnline, pendingCount, isSyncing }: ConnectionChipPro
       ) : (
         <span className={cn("w-2 h-2 rounded-full shrink-0", dotClass)} aria-hidden="true" />
       )}
-      <span className="font-mono tabular-nums whitespace-nowrap">{label}</span>
+      <span className="whitespace-nowrap">{label}</span>
     </div>
   );
 }
