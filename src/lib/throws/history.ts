@@ -32,7 +32,7 @@ export type BlockLogInput = {
 
 export type SelfLoggedSessionInput = {
   id: string;
-  event: EventType;
+  event: EventType | string; // EventType from ThrowLog, string from AthleteThrowsSession
   date: string; // YYYY-MM-DD
   drillLogs: Array<{
     drillType: string;
@@ -247,7 +247,7 @@ export function aggregateHistoryDays(input: {
       selfLoggedSessionId: null,
     };
     bucket.selfLoggedSessionId = bucket.selfLoggedSessionId ?? session.id;
-    bucket.events.add(session.event);
+    bucket.events.add(session.event as EventType);
 
     for (const dl of session.drillLogs) {
       const implKg = dl.implementWeight ?? 0;
@@ -258,7 +258,7 @@ export function aggregateHistoryDays(input: {
         dl.bestMark >= pr.distance;
       bucket.drills.push({
         source: "free",
-        event: session.event,
+        event: session.event as EventType,
         implementKg: implKg,
         implementLabel: implKg > 0 ? formatImplementDisplay(implKg, session.event, input.gender, { compact: true }) : "BW",
         drillType: dl.drillType,

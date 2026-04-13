@@ -1627,7 +1627,7 @@ model AthleteThrowsSession {
   id        String         @id @default(cuid())
   athleteId String
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  event     EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  event     String // SHOT_PUT, DISCUS, HAMMER, JAVELIN (DB column is TEXT, not enum)
   date      String // YYYY-MM-DD
   focus     String? // e.g. "Technique", "Power", "Speed", "Volume", "Competition Sim"
   notes     String?
