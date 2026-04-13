@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useCallback, useTransition } from "react";
-import { Badge, Button, EmptyState, Modal, ProgressBar, useConfirm, StaggeredList } from "@/components";
+import {
+  Badge,
+  Button,
+  EmptyState,
+  Modal,
+  ProgressBar,
+  useConfirm,
+  StaggeredList,
+} from "@/components";
 import { Input } from "@/components/ui/Input";
 import type { GoalItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
@@ -73,12 +81,20 @@ interface GoalFormProps {
   error?: string | null;
 }
 
-function GoalForm({ initial = EMPTY_FORM, onSubmit, onCancel, submitLabel = "Create Goal", isSubmitting, error }: GoalFormProps) {
+function GoalForm({
+  initial = EMPTY_FORM,
+  onSubmit,
+  onCancel,
+  submitLabel = "Create Goal",
+  isSubmitting,
+  error,
+}: GoalFormProps) {
   const [form, setForm] = useState<GoalFormData>(initial);
 
-  const set = (field: keyof GoalFormData) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  const set =
+    (field: keyof GoalFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,12 +140,7 @@ function GoalForm({ initial = EMPTY_FORM, onSubmit, onCancel, submitLabel = "Cre
           onChange={set("startingValue")}
           helper="Used to calculate progress %"
         />
-        <Input
-          label="Target Date"
-          type="date"
-          value={form.deadline}
-          onChange={set("deadline")}
-        />
+        <Input label="Target Date" type="date" value={form.deadline} onChange={set("deadline")} />
       </div>
 
       {/* Event select */}
@@ -137,14 +148,12 @@ function GoalForm({ initial = EMPTY_FORM, onSubmit, onCancel, submitLabel = "Cre
         <label className="text-sm font-medium text-[var(--foreground)]">
           Event <span className="text-muted font-normal">(optional)</span>
         </label>
-        <select
-          value={form.event}
-          onChange={set("event")}
-          className="input w-full"
-        >
+        <select value={form.event} onChange={set("event")} className="input w-full">
           <option value="">No specific event</option>
           {EVENTS.map((ev) => (
-            <option key={ev} value={ev}>{formatEventType(ev)}</option>
+            <option key={ev} value={ev}>
+              {formatEventType(ev)}
+            </option>
           ))}
         </select>
       </div>
@@ -162,9 +171,7 @@ function GoalForm({ initial = EMPTY_FORM, onSubmit, onCancel, submitLabel = "Cre
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={isSubmitting}>
@@ -214,6 +221,7 @@ function UpdateProgressInline({ goal, onUpdate }: UpdateProgressProps) {
     <div className="flex items-center gap-2 mt-1">
       <input
         type="number"
+        inputMode="decimal"
         min="0"
         step="any"
         value={value}
@@ -269,7 +277,17 @@ function AdjustDeadlineInline({ goal, onUpdateDeadline }: AdjustDeadlineProps) {
         className="text-xs text-muted hover:text-primary-500 transition-colors"
         title="Adjust deadline"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline -mt-px mr-0.5">
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="inline -mt-px mr-0.5"
+        >
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
@@ -280,11 +298,14 @@ function AdjustDeadlineInline({ goal, onUpdateDeadline }: AdjustDeadlineProps) {
 
   // Re-project completion based on new deadline
   const newDeadline = value ? new Date(value + "T00:00:00") : null;
-  const daysUntilDeadline = newDeadline ? Math.ceil((newDeadline.getTime() - Date.now()) / 86_400_000) : null;
-  const remaining = goal.targetValue - goal.currentValue;
-  const rateNeeded = daysUntilDeadline && daysUntilDeadline > 0 && remaining > 0
-    ? (remaining / daysUntilDeadline)
+  const daysUntilDeadline = newDeadline
+    ? Math.ceil((newDeadline.getTime() - Date.now()) / 86_400_000)
     : null;
+  const remaining = goal.targetValue - goal.currentValue;
+  const rateNeeded =
+    daysUntilDeadline && daysUntilDeadline > 0 && remaining > 0
+      ? remaining / daysUntilDeadline
+      : null;
 
   return (
     <div className="flex flex-col gap-1.5 mt-1">
@@ -308,7 +329,10 @@ function AdjustDeadlineInline({ goal, onUpdateDeadline }: AdjustDeadlineProps) {
           {isPending ? "Saving…" : "Save"}
         </button>
         <button
-          onClick={() => { setEditing(false); setValue(goal.deadline ? goal.deadline.split("T")[0] : ""); }}
+          onClick={() => {
+            setEditing(false);
+            setValue(goal.deadline ? goal.deadline.split("T")[0] : "");
+          }}
           className="text-xs text-muted hover:text-[var(--foreground)]"
         >
           Cancel
@@ -316,13 +340,12 @@ function AdjustDeadlineInline({ goal, onUpdateDeadline }: AdjustDeadlineProps) {
       </div>
       {rateNeeded !== null && daysUntilDeadline !== null && (
         <p className="text-[10px] text-muted">
-          {daysUntilDeadline} days left — need ~{rateNeeded.toFixed(2)} {goal.unit}/day to hit target
+          {daysUntilDeadline} days left — need ~{rateNeeded.toFixed(2)} {goal.unit}/day to hit
+          target
         </p>
       )}
       {daysUntilDeadline !== null && daysUntilDeadline <= 0 && value && (
-        <p className="text-[10px] text-danger-500 font-medium">
-          This date is in the past
-        </p>
+        <p className="text-[10px] text-danger-500 font-medium">This date is in the past</p>
       )}
     </div>
   );
@@ -356,9 +379,7 @@ function GoalCard({ goal, onUpdateProgress, onUpdateDeadline, onAbandon }: GoalC
           )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {goal.event && (
-            <Badge variant="primary">{formatEventType(goal.event)}</Badge>
-          )}
+          {goal.event && <Badge variant="primary">{formatEventType(goal.event)}</Badge>}
           <Badge variant={STATUS_BADGE[goal.status] ?? "neutral"}>
             {STATUS_LABEL[goal.status] ?? goal.status}
           </Badge>
@@ -371,7 +392,10 @@ function GoalCard({ goal, onUpdateProgress, onUpdateDeadline, onAbandon }: GoalC
           <span className="tabular-nums font-medium text-[var(--foreground)]">
             {goal.currentValue} / {goal.targetValue} {goal.unit}
           </span>
-          <span className="font-semibold tabular-nums" style={{ color: goal.progressPct >= 100 ? "#10b981" : "#f59e0b" }}>
+          <span
+            className="font-semibold tabular-nums"
+            style={{ color: goal.progressPct >= 100 ? "#10b981" : "#f59e0b" }}
+          >
             {goal.progressPct}%
           </span>
         </div>
@@ -393,13 +417,9 @@ function GoalCard({ goal, onUpdateProgress, onUpdateDeadline, onAbandon }: GoalC
             </span>
           )}
           {goal.projectedCompletionDate && isActive && (
-            <span>
-              On track for {formatProjectedDate(goal.projectedCompletionDate)}
-            </span>
+            <span>On track for {formatProjectedDate(goal.projectedCompletionDate)}</span>
           )}
-          {isActive && (
-            <AdjustDeadlineInline goal={goal} onUpdateDeadline={onUpdateDeadline} />
-          )}
+          {isActive && <AdjustDeadlineInline goal={goal} onUpdateDeadline={onUpdateDeadline} />}
         </div>
 
         {isActive && (
@@ -517,11 +537,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       const data = await res.json();
       if (res.ok) {
         setGoals((prev) =>
-          prev.map((g) =>
-            g.id === id
-              ? { ...g, deadline: data.goal.deadline }
-              : g
-          )
+          prev.map((g) => (g.id === id ? { ...g, deadline: data.goal.deadline } : g))
         );
       }
     } catch {
@@ -538,9 +554,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         body: JSON.stringify({ status: "ABANDONED" }),
       });
       if (res.ok) {
-        setGoals((prev) =>
-          prev.map((g) => (g.id === id ? { ...g, status: "ABANDONED" } : g))
-        );
+        setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, status: "ABANDONED" } : g)));
       }
     } catch {
       // Silent fail
@@ -553,7 +567,8 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
   const handleAbandonRequest = (id: string) => {
     confirmAbandon({
       title: "Abandon this goal?",
-      description: "This will mark the goal as abandoned. You can view it in history but it won't count toward your active goals.",
+      description:
+        "This will mark the goal as abandoned. You can view it in history but it won't count toward your active goals.",
       confirmLabel: "Abandon",
       variant: "danger",
       onConfirm: () => handleAbandon(id),
@@ -571,8 +586,19 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
           </p>
         </div>
         <Button size="sm" onClick={() => setShowAddModal(true)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-1.5"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           Add Goal
         </Button>
@@ -582,8 +608,16 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       {goals.length === 0 && (
         <EmptyState
           icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
           }
           title="No goals yet"
@@ -639,9 +673,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       {/* Abandoned Goals */}
       {abandonedGoals.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Abandoned
-          </h2>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Abandoned</h2>
           <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {abandonedGoals.map((goal) => (
               <GoalCard

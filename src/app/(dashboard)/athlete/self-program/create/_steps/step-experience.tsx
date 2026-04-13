@@ -1,5 +1,6 @@
 "use client";
 
+import { Input } from "@/components/ui/Input";
 import type { WizardFormState } from "../_wizard";
 
 interface StepExperienceProps {
@@ -32,21 +33,19 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
         <label className="label" htmlFor="yearsExperience">
           Years Throwing
         </label>
-        <input
+        <Input
           id="yearsExperience"
           type="number"
           min="0"
           max="40"
           step="1"
-          className="input w-full"
+          className="w-full"
           placeholder="e.g. 4"
           value={form.yearsExperience}
           onChange={(e) => update("yearsExperience", e.target.value)}
         />
         {errors.yearsExperience && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-            {errors.yearsExperience}
-          </p>
+          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.yearsExperience}</p>
         )}
       </div>
 
@@ -69,9 +68,7 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
           ))}
         </select>
         {errors.competitionLevel && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-            {errors.competitionLevel}
-          </p>
+          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.competitionLevel}</p>
         )}
       </div>
 
@@ -81,12 +78,12 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
           Current PR
         </label>
         <div className="relative">
-          <input
+          <Input
             id="currentPR"
             type="number"
             min="0"
             step="0.01"
-            className="input w-full pr-8"
+            className="w-full pr-8"
             placeholder="e.g. 15.50"
             value={form.currentPR}
             onChange={(e) => update("currentPR", e.target.value)}
@@ -106,12 +103,12 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
           Goal Distance
         </label>
         <div className="relative">
-          <input
+          <Input
             id="goalDistance"
             type="number"
             min="0"
             step="0.01"
-            className="input w-full pr-8"
+            className="w-full pr-8"
             placeholder="e.g. 17.00"
             value={form.goalDistance}
             onChange={(e) => update("goalDistance", e.target.value)}
@@ -128,16 +125,15 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
       {/* Current Weekly Volume (optional) */}
       <div>
         <label className="label" htmlFor="currentWeeklyVolume">
-          Current Weekly Volume{" "}
-          <span className="text-xs font-normal text-muted">(optional)</span>
+          Current Weekly Volume <span className="text-xs font-normal text-muted">(optional)</span>
         </label>
         <div className="relative">
-          <input
+          <Input
             id="currentWeeklyVolume"
             type="number"
             min="0"
             step="1"
-            className="input w-full pr-16"
+            className="w-full pr-16"
             placeholder="e.g. 150"
             value={form.currentWeeklyVolume}
             onChange={(e) => update("currentWeeklyVolume", e.target.value)}

@@ -8,6 +8,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { Input } from "@/components/ui/Input";
 import type { ProfileData, LiftEntry } from "./_types";
 import { LIFTS } from "./_types";
 
@@ -43,15 +44,13 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
 
   const [lifts, setLifts] = useState<Record<string, LiftEntry>>(() => {
     const existing = profile.strengthNumbers?.lifts ?? {};
-    return Object.fromEntries(
-      LIFTS.map((l) => [l.key, existing[l.key] ?? { ...defaultLift }])
-    );
+    return Object.fromEntries(LIFTS.map((l) => [l.key, existing[l.key] ?? { ...defaultLift }]));
   });
 
   /* ── Athletic tests state ──────────────────────────────────────────── */
 
-  const [tests, setTests] = useState(() =>
-    profile.strengthNumbers?.tests ?? { standingLJ: 0, tripleJump: 0 }
+  const [tests, setTests] = useState(
+    () => profile.strengthNumbers?.tests ?? { standingLJ: 0, tripleJump: 0 }
   );
 
   /* ── Computed ratios ───────────────────────────────────────────────── */
@@ -75,10 +74,7 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
       ...prev,
       [key]: {
         ...prev[key],
-        [field]:
-          field === "current" || field === "goal"
-            ? parseFloat(value) || 0
-            : value,
+        [field]: field === "current" || field === "goal" ? parseFloat(value) || 0 : value,
       },
     }));
   }
@@ -138,18 +134,14 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
     <div className="space-y-6">
       {/* ── Lift Cards ─────────────────────────────────────────────────── */}
       <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-5 sm:p-6 space-y-5">
-        <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">
-          Lift Maxes
-        </h2>
+        <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">Lift Maxes</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {LIFTS.map((lift) => {
             const entry = lifts[lift.key] ?? { ...defaultLift };
             return (
               <div key={lift.key} className="card p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-[var(--foreground)]">
-                  {lift.label}
-                </h3>
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">{lift.label}</h3>
 
                 {/* Current Max */}
                 <div>
@@ -159,12 +151,12 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
                   >
                     Current Max (kg)
                   </label>
-                  <input
+                  <Input
                     id={`lift-${lift.key}-current`}
                     type="number"
                     step="0.5"
                     min="0"
-                    className="input w-full"
+                    className="w-full"
                     value={entry.current || ""}
                     onChange={(e) => updateLift(lift.key, "current", e.target.value)}
                     placeholder="0"
@@ -196,12 +188,12 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
                   >
                     Goal (kg)
                   </label>
-                  <input
+                  <Input
                     id={`lift-${lift.key}-goal`}
                     type="number"
                     step="0.5"
                     min="0"
-                    className="input w-full"
+                    className="w-full"
                     value={entry.goal || ""}
                     onChange={(e) => updateLift(lift.key, "goal", e.target.value)}
                     placeholder="0"
@@ -249,12 +241,12 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
             >
               Standing Long Jump (mm)
             </label>
-            <input
+            <Input
               id="test-slj"
               type="number"
               step="1"
               min="0"
-              className="input w-full"
+              className="w-full"
               value={tests.standingLJ || ""}
               onChange={(e) =>
                 setTests((prev) => ({
@@ -272,12 +264,12 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
             >
               Triple Jump (m)
             </label>
-            <input
+            <Input
               id="test-tj"
               type="number"
               step="0.01"
               min="0"
-              className="input w-full"
+              className="w-full"
               value={tests.tripleJump || ""}
               onChange={(e) =>
                 setTests((prev) => ({
@@ -301,8 +293,8 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
           <div className="rounded-lg bg-surface-100 dark:bg-surface-800/50 p-4 text-center">
             <p className="text-sm text-muted">
               Set body weight in the{" "}
-              <span className="font-semibold text-primary-500">Core Info</span>{" "}
-              tab to see your ratios.
+              <span className="font-semibold text-primary-500">Core Info</span> tab to see your
+              ratios.
             </p>
           </div>
         ) : (
@@ -326,17 +318,11 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
                         decimals={2}
                         className={cn("text-sm font-semibold tabular-nums", textColor)}
                       />
-                      <span className="text-xs text-muted">
-                        / {ratio.target.toFixed(1)}x
-                      </span>
+                      <span className="text-xs text-muted">/ {ratio.target.toFixed(1)}x</span>
                     </div>
                   </div>
 
-                  <ProgressBar
-                    value={progressPct}
-                    variant={variant}
-                    size="sm"
-                  />
+                  <ProgressBar value={progressPct} variant={variant} size="sm" />
                 </div>
               );
             })}

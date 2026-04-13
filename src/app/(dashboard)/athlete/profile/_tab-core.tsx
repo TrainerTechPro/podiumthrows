@@ -7,6 +7,7 @@ import { cn, localToday } from "@/lib/utils";
 import { Button } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
+import { Input } from "@/components/ui/Input";
 import type { ProfileData } from "./_types";
 import { CLASS_STANDINGS, EVENTS_LIST, GENDERS_LIST } from "./_types";
 
@@ -21,24 +22,14 @@ export function TabCore({ profile }: { profile: ProfileData }) {
 
   const [firstName, setFirstName] = useState(profile.firstName);
   const [lastName, setLastName] = useState(profile.lastName);
-  const [classStanding, setClassStanding] = useState(
-    profile.classStanding ?? ""
-  );
-  const [gradYear, setGradYear] = useState(
-    profile.gradYear?.toString() ?? ""
-  );
-  const [turnDirection, setTurnDirection] = useState(
-    profile.turnDirection ?? ""
-  );
+  const [classStanding, setClassStanding] = useState(profile.classStanding ?? "");
+  const [gradYear, setGradYear] = useState(profile.gradYear?.toString() ?? "");
+  const [turnDirection, setTurnDirection] = useState(profile.turnDirection ?? "");
   const [events, setEvents] = useState<string[]>([...profile.events]);
   const [gender, setGender] = useState(profile.gender);
   const [dateOfBirth, setDateOfBirth] = useState(profile.dateOfBirth ?? "");
-  const [heightCm, setHeightCm] = useState(
-    profile.heightCm?.toString() ?? ""
-  );
-  const [weightKg, setWeightKg] = useState(
-    profile.weightKg?.toString() ?? ""
-  );
+  const [heightCm, setHeightCm] = useState(profile.heightCm?.toString() ?? "");
+  const [weightKg, setWeightKg] = useState(profile.weightKg?.toString() ?? "");
 
   /* ── Helpers ─────────────────────────────────────────────────────────── */
 
@@ -97,15 +88,11 @@ export function TabCore({ profile }: { profile: ProfileData }) {
 
   return (
     <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-5 sm:p-6 space-y-8">
-      <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">
-        Core Info
-      </h2>
+      <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">Core Info</h2>
 
       {/* ── Name ──────────────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Name
-        </h3>
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Name</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label
@@ -153,11 +140,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
               <button
                 key={cs.value}
                 type="button"
-                onClick={() =>
-                  setClassStanding(
-                    classStanding === cs.value ? "" : cs.value
-                  )
-                }
+                onClick={() => setClassStanding(classStanding === cs.value ? "" : cs.value)}
                 className={cn(
                   "px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors",
                   classStanding === cs.value
@@ -176,12 +159,12 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             >
               Grad Year
             </label>
-            <input
+            <Input
               id="core-grad-year"
               type="number"
               value={gradYear}
               onChange={(e) => setGradYear(e.target.value)}
-              className="input w-full"
+              className="w-full"
               placeholder="2027"
               min={2020}
               max={2040}
@@ -205,9 +188,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             <button
               key={value}
               type="button"
-              onClick={() =>
-                setTurnDirection(turnDirection === value ? "" : value)
-              }
+              onClick={() => setTurnDirection(turnDirection === value ? "" : value)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border transition-colors",
                 turnDirection === value
@@ -215,11 +196,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
                   : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
               )}
             >
-              <Icon
-                className="w-4 h-4"
-                strokeWidth={1.75}
-                aria-hidden="true"
-              />
+              <Icon className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
               {label}
             </button>
           ))}
@@ -228,9 +205,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
 
       {/* ── Events ─────────────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Events
-        </h3>
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Events</h3>
         <div className="grid grid-cols-2 gap-2">
           {EVENTS_LIST.map((ev) => {
             const selected = events.includes(ev.value);
@@ -255,9 +230,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
 
       {/* ── Gender ─────────────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Gender
-        </h3>
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Gender</h3>
         <div className="flex flex-wrap gap-2">
           {GENDERS_LIST.map((g) => (
             <button
@@ -279,9 +252,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
 
       {/* ── Date of Birth ──────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Date of Birth
-        </h3>
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Date of Birth</h3>
         <div className="max-w-xs">
           <input
             type="date"
@@ -300,10 +271,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
         </h3>
         <p className="text-xs text-muted">
           Used to auto-fill the body composition calculators in{" "}
-          <a
-            href="/athlete/tools"
-            className="text-primary-500 hover:underline"
-          >
+          <a href="/athlete/tools" className="text-primary-500 hover:underline">
             Tools
           </a>
           .
@@ -316,12 +284,12 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             >
               Height
             </label>
-            <input
+            <Input
               id="core-height"
               type="number"
               value={heightCm}
               onChange={(e) => setHeightCm(e.target.value)}
-              className="input w-full"
+              className="w-full"
               placeholder="cm"
               min={100}
               max={250}
@@ -335,12 +303,12 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             >
               Weight
             </label>
-            <input
+            <Input
               id="core-weight"
               type="number"
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
-              className="input w-full"
+              className="w-full"
               placeholder="kg"
               min={30}
               max={250}

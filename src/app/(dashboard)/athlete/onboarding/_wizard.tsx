@@ -7,6 +7,7 @@ import { cn, localToday } from "@/lib/utils";
 import { Avatar, Button, ProgressBar } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { EnablePushNotifications } from "@/components/notifications/EnablePushNotifications";
+import { Input } from "@/components/ui/Input";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
@@ -49,12 +50,21 @@ function StepIndicator({ current, steps }: { current: number; steps: string[] })
               i < current
                 ? "bg-primary-500 text-white"
                 : i === current
-                ? "bg-primary-500 text-white ring-4 ring-primary-500/20"
-                : "bg-surface-200 dark:bg-surface-700 text-muted"
+                  ? "bg-primary-500 text-white ring-4 ring-primary-500/20"
+                  : "bg-surface-200 dark:bg-surface-700 text-muted"
             )}
           >
             {i < current ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             ) : (
@@ -115,12 +125,12 @@ export function OnboardingWizard({
     step === "events"
       ? 0
       : step === "pbs"
-      ? 1
-      : step === "physical"
-      ? 2
-      : step === "notifications"
-      ? 3
-      : 0;
+        ? 1
+        : step === "physical"
+          ? 2
+          : step === "notifications"
+            ? 3
+            : 0;
 
   /* ─── Event toggling ──────────────────────────────────────────────── */
 
@@ -265,7 +275,8 @@ export function OnboardingWizard({
               Let&apos;s set up your athlete profile in 4 quick steps.
             </p>
             <p className="text-sm text-muted max-w-sm mx-auto">
-              This helps your coach build a personalised training programme tailored to your events and abilities.
+              This helps your coach build a personalised training programme tailored to your events
+              and abilities.
             </p>
           </div>
 
@@ -274,7 +285,9 @@ export function OnboardingWizard({
             {STEP_LABELS.map((label, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-500/15 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-primary-600 dark:text-primary-400">{i + 1}</span>
+                  <span className="text-xs font-bold text-primary-600 dark:text-primary-400">
+                    {i + 1}
+                  </span>
                 </div>
                 <span className="text-sm text-[var(--foreground)]">{label}</span>
               </div>
@@ -296,12 +309,7 @@ export function OnboardingWizard({
   if (step === "notifications") {
     return (
       <div>
-        <EnablePushNotifications
-          variant="card"
-          showSkip
-          onComplete={goToDone}
-          onSkip={goToDone}
-        />
+        <EnablePushNotifications variant="card" showSkip onComplete={goToDone} onSkip={goToDone} />
       </div>
     );
   }
@@ -313,7 +321,16 @@ export function OnboardingWizard({
       <div className="card">
         <div className="flex flex-col items-center justify-center py-16 text-center gap-5">
           <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center animate-in zoom-in duration-300">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
@@ -321,9 +338,7 @@ export function OnboardingWizard({
             <h2 className="text-2xl font-bold font-heading text-[var(--foreground)]">
               You&apos;re all set, {firstName}!
             </h2>
-            <p className="text-sm text-muted">
-              Taking you to your dashboard…
-            </p>
+            <p className="text-sm text-muted">Taking you to your dashboard…</p>
           </div>
           <ProgressBar value={100} variant="primary" size="sm" animate className="max-w-[200px]" />
         </div>
@@ -339,8 +354,19 @@ export function OnboardingWizard({
         href="/athlete/dashboard"
         className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors mb-4"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
         </svg>
         Skip for now
       </Link>
@@ -373,9 +399,7 @@ export function OnboardingWizard({
                   <p
                     className={cn(
                       "font-semibold text-sm",
-                      active
-                        ? "text-primary-700 dark:text-primary-300"
-                        : "text-[var(--foreground)]"
+                      active ? "text-primary-700 dark:text-primary-300" : "text-[var(--foreground)]"
                     )}
                   >
                     {ev.label}
@@ -385,9 +409,7 @@ export function OnboardingWizard({
             })}
           </div>
 
-          {error && (
-            <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">{error}</p>
-          )}
+          {error && <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">{error}</p>}
 
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setStep("welcome")} className="flex-1">
@@ -407,7 +429,8 @@ export function OnboardingWizard({
             Your competition personal bests
           </h2>
           <p className="text-sm text-muted mb-6">
-            Enter your best competition marks so your coach has a baseline. Leave blank if you&apos;re not sure.
+            Enter your best competition marks so your coach has a baseline. Leave blank if
+            you&apos;re not sure.
           </p>
 
           <div className="space-y-4 mb-6">
@@ -423,7 +446,7 @@ export function OnboardingWizard({
                     {event.icon} {event.label} PB
                     <span className="text-muted font-normal ml-1">(metres)</span>
                   </label>
-                  <input
+                  <Input
                     id={`pb-${eventValue}`}
                     type="number"
                     min={0}
@@ -432,16 +455,14 @@ export function OnboardingWizard({
                     placeholder="e.g. 14.52"
                     value={pbs[eventValue] ?? ""}
                     onChange={(e) => updatePb(eventValue, e.target.value)}
-                    className="input w-full"
+                    className="w-full"
                   />
                 </div>
               );
             })}
           </div>
 
-          {error && (
-            <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">{error}</p>
-          )}
+          {error && <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">{error}</p>}
 
           <div className="flex gap-3">
             <Button variant="ghost" onClick={goToEvents} className="flex-1">
@@ -502,8 +523,7 @@ export function OnboardingWizard({
                 htmlFor="dob"
                 className="block text-sm font-medium text-[var(--foreground)] mb-1"
               >
-                Date of birth{" "}
-                <span className="text-muted font-normal">(optional)</span>
+                Date of birth <span className="text-muted font-normal">(optional)</span>
               </label>
               <input
                 id="dob"
@@ -522,10 +542,9 @@ export function OnboardingWizard({
                   htmlFor="height"
                   className="block text-sm font-medium text-[var(--foreground)] mb-1"
                 >
-                  Height (cm){" "}
-                  <span className="text-muted font-normal">(optional)</span>
+                  Height (cm) <span className="text-muted font-normal">(optional)</span>
                 </label>
-                <input
+                <Input
                   id="height"
                   type="number"
                   min={100}
@@ -534,7 +553,7 @@ export function OnboardingWizard({
                   placeholder="e.g. 185"
                   value={heightCm}
                   onChange={(e) => setHeightCm(e.target.value)}
-                  className="input w-full"
+                  className="w-full"
                 />
               </div>
               <div>
@@ -542,10 +561,9 @@ export function OnboardingWizard({
                   htmlFor="weight"
                   className="block text-sm font-medium text-[var(--foreground)] mb-1"
                 >
-                  Weight (kg){" "}
-                  <span className="text-muted font-normal">(optional)</span>
+                  Weight (kg) <span className="text-muted font-normal">(optional)</span>
                 </label>
-                <input
+                <Input
                   id="weight"
                   type="number"
                   min={30}
@@ -554,15 +572,13 @@ export function OnboardingWizard({
                   placeholder="e.g. 110"
                   value={weightKg}
                   onChange={(e) => setWeightKg(e.target.value)}
-                  className="input w-full"
+                  className="w-full"
                 />
               </div>
             </div>
           </div>
 
-          {error && (
-            <p className="text-sm text-danger-600 dark:text-danger-400 mt-4">{error}</p>
-          )}
+          {error && <p className="text-sm text-danger-600 dark:text-danger-400 mt-4">{error}</p>}
 
           <div className="flex gap-3 mt-6">
             <Button
@@ -573,12 +589,7 @@ export function OnboardingWizard({
             >
               Back
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleSubmit}
-              loading={isPending}
-              className="flex-1"
-            >
+            <Button variant="primary" onClick={handleSubmit} loading={isPending} className="flex-1">
               {isPending ? "Saving…" : "Complete Setup"}
             </Button>
           </div>

@@ -8,6 +8,7 @@ import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/th
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
+import { Input } from "@/components/ui/Input";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
@@ -274,7 +275,12 @@ export function LogSessionWizard({
             s.drillLogs.map((d: any) => ({
               id: d.id || crypto.randomUUID(),
               drillType: d.drillType || "",
-              implementWeight: d.implementWeightOriginal != null ? String(d.implementWeightOriginal) : d.implementWeight != null ? String(d.implementWeight) : "",
+              implementWeight:
+                d.implementWeightOriginal != null
+                  ? String(d.implementWeightOriginal)
+                  : d.implementWeight != null
+                    ? String(d.implementWeight)
+                    : "",
               implementUnit: (d.implementWeightUnit === "lbs" ? "lbs" : "kg") as "kg" | "lbs",
               wireLength: d.wireLength || "FULL",
               throwCount: d.throwCount != null ? String(d.throwCount) : "",
@@ -289,17 +295,24 @@ export function LogSessionWizard({
   }, [editSessionId, apiEndpoint]);
 
   useEffect(() => {
-    if (!event) { setPastDrills([]); return; }
+    if (!event) {
+      setPastDrills([]);
+      return;
+    }
     fetch(`/api/throws/past-drills?event=${event}`)
       .then((r) => r.json())
-      .then((d) => { if (d.success) setPastDrills(d.data); })
+      .then((d) => {
+        if (d.success) setPastDrills(d.data);
+      })
       .catch(() => {});
   }, [event]);
 
   // Warn before navigating away mid-session
   useEffect(() => {
     if (step === "done" || step === "event") return;
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [step]);
@@ -321,9 +334,7 @@ export function LogSessionWizard({
   }
 
   function updateDrill(id: string, field: keyof DrillEntry, value: string) {
-    setDrills((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, [field]: value } : d))
-    );
+    setDrills((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
   }
 
   function removeDrill(id: string) {
@@ -373,13 +384,17 @@ export function LogSessionWizard({
               const raw = d.bestMark ? parseFloat(d.bestMark) : undefined;
               const best = raw && distanceUnit === "feet" ? raw * 0.3048 : raw;
               const implWeight = d.implementWeight
-                ? (d.implementUnit === "lbs" ? parseFloat(d.implementWeight) * LBS_TO_KG : parseFloat(d.implementWeight))
+                ? d.implementUnit === "lbs"
+                  ? parseFloat(d.implementWeight) * LBS_TO_KG
+                  : parseFloat(d.implementWeight)
                 : undefined;
               return {
                 drillType: d.drillType,
                 implementWeight: implWeight,
                 implementWeightUnit: d.implementUnit,
-                implementWeightOriginal: d.implementWeight ? parseFloat(d.implementWeight) : undefined,
+                implementWeightOriginal: d.implementWeight
+                  ? parseFloat(d.implementWeight)
+                  : undefined,
                 wireLength: event === "HAMMER" ? d.wireLength : undefined,
                 throwCount: parseInt(d.throwCount, 10) || 0,
                 bestMark: best,
@@ -419,8 +434,19 @@ export function LogSessionWizard({
       onClick={handleClose}
       className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors mb-4"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M19 12H5" />
+        <path d="M12 19l-7-7 7-7" />
       </svg>
       Back to Sessions
     </button>
@@ -456,9 +482,7 @@ export function LogSessionWizard({
               type="button"
               onClick={() => setEvent(ev.value)}
               className={`card card-interactive p-4 sm:p-5 text-center ${
-                event === ev.value
-                  ? "ring-2 ring-primary-500 bg-primary-500/5"
-                  : ""
+                event === ev.value ? "ring-2 ring-primary-500 bg-primary-500/5" : ""
               }`}
             >
               <span className="text-2xl block mb-1">{ev.icon}</span>
@@ -492,7 +516,9 @@ export function LogSessionWizard({
 
         {/* Date */}
         <div>
-          <label htmlFor="session-date" className="label">Date</label>
+          <label htmlFor="session-date" className="label">
+            Date
+          </label>
           <input
             id="session-date"
             type="date"
@@ -502,12 +528,7 @@ export function LogSessionWizard({
           />
         </div>
 
-        <button
-          type="button"
-          onClick={nextStep}
-          disabled={!event}
-          className="btn-primary w-full"
-        >
+        <button type="button" onClick={nextStep} disabled={!event} className="btn-primary w-full">
           Next
         </button>
       </div>
@@ -531,7 +552,9 @@ export function LogSessionWizard({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="label mb-0">Sleep Quality</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">1 = poor, 5 = great</span>
+              <span className="text-[10px] text-muted uppercase tracking-wider">
+                1 = poor, 5 = great
+              </span>
             </div>
             <ScaleSelector value={sleepQuality} onChange={setSleepQuality} />
           </div>
@@ -539,7 +562,9 @@ export function LogSessionWizard({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="label mb-0">Soreness</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">1 = none, 5 = severe</span>
+              <span className="text-[10px] text-muted uppercase tracking-wider">
+                1 = none, 5 = severe
+              </span>
             </div>
             <ScaleSelector value={sorenessLevel} onChange={setSorenessLevel} />
           </div>
@@ -547,7 +572,9 @@ export function LogSessionWizard({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="label mb-0">Energy Level</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">1 = low, 5 = high</span>
+              <span className="text-[10px] text-muted uppercase tracking-wider">
+                1 = low, 5 = high
+              </span>
             </div>
             <ScaleSelector value={energyLevel} onChange={setEnergyLevel} />
           </div>
@@ -633,7 +660,9 @@ export function LogSessionWizard({
                     >
                       <option value="">Select drill...</option>
                       {eventDrills.map((d) => (
-                        <option key={d} value={d}>{d}</option>
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
                       ))}
                     </select>
                   )}
@@ -642,12 +671,11 @@ export function LogSessionWizard({
                 {/* Reps / throw count */}
                 <div>
                   <label className="label">Reps</label>
-                  <input
+                  <Input
                     type="number"
                     min="0"
                     value={drill.throwCount}
                     onChange={(e) => updateDrill(drill.id, "throwCount", e.target.value)}
-                    className="input"
                     placeholder="10"
                   />
                 </div>
@@ -665,7 +693,13 @@ export function LogSessionWizard({
                     />
                     <button
                       type="button"
-                      onClick={() => updateDrill(drill.id, "implementUnit", drill.implementUnit === "kg" ? "lbs" : "kg")}
+                      onClick={() =>
+                        updateDrill(
+                          drill.id,
+                          "implementUnit",
+                          drill.implementUnit === "kg" ? "lbs" : "kg"
+                        )
+                      }
                       className="shrink-0 px-2 py-1.5 text-xs sm:px-1.5 sm:py-1 sm:text-[10px] font-bold border border-[var(--card-border)] rounded text-muted hover:border-primary-400 hover:text-primary-500 transition-colors"
                     >
                       {drill.implementUnit}
@@ -719,13 +753,12 @@ export function LogSessionWizard({
                       ))}
                     </div>
                   </div>
-                  <input
+                  <Input
                     type="number"
                     step="0.01"
                     min="0"
                     value={drill.bestMark}
                     onChange={(e) => updateDrill(drill.id, "bestMark", e.target.value)}
-                    className="input"
                     placeholder={distanceUnit === "meters" ? "18.50" : "60.70"}
                   />
                 </div>
@@ -753,9 +786,7 @@ export function LogSessionWizard({
           + Add Drill
         </button>
 
-        {error && (
-          <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
-        )}
+        {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
 
         {limitedMode ? (
           <>
@@ -765,7 +796,9 @@ export function LogSessionWizard({
                 Back
               </button>
               <SlideToConfirm
-                label={submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"}
+                label={
+                  submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"
+                }
                 onConfirm={handleSubmit}
                 disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
               />
@@ -822,7 +855,9 @@ export function LogSessionWizard({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="label mb-0">Session RPE</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">1 = easy, 10 = max</span>
+              <span className="text-[10px] text-muted uppercase tracking-wider">
+                1 = easy, 10 = max
+              </span>
             </div>
             <ScaleSelector value={sessionRpe} onChange={setSessionRpe} max={10} />
           </div>
@@ -900,9 +935,7 @@ export function LogSessionWizard({
           </div>
         </div>
 
-        {error && (
-          <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
-        )}
+        {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
 
         {/* Mobile: slide to confirm */}
         <div className="sm:hidden space-y-3">
@@ -910,7 +943,9 @@ export function LogSessionWizard({
             Back
           </button>
           <SlideToConfirm
-            label={submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"}
+            label={
+              submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"
+            }
             onConfirm={handleSubmit}
             disabled={submitting}
           />
@@ -936,20 +971,26 @@ export function LogSessionWizard({
 
   /* ── STEP: Done ── */
   if (step === "done") {
-    const totalThrows = drills.reduce(
-      (sum, d) => sum + (parseInt(d.throwCount, 10) || 0),
-      0
-    );
-    const bestDist = drills
-      .map((d) => parseFloat(d.bestMark))
-      .filter((n) => !isNaN(n) && n > 0);
+    const totalThrows = drills.reduce((sum, d) => sum + (parseInt(d.throwCount, 10) || 0), 0);
+    const bestDist = drills.map((d) => parseFloat(d.bestMark)).filter((n) => !isNaN(n) && n > 0);
     const sessionBest = bestDist.length > 0 ? Math.max(...bestDist) : null;
     const eventName = EVENTS.find((e) => e.value === event)?.label ?? event;
 
     return (
       <div className="max-w-lg mx-auto text-center space-y-6 animate-spring-up">
         <div className="w-16 h-16 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 dark:text-green-400" aria-hidden="true">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-green-600 dark:text-green-400"
+            aria-hidden="true"
+          >
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
@@ -959,8 +1000,15 @@ export function LogSessionWizard({
             {isEditing ? "Session Updated!" : "Session logged"}
           </h2>
           <p className="text-sm text-muted mt-1">
-            {eventName} &middot; {drills.filter((d) => d.drillType).length} drill{drills.filter((d) => d.drillType).length !== 1 ? "s" : ""} &middot; <NumberFlow value={totalThrows} /> throws
-            {sessionBest && <> &middot; best: <NumberFlow value={sessionBest} decimals={2} suffix="m" /></>}
+            {eventName} &middot; {drills.filter((d) => d.drillType).length} drill
+            {drills.filter((d) => d.drillType).length !== 1 ? "s" : ""} &middot;{" "}
+            <NumberFlow value={totalThrows} /> throws
+            {sessionBest && (
+              <>
+                {" "}
+                &middot; best: <NumberFlow value={sessionBest} decimals={2} suffix="m" />
+              </>
+            )}
           </p>
         </div>
 
@@ -972,7 +1020,13 @@ export function LogSessionWizard({
                 key={i}
                 className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-amber-500 shrink-0">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="text-amber-500 shrink-0"
+                >
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
                 <div className="text-left">
@@ -997,9 +1051,18 @@ export function LogSessionWizard({
                 key={i}
                 className="flex gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-500 shrink-0 mt-0.5">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="text-amber-500 shrink-0 mt-0.5"
+                >
                   <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                  <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 <p className="text-xs text-amber-800 dark:text-amber-300 text-left">{w.message}</p>
               </div>
@@ -1008,11 +1071,7 @@ export function LogSessionWizard({
         )}
 
         <div className="flex gap-3 justify-center">
-          <button
-            type="button"
-            onClick={() => router.push(sessionsPath)}
-            className="btn-secondary"
-          >
+          <button type="button" onClick={() => router.push(sessionsPath)} className="btn-secondary">
             View Sessions
           </button>
           <button

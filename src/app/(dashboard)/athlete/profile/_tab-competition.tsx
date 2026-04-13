@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
+import { Input } from "@/components/ui/Input";
 import type {
   ProfileData,
   ThrowsProfileSummary,
@@ -38,10 +39,7 @@ const emptyEntry = (): CompetitionGoalsEntry => ({
 
 type EventFormState = Record<string, CompetitionGoalsEntry>;
 
-function buildInitialState(
-  events: string[],
-  goals: CompetitionGoalsMap | null
-): EventFormState {
+function buildInitialState(events: string[], goals: CompetitionGoalsMap | null): EventFormState {
   const state: EventFormState = {};
   for (const ev of events) {
     const existing = goals?.[ev];
@@ -116,11 +114,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
     }));
   };
 
-  const updateGoal = (
-    event: string,
-    field: "seasonGoal" | "careerGoal",
-    value: string
-  ) => {
+  const updateGoal = (event: string, field: "seasonGoal" | "careerGoal", value: string) => {
     setForm((prev) => ({
       ...prev,
       [event]: {
@@ -177,9 +171,8 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
           No Events Selected
         </h2>
         <p className="mt-2 text-sm text-muted">
-          Add your events in the{" "}
-          <span className="font-semibold text-primary-500">Core Info</span> tab
-          to set up competition goals and distance bands.
+          Add your events in the <span className="font-semibold text-primary-500">Core Info</span>{" "}
+          tab to set up competition goals and distance bands.
         </p>
       </div>
     );
@@ -236,18 +229,14 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
                 <MarkSection
                   label="Competition PR"
                   mark={entry.competitionPR}
-                  onChange={(key, val) =>
-                    updateMark(ev, "competitionPR", key, val)
-                  }
+                  onChange={(key, val) => updateMark(ev, "competitionPR", key, val)}
                 />
 
                 {/* Season Best */}
                 <MarkSection
                   label="Season Best"
                   mark={entry.seasonBest}
-                  onChange={(key, val) =>
-                    updateMark(ev, "seasonBest", key, val)
-                  }
+                  onChange={(key, val) => updateMark(ev, "seasonBest", key, val)}
                 />
 
                 {/* Goals row */}
@@ -260,15 +249,13 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
                       <label className="text-sm font-medium text-[var(--foreground)] mb-1 block">
                         Season Goal (m)
                       </label>
-                      <input
+                      <Input
                         type="number"
                         step="0.01"
                         min="0"
-                        className="input w-full"
+                        className="w-full"
                         value={entry.seasonGoal || ""}
-                        onChange={(e) =>
-                          updateGoal(ev, "seasonGoal", e.target.value)
-                        }
+                        onChange={(e) => updateGoal(ev, "seasonGoal", e.target.value)}
                         placeholder="0.00"
                       />
                     </div>
@@ -276,15 +263,13 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
                       <label className="text-sm font-medium text-[var(--foreground)] mb-1 block">
                         Career Goal (m)
                       </label>
-                      <input
+                      <Input
                         type="number"
                         step="0.01"
                         min="0"
-                        className="input w-full"
+                        className="w-full"
                         value={entry.careerGoal || ""}
-                        onChange={(e) =>
-                          updateGoal(ev, "careerGoal", e.target.value)
-                        }
+                        onChange={(e) => updateGoal(ev, "careerGoal", e.target.value)}
                         placeholder="0.00"
                       />
                     </div>
@@ -313,9 +298,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
                         type="text"
                         className="input w-full"
                         value={entry.targetBand}
-                        onChange={(e) =>
-                          updateTargetBand(ev, e.target.value)
-                        }
+                        onChange={(e) => updateTargetBand(ev, e.target.value)}
                         placeholder="e.g. 18-19m"
                       />
                     </div>
@@ -355,28 +338,24 @@ function MarkSection({
 }) {
   return (
     <div className="pt-4">
-      <h4 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
-        {label}
-      </h4>
+      <h4 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">{label}</h4>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="text-sm font-medium text-[var(--foreground)] mb-1 block">
             Distance (m)
           </label>
-          <input
+          <Input
             type="number"
             step="0.01"
             min="0"
-            className="input w-full"
+            className="w-full"
             value={mark.distance || ""}
             onChange={(e) => onChange("distance", e.target.value)}
             placeholder="0.00"
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-[var(--foreground)] mb-1 block">
-            Date
-          </label>
+          <label className="text-sm font-medium text-[var(--foreground)] mb-1 block">Date</label>
           <input
             type="date"
             className="input w-full"

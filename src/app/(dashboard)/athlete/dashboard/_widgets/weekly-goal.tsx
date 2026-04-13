@@ -7,6 +7,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PRCelebration } from "@/components/ui/PRCelebration";
 import { AnimatedNumber } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { Input } from "@/components/ui/Input";
 import type { WeeklyGoalData } from "@/lib/data/dashboard-progress";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -49,11 +50,7 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
         onDismiss={() => setShowCelebration(false)}
         icon="🎯"
         title="Weekly goal crushed!"
-        subtitle={
-          data.goal
-            ? `${data.currentValue}/${data.goal.targetValue} throws`
-            : undefined
-        }
+        subtitle={data.goal ? `${data.currentValue}/${data.goal.targetValue} throws` : undefined}
       />
 
       <div className="card px-4 py-4 shadow-sm md:hover:shadow-md md:transition-shadow">
@@ -89,10 +86,7 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
             <div className="flex items-baseline justify-between mb-2">
               <p className="text-3xl font-bold font-heading tabular-nums text-[var(--foreground)]">
                 <AnimatedNumber value={data.currentValue} decimals={0} />
-                <span className="text-base font-normal text-muted">
-                  {" "}
-                  / {data.goal.targetValue}
-                </span>
+                <span className="text-base font-normal text-muted"> / {data.goal.targetValue}</span>
               </p>
               <div className="text-right">
                 <p className="text-xs font-semibold tabular-nums text-primary-500">
@@ -100,9 +94,7 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
                 </p>
                 {daysRemaining != null && (
                   <p className="text-[10px] text-muted">
-                    {daysRemaining === 0
-                      ? "Last day"
-                      : `${daysRemaining}d left`}
+                    {daysRemaining === 0 ? "Last day" : `${daysRemaining}d left`}
                   </p>
                 )}
               </div>
@@ -224,15 +216,13 @@ function SetGoalDialog({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-muted mb-1">
-          Custom target
-        </label>
-        <input
+        <label className="block text-xs font-medium text-muted mb-1">Custom target</label>
+        <Input
           type="number"
           min={1}
           value={value}
           onChange={(e) => setValue(parseInt(e.target.value, 10) || 0)}
-          className="input w-full tabular-nums"
+          className="w-full tabular-nums"
         />
       </div>
 
