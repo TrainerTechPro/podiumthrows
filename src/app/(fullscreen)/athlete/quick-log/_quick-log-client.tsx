@@ -37,6 +37,8 @@ interface QuickLogData {
   recentThrows: RecentThrow[];
   throwCount: number;
   availableImplements: { event: string; implementWeight: number }[];
+  weightPresets?: Record<string, number[]>;
+  compWeights?: Record<string, number>;
   sessionFocus: string | null;
 }
 
@@ -366,6 +368,11 @@ export function QuickLogClient() {
   const [sessionFocus, setSessionFocus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Weight presets for the weight picker
+  const [weightPresets, setWeightPresets] = useState<Record<string, number[]>>({});
+  const [compWeights, setCompWeights] = useState<Record<string, number>>({});
+  const [weightPickerOpen, setWeightPickerOpen] = useState(false);
+
   // UI state
   const [glowActive, setGlowActive] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -420,14 +427,25 @@ export function QuickLogClient() {
         setThrowCount(data.throwCount);
         setRecentThrows(data.recentThrows ?? []);
         setSessionFocus(data.sessionFocus ?? null);
+        if (data.weightPresets) setWeightPresets(data.weightPresets);
+        if (data.compWeights) setCompWeights(data.compWeights);
 
-        // Restore saved implement selection
+        // Restore saved implement selection (event + weight)
         const saved = localStorage.getItem(IMPLEMENT_KEY);
         if (saved) {
-          const savedIndex = list.findIndex(
-            (i) => `${i.event}|${i.implementWeight}` === saved
-          );
-          if (savedIndex >= 0) setImplementIndex(savedIndex);
+          const [savedEvent, savedWeightStr] = saved.split("|");
+          const savedWeight = parseFloat(savedWeightStr);
+
+          // Find the matching event in the list
+          const eventIndex = list.findIndex((i) => i.event === savedEvent);
+          if (eventIndex >= 0) {
+            setImplementIndex(eventIndex);
+            // If the saved weight differs from competition weight, update it
+            if (Number.isFinite(savedWeight) && Math.abs(list[eventIndex].implementWeight - savedWeight) > 0.01) {
+              list[eventIndex] = { ...list[eventIndex], implementWeight: savedWeight };
+              setImplements([...list]);
+            }
+          }
         }
 
         setIsLoading(false);
@@ -513,6 +531,25 @@ export function QuickLogClient() {
       });
     },
     [implements_]
+  );
+
+  /* ── Change implement weight ─────────────────────────────────────────── */
+
+  const changeWeight = useCallback(
+    (newWeight: number) => {
+      if (!currentImplement) return;
+      haptic(30);
+      // Update the current implement's weight in the list
+      setImplements((prev) =>
+        prev.map((impl, i) =>
+          i === implementIndex ? { ...impl, implementWeight: newWeight } : impl
+        )
+      );
+      // Persist updated selection
+      localStorage.setItem(IMPLEMENT_KEY, `${currentImplement.event}|${newWeight}`);
+      setWeightPickerOpen(false);
+    },
+    [currentImplement, implementIndex]
   );
 
   /* ── Log throw (immediate, no popover) ──────────────────────────────── */
@@ -822,12 +859,48 @@ export function QuickLogClient() {
               {isLoading ? (
                 <div className="h-7 w-48 mx-auto rounded-lg bg-surface-700 animate-pulse" />
               ) : (
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <span className="font-heading text-xl font-bold text-[var(--foreground)]">
-                    {currentImplement?.event ?? "—"}
-                    {" · "}
-                    <span className="font-mono">{currentImplement?.implementWeight ?? "—"}kg</span>
-                  </span>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                    <span className="font-heading text-xl font-bold text-[var(--foreground)]">
+                      {currentImplement?.event ?? "—"}
+                      {" · "}
+                      <button
+                        type="button"
+                        onClick={() => setWeightPickerOpen((v) => !v)}
+                        className="font-mono inline-flex items-center gap-1 text-primary-400 underline underline-offset-4 decoration-primary-400/30"
+                      >
+                        {currentImplement?.implementWeight ?? "—"}kg
+                        <span className="text-[10px] no-underline">▾</span>
+                      </button>
+                    </span>
+                  </div>
+                  {/* Weight picker pills */}
+                  {weightPickerOpen && currentImplement && (
+                    <div className="flex flex-wrap justify-center gap-1.5 mt-2 px-2">
+                      {(weightPresets[currentImplement.event] ?? []).map((w) => {
+                        const isActive = Math.abs(w - currentImplement.implementWeight) < 0.01;
+                        const isComp = Math.abs(w - (compWeights[currentImplement.event] ?? 0)) < 0.01;
+                        return (
+                          <button
+                            key={w}
+                            type="button"
+                            onClick={() => changeWeight(w)}
+                            className={cn(
+                              "min-h-[44px] px-3 py-2 rounded-lg text-sm font-mono font-semibold transition-colors",
+                              isActive
+                                ? "bg-primary-500 text-surface-950"
+                                : "bg-surface-800 text-surface-300 active:bg-surface-700"
+                            )}
+                          >
+                            {w}kg
+                            {isComp && !isActive && (
+                              <span className="ml-1 text-[9px] text-primary-400 font-sans">comp</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>

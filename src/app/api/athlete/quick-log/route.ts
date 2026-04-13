@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { checkAndSetPR, COMPETITION_WEIGHTS } from "@/lib/throws";
+import { checkAndSetPR, COMPETITION_WEIGHTS, IMPLEMENT_PRESETS } from "@/lib/throws";
 import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
@@ -180,6 +180,19 @@ export async function GET() {
     const currentImplement = await getCurrentImplement(athlete.id, primaryEvent, gender);
     const availableImplements = buildAvailableImplements(events, gender);
 
+    // Weight presets per event for the implement weight picker
+    const genderKey = gender === "FEMALE" ? "female" : "male";
+    const weightPresets: Record<string, number[]> = {};
+    for (const ev of events) {
+      weightPresets[ev] = IMPLEMENT_PRESETS[ev]?.[genderKey] ?? [];
+    }
+
+    // Competition weights per event for highlighting
+    const compWeights: Record<string, number> = {};
+    for (const ev of events) {
+      compWeights[ev] = COMPETITION_WEIGHTS[ev]?.[genderKey] ?? 0;
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -190,6 +203,8 @@ export async function GET() {
         recentThrows,
         throwCount,
         availableImplements,
+        weightPresets,
+        compWeights,
         sessionFocus: todaySession?.focus ?? null,
       },
     });
