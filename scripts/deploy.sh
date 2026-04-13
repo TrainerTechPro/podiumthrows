@@ -14,7 +14,7 @@
 # This saves ~$0.27 per deploy ($72/mo → ~$0 at current build volume).
 # ─────────────────────────────────────────────────────────────────────
 
-set -euo pipefail
+set -uo pipefail
 
 PROD_FLAG=""
 if [[ "${1:-}" == "prod" || "${1:-}" == "production" ]]; then
@@ -72,13 +72,20 @@ echo "── Generating Prisma client ──"
 npx prisma generate
 echo "  ✓ Client generated"
 
-# ── Step 5: Build locally ──────────────────────────────────────────
+# ── Step 5: Pull project settings if needed ────────────────────────
+if [[ ! -f .vercel/project.json ]]; then
+  echo ""
+  echo "── Pulling Vercel project settings ──"
+  npx vercel pull --yes --environment production
+fi
+
+# ── Step 6: Build locally using Vercel CLI ─────────────────────────
 echo ""
-echo "── Building Next.js locally ──"
-npx next build
+echo "── Building locally (vercel build) ──"
+npx vercel build --prod 2>&1 | tail -5
 echo "  ✓ Build complete"
 
-# ── Step 6: Deploy prebuilt output ─────────────────────────────────
+# ── Step 7: Deploy prebuilt output ─────────────────────────────────
 echo ""
 echo "── Deploying to Vercel (prebuilt) ──"
 npx vercel deploy --prebuilt $PROD_FLAG
