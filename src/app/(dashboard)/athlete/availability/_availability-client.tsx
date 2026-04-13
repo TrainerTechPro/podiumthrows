@@ -21,10 +21,7 @@ import { StaggeredList } from "@/components/ui/StaggeredList";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
-import type {
-  AvailabilityBlock,
-  AvailabilityOverrideItem,
-} from "@/lib/data/availability";
+import type { AvailabilityBlock, AvailabilityOverrideItem } from "@/lib/data/availability";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -127,9 +124,7 @@ function typeColor(type: AvailType | OverrideType): string {
   return "border-amber-500";
 }
 
-function typeBadgeVariant(
-  type: AvailType | OverrideType
-): "success" | "danger" | "warning" {
+function typeBadgeVariant(type: AvailType | OverrideType): "success" | "danger" | "warning" {
   if (type === "AVAILABLE") return "success";
   if (type === "UNAVAILABLE") return "danger";
   return "warning";
@@ -233,7 +228,7 @@ function TypePill({
       type="button"
       onClick={onClick}
       className={[
-        "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 border",
+        "px-3 py-2.5 rounded-full text-xs font-semibold transition-all duration-150 border",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
         active
           ? `${colorClass} border-transparent`
@@ -251,17 +246,14 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
   const { success, error } = useToast();
 
   const [blocks, setBlocks] = useState<AvailabilityBlock[]>(initialData.blocks);
-  const [overrides, setOverrides] = useState<AvailabilityOverrideItem[]>(
-    initialData.overrides
-  );
+  const [overrides, setOverrides] = useState<AvailabilityOverrideItem[]>(initialData.overrides);
 
   const [showBlockForm, setShowBlockForm] = useState(false);
   const [blockForm, setBlockForm] = useState<BlockFormState>(DEFAULT_BLOCK_FORM);
   const [blockSaving, setBlockSaving] = useState(false);
 
   const [showOverrideForm, setShowOverrideForm] = useState(false);
-  const [overrideForm, setOverrideForm] =
-    useState<OverrideFormState>(DEFAULT_OVERRIDE_FORM);
+  const [overrideForm, setOverrideForm] = useState<OverrideFormState>(DEFAULT_OVERRIDE_FORM);
   const [overrideSaving, setOverrideSaving] = useState(false);
 
   // Edit state: which group is being edited (by group key)
@@ -314,10 +306,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
               endTime: blockForm.endTime,
               type: blockForm.type,
               label: blockForm.label.trim() || null,
-              notes:
-                blockForm.type === "CONDITIONAL"
-                  ? blockForm.notes.trim() || null
-                  : null,
+              notes: blockForm.type === "CONDITIONAL" ? blockForm.notes.trim() || null : null,
             }),
           })
         )
@@ -412,10 +401,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
               endTime: editForm.endTime,
               type: editForm.type,
               label: editForm.label.trim() || null,
-              notes:
-                editForm.type === "CONDITIONAL"
-                  ? editForm.notes.trim() || null
-                  : null,
+              notes: editForm.type === "CONDITIONAL" ? editForm.notes.trim() || null : null,
             }),
           })
         )
@@ -460,14 +446,8 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           date: overrideForm.date,
-          startTime:
-            overrideForm.allDay || !overrideForm.startTime
-              ? null
-              : overrideForm.startTime,
-          endTime:
-            overrideForm.allDay || !overrideForm.endTime
-              ? null
-              : overrideForm.endTime,
+          startTime: overrideForm.allDay || !overrideForm.startTime ? null : overrideForm.startTime,
+          endTime: overrideForm.allDay || !overrideForm.endTime ? null : overrideForm.endTime,
           type: overrideForm.type,
           reason: overrideForm.reason.trim() || null,
         }),
@@ -522,9 +502,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
     sunday.setDate(monday.getDate() + 6);
     const weekStart = localDateStr(monday);
     const weekEnd = localDateStr(sunday);
-    const thisWeekCount = overrides.filter(
-      (o) => o.date >= weekStart && o.date <= weekEnd
-    ).length;
+    const thisWeekCount = overrides.filter((o) => o.date >= weekStart && o.date <= weekEnd).length;
 
     if (thisWeekCount === 0) return;
 
@@ -535,10 +513,10 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
 
     setCopyingWeek(true);
     try {
-      const res = await fetch(
-        "/api/athlete/availability/overrides/copy-week",
-        { method: "POST", headers: csrfHeaders() }
-      );
+      const res = await fetch("/api/athlete/availability/overrides/copy-week", {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         error("Copy failed", (json as { error?: string }).error ?? "Please try again.");
@@ -576,10 +554,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
       } else {
         const shareUrl = (json as { shareUrl?: string }).shareUrl ?? "";
         await navigator.clipboard.writeText(shareUrl);
-        success(
-          "Share link copied",
-          "Anyone with this link can view your availability."
-        );
+        success("Share link copied", "Anyone with this link can view your availability.");
       }
     } catch {
       error("Network error", "Please try again.");
@@ -671,16 +646,14 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
                       {o.type === "AVAILABLE" ? "Available" : "Unavailable"}
                     </Badge>
                   </div>
-                  {(o.startTime && o.endTime) ? (
+                  {o.startTime && o.endTime ? (
                     <p className="text-xs font-mono tabular-nums text-muted mt-0.5">
                       {formatTime(o.startTime)} – {formatTime(o.endTime)}
                     </p>
                   ) : (
                     <p className="text-xs text-muted mt-0.5">All Day</p>
                   )}
-                  {o.reason && (
-                    <p className="text-xs text-muted mt-1 italic">{o.reason}</p>
-                  )}
+                  {o.reason && <p className="text-xs text-muted mt-1 italic">{o.reason}</p>}
                 </div>
                 <button
                   type="button"
@@ -689,11 +662,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
                   className="shrink-0 text-surface-400 hover:text-danger-500 transition-colors disabled:opacity-50"
                   aria-label="Remove change"
                 >
-                  <Trash2
-                    size={15}
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
+                  <Trash2 size={15} strokeWidth={1.75} aria-hidden="true" />
                 </button>
               </div>
             ))}
@@ -769,10 +738,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
             {groups.map((g) =>
               editingGroupKey === g.key ? (
                 <div key={g.key} className="card px-4 py-4">
-                  <BlockFormFields
-                    form={editForm}
-                    onChange={setEditForm}
-                  />
+                  <BlockFormFields form={editForm} onChange={setEditForm} />
                   <div className="flex items-center gap-2 mt-4">
                     <Button
                       variant="primary"
@@ -809,9 +775,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
         {/* Add block inline form */}
         {showBlockForm && (
           <div className="card px-4 py-4 space-y-4">
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">
-              New Time Block
-            </h3>
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">New Time Block</h3>
             <BlockFormFields form={blockForm} onChange={setBlockForm} />
             <div className="flex items-center gap-2">
               <Button
@@ -858,9 +822,7 @@ function BlockGroupCard({
   const dayStr = group.dayOfWeeks.map((d) => DAY_LABELS[d]).join(", ");
 
   return (
-    <div
-      className={`card border-l-4 ${typeColor(group.type)} px-4 py-3 flex items-start gap-3`}
-    >
+    <div className={`card border-l-4 ${typeColor(group.type)} px-4 py-3 flex items-start gap-3`}>
       <Calendar
         size={16}
         strokeWidth={1.75}
@@ -869,15 +831,13 @@ function BlockGroupCard({
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-[var(--foreground)]">
-            {dayStr}
-          </span>
+          <span className="text-sm font-semibold text-[var(--foreground)]">{dayStr}</span>
           <Badge variant={typeBadgeVariant(group.type)}>
             {group.type === "AVAILABLE"
               ? "Available"
               : group.type === "UNAVAILABLE"
-              ? "Unavailable"
-              : "Conditional"}
+                ? "Unavailable"
+                : "Conditional"}
           </Badge>
           {group.label && (
             <span className="text-xs text-muted bg-surface-100 dark:bg-surface-800 px-2 py-0.5 rounded-full border border-[var(--card-border)]">
@@ -927,9 +887,7 @@ function BlockFormFields({
   const toggleDay = (day: number) => {
     onChange({
       ...form,
-      days: form.days.includes(day)
-        ? form.days.filter((d) => d !== day)
-        : [...form.days, day],
+      days: form.days.includes(day) ? form.days.filter((d) => d !== day) : [...form.days, day],
     });
   };
 
@@ -937,9 +895,7 @@ function BlockFormFields({
     <div className="space-y-4">
       {/* Day selection */}
       <div>
-        <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-          Days
-        </p>
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Days</p>
         <div className="flex gap-2 flex-wrap">
           {DAY_LABELS.map((label, i) => (
             <DayPill
@@ -986,9 +942,7 @@ function BlockFormFields({
 
       {/* Type */}
       <div>
-        <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-          Type
-        </p>
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Type</p>
         <div className="flex gap-2 flex-wrap">
           <TypePill
             label="Available"
@@ -1052,12 +1006,8 @@ function OverrideForm({
 }) {
   return (
     <div className="card px-4 py-4 space-y-4">
-      <h3 className="text-sm font-semibold text-[var(--foreground)]">
-        Add Temporary Change
-      </h3>
-      <p className="text-xs text-muted">
-        Override your weekly schedule for a specific date.
-      </p>
+      <h3 className="text-sm font-semibold text-[var(--foreground)]">Add Temporary Change</h3>
+      <p className="text-xs text-muted">Override your weekly schedule for a specific date.</p>
 
       {/* Date */}
       <div>
@@ -1073,9 +1023,7 @@ function OverrideForm({
 
       {/* Type */}
       <div>
-        <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-          Type
-        </p>
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">Type</p>
         <div className="flex gap-2 flex-wrap">
           <TypePill
             label="Available"
@@ -1104,9 +1052,7 @@ function OverrideForm({
           className={[
             "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
-            form.allDay
-              ? "bg-primary-500"
-              : "bg-surface-300 dark:bg-surface-600",
+            form.allDay ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600",
           ].join(" ")}
         >
           <span

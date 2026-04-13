@@ -22,9 +22,7 @@ const DataTableCtx = createContext<UseDataTableReturn<any> | null>(null);
 function useDataTableContext<T>(): UseDataTableReturn<T> {
   const ctx = useContext(DataTableCtx) as UseDataTableReturn<T> | null;
   if (!ctx)
-    throw new Error(
-      "DataTable compound components must be used within <DataTableProvider>"
-    );
+    throw new Error("DataTable compound components must be used within <DataTableProvider>");
   return ctx;
 }
 
@@ -110,7 +108,9 @@ export function DataTable<T extends Record<string, unknown>>({
   } = useDataTable({ data, columns, pageSize, loading });
 
   /* Reset page when query changes */
-  const handleSearch = (v: string) => { setQuery(v); };
+  const handleSearch = (v: string) => {
+    setQuery(v);
+  };
 
   const handleSort = (col: Column<T>) => {
     if (!col.sortable) return;
@@ -124,7 +124,12 @@ export function DataTable<T extends Record<string, unknown>>({
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           {searchable && (
             <div className="relative flex-1 min-w-[180px] max-w-xs">
-              <SearchLucide size={16} strokeWidth={2} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" aria-hidden="true" />
+              <SearchLucide
+                size={16}
+                strokeWidth={2}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"
+                aria-hidden="true"
+              />
               <input
                 type="search"
                 value={query}
@@ -150,23 +155,23 @@ export function DataTable<T extends Record<string, unknown>>({
                     onClick={() => handleSort(col)}
                     className={cn(
                       "px-4 py-3 text-left text-sm font-semibold uppercase tracking-wider text-muted whitespace-nowrap",
-                      col.sortable && "cursor-pointer select-none hover:text-[var(--foreground)] transition-colors",
+                      col.sortable &&
+                        "cursor-pointer select-none hover:text-[var(--foreground)] transition-colors",
                       col.hideOnMobile && "hidden sm:table-cell",
                       col.className
                     )}
                     aria-sort={
                       sortKey === String(col.key)
-                        ? sortDir === "asc" ? "ascending" : "descending"
+                        ? sortDir === "asc"
+                          ? "ascending"
+                          : "descending"
                         : undefined
                     }
                   >
                     <span className="inline-flex items-center gap-1.5">
                       {col.header}
                       {col.sortable && (
-                        <SortIcon
-                          active={sortKey === String(col.key)}
-                          direction={sortDir}
-                        />
+                        <SortIcon active={sortKey === String(col.key)} direction={sortDir} />
                       )}
                     </span>
                   </th>
@@ -226,9 +231,7 @@ export function DataTable<T extends Record<string, unknown>>({
                           col.className
                         )}
                       >
-                        {col.cell
-                          ? col.cell(row, rowIdx)
-                          : String(row[col.key as keyof T] ?? "—")}
+                        {col.cell ? col.cell(row, rowIdx) : String(row[col.key as keyof T] ?? "—")}
                       </td>
                     ))}
                   </tr>
@@ -255,15 +258,13 @@ export function DataTable<T extends Record<string, unknown>>({
               </PageButton>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) =>
                 Math.abs(p - page) <= 2 || p === 1 || p === totalPages ? (
-                  <PageButton
-                    key={p}
-                    onClick={() => setPage(p)}
-                    active={p === page}
-                  >
+                  <PageButton key={p} onClick={() => setPage(p)} active={p === page}>
                     {p}
                   </PageButton>
                 ) : p === 2 || p === totalPages - 1 ? (
-                  <span key={`ellipsis-${p}`} className="px-1 text-muted text-xs">…</span>
+                  <span key={`ellipsis-${p}`} className="px-1 text-muted text-xs">
+                    …
+                  </span>
                 ) : null
               )}
               <PageButton
@@ -303,7 +304,7 @@ function PageButton({
       aria-label={ariaLabel}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "min-w-[28px] h-7 px-1.5 rounded-lg text-xs font-medium transition-colors",
+        "min-w-[44px] min-h-[44px] px-1.5 rounded-lg text-xs font-medium transition-colors",
         active
           ? "bg-primary-500 text-white"
           : "text-muted hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-[var(--foreground)]",
@@ -352,7 +353,9 @@ export function DataTableSearch({
       <input
         type="search"
         value={query}
-        onChange={(e) => { setQuery(e.target.value); }}
+        onChange={(e) => {
+          setQuery(e.target.value);
+        }}
         placeholder={placeholder}
         className="input pl-9"
       />
@@ -411,10 +414,7 @@ export function DataTableHeader() {
             <span className="inline-flex items-center gap-1.5">
               {col.header}
               {col.sortable && (
-                <SortIcon
-                  active={sortKey === String(col.key)}
-                  direction={sortDir}
-                />
+                <SortIcon active={sortKey === String(col.key)} direction={sortDir} />
               )}
             </span>
           </th>
@@ -458,9 +458,7 @@ export function DataTableBody<T extends Record<string, unknown>>({
             <EmptyState
               compact
               title={query ? `No results for "${query}"` : emptyTitle}
-              description={
-                query ? "Try a different search term." : emptyDescription
-              }
+              description={query ? "Try a different search term." : emptyDescription}
             />
           </td>
         </tr>
@@ -497,9 +495,7 @@ export function DataTableBody<T extends Record<string, unknown>>({
                   col.className
                 )}
               >
-                {col.cell
-                  ? col.cell(row, rowIdx)
-                  : String(row[col.key as keyof T] ?? "—")}
+                {col.cell ? col.cell(row, rowIdx) : String(row[col.key as keyof T] ?? "—")}
               </td>
             ))}
           </tr>
@@ -511,16 +507,14 @@ export function DataTableBody<T extends Record<string, unknown>>({
 
 /** Pagination footer. Reads page/totalPages/sorted from context. */
 export function DataTablePagination({ pageSize = 10 }: { pageSize?: number }) {
-  const { page, totalPages, sorted, setPage, loading } =
-    useDataTableContext();
+  const { page, totalPages, sorted, setPage, loading } = useDataTableContext();
 
   if (loading || pageSize <= 0 || totalPages <= 1) return null;
 
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-[var(--card-border)]">
       <p className="text-xs text-muted">
-        {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, sorted.length)}{" "}
-        of {sorted.length}
+        {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, sorted.length)} of {sorted.length}
       </p>
       <div className="flex items-center gap-1">
         <PageButton
@@ -532,11 +526,7 @@ export function DataTablePagination({ pageSize = 10 }: { pageSize?: number }) {
         </PageButton>
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) =>
           Math.abs(p - page) <= 2 || p === 1 || p === totalPages ? (
-            <PageButton
-              key={p}
-              onClick={() => setPage(p)}
-              active={p === page}
-            >
+            <PageButton key={p} onClick={() => setPage(p)} active={p === page}>
               {p}
             </PageButton>
           ) : p === 2 || p === totalPages - 1 ? (

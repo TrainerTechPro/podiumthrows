@@ -2,7 +2,22 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CheckCheck, Trophy, AlertTriangle, ClipboardList, Dumbbell, UserPlus, RefreshCw, MessageCircle, Video, CalendarClock, Clock, Flame, Settings2 } from "lucide-react";
+import {
+  Bell,
+  CheckCheck,
+  Trophy,
+  AlertTriangle,
+  ClipboardList,
+  Dumbbell,
+  UserPlus,
+  RefreshCw,
+  MessageCircle,
+  Video,
+  CalendarClock,
+  Clock,
+  Flame,
+  Settings2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { NotificationItem } from "@/lib/notifications";
@@ -27,38 +42,130 @@ function relativeTime(iso: string): string {
 }
 
 function notificationIcon(type: string) {
-  const base = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
+  const base = "w-11 h-11 rounded-full flex items-center justify-center shrink-0";
   const iconProps = { size: 15, strokeWidth: 1.75, "aria-hidden": true as const };
 
   switch (type) {
     case "PR_ALERT":
-      return <span className={cn(base, "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400")}><Trophy {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400"
+          )}
+        >
+          <Trophy {...iconProps} />
+        </span>
+      );
     case "LOW_READINESS":
-      return <span className={cn(base, "bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400")}><AlertTriangle {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400"
+          )}
+        >
+          <AlertTriangle {...iconProps} />
+        </span>
+      );
     case "QUESTIONNAIRE_ASSIGNED":
     case "QUESTIONNAIRE_COMPLETE":
-      return <span className={cn(base, "bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400")}><ClipboardList {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(base, "bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400")}
+        >
+          <ClipboardList {...iconProps} />
+        </span>
+      );
     case "WORKOUT_ASSIGNED":
     case "WORKOUT_COMPLETED":
     case "WORKOUT_SKIPPED":
-      return <span className={cn(base, "bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400")}><Dumbbell {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400"
+          )}
+        >
+          <Dumbbell {...iconProps} />
+        </span>
+      );
     case "ATHLETE_JOINED":
-      return <span className={cn(base, "bg-success-50 dark:bg-success-500/20 text-success-600 dark:text-success-400")}><UserPlus {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-success-50 dark:bg-success-500/20 text-success-600 dark:text-success-400"
+          )}
+        >
+          <UserPlus {...iconProps} />
+        </span>
+      );
     case "PROGRAM_CHECKPOINT":
     case "COMPLEX_ROTATED":
-      return <span className={cn(base, "bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400")}><RefreshCw {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400"
+          )}
+        >
+          <RefreshCw {...iconProps} />
+        </span>
+      );
     case "COMMENT_ADDED":
-      return <span className={cn(base, "bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400")}><MessageCircle {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(base, "bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400")}
+        >
+          <MessageCircle {...iconProps} />
+        </span>
+      );
     case "VIDEO_SHARED":
-      return <span className={cn(base, "bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400")}><Video {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400"
+          )}
+        >
+          <Video {...iconProps} />
+        </span>
+      );
     case "COMPETITION_REMINDER":
-      return <span className={cn(base, "bg-warning-50 dark:bg-warning-500/15 text-warning-600 dark:text-warning-400")}><CalendarClock {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-warning-50 dark:bg-warning-500/15 text-warning-600 dark:text-warning-400"
+          )}
+        >
+          <CalendarClock {...iconProps} />
+        </span>
+      );
     case "INVITATION_EXPIRED":
-      return <span className={cn(base, "bg-surface-100 dark:bg-surface-800 text-surface-500")}><Clock {...iconProps} /></span>;
+      return (
+        <span className={cn(base, "bg-surface-100 dark:bg-surface-800 text-surface-500")}>
+          <Clock {...iconProps} />
+        </span>
+      );
     case "STREAK_BROKEN":
-      return <span className={cn(base, "bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400")}><Flame {...iconProps} /></span>;
+      return (
+        <span
+          className={cn(
+            base,
+            "bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400"
+          )}
+        >
+          <Flame {...iconProps} />
+        </span>
+      );
     default:
-      return <span className={cn(base, "bg-surface-100 dark:bg-surface-800 text-surface-500")}><Settings2 {...iconProps} /></span>;
+      return (
+        <span className={cn(base, "bg-surface-100 dark:bg-surface-800 text-surface-500")}>
+          <Settings2 {...iconProps} />
+        </span>
+      );
   }
 }
 
@@ -74,7 +181,9 @@ function getNotificationUrl(n: NotificationItem, role: "COACH" | "ATHLETE"): str
     case "WORKOUT_COMPLETED":
     case "WORKOUT_SKIPPED":
     case "STREAK_BROKEN":
-      return n.athleteProfileId ? `${prefix === "/coach" ? "/coach" : "/athlete"}/athletes/${n.athleteProfileId}` : null;
+      return n.athleteProfileId
+        ? `${prefix === "/coach" ? "/coach" : "/athlete"}/athletes/${n.athleteProfileId}`
+        : null;
     case "WORKOUT_ASSIGNED":
       return `${prefix}/sessions`;
     case "QUESTIONNAIRE_ASSIGNED":
@@ -112,9 +221,7 @@ function resolveCommentUrl(
           : "/coach/athletes";
       case "practiceAttemptId": {
         const sessionId = meta?.practiceSessionId as string | undefined;
-        return sessionId
-          ? `/coach/throws/practice/${sessionId}`
-          : "/coach/throws/practice";
+        return sessionId ? `/coach/throws/practice/${sessionId}` : "/coach/throws/practice";
       }
       case "trainingSessionId":
         return "/coach/sessions";
@@ -164,7 +271,10 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
       }
     }
     const id = setInterval(poll, POLL_INTERVAL);
-    return () => { mounted = false; clearInterval(id); };
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
   }, []);
 
   // Close on outside click
@@ -207,7 +317,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ read: true }),
       });
-      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
       setCount((c) => Math.max(0, c - 1));
     } catch {
       // Silent
@@ -281,7 +391,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
               <div className="p-4 space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex gap-3 animate-pulse">
-                    <div className="w-8 h-8 rounded-full bg-surface-200 dark:bg-surface-800 shrink-0" />
+                    <div className="w-11 h-11 rounded-full bg-surface-200 dark:bg-surface-800 shrink-0" />
                     <div className="flex-1 space-y-2">
                       <div className="h-3 bg-surface-200 dark:bg-surface-800 rounded w-3/4" />
                       <div className="h-2.5 bg-surface-200 dark:bg-surface-800 rounded w-1/2" />
@@ -291,7 +401,12 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-10 px-4 text-center">
-                <Bell size={28} strokeWidth={1.5} className="mx-auto text-surface-400 dark:text-surface-600 mb-2" aria-hidden="true" />
+                <Bell
+                  size={28}
+                  strokeWidth={1.5}
+                  className="mx-auto text-surface-400 dark:text-surface-600 mb-2"
+                  aria-hidden="true"
+                />
                 <p className="text-sm text-muted">All caught up</p>
               </div>
             ) : (
@@ -309,10 +424,14 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
                     {notificationIcon(n.type)}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className={cn(
-                          "text-[13px] leading-snug truncate",
-                          !n.read ? "font-semibold text-[var(--foreground)]" : "font-medium text-[var(--foreground)]/80"
-                        )}>
+                        <p
+                          className={cn(
+                            "text-[13px] leading-snug truncate",
+                            !n.read
+                              ? "font-semibold text-[var(--foreground)]"
+                              : "font-medium text-[var(--foreground)]/80"
+                          )}
+                        >
                           {n.title}
                         </p>
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -336,7 +455,10 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
           <div className="border-t border-[var(--card-border)] px-4 py-2.5">
             <button
               type="button"
-              onClick={() => { setOpen(false); router.push(notificationsUrl); }}
+              onClick={() => {
+                setOpen(false);
+                router.push(notificationsUrl);
+              }}
               className="w-full text-center text-xs font-medium text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             >
               View all notifications

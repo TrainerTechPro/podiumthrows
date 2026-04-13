@@ -8,14 +8,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  ThumbsUp,
-  ThumbsDown,
-  Play,
-  Pause,
-  MessageSquare,
-  Check,
-} from "lucide-react";
+import { ThumbsUp, ThumbsDown, Play, Pause, MessageSquare, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AthleteFeedbackItem } from "@/lib/data/athlete-feedback";
 
@@ -36,11 +29,7 @@ function formatRelative(iso: string): string {
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
-export function FeedbackList({
-  initialItems,
-}: {
-  initialItems: AthleteFeedbackItem[];
-}) {
+export function FeedbackList({ initialItems }: { initialItems: AthleteFeedbackItem[] }) {
   const [items, setItems] = useState(initialItems);
   const markedRef = useRef<Set<string>>(new Set());
 
@@ -68,9 +57,7 @@ export function FeedbackList({
       })
     ).then(() => {
       setItems((prev) =>
-        prev.map((it) =>
-          it.readAt === null ? { ...it, readAt: new Date().toISOString() } : it
-        )
+        prev.map((it) => (it.readAt === null ? { ...it, readAt: new Date().toISOString() } : it))
       );
     });
   }, [items]);
@@ -78,9 +65,7 @@ export function FeedbackList({
   if (items.length === 0) {
     return (
       <div className="card p-8 text-center">
-        <p className="text-sm font-semibold text-[var(--foreground)]">
-          No feedback yet
-        </p>
+        <p className="text-sm font-semibold text-[var(--foreground)]">No feedback yet</p>
         <p className="text-xs text-muted mt-1">
           Your coach will leave notes on your throws and sessions here.
         </p>
@@ -95,11 +80,7 @@ export function FeedbackList({
           key={item.id}
           item={item}
           onUpdate={(patch) =>
-            setItems((prev) =>
-              prev.map((it) =>
-                it.id === item.id ? { ...it, ...patch } : it
-              )
-            )
+            setItems((prev) => prev.map((it) => (it.id === item.id ? { ...it, ...patch } : it)))
           }
         />
       ))}
@@ -182,21 +163,13 @@ function FeedbackRow({
   const isUnread = item.readAt === null;
 
   return (
-    <div
-      className={`card p-4 ${
-        isUnread ? "border-l-4 border-l-primary-500" : ""
-      }`.trim()}
-    >
+    <div className={`card p-4 ${isUnread ? "border-l-4 border-l-primary-500" : ""}`.trim()}>
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           {item.coachAvatar ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.coachAvatar}
-              alt=""
-              className="h-8 w-8 rounded-full object-cover"
-            />
+            <img src={item.coachAvatar} alt="" className="h-8 w-8 rounded-full object-cover" />
           ) : (
             <div className="h-8 w-8 rounded-full bg-primary-500/15 flex items-center justify-center text-xs font-bold text-primary-500">
               {item.coachName.charAt(0)}
@@ -246,9 +219,7 @@ function FeedbackRow({
             />
           </div>
         ) : (
-          <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
-            {item.body}
-          </p>
+          <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">{item.body}</p>
         )}
       </div>
 
@@ -260,7 +231,7 @@ function FeedbackRow({
           disabled={reactionPending}
           aria-pressed={item.reaction === "THUMBS_UP"}
           aria-label="React with thumbs up"
-          className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+          className={`min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-colors ${
             item.reaction === "THUMBS_UP"
               ? "bg-emerald-500/15 text-emerald-500"
               : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
@@ -274,7 +245,7 @@ function FeedbackRow({
           disabled={reactionPending}
           aria-pressed={item.reaction === "THUMBS_DOWN"}
           aria-label="React with thumbs down"
-          className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+          className={`min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-colors ${
             item.reaction === "THUMBS_DOWN"
               ? "bg-red-500/15 text-red-500"
               : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"

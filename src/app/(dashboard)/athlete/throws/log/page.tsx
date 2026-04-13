@@ -208,7 +208,7 @@ function DrillCard({
             <button
               type="button"
               onClick={() => update({ implementUnit: drill.implementUnit === "kg" ? "lbs" : "kg" })}
-              className="shrink-0 px-2 py-1.5 text-xs sm:px-1.5 sm:py-1 sm:text-[10px] font-bold border border-[var(--color-border-strong)] rounded text-surface-700 dark:text-surface-300 hover:border-primary-500 hover:text-primary-600 transition-colors"
+              className="shrink-0 px-2 py-1.5 text-xs font-bold border border-[var(--color-border-strong)] rounded text-surface-700 dark:text-surface-300 hover:border-primary-500 hover:text-primary-600 transition-colors"
             >
               {drill.implementUnit}
             </button>
@@ -273,7 +273,7 @@ function DrillCard({
           <button
             type="button"
             onClick={() => update({ throwCount: Math.max(0, drill.throwCount - 1) })}
-            className="w-8 h-8 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors font-bold text-lg"
+            className="w-11 h-11 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors font-bold text-lg"
           >
             −
           </button>
@@ -283,7 +283,7 @@ function DrillCard({
           <button
             type="button"
             onClick={() => update({ throwCount: drill.throwCount + 1 })}
-            className="w-8 h-8 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors font-bold text-lg"
+            className="w-11 h-11 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors font-bold text-lg"
           >
             +
           </button>

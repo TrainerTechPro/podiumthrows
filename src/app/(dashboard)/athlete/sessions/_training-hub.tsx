@@ -31,12 +31,16 @@ function QuickActions({
 }) {
   const actions = [
     { label: "Log Session", href: "/athlete/log-session", icon: PenLine },
-    ...(!readinessCheckedIn
-      ? [{ label: "Check-in", href: "/athlete/wellness", icon: Heart }]
-      : []),
+    ...(!readinessCheckedIn ? [{ label: "Check-in", href: "/athlete/wellness", icon: Heart }] : []),
     { label: "Drill Videos", href: "/athlete/drill-videos", icon: Video },
     ...(pendingQuestionnaires > 0
-      ? [{ label: `Questionnaires (${pendingQuestionnaires})`, href: "/athlete/questionnaires", icon: Calendar }]
+      ? [
+          {
+            label: `Questionnaires (${pendingQuestionnaires})`,
+            href: "/athlete/questionnaires",
+            icon: Calendar,
+          },
+        ]
       : []),
   ];
 
@@ -46,7 +50,7 @@ function QuickActions({
         <Link
           key={a.href}
           href={a.href}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-100 dark:bg-surface-800 text-xs font-medium text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors whitespace-nowrap shrink-0"
+          className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-surface-100 dark:bg-surface-800 text-xs font-medium text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors whitespace-nowrap shrink-0"
         >
           <a.icon size={13} strokeWidth={1.75} aria-hidden="true" />
           {a.label}
@@ -85,23 +89,22 @@ function NextSessionCard({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-muted">Next Session</p>
-        <p className="text-sm font-semibold text-[var(--foreground)] truncate">
-          {name}
-        </p>
+        <p className="text-sm font-semibold text-[var(--foreground)] truncate">{name}</p>
         <p className="text-xs text-muted">{formatted}</p>
       </div>
-      <ChevronRight size={16} strokeWidth={1.75} className="text-muted shrink-0" aria-hidden="true" />
+      <ChevronRight
+        size={16}
+        strokeWidth={1.75}
+        className="text-muted shrink-0"
+        aria-hidden="true"
+      />
     </div>
   );
 }
 
 /* ─── Recent Completions ─────────────────────────────────────────────────── */
 
-function RecentCompletions({
-  sessions,
-}: {
-  sessions: TrainingHubData["recentCompletions"];
-}) {
+function RecentCompletions({ sessions }: { sessions: TrainingHubData["recentCompletions"] }) {
   const [expanded, setExpanded] = useState(false);
   // Show expanded by default on desktop via CSS, collapsed on mobile
   if (sessions.length === 0) return null;
@@ -124,7 +127,12 @@ function RecentCompletions({
         </span>
       </button>
 
-      <div className={cn("card divide-y divide-[var(--card-border)] overflow-hidden", !expanded && "hidden sm:block")}>
+      <div
+        className={cn(
+          "card divide-y divide-[var(--card-border)] overflow-hidden",
+          !expanded && "hidden sm:block"
+        )}
+      >
         {sessions.map((s) => (
           <Link
             key={s.id}
@@ -132,11 +140,12 @@ function RecentCompletions({
             className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
           >
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                {s.name}
-              </p>
+              <p className="text-sm font-medium text-[var(--foreground)] truncate">{s.name}</p>
               <p className="text-xs text-muted">
-                {new Date(s.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {new Date(s.date + "T12:00:00").toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
                 {s.rpe != null && ` · RPE ${s.rpe.toFixed(1)}`}
                 {s.throwCount != null && s.throwCount > 0 && ` · ${s.throwCount} throws`}
               </p>

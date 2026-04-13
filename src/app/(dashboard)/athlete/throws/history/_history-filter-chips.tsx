@@ -33,7 +33,7 @@ export function HistoryFilterChips({ filter, onOpen, onClear, hasAnyActive }: Pr
     filter.events.length === 0
       ? "Event"
       : filter.events.length === 1
-        ? EVENT_SHORT_LABELS[filter.events[0]] ?? filter.events[0]
+        ? (EVENT_SHORT_LABELS[filter.events[0]] ?? filter.events[0])
         : `${filter.events.length} events`;
   const implementLabel =
     filter.implementsKg.length === 0
@@ -43,7 +43,14 @@ export function HistoryFilterChips({ filter, onOpen, onClear, hasAnyActive }: Pr
         : `${filter.implementsKg.length} impl`;
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+    <div
+      className="relative flex gap-2 overflow-x-auto pb-1"
+      style={{
+        scrollbarWidth: "none",
+        maskImage: "linear-gradient(to right, black calc(100% - 24px), transparent)",
+        WebkitMaskImage: "linear-gradient(to right, black calc(100% - 24px), transparent)",
+      }}
+    >
       <FilterChip active={filter.range !== "30d"} onClick={() => onOpen("range")}>
         {rangeLabel}
       </FilterChip>
@@ -60,7 +67,7 @@ export function HistoryFilterChips({ filter, onOpen, onClear, hasAnyActive }: Pr
         <button
           type="button"
           onClick={onClear}
-          className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+          className="flex-shrink-0 px-3 py-2.5 rounded-full text-xs text-muted hover:text-[var(--foreground)] transition-colors"
         >
           Clear
         </button>
@@ -84,7 +91,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+      className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-2.5 rounded-full border text-xs font-medium transition-colors ${
         active
           ? "bg-primary-500/15 border-primary-500/40 text-primary-500"
           : "bg-surface-100 dark:bg-surface-800 border-[var(--card-border)] text-surface-700 dark:text-surface-300 hover:border-[var(--card-border)]"

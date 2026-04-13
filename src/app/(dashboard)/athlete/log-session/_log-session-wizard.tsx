@@ -700,7 +700,7 @@ export function LogSessionWizard({
                           drill.implementUnit === "kg" ? "lbs" : "kg"
                         )
                       }
-                      className="shrink-0 px-2 py-1.5 text-xs sm:px-1.5 sm:py-1 sm:text-[10px] font-bold border border-[var(--card-border)] rounded text-muted hover:border-primary-400 hover:text-primary-500 transition-colors"
+                      className="shrink-0 px-2 py-1.5 text-xs font-bold border border-[var(--card-border)] rounded text-muted hover:border-primary-400 hover:text-primary-500 transition-colors"
                     >
                       {drill.implementUnit}
                     </button>
