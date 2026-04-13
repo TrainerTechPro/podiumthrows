@@ -318,18 +318,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. Update the throws-based streak. Recomputes from history, so this is
-    // self-healing against any drift from the sessions/complete or readiness
-    // writers. Errors are swallowed inside the helper.
-    await updateThrowsStreak(athlete.id);
+    // 4. Update the throws-based streak — fire-and-forget so it never
+    // crashes the response. The throw is already persisted above.
+    void updateThrowsStreak(athlete.id).catch((err) => {
+      logger.error("POST /api/athlete/quick-log streak update failed (non-fatal)", { error: err });
+    });
 
     // 5. Get updated throw count for today
-    const throwCount = await prisma.throwLog.count({
-      where: {
-        athleteId: athlete.id,
-        date: { gte: startOfTodayUtc },
-      },
-    });
+    let throwCount = 0;
+    try {
+      throwCount = await prisma.throwLog.count({
+        where: {
+          athleteId: athlete.id,
+          date: { gte: startOfTodayUtc },
+        },
+      });
+    } catch {
+      // Fall back to optimistic count — the throw IS saved, just can't get the count
+      throwCount = -1; // client will use its own count
+    }
 
     const { feeling: parsedFeeling, text: parsedText } = deserializeNotes(throwLog.notes);
 
