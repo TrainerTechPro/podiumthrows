@@ -37,10 +37,10 @@ fi
 echo "✓"
 
 echo -n "  Lint... "
-LINT_OUTPUT=$(npx next lint 2>&1 | tail -1)
-if echo "$LINT_OUTPUT" | grep -q "error"; then
+LINT_OUTPUT=$(npx next lint 2>&1)
+if ! echo "$LINT_OUTPUT" | grep -q "No ESLint warnings or errors"; then
   echo "❌ FAILED"
-  echo "$LINT_OUTPUT"
+  echo "$LINT_OUTPUT" | tail -5
   exit 1
 fi
 echo "✓"
