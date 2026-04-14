@@ -1,27 +1,32 @@
 #!/usr/bin/env bash
-# ─── Prebuilt Deploy ─────────────────────────────────────────────────
-# Builds locally and deploys to Vercel WITHOUT using Vercel build minutes.
+# ─── Hybrid Deploy ───────────────────────────────────────────────────
+# Preview: builds locally and ships prebuilt output (fast, ~$0 build cost).
+# Prod:    lets Vercel cloud-build on its own Linux runtime so native
+#          bindings (Prisma engines, bcrypt native, etc.) always match
+#          the target architecture. Eliminates the darwin→linux mismatch
+#          class of bug that caused the 2026-04-13 outage.
+#
+# Both modes run preflight (tsc + lint), prisma migrate deploy, and a
+# post-deploy smoke test against /api/auth/login (prod only; preview
+# URLs are SSO-gated).
 #
 # Usage:
-#   ./scripts/deploy.sh           # preview deployment
-#   ./scripts/deploy.sh prod      # production deployment
+#   ./scripts/deploy.sh           # preview deployment (prebuilt)
+#   ./scripts/deploy.sh prod      # production deployment (Vercel cloud build)
 #
 # Requirements:
 #   - Vercel CLI: npm i -g vercel
 #   - Vercel project linked: vercel link
-#   - Environment variables pulled: vercel env pull .env.vercel.local
-#
-# This saves ~$0.27 per deploy ($72/mo → ~$0 at current build volume).
 # ─────────────────────────────────────────────────────────────────────
 
 set -uo pipefail
 
-PROD_FLAG=""
+PROD_MODE=false
 if [[ "${1:-}" == "prod" || "${1:-}" == "production" ]]; then
-  PROD_FLAG="--prod"
-  echo "🚀 Production deploy"
+  PROD_MODE=true
+  echo "🚀 Production deploy (Vercel cloud build — Linux native)"
 else
-  echo "🔍 Preview deploy"
+  echo "🔍 Preview deploy (local prebuilt)"
 fi
 
 # ── Step 1: Pre-flight checks ──────────────────────────────────────
@@ -61,16 +66,25 @@ else
 fi
 
 # ── Step 3: Run migrations against production DB ───────────────────
+# Fast-fail locally rather than waiting for Vercel build to discover a
+# migration error. Vercel will re-run migrate deploy during cloud build;
+# it's idempotent.
 echo ""
 echo "── Running migrations ──"
 npx prisma migrate deploy
 echo "  ✓ Migrations applied"
 
-# ── Step 4: Generate Prisma client ─────────────────────────────────
-echo ""
-echo "── Generating Prisma client ──"
-npx prisma generate
-echo "  ✓ Client generated"
+# ── Step 4: Generate Prisma client (preview only) ──────────────────
+# Prod skips this — Vercel's cloud build runs `prisma generate` on
+# Linux via the postinstall hook, producing a native Linux engine
+# that actually matches the runtime. That's the whole point of
+# cloud-building prod: no cross-platform native binary drift.
+if ! $PROD_MODE; then
+  echo ""
+  echo "── Generating Prisma client ──"
+  npx prisma generate
+  echo "  ✓ Client generated"
+fi
 
 # ── Step 5: Pull project settings if needed ────────────────────────
 if [[ ! -f .vercel/project.json ]]; then
@@ -79,16 +93,24 @@ if [[ ! -f .vercel/project.json ]]; then
   npx vercel pull --yes --environment production
 fi
 
-# ── Step 6: Build locally using Vercel CLI ─────────────────────────
-echo ""
-echo "── Building locally (vercel build) ──"
-npx vercel build --prod 2>&1 | tail -5
-echo "  ✓ Build complete"
+# ── Step 6: Build (preview only) ───────────────────────────────────
+# Prod lets Vercel build in the cloud on a Linux runtime.
+if ! $PROD_MODE; then
+  echo ""
+  echo "── Building locally (vercel build) ──"
+  npx vercel build 2>&1 | tail -5
+  echo "  ✓ Build complete"
+fi
 
-# ── Step 7: Deploy prebuilt output ─────────────────────────────────
+# ── Step 7: Deploy ─────────────────────────────────────────────────
 echo ""
-echo "── Deploying to Vercel (prebuilt) ──"
-npx vercel deploy --prebuilt $PROD_FLAG
+if $PROD_MODE; then
+  echo "── Deploying to Vercel (cloud build) ──"
+  npx vercel deploy --prod
+else
+  echo "── Deploying to Vercel (prebuilt) ──"
+  npx vercel deploy --prebuilt
+fi
 DEPLOY_EXIT=$?
 
 if [[ $DEPLOY_EXIT -ne 0 ]]; then
@@ -101,7 +123,7 @@ fi
 # that Vercel's build succeeds on but runtime requests 500 on. Prior
 # incident: 2026-04-13 Prisma engine mismatch (darwin-arm64 vs linux-arm64)
 # 500'd every Prisma-backed route for 2+ days before detection.
-if [[ "$PROD_FLAG" == "--prod" ]]; then
+if $PROD_MODE; then
   SMOKE_URL="https://www.podiumthrows.com"
   VERCEL_SCOPE="tonys-projects-9cce8202"
 
@@ -140,4 +162,8 @@ if [[ "$PROD_FLAG" == "--prod" ]]; then
 fi
 
 echo ""
-echo "✅ Deploy complete — zero Vercel build minutes used."
+if $PROD_MODE; then
+  echo "✅ Production deploy complete — smoke test passed."
+else
+  echo "✅ Preview deploy complete — zero Vercel build minutes used."
+fi
