@@ -143,7 +143,13 @@ interface ThrowChipProps {
 
 function ThrowChip({ throw_, index, onTap }: ThrowChipProps) {
   const feelingEmoji =
-    throw_.feeling === "great" ? "🔥" : throw_.feeling === "bad" ? "😞" : throw_.feeling === "ok" ? "😐" : "";
+    throw_.feeling === "great"
+      ? "🔥"
+      : throw_.feeling === "bad"
+        ? "😞"
+        : throw_.feeling === "ok"
+          ? "😐"
+          : "";
 
   const label = throw_.distance
     ? `${throw_.distance.toFixed(2)}m${feelingEmoji ? ` ${feelingEmoji}` : ""}`
@@ -182,9 +188,7 @@ function DotIndicator({ count, current }: DotIndicatorProps) {
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
           className={cn(
             "rounded-full",
-            i === current
-              ? "w-2.5 h-2.5 bg-primary-500"
-              : "w-2 h-2 bg-surface-400"
+            i === current ? "w-2.5 h-2.5 bg-primary-500" : "w-2 h-2 bg-surface-400"
           )}
         />
       ))}
@@ -441,7 +445,10 @@ export function QuickLogClient() {
           if (eventIndex >= 0) {
             setImplementIndex(eventIndex);
             // If the saved weight differs from competition weight, update it
-            if (Number.isFinite(savedWeight) && Math.abs(list[eventIndex].implementWeight - savedWeight) > 0.01) {
+            if (
+              Number.isFinite(savedWeight) &&
+              Math.abs(list[eventIndex].implementWeight - savedWeight) > 0.01
+            ) {
               list[eventIndex] = { ...list[eventIndex], implementWeight: savedWeight };
               setImplements([...list]);
             }
@@ -461,7 +468,9 @@ export function QuickLogClient() {
   /* ── Offline queue tracking ──────────────────────────────────────────── */
 
   useEffect(() => {
-    getPendingQuickLogCount().then(setPendingCount).catch(() => {});
+    getPendingQuickLogCount()
+      .then(setPendingCount)
+      .catch(() => {});
   }, []);
 
   // Auto-sync on reconnect
@@ -477,7 +486,7 @@ export function QuickLogClient() {
           if (failed > 0) {
             toastError(
               "Sync incomplete",
-              `${synced} throw${synced !== 1 ? "s" : ""} synced, ${failed} failed — will retry next time you're online.`,
+              `${synced} throw${synced !== 1 ? "s" : ""} synced, ${failed} failed — will retry next time you're online.`
             );
           } else if (synced > 0) {
             toastSuccess("Throws synced", `${synced} throw${synced !== 1 ? "s" : ""} saved.`);
@@ -499,7 +508,10 @@ export function QuickLogClient() {
           }, 60_000);
         })
         .catch(() => {
-          toastError("Sync failed", "Couldn\u2019t sync your throws \u2014 will retry when connected.");
+          toastError(
+            "Sync failed",
+            "Couldn\u2019t sync your throws \u2014 will retry when connected."
+          );
           setIsSyncing(false);
         });
     });
@@ -778,11 +790,21 @@ export function QuickLogClient() {
 
   /* ── Formatted date ──────────────────────────────────────────────────── */
 
-  const todayFormatted = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  // Format today's date on the client only. Computing it during render
+  // caused hydration mismatches whenever the server's wall-clock day differed
+  // from the client's (e.g. server in EDT at 00:30 AM rendering "Sunday" while
+  // the client in PDT at 21:30 the prior night renders "Saturday"). Sentry
+  // tracked this as PODIUM-THROWS-4 (Hydration Error) across ~16 iOS users.
+  const [todayFormatted, setTodayFormatted] = useState<string>("");
+  useEffect(() => {
+    setTodayFormatted(
+      new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      })
+    );
+  }, []);
 
   /* ── Slide variants for implement label ──────────────────────────────── */
 
@@ -811,11 +833,7 @@ export function QuickLogClient() {
             <span className="text-sm">Back</span>
           </Link>
 
-          <ConnectionChip
-            isOnline={isOnline}
-            pendingCount={pendingCount}
-            isSyncing={isSyncing}
-          />
+          <ConnectionChip isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} />
 
           <Link
             href="/athlete/dashboard"
@@ -833,9 +851,7 @@ export function QuickLogClient() {
           <p className="font-heading text-lg font-semibold text-[var(--foreground)] mt-0.5">
             {todayFormatted}
           </p>
-          {sessionFocus && (
-            <p className="text-xs text-[var(--muted)] mt-0.5">{sessionFocus}</p>
-          )}
+          {sessionFocus && <p className="text-xs text-[var(--muted)] mt-0.5">{sessionFocus}</p>}
         </div>
 
         {/* Implement display (draggable) */}
@@ -879,7 +895,8 @@ export function QuickLogClient() {
                     <div className="flex flex-wrap justify-center gap-1.5 mt-2 px-2">
                       {(weightPresets[currentImplement.event] ?? []).map((w) => {
                         const isActive = Math.abs(w - currentImplement.implementWeight) < 0.01;
-                        const isComp = Math.abs(w - (compWeights[currentImplement.event] ?? 0)) < 0.01;
+                        const isComp =
+                          Math.abs(w - (compWeights[currentImplement.event] ?? 0)) < 0.01;
                         return (
                           <button
                             key={w}
@@ -894,7 +911,9 @@ export function QuickLogClient() {
                           >
                             {w}kg
                             {isComp && !isActive && (
-                              <span className="ml-1 text-[9px] text-primary-400 font-sans">comp</span>
+                              <span className="ml-1 text-[9px] text-primary-400 font-sans">
+                                comp
+                              </span>
                             )}
                           </button>
                         );
@@ -1003,7 +1022,10 @@ export function QuickLogClient() {
           {isLoading ? (
             <div className="flex gap-3 px-5 py-3 overflow-hidden">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="h-9 w-20 rounded-xl bg-surface-700 animate-pulse shrink-0" />
+                <div
+                  key={i}
+                  className="h-9 w-20 rounded-xl bg-surface-700 animate-pulse shrink-0"
+                />
               ))}
             </div>
           ) : recentThrows.length > 0 ? (
@@ -1013,7 +1035,12 @@ export function QuickLogClient() {
                   Recent
                 </span>
                 {recentThrows.slice(0, 3).map((t, i) => (
-                  <ThrowChip key={t.id} throw_={t} index={throwCount - i - 1} onTap={openEditSheet} />
+                  <ThrowChip
+                    key={t.id}
+                    throw_={t}
+                    index={throwCount - i - 1}
+                    onTap={openEditSheet}
+                  />
                 ))}
               </div>
             </div>
