@@ -2,7 +2,12 @@
 // PostgreSQL via Prisma ORM (Vercel Postgres)
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // Vercel Fluid Compute runs on Linux ARM64; "native" covers local macOS dev.
+  // Without linux-arm64-openssl-3.0.x, the prebuilt bundle ships only a darwin
+  // engine that can't load on Vercel, throwing PrismaClientInitializationError
+  // on every query (login 500s, RSC page throws → PODIUM-THROWS-5).
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {
