@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
+import { validateImplementSequence } from "@/lib/bondarchuk/sequencing";
 
 // ── Auth Schemas ────────────────────────────────────────────────────────
 
@@ -328,22 +329,42 @@ const LogSessionDrillSchema = z.object({
   marks: z.array(z.number()).optional(),
 });
 
-export const LogSessionSchema = z.object({
-  event: z.string().min(1, "Event is required"),
-  date: z.string().min(1, "Date is required"),
-  focus: z.string().optional(),
-  notes: z.string().optional(),
-  sleepQuality: z.number().min(1).max(10).nullable().optional(),
-  sorenessLevel: z.number().min(1).max(10).nullable().optional(),
-  energyLevel: z.number().min(1).max(10).nullable().optional(),
-  sessionRpe: z.number().min(1).max(10).nullable().optional(),
-  sessionFeeling: z.string().optional(),
-  techniqueRating: z.number().min(1).max(10).nullable().optional(),
-  mentalFocus: z.number().min(1).max(10).nullable().optional(),
-  bestPart: z.string().optional(),
-  improvementArea: z.string().optional(),
-  drills: z.array(LogSessionDrillSchema),
-});
+export const LogSessionSchema = z
+  .object({
+    event: z.string().min(1, "Event is required"),
+    date: z.string().min(1, "Date is required"),
+    focus: z.string().optional(),
+    notes: z.string().optional(),
+    sleepQuality: z.number().min(1).max(10).nullable().optional(),
+    sorenessLevel: z.number().min(1).max(10).nullable().optional(),
+    energyLevel: z.number().min(1).max(10).nullable().optional(),
+    sessionRpe: z.number().min(1).max(10).nullable().optional(),
+    sessionFeeling: z.string().optional(),
+    techniqueRating: z.number().min(1).max(10).nullable().optional(),
+    mentalFocus: z.number().min(1).max(10).nullable().optional(),
+    bestPart: z.string().optional(),
+    improvementArea: z.string().optional(),
+    drills: z.array(LogSessionDrillSchema),
+  })
+  .superRefine((data, ctx) => {
+    // Bondarchuk Rule 1: Implement weights within a session must descend.
+    // Vol IV p.114-117: ascending order causes 2-4m performance decrease.
+    const result = validateImplementSequence(
+      data.drills.map((d, i) => ({
+        implementWeightKg: d.implementWeight ?? null,
+        orderIndex: i,
+      }))
+    );
+    if (!result.ok) {
+      const drill = data.drills[result.offendingIndex];
+      const name = drill?.drillType ? ` (${drill.drillType})` : "";
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["drills", result.offendingIndex, "implementWeight"],
+        message: `Bondarchuk sequencing violation${name}: ${result.violation}`,
+      });
+    }
+  });
 
 // ── Practice Session ────────────────────────────────────────────────────
 

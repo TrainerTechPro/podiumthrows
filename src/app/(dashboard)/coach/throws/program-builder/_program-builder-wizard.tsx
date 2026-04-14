@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import Link from "next/link";
+import { AlertTriangle, Check } from "lucide-react";
 import { GeneratingOverlay } from "@/components/throws/GeneratingOverlay";
 import { CLASSIFICATION_COLOR_PARTS } from "@/lib/throws/constants";
+import { validateImplementSequence } from "@/lib/bondarchuk/sequencing";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -190,7 +192,6 @@ const PHASE_COLORS: Record<string, string> = {
 };
 
 const DAY_SHORT = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
 
 // ── Form State ──────────────────────────────────────────────────────────
 
@@ -924,7 +925,12 @@ function StepSelectAthleteOrTest({
               >
                 <div className="w-10 h-10 rounded-full bg-[var(--muted-bg)] flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {a.avatarUrl ? (
-                    <img src={a.avatarUrl} alt="" className="w-full h-full object-cover" loading="lazy" /> // eslint-disable-line @next/next/no-img-element
+                    <img
+                      src={a.avatarUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    /> // eslint-disable-line @next/next/no-img-element
                   ) : (
                     <span className="text-sm font-semibold text-surface-700 dark:text-surface-300">
                       {a.firstName?.[0]}
@@ -1710,8 +1716,76 @@ function SandboxPreviewCard({
   const week1 = generated.phases[0]?.weeks?.[0];
   const sessions = week1?.sessions ?? [];
 
+  // Bondarchuk sequencing check — persistent banner, gates the Generate CTA.
+  // Vol IV p.114-117: ascending implement order causes 2-4m decrease in natural athletes.
+  const sequencingViolation = useMemo(() => {
+    for (let pi = 0; pi < generated.phases.length; pi++) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const phase = generated.phases[pi] as any;
+      const weeks = phase?.weeks ?? [];
+      for (let wi = 0; wi < weeks.length; wi++) {
+        const wkSessions = weeks[wi]?.sessions ?? [];
+        for (let si = 0; si < wkSessions.length; si++) {
+          const throws = (wkSessions[si]?.throws ?? []) as Array<{
+            implementKg: number;
+            implement: string;
+          }>;
+          if (throws.length < 2) continue;
+          const result = validateImplementSequence(
+            throws.map((t, i) => ({ implementWeightKg: t.implementKg, orderIndex: i }))
+          );
+          if (!result.ok) {
+            const offending = throws[result.offendingIndex];
+            const prior = throws[result.offendingIndex - 1];
+            return {
+              phaseIndex: pi,
+              weekIndex: wi,
+              sessionIndex: si,
+              sequence: throws.map((t) => t.implement).join(" → "),
+              message:
+                offending && prior
+                  ? `${offending.implement} cannot follow ${prior.implement} — heavier implements must come first.`
+                  : result.violation,
+            };
+          }
+        }
+      }
+    }
+    return null;
+  }, [generated]);
+
   return (
     <div className="space-y-6">
+      {/* Bondarchuk sequencing violation banner — persistent, non-dismissible */}
+      {sequencingViolation && (
+        <div
+          role="alert"
+          className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl flex items-start gap-3"
+        >
+          <AlertTriangle
+            className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+              Bondarchuk sequencing violation — cannot assign this plan
+            </p>
+            <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+              Phase {sequencingViolation.phaseIndex + 1}, Week {sequencingViolation.weekIndex + 1},
+              Session {sequencingViolation.sessionIndex + 1}: {sequencingViolation.message}
+            </p>
+            <p className="mt-1 text-[11px] text-amber-800 dark:text-amber-300 font-mono">
+              {sequencingViolation.sequence}
+            </p>
+            <p className="mt-2 text-[11px] text-amber-800 dark:text-amber-300">
+              Vol IV p.114–117: ascending implement order causes 2–4m performance decrease in
+              natural athletes. Implement weights must descend (heavy → competition weight).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Sandbox Banner */}
       <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center gap-2">
         <svg
@@ -2079,15 +2153,14 @@ function SandboxPreviewCard({
                           <div className="flex flex-wrap gap-1.5">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {session.warmup.map((w: any, wi: number) => (
-                                <span
-                                  key={wi}
-                                  className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
-                                >
-                                  {w.name}
-                                  {w.duration ? ` (${w.duration}min)` : ""}
-                                </span>
-                              )
-                            )}
+                              <span
+                                key={wi}
+                                className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
+                              >
+                                {w.name}
+                                {w.duration ? ` (${w.duration}min)` : ""}
+                              </span>
+                            ))}
                           </div>
                         </div>
                       )}
@@ -2102,7 +2175,16 @@ function SandboxPreviewCard({
 
       {/* ── Actions ──────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 pt-2">
-        <button onClick={onBuildForReal} className="btn-primary w-full py-3">
+        <button
+          onClick={onBuildForReal}
+          disabled={!!sequencingViolation}
+          title={
+            sequencingViolation
+              ? "Resolve the Bondarchuk sequencing violation above before assigning this plan."
+              : undefined
+          }
+          className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Generate for Real Athlete
         </button>
         <button onClick={onReset} className="btn-secondary w-full py-3">
@@ -2122,15 +2204,13 @@ function ImplementOrderCheck({
 }) {
   if (!throws || throws.length < 2) return null;
 
-  // Check if implements are in descending weight order (Bondarchuk rule)
-  let isDescending = true;
-  for (let i = 1; i < throws.length; i++) {
-    if (throws[i].implementKg > throws[i - 1].implementKg) {
-      isDescending = false;
-      break;
-    }
-  }
-
+  const result = validateImplementSequence(
+    throws.map((t, i) => ({
+      implementWeightKg: t.implementKg,
+      orderIndex: i,
+    }))
+  );
+  const isDescending = result.ok;
   const weights = throws.map((t) => t.implement).join(" \u2192 ");
 
   return (
@@ -2138,21 +2218,12 @@ function ImplementOrderCheck({
       className={`mt-1.5 flex items-center gap-1.5 text-[11px] ${isDescending ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
     >
       {isDescending ? (
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-        </svg>
+        <Check className="w-3.5 h-3.5" strokeWidth={2.5} aria-hidden="true" />
       ) : (
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-          />
-        </svg>
+        <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.75} aria-hidden="true" />
       )}
       <span className="font-medium">
-        {isDescending ? "Correct descending order" : "Warning: ascending order detected"}
+        {isDescending ? "Correct descending order" : "Ascending order detected"}
       </span>
       <span className="text-surface-700 dark:text-surface-300">({weights})</span>
     </div>
