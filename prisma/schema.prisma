@@ -3,11 +3,11 @@
 
 generator client {
   provider      = "prisma-client-js"
-  // Vercel Fluid Compute runs on Linux ARM64; "native" covers local macOS dev.
-  // Without linux-arm64-openssl-3.0.x, the prebuilt bundle ships only a darwin
-  // engine that can't load on Vercel, throwing PrismaClientInitializationError
-  // on every query (login 500s, RSC page throws → PODIUM-THROWS-5).
-  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
+  // "native" covers local dev (macOS or linux). The two Linux targets cover
+  // both Vercel Fluid Compute architectures — currently arm64, but keeping
+  // rhel-openssl-3.0.x (Vercel's linux-x64 runtime) so a silent arch flip
+  // can't recur the 2026-04-13 outage.
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
