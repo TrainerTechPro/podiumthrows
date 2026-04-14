@@ -89,6 +89,55 @@ echo "  ✓ Build complete"
 echo ""
 echo "── Deploying to Vercel (prebuilt) ──"
 npx vercel deploy --prebuilt $PROD_FLAG
+DEPLOY_EXIT=$?
+
+if [[ $DEPLOY_EXIT -ne 0 ]]; then
+  echo "❌ Deploy failed (exit $DEPLOY_EXIT)"
+  exit $DEPLOY_EXIT
+fi
+
+# ── Step 8: Smoke test (prod only) ─────────────────────────────────
+# Catches platform-specific bundle failures (e.g. native binary mismatch)
+# that Vercel's build succeeds on but runtime requests 500 on. Prior
+# incident: 2026-04-13 Prisma engine mismatch (darwin-arm64 vs linux-arm64)
+# 500'd every Prisma-backed route for 2+ days before detection.
+if [[ "$PROD_FLAG" == "--prod" ]]; then
+  SMOKE_URL="https://www.podiumthrows.com"
+  VERCEL_SCOPE="tonys-projects-9cce8202"
+
+  echo ""
+  echo "── Smoke test (prod) ──"
+
+  CSRF=$(curl -sS -D - "$SMOKE_URL/login" -o /dev/null 2>&1 \
+    | grep -i "set-cookie: csrf-token=" \
+    | sed 's/.*csrf-token=\([^;]*\).*/\1/' \
+    | tr -d '\r\n')
+
+  if [[ -z "$CSRF" ]]; then
+    echo "  ⚠ Could not fetch CSRF token from $SMOKE_URL/login — skipping smoke test"
+  else
+    STATUS=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 10 \
+      -X POST "$SMOKE_URL/api/auth/login" \
+      -H "Content-Type: application/json" \
+      -b "csrf-token=$CSRF" \
+      -H "x-csrf-token: $CSRF" \
+      -d '{"email":"smoke-test-deploy@example.com","password":"invalid-password"}' \
+      2>/dev/null)
+
+    if [[ "$STATUS" == "401" ]]; then
+      echo "  ✓ Login 401 for bad creds — Prisma/bcrypt/rate-limit paths all healthy"
+    else
+      echo "  ❌ Smoke test FAILED (/api/auth/login returned $STATUS, expected 401)"
+      echo ""
+      echo "── Auto-rollback ──"
+      npx vercel rollback --scope "$VERCEL_SCOPE" --yes 2>&1 | tail -5
+      echo ""
+      echo "❌ Deploy rolled back due to smoke test failure."
+      echo "   Check Vercel logs for the failing deployment and fix before redeploying."
+      exit 1
+    fi
+  fi
+fi
 
 echo ""
 echo "✅ Deploy complete — zero Vercel build minutes used."
