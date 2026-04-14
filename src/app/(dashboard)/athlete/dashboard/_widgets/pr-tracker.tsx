@@ -35,10 +35,7 @@ export function PRTrackerWidget({ data }: { data: PRTrackerData }) {
           <Trophy className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           PR Tracker
         </h3>
-        <Link
-          href="/athlete/throws"
-          className="text-xs text-primary-500 hover:underline"
-        >
+        <Link href="/athlete/throws/history" className="text-xs text-primary-500 hover:underline">
           All throws &gt;
         </Link>
       </div>
@@ -46,17 +43,10 @@ export function PRTrackerWidget({ data }: { data: PRTrackerData }) {
       {data.rows.length === 0 ? (
         <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
           <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center">
-            <Trophy
-              size={20}
-              strokeWidth={1.75}
-              className="text-primary-500"
-              aria-hidden="true"
-            />
+            <Trophy size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
           </div>
           <div className="max-w-[260px]">
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              No PRs yet
-            </p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">No PRs yet</p>
             <p className="text-xs text-muted mt-1">
               Log a throw with distance to start your first personal best.
             </p>
@@ -82,9 +72,7 @@ export function PRTrackerWidget({ data }: { data: PRTrackerData }) {
                   <AnimatedNumber value={row.distance} decimals={2} />
                   <span className="text-xs font-normal text-muted ml-0.5">m</span>
                 </p>
-                <p className="text-[11px] text-muted mt-0.5">
-                  {formatRelativeDate(row.date)}
-                </p>
+                <p className="text-[11px] text-muted mt-0.5">{formatRelativeDate(row.date)}</p>
               </div>
 
               {/* Next target */}
