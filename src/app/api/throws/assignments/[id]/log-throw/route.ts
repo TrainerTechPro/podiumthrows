@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { checkAndSetPR } from "@/lib/throws";
+import { checkAndSetPR, parseImplementKg } from "@/lib/throws";
 import { notifyCoachPR } from "@/lib/notifications";
 import { awardPRAchievement } from "@/lib/achievements";
 import { emitPR } from "@/lib/team-activity";
@@ -17,10 +17,7 @@ import { emitPR } from "@/lib/team-activity";
  * Body: { blockId, distance, implement, throwNumber, event?, notes? }
  * Returns: { throwLog, isPersonalBest }
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -40,12 +37,21 @@ export async function POST(
     });
 
     if (!user?.athleteProfile) {
-      return NextResponse.json({ success: false, error: "Athlete profile required" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Athlete profile required" },
+        { status: 403 }
+      );
     }
 
     const assignment = await prisma.throwsAssignment.findUnique({
       where: { id: assignmentId },
-      select: { id: true, athleteId: true, status: true, sessionId: true, session: { select: { event: true } } },
+      select: {
+        id: true,
+        athleteId: true,
+        status: true,
+        sessionId: true,
+        session: { select: { event: true } },
+      },
     });
 
     if (!assignment || assignment.athleteId !== user.athleteProfile.id) {
@@ -56,7 +62,7 @@ export async function POST(
     if (assignment.status !== "IN_PROGRESS" && assignment.status !== "ASSIGNED") {
       return NextResponse.json(
         { success: false, error: "Assignment is not active" },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -74,7 +80,7 @@ export async function POST(
     if (!blockId || typeof throwNumber !== "number") {
       return NextResponse.json(
         { success: false, error: "blockId and throwNumber are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -90,7 +96,10 @@ export async function POST(
 
     // Verify block belongs to this assignment's session
     if (block.sessionId !== assignment.sessionId) {
-      return NextResponse.json({ success: false, error: "Block does not belong to this session" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Block does not belong to this session" },
+        { status: 403 }
+      );
     }
 
     // Create the throw log
@@ -109,15 +118,10 @@ export async function POST(
     let isPersonalBest = false;
     if (typeof distance === "number" && distance > 0) {
       const event = assignment.session.event;
-      const implementKg = parseFloat(String(implement).replace("kg", "")) || 0;
+      const implementKg = parseImplementKg(implement);
 
-      if (event && implementKg > 0) {
-        const prResult = await checkAndSetPR(
-          user.athleteProfile.id,
-          event,
-          implementKg,
-          distance,
-        );
+      if (event && implementKg != null && implementKg > 0) {
+        const prResult = await checkAndSetPR(user.athleteProfile.id, event, implementKg, distance);
         isPersonalBest = prResult.isPersonalBest;
 
         if (isPersonalBest) {
@@ -146,30 +150,32 @@ export async function POST(
 
           // Fire coach notification (fire-and-forget)
           if (user.athleteProfile.coachId) {
-            const name = [user.athleteProfile.firstName, user.athleteProfile.lastName]
-              .filter(Boolean)
-              .join(" ") || user.email || "Athlete";
+            const name =
+              [user.athleteProfile.firstName, user.athleteProfile.lastName]
+                .filter(Boolean)
+                .join(" ") ||
+              user.email ||
+              "Athlete";
             void notifyCoachPR(
               user.athleteProfile.coachId,
               user.athleteProfile.id,
               name,
               event,
-              distance,
+              distance
             ).catch((err) => logger.error("PR notification failed", { error: err }));
           }
 
           // Award PR achievement (fire-and-forget)
-          void awardPRAchievement(
-            user.athleteProfile.id,
-            event,
-          ).catch((err) => logger.error("PR achievement failed", { error: err }));
+          void awardPRAchievement(user.athleteProfile.id, event).catch((err) =>
+            logger.error("PR achievement failed", { error: err })
+          );
 
           // Emit team activity feed entry (fire-and-forget)
           void emitPR(user.athleteProfile.id, {
             event,
             implementWeight: implementKg,
             distance,
-            previousDistance: null, // checkAndSetPR doesn't return previous
+            previousDistance: prResult.previousDistance,
           }).catch((err) => logger.error("Team activity PR emit failed", { error: err }));
         }
       }

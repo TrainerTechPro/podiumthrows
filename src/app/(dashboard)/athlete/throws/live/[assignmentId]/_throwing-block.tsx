@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
-import {
-  Check,
-  Trophy,
-  Video,
-} from "lucide-react";
+import { Check, Trophy, Video } from "lucide-react";
 import { AnimatedNumber, RestTimer } from "@/components";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { useToast } from "@/components/toast";
@@ -60,7 +56,7 @@ export function ThrowingBlockView({
       state.throws
         .filter((t) => t.distance !== null)
         .reduce((max, t) => Math.max(max, t.distance as number), 0),
-    [state.throws],
+    [state.throws]
   );
 
   async function logThrow() {
@@ -111,11 +107,13 @@ export function ThrowingBlockView({
           method: "POST",
           headers: { ...csrfHeaders() },
           body: formData,
-        }).then(() => {
-          toast("Video saved to Codex", "success");
-        }).catch(() => {
-          toast("Video upload failed", "error");
-        });
+        })
+          .then(() => {
+            toast("Video saved to Codex", "success");
+          })
+          .catch(() => {
+            toast("Video upload failed", "error");
+          });
         setVideoFile(null);
       }
 
@@ -143,7 +141,7 @@ export function ThrowingBlockView({
 
   async function skipThrow() {
     try {
-      await fetch(`/api/throws/assignments/${assignmentId}/log-throw`, {
+      const res = await fetch(`/api/throws/assignments/${assignmentId}/log-throw`, {
         method: "POST",
         headers: csrfHeaders(),
         body: JSON.stringify({
@@ -154,8 +152,16 @@ export function ThrowingBlockView({
           event,
         }),
       });
-    } catch {
-      // Best-effort — still advance locally even if persistence fails
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Skip failed (${res.status})`);
+      }
+    } catch (err) {
+      // Advance locally either way — blocking mid-session on a transient
+      // network error is worse UX than a warning toast. But make the failure
+      // visible so athlete + coach know the skip isn't persisted.
+      console.error("skipThrow persist failed", err);
+      toast(err instanceof Error ? err.message : "Skip not saved — connection issue", "warning");
     }
     onThrowLogged({ throwNumber: current + 1, distance: null });
   }
@@ -243,7 +249,10 @@ export function ThrowingBlockView({
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm"
             style={{ backgroundColor: `${accent}11`, border: `1px solid ${accent}22` }}
           >
-            <span className="text-[9px] uppercase font-semibold" style={{ color: `${accent}88`, letterSpacing: "2px" }}>
+            <span
+              className="text-[9px] uppercase font-semibold"
+              style={{ color: `${accent}88`, letterSpacing: "2px" }}
+            >
               Best
             </span>
             <span style={{ color: accent }}>
@@ -253,7 +262,9 @@ export function ThrowingBlockView({
                 className="text-sm font-heading font-bold"
               />
             </span>
-            <span className="text-xs" style={{ color: `${accent}66` }}>m</span>
+            <span className="text-xs" style={{ color: `${accent}66` }}>
+              m
+            </span>
           </div>
         </div>
       )}
@@ -379,7 +390,12 @@ export function ThrowingBlockView({
                   clipPath: CHAMFER_LG,
                 }}
               >
-                <Video size={14} strokeWidth={1.75} style={{ color: videoFile ? accent : `${accent}66` }} aria-hidden="true" />
+                <Video
+                  size={14}
+                  strokeWidth={1.75}
+                  style={{ color: videoFile ? accent : `${accent}66` }}
+                  aria-hidden="true"
+                />
                 <span
                   className="text-[10px] font-bold uppercase"
                   style={{ letterSpacing: "2px", color: videoFile ? accent : `${accent}66` }}
@@ -418,8 +434,7 @@ export function ThrowingBlockView({
               className="text-xs tabular-nums"
               style={{ color: t.isPersonalBest ? "#FFC800" : `${accent}88` }}
             >
-              #{t.throwNumber}{" "}
-              {t.distance !== null ? `${t.distance.toFixed(2)}m` : "\u2014"}
+              #{t.throwNumber} {t.distance !== null ? `${t.distance.toFixed(2)}m` : "\u2014"}
               {t.isPersonalBest && (
                 <Trophy size={10} strokeWidth={1.75} className="inline ml-0.5" aria-hidden="true" />
               )}
@@ -438,8 +453,17 @@ export function ThrowingBlockView({
             clipPath: CHAMFER_LG,
           }}
         >
-          <Check size={20} strokeWidth={1.75} className="mx-auto mb-1" style={{ color: "#00FF88" }} aria-hidden="true" />
-          <p className="text-xs font-bold uppercase" style={{ letterSpacing: "3px", color: "#00FF88" }}>
+          <Check
+            size={20}
+            strokeWidth={1.75}
+            className="mx-auto mb-1"
+            style={{ color: "#00FF88" }}
+            aria-hidden="true"
+          />
+          <p
+            className="text-xs font-bold uppercase"
+            style={{ letterSpacing: "3px", color: "#00FF88" }}
+          >
             Block Complete
           </p>
         </div>

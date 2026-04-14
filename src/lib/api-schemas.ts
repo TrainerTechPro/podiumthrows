@@ -174,7 +174,9 @@ export const ReadinessCheckInSchema = z.object({
   ouraActivityScore: z.number().optional(),
   ouraSleepScore: z.number().optional(),
   temperatureDeviation: z.number().optional(),
-  source: z.enum(["MANUAL", "WHOOP_AUTO", "WHOOP_ASSISTED", "OURA_AUTO", "OURA_ASSISTED"]).optional(),
+  source: z
+    .enum(["MANUAL", "WHOOP_AUTO", "WHOOP_ASSISTED", "OURA_AUTO", "OURA_ASSISTED"])
+    .optional(),
 });
 
 // ── Athlete Schemas (for future use) ────────────────────────────────────
@@ -264,16 +266,15 @@ export const ThrowsCheckInSchema = z.object({
 
 export const TypingSubmitSchema = z.object({
   athleteId: z.string().min(1, "Athlete ID is required"),
-  quizResponses: z.object({
-    adaptationSpeed: z.array(z.record(z.string(), z.number())).optional(),
-    transferType: z.array(z.record(z.string(), z.number())).optional(),
-    selfFeeling: z.array(z.record(z.string(), z.number())).optional(),
-    lightImpl: z.array(z.record(z.string(), z.number())).optional(),
-    recovery: z.array(z.record(z.string(), z.number())).optional(),
-  }).refine(
-    (v) => Object.values(v).some(Boolean),
-    "At least one quiz response is required"
-  ),
+  quizResponses: z
+    .object({
+      adaptationSpeed: z.array(z.record(z.string(), z.number())).optional(),
+      transferType: z.array(z.record(z.string(), z.number())).optional(),
+      selfFeeling: z.array(z.record(z.string(), z.number())).optional(),
+      lightImpl: z.array(z.record(z.string(), z.number())).optional(),
+      recovery: z.array(z.record(z.string(), z.number())).optional(),
+    })
+    .refine((v) => Object.values(v).some(Boolean), "At least one quiz response is required"),
 });
 
 // ── Coach Add Athlete ───────────────────────────────────────────────────
@@ -375,12 +376,21 @@ export const AthleteBioUpdateSchema = z.object({
 // ── Coach Teams / Roster Groups ─────────────────────────────────────────────
 
 export const TeamCreateSchema = z.object({
-  name: z.string().min(1, "Group name is required").max(100).transform((s) => s.trim()),
+  name: z
+    .string()
+    .min(1, "Group name is required")
+    .max(100)
+    .transform((s) => s.trim()),
   description: z.string().max(500).nullable().optional(),
 });
 
 export const TeamUpdateSchema = z.object({
-  name: z.string().min(1).max(100).transform((s) => s.trim()).optional(),
+  name: z
+    .string()
+    .min(1)
+    .max(100)
+    .transform((s) => s.trim())
+    .optional(),
   description: z.string().max(500).nullable().optional(),
 });
 
@@ -480,7 +490,7 @@ export const CoachAthleteSessionCreateSchema = z.object({
         throwCount: z.number().optional(),
         bestMark: z.number().optional(),
         notes: z.string().optional(),
-      }),
+      })
     )
     .min(1, "At least one drill log is required"),
 });
@@ -515,7 +525,10 @@ export const ThrowFlowAnalysisSchema = z.object({
   implementWeight: z.number().optional().nullable(),
   knownDistance: z.number().optional().nullable(),
   frames: z.array(z.string()).optional(),
-  keyFrames: z.array(z.string()).min(1, "At least one key frame is required").max(20, "Maximum 20 key frames"),
+  keyFrames: z
+    .array(z.string())
+    .min(1, "At least one key frame is required")
+    .max(20, "Maximum 20 key frames"),
   keyFrameIndices: z.array(z.number()).optional(),
   totalFrames: z.number().optional(),
   videoDuration: z.number().optional().nullable(),
@@ -526,12 +539,16 @@ export const ThrowFlowAnalysisSchema = z.object({
 export const ThrowsBlockLogCreateSchema = z.object({
   assignmentId: z.string().min(1, "Assignment ID is required"),
   blockId: z.string().min(1, "Block ID is required"),
-  throws: z.array(z.object({
-    throwNumber: z.number().int().min(1),
-    distance: z.number().nullable(),
-    implement: z.string().min(1, "Implement is required"),
-    notes: z.string().optional().nullable(),
-  })).min(1, "At least one throw is required"),
+  throws: z
+    .array(
+      z.object({
+        throwNumber: z.number().int().min(1),
+        distance: z.number().nullable(),
+        implement: z.string().min(1, "Implement is required"),
+        notes: z.string().optional().nullable(),
+      })
+    )
+    .min(1, "At least one throw is required"),
 });
 
 // ── Throws PRs ─────────────────────────────────────────────────────────
@@ -596,17 +613,23 @@ const BestMarkInputSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
-export const ProgramBestMarksSchema = z.object({
-  marks: z.array(BestMarkInputSchema).min(1, "At least one mark is required"),
-}).or(BestMarkInputSchema); // Accepts single mark or { marks: [...] }
+export const ProgramBestMarksSchema = z
+  .object({
+    marks: z.array(BestMarkInputSchema).min(1, "At least one mark is required"),
+  })
+  .or(BestMarkInputSchema); // Accepts single mark or { marks: [...] }
 
-export const ProgramAlternateSchema = z.object({
-  actualPrescription: z.unknown().optional(),
-  modificationNotes: z.string().nullable().optional(),
-}).refine(
-  (d) => d.actualPrescription !== undefined || (d.modificationNotes != null && d.modificationNotes.length > 0),
-  "Provide at least actualPrescription or modificationNotes"
-);
+export const ProgramAlternateSchema = z
+  .object({
+    actualPrescription: z.unknown().optional(),
+    modificationNotes: z.string().nullable().optional(),
+  })
+  .refine(
+    (d) =>
+      d.actualPrescription !== undefined ||
+      (d.modificationNotes != null && d.modificationNotes.length > 0),
+    "Provide at least actualPrescription or modificationNotes"
+  );
 
 // ── Testing / Benchmarks ──────────────────────────────────────────────
 
@@ -631,18 +654,24 @@ export const EquipmentInventorySchema = z.object({
 export const CoachPreferencesPatchSchema = z.object({
   globalDefaultPage: z.string().optional(),
   workspaceDefaults: z.record(z.string(), z.string()).optional(),
-  dashboardLayout: z.object({
-    widgets: z.array(z.object({
-      id: z.string(),
-      visible: z.boolean(),
-      order: z.number(),
-    })),
-  }).optional(),
-  myTraining: z.object({
-    mode: z.enum(["competitive", "recreational"]).optional(),
-    primaryEvent: z.string().optional(),
-    gender: z.enum(["male", "female"]).optional(),
-  }).optional(),
+  dashboardLayout: z
+    .object({
+      widgets: z.array(
+        z.object({
+          id: z.string(),
+          visible: z.boolean(),
+          order: z.number(),
+        })
+      ),
+    })
+    .optional(),
+  myTraining: z
+    .object({
+      mode: z.enum(["competitive", "recreational"]).optional(),
+      primaryEvent: z.string().optional(),
+      gender: z.enum(["male", "female"]).optional(),
+    })
+    .optional(),
   lastTeamId: z.string().nullable().optional(),
 });
 
@@ -683,7 +712,10 @@ export const QuestionnaireScheduleSchema = z.object({
 
 export const TypingOverrideSchema = z.object({
   athleteId: z.string().min(1, "Athlete ID is required"),
-  adaptationGroup: z.union([z.number().int().min(1).max(4), z.string()]).optional().nullable(),
+  adaptationGroup: z
+    .union([z.number().int().min(1).max(4), z.string()])
+    .optional()
+    .nullable(),
   transferType: z.string().optional().nullable(),
   selfFeelingAccuracy: z.string().optional().nullable(),
   lightImplResponse: z.string().optional().nullable(),
@@ -706,10 +738,7 @@ export const CoachLogThrowSchema = z.object({
 });
 
 export const CoachNoteSchema = z.object({
-  content: z
-    .string()
-    .min(1, "Note content is required")
-    .max(5000, "Note content is too long"),
+  content: z.string().min(1, "Note content is required").max(5000, "Note content is too long"),
   category: z.enum(["TECHNICAL", "MENTAL", "INJURY", "GENERAL"]).default("GENERAL"),
   isPrivate: z.boolean().default(false),
 });
@@ -728,12 +757,25 @@ export const CoachEditProfileSchema = z.object({
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  events: z.array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"])).min(1).optional(),
-  dateOfBirth: z.string().datetime({ message: "Date of birth must be a valid ISO datetime" }).nullable().optional(),
+  events: z
+    .array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]))
+    .min(1)
+    .optional(),
+  dateOfBirth: z
+    .string()
+    .datetime({ message: "Date of birth must be a valid ISO datetime" })
+    .nullable()
+    .optional(),
   heightCm: z.number().min(100).max(250).nullable().optional(),
   weightKg: z.number().min(30).max(200).nullable().optional(),
   classStanding: z.string().nullable().optional(),
-  gradYear: z.number().int().min(1950, "Grad year too early").max(2050, "Grad year too late").nullable().optional(),
+  gradYear: z
+    .number()
+    .int()
+    .min(1950, "Grad year too early")
+    .max(2050, "Grad year too late")
+    .nullable()
+    .optional(),
   turnDirection: z.enum(["LEFT", "RIGHT"]).nullable().optional(),
   strengthNumbers: z.record(z.string(), z.number().nullable()).nullable().optional(),
   technicalProfile: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -741,6 +783,116 @@ export const CoachEditProfileSchema = z.object({
   movementRestrictions: z.record(z.string(), z.unknown()).nullable().optional(),
   competitionPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),
   implementPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),
+});
+
+// ── Session Complete + Log ──────────────────────────────────────────────
+
+export const SessionCompleteSchema = z.object({
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+});
+
+export const SessionLogSchema = z.object({
+  exerciseName: z.string().min(1, "Exercise name is required").max(200),
+  sets: z.number().int().min(1, "Sets must be at least 1"),
+  reps: z.number().int().min(0).nullable().optional(),
+  weight: z.number().min(0).nullable().optional(),
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  distance: z.number().min(0).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  // Throw-specific fields
+  isThrow: z.boolean().optional(),
+  event: z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]).optional(),
+  implementKg: z.number().min(0).optional(),
+});
+
+// ── Goals ───────────────────────────────────────────────────────────────
+
+export const GoalCreateSchema = z.object({
+  title: z.string().min(1, "Title is required").max(200),
+  targetValue: z.number().positive("Target value must be a positive number"),
+  unit: z.string().min(1, "Unit is required").max(50),
+  startingValue: z.number().nullable().optional(),
+  deadline: z.string().nullable().optional(),
+  event: z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]).nullable().optional(),
+  description: z.string().nullable().optional(),
+});
+
+export const GoalUpdateSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    targetValue: z.number().positive().optional(),
+    currentValue: z.number().optional(),
+    unit: z.string().min(1).max(50).optional(),
+    deadline: z.string().nullable().optional(),
+    event: z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]).nullable().optional(),
+    description: z.string().nullable().optional(),
+    status: z.enum(["ACTIVE", "COMPLETED", "ABANDONED"]).optional(),
+  })
+  .refine((d) => Object.keys(d).length > 0, {
+    message: "At least one field is required",
+  });
+
+// ── Availability ───────────────────────────────────────────────────────
+
+export const AvailabilityBlockSchema = z.object({
+  dayOfWeek: z.number().int().min(0).max(6, "dayOfWeek must be 0-6 (Sun-Sat)"),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:MM"),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:MM"),
+  type: z.string().min(1, "type is required").max(50),
+  label: z.string().max(100).nullable().optional(),
+  notes: z.string().max(500).nullable().optional(),
+});
+
+export const AvailabilityOverrideSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD"),
+  type: z.string().min(1, "type is required").max(50),
+  startTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .nullable()
+    .optional(),
+  endTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .nullable()
+    .optional(),
+  reason: z.string().max(500).nullable().optional(),
+});
+
+// ── Athlete Self-Edit Profile ───────────────────────────────────────────
+
+/**
+ * PATCH schema for the athlete self-edit profile endpoint.
+ *
+ * All fields are optional — only those present in the payload are updated.
+ * JSON blobs (competitionGoals, strengthNumbers) are accepted as unknown
+ * objects here; deeper per-field validation lives in the tab components
+ * and in the data access layer. `.nullable().optional()` covers the React
+ * form pattern where unset values arrive as null.
+ */
+export const AthleteProfileSelfPatchSchema = z.object({
+  firstName: z.string().min(1, "First name cannot be empty").max(100).optional(),
+  lastName: z.string().min(1, "Last name cannot be empty").max(100).optional(),
+  events: z.array(z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"])).optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  dateOfBirth: z.string().nullable().optional(),
+  heightCm: z.number().min(50).max(260).nullable().optional(),
+  weightKg: z.number().min(20).max(300).nullable().optional(),
+  turnDirection: z.enum(["LEFT", "RIGHT"]).nullable().optional(),
+  classStanding: z.string().nullable().optional(),
+  gradYear: z.number().int().min(1950).max(2050).nullable().optional(),
+  competitionGoals: z.record(z.string(), z.unknown()).nullable().optional(),
+  strengthNumbers: z.record(z.string(), z.unknown()).nullable().optional(),
+  competitionPBs: z
+    .array(
+      z.object({
+        event: z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]),
+        distance: z.number().nullable().optional(),
+      })
+    )
+    .optional(),
+  completeOnboarding: z.boolean().optional(),
 });
 
 // ── parseBody Helper ────────────────────────────────────────────────────
@@ -773,7 +925,10 @@ export async function parseBody<T>(
       field: issue.path.join(".") || "_body",
       message: issue.message,
     }));
-    return NextResponse.json({ success: false, error: "Validation failed", fieldErrors }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "Validation failed", fieldErrors },
+      { status: 400 }
+    );
   }
 
   return result.data;
@@ -790,10 +945,7 @@ export async function parseBody<T>(
  * const { range, prOnly } = parsed;
  * ```
  */
-export function parseQuery<T>(
-  request: Request,
-  schema: z.ZodType<T>
-): T | NextResponse {
+export function parseQuery<T>(request: Request, schema: z.ZodType<T>): T | NextResponse {
   const url = new URL(request.url);
   const raw: Record<string, string> = {};
   for (const [k, v] of url.searchParams.entries()) {

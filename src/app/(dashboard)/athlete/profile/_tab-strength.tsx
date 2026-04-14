@@ -69,12 +69,20 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
 
   /* ── Lift updater ──────────────────────────────────────────────────── */
 
+  // Blank/invalid input resets numeric fields to 0. The `|| 0` previously
+  // silently collapsed NaN here — now the intent is explicit.
+  const parseNumericOrZero = (value: string): number => {
+    if (value === "" || value == null) return 0;
+    const n = parseFloat(value);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   function updateLift(key: string, field: keyof LiftEntry, value: string) {
     setLifts((prev) => ({
       ...prev,
       [key]: {
         ...prev[key],
-        [field]: field === "current" || field === "goal" ? parseFloat(value) || 0 : value,
+        [field]: field === "current" || field === "goal" ? parseNumericOrZero(value) : value,
       },
     }));
   }
@@ -92,9 +100,9 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
           }),
         });
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          toastError("Save failed", data.error || "Please try again.");
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          toastError("Save failed", data?.error || "Please try again.");
           return;
         }
 

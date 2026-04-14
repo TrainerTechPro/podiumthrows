@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn, localToday } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { Avatar, Button, ProgressBar } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { EnablePushNotifications } from "@/components/notifications/EnablePushNotifications";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
@@ -113,7 +114,10 @@ export function OnboardingWizard({
   const [pbs, setPbs] = useState<Record<string, string>>({});
 
   // Form state — Step 3: Physical Profile
-  const [gender, setGender] = useState("MALE");
+  // Default to null so the athlete must explicitly pick. A silent default
+  // of "MALE" drives competition-weight selection and would produce the
+  // wrong implement weight for anyone who skips through without picking.
+  const [gender, setGender] = useState<string | null>(null);
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
@@ -176,34 +180,59 @@ export function OnboardingWizard({
   }
 
   /* ─── Go to done ─────────────────────────────────────────────────── */
+  // Tracks the pending redirect so we can clear it if the user navigates
+  // away before 2s elapses.
+  const doneTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (doneTimeoutRef.current) clearTimeout(doneTimeoutRef.current);
+    };
+  }, []);
 
   function goToDone() {
     setStep("done");
-    setTimeout(() => {
+    doneTimeoutRef.current = setTimeout(() => {
       router.push("/athlete/dashboard");
       router.refresh();
     }, 2000);
   }
 
   /* ─── Submit ──────────────────────────────────────────────────────── */
+  const toast = useToast();
 
   async function handleSubmit() {
     setError(null);
+    if (!gender) {
+      setError("Please select an option for gender.");
+      toast.error("Please select an option for gender before continuing.");
+      return;
+    }
     startTransition(async () => {
       try {
-        // Fetch current profile for firstName/lastName
+        // Fetch current profile for firstName/lastName. GET now returns
+        // the canonical { success, data } envelope — read through .data.
         const profileRes = await fetch("/api/athlete/profile");
         let currentFirstName = firstName;
         let currentLastName = "";
         if (profileRes.ok) {
-          const profile = await profileRes.json();
-          currentFirstName = profile.firstName;
-          currentLastName = profile.lastName;
+          const profilePayload = await profileRes.json().catch(() => null);
+          if (profilePayload?.success && profilePayload.data) {
+            currentFirstName = profilePayload.data.firstName ?? currentFirstName;
+            currentLastName = profilePayload.data.lastName ?? "";
+          }
         }
 
-        // Build competition PBs array
+        // Build competition PBs array. Explicit empty-string check so a
+        // user typing `0` isn't silently dropped (though 0m isn't a
+        // realistic PB, the parser shouldn't conflate "blank" with "0").
         const competitionPBs = selectedEvents
-          .filter((ev) => pbs[ev] && parseFloat(pbs[ev]) > 0)
+          .filter((ev) => {
+            const raw = pbs[ev];
+            if (raw === "" || raw == null) return false;
+            const n = parseFloat(raw);
+            return Number.isFinite(n) && n > 0;
+          })
           .map((ev) => ({
             event: ev,
             distance: parseFloat(pbs[ev]),
@@ -227,16 +256,22 @@ export function OnboardingWizard({
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) {
-          const data = await res.json();
-          setError(data.error ?? "Something went wrong.");
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          const msg = data?.error ?? `Something went wrong (${res.status}).`;
+          setError(msg);
+          toast.error(msg);
           return;
         }
 
         // Go to the notifications step before the final done state
         setStep("notifications");
-      } catch {
-        setError("Failed to save profile. Please try again.");
+      } catch (err) {
+        console.error("onboarding submit failed", err);
+        const msg =
+          err instanceof Error ? err.message : "Failed to save profile. Please try again.";
+        setError(msg);
+        toast.error(msg);
       }
     });
   }

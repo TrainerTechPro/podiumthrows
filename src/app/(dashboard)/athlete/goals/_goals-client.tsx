@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition } from "react";
+import { Pencil, Plus, Target } from "lucide-react";
 import {
   Badge,
   Button,
@@ -11,6 +12,7 @@ import {
   StaggeredList,
 } from "@/components";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
 import type { GoalItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -277,20 +279,7 @@ function AdjustDeadlineInline({ goal, onUpdateDeadline }: AdjustDeadlineProps) {
         className="text-xs text-muted hover:text-primary-500 transition-colors"
         title="Adjust deadline"
       >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="inline -mt-px mr-0.5"
-        >
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-        </svg>
+        <Pencil size={12} strokeWidth={1.75} className="inline -mt-px mr-0.5" aria-hidden="true" />
         Edit
       </button>
     );
@@ -449,62 +438,83 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [isAdding, startAddTransition] = useTransition();
+  const toast = useToast();
 
   const activeGoals = goals.filter((g) => g.status === "ACTIVE");
   const completedGoals = goals.filter((g) => g.status === "COMPLETED");
   const abandonedGoals = goals.filter((g) => g.status === "ABANDONED");
 
   /* ── Create goal ── */
-  const handleCreate = useCallback(async (form: GoalFormData) => {
-    setAddError(null);
-    startAddTransition(async () => {
-      try {
-        const res = await fetch("/api/athlete/goals", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({
-            title: form.title,
-            targetValue: parseFloat(form.targetValue),
-            unit: form.unit,
-            startingValue: form.startingValue ? parseFloat(form.startingValue) : null,
-            deadline: form.deadline || null,
-            event: form.event || null,
-            description: form.description || null,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setAddError(data.error ?? "Failed to create goal.");
-          return;
+  // Preserve 0 as a valid startingValue — an athlete tracking growth from
+  // a standing start (e.g. new PR from 0 attempts) should be able to
+  // enter 0. `form.startingValue ? parseFloat() : null` coerced "0" to null.
+  const parseOptionalNumeric = (raw: string): number | null => {
+    if (raw === "" || raw == null) return null;
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const handleCreate = useCallback(
+    async (form: GoalFormData) => {
+      setAddError(null);
+      startAddTransition(async () => {
+        try {
+          const res = await fetch("/api/athlete/goals", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            body: JSON.stringify({
+              title: form.title,
+              targetValue: parseFloat(form.targetValue),
+              unit: form.unit,
+              startingValue: parseOptionalNumeric(form.startingValue),
+              deadline: form.deadline || null,
+              event: form.event || null,
+              description: form.description || null,
+            }),
+          });
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data?.success) {
+            setAddError(data?.error ?? `Failed to create goal (${res.status}).`);
+            return;
+          }
+          // Fetch fresh list
+          const listRes = await fetch("/api/athlete/goals");
+          const listData = await listRes.json().catch(() => null);
+          if (listRes.ok && listData?.success && Array.isArray(listData.data)) {
+            setGoals(listData.data);
+          }
+          setShowAddModal(false);
+          toast.success("Goal created");
+        } catch (err) {
+          console.error("goal create failed", err);
+          setAddError(err instanceof Error ? err.message : "Something went wrong.");
         }
-        // Fetch fresh list
-        const listRes = await fetch("/api/athlete/goals");
-        const listData = await listRes.json();
-        if (listRes.ok) setGoals(listData.goals ?? []);
-        setShowAddModal(false);
-      } catch {
-        setAddError("Something went wrong.");
-      }
-    });
-  }, []);
+      });
+    },
+    [toast]
+  );
 
   /* ── Update progress ── */
-  const handleUpdateProgress = useCallback(async (id: string, currentValue: number) => {
-    try {
-      const res = await fetch(`/api/athlete/goals/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ currentValue }),
-      });
-      const data = await res.json();
-      if (res.ok) {
+  const handleUpdateProgress = useCallback(
+    async (id: string, currentValue: number) => {
+      try {
+        const res = await fetch(`/api/athlete/goals/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ currentValue }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || `Failed to update progress (${res.status}).`);
+        }
+        const goal = data.data;
         setGoals((prev) =>
           prev.map((g) =>
             g.id === id
               ? {
                   ...g,
-                  currentValue: data.goal.currentValue,
-                  status: data.goal.status,
+                  currentValue: goal.currentValue,
+                  status: goal.status,
                   progressPct: Math.min(
                     100,
                     Math.max(
@@ -520,46 +530,62 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
               : g
           )
         );
+        toast.success("Progress updated");
+      } catch (err) {
+        console.error("goal progress update failed", err);
+        toast.error(err instanceof Error ? err.message : "Couldn't save progress.");
       }
-    } catch {
-      // Silent fail — will refresh on next nav
-    }
-  }, []);
+    },
+    [toast]
+  );
 
   /* ── Update deadline ── */
-  const handleUpdateDeadline = useCallback(async (id: string, deadline: string | null) => {
-    try {
-      const res = await fetch(`/api/athlete/goals/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ deadline: deadline ?? "" }),
-      });
-      const data = await res.json();
-      if (res.ok) {
+  const handleUpdateDeadline = useCallback(
+    async (id: string, deadline: string | null) => {
+      try {
+        const res = await fetch(`/api/athlete/goals/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ deadline: deadline ?? "" }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || `Failed to update deadline (${res.status}).`);
+        }
         setGoals((prev) =>
-          prev.map((g) => (g.id === id ? { ...g, deadline: data.goal.deadline } : g))
+          prev.map((g) => (g.id === id ? { ...g, deadline: data.data.deadline } : g))
         );
+        toast.success("Deadline updated");
+      } catch (err) {
+        console.error("goal deadline update failed", err);
+        toast.error(err instanceof Error ? err.message : "Couldn't save deadline.");
       }
-    } catch {
-      // Silent fail
-    }
-  }, []);
+    },
+    [toast]
+  );
 
   /* ── Abandon goal ── */
-  const handleAbandon = useCallback(async (id: string) => {
-    try {
-      const res = await fetch(`/api/athlete/goals/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ status: "ABANDONED" }),
-      });
-      if (res.ok) {
+  const handleAbandon = useCallback(
+    async (id: string) => {
+      try {
+        const res = await fetch(`/api/athlete/goals/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ status: "ABANDONED" }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          throw new Error(data?.error || `Failed to abandon goal (${res.status}).`);
+        }
         setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, status: "ABANDONED" } : g)));
+        toast.success("Goal abandoned");
+      } catch (err) {
+        console.error("goal abandon failed", err);
+        toast.error(err instanceof Error ? err.message : "Couldn't abandon goal.");
       }
-    } catch {
-      // Silent fail
-    }
-  }, []);
+    },
+    [toast]
+  );
 
   /* ── Abandon request with confirmation ── */
   const { confirm: confirmAbandon, Dialog: AbandonConfirmDialog } = useConfirm();
@@ -586,20 +612,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
           </p>
         </div>
         <Button size="sm" onClick={() => setShowAddModal(true)}>
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-1.5"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <Plus size={14} strokeWidth={1.75} className="mr-1.5" aria-hidden="true" />
           Add Goal
         </Button>
       </div>
@@ -607,19 +620,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
       {/* Empty state */}
       {goals.length === 0 && (
         <EmptyState
-          icon={
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          }
+          icon={<Target size={24} strokeWidth={1.75} aria-hidden="true" />}
           title="No goals yet"
           description="Set SMART goals to track your progress toward competition distances and personal bests."
           action={

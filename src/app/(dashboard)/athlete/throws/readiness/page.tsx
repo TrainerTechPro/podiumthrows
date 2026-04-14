@@ -171,7 +171,7 @@ export default function AthleteProfilePage() {
     setSaving(true);
     setSaveError("");
     try {
-      await fetch("/api/throws/checkins", {
+      const res = await fetch("/api/throws/checkins", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
@@ -191,10 +191,17 @@ export default function AthleteProfilePage() {
           notes: checkInData.notes || null,
         }),
       });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || `Check-in failed (${res.status})`);
+      }
       setShowCheckIn(false);
-      if (athleteId) loadProfile(athleteId);
-    } catch {
-      setSaveError("Failed to save check-in. Please try again.");
+      loadProfile(athleteId);
+    } catch (err) {
+      console.error("throws check-in save failed", err);
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to save check-in. Please try again."
+      );
     }
     setSaving(false);
   }
@@ -214,14 +221,16 @@ export default function AthleteProfilePage() {
           source: "MANUAL",
         }),
       });
-      const data = await res.json();
-      if (data.success) {
-        setShowAddPR(false);
-        setPrForm({ event: "SHOT_PUT", implement: "", distance: "" });
-        if (athleteId) loadProfile(athleteId);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || `PR save failed (${res.status})`);
       }
-    } catch {
-      setPrError("Failed to save PR. Please try again.");
+      setShowAddPR(false);
+      setPrForm({ event: "SHOT_PUT", implement: "", distance: "" });
+      if (athleteId) loadProfile(athleteId);
+    } catch (err) {
+      console.error("PR save failed", err);
+      setPrError(err instanceof Error ? err.message : "Failed to save PR. Please try again.");
     }
     setSavingPR(false);
   }

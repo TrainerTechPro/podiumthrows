@@ -14,7 +14,7 @@ import { formatImplementDisplay } from "@/lib/throws/display";
 
 const DistanceTrendChart = dynamic(
   () => import("./_distance-chart").then((m) => m.DistanceTrendChart),
-  { ssr: false, loading: () => <div className="shimmer h-64 rounded-xl" /> },
+  { ssr: false, loading: () => <div className="shimmer h-64 rounded-xl" /> }
 );
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -118,15 +118,16 @@ export default function ThrowAnalysisPage() {
 
   useEffect(() => {
     fetch("/api/athlete/throws/analysis")
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed");
-        return r.json();
-      })
-      .then((d: AnalysisData) => {
-        setData(d);
+      .then(async (r) => {
+        const payload = await r.json().catch(() => null);
+        if (!r.ok || !payload?.success || !payload.data) {
+          throw new Error(payload?.error || `Failed (${r.status})`);
+        }
+        setData(payload.data as AnalysisData);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("throws analysis fetch failed", err);
         setError(true);
         setLoading(false);
       });
@@ -159,10 +160,7 @@ export default function ThrowAnalysisPage() {
             title="Unable to load analysis"
             description="Something went wrong fetching your throw data. Please try again."
             action={
-              <button
-                className="btn-primary"
-                onClick={() => window.location.reload()}
-              >
+              <button className="btn-primary" onClick={() => window.location.reload()}>
                 Retry
               </button>
             }
@@ -202,7 +200,7 @@ export default function ThrowAnalysisPage() {
   // ── Group data by event ────────────────────────────────────────────
 
   const eventsWithData = EVENT_ORDER.filter((ev) =>
-    data.distanceTrends.some((t) => t.event === ev),
+    data.distanceTrends.some((t) => t.event === ev)
   );
 
   // Group implement distribution by event (for the bottom section)
@@ -224,9 +222,7 @@ export default function ThrowAnalysisPage() {
       {/* ── Per-event chart cards ──────────────────────────────────── */}
       {eventsWithData.length === 0 ? (
         <section className="card !p-5">
-          <p className="text-sm text-muted text-center">
-            No distance data logged yet.
-          </p>
+          <p className="text-sm text-muted text-center">No distance data logged yet.</p>
         </section>
       ) : (
         eventsWithData.map((event) => (
@@ -246,9 +242,7 @@ export default function ThrowAnalysisPage() {
           <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             PR Progression
           </h2>
-          <p className="text-xs text-muted mt-0.5">
-            Personal record achievements over time
-          </p>
+          <p className="text-xs text-muted mt-0.5">Personal record achievements over time</p>
         </div>
 
         {data.prTimeline.length > 0 ? (
@@ -272,9 +266,7 @@ export default function ThrowAnalysisPage() {
                           >
                             {meta?.label ?? pr.event}
                           </span>
-                          <span className="text-xs text-muted font-mono">
-                            {pr.implement}
-                          </span>
+                          <span className="text-xs text-muted font-mono">{pr.implement}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
                             {pr.source === "COMPETITION" ? "Competition" : "Training"}
                           </span>
@@ -305,9 +297,7 @@ export default function ThrowAnalysisPage() {
           <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             Competition vs Practice
           </h2>
-          <p className="text-xs text-muted mt-0.5">
-            Throw volume and average distance split
-          </p>
+          <p className="text-xs text-muted mt-0.5">Throw volume and average distance split</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -375,9 +365,7 @@ export default function ThrowAnalysisPage() {
           <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             Implement Distribution
           </h2>
-          <p className="text-xs text-muted mt-0.5">
-            Throw count and distances by implement weight
-          </p>
+          <p className="text-xs text-muted mt-0.5">Throw count and distances by implement weight</p>
         </div>
 
         {data.implementDistribution.length > 0 ? (
@@ -437,9 +425,7 @@ function Header() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-display font-heading text-[var(--foreground)]">
-          Throw Analysis
-        </h1>
+        <h1 className="text-display font-heading text-[var(--foreground)]">Throw Analysis</h1>
         <p className="text-sm text-surface-700 dark:text-surface-300">
           Distance trends, PRs, and implement breakdown
         </p>
@@ -468,8 +454,11 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
   const compLabel = compLabelFor(event, gender);
   const compKg = compKgFor(event, gender);
 
-  const { settings, setDateRange, toggleWeight, resetToComp } =
-    useEventChartSettings(athleteId, event, compLabel);
+  const { settings, setDateRange, toggleWeight, resetToComp } = useEventChartSettings(
+    athleteId,
+    event,
+    compLabel
+  );
 
   // All implement labels that appear in this event's data, sorted by kg
   const allImplements = useMemo(() => {
@@ -491,9 +480,8 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
   // Apply date filter
   const rangeStart = rangeStartDate(settings.dateRange);
   const dateFilteredTrends = useMemo(
-    () =>
-      rangeStart ? trends.filter((t) => t.date >= rangeStart) : trends,
-    [trends, rangeStart],
+    () => (rangeStart ? trends.filter((t) => t.date >= rangeStart) : trends),
+    [trends, rangeStart]
   );
 
   const hiddenByDate = trends.length - dateFilteredTrends.length;
@@ -503,7 +491,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
   const visibleTrends = useMemo(
     () => dateFilteredTrends.filter((t) => visibleSet.has(t.implementLabel)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dateFilteredTrends, settings.visibleWeights],
+    [dateFilteredTrends, settings.visibleWeights]
   );
 
   // Aggregate: best distance per date per implement
@@ -521,7 +509,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
   }, [visibleTrends]);
 
   const visibleImplementKeys = settings.visibleWeights.filter((w) =>
-    allImplements.some((i) => i.label === w),
+    allImplements.some((i) => i.label === w)
   );
 
   const hasAnyVisibleData = chartData.length > 0 && visibleImplementKeys.length > 0;
@@ -536,12 +524,8 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
             style={{ backgroundColor: meta?.color ?? "#666" }}
           />
           <div>
-            <h2 className="text-base font-bold text-[var(--foreground)]">
-              {meta?.label ?? event}
-            </h2>
-            <p className="text-xs text-muted mt-0.5">
-              Distance progression by implement
-            </p>
+            <h2 className="text-base font-bold text-[var(--foreground)]">{meta?.label ?? event}</h2>
+            <p className="text-xs text-muted mt-0.5">Distance progression by implement</p>
           </div>
         </div>
         {/* Date range picker */}
@@ -615,8 +599,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
       {hiddenByDate > 0 && (
         <div className="text-xs text-muted bg-[var(--muted-bg)] rounded-md px-3 py-2 flex items-center justify-between gap-3">
           <span>
-            {hiddenByDate} older throw{hiddenByDate === 1 ? "" : "s"} hidden by
-            date filter
+            {hiddenByDate} older throw{hiddenByDate === 1 ? "" : "s"} hidden by date filter
           </span>
           <button
             onClick={() => setDateRange("all")}

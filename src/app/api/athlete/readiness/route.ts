@@ -138,12 +138,22 @@ export async function POST(req: NextRequest) {
     if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
     return NextResponse.json(
-      { id: checkIn.id, overallScore: checkIn.overallScore, date: checkIn.date.toISOString(), streak: newStreak },
+      {
+        success: true,
+        data: {
+          id: checkIn.id,
+          overallScore: checkIn.overallScore,
+          date: checkIn.date.toISOString(),
+          streak: newStreak,
+        },
+      },
       { status: 201 }
     );
   } catch (err) {
     logger.error("POST /api/athlete/readiness", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to save check-in." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to save check-in." },
+      { status: 500 }
+    );
   }
 }
-

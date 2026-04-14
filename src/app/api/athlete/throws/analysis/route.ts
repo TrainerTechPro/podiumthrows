@@ -70,68 +70,67 @@ export async function GET() {
 
     // ── Fetch all data sources in parallel ────────────────────────────────
 
-    const [practiceAttempts, throwLogs, throwsPRs, throwsBlockLogs] =
-      await Promise.all([
-        // PracticeAttempt — coach-led practice throws
-        prisma.practiceAttempt.findMany({
-          where: { athleteId: athlete.id },
-          select: {
-            event: true,
-            implement: true,
-            distance: true,
-            isPR: true,
-            createdAt: true,
-          },
-          orderBy: { createdAt: "asc" },
-        }),
+    const [practiceAttempts, throwLogs, throwsPRs, throwsBlockLogs] = await Promise.all([
+      // PracticeAttempt — coach-led practice throws
+      prisma.practiceAttempt.findMany({
+        where: { athleteId: athlete.id },
+        select: {
+          event: true,
+          implement: true,
+          distance: true,
+          isPR: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      }),
 
-        // ThrowLog — standalone throws (has isCompetition flag)
-        prisma.throwLog.findMany({
-          where: { athleteId: athlete.id },
-          select: {
-            event: true,
-            implementWeight: true,
-            distance: true,
-            date: true,
-            isPersonalBest: true,
-            isCompetition: true,
-          },
-          orderBy: { date: "asc" },
-        }),
+      // ThrowLog — standalone throws (has isCompetition flag)
+      prisma.throwLog.findMany({
+        where: { athleteId: athlete.id },
+        select: {
+          event: true,
+          implementWeight: true,
+          distance: true,
+          date: true,
+          isPersonalBest: true,
+          isCompetition: true,
+        },
+        orderBy: { date: "asc" },
+      }),
 
-        // ThrowsPR — personal records
-        prisma.throwsPR.findMany({
-          where: { athleteId: athlete.id },
-          select: {
-            event: true,
-            implement: true,
-            distance: true,
-            achievedAt: true,
-            source: true,
-          },
-          orderBy: { achievedAt: "asc" },
-        }),
+      // ThrowsPR — personal records
+      prisma.throwsPR.findMany({
+        where: { athleteId: athlete.id },
+        select: {
+          event: true,
+          implement: true,
+          distance: true,
+          achievedAt: true,
+          source: true,
+        },
+        orderBy: { achievedAt: "asc" },
+      }),
 
-        // ThrowsBlockLog — structured session throws
-        prisma.throwsBlockLog.findMany({
-          where: {
-            assignment: { athleteId: athlete.id },
-          },
-          select: {
-            distance: true,
-            implement: true,
-            createdAt: true,
-            assignment: {
-              select: {
-                session: {
-                  select: { event: true },
-                },
+      // ThrowsBlockLog — structured session throws
+      prisma.throwsBlockLog.findMany({
+        where: {
+          assignment: { athleteId: athlete.id },
+        },
+        select: {
+          distance: true,
+          implement: true,
+          createdAt: true,
+          assignment: {
+            select: {
+              session: {
+                select: { event: true },
               },
             },
           },
-          orderBy: { createdAt: "asc" },
-        }),
-      ]);
+        },
+        orderBy: { createdAt: "asc" },
+      }),
+    ]);
 
     // ── Build distance trends ──────────────────────────────────────────────
 
@@ -184,9 +183,7 @@ export async function GET() {
     }
 
     // Sort by date
-    distanceTrends.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    distanceTrends.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // ── Build PR timeline ──────────────────────────────────────────────────
 
@@ -199,9 +196,7 @@ export async function GET() {
     }));
 
     // Sort newest first
-    prTimeline.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    prTimeline.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // ── Build competition vs practice split ────────────────────────────────
 
@@ -242,17 +237,12 @@ export async function GET() {
     const competitionVsPractice = {
       competition: {
         count: compCount,
-        avgDistance:
-          compCount > 0
-            ? Math.round((compTotal / compCount) * 100) / 100
-            : 0,
+        avgDistance: compCount > 0 ? Math.round((compTotal / compCount) * 100) / 100 : 0,
       },
       practice: {
         count: practiceCount,
         avgDistance:
-          practiceCount > 0
-            ? Math.round((practiceTotal / practiceCount) * 100) / 100
-            : 0,
+          practiceCount > 0 ? Math.round((practiceTotal / practiceCount) * 100) / 100 : 0,
       },
     };
 
@@ -260,11 +250,7 @@ export async function GET() {
 
     const implMap = new Map<string, ImplBucket>();
 
-    const addToImplMap = (
-      event: string,
-      implement: string,
-      distance: number
-    ) => {
+    const addToImplMap = (event: string, implement: string, distance: number) => {
       const key = `${event}||${implement}`;
       const existing = implMap.get(key);
       if (existing) {
@@ -298,19 +284,16 @@ export async function GET() {
       }
     }
 
-    const implementDistribution = Array.from(implMap.entries()).map(
-      ([key, bucket]) => {
-        const [event, implement] = key.split("||");
-        return {
-          event,
-          implement,
-          throwCount: bucket.throwCount,
-          avgDistance:
-            Math.round((bucket.totalDistance / bucket.throwCount) * 100) / 100,
-          bestDistance: Math.round(bucket.bestDistance * 100) / 100,
-        };
-      }
-    );
+    const implementDistribution = Array.from(implMap.entries()).map(([key, bucket]) => {
+      const [event, implement] = key.split("||");
+      return {
+        event,
+        implement,
+        throwCount: bucket.throwCount,
+        avgDistance: Math.round((bucket.totalDistance / bucket.throwCount) * 100) / 100,
+        bestDistance: Math.round(bucket.bestDistance * 100) / 100,
+      };
+    });
 
     // Sort by event then implement
     implementDistribution.sort((a, b) => {
@@ -319,12 +302,15 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      athleteId: athlete.id,
-      gender: athlete.gender,
-      distanceTrends,
-      prTimeline,
-      competitionVsPractice,
-      implementDistribution,
+      success: true,
+      data: {
+        athleteId: athlete.id,
+        gender: athlete.gender,
+        distanceTrends,
+        prTimeline,
+        competitionVsPractice,
+        implementDistribution,
+      },
     });
   } catch (err) {
     logger.error("GET /api/athlete/throws/analysis", { context: "api", error: err });

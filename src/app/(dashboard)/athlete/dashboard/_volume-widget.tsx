@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { AlertCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton, AnimatedNumber } from "@/components";
 
@@ -30,28 +31,61 @@ export function VolumeWidget() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(false);
     fetch("/api/athlete/training-volume")
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed");
-        return r.json();
-      })
-      .then((d) => {
-        setData(d);
+      .then(async (r) => {
+        const payload = await r.json().catch(() => null);
+        if (!r.ok || !payload?.success || !payload.data) {
+          throw new Error(payload?.error || `Failed (${r.status})`);
+        }
+        setData(payload.data as VolumeData);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("training-volume fetch failed", err);
         setError(true);
         setLoading(false);
       });
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   if (loading) return <VolumeWidgetSkeleton />;
 
-  if (error || !data) return null;
+  // Render an inline error with a retry button rather than disappearing
+  // silently. A blank widget looks like the athlete has no data — this
+  // tells them the fetch failed and gives them a way out.
+  if (error || !data) {
+    return (
+      <div className="card px-6 py-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
+          Training Volume
+        </h3>
+        <div className="flex flex-col items-center text-center gap-3 py-3">
+          <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <AlertCircle size={20} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
+          </div>
+          <p className="text-sm font-medium text-[var(--foreground)]">
+            Couldn&apos;t load volume data
+          </p>
+          <button
+            type="button"
+            onClick={load}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-500 hover:underline"
+          >
+            <RotateCcw size={14} strokeWidth={1.75} aria-hidden="true" />
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const hasActivity =
-    data.weeklyVolume.some((w) => w.sessions > 0 || w.throws > 0);
+  const hasActivity = data.weeklyVolume.some((w) => w.sessions > 0 || w.throws > 0);
 
   if (!hasActivity) {
     return (
@@ -77,9 +111,7 @@ export function VolumeWidget() {
               <path d="M7 16l4-8 4 4 4-6" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-[var(--foreground)]">
-            No training data yet
-          </p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">No training data yet</p>
           <p className="text-xs text-muted max-w-[240px]">
             Start training to see your volume trends and session streaks.
           </p>
@@ -109,22 +141,14 @@ export function VolumeWidget() {
           <p className="text-xs text-muted mb-3">Sessions per week</p>
           <div className="flex items-end gap-1.5 h-20">
             {recentWeeks.map((w, i) => {
-              const height =
-                maxSessions > 0
-                  ? Math.max(4, (w.sessions / maxSessions) * 100)
-                  : 4;
+              const height = maxSessions > 0 ? Math.max(4, (w.sessions / maxSessions) * 100) : 4;
               const isCurrentWeek = i === recentWeeks.length - 1;
               return (
-                <div
-                  key={w.week}
-                  className="flex-1 flex flex-col items-center gap-1"
-                >
+                <div key={w.week} className="flex-1 flex flex-col items-center gap-1">
                   <span
                     className={cn(
                       "text-[10px] tabular-nums font-medium",
-                      isCurrentWeek
-                        ? "text-primary-600 dark:text-primary-400"
-                        : "text-muted"
+                      isCurrentWeek ? "text-primary-600 dark:text-primary-400" : "text-muted"
                     )}
                   >
                     {w.sessions > 0 ? w.sessions : ""}
@@ -132,9 +156,7 @@ export function VolumeWidget() {
                   <div
                     className={cn(
                       "w-full rounded-t-md animate-bar-grow",
-                      isCurrentWeek
-                        ? "bg-primary-500"
-                        : "bg-surface-200 dark:bg-surface-700"
+                      isCurrentWeek ? "bg-primary-500" : "bg-surface-200 dark:bg-surface-700"
                     )}
                     style={{
                       height: `${height}%`,
@@ -182,14 +204,10 @@ export function VolumeWidget() {
               <span className="text-xl font-bold tabular-nums font-heading text-primary-600 dark:text-primary-400">
                 <AnimatedNumber value={data.streaks.current} decimals={0} />
               </span>
-              <span className="text-xs text-muted">
-                day{data.streaks.current !== 1 ? "s" : ""}
-              </span>
+              <span className="text-xs text-muted">day{data.streaks.current !== 1 ? "s" : ""}</span>
             </div>
             {data.streaks.longest > data.streaks.current && (
-              <p className="text-[10px] text-muted mt-0.5">
-                Best: {data.streaks.longest}d
-              </p>
+              <p className="text-[10px] text-muted mt-0.5">Best: {data.streaks.longest}d</p>
             )}
           </div>
         </div>

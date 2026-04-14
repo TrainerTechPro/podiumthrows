@@ -36,12 +36,20 @@ export default async function AthleteSettingsPage() {
 
   let connectedDevices = 0;
   try {
-    const whoop = await prisma.whoopConnection.findUnique({ where: { athleteId: profile.id }, select: { id: true } });
-    const oura = await prisma.ouraConnection.findUnique({ where: { athleteId: profile.id }, select: { id: true } });
+    const whoop = await prisma.whoopConnection.findUnique({
+      where: { athleteId: profile.id },
+      select: { id: true },
+    });
+    const oura = await prisma.ouraConnection.findUnique({
+      where: { athleteId: profile.id },
+      select: { id: true },
+    });
     if (whoop) connectedDevices++;
     if (oura) connectedDevices++;
-  } catch {
-    // Tables may not exist yet
+  } catch (err) {
+    // Wearable tables can be missing in older dev DBs. Log so real DB
+    // errors aren't silently hidden; the badge falls back to 0.
+    console.warn("wearable connection count failed", err);
   }
 
   return (
@@ -110,7 +118,10 @@ export default async function AthleteSettingsPage() {
       {/* Integrations link */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Integrations</h2>
-        <Link href="/athlete/integrations" className="card card-interactive p-4 flex items-center gap-3">
+        <Link
+          href="/athlete/integrations"
+          className="card card-interactive p-4 flex items-center gap-3"
+        >
           <Zap size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-[var(--foreground)]">Wearable Integrations</p>

@@ -26,7 +26,7 @@ import { TimelineProgressDots } from "./_timeline-progress-dots";
 /*  TIMELINE NODE WRAPPER                                                  */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
-type NodeState = "pending" | "active" | "completed";
+type NodeState = "locked" | "ready" | "active" | "completed";
 
 function TimelineNode({
   nodeState,
@@ -62,7 +62,11 @@ function TimelineNode({
 
   const isExpanded = nodeState === "active";
   const isCompleted = nodeState === "completed";
-  const isPending = nodeState === "pending";
+  const isLocked = nodeState === "locked";
+  // "ready" nodes are the next-in-sequence: they should look and feel
+  // tappable (full opacity, pointer cursor, chevron visible), unlike
+  // locked nodes which are dimmed and disabled.
+  const isPending = isLocked;
 
   return (
     <div ref={nodeRef} className="relative flex gap-4">
@@ -97,9 +101,7 @@ function TimelineNode({
               width: 2,
               flex: 1,
               minHeight: 16,
-              backgroundColor: isCompleted
-                ? "#00FF8833"
-                : "rgba(255,255,255,0.03)",
+              backgroundColor: isCompleted ? "#00FF8833" : "rgba(255,255,255,0.03)",
               transition: "background-color 0.6s ease",
             }}
           />
@@ -161,10 +163,7 @@ function TimelineNode({
           </div>
           {/* Summary line for completed nodes */}
           {isCompleted && summaryLine && (
-            <p
-              className="text-[11px] mt-1 font-mono tabular-nums"
-              style={{ color: "#00FF8888" }}
-            >
+            <p className="text-[11px] mt-1 font-mono tabular-nums" style={{ color: "#00FF8888" }}>
               {summaryLine}
             </p>
           )}
@@ -231,7 +230,11 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
 
       for (const tl of blockLogs) {
         let parsed: Record<string, unknown> | null = null;
-        try { parsed = tl.notes ? JSON.parse(tl.notes) : null; } catch { /* not JSON */ }
+        try {
+          parsed = tl.notes ? JSON.parse(tl.notes) : null;
+        } catch {
+          /* not JSON */
+        }
 
         if (parsed?.type === "warmup_drill") {
           warmupChecked.add(tl.throwNumber);
@@ -280,12 +283,18 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
 
   // Unsaved changes warning + back button protection
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); };
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     window.history.pushState(null, "", window.location.href);
     const handlePopState = () => {
-      if (confirm("Leave workout? Your logged throws are saved, but the session won't be marked complete.")) {
+      if (
+        confirm(
+          "Leave workout? Your logged throws are saved, but the session won't be marked complete."
+        )
+      ) {
         window.history.back();
       } else {
         window.history.pushState(null, "", window.location.href);
@@ -301,16 +310,19 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
 
   // ── Handlers ──────────────────────────────────────────────────────
 
-  const advanceToNextBlock = useCallback((currentBlockId: string) => {
-    const idx = data.blocks.findIndex((b) => b.id === currentBlockId);
-    if (idx < data.blocks.length - 1) {
-      setExpandedBlockId(data.blocks[idx + 1].id);
-    } else {
-      // Last block completed — show completion
-      setExpandedBlockId(null);
-      setShowCompletion(true);
-    }
-  }, [data.blocks]);
+  const advanceToNextBlock = useCallback(
+    (currentBlockId: string) => {
+      const idx = data.blocks.findIndex((b) => b.id === currentBlockId);
+      if (idx < data.blocks.length - 1) {
+        setExpandedBlockId(data.blocks[idx + 1].id);
+      } else {
+        // Last block completed — show completion
+        setExpandedBlockId(null);
+        setShowCompletion(true);
+      }
+    },
+    [data.blocks]
+  );
 
   const handleThrowLogged = useCallback(
     (blockId: string, t: LoggedThrow) => {
@@ -334,7 +346,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         return next;
       });
     },
-    [data.blocks, advanceToNextBlock],
+    [data.blocks, advanceToNextBlock]
   );
 
   const handleSetLogged = useCallback(
@@ -358,7 +370,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         return next;
       });
     },
-    [data.blocks, advanceToNextBlock],
+    [data.blocks, advanceToNextBlock]
   );
 
   const handleToggleDrill = useCallback(
@@ -384,13 +396,30 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
               throwNumber: idx,
               notes: JSON.stringify({ type: "warmup_drill", checked: true }),
             }),
-          }).catch(() => {});
+          })
+            .then(async (r) => {
+              if (!r.ok) {
+                const err = await r.json().catch(() => ({}));
+                throw new Error(err.error || `Failed to save warmup drill (${r.status})`);
+              }
+            })
+            .catch((err) => {
+              // Surface failure so the athlete knows the checkmark isn't
+              // persisted — coach won't see this warmup drill in history.
+              console.error("warmup drill persist failed", err);
+              toast(
+                err instanceof Error
+                  ? err.message
+                  : "Couldn't save warmup drill — check will retry on next load",
+                "error"
+              );
+            });
         }
 
         return next;
       });
     },
-    [data.assignmentId],
+    [data.assignmentId, toast]
   );
 
   async function endEarly() {
@@ -524,7 +553,10 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         {data.blocks.map((block, idx) => {
           const bt = block.blockType?.toUpperCase();
           const state = blockStates.get(block.id) ?? {
-            throws: [], sets: [], warmupChecked: new Set<number>(), completed: false,
+            throws: [],
+            sets: [],
+            warmupChecked: new Set<number>(),
+            completed: false,
           };
           const accent = getBlockAccent(block);
           const exerciseName = getExerciseName(block);
@@ -536,17 +568,18 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
           // Determine if this block is tappable (only if previous is complete or this is first)
           const prevBlock = idx > 0 ? data.blocks[idx - 1] : null;
           const prevState = prevBlock ? blockStates.get(prevBlock.id) : null;
-          const canExpand = idx === 0
-            || (prevBlock && prevState && isBlockComplete(prevBlock, prevState))
-            || complete;
+          const canExpand =
+            idx === 0 ||
+            (prevBlock && prevState && isBlockComplete(prevBlock, prevState)) ||
+            complete;
 
           const nodeState: NodeState = isExpanded
             ? "active"
             : complete
               ? "completed"
               : canExpand
-                ? "pending" // visually pending but tappable
-                : "pending";
+                ? "ready"
+                : "locked";
 
           // Build subtitle from prescription
           let subtitle = "";
@@ -585,9 +618,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
 
           return (
             <div key={block.id}>
-              {groupLabel && (
-                <BlockGroupLabel label={groupLabel.label} color={groupLabel.color} />
-              )}
+              {groupLabel && <BlockGroupLabel label={groupLabel.label} color={groupLabel.color} />}
               <TimelineNode
                 nodeState={nodeState}
                 accent={accent}

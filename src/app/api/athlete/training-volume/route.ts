@@ -25,54 +25,48 @@ export async function GET() {
     twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84); // 12 * 7
 
     // Fetch all data sources in parallel
-    const [completedSessions, practiceAttempts, selfLoggedSessions] =
-      await Promise.all([
-        // Coach-assigned sessions that were completed
-        prisma.trainingSession.findMany({
-          where: {
-            athleteId: athlete.id,
-            status: "COMPLETED",
-            completedDate: { gte: twelveWeeksAgo },
-          },
-          select: { completedDate: true },
-        }),
+    const [completedSessions, practiceAttempts, selfLoggedSessions] = await Promise.all([
+      // Coach-assigned sessions that were completed
+      prisma.trainingSession.findMany({
+        where: {
+          athleteId: athlete.id,
+          status: "COMPLETED",
+          completedDate: { gte: twelveWeeksAgo },
+        },
+        select: { completedDate: true },
+      }),
 
-        // Practice attempts (throws logged by coach during practice)
-        prisma.practiceAttempt.findMany({
-          where: {
-            athleteId: athlete.id,
-            createdAt: { gte: twelveWeeksAgo },
-          },
-          select: { createdAt: true, drillType: true },
-        }),
+      // Practice attempts (throws logged by coach during practice)
+      prisma.practiceAttempt.findMany({
+        where: {
+          athleteId: athlete.id,
+          createdAt: { gte: twelveWeeksAgo },
+        },
+        select: { createdAt: true, drillType: true },
+      }),
 
-        // Self-logged athlete throws sessions
-        prisma.athleteThrowsSession.findMany({
-          where: {
-            athleteId: athlete.id,
-            createdAt: { gte: twelveWeeksAgo },
+      // Self-logged athlete throws sessions
+      prisma.athleteThrowsSession.findMany({
+        where: {
+          athleteId: athlete.id,
+          createdAt: { gte: twelveWeeksAgo },
+        },
+        select: {
+          date: true,
+          createdAt: true,
+          drillLogs: {
+            select: { throwCount: true, drillType: true },
           },
-          select: {
-            date: true,
-            createdAt: true,
-            drillLogs: {
-              select: { throwCount: true, drillType: true },
-            },
-          },
-        }),
-      ]);
+        },
+      }),
+    ]);
 
     // Build weekly volume map (last 12 weeks)
-    const weeklyMap = new Map<
-      string,
-      { weekStart: Date; sessions: number; throws: number }
-    >();
+    const weeklyMap = new Map<string, { weekStart: Date; sessions: number; throws: number }>();
 
     // Initialize all 12 weeks
     for (let i = 11; i >= 0; i--) {
-      const weekStart = getWeekStart(
-        new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000)
-      );
+      const weekStart = getWeekStart(new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000));
       const key = weekStart.toISOString();
       weeklyMap.set(key, { weekStart, sessions: 0, throws: 0 });
     }
@@ -156,9 +150,12 @@ export async function GET() {
     const { current, longest } = calculateStreaks(activityDates);
 
     return NextResponse.json({
-      weeklyVolume,
-      exerciseFrequency,
-      streaks: { current, longest },
+      success: true,
+      data: {
+        weeklyVolume,
+        exerciseFrequency,
+        streaks: { current, longest },
+      },
     });
   } catch (err) {
     logger.error("GET /api/athlete/training-volume", { context: "api", error: err });

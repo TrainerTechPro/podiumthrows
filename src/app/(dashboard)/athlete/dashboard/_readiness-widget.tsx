@@ -25,20 +25,27 @@ function ReadinessRing({ score }: { score: number }) {
   const r = 36;
   const circ = 2 * Math.PI * r;
   const dash = circ * pct;
-  const color =
-    score >= 8 ? "#10b981" : score >= 5 ? "#f59e0b" : "#ef4444";
+  const color = score >= 8 ? "#10b981" : score >= 5 ? "#f59e0b" : "#ef4444";
 
   return (
     <div className="relative w-24 h-24 shrink-0">
       <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
         <circle
-          cx="48" cy="48" r={r}
-          fill="none" stroke="currentColor" strokeWidth="8"
+          cx="48"
+          cy="48"
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="8"
           className="text-surface-200 dark:text-surface-700"
         />
         <circle
-          cx="48" cy="48" r={r}
-          fill="none" stroke={color} strokeWidth="8"
+          cx="48"
+          cy="48"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={`${dash} ${circ}`}
           className="transition-all duration-700"
@@ -56,18 +63,9 @@ function ReadinessRing({ score }: { score: number }) {
 
 /* ─── Breakdown Bar ─────────────────────────────────────────────────────── */
 
-function BreakdownBar({
-  label,
-  value,
-  max = 10,
-}: {
-  label: string;
-  value: number;
-  max?: number;
-}) {
+function BreakdownBar({ label, value, max = 10 }: { label: string; value: number; max?: number }) {
   const pct = (value / max) * 100;
-  const barColor =
-    pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500";
+  const barColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500";
 
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -116,8 +114,8 @@ export function ReadinessWidget({ data }: { data: ReadinessData | null }) {
     data.overallScore >= 8
       ? "Feeling great"
       : data.overallScore >= 5
-      ? "Moderate readiness"
-      : "Low readiness";
+        ? "Moderate readiness"
+        : "Low readiness";
 
   return (
     <div className="card px-5 py-4 sm:col-span-2">
@@ -133,27 +131,24 @@ export function ReadinessWidget({ data }: { data: ReadinessData | null }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-[var(--foreground)]">
-                  {scoreLabel}
-                </p>
+                <p className="text-sm font-semibold text-[var(--foreground)]">{scoreLabel}</p>
                 <p className="text-xs text-muted mt-0.5">
                   {formatRelativeDate(data.date)}
-                  {data.sleepHours > 0 && (
-                    <> &middot; {data.sleepHours}h sleep</>
-                  )}
+                  {data.sleepHours != null && <> &middot; {data.sleepHours}h sleep</>}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
-                {data.injuryStatus === "ACTIVE" && (
-                  <Badge variant="danger">Injured</Badge>
-                )}
-                {data.injuryStatus === "MONITORING" && (
-                  <Badge variant="warning">Watch</Badge>
-                )}
+                {data.injuryStatus === "ACTIVE" && <Badge variant="danger">Injured</Badge>}
+                {data.injuryStatus === "MONITORING" && <Badge variant="warning">Watch</Badge>}
                 <svg
-                  width="14" height="14" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" strokeWidth="2"
-                  strokeLinecap="round" strokeLinejoin="round"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className={`text-muted shrink-0 transition-transform duration-200 ${
                     expanded ? "rotate-180" : ""
                   }`}

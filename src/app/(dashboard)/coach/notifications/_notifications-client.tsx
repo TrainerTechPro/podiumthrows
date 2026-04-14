@@ -5,9 +5,21 @@ import { Badge, Button, EmptyState } from "@/components";
 import type { NotificationItem } from "@/lib/notifications";
 import { useRouter } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { useToast } from "@/components/ui/Toast";
 import {
-  Bell, Trophy, AlertTriangle, ClipboardList, Dumbbell, UserPlus,
-  RefreshCw, MessageCircle, Video, CalendarClock, Clock, Flame, Settings2,
+  Bell,
+  Trophy,
+  AlertTriangle,
+  ClipboardList,
+  Dumbbell,
+  UserPlus,
+  RefreshCw,
+  MessageCircle,
+  Video,
+  CalendarClock,
+  Clock,
+  Flame,
+  Settings2,
 } from "lucide-react";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -31,33 +43,97 @@ function NotificationIcon({ type }: { type: string }) {
 
   switch (type) {
     case "PR_ALERT":
-      return <div className={`${base} bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400`}><Trophy {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400`}
+        >
+          <Trophy {...iconProps} />
+        </div>
+      );
     case "LOW_READINESS":
-      return <div className={`${base} bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400`}><AlertTriangle {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400`}
+        >
+          <AlertTriangle {...iconProps} />
+        </div>
+      );
     case "QUESTIONNAIRE_ASSIGNED":
     case "QUESTIONNAIRE_COMPLETE":
-      return <div className={`${base} bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400`}><ClipboardList {...iconProps} /></div>;
+      return (
+        <div className={`${base} bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400`}>
+          <ClipboardList {...iconProps} />
+        </div>
+      );
     case "WORKOUT_ASSIGNED":
     case "WORKOUT_COMPLETED":
     case "WORKOUT_SKIPPED":
-      return <div className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}><Dumbbell {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}
+        >
+          <Dumbbell {...iconProps} />
+        </div>
+      );
     case "ATHLETE_JOINED":
-      return <div className={`${base} bg-success-50 dark:bg-success-500/20 text-success-600 dark:text-success-400`}><UserPlus {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-success-50 dark:bg-success-500/20 text-success-600 dark:text-success-400`}
+        >
+          <UserPlus {...iconProps} />
+        </div>
+      );
     case "PROGRAM_CHECKPOINT":
     case "COMPLEX_ROTATED":
-      return <div className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}><RefreshCw {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}
+        >
+          <RefreshCw {...iconProps} />
+        </div>
+      );
     case "COMMENT_ADDED":
-      return <div className={`${base} bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400`}><MessageCircle {...iconProps} /></div>;
+      return (
+        <div className={`${base} bg-info-50 dark:bg-info-500/20 text-info-600 dark:text-info-400`}>
+          <MessageCircle {...iconProps} />
+        </div>
+      );
     case "VIDEO_SHARED":
-      return <div className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}><Video {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}
+        >
+          <Video {...iconProps} />
+        </div>
+      );
     case "COMPETITION_REMINDER":
-      return <div className={`${base} bg-warning-50 dark:bg-warning-500/15 text-warning-600 dark:text-warning-400`}><CalendarClock {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-warning-50 dark:bg-warning-500/15 text-warning-600 dark:text-warning-400`}
+        >
+          <CalendarClock {...iconProps} />
+        </div>
+      );
     case "INVITATION_EXPIRED":
-      return <div className={`${base} bg-surface-100 dark:bg-surface-800 text-surface-500`}><Clock {...iconProps} /></div>;
+      return (
+        <div className={`${base} bg-surface-100 dark:bg-surface-800 text-surface-500`}>
+          <Clock {...iconProps} />
+        </div>
+      );
     case "STREAK_BROKEN":
-      return <div className={`${base} bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400`}><Flame {...iconProps} /></div>;
+      return (
+        <div
+          className={`${base} bg-danger-50 dark:bg-danger-500/20 text-danger-600 dark:text-danger-400`}
+        >
+          <Flame {...iconProps} />
+        </div>
+      );
     default:
-      return <div className={`${base} bg-surface-100 dark:bg-surface-800 text-surface-500`}><Settings2 {...iconProps} /></div>;
+      return (
+        <div className={`${base} bg-surface-100 dark:bg-surface-800 text-surface-500`}>
+          <Settings2 {...iconProps} />
+        </div>
+      );
   }
 }
 
@@ -81,7 +157,10 @@ const TYPE_LABELS: Record<string, string> = {
   INVITATION_EXPIRED: "Invitation",
 };
 
-const TYPE_BADGE_VARIANTS: Record<string, "success" | "danger" | "info" | "neutral" | "warning" | "primary"> = {
+const TYPE_BADGE_VARIANTS: Record<
+  string,
+  "success" | "danger" | "info" | "neutral" | "warning" | "primary"
+> = {
   PR_ALERT: "success",
   LOW_READINESS: "danger",
   QUESTIONNAIRE_COMPLETE: "info",
@@ -111,7 +190,9 @@ function getNotificationUrl(n: NotificationItem, role: "COACH" | "ATHLETE"): str
     case "WORKOUT_COMPLETED":
     case "WORKOUT_SKIPPED":
     case "STREAK_BROKEN":
-      return n.athleteProfileId && role === "COACH" ? `/coach/athletes/${n.athleteProfileId}` : null;
+      return n.athleteProfileId && role === "COACH"
+        ? `/coach/athletes/${n.athleteProfileId}`
+        : null;
     case "WORKOUT_ASSIGNED":
       return `${prefix}/sessions`;
     case "QUESTIONNAIRE_ASSIGNED":
@@ -149,9 +230,7 @@ function resolveCommentUrl(
           : "/coach/athletes";
       case "practiceAttemptId": {
         const sessionId = meta?.practiceSessionId as string | undefined;
-        return sessionId
-          ? `/coach/throws/practice/${sessionId}`
-          : "/coach/throws/practice";
+        return sessionId ? `/coach/throws/practice/${sessionId}` : "/coach/throws/practice";
       }
       case "trainingSessionId":
         return "/coach/sessions";
@@ -220,12 +299,14 @@ function NotificationRow({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold leading-snug text-[var(--foreground)]">
-            {n.title}
-          </p>
+          <p className="text-sm font-semibold leading-snug text-[var(--foreground)]">{n.title}</p>
           <div className="flex items-center gap-2 shrink-0">
             {!n.read && (
-              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+              <span
+                className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                role="status"
+                aria-label="Unread"
+              />
             )}
             <span className="text-[10px] text-muted tabular-nums whitespace-nowrap">
               {relativeTime(n.createdAt)}
@@ -251,7 +332,9 @@ function NotificationRow({
           )}
 
           <button
+            type="button"
             onClick={() => onMarkRead(n.id, !n.read)}
+            aria-label={`${n.read ? "Mark unread" : "Mark read"}: ${n.title}`}
             className="text-[10px] text-muted hover:text-[var(--foreground)] ml-auto transition-colors"
           >
             {n.read ? "Mark unread" : "Mark read"}
@@ -270,7 +353,11 @@ interface NotificationsClientProps {
   role: "COACH" | "ATHLETE";
 }
 
-export function NotificationsClient({ initialNotifications, unreadCount: _initialUnread, role }: NotificationsClientProps) {
+export function NotificationsClient({
+  initialNotifications,
+  unreadCount: _initialUnread,
+  role,
+}: NotificationsClientProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [filter, setFilter] = useState<FilterType>("all");
   const [, startTransition] = useTransition();
@@ -284,43 +371,57 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
     return true;
   });
 
-  const handleMarkRead = useCallback((id: string, read: boolean) => {
-    startTransition(async () => {
-      try {
-        await fetch(`/api/notifications/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ read }),
-        });
-        setNotifications((prev) =>
-          prev.map((n) => (n.id === id ? { ...n, read } : n))
-        );
-      } catch {
-        // Silent fail
-      }
-    });
-  }, []);
+  const toast = useToast();
+
+  const handleMarkRead = useCallback(
+    (id: string, read: boolean) => {
+      startTransition(async () => {
+        try {
+          const res = await fetch(`/api/notifications/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            body: JSON.stringify({ read }),
+          });
+          if (!res.ok) {
+            throw new Error(`Mark read failed (${res.status})`);
+          }
+          setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read } : n)));
+        } catch (err) {
+          console.error("mark notification read failed", err);
+          toast.error("Couldn't update — try again");
+        }
+      });
+    },
+    [toast]
+  );
 
   const handleMarkAllRead = useCallback(() => {
     startTransition(async () => {
       try {
-        await fetch("/api/notifications", {
+        const res = await fetch("/api/notifications", {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
         });
+        if (!res.ok) {
+          throw new Error(`Mark all read failed (${res.status})`);
+        }
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      } catch {
-        // Silent fail
+        toast.success("All notifications marked read");
+      } catch (err) {
+        console.error("mark all read failed", err);
+        toast.error("Couldn't mark all — try again");
       }
     });
-  }, []);
+  }, [toast]);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Notifications</h1>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
+            Notifications
+          </h1>
           <p className="text-sm text-muted mt-0.5">
             {unreadCount > 0
               ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
@@ -341,8 +442,8 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
             key === "unread"
               ? notifications.filter((n) => !n.read).length
               : key !== "all"
-              ? notifications.filter((n) => n.type === key).length
-              : null;
+                ? notifications.filter((n) => n.type === key).length
+                : null;
 
           return (
             <button
@@ -374,8 +475,8 @@ export function NotificationsClient({ initialNotifications, unreadCount: _initia
             filter === "unread"
               ? "You're all caught up! New alerts will appear here."
               : role === "COACH"
-              ? "PR alerts, readiness warnings, workout completions, and more will appear here."
-              : "Workout assignments, questionnaires, videos, and more will appear here."
+                ? "PR alerts, readiness warnings, workout completions, and more will appear here."
+                : "Workout assignments, questionnaires, videos, and more will appear here."
           }
         />
       ) : (

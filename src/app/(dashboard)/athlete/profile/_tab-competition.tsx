@@ -84,6 +84,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
 
   // Collapsible state: on mobile all start collapsed; track which are open
   const [openEvents, setOpenEvents] = useState<Set<string>>(new Set(events));
+  const [justSaved, setJustSaved] = useState(false);
 
   const toggleEvent = (ev: string) => {
     setOpenEvents((prev) => {
@@ -95,6 +96,16 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
   };
 
   /* ── Field updaters ──────────────────────────────────────────────── */
+
+  // Distance and goal fields are stored as `number` in the form type, so
+  // there's no null/unset state — but we still want to preserve explicit 0
+  // without silently coercing it from blank input. `parseNumericOrZero`
+  // makes the intent explicit: blank/invalid input resets to 0.
+  const parseNumericOrZero = (value: string): number => {
+    if (value === "" || value == null) return 0;
+    const n = parseFloat(value);
+    return Number.isFinite(n) ? n : 0;
+  };
 
   const updateMark = (
     event: string,
@@ -108,7 +119,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
         ...prev[event],
         [field]: {
           ...prev[event][field],
-          [key]: key === "distance" ? parseFloat(value) || 0 : value,
+          [key]: key === "distance" ? parseNumericOrZero(value) : value,
         },
       },
     }));
@@ -119,7 +130,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
       ...prev,
       [event]: {
         ...prev[event],
-        [field]: parseFloat(value) || 0,
+        [field]: parseNumericOrZero(value),
       },
     }));
   };
@@ -148,15 +159,18 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
           body: JSON.stringify({ competitionGoals: form }),
         });
 
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          toastError("Save failed", data.error || "Please try again.");
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          toastError("Save failed", data?.error || "Please try again.");
           return;
         }
 
         success("Competition data saved");
+        setJustSaved(true);
+        setTimeout(() => setJustSaved(false), 2500);
         router.refresh();
-      } catch {
+      } catch (err) {
+        console.error("competition profile save failed", err);
         toastError("Save failed", "Network error. Please try again.");
       }
     });
@@ -311,14 +325,22 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
       })}
 
       {/* ── Save button ───────────────────────────────────────────── */}
-      <div className="flex justify-end pt-2">
+      <div className="flex items-center justify-end gap-3 pt-2">
+        {justSaved && (
+          <span
+            className="text-sm font-medium text-green-600 dark:text-green-400"
+            aria-live="polite"
+          >
+            ✓ Saved
+          </span>
+        )}
         <Button
           variant="primary"
           onClick={handleSave}
           disabled={isPending}
           className="w-full sm:w-auto"
         >
-          {isPending ? "Saving..." : "Save Changes"}
+          {isPending ? "Saving..." : justSaved ? "Saved" : "Save Changes"}
         </Button>
       </div>
     </div>

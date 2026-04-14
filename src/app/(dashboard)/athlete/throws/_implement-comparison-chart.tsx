@@ -22,11 +22,7 @@ const SERIES_COLORS = [
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
-export function ImplementComparisonChart({
-  seriesData,
-}: {
-  seriesData: ImplementSeriesData[];
-}) {
+export function ImplementComparisonChart({ seriesData }: { seriesData: ImplementSeriesData[] }) {
   if (seriesData.length === 0) {
     return (
       <div className="flex items-center justify-center text-sm text-muted h-[180px]">
@@ -35,8 +31,11 @@ export function ImplementComparisonChart({
     );
   }
 
-  // Convert to LineChart series format
-  const chartSeries = seriesData.map((s, i) => ({
+  // Sort heaviest → lightest so the color palette (red=heavy → green=light)
+  // encodes implement weight consistently regardless of caller ordering.
+  const sortedSeries = [...seriesData].sort((a, b) => b.implementWeight - a.implementWeight);
+
+  const chartSeries = sortedSeries.map((s, i) => ({
     data: s.data.map(
       (d): LineChartDataPoint => ({
         label: new Date(d.date).toLocaleDateString("en-US", {
@@ -56,10 +55,7 @@ export function ImplementComparisonChart({
       <div className="flex flex-wrap gap-3 mb-3">
         {chartSeries.map((s) => (
           <div key={s.label} className="flex items-center gap-1.5">
-            <span
-              className="w-3 h-3 rounded-full shrink-0"
-              style={{ backgroundColor: s.color }}
-            />
+            <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
             <span className="text-xs text-muted">{s.label}</span>
           </div>
         ))}

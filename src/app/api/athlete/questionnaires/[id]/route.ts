@@ -6,6 +6,7 @@ import { calculateFormScores } from "@/lib/forms/scoring-engine";
 import type { FormBlock, ScoringConfig } from "@/lib/forms/types";
 import { validateAllAnswers } from "@/lib/forms/validation";
 import { parseBody, QuestionnaireSubmissionSchema } from "@/lib/api-schemas";
+import { logger } from "@/lib/logger";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -20,8 +21,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    return NextResponse.json({ questionnaire });
-  } catch {
+    return NextResponse.json({ success: true, data: { questionnaire } });
+  } catch (err) {
+    logger.error("GET /api/athlete/questionnaires/[id]", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
@@ -62,7 +64,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     if (!questionnaire || questionnaire.status !== "published") {
-      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Questionnaire not found" },
+        { status: 404 }
+      );
     }
 
     const parsed = await parseBody(req, QuestionnaireSubmissionSchema);
@@ -140,12 +145,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         }),
       ]);
 
-      return NextResponse.json({ response }, { status: 201 });
+      return NextResponse.json({ success: true, data: { response } }, { status: 201 });
     }
 
     // ── Legacy question-based form submission ─────────────────────────────
     if (!Array.isArray(answers)) {
-      return NextResponse.json({ success: false, error: "Answers must be an array" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Answers must be an array" },
+        { status: 400 }
+      );
     }
 
     const questions = questionnaire.questions as Array<{
@@ -160,11 +168,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     for (const q of questions) {
       if (q.required) {
         const answer = answerMap.get(q.id) as { answer?: unknown } | undefined;
+        // Preserve explicit 0 as an answered value (CLAUDE.md rule 3).
+        // A numeric score of 0 is valid data, not "unanswered".
         if (
           !answer ||
           answer.answer === undefined ||
           answer.answer === null ||
-          answer.answer === ""
+          (typeof answer.answer === "string" && answer.answer === "")
         ) {
           return NextResponse.json(
             { success: false, error: `Required question "${q.text}" must be answered` },

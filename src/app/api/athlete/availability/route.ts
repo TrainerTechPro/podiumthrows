@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import {
-  getAthleteAvailability,
-  createAvailabilityBlock,
-} from "@/lib/data/availability";
+import { parseBody, AvailabilityBlockSchema } from "@/lib/api-schemas";
+import { getAthleteAvailability, createAvailabilityBlock } from "@/lib/data/availability";
 
 /* ─── GET — fetch current athlete's blocks + overrides ───────────────────── */
 
@@ -28,7 +26,10 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/athlete/availability", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch availability." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch availability." },
+      { status: 500 }
+    );
   }
 }
 
@@ -49,30 +50,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { dayOfWeek, startTime, endTime, type, label, notes } =
-      body as Record<string, unknown>;
-
-    if (typeof dayOfWeek !== "number") {
-      return NextResponse.json({ success: false, error: "dayOfWeek is required." }, { status: 400 });
-    }
-    if (typeof startTime !== "string" || !startTime) {
-      return NextResponse.json({ success: false, error: "startTime is required." }, { status: 400 });
-    }
-    if (typeof endTime !== "string" || !endTime) {
-      return NextResponse.json({ success: false, error: "endTime is required." }, { status: 400 });
-    }
-    if (typeof type !== "string" || !type) {
-      return NextResponse.json({ success: false, error: "type is required." }, { status: 400 });
-    }
+    const parsed = await parseBody(req, AvailabilityBlockSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { dayOfWeek, startTime, endTime, type, label, notes } = parsed;
 
     const block = await createAvailabilityBlock(athlete.id, {
       dayOfWeek,
       startTime,
       endTime,
       type,
-      label: typeof label === "string" ? label : null,
-      notes: typeof notes === "string" ? notes : null,
+      label: label ?? null,
+      notes: notes ?? null,
     });
 
     return NextResponse.json({ success: true, data: block }, { status: 201 });

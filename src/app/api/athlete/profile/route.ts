@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, AthleteProfileSelfPatchSchema } from "@/lib/api-schemas";
 import {
   COMPETITION_WEIGHTS,
   EVENT_CODE_MAP,
@@ -41,8 +42,11 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      ...athlete,
-      dateOfBirth: athlete.dateOfBirth?.toISOString() ?? null,
+      success: true,
+      data: {
+        ...athlete,
+        dateOfBirth: athlete.dateOfBirth?.toISOString() ?? null,
+      },
     });
   } catch (err) {
     logger.error("GET /api/athlete/profile", { context: "api", error: err });
@@ -52,8 +56,6 @@ export async function GET() {
 
 /* ─── PATCH — update profile ──────────────────────────────────────────────── */
 
-type CompetitionPB = { event: string; distance: number };
-
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getSession();
@@ -61,7 +63,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const parsed = await parseBody(req, AthleteProfileSelfPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+
     const {
       firstName,
       lastName,
@@ -77,68 +81,30 @@ export async function PATCH(req: NextRequest) {
       strengthNumbers,
       competitionPBs,
       completeOnboarding,
-    } = body as Record<string, unknown>;
+    } = parsed;
 
-    // Validate name fields only when present in the payload
-    if (firstName !== undefined) {
-      if (typeof firstName !== "string" || firstName.trim().length === 0) {
-        return NextResponse.json(
-          { success: false, error: "First name cannot be empty." },
-          { status: 400 }
-        );
-      }
-    }
-    if (lastName !== undefined) {
-      if (typeof lastName !== "string" || lastName.trim().length === 0) {
-        return NextResponse.json(
-          { success: false, error: "Last name cannot be empty." },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Build the Prisma data object conditionally from provided fields
+    // Build the Prisma data object conditionally from provided fields.
+    // Unlike the original manual-parse version, Zod has already enforced
+    // types and ranges, so we can write straight-through.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: Record<string, any> = {};
 
-    if (typeof firstName === "string")  data.firstName = firstName.trim();
-    if (typeof lastName === "string")   data.lastName = lastName.trim();
-    if (Array.isArray(events))          data.events = events as never[];
-    if (typeof gender === "string")     data.gender = gender as never;
+    if (firstName !== undefined) data.firstName = firstName.trim();
+    if (lastName !== undefined) data.lastName = lastName.trim();
+    if (events !== undefined) data.events = events;
+    if (gender !== undefined) data.gender = gender;
 
-    // dateOfBirth: accept string (set date) or null (clear it)
-    if (typeof dateOfBirth === "string" && dateOfBirth) {
-      data.dateOfBirth = new Date(dateOfBirth);
-    } else if (dateOfBirth === null) {
-      data.dateOfBirth = null;
+    if (dateOfBirth !== undefined) {
+      data.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
     }
+    if (heightCm !== undefined) data.heightCm = heightCm;
+    if (weightKg !== undefined) data.weightKg = weightKg;
+    if (turnDirection !== undefined) data.turnDirection = turnDirection;
+    if (classStanding !== undefined) data.classStanding = classStanding;
+    if (gradYear !== undefined) data.gradYear = gradYear;
+    if (competitionGoals !== undefined) data.competitionGoals = competitionGoals;
+    if (strengthNumbers !== undefined) data.strengthNumbers = strengthNumbers;
 
-    // Numeric body measurements: accept number (set) or null (clear)
-    if (typeof heightCm === "number")   data.heightCm = heightCm;
-    else if (heightCm === null)         data.heightCm = null;
-
-    if (typeof weightKg === "number")   data.weightKg = weightKg;
-    else if (weightKg === null)         data.weightKg = null;
-
-    // Master profile fields
-    if (typeof turnDirection === "string") data.turnDirection = turnDirection;
-    else if (turnDirection === null)       data.turnDirection = null;
-
-    if (typeof classStanding === "string") data.classStanding = classStanding;
-    else if (classStanding === null)       data.classStanding = null;
-
-    if (typeof gradYear === "number")   data.gradYear = gradYear;
-    else if (gradYear === null)         data.gradYear = null;
-
-    // JSON fields: accept object (set) or null (clear)
-    if (competitionGoals !== undefined && (typeof competitionGoals === "object" || competitionGoals === null)) {
-      data.competitionGoals = competitionGoals;
-    }
-    if (strengthNumbers !== undefined && (typeof strengthNumbers === "object" || strengthNumbers === null)) {
-      data.strengthNumbers = strengthNumbers;
-    }
-
-    // completeOnboarding flag
     if (completeOnboarding === true) {
       data.onboardingCompletedAt = new Date();
     }
@@ -205,16 +171,19 @@ export async function PATCH(req: NextRequest) {
         });
 
     // Create ThrowLog entries for competition PBs submitted during onboarding
-    if (hasPBs) {
-      const resolvedGender = (typeof gender === "string" ? gender : athlete.gender) as Gender;
+    if (hasPBs && competitionPBs) {
+      const resolvedGender = (gender ?? athlete.gender) as Gender;
       const genderCode = GENDER_CODE_MAP[resolvedGender] ?? "M";
 
-      const pbEntries = (competitionPBs as CompetitionPB[])
-        .filter((pb) => pb.event && typeof pb.distance === "number" && pb.distance > 0)
+      const pbEntries = competitionPBs
+        .filter(
+          (pb): pb is { event: ThrowEvent; distance: number } =>
+            pb.distance != null && pb.distance > 0
+        )
         .map((pb) => {
-          const eventCode = EVENT_CODE_MAP[pb.event as ThrowEvent];
+          const eventCode = EVENT_CODE_MAP[pb.event];
           const compWeight = eventCode
-            ? COMPETITION_WEIGHTS[eventCode]?.[genderCode] ?? 7.26
+            ? (COMPETITION_WEIGHTS[eventCode]?.[genderCode] ?? 7.26)
             : 7.26;
 
           return {
@@ -243,6 +212,9 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/profile", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update profile." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update profile." },
+      { status: 500 }
+    );
   }
 }

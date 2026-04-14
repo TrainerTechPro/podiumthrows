@@ -25,8 +25,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { event, implementKg, distance, isCompetition, rpe, notes, attemptNumber, wireLength, implementWeightUnit, implementWeightOriginal } =
-      body as Record<string, unknown>;
+    const {
+      event,
+      implementKg,
+      distance,
+      isCompetition,
+      rpe,
+      notes,
+      attemptNumber,
+      wireLength,
+      implementWeightUnit,
+      implementWeightOriginal,
+    } = body as Record<string, unknown>;
 
     // Validate required fields
     if (!isValidEvent(event)) {
@@ -49,12 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check and set PR
-    const { isPersonalBest } = await checkAndSetPR(
-      athlete.id,
-      event,
-      implementKg,
-      distance
-    );
+    const { isPersonalBest } = await checkAndSetPR(athlete.id, event, implementKg, distance);
 
     // Create throw log (no session — standalone)
     const throwLog = await prisma.throwLog.create({
@@ -63,14 +68,21 @@ export async function POST(req: NextRequest) {
         sessionId: null,
         event: event as never,
         implementWeight: implementKg,
-        implementWeightUnit: typeof implementWeightUnit === "string" && ["kg", "lbs"].includes(implementWeightUnit) ? implementWeightUnit : "kg",
-        implementWeightOriginal: typeof implementWeightOriginal === "number" ? implementWeightOriginal : null,
+        implementWeightUnit:
+          typeof implementWeightUnit === "string" && ["kg", "lbs"].includes(implementWeightUnit)
+            ? implementWeightUnit
+            : "kg",
+        implementWeightOriginal:
+          typeof implementWeightOriginal === "number" ? implementWeightOriginal : null,
         distance,
         isPersonalBest,
         isCompetition: isCompetition === true,
         rpe: typeof rpe === "number" && rpe >= 1 && rpe <= 10 ? rpe : null,
         attemptNumber: typeof attemptNumber === "number" ? attemptNumber : null,
-        wireLength: typeof wireLength === "string" && ["FULL", "THREE_QUARTER", "HALF"].includes(wireLength) ? wireLength : null,
+        wireLength:
+          typeof wireLength === "string" && ["FULL", "THREE_QUARTER", "HALF"].includes(wireLength)
+            ? wireLength
+            : null,
         notes: typeof notes === "string" ? notes.trim() || null : null,
       },
       select: {
@@ -89,15 +101,13 @@ export async function POST(req: NextRequest) {
     // Fire-and-forget: award achievement + notify coach on new PR
     if (isPersonalBest) {
       const athleteName = `${athlete.firstName} ${athlete.lastName}`;
-      void awardPRAchievement(athlete.id, event).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
+      void awardPRAchievement(athlete.id, event).catch((err) =>
+        logger.error("Async operation failed", { context: "api", error: err })
+      );
       if (athlete.coachId) {
-        void notifyCoachPR(
-          athlete.coachId,
-          athlete.id,
-          athleteName,
-          event,
-          distance
-        ).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
+        void notifyCoachPR(athlete.coachId, athlete.id, athleteName, event, distance).catch((err) =>
+          logger.error("Async operation failed", { context: "api", error: err })
+        );
       }
     }
 
@@ -107,20 +117,20 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        throwLog: {
-          ...throwLog,
-          event: throwLog.event as string,
-          date: throwLog.date.toISOString(),
+        success: true,
+        data: {
+          throwLog: {
+            ...throwLog,
+            event: throwLog.event as string,
+            date: throwLog.date.toISOString(),
+          },
+          isPersonalBest,
         },
-        isPersonalBest,
       },
       { status: 201 }
     );
   } catch (err) {
     logger.error("POST /api/athlete/throws", { context: "api", error: err });
-    return NextResponse.json(
-      { success: false, error: "Failed to log throw." },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to log throw." }, { status: 500 });
   }
 }

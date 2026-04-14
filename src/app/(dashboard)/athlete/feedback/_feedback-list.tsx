@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ThumbsUp, ThumbsDown, Play, Pause, MessageSquare, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { useToast } from "@/components/ui/Toast";
 import type { AthleteFeedbackItem } from "@/lib/data/athlete-feedback";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -33,11 +34,13 @@ export function FeedbackList({ initialItems }: { initialItems: AthleteFeedbackIt
   const [items, setItems] = useState(initialItems);
   const markedRef = useRef<Set<string>>(new Set());
 
-  // Auto-mark all unread items as read on mount — opening the feedback
-  // page is the explicit "I'm looking at this" signal. Reactions and
-  // replies remain unset until the athlete actually taps one.
+  // Auto-mark all unread items as read on mount. Depending on `items`
+  // re-triggered on every state update — we only want this to run once
+  // per set of initially-unread items. Using `initialItems` as the
+  // trigger keeps it bound to the original data load; subsequent local
+  // state changes (reaction, reply) don't re-PATCH.
   useEffect(() => {
-    const unread = items.filter((i) => i.readAt === null);
+    const unread = initialItems.filter((i) => i.readAt === null);
     if (unread.length === 0) return;
 
     void Promise.all(
@@ -45,14 +48,18 @@ export function FeedbackList({ initialItems }: { initialItems: AthleteFeedbackIt
         if (markedRef.current.has(item.id)) return;
         markedRef.current.add(item.id);
         try {
-          await fetch(`/api/throws/comments/${item.id}`, {
+          const res = await fetch(`/api/throws/comments/${item.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({ readAt: "now" }),
           });
-        } catch {
-          // Silent — the row will still render, and the server will catch
-          // up on the next ack action.
+          if (!res.ok) {
+            throw new Error(`Mark read failed (${res.status})`);
+          }
+        } catch (err) {
+          // Don't interrupt the reading flow — log so we can diagnose.
+          // The server will catch up on the next ack action.
+          console.warn("auto-mark-read failed", err);
         }
       })
     ).then(() => {
@@ -60,7 +67,7 @@ export function FeedbackList({ initialItems }: { initialItems: AthleteFeedbackIt
         prev.map((it) => (it.readAt === null ? { ...it, readAt: new Date().toISOString() } : it))
       );
     });
-  }, [items]);
+  }, [initialItems]);
 
   if (items.length === 0) {
     return (
@@ -103,6 +110,7 @@ function FeedbackRow({
   const [replyDraft, setReplyDraft] = useState(item.replyText ?? "");
   const [replyPending, setReplyPending] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const toast = useToast();
 
   async function setReaction(reaction: "THUMBS_UP" | "THUMBS_DOWN") {
     if (reactionPending) return;
@@ -111,14 +119,19 @@ function FeedbackRow({
     const next = item.reaction === reaction ? null : reaction;
     onUpdate({ reaction: next });
     try {
-      await fetch(`/api/throws/comments/${item.id}`, {
+      const res = await fetch(`/api/throws/comments/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ reaction: next }),
       });
-    } catch {
-      // Rollback on failure
+      if (!res.ok) {
+        throw new Error(`Reaction save failed (${res.status})`);
+      }
+    } catch (err) {
+      console.error("reaction save failed", err);
+      // Rollback on failure and tell the user so the revert isn't silent.
       onUpdate({ reaction: item.reaction });
+      toast.error("Couldn't save reaction — try again");
     } finally {
       setReactionPending(false);
     }
@@ -138,10 +151,16 @@ function FeedbackRow({
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ replyText: trimmed.length > 0 ? trimmed : null }),
       });
-      if (res.ok) {
-        onUpdate({ replyText: trimmed.length > 0 ? trimmed : null });
-        setShowReply(trimmed.length > 0);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || `Reply save failed (${res.status})`);
       }
+      onUpdate({ replyText: trimmed.length > 0 ? trimmed : null });
+      setShowReply(trimmed.length > 0);
+      toast.success(trimmed.length > 0 ? "Reply sent" : "Reply cleared");
+    } catch (err) {
+      console.error("reply save failed", err);
+      toast.error(err instanceof Error ? err.message : "Couldn't save reply — try again");
     } finally {
       setReplyPending(false);
     }

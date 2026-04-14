@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, GoalUpdateSchema } from "@/lib/api-schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -33,37 +34,32 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Goal not found." }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { currentValue, status, title, targetValue, deadline, description } =
-      body as Record<string, unknown>;
+    const parsed = await parseBody(req, GoalUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { currentValue, status, title, targetValue, deadline, description } = parsed;
 
     // Build update payload
     const data: Record<string, unknown> = {};
 
-    if (typeof title === "string" && title.trim().length > 0) {
-      data.title = title.trim();
-    }
-    if (typeof description === "string") {
-      data.description = description.trim() || null;
-    }
-    if (typeof targetValue === "number" && targetValue > 0) {
-      data.targetValue = targetValue;
-    }
-    if (typeof deadline === "string") {
-      const d = deadline.length > 0 ? new Date(deadline) : null;
+    if (title !== undefined) data.title = title.trim();
+    if (description !== undefined) data.description = description?.trim() || null;
+    if (targetValue !== undefined) data.targetValue = targetValue;
+
+    if (deadline !== undefined) {
+      const d = deadline && deadline.length > 0 ? new Date(deadline) : null;
       if (d && isNaN(d.getTime())) {
-        return NextResponse.json({ success: false, error: "Invalid deadline date." }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: "Invalid deadline date." },
+          { status: 400 }
+        );
       }
       data.deadline = d;
     }
 
     // Determine the effective target for auto-complete check
-    const effectiveTarget =
-      typeof targetValue === "number" && targetValue > 0
-        ? targetValue
-        : existing.targetValue;
+    const effectiveTarget = typeof targetValue === "number" ? targetValue : existing.targetValue;
 
-    if (typeof currentValue === "number") {
+    if (currentValue !== undefined) {
       data.currentValue = currentValue;
       // Auto-complete: if progress meets or exceeds target
       if (currentValue >= effectiveTarget && existing.status === "ACTIVE") {
@@ -71,14 +67,14 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       }
     }
 
-    // Allow explicit status override (ACTIVE / COMPLETED / ABANDONED / PAUSED)
-    const validStatuses = ["ACTIVE", "COMPLETED", "ABANDONED"];
-    if (typeof status === "string" && validStatuses.includes(status)) {
-      data.status = status;
-    }
+    // Allow explicit status override (ACTIVE / COMPLETED / ABANDONED)
+    if (status !== undefined) data.status = status;
 
     if (Object.keys(data).length === 0) {
-      return NextResponse.json({ success: false, error: "No valid fields to update." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "No valid fields to update." },
+        { status: 400 }
+      );
     }
 
     const updated = await prisma.goal.update({
@@ -103,7 +99,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
     return NextResponse.json({
-      goal: {
+      success: true,
+      data: {
         ...updated,
         event: updated.event as string | null,
         status: updated.status as string,

@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import type { EventType } from "@prisma/client";
+import { parseBody, GoalCreateSchema } from "@/lib/api-schemas";
 
 /* ─── GET — list athlete's own goals ──────────────────────────────────────── */
 
@@ -76,7 +76,7 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ goals: data });
+    return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/athlete/goals", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to fetch goals." }, { status: 500 });
@@ -100,39 +100,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { title, targetValue, unit, deadline, startingValue, description, event } =
-      body as Record<string, unknown>;
-
-    if (typeof title !== "string" || title.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Title is required." }, { status: 400 });
-    }
-    if (typeof targetValue !== "number" || targetValue <= 0) {
-      return NextResponse.json({ success: false, error: "Target value must be a positive number." }, { status: 400 });
-    }
-    if (typeof unit !== "string" || unit.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Unit is required." }, { status: 400 });
-    }
+    const parsed = await parseBody(req, GoalCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { title, targetValue, unit, deadline, startingValue, description, event } = parsed;
 
     const deadlineDate =
       typeof deadline === "string" && deadline.length > 0 ? new Date(deadline) : null;
     if (deadlineDate && isNaN(deadlineDate.getTime())) {
-      return NextResponse.json({ success: false, error: "Invalid deadline date." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Invalid deadline date." },
+        { status: 400 }
+      );
     }
 
-    const starting =
-      typeof startingValue === "number" ? startingValue : null;
+    // `startingValue: null | undefined` both mean "not set" for DB purposes.
+    const starting = typeof startingValue === "number" ? startingValue : null;
 
     const goal = await prisma.goal.create({
       data: {
         athleteId: athlete.id,
         title: title.trim(),
-        description: typeof description === "string" ? description.trim() || null : null,
-        targetValue: targetValue as number,
+        description: description?.trim() || null,
+        targetValue,
         currentValue: starting ?? 0,
         startingValue: starting,
-        unit: (unit as string).trim(),
-        event: typeof event === "string" && event.length > 0 ? (event as EventType) : null,
+        unit: unit.trim(),
+        event: event ?? null,
         deadline: deadlineDate,
         status: "ACTIVE",
       },
@@ -156,7 +149,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        goal: {
+        success: true,
+        data: {
           ...goal,
           event: goal.event as string | null,
           status: goal.status as string,

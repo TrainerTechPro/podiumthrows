@@ -92,7 +92,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
         const presetEntry = (Object.entries(PRESETS) as [PresetId, DashboardConfig][]).find(
           ([, p]) =>
             JSON.stringify(p.widgets) === JSON.stringify(next.widgets) &&
-            JSON.stringify(p.order) === JSON.stringify(next.order),
+            JSON.stringify(p.order) === JSON.stringify(next.order)
         );
 
         const body = presetEntry
@@ -105,24 +105,24 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
           body: JSON.stringify(body),
         });
 
-        if (res.ok) {
-          const saved = await res.json();
-          setConfig(saved);
+        const payload = await res.json().catch(() => null);
+        if (res.ok && payload?.success && payload.data) {
+          setConfig(payload.data);
           router.refresh();
         } else {
-          const data = await res.json().catch(() => null);
-          setError(data?.error ?? "Failed to save. Please try again.");
+          setError(payload?.error ?? "Failed to save. Please try again.");
           // Revert optimistic state
           setConfig(currentConfig);
         }
-      } catch {
+      } catch (err) {
+        console.error("dashboard-config save failed", err);
         setError("Network error. Check your connection and try again.");
         setConfig(currentConfig);
       } finally {
         setSaving(false);
       }
     },
-    [router, currentConfig],
+    [router, currentConfig]
   );
 
   /* ── Preset select ──────────────────────────────────────────────────── */
@@ -133,7 +133,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
       setConfig(next);
       saveConfig(next);
     },
-    [saveConfig],
+    [saveConfig]
   );
 
   /* ── Widget toggle ──────────────────────────────────────────────────── */
@@ -162,7 +162,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
       setConfig(next);
       saveConfig(next);
     },
-    [config, saveConfig],
+    [config, saveConfig]
   );
 
   /* ── Reorder ────────────────────────────────────────────────────────── */
@@ -192,7 +192,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
       setConfig(next);
       saveConfig(next);
     },
-    [config, saveConfig],
+    [config, saveConfig]
   );
 
   /* ── Reset ──────────────────────────────────────────────────────────── */
@@ -236,9 +236,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
           transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : { type: "spring", damping: 30, stiffness: 300 }
+            shouldReduceMotion ? { duration: 0 } : { type: "spring", damping: 30, stiffness: 300 }
           }
           className="absolute bottom-0 left-0 right-0 max-h-[90vh] overflow-y-auto custom-scrollbar rounded-t-2xl"
           style={{
@@ -249,7 +247,10 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
           }}
         >
           {/* Drag handle */}
-          <div className="sticky top-0 z-10 flex items-center justify-center pt-3 pb-1" style={{ backgroundColor: "var(--card-bg)" }}>
+          <div
+            className="sticky top-0 z-10 flex items-center justify-center pt-3 pb-1"
+            style={{ backgroundColor: "var(--card-bg)" }}
+          >
             <div className="h-1 w-10 rounded-full bg-surface-300 dark:bg-surface-600" />
           </div>
 
@@ -307,23 +308,17 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
                           size={16}
                           strokeWidth={1.75}
                           aria-hidden="true"
-                          className={
-                            isActive ? "text-primary-500" : "text-muted"
-                          }
+                          className={isActive ? "text-primary-500" : "text-muted"}
                         />
                         <span
                           className={`text-sm font-semibold capitalize ${
-                            isActive
-                              ? "text-primary-500"
-                              : "text-[var(--foreground)]"
+                            isActive ? "text-primary-500" : "text-[var(--foreground)]"
                           }`}
                         >
                           {presetId}
                         </span>
                       </div>
-                      <p className="text-xs text-muted">
-                        {PRESET_DESCRIPTIONS[presetId]}
-                      </p>
+                      <p className="text-xs text-muted">{PRESET_DESCRIPTIONS[presetId]}</p>
                       <p className="text-[10px] text-muted mt-1">
                         {PRESETS[presetId].widgets.length} widgets
                       </p>
@@ -340,9 +335,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
               </h3>
               <div className="space-y-1">
                 {config.order
-                  .concat(
-                    WIDGET_IDS.filter((w) => !config.order.includes(w)),
-                  )
+                  .concat(WIDGET_IDS.filter((w) => !config.order.includes(w)))
                   .map((widgetId) => {
                     const meta = WIDGET_CATALOG.find((w) => w.id === widgetId);
                     if (!meta) return null;
@@ -353,18 +346,13 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
                     const orderIdx = config.order.indexOf(widgetId);
                     const canMoveUp = enabled && !isPinned && orderIdx > 1;
                     const canMoveDown =
-                      enabled &&
-                      !isPinned &&
-                      orderIdx >= 0 &&
-                      orderIdx < config.order.length - 1;
+                      enabled && !isPinned && orderIdx >= 0 && orderIdx < config.order.length - 1;
 
                     return (
                       <div
                         key={widgetId}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                          enabled
-                            ? "bg-surface-50 dark:bg-surface-800/30"
-                            : "opacity-50"
+                          enabled ? "bg-surface-50 dark:bg-surface-800/30" : "opacity-50"
                         }`}
                       >
                         {/* Icon */}
@@ -373,9 +361,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
                             size={16}
                             strokeWidth={1.75}
                             aria-hidden="true"
-                            className={
-                              enabled ? "text-primary-500" : "text-muted"
-                            }
+                            className={enabled ? "text-primary-500" : "text-muted"}
                           />
                         )}
 
@@ -399,11 +385,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
                               }`}
                               aria-label={`Move ${meta.name} up`}
                             >
-                              <ChevronUp
-                                size={14}
-                                strokeWidth={1.75}
-                                aria-hidden="true"
-                              />
+                              <ChevronUp size={14} strokeWidth={1.75} aria-hidden="true" />
                             </button>
                             <button
                               onClick={() => moveWidget(widgetId, "down")}
@@ -415,11 +397,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
                               }`}
                               aria-label={`Move ${meta.name} down`}
                             >
-                              <ChevronDown
-                                size={14}
-                                strokeWidth={1.75}
-                                aria-hidden="true"
-                              />
+                              <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
                             </button>
                           </div>
                         )}

@@ -1,11 +1,4 @@
-import {
-  Activity,
-  Heart,
-  Thermometer,
-  Droplets,
-  Zap,
-  CircleDot,
-} from "lucide-react";
+import { Activity, Heart, Thermometer, Droplets, Zap, CircleDot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   requireAthleteSession,
@@ -77,10 +70,15 @@ function buildInsights(today: ReadinessCheckInItem, trend: ReadinessTrendPoint[]
 
   if (today.sleepQuality < avgSleep - 1.5)
     insights.push("Your sleep quality is below your recent average — prioritise recovery tonight.");
-  if (today.soreness < avgSoreness - 1.5)
+  // Soreness slider: 1 = "No soreness", 10 = extreme. Higher score = worse
+  // recovery, so the "elevated soreness" insight fires when today's value
+  // is higher than the recent average, not lower.
+  if (today.soreness > avgSoreness + 1.5)
     insights.push("Higher soreness than usual. Consider a lighter session or active recovery.");
   if (today.energyMood < avgEnergy - 1.5)
     insights.push("Energy is dipping. Stay well-hydrated and check in with your coach.");
+  // Stress slider: 1 = Overwhelmed, 10 = Totally relaxed. Lower score =
+  // more stressed, so the check stays `< avg - 1.5`.
   if (today.stressLevel < avgStress - 1.5)
     insights.push("Stress is elevated today. A short mindfulness session may help.");
 
@@ -172,11 +170,12 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
       label: "Temp Dev",
       value: `${sign}${checkIn.temperatureDeviation.toFixed(1)}\u00B0C`,
       icon: Thermometer,
-      color: checkIn.temperatureDeviation > 0.5
-        ? "text-red-500"
-        : checkIn.temperatureDeviation < -0.5
-          ? "text-blue-500"
-          : "text-emerald-500",
+      color:
+        checkIn.temperatureDeviation > 0.5
+          ? "text-red-500"
+          : checkIn.temperatureDeviation < -0.5
+            ? "text-blue-500"
+            : "text-emerald-500",
     });
   }
   if (!isOura && checkIn.whoopStrain != null) {
@@ -192,15 +191,18 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
 
   return (
     <div className="card px-5 py-4 space-y-3">
-      <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
-        Biometrics
-      </h3>
+      <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">Biometrics</h3>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {vitals.map((v) => {
           const Icon = v.icon;
           return (
             <div key={v.label} className="text-center space-y-1">
-              <Icon size={16} strokeWidth={1.75} className={cn(v.color, "mx-auto")} aria-hidden="true" />
+              <Icon
+                size={16}
+                strokeWidth={1.75}
+                className={cn(v.color, "mx-auto")}
+                aria-hidden="true"
+              />
               <p className="text-lg font-bold font-heading tabular-nums text-[var(--foreground)]">
                 {v.value}
               </p>
@@ -265,9 +267,20 @@ function TodayResultCard({
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-100 dark:bg-surface-800 text-xs font-medium text-muted rounded-full">
             {isOura ? (
-              <><CircleDot size={10} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" /> Oura Ring</>
+              <>
+                <CircleDot
+                  size={10}
+                  strokeWidth={1.75}
+                  className="text-primary-500"
+                  aria-hidden="true"
+                />{" "}
+                Oura Ring
+              </>
             ) : (
-              <><Zap size={10} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" /> WHOOP</>
+              <>
+                <Zap size={10} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />{" "}
+                WHOOP
+              </>
             )}
           </span>
           <span className="text-[10px] text-muted">Auto-synced</span>
@@ -279,9 +292,16 @@ function TodayResultCard({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Readiness */}
           <div className={cn("card px-5 py-4 border", scoreBg(checkIn.overallScore))}>
-            <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Readiness</p>
+            <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
+              Readiness
+            </p>
             <div className="flex items-baseline gap-2">
-              <span className={cn("text-4xl font-bold font-heading tabular-nums", ouraScoreColor(ouraReadiness))}>
+              <span
+                className={cn(
+                  "text-4xl font-bold font-heading tabular-nums",
+                  ouraScoreColor(ouraReadiness)
+                )}
+              >
                 {Math.round(ouraReadiness)}
               </span>
               <span className="text-xs text-muted">/100</span>
@@ -300,16 +320,21 @@ function TodayResultCard({
           {/* Sleep */}
           {ouraSleep != null && (
             <div className="card px-5 py-4">
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Sleep</p>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
+                Sleep
+              </p>
               <div className="flex items-baseline gap-2">
-                <span className={cn("text-4xl font-bold font-heading tabular-nums", ouraScoreColor(ouraSleep))}>
+                <span
+                  className={cn(
+                    "text-4xl font-bold font-heading tabular-nums",
+                    ouraScoreColor(ouraSleep)
+                  )}
+                >
                   {Math.round(ouraSleep)}
                 </span>
                 <span className="text-xs text-muted">/100</span>
               </div>
-              <p className="text-xs text-muted mt-1">
-                {formatSleepDuration(checkIn.sleepHours)}
-              </p>
+              <p className="text-xs text-muted mt-1">{formatSleepDuration(checkIn.sleepHours)}</p>
               <div className="mt-2 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
                 <div
                   className={cn("h-full rounded-full", ouraBarColor(ouraSleep))}
@@ -322,14 +347,26 @@ function TodayResultCard({
           {/* Activity */}
           {ouraActivity != null && (
             <div className="card px-5 py-4">
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Activity</p>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
+                Activity
+              </p>
               <div className="flex items-baseline gap-2">
-                <span className={cn("text-4xl font-bold font-heading tabular-nums", ouraScoreColor(Math.min(ouraActivity, 100)))}>
+                <span
+                  className={cn(
+                    "text-4xl font-bold font-heading tabular-nums",
+                    ouraScoreColor(Math.min(ouraActivity, 100))
+                  )}
+                >
                   {Math.round(ouraActivity)}
                 </span>
                 <span className="text-xs text-muted">/100</span>
               </div>
-              <p className={cn("text-xs font-medium mt-1", ouraActivity >= 100 ? "text-emerald-600 dark:text-emerald-400" : "text-muted")}>
+              <p
+                className={cn(
+                  "text-xs font-medium mt-1",
+                  ouraActivity >= 100 ? "text-emerald-600 dark:text-emerald-400" : "text-muted"
+                )}
+              >
                 {ouraActivity >= 100 ? "Goal Reached" : ouraLabel(ouraActivity)}
               </p>
               <div className="mt-2 h-1.5 bg-[var(--card-border)] rounded-full overflow-hidden">
@@ -464,8 +501,8 @@ function TodayResultCard({
                         area.severity === 3
                           ? "bg-red-500/12 text-red-400 border-red-500/20"
                           : area.severity === 2
-                          ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
-                          : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                            ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
+                            : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
                       )}
                     >
                       {area.region}
@@ -554,7 +591,9 @@ function CheckInCard({ c }: { c: CheckIn }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 ml-5">
         <div>
           <p className="text-[10px] text-muted uppercase tracking-wide">Sleep</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">{c.sleepQuality}/10 · {c.sleepHours}h</p>
+          <p className="text-xs text-[var(--foreground)] font-medium">
+            {c.sleepQuality}/10 · {c.sleepHours}h
+          </p>
         </div>
         <div>
           <p className="text-[10px] text-muted uppercase tracking-wide">Soreness</p>
@@ -569,8 +608,8 @@ function CheckInCard({ c }: { c: CheckIn }) {
                     area.severity === 3
                       ? "bg-red-500/12 text-red-400 border-red-500/20"
                       : area.severity === 2
-                      ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
-                      : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                        ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
+                        : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
                   )}
                 >
                   {area.region}

@@ -20,7 +20,16 @@ function CheckCircle({ done }: { done: boolean }) {
   if (done) {
     return (
       <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <polyline points="20 6 9 17 4 12" />
         </svg>
       </div>
@@ -36,7 +45,17 @@ function CheckCircle({ done }: { done: boolean }) {
 
 function ArrowRightIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="ml-1"
+    >
       <line x1="5" y1="12" x2="19" y2="12" />
       <polyline points="12 5 19 12 12 19" />
     </svg>
@@ -58,7 +77,13 @@ export function WelcomeCard({ firstName, guide }: WelcomeCardProps) {
 
   function handleDismiss() {
     setDismissed(true);
-    try { localStorage.setItem(DISMISS_KEY, "true"); } catch {}
+    try {
+      localStorage.setItem(DISMISS_KEY, "true");
+    } catch (err) {
+      // Private browsing or storage quota — dismiss visually but the card
+      // will reappear on next load. Not worth interrupting the athlete.
+      console.warn("localStorage.setItem(welcome-dismissed) failed", err);
+    }
   }
 
   const pct = (guide.completedCount / guide.totalSteps) * 100;
@@ -96,7 +121,8 @@ export function WelcomeCard({ firstName, guide }: WelcomeCardProps) {
               key={step.key}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-4 py-3 transition-colors",
-                isCurrent && "bg-primary-50 dark:bg-primary-500/5 border border-primary-200 dark:border-primary-500/20",
+                isCurrent &&
+                  "bg-primary-50 dark:bg-primary-500/5 border border-primary-200 dark:border-primary-500/20",
                 step.completed && "opacity-70"
               )}
             >

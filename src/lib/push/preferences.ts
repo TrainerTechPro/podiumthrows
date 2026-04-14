@@ -33,9 +33,7 @@ export function parsePushPreferences(raw: unknown): PushPreferences {
         ? p.coachFeedback
         : DEFAULT_PUSH_PREFERENCES.coachFeedback,
     teammatePRs:
-      typeof p.teammatePRs === "boolean"
-        ? p.teammatePRs
-        : DEFAULT_PUSH_PREFERENCES.teammatePRs,
+      typeof p.teammatePRs === "boolean" ? p.teammatePRs : DEFAULT_PUSH_PREFERENCES.teammatePRs,
     streakReminder:
       typeof p.streakReminder === "boolean"
         ? p.streakReminder
@@ -55,9 +53,7 @@ export function parsePushPreferences(raw: unknown): PushPreferences {
  * Fetch the athlete's push preferences. Returns defaults if athlete not found
  * or preferences are missing.
  */
-export async function getPushPreferences(
-  athleteId: string
-): Promise<PushPreferences> {
+export async function getPushPreferences(athleteId: string): Promise<PushPreferences> {
   try {
     const athlete = await prisma.athleteProfile.findUnique({
       where: { id: athleteId },
@@ -72,9 +68,7 @@ export async function getPushPreferences(
 }
 
 /** Look up by userId instead of athleteId — convenience for places that have userId. */
-export async function getPushPreferencesByUserId(
-  userId: string
-): Promise<PushPreferences> {
+export async function getPushPreferencesByUserId(userId: string): Promise<PushPreferences> {
   try {
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId },
@@ -89,6 +83,20 @@ export async function getPushPreferencesByUserId(
 }
 
 /**
+ * Feed privacy setting stored alongside push preferences.
+ * "public"  — activity shows to all teammates (default)
+ * "private" — activity hidden from team feed; only the athlete sees it
+ */
+export type FeedPrivacy = "public" | "private";
+export const DEFAULT_FEED_PRIVACY: FeedPrivacy = "public";
+
+export function parseFeedPrivacy(raw: unknown): FeedPrivacy {
+  if (!raw || typeof raw !== "object") return DEFAULT_FEED_PRIVACY;
+  const r = raw as Record<string, unknown>;
+  return r.feedPrivacy === "private" ? "private" : "public";
+}
+
+/**
  * Update push preferences for an athlete. Merges with existing notificationPreferences
  * to preserve feedPrivacy and other keys.
  */
@@ -100,8 +108,7 @@ export async function updatePushPreferences(
     where: { id: athleteId },
     select: { notificationPreferences: true },
   });
-  const existing =
-    (athlete?.notificationPreferences as Record<string, unknown>) ?? {};
+  const existing = (athlete?.notificationPreferences as Record<string, unknown>) ?? {};
   const existingPush = parsePushPreferences(existing);
   const merged = { ...existingPush, ...updates };
 

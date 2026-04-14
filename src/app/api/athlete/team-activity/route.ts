@@ -26,6 +26,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseFeedPrivacy } from "@/lib/push/preferences";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -55,6 +56,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    // Explicit role guard — this endpoint is athlete-only.
+    if (session.role !== "ATHLETE") {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true, coachId: true },
@@ -69,22 +75,39 @@ export async function GET(req: NextRequest) {
     const limitParam = url.searchParams.get("limit");
 
     const cursor =
-      cursorParam && !isNaN(new Date(cursorParam).getTime())
-        ? new Date(cursorParam)
-        : null;
+      cursorParam && !isNaN(new Date(cursorParam).getTime()) ? new Date(cursorParam) : null;
     const limit = Math.min(
       MAX_LIMIT,
       Math.max(1, limitParam ? parseInt(limitParam, 10) || DEFAULT_LIMIT : DEFAULT_LIMIT)
     );
 
-    // Fetch one extra row to detect hasMore without a second query
+    // Privacy enforcement: resolve athlete IDs whose feed is set to
+    // "private" and filter them out of the feed. The current athlete
+    // always sees their own rows regardless of their own setting.
+    const privateAthleteRows = await prisma.athleteProfile.findMany({
+      where: {
+        coachId: athlete.coachId,
+        id: { not: athlete.id },
+      },
+      select: { id: true, notificationPreferences: true },
+    });
+    const privateAthleteIds = privateAthleteRows
+      .filter((a) => parseFeedPrivacy(a.notificationPreferences) === "private")
+      .map((a) => a.id);
+
+    // Fetch one extra row to detect hasMore without a second query. We also
+    // over-fetch to account for privacy filtering; limit * 2 is a
+    // conservative buffer — rare at normal roster sizes.
+    const fetchLimit = privateAthleteIds.length > 0 ? (limit + 1) * 2 : limit + 1;
+
     const rows = await prisma.teamActivity.findMany({
       where: {
         coachId: athlete.coachId,
+        ...(privateAthleteIds.length > 0 ? { athleteId: { notIn: privateAthleteIds } } : {}),
         ...(cursor ? { createdAt: { lt: cursor } } : {}),
       },
       orderBy: { createdAt: "desc" },
-      take: limit + 1,
+      take: fetchLimit,
       include: {
         athlete: {
           select: {
@@ -99,9 +122,7 @@ export async function GET(req: NextRequest) {
 
     const hasMore = rows.length > limit;
     const pageRows = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = hasMore
-      ? pageRows[pageRows.length - 1].createdAt.toISOString()
-      : null;
+    const nextCursor = hasMore ? pageRows[pageRows.length - 1].createdAt.toISOString() : null;
 
     // Aggregate reactions for the visible page in a single query
     const activityIds = pageRows.map((r) => r.id);
@@ -119,8 +140,7 @@ export async function GET(req: NextRequest) {
 
       for (const r of allReactions) {
         if (!reactionMap[r.activityId]) reactionMap[r.activityId] = {};
-        reactionMap[r.activityId][r.emoji] =
-          (reactionMap[r.activityId][r.emoji] ?? 0) + 1;
+        reactionMap[r.activityId][r.emoji] = (reactionMap[r.activityId][r.emoji] ?? 0) + 1;
 
         if (r.userId === session.userId) {
           if (!mineMap[r.activityId]) mineMap[r.activityId] = new Set();
@@ -151,9 +171,8 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({
-      items,
-      nextCursor,
-      hasMore,
+      success: true,
+      data: { items, nextCursor, hasMore },
     });
   } catch (err) {
     logger.error("GET /api/athlete/team-activity", {

@@ -31,8 +31,13 @@ export default async function LiveWorkoutPage({
 
   if (!assignment || assignment.athleteId !== user.athleteProfile.id) notFound();
 
-  // Redirect completed/skipped assignments to dashboard (session is done)
-  if (assignment.status === "COMPLETED" || assignment.status === "SKIPPED") {
+  // Redirect completed assignments to the read-only session view so athletes
+  // can review their results. Skipped assignments have no session data to
+  // review — send those back to the program hub.
+  if (assignment.status === "COMPLETED") {
+    redirect(`/athlete/throws/session/${assignment.id}`);
+  }
+  if (assignment.status === "SKIPPED") {
     redirect("/athlete/self-program");
   }
 

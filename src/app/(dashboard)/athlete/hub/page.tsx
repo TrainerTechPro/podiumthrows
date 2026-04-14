@@ -1,10 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireAthleteSession } from "@/lib/data/athlete";
-import {
-  getAthleteAnnouncements,
-  getTeamLinks,
-  getTeamFiles,
-} from "@/lib/data/team-hub";
+import { getAthleteAnnouncements, getTeamLinks, getTeamFiles } from "@/lib/data/team-hub";
 import prisma from "@/lib/prisma";
 import { TeamHubClient } from "@/app/(dashboard)/coach/hub/_team-hub-client";
 import { getAthleteTimezone, getLocalDate } from "@/lib/dates";
@@ -16,8 +12,24 @@ export default async function AthleteHubPage() {
   let result;
   try {
     result = await requireAthleteSession();
-  } catch {
-    redirect("/login");
+  } catch (err) {
+    // next/navigation redirect() throws a special error (NEXT_REDIRECT).
+    // We must re-throw those so the redirect actually happens — swallowing
+    // them would render the page with no data.
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("NEXT_REDIRECT")) throw err;
+    // Only redirect to /login on true auth failures. For Prisma errors or
+    // other unexpected exceptions, log and re-throw so the error boundary
+    // can render a proper error page instead of silently logging the
+    // athlete out.
+    console.error("requireAthleteSession failed in hub", err);
+    if (
+      message.toLowerCase().includes("unauthorized") ||
+      message.toLowerCase().includes("no session")
+    ) {
+      redirect("/login");
+    }
+    throw err;
   }
 
   const tz = await getAthleteTimezone(result.athlete.id);
@@ -31,13 +43,7 @@ export default async function AthleteHubPage() {
   });
   const groupIds = memberships.map((m) => m.groupId);
 
-  const [
-    announcements,
-    links,
-    files,
-    upcomingPractices,
-    upcomingCompetitions,
-  ] = await Promise.all([
+  const [announcements, links, files, upcomingPractices, upcomingCompetitions] = await Promise.all([
     getAthleteAnnouncements(result.athlete.id),
     getTeamLinks(result.athlete.coachId),
     getTeamFiles(result.athlete.coachId),
@@ -48,9 +54,7 @@ export default async function AthleteHubPage() {
         status: "SCHEDULED",
         OR: [
           { groupId: null }, // all-team practices
-          ...(groupIds.length > 0
-            ? [{ groupId: { in: groupIds } }]
-            : []),
+          ...(groupIds.length > 0 ? [{ groupId: { in: groupIds } }] : []),
         ],
       },
       orderBy: [{ date: "asc" }, { startTime: "asc" }],

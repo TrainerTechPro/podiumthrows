@@ -6,13 +6,11 @@ import { isValidEvent, checkAndSetPR } from "@/lib/throws";
 import { awardPRAchievement } from "@/lib/achievements";
 import { notifyCoachPR } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
+import { parseBody, SessionLogSchema } from "@/lib/api-schemas";
 
 /* ─── POST — log an exercise set for a session ────────────────────────────── */
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -39,7 +37,10 @@ export async function POST(
     }
 
     if (trainingSession.status === "COMPLETED") {
-      return NextResponse.json({ success: false, error: "Cannot log to a completed session." }, { status: 409 });
+      return NextResponse.json(
+        { success: false, error: "Cannot log to a completed session." },
+        { status: 409 }
+      );
     }
 
     // Auto-transition SCHEDULED → IN_PROGRESS on first log
@@ -50,41 +51,23 @@ export async function POST(
       });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const {
-      exerciseName,
-      sets,
-      reps,
-      weight,
-      rpe,
-      distance,
-      notes,
-      // Throw-specific fields
-      isThrow,
-      event,
-      implementKg,
-    } = body as Record<string, unknown>;
-
-    // Validate common fields
-    if (typeof exerciseName !== "string" || exerciseName.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Exercise name is required." }, { status: 400 });
-    }
-    if (typeof sets !== "number" || sets < 1) {
-      return NextResponse.json({ success: false, error: "Sets must be at least 1." }, { status: 400 });
-    }
+    const parsed = await parseBody(req, SessionLogSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { exerciseName, sets, reps, weight, rpe, distance, notes, isThrow, event, implementKg } =
+      parsed;
 
     // Create the session log
     const log = await prisma.sessionLog.create({
       data: {
         sessionId: id,
         athleteId: athlete.id,
-        exerciseName: (exerciseName as string).trim(),
-        sets: sets as number,
-        reps: typeof reps === "number" ? reps : null,
-        weight: typeof weight === "number" ? weight : null,
-        rpe: typeof rpe === "number" && rpe >= 1 && rpe <= 10 ? rpe : null,
-        distance: typeof distance === "number" ? distance : null,
-        notes: typeof notes === "string" ? notes.trim() || null : null,
+        exerciseName: exerciseName.trim(),
+        sets,
+        reps: reps ?? null,
+        weight: weight ?? null,
+        rpe: rpe ?? null,
+        distance: distance ?? null,
+        notes: notes?.trim() || null,
       },
       select: {
         id: true,
@@ -102,17 +85,13 @@ export async function POST(
     let throwLog = null;
     if (
       isThrow === true &&
+      event != null &&
       isValidEvent(event) &&
       typeof implementKg === "number" &&
       typeof distance === "number" &&
       distance > 0
     ) {
-      const { isPersonalBest } = await checkAndSetPR(
-        athlete.id,
-        event,
-        implementKg,
-        distance as number
-      );
+      const { isPersonalBest } = await checkAndSetPR(athlete.id, event, implementKg, distance);
 
       throwLog = await prisma.throwLog.create({
         data: {
@@ -120,9 +99,9 @@ export async function POST(
           sessionId: id,
           event: event as never,
           implementWeight: implementKg,
-          distance: distance as number,
+          distance,
           isPersonalBest,
-          notes: typeof notes === "string" ? notes.trim() || null : null,
+          notes: notes?.trim() || null,
         },
         select: {
           id: true,
@@ -136,15 +115,13 @@ export async function POST(
       // Fire-and-forget: award achievement + notify coach on new PR
       if (isPersonalBest) {
         const athleteName = `${athlete.firstName} ${athlete.lastName}`;
-        void awardPRAchievement(athlete.id, event).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
+        void awardPRAchievement(athlete.id, event).catch((err) =>
+          logger.error("Async operation failed", { context: "api", error: err })
+        );
         if (athlete.coachId) {
-          void notifyCoachPR(
-            athlete.coachId,
-            athlete.id,
-            athleteName,
-            event,
-            distance as number
-          ).catch((err) => logger.error("Async operation failed", { context: "api", error: err }));
+          void notifyCoachPR(athlete.coachId, athlete.id, athleteName, event, distance).catch(
+            (err) => logger.error("Async operation failed", { context: "api", error: err })
+          );
         }
       }
     }
@@ -155,16 +132,19 @@ export async function POST(
 
     return NextResponse.json(
       {
-        log: {
-          ...log,
-          completedAt: log.completedAt.toISOString(),
+        success: true,
+        data: {
+          log: {
+            ...log,
+            completedAt: log.completedAt.toISOString(),
+          },
+          throwLog: throwLog
+            ? {
+                ...throwLog,
+                event: throwLog.event as string,
+              }
+            : null,
         },
-        throwLog: throwLog
-          ? {
-              ...throwLog,
-              event: throwLog.event as string,
-            }
-          : null,
       },
       { status: 201 }
     );

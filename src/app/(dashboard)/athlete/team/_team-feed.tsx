@@ -15,14 +15,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Flame,
-  MessageSquare,
-  Target,
-  Trophy,
-  Dumbbell,
-  Calendar,
-} from "lucide-react";
+import { Flame, MessageSquare, Target, Trophy, Dumbbell, Calendar } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -104,15 +97,17 @@ export function TeamFeed() {
     setError(null);
     try {
       const res = await fetch("/api/athlete/team-activity", { cache: "no-store" });
-      if (!res.ok) {
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success || !payload.data) {
         setError("Couldn't load the feed.");
         return;
       }
-      const data = (await res.json()) as FeedResponse;
+      const data = payload.data as FeedResponse;
       setItems(data.items);
       setNextCursor(data.nextCursor);
       setHasMore(data.hasMore);
-    } catch {
+    } catch (err) {
+      console.error("team feed load failed", err);
       setError("Couldn't load the feed.");
     } finally {
       setLoading(false);
@@ -128,11 +123,18 @@ export function TeamFeed() {
         `/api/athlete/team-activity?cursor=${encodeURIComponent(nextCursor)}`,
         { cache: "no-store" }
       );
-      if (!res.ok) return;
-      const data = (await res.json()) as FeedResponse;
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success || !payload.data) {
+        setError("Couldn't load more — try scrolling again.");
+        return;
+      }
+      const data = payload.data as FeedResponse;
       setItems((prev) => [...prev, ...data.items]);
       setNextCursor(data.nextCursor);
       setHasMore(data.hasMore);
+    } catch (err) {
+      console.error("team feed loadMore failed", err);
+      setError("Couldn't load more — try scrolling again.");
     } finally {
       setLoadingMore(false);
     }
@@ -166,14 +168,33 @@ export function TeamFeed() {
     );
 
     try {
-      await fetch(`/api/athlete/team-activity/${activityId}/reactions`, {
+      const res = await fetch(`/api/athlete/team-activity/${activityId}/reactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ emoji }),
       });
-    } catch {
-      // On failure, refetch to re-sync state
-      void loadInitial();
+      if (!res.ok) {
+        throw new Error(`Reaction save failed (${res.status})`);
+      }
+    } catch (err) {
+      console.error("team reaction toggle failed", err);
+      // Roll back the optimistic update for this one item rather than
+      // triggering a full feed reload (previously could loop on a 403).
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== activityId) return item;
+          const nowHas = item.myReactions.includes(emoji);
+          const rolledMine = nowHas
+            ? item.myReactions.filter((e) => e !== emoji)
+            : [...item.myReactions, emoji];
+          const rolledCount = {
+            ...item.reactions,
+            [emoji]: Math.max(0, (item.reactions[emoji] ?? 0) + (nowHas ? -1 : 1)),
+          };
+          if (rolledCount[emoji] === 0) delete rolledCount[emoji];
+          return { ...item, myReactions: rolledMine, reactions: rolledCount };
+        })
+      );
     }
   }
 
@@ -196,11 +217,7 @@ export function TeamFeed() {
         <p className="text-sm font-semibold text-[var(--foreground)]">
           Couldn&apos;t load the feed
         </p>
-        <button
-          type="button"
-          onClick={loadInitial}
-          className="btn btn-secondary text-xs mt-3"
-        >
+        <button type="button" onClick={loadInitial} className="btn btn-secondary text-xs mt-3">
           Try again
         </button>
       </div>
@@ -210,9 +227,7 @@ export function TeamFeed() {
   if (items.length === 0) {
     return (
       <div className="card p-8 text-center">
-        <p className="text-sm font-semibold text-[var(--foreground)]">
-          No team activity yet
-        </p>
+        <p className="text-sm font-semibold text-[var(--foreground)]">No team activity yet</p>
         <p className="text-xs text-muted mt-1">
           Once your teammates start logging throws, their activity will show up here.
         </p>
@@ -297,9 +312,7 @@ function FeedRow({
               }`}
             >
               <span aria-hidden="true">{r.label}</span>
-              {count > 0 && (
-                <span className="text-xs font-mono tabular-nums">{count}</span>
-              )}
+              {count > 0 && <span className="text-xs font-mono tabular-nums">{count}</span>}
             </button>
           );
         })}
@@ -310,21 +323,11 @@ function FeedRow({
 
 /* ─── Avatar ─────────────────────────────────────────────────────────────── */
 
-function Avatar({
-  athlete,
-  type,
-}: {
-  athlete: AthleteRef | null;
-  type: string;
-}) {
+function Avatar({ athlete, type }: { athlete: AthleteRef | null; type: string }) {
   if (athlete?.avatarUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={athlete.avatarUrl}
-        alt=""
-        className="h-8 w-8 rounded-full object-cover shrink-0"
-      />
+      <img src={athlete.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover shrink-0" />
     );
   }
 
@@ -332,11 +335,7 @@ function Avatar({
   if (type === "COACH_POST") {
     return (
       <div className="h-8 w-8 rounded-full bg-primary-500/15 flex items-center justify-center shrink-0">
-        <MessageSquare
-          className="h-4 w-4 text-primary-500"
-          strokeWidth={2}
-          aria-hidden="true"
-        />
+        <MessageSquare className="h-4 w-4 text-primary-500" strokeWidth={2} aria-hidden="true" />
       </div>
     );
   }
@@ -358,8 +357,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
       const weight = typeof m.implementWeight === "number" ? m.implementWeight : null;
       const distance = typeof m.distance === "number" ? m.distance : null;
       const prev = typeof m.previousDistance === "number" ? m.previousDistance : null;
-      const delta =
-        distance != null && prev != null ? distance - prev : null;
+      const delta = distance != null && prev != null ? distance - prev : null;
       return (
         <div className="flex items-start gap-2.5">
           <Trophy
@@ -424,7 +422,9 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
           />
           <p className="text-sm text-[var(--foreground)]">
             is on a{" "}
-            <span className="font-bold"><span className="font-mono tabular-nums">{days}</span>-day</span>{" "}
+            <span className="font-bold">
+              <span className="font-mono tabular-nums">{days}</span>-day
+            </span>{" "}
             streak 🔥
           </p>
         </div>
@@ -443,7 +443,10 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
           <p className="text-sm text-[var(--foreground)]">
             hit their weekly goal:{" "}
             <span className="font-bold">
-              <span className="font-mono tabular-nums">{target}/{target}</span> {unit}
+              <span className="font-mono tabular-nums">
+                {target}/{target}
+              </span>{" "}
+              {unit}
             </span>{" "}
             ✅
           </p>
@@ -459,9 +462,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
             strokeWidth={1.75}
             aria-hidden="true"
           />
-          <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">
-            {body}
-          </p>
+          <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">{body}</p>
         </div>
       );
     }

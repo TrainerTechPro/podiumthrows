@@ -5,14 +5,11 @@ import { RecapClient } from "./_recap-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function RecapPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function RecapPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { athlete } = await requireAthleteSession();
 
-  const recap = await computeSessionRecap(athlete.id, params.id);
+  const recap = await computeSessionRecap(athlete.id, id);
   if (!recap) {
     notFound();
   }

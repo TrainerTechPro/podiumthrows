@@ -27,12 +27,14 @@ export function AssignmentActions({
     try {
       const res = await fetch(`/api/throws/assignments/${assignmentId}`, {
         method: "PUT",
-        headers: csrfHeaders(),
+        // Explicit Content-Type so middleware + server parsers pick up the
+        // body correctly; previously only csrfHeaders() was spread.
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ action }),
       });
-      const data = await res.json();
-      if (!data.success) {
-        toast(data.error || "Something went wrong", "error");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        toast(data?.error || `Something went wrong (${res.status})`, "error");
         return;
       }
 
@@ -43,8 +45,9 @@ export function AssignmentActions({
         toast("Session skipped", "info");
         router.push("/athlete/dashboard");
       }
-    } catch {
-      toast("Network error", "error");
+    } catch (err) {
+      console.error("assignment action failed", err);
+      toast(err instanceof Error ? err.message : "Network error", "error");
     } finally {
       setLoading(null);
     }
@@ -58,9 +61,7 @@ export function AssignmentActions({
           className="flex-1"
           onClick={() => handleAction("start")}
           disabled={loading !== null}
-          leftIcon={
-            <Play size={16} strokeWidth={1.75} aria-hidden="true" />
-          }
+          leftIcon={<Play size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           {isInProgress ? "Continue Workout" : "Start Live Workout"}
         </Button>
@@ -71,9 +72,7 @@ export function AssignmentActions({
           className="flex-1 sm:flex-none"
           onClick={() => handleAction("skip")}
           disabled={loading !== null}
-          leftIcon={
-            <SkipForward size={16} strokeWidth={1.75} aria-hidden="true" />
-          }
+          leftIcon={<SkipForward size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Skip Session
         </Button>

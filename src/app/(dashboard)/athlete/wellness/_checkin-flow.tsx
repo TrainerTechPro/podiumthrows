@@ -1,18 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { serializeSorenessArea } from "@/lib/readiness/parse-soreness";
-import type {
-  CheckinData,
-  WhoopSnapshot,
-  OuraSnapshot,
-  StepProps,
-} from "./_steps/types";
+import type { CheckinData, WhoopSnapshot, OuraSnapshot, StepProps } from "./_steps/types";
 import { SleepStep } from "./_steps/sleep-step";
 import { SorenessStep } from "./_steps/soreness-step";
 import { StressEnergyStep } from "./_steps/stress-energy-step";
@@ -104,7 +99,13 @@ export function CheckinFlow({ whoopData, ouraData, previousScore }: CheckinFlowP
   }, [phase]);
 
   /* ── Submit handler ─────────────────────────────────────────────────── */
+  // Synchronous in-flight flag prevents rapid Retry taps from firing
+  // concurrent POSTs before the `phase` state re-render hides the button.
+  const inFlightRef = useRef(false);
+
   const handleSubmit = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setPhase("submitting");
     try {
       const res = await fetch("/api/athlete/readiness", {
@@ -129,11 +130,7 @@ export function CheckinFlow({ whoopData, ouraData, previousScore }: CheckinFlowP
           whoopStrain: whoopData?.strain ?? undefined,
           ouraReadiness: ouraData?.readinessScore ?? undefined,
           ouraActivityScore: ouraData?.activityScore ?? undefined,
-          source: whoopData
-            ? "WHOOP_ASSISTED"
-            : ouraData
-              ? "OURA_ASSISTED"
-              : "MANUAL",
+          source: whoopData ? "WHOOP_ASSISTED" : ouraData ? "OURA_ASSISTED" : "MANUAL",
         }),
       });
 
@@ -142,15 +139,25 @@ export function CheckinFlow({ whoopData, ouraData, previousScore }: CheckinFlowP
         setPhase("error");
         return;
       }
-      if (!res.ok) throw new Error("Failed to submit");
 
-      const result = await res.json();
-      setScore(result.overallScore);
-      setStreak(result.streak ?? 0);
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success || !payload.data) {
+        throw new Error(payload?.error || `Check-in failed (${res.status})`);
+      }
+
+      setScore(payload.data.overallScore);
+      setStreak(payload.data.streak ?? 0);
       setPhase("summary");
-    } catch {
-      setErrorMsg("Something went wrong. Your data is saved — tap retry.");
+    } catch (err) {
+      console.error("wellness check-in submit failed", err);
+      setErrorMsg(
+        err instanceof Error && err.message
+          ? err.message
+          : "Your check-in didn't save. Tap retry to try again."
+      );
       setPhase("error");
+    } finally {
+      inFlightRef.current = false;
     }
   }, [data, whoopData, ouraData]);
 
@@ -231,9 +238,7 @@ export function CheckinFlow({ whoopData, ouraData, previousScore }: CheckinFlowP
 
   // Step rendering with transition animation
   const animationClass =
-    direction === "forward"
-      ? "animate-slide-in-right"
-      : "animate-slide-in-left";
+    direction === "forward" ? "animate-slide-in-right" : "animate-slide-in-left";
 
   let activeStep: React.ReactNode;
   switch (phase) {
@@ -244,12 +249,7 @@ export function CheckinFlow({ whoopData, ouraData, previousScore }: CheckinFlowP
       activeStep = <SorenessStep {...stepProps} />;
       break;
     case "stress":
-      activeStep = (
-        <StressEnergyStep
-          {...stepProps}
-          previousScore={previousScore ?? undefined}
-        />
-      );
+      activeStep = <StressEnergyStep {...stepProps} previousScore={previousScore ?? undefined} />;
       break;
     case "checks":
       activeStep = <QuickChecksStep {...stepProps} />;

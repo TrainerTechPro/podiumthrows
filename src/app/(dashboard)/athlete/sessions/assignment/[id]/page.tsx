@@ -14,6 +14,7 @@ import {
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
+import { logger } from "@/lib/logger";
 import { AssignmentActions } from "./_assignment-actions";
 
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
@@ -73,11 +74,7 @@ function ThrowingBlockDetail({ config }: { config: Record<string, unknown> }) {
             {String(weight)}
           </span>
         )}
-        {throwCount && (
-          <span className="text-muted">
-            {throwCount} throws
-          </span>
-        )}
+        {throwCount && <span className="text-muted">{throwCount} throws</span>}
         {technique && technique !== "FULL_THROW" && (
           <span className="text-muted capitalize">
             {technique.replace(/_/g, " ").toLowerCase()}
@@ -89,9 +86,7 @@ function ThrowingBlockDetail({ config }: { config: Record<string, unknown> }) {
           RPE target: {rpeMin}–{rpeMax}%
         </p>
       )}
-      {notes && (
-        <p className="text-xs text-muted italic">{notes}</p>
-      )}
+      {notes && <p className="text-xs text-muted italic">{notes}</p>}
     </div>
   );
 }
@@ -130,9 +125,7 @@ function WarmupCooldownDetail({ config }: { config: Record<string, unknown> }) {
 
   return (
     <div className="space-y-1">
-      {duration && (
-        <p className="text-sm text-muted">{duration} minutes</p>
-      )}
+      {duration && <p className="text-sm text-muted">{duration} minutes</p>}
       {drills.length > 0 && (
         <ul className="text-sm text-muted space-y-0.5">
           {drills.map((d, i) => (
@@ -143,9 +136,7 @@ function WarmupCooldownDetail({ config }: { config: Record<string, unknown> }) {
           ))}
         </ul>
       )}
-      {!duration && drills.length === 0 && (
-        <p className="text-sm text-muted">As needed</p>
-      )}
+      {!duration && drills.length === 0 && <p className="text-sm text-muted">As needed</p>}
     </div>
   );
 }
@@ -187,13 +178,26 @@ export default async function AssignmentDetailPage({
 
   if (!assignment) notFound();
 
-  // Verify caller has access
+  // Verify caller has access. Using `notFound()` for permission denial
+  // reveals that the assignment exists (a true 404 and a permission 404
+  // look identical to the caller). Throwing an error with a custom code
+  // lets the error boundary render a proper forbidden state. If no
+  // boundary exists yet, fall back to `notFound()` to avoid crashing.
   const hasAccess = await canAccessAthlete(
     currentUser.userId,
     currentUser.role as "COACH" | "ATHLETE",
-    assignment.athleteId,
+    assignment.athleteId
   );
-  if (!hasAccess) notFound();
+  if (!hasAccess) {
+    logger.warn("Assignment access denied", {
+      metadata: {
+        assignmentId: assignment.id,
+        callerId: currentUser.userId,
+        callerRole: currentUser.role,
+      },
+    });
+    notFound();
+  }
 
   const session = assignment.session;
   const status = STATUS_CONFIG[assignment.status] ?? STATUS_CONFIG.ASSIGNED;
@@ -202,14 +206,22 @@ export default async function AssignmentDetailPage({
   const canStart = assignment.status === "ASSIGNED" || assignment.status === "NOTIFIED";
   const isInProgress = assignment.status === "IN_PROGRESS";
 
-  // Count throws across blocks
+  // Count throws across blocks. Malformed JSON is logged and the block is
+  // silently skipped rather than crashing the whole page.
   let totalThrows = 0;
   for (const block of session.blocks) {
     if (block.blockType === "THROWING") {
       try {
         const cfg = JSON.parse(block.config) as Record<string, unknown>;
         totalThrows += (cfg.throwCount as number) ?? 0;
-      } catch { /* ignore */ }
+      } catch (err) {
+        logger.warn("Malformed THROWING block config JSON", {
+          metadata: {
+            blockId: block.id,
+            error: err instanceof Error ? err.message : String(err),
+          },
+        });
+      }
     }
   }
 
@@ -242,13 +254,11 @@ export default async function AssignmentDetailPage({
               </span>
               {session.estimatedDuration && (
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock size={14} strokeWidth={1.75} aria-hidden="true" />
-                  ~{session.estimatedDuration} min
+                  <Clock size={14} strokeWidth={1.75} aria-hidden="true" />~
+                  {session.estimatedDuration} min
                 </span>
               )}
-              {totalThrows > 0 && (
-                <span className="tabular-nums">{totalThrows} throws total</span>
-              )}
+              {totalThrows > 0 && <span className="tabular-nums">{totalThrows} throws total</span>}
             </div>
           </div>
           <Badge variant={status.variant} dot>
@@ -276,7 +286,15 @@ export default async function AssignmentDetailPage({
             let config: Record<string, unknown> = {};
             try {
               config = JSON.parse(block.config) as Record<string, unknown>;
-            } catch { /* ignore */ }
+            } catch (err) {
+              logger.warn("Malformed block config JSON", {
+                metadata: {
+                  blockId: block.id,
+                  blockType: block.blockType,
+                  error: err instanceof Error ? err.message : String(err),
+                },
+              });
+            }
 
             return (
               <div
@@ -284,11 +302,15 @@ export default async function AssignmentDetailPage({
                 className="card p-4 border-l-4"
                 style={{
                   borderLeftColor:
-                    block.blockType === "WARMUP" ? "var(--amber-500, #f59e0b)" :
-                    block.blockType === "THROWING" ? "var(--orange-500, #f97316)" :
-                    block.blockType === "STRENGTH" ? "var(--blue-500, #3b82f6)" :
-                    block.blockType === "COOLDOWN" ? "var(--cyan-500, #06b6d4)" :
-                    "var(--surface-400, #9ca3af)",
+                    block.blockType === "WARMUP"
+                      ? "var(--amber-500, #f59e0b)"
+                      : block.blockType === "THROWING"
+                        ? "var(--orange-500, #f97316)"
+                        : block.blockType === "STRENGTH"
+                          ? "var(--blue-500, #3b82f6)"
+                          : block.blockType === "COOLDOWN"
+                            ? "var(--cyan-500, #06b6d4)"
+                            : "var(--surface-400, #9ca3af)",
                 }}
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -301,23 +323,15 @@ export default async function AssignmentDetailPage({
                   <h3 className="text-sm font-semibold text-[var(--foreground)]">
                     {blockMeta.label}
                   </h3>
-                  <span className="text-xs text-muted ml-auto tabular-nums">
-                    Block {idx + 1}
-                  </span>
+                  <span className="text-xs text-muted ml-auto tabular-nums">Block {idx + 1}</span>
                 </div>
 
-                {block.blockType === "THROWING" && (
-                  <ThrowingBlockDetail config={config} />
-                )}
-                {block.blockType === "STRENGTH" && (
-                  <StrengthBlockDetail config={config} />
-                )}
+                {block.blockType === "THROWING" && <ThrowingBlockDetail config={config} />}
+                {block.blockType === "STRENGTH" && <StrengthBlockDetail config={config} />}
                 {(block.blockType === "WARMUP" || block.blockType === "COOLDOWN") && (
                   <WarmupCooldownDetail config={config} />
                 )}
-                {block.blockType === "NOTES" && (
-                  <NotesBlockDetail config={config} />
-                )}
+                {block.blockType === "NOTES" && <NotesBlockDetail config={config} />}
               </div>
             );
           })}
@@ -341,10 +355,15 @@ export default async function AssignmentDetailPage({
           </h3>
           <div className="flex items-center gap-4 text-sm">
             {assignment.rpe && (
-              <span>RPE: <strong className="tabular-nums">{assignment.rpe}/10</strong></span>
+              <span>
+                RPE: <strong className="tabular-nums">{assignment.rpe}/10</strong>
+              </span>
             )}
             {assignment.selfFeeling && (
-              <span>Feeling: <strong className="capitalize">{assignment.selfFeeling.toLowerCase()}</strong></span>
+              <span>
+                Feeling:{" "}
+                <strong className="capitalize">{assignment.selfFeeling.toLowerCase()}</strong>
+              </span>
             )}
           </div>
           {assignment.feedbackNotes && (

@@ -63,7 +63,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
   const reducedMotion = useRef(false);
   const hasFiredToast = useRef(false);
   const [offset, setOffset] = useState(CIRCUMFERENCE);
-  const { celebration } = useToast();
+  const { celebration, success } = useToast();
 
   const color = scoreColor(score);
   const label = scoreLabel(score);
@@ -71,9 +71,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
 
   /* Check reduced motion preference on mount */
   useEffect(() => {
-    reducedMotion.current = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (reducedMotion.current) {
       /* Skip to final position immediately */
@@ -87,39 +85,33 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
     }
   }, [score]);
 
-  /* Celebration toast for high scores */
+  /* Confirm the save succeeded — celebration for high scores, plain toast
+   * for everything else. Athletes who miss subtle visual changes still get
+   * a notification.  */
   useEffect(() => {
     if (hasFiredToast.current) return;
+    hasFiredToast.current = true;
     if (score >= 8) {
-      hasFiredToast.current = true;
       celebration("Great Readiness!", {
         highlight: score.toFixed(1),
         description: "You're ready to perform",
       });
+    } else {
+      success("Check-in saved");
     }
-  }, [score, celebration]);
+  }, [score, celebration, success]);
 
   return (
     <div className="flex flex-col items-center gap-6">
       {/* ── Title ──────────────────────────────────────────────────────── */}
-      <p
-        className="text-[13px] font-medium"
-        style={{ color: "#52525b" }}
-      >
+      <p className="text-[13px] font-medium" style={{ color: "#52525b" }}>
         Your Readiness Score
       </p>
 
       {/* ── Score Ring ─────────────────────────────────────────────────── */}
       <div className="relative flex items-center justify-center">
         <svg viewBox="0 0 140 140" width={140} height={140}>
-          <circle
-            cx="70"
-            cy="70"
-            r="65"
-            fill="none"
-            stroke="#1a1a1e"
-            strokeWidth={6}
-          />
+          <circle cx="70" cy="70" r="65" fill="none" stroke="#1a1a1e" strokeWidth={6} />
           <circle
             cx="70"
             cy="70"
@@ -131,9 +123,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
             strokeDasharray={CIRCUMFERENCE}
             strokeDashoffset={offset}
             style={{
-              transition: reducedMotion.current
-                ? "none"
-                : "stroke-dashoffset 1s ease-out",
+              transition: reducedMotion.current ? "none" : "stroke-dashoffset 1s ease-out",
               transform: "rotate(-90deg)",
               transformOrigin: "center",
             }}
@@ -141,10 +131,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
         </svg>
 
         {/* Score number centered inside ring */}
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ color }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center" style={{ color }}>
           <AnimatedNumber
             value={score}
             decimals={1}
@@ -155,10 +142,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
       </div>
 
       {/* ── Score Label ────────────────────────────────────────────────── */}
-      <p
-        className="text-base font-bold font-heading -mt-2"
-        style={{ color: label.color }}
-      >
+      <p className="text-base font-bold font-heading -mt-2" style={{ color: label.color }}>
         {label.text}
       </p>
 
@@ -166,9 +150,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
       {streak > 0 && (
         <div className="flex items-center gap-1.5" style={{ color: "#3f3f46" }}>
           <Flame size={14} strokeWidth={1.75} aria-hidden="true" />
-          <span className="text-xs font-medium">
-            {streak}-day streak
-          </span>
+          <span className="text-xs font-medium">{streak}-day streak</span>
         </div>
       )}
 
@@ -181,29 +163,16 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
           return (
             <div
               key={item.label}
-              className="rounded-[10px] p-[10px] border"
-              style={{
-                backgroundColor: "#0a0a0a",
-                borderColor: "#1a1a1e",
-              }}
+              className="rounded-[10px] p-[10px] border bg-[var(--card-bg)] border-[var(--card-border)]"
             >
-              <p
-                className="text-[10px] font-semibold uppercase tracking-wider leading-tight mb-1"
-                style={{ color: "#52525b" }}
-              >
+              <p className="text-[10px] font-semibold uppercase tracking-wider leading-tight mb-1 text-muted">
                 {item.label}
               </p>
-              <p
-                className="text-[20px] font-bold font-heading leading-tight"
-                style={{ color: c }}
-              >
+              <p className="text-[20px] font-bold font-heading leading-tight" style={{ color: c }}>
                 {item.value}
               </p>
               {/* Mini progress bar */}
-              <div
-                className="mt-1.5 h-[3px] w-full rounded-full overflow-hidden"
-                style={{ backgroundColor: "#1a1a1e" }}
-              >
+              <div className="mt-1.5 h-[3px] w-full rounded-full overflow-hidden bg-[var(--card-border)]">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${pct}%`, backgroundColor: c }}

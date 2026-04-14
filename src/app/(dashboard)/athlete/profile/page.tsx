@@ -5,13 +5,15 @@ import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { ProfileTabs } from "./_profile-tabs";
 import type {
   ProfileData,
-  CompetitionGoalsMap,
-  StrengthNumbersData,
-  TechnicalProfileData,
-  MovementRestrictionsData,
   ThrowsPRRecord,
   ThrowsInjuryRecord,
   ThrowsProfileSummary,
+} from "./_types";
+import {
+  safeCompetitionGoals,
+  safeStrengthNumbers,
+  safeTechnicalProfile,
+  safeMovementRestrictions,
 } from "./_types";
 
 export default async function AthleteProfilePage() {
@@ -76,20 +78,17 @@ export default async function AthleteProfilePage() {
     lastName: profile.lastName,
     events: profile.events,
     gender: profile.gender,
-    dateOfBirth: profile.dateOfBirth
-      ? profile.dateOfBirth.toISOString().split("T")[0]
-      : null,
+    dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString().split("T")[0] : null,
     avatarUrl: profile.avatarUrl,
     heightCm: profile.heightCm,
     weightKg: profile.weightKg,
     turnDirection: profile.turnDirection,
     classStanding: profile.classStanding,
     gradYear: profile.gradYear,
-    competitionGoals: (profile.competitionGoals as CompetitionGoalsMap) ?? null,
-    strengthNumbers: (profile.strengthNumbers as StrengthNumbersData) ?? null,
-    technicalProfile: (profile.technicalProfile as TechnicalProfileData) ?? null,
-    movementRestrictions:
-      (profile.movementRestrictions as MovementRestrictionsData) ?? null,
+    competitionGoals: safeCompetitionGoals(profile.competitionGoals),
+    strengthNumbers: safeStrengthNumbers(profile.strengthNumbers),
+    technicalProfile: safeTechnicalProfile(profile.technicalProfile),
+    movementRestrictions: safeMovementRestrictions(profile.movementRestrictions),
     email: profile.user.email,
   };
 
@@ -121,13 +120,11 @@ export default async function AthleteProfilePage() {
     recoveredDate: inj.recoveredDate,
   }));
 
-  const serializedProfiles: ThrowsProfileSummary[] = throwsProfiles.map(
-    (tp) => ({
-      event: tp.event,
-      competitionPb: tp.competitionPb,
-      currentDistanceBand: tp.currentDistanceBand,
-    })
-  );
+  const serializedProfiles: ThrowsProfileSummary[] = throwsProfiles.map((tp) => ({
+    event: tp.event,
+    competitionPb: tp.competitionPb,
+    currentDistanceBand: tp.currentDistanceBand,
+  }));
 
   return (
     <div className="space-y-6">

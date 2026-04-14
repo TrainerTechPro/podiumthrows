@@ -95,7 +95,11 @@ function isThrowingExercise(exercise: PrescribedExercise, block: PrescribedBlock
   );
 }
 
-function getBlockLabel(block: PrescribedBlock, blockIndex: number, blocks: PrescribedBlock[]): string | null {
+function getBlockLabel(
+  block: PrescribedBlock,
+  blockIndex: number,
+  blocks: PrescribedBlock[]
+): string | null {
   // Count how many blocks of this type appear before this one
   const sameTypeBefore = blocks
     .slice(0, blockIndex)
@@ -131,7 +135,7 @@ function getBlockLabel(block: PrescribedBlock, blockIndex: number, blocks: Presc
 
 export function SessionLogger({ session }: { session: SessionWithPrescription }) {
   const router = useRouter();
-  const { celebration } = useToast();
+  const { celebration, error: toastError } = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const shouldReduceMotion = useReducedMotion();
@@ -196,10 +200,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
     }
 
     for (const [name, throws] of throwsByExercise) {
-      const best = throws.reduce(
-        (max, t) => (t.distance > max ? t.distance : max),
-        0
-      );
+      const best = throws.reduce((max, t) => (t.distance > max ? t.distance : max), 0);
       // Find the exercise to get target throws
       const fe = flatExercises.find((f) => f.exercise.exerciseName === name);
       const target = fe ? getTargetThrows(fe.exercise) : throws.length;
@@ -291,6 +292,16 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
   ) {
     setError(null);
 
+    // Precondition guard — if the session prop is somehow stale/undefined
+    // from a race condition, surface a clear error instead of firing POST
+    // to /api/athlete/sessions/undefined/log.
+    if (!session?.id) {
+      const msg = "Session not loaded — refresh and try again";
+      setError(msg);
+      toastError("Not ready", msg);
+      return;
+    }
+
     const isThrow = isThrowingExercise(exercise, block);
 
     startTransition(async () => {
@@ -306,20 +317,20 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
             rpe: values.rpe,
             distance: values.distance,
             isThrow,
-            event: isThrow
-              ? session.planName?.toUpperCase()?.replace(/ /g, "_")
-              : undefined,
+            event: isThrow ? session.planName?.toUpperCase()?.replace(/ /g, "_") : undefined,
             implementKg: exercise.implementKg,
           }),
         });
 
-        if (!res.ok) {
-          const data = await res.json();
-          setError(data.error ?? "Failed to log exercise.");
+        const payload = await res.json().catch(() => null);
+        if (!res.ok || !payload?.success || !payload.data) {
+          const msg = payload?.error ?? `Failed to log exercise (${res.status}).`;
+          setError(msg);
+          toastError("Log failed", msg);
           return;
         }
 
-        const data = await res.json();
+        const data = payload.data;
 
         // Update local state
         setExerciseLogs((prev) => {
@@ -337,10 +348,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
               throwNumber: existing.throws.length + 1,
             };
             const newThrows = [...existing.throws, newThrow];
-            const best = newThrows.reduce(
-              (max, t) => (t.distance > max ? t.distance : max),
-              0
-            );
+            const best = newThrows.reduce((max, t) => (t.distance > max ? t.distance : max), 0);
             const target = getTargetThrows(exercise);
             next.set(exercise.exerciseName, {
               throws: newThrows,
@@ -376,12 +384,8 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
             distance: data.throwLog.distance ?? undefined,
           });
           celebration("New Personal Best!", {
-            description: data.throwLog.event
-              ? formatEventType(data.throwLog.event)
-              : undefined,
-            highlight: data.throwLog.distance
-              ? `${data.throwLog.distance.toFixed(2)}m`
-              : undefined,
+            description: data.throwLog.event ? formatEventType(data.throwLog.event) : undefined,
+            highlight: data.throwLog.distance ? `${data.throwLog.distance.toFixed(2)}m` : undefined,
           });
         }
 
@@ -395,8 +399,11 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
         }
 
         router.refresh();
-      } catch {
-        setError("Something went wrong. Please try again.");
+      } catch (err) {
+        console.error("session log failed", err);
+        const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+        setError(msg);
+        toastError("Log failed", msg);
       }
     });
   }
@@ -413,9 +420,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
   if (session.blocks.length === 0) {
     return (
       <div className="card p-6 text-center">
-        <p className="text-muted text-sm">
-          No prescribed workout for this session.
-        </p>
+        <p className="text-muted text-sm">No prescribed workout for this session.</p>
         <p className="text-muted text-xs mt-1">
           Use the complete button to mark this session done.
         </p>
@@ -436,10 +441,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
       if (label) {
         const isThrowingLabel = block.blockType === "throwing";
         timelineNodes.push(
-          <div
-            key={`label-${block.id}`}
-            className="relative flex items-center pl-12 py-3"
-          >
+          <div key={`label-${block.id}`} className="relative flex items-center pl-12 py-3">
             <span
               className="text-[10px] font-bold tracking-[0.2em] uppercase"
               style={{
@@ -487,9 +489,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
           activeCardRef={isExpanded ? activeCardRef : undefined}
           onExpand={() => {
             if (!isCompleted) {
-              setExpandedExerciseId(
-                expandedExerciseId === exercise.id ? null : exercise.id
-              );
+              setExpandedExerciseId(expandedExerciseId === exercise.id ? null : exercise.id);
             }
           }}
           onLog={(values) => handleLogExercise(exercise, block, values)}
@@ -540,10 +540,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
           className="card p-4 flex items-center justify-between"
           style={{ borderLeft: "3px solid #f59e0b" }}
         >
-          <span
-            className="text-sm font-medium"
-            style={{ color: "var(--foreground)" }}
-          >
+          <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
             Rest
           </span>
           <RestTimer
@@ -580,9 +577,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
             height: `${progress}%`,
             background: "linear-gradient(180deg, #f59e0b, #d97706)",
             borderRadius: "1px",
-            transition: shouldReduceMotion
-              ? "none"
-              : "height 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+            transition: shouldReduceMotion ? "none" : "height 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         />
 
@@ -651,9 +646,7 @@ function TimelineExerciseNode({
             : isExpanded
               ? {
                   backgroundColor: "#f59e0b",
-                  animation: shouldReduceMotion
-                    ? "none"
-                    : "tl-dotPulse 1.8s ease-in-out infinite",
+                  animation: shouldReduceMotion ? "none" : "tl-dotPulse 1.8s ease-in-out infinite",
                 }
               : {
                   backgroundColor: "var(--card-border)",
@@ -672,9 +665,7 @@ function TimelineExerciseNode({
               : `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)`,
             backgroundColor: "var(--card-bg)",
             backgroundSize: "200% 100%",
-            animation: shouldReduceMotion
-              ? "none"
-              : "tl-shimmerSweep 8s ease-in-out infinite",
+            animation: shouldReduceMotion ? "none" : "tl-shimmerSweep 8s ease-in-out infinite",
           }}
         >
           <div className="flex items-center gap-3">
@@ -693,10 +684,7 @@ function TimelineExerciseNode({
               <polyline points="20 6 9 17 4 12" />
             </svg>
             <div className="flex-1 min-w-0">
-              <p
-                className="text-sm font-medium"
-                style={{ color: "var(--foreground)" }}
-              >
+              <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
                 {exercise.exerciseName}
               </p>
               <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
@@ -719,10 +707,7 @@ function TimelineExerciseNode({
           className="w-full text-left rounded-xl px-4 py-3"
           style={{ opacity: 0.4 }}
         >
-          <p
-            className="text-sm font-medium"
-            style={{ color: "var(--foreground)" }}
-          >
+          <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
             {exercise.exerciseName}
           </p>
           <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
@@ -743,40 +728,24 @@ function TimelineExerciseNode({
         {isExpanded && (
           <motion.div
             key={`expanded-${exercise.id}`}
-            initial={
-              shouldReduceMotion
-                ? { opacity: 1 }
-                : { opacity: 0, height: 0 }
-            }
-            animate={
-              shouldReduceMotion
-                ? { opacity: 1 }
-                : { opacity: 1, height: "auto" }
-            }
-            exit={
-              shouldReduceMotion
-                ? { opacity: 0 }
-                : { opacity: 0, height: 0 }
-            }
+            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, height: 0 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, height: "auto" }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
             <div
               className="rounded-xl p-5 relative overflow-hidden"
               style={{
-                background:
-                  "linear-gradient(165deg, rgba(245,158,11,0.04), transparent)",
+                background: "linear-gradient(165deg, rgba(245,158,11,0.04), transparent)",
                 backgroundColor: "var(--card-bg)",
-                boxShadow:
-                  "0 4px 24px rgba(245,158,11,0.08), 0 1px 3px rgba(0,0,0,0.1)",
+                boxShadow: "0 4px 24px rgba(245,158,11,0.08), 0 1px 3px rgba(0,0,0,0.1)",
                 // Tilt shine sweep
                 backgroundImage: shouldReduceMotion
                   ? undefined
                   : "linear-gradient(115deg, transparent 30%, rgba(245,158,11,0.06) 45%, rgba(245,158,11,0.1) 50%, rgba(245,158,11,0.06) 55%, transparent 70%)",
                 backgroundSize: "300% 100%",
-                animation: shouldReduceMotion
-                  ? "none"
-                  : "tl-tiltShine 6s ease-in-out infinite",
+                animation: shouldReduceMotion ? "none" : "tl-tiltShine 6s ease-in-out infinite",
               }}
             >
               {/* Header */}
@@ -788,40 +757,30 @@ function TimelineExerciseNode({
                   {exercise.exerciseName}
                 </h3>
                 <div className="flex items-center gap-2 mt-1">
-                  {exercise.implementKg != null &&
-                    exercise.implementKg > 0 && (
-                      <span
-                        className="text-xs font-bold px-2 py-0.5 rounded-full"
-                        style={{
-                          backgroundColor: "rgba(245,158,11,0.15)",
-                          color: "#f59e0b",
-                        }}
-                      >
-                        {exercise.implementKg}kg
-                      </span>
-                    )}
-                  {exercise.exerciseCategory && (
+                  {exercise.implementKg != null && exercise.implementKg > 0 && (
                     <span
-                      className="text-xs font-medium"
-                      style={{ color: "var(--muted)" }}
+                      className="text-xs font-bold px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: "rgba(245,158,11,0.15)",
+                        color: "#f59e0b",
+                      }}
                     >
+                      {exercise.implementKg}kg
+                    </span>
+                  )}
+                  {exercise.exerciseCategory && (
+                    <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>
                       {exercise.exerciseCategory}
                     </span>
                   )}
                   {block.blockType === "throwing" && (
-                    <span
-                      className="text-xs"
-                      style={{ color: "var(--muted)" }}
-                    >
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
                       {block.name}
                     </span>
                   )}
                 </div>
                 {exercise.notes && (
-                  <p
-                    className="text-xs italic mt-2"
-                    style={{ color: "var(--muted)" }}
-                  >
+                  <p className="text-xs italic mt-2" style={{ color: "var(--muted)" }}>
                     {exercise.notes}
                   </p>
                 )}
@@ -896,8 +855,11 @@ function ThrowingInput({
   }, [throwsDone]);
 
   function handleLogThrow() {
+    // Preserve 0 as a valid distance (foul / no-mark). Reject only blank or
+    // malformed input — a 0.00m throw is a legitimate logged attempt.
+    if (distanceInput === "") return;
     const dist = parseFloat(distanceInput);
-    if (!dist || dist <= 0) return;
+    if (!Number.isFinite(dist) || dist < 0) return;
     onLog({
       sets: 1,
       reps: 1,
@@ -926,19 +888,14 @@ function ThrowingInput({
   });
 
   // Sorted throws (newest first)
-  const sortedThrows = state
-    ? [...state.throws].sort((a, b) => b.throwNumber - a.throwNumber)
-    : [];
+  const sortedThrows = state ? [...state.throws].sort((a, b) => b.throwNumber - a.throwNumber) : [];
 
   return (
     <div>
       {/* Progress dots */}
       <div className="flex items-center gap-1.5 mb-4 flex-wrap">
         {progressDots}
-        <span
-          className="text-xs ml-2 tabular-nums"
-          style={{ color: "var(--muted)" }}
-        >
+        <span className="text-xs ml-2 tabular-nums" style={{ color: "var(--muted)" }}>
           {throwsDone}/{target} throws
         </span>
       </div>
@@ -947,10 +904,7 @@ function ThrowingInput({
       {throwsDone < target && (
         <div className="space-y-3">
           <div>
-            <label
-              className="text-xs font-medium block mb-1.5"
-              style={{ color: "var(--muted)" }}
-            >
+            <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--muted)" }}>
               Distance (m)
             </label>
             <input
@@ -983,16 +937,14 @@ function ThrowingInput({
               fontSize: "16px",
               background: "linear-gradient(135deg, #f59e0b, #d97706)",
               opacity: isPending || !distanceInput ? 0.5 : 1,
-              cursor:
-                isPending || !distanceInput ? "not-allowed" : "pointer",
+              cursor: isPending || !distanceInput ? "not-allowed" : "pointer",
               transition: shouldReduceMotion
                 ? "opacity 0.15s"
                 : "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s",
             }}
             onPointerDown={(e) => {
               if (!shouldReduceMotion) {
-                (e.currentTarget as HTMLElement).style.transform =
-                  "scale(0.93)";
+                (e.currentTarget as HTMLElement).style.transform = "scale(0.93)";
               }
             }}
             onPointerUp={(e) => {
@@ -1013,39 +965,26 @@ function ThrowingInput({
       {sortedThrows.length > 0 && (
         <div className="mt-4 space-y-1.5">
           {sortedThrows.map((t, i) => {
-            const isBest =
-              state?.bestDistance != null &&
-              t.distance === state.bestDistance;
+            const isBest = state?.bestDistance != null && t.distance === state.bestDistance;
             return (
               <div
                 key={t.throwNumber}
                 className="flex items-center justify-between rounded-lg px-3 py-2"
                 style={{
-                  backgroundColor: isBest
-                    ? "rgba(245,158,11,0.1)"
-                    : "rgba(255,255,255,0.03)",
+                  backgroundColor: isBest ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.03)",
                   animation:
-                    shouldReduceMotion || i > 0
-                      ? "none"
-                      : "tl-throwSlideIn 0.35s ease-out both",
-                  animationDelay: shouldReduceMotion
-                    ? "0ms"
-                    : `${i * 60}ms`,
+                    shouldReduceMotion || i > 0 ? "none" : "tl-throwSlideIn 0.35s ease-out both",
+                  animationDelay: shouldReduceMotion ? "0ms" : `${i * 60}ms`,
                 }}
               >
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: "var(--muted)" }}
-                >
+                <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>
                   #{t.throwNumber}
                 </span>
                 <span
                   className="text-sm font-bold tabular-nums"
                   style={{
                     color: isBest ? "#f59e0b" : "var(--foreground)",
-                    textShadow: isBest
-                      ? "0 0 12px rgba(245,158,11,0.4)"
-                      : "none",
+                    textShadow: isBest ? "0 0 12px rgba(245,158,11,0.4)" : "none",
                   }}
                 >
                   {t.distance.toFixed(2)}m
@@ -1088,9 +1027,7 @@ function StrengthInput({
 }) {
   const [weightInput, setWeightInput] = useState(exercise.weight ?? "");
   const [repsInput, setRepsInput] = useState(exercise.reps ?? "");
-  const [rpeInput, setRpeInput] = useState(
-    exercise.rpe != null ? String(exercise.rpe) : ""
-  );
+  const [rpeInput, setRpeInput] = useState(exercise.rpe != null ? String(exercise.rpe) : "");
   const targetSets = exercise.sets ?? 1;
   const setsDone = state?.strengthSets.length ?? 0;
   const currentSetNumber = setsDone + 1;
@@ -1143,10 +1080,7 @@ function StrengthInput({
               className="flex items-center justify-between rounded-lg px-3 py-2"
               style={{ backgroundColor: "rgba(74,222,128,0.06)" }}
             >
-              <span
-                className="text-xs font-medium"
-                style={{ color: "var(--muted)" }}
-              >
+              <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>
                 Set {s.setNumber}
               </span>
               <span
@@ -1165,10 +1099,7 @@ function StrengthInput({
       {/* Input form for next set */}
       {setsDone < targetSets && (
         <div className="space-y-3">
-          <p
-            className="text-xs font-medium"
-            style={{ color: "var(--muted)" }}
-          >
+          <p className="text-xs font-medium" style={{ color: "var(--muted)" }}>
             Set {currentSetNumber} of {targetSets}
           </p>
 
@@ -1252,8 +1183,7 @@ function StrengthInput({
               background: "linear-gradient(135deg, #818cf8, #6366f1)",
               opacity: isPending ? 0.5 : 1,
               cursor: isPending ? "not-allowed" : "pointer",
-              transition:
-                "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s",
+              transition: "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s",
             }}
             onPointerDown={(e) => {
               (e.currentTarget as HTMLElement).style.transform = "scale(0.93)";
@@ -1265,9 +1195,7 @@ function StrengthInput({
               (e.currentTarget as HTMLElement).style.transform = "scale(1)";
             }}
           >
-            {isPending
-              ? "Logging..."
-              : `Log Set ${currentSetNumber}`}
+            {isPending ? "Logging..." : `Log Set ${currentSetNumber}`}
           </button>
         </div>
       )}
@@ -1295,7 +1223,7 @@ function CompletionSummary({
     const colors = ["#f59e0b", "#4ade80", "#818cf8", "#f43f5e", "#22d3ee"];
     const color = colors[i % colors.length];
     const size = 4 + (i % 3) * 2;
-    const left = 10 + (i * 7.5);
+    const left = 10 + i * 7.5;
     const delay = i * 0.15;
     return (
       <span
@@ -1308,9 +1236,7 @@ function CompletionSummary({
           height: `${size}px`,
           borderRadius: i % 2 === 0 ? "50%" : "1px",
           backgroundColor: color,
-          animation: shouldReduceMotion
-            ? "none"
-            : `tl-confettiDrift 1.5s ${delay}s ease-out both`,
+          animation: shouldReduceMotion ? "none" : `tl-confettiDrift 1.5s ${delay}s ease-out both`,
           pointerEvents: "none",
         }}
       />
@@ -1343,10 +1269,7 @@ function CompletionSummary({
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
           <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
-        <span
-          className="text-sm font-bold"
-          style={{ color: "#4ade80" }}
-        >
+        <span className="text-sm font-bold" style={{ color: "#4ade80" }}>
           Exercise Complete
         </span>
       </div>
@@ -1355,29 +1278,16 @@ function CompletionSummary({
       <div className="grid grid-cols-2 gap-3 mb-4">
         {isThrow ? (
           <>
-            <StatPill
-              label="Throws"
-              value={`${state.throws.length}`}
-            />
+            <StatPill label="Throws" value={`${state.throws.length}`} />
             {state.bestDistance != null && (
-              <StatPill
-                label="Best"
-                value={`${state.bestDistance.toFixed(2)}m`}
-                highlight
-              />
+              <StatPill label="Best" value={`${state.bestDistance.toFixed(2)}m`} highlight />
             )}
           </>
         ) : (
           <>
-            <StatPill
-              label="Sets"
-              value={`${state.strengthSets.length}`}
-            />
+            <StatPill label="Sets" value={`${state.strengthSets.length}`} />
             {state.strengthSets.length > 0 && state.strengthSets[0].weight != null && (
-              <StatPill
-                label="Weight"
-                value={`${state.strengthSets[0].weight}kg`}
-              />
+              <StatPill label="Weight" value={`${state.strengthSets[0].weight}kg`} />
             )}
             {state.strengthSets.some((s) => s.rpe != null) && (
               <StatPill
@@ -1407,8 +1317,7 @@ function CompletionSummary({
           backgroundColor: "rgba(74,222,128,0.15)",
           color: "#4ade80",
           cursor: "pointer",
-          transition:
-            "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s",
+          transition: "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s",
         }}
         onPointerDown={(e) => {
           (e.currentTarget as HTMLElement).style.transform = "scale(0.95)";
@@ -1454,24 +1363,17 @@ function StatPill({
     <div
       className="rounded-lg px-3 py-2 text-center"
       style={{
-        backgroundColor: highlight
-          ? "rgba(245,158,11,0.1)"
-          : "rgba(255,255,255,0.04)",
+        backgroundColor: highlight ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.04)",
       }}
     >
-      <p
-        className="text-[10px] uppercase tracking-wider mb-0.5"
-        style={{ color: "var(--muted)" }}
-      >
+      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: "var(--muted)" }}>
         {label}
       </p>
       <p
         className="text-sm font-bold tabular-nums"
         style={{
           color: highlight ? "#f59e0b" : "var(--foreground)",
-          textShadow: highlight
-            ? "0 0 12px rgba(245,158,11,0.4)"
-            : "none",
+          textShadow: highlight ? "0 0 12px rgba(245,158,11,0.4)" : "none",
         }}
       >
         {value}

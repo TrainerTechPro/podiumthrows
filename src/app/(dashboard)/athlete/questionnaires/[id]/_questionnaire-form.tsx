@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { useToast } from "@/components/ui/Toast";
 import { FormRendererShell } from "@/components/form-renderer/FormRendererShell";
 import type { FormBlock, FormDisplayMode, ConditionalRule } from "@/lib/forms/types";
 
@@ -54,9 +55,7 @@ export function QuestionnaireForm({ questionnaire }: Props) {
         description={questionnaire.description}
         blocks={blocks}
         displayMode={questionnaire.displayMode as FormDisplayMode}
-        conditionalLogic={
-          questionnaire.conditionalLogic as ConditionalRule[] | undefined
-        }
+        conditionalLogic={questionnaire.conditionalLogic as ConditionalRule[] | undefined}
         scoringEnabled={questionnaire.scoringEnabled}
         draftAnswers={questionnaire.draftAnswers}
       />
@@ -64,9 +63,7 @@ export function QuestionnaireForm({ questionnaire }: Props) {
   }
 
   // Legacy question-based rendering
-  return (
-    <LegacyQuestionForm questionnaire={questionnaire} />
-  );
+  return <LegacyQuestionForm questionnaire={questionnaire} />;
 }
 
 /* ─── Legacy Question Form ────────────────────────────────────────────────── */
@@ -100,7 +97,10 @@ function LegacyQuestionForm({ questionnaire }: Props) {
     return questionnaire.questions.filter((q) => {
       if (!q.required) return false;
       const val = answers[q.id];
-      if (val === undefined || val === null || val === "") return false;
+      // Treat null/undefined as unanswered; accept 0 and other falsy numbers
+      // as answered (CLAUDE.md rule 3 — preserve 0).
+      if (val === undefined || val === null) return false;
+      if (typeof val === "string" && val === "") return false;
       if (Array.isArray(val) && val.length === 0) return false;
       return true;
     }).length;
@@ -109,6 +109,8 @@ function LegacyQuestionForm({ questionnaire }: Props) {
   const progress = requiredCount > 0 ? Math.round((answeredRequired / requiredCount) * 100) : 100;
 
   /* ── Submit ────────────────────────────────────────────────────────────── */
+
+  const toast = useToast();
 
   async function handleSubmit() {
     setError(null);
@@ -128,15 +130,21 @@ function LegacyQuestionForm({ questionnaire }: Props) {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to submit");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        const msg = data?.error || `Failed to submit (${res.status})`;
+        setError(msg);
+        toast.error(msg);
         return;
       }
 
       setSubmitted(true);
-    } catch {
-      setError("Something went wrong");
+      toast.success("Questionnaire submitted");
+    } catch (err) {
+      console.error("questionnaire submit failed", err);
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
       setShowConfirm(false);
@@ -161,12 +169,8 @@ function LegacyQuestionForm({ questionnaire }: Props) {
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-[var(--foreground)]">
-          Submitted Successfully
-        </h2>
-        <p className="text-sm text-muted">
-          Your responses have been recorded. Thank you!
-        </p>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">Submitted Successfully</h2>
+        <p className="text-sm text-muted">Your responses have been recorded. Thank you!</p>
         <Button onClick={() => router.push("/athlete/questionnaires")}>
           ← Back to Questionnaires
         </Button>
@@ -241,26 +245,25 @@ function LegacyQuestionForm({ questionnaire }: Props) {
             {/* Scale 1-5 or 1-10 */}
             {(q.type === "scale_1_5" || q.type === "scale_1_10") && (
               <div className="flex gap-2 flex-wrap">
-                {Array.from(
-                  { length: q.type === "scale_1_5" ? 5 : 10 },
-                  (_, i) => i + 1
-                ).map((n) => {
-                  const selected = answers[q.id] === n;
-                  return (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setAnswer(q.id, n)}
-                      className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                        selected
-                          ? "bg-primary-500 text-white ring-2 ring-primary-500/30"
-                          : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-primary-500/50"
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  );
-                })}
+                {Array.from({ length: q.type === "scale_1_5" ? 5 : 10 }, (_, i) => i + 1).map(
+                  (n) => {
+                    const selected = answers[q.id] === n;
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setAnswer(q.id, n)}
+                        className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                          selected
+                            ? "bg-primary-500 text-white ring-2 ring-primary-500/30"
+                            : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-primary-500/50"
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    );
+                  }
+                )}
               </div>
             )}
 
@@ -370,10 +373,7 @@ function LegacyQuestionForm({ questionnaire }: Props) {
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-2">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/athlete/questionnaires")}
-        >
+        <Button variant="ghost" onClick={() => router.push("/athlete/questionnaires")}>
           ← Back
         </Button>
         <Button

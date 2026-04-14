@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Star,
-  FileVideo,
-  MessageSquare,
-  User,
-  Trophy,
-  Dumbbell,
-} from "lucide-react";
+import { Star, FileVideo, MessageSquare, User, Trophy, Dumbbell } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AthletePREvent } from "@/lib/data/personal-records";
@@ -75,12 +68,7 @@ const LIFT_LABELS: Record<string, string> = {
   benchPress: "Bench Press",
 };
 
-export function ReviewProfileClient({
-  profile,
-  recentThrows,
-  notes,
-  videos,
-}: Props) {
+export function ReviewProfileClient({ profile, recentThrows, notes, videos }: Props) {
   const router = useRouter();
   const { error: toastError } = useToast();
   const [completing, setCompleting] = useState(false);
@@ -113,67 +101,49 @@ export function ReviewProfileClient({
   }
 
   const hasStrength =
-    profile.strengthNumbers &&
-    Object.values(profile.strengthNumbers).some((v) => v != null);
+    profile.strengthNumbers && Object.values(profile.strengthNumbers).some((v) => v != null);
 
   return (
     <div className="space-y-5">
       {/* Basic Info */}
       <section className="card p-5 space-y-3">
         <header className="flex items-center gap-2">
-          <User
-            size={18}
-            strokeWidth={1.75}
-            className="text-primary-500"
-            aria-hidden="true"
-          />
+          <User size={18} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
           <h2 className="font-heading text-base font-semibold">Basic Info</h2>
         </header>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <div className="text-xs text-[var(--muted)] uppercase tracking-wider">
-              Name
-            </div>
+            <div className="text-xs text-[var(--muted)] uppercase tracking-wider">Name</div>
             <div className="font-medium">
               {profile.firstName} {profile.lastName}
             </div>
           </div>
           <div>
-            <div className="text-xs text-[var(--muted)] uppercase tracking-wider">
-              Gender
-            </div>
+            <div className="text-xs text-[var(--muted)] uppercase tracking-wider">Gender</div>
             <div className="font-medium">
               {profile.gender.charAt(0) + profile.gender.slice(1).toLowerCase()}
             </div>
           </div>
           {profile.heightCm != null && (
             <div>
-              <div className="text-xs text-[var(--muted)] uppercase tracking-wider">
-                Height
-              </div>
+              <div className="text-xs text-[var(--muted)] uppercase tracking-wider">Height</div>
               <div className="font-mono tabular-nums">{profile.heightCm} cm</div>
             </div>
           )}
           {profile.weightKg != null && (
             <div>
-              <div className="text-xs text-[var(--muted)] uppercase tracking-wider">
-                Weight
-              </div>
+              <div className="text-xs text-[var(--muted)] uppercase tracking-wider">Weight</div>
               <div className="font-mono tabular-nums">{profile.weightKg} kg</div>
             </div>
           )}
           {profile.classStanding && (
             <div>
-              <div className="text-xs text-[var(--muted)] uppercase tracking-wider">
-                Class
-              </div>
+              <div className="text-xs text-[var(--muted)] uppercase tracking-wider">Class</div>
               <div className="font-medium">{profile.classStanding}</div>
             </div>
           )}
           <div className="col-span-2">
-            <div className="text-xs text-[var(--muted)] uppercase tracking-wider">
-              Events
-            </div>
+            <div className="text-xs text-[var(--muted)] uppercase tracking-wider">Events</div>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {profile.events.map((e) => (
                 <span
@@ -227,9 +197,7 @@ export function ReviewProfileClient({
               className="text-primary-500"
               aria-hidden="true"
             />
-            <h2 className="font-heading text-base font-semibold">
-              Strength Numbers
-            </h2>
+            <h2 className="font-heading text-base font-semibold">Strength Numbers</h2>
           </header>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {Object.entries(profile.strengthNumbers).map(([key, weight]) => {
@@ -250,9 +218,7 @@ export function ReviewProfileClient({
       {/* Recent Throws */}
       {recentThrows.length > 0 && (
         <section className="card p-5 space-y-3">
-          <h2 className="font-heading text-base font-semibold">
-            Recent Throws Logged by Coach
-          </h2>
+          <h2 className="font-heading text-base font-semibold">Recent Throws Logged by Coach</h2>
           <ul className="space-y-2">
             {recentThrows.map((t) => (
               <li
@@ -268,12 +234,9 @@ export function ReviewProfileClient({
                   />
                 )}
                 <div className="flex-1">
-                  <div className="font-medium">
-                    {EVENT_LABELS[t.event] || t.event}
-                  </div>
+                  <div className="font-medium">{EVENT_LABELS[t.event] || t.event}</div>
                   <div className="text-xs text-[var(--muted)] font-mono tabular-nums">
-                    {t.implementWeight}kg ·{" "}
-                    {new Date(t.date).toLocaleDateString()}
+                    {t.implementWeight}kg · {new Date(t.date).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="font-mono tabular-nums text-base">
@@ -295,9 +258,7 @@ export function ReviewProfileClient({
               className="text-primary-500"
               aria-hidden="true"
             />
-            <h2 className="font-heading text-base font-semibold">
-              Videos from Practice
-            </h2>
+            <h2 className="font-heading text-base font-semibold">Videos from Practice</h2>
           </header>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {videos.map((v) => (
@@ -339,9 +300,7 @@ export function ReviewProfileClient({
               className="text-primary-500"
               aria-hidden="true"
             />
-            <h2 className="font-heading text-base font-semibold">
-              Notes from Your Coach
-            </h2>
+            <h2 className="font-heading text-base font-semibold">Notes from Your Coach</h2>
           </header>
           <ul className="space-y-3">
             {notes.map((n) => (
@@ -354,9 +313,7 @@ export function ReviewProfileClient({
                     {new Date(n.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-[var(--foreground)] whitespace-pre-wrap">
-                  {n.content}
-                </p>
+                <p className="text-[var(--foreground)] whitespace-pre-wrap">{n.content}</p>
               </li>
             ))}
           </ul>
@@ -377,7 +334,7 @@ export function ReviewProfileClient({
           {completing ? "Setting up..." : "Looks Good — Let's Go"}
         </button>
         <button
-          onClick={complete}
+          onClick={() => router.push("/athlete/dashboard")}
           disabled={completing}
           className="w-full px-4 py-3 text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
           type="button"

@@ -159,3 +159,60 @@ export const GENDERS_LIST = [
   { value: "FEMALE", label: "Female" },
   { value: "OTHER", label: "Other" },
 ] as const;
+
+/* ─── Defensive JSON parsers ────────────────────────────────────────── */
+
+/**
+ * Runtime shape guards for profile JSON blobs. Prisma types these as
+ * `Prisma.JsonValue` — any cast would pass, so legacy or malformed rows
+ * could crash tabs on first render. Each parser returns a safe default
+ * for the missing or malformed shape.
+ */
+function isObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+export function safeCompetitionGoals(raw: unknown): CompetitionGoalsMap | null {
+  if (!isObject(raw)) return null;
+  return raw as CompetitionGoalsMap;
+}
+
+export function safeStrengthNumbers(raw: unknown): StrengthNumbersData | null {
+  if (!isObject(raw)) return null;
+  return {
+    lifts: isObject(raw.lifts) ? (raw.lifts as StrengthNumbersData["lifts"]) : {},
+    tests: isObject(raw.tests)
+      ? (raw.tests as StrengthNumbersData["tests"])
+      : { standingLJ: 0, tripleJump: 0 },
+    ratios: isObject(raw.ratios)
+      ? (raw.ratios as StrengthNumbersData["ratios"])
+      : { squatBW: 0, cleanBW: 0, snatchBW: 0 },
+  };
+}
+
+export function safeTechnicalProfile(raw: unknown): TechnicalProfileData | null {
+  if (!isObject(raw)) return null;
+  return {
+    primaryLimiter: typeof raw.primaryLimiter === "string" ? raw.primaryLimiter : "",
+    strengths: Array.isArray(raw.strengths)
+      ? raw.strengths.filter((s): s is string => typeof s === "string")
+      : [],
+    weaknesses: Array.isArray(raw.weaknesses)
+      ? raw.weaknesses.filter((s): s is string => typeof s === "string")
+      : [],
+    cuesWork: Array.isArray(raw.cuesWork) ? (raw.cuesWork as TechnicalProfileData["cuesWork"]) : [],
+    cuesFail: Array.isArray(raw.cuesFail) ? (raw.cuesFail as TechnicalProfileData["cuesFail"]) : [],
+  };
+}
+
+export function safeMovementRestrictions(raw: unknown): MovementRestrictionsData | null {
+  if (!isObject(raw)) return null;
+  return {
+    fullOverhead: typeof raw.fullOverhead === "boolean" ? raw.fullOverhead : false,
+    fullHipRotation: typeof raw.fullHipRotation === "boolean" ? raw.fullHipRotation : false,
+    deepSquat: typeof raw.deepSquat === "boolean" ? raw.deepSquat : false,
+    singleLegStability:
+      typeof raw.singleLegStability === "boolean" ? raw.singleLegStability : false,
+    notes: typeof raw.notes === "string" ? raw.notes : "",
+  };
+}

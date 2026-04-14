@@ -68,15 +68,16 @@ export function TabCore({ profile }: { profile: ProfileData }) {
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) {
-          const data = await res.json();
-          toastError("Save Failed", data.error ?? "Something went wrong.");
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          toastError("Save Failed", data?.error ?? "Something went wrong.");
           return;
         }
 
         success("Profile Updated", "Your core info has been saved.");
         router.refresh();
-      } catch {
+      } catch (err) {
+        console.error("core profile save failed", err);
         toastError("Network Error", "Could not reach the server.");
       }
     });

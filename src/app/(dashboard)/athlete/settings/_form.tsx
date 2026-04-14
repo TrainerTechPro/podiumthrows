@@ -75,8 +75,9 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
         setSuccess(true);
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
-      } catch {
-        setError("An error occurred. Please try again.");
+      } catch (err) {
+        console.error("settings save failed", err);
+        setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
       }
     });
   }
@@ -85,13 +86,14 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
     <div className="space-y-8">
       {/* Personal Info */}
       <div className="card px-5 py-5 space-y-5">
-        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Personal Info
-        </h3>
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Personal Info</h3>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-medium text-[var(--foreground)] mb-1"
+            >
               First Name
             </label>
             <input
@@ -103,7 +105,10 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
             />
           </div>
           <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            <label
+              htmlFor="lastName"
+              className="block text-sm font-medium text-[var(--foreground)] mb-1"
+            >
               Last Name
             </label>
             <input
@@ -153,7 +158,10 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="height" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            <label
+              htmlFor="height"
+              className="block text-sm font-medium text-[var(--foreground)] mb-1"
+            >
               Height (cm)
             </label>
             <input
@@ -169,7 +177,10 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
             />
           </div>
           <div>
-            <label htmlFor="weight" className="block text-sm font-medium text-[var(--foreground)] mb-1">
+            <label
+              htmlFor="weight"
+              className="block text-sm font-medium text-[var(--foreground)] mb-1"
+            >
               Weight (kg)
             </label>
             <input
@@ -216,20 +227,14 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
       </div>
 
       {/* Feedback */}
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       {success && (
         <p className="text-sm text-emerald-600 dark:text-emerald-400">
           Profile updated successfully.
         </p>
       )}
 
-      <button
-        onClick={handleSave}
-        disabled={isPending}
-        className="btn btn-primary"
-      >
+      <button onClick={handleSave} disabled={isPending} className="btn btn-primary">
         {isPending ? "Saving…" : "Save Changes"}
       </button>
     </div>

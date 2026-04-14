@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { useToast } from "@/components/ui/Toast";
+import { useConfirm } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AvailabilityBlock, AvailabilityOverrideItem } from "@/lib/data/availability";
 
@@ -244,6 +245,7 @@ function TypePill({
 
 export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
   const { success, error } = useToast();
+  const { confirm: confirmCopyWeek, Dialog: CopyWeekConfirmDialog } = useConfirm();
 
   const [blocks, setBlocks] = useState<AvailabilityBlock[]>(initialData.blocks);
   const [overrides, setOverrides] = useState<AvailabilityOverrideItem[]>(initialData.overrides);
@@ -268,13 +270,22 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
   // ─── Refresh from server ────────────────────────────────────────────────
 
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/athlete/availability");
-    if (res.ok) {
-      const json = await res.json();
+    try {
+      const res = await fetch("/api/athlete/availability");
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success || !json.data) {
+        throw new Error(json?.error || `Failed to load availability (${res.status})`);
+      }
       setBlocks(json.data.blocks);
       setOverrides(json.data.overrides);
+    } catch (err) {
+      console.error("availability refresh failed", err);
+      error(
+        "Couldn't refresh availability",
+        err instanceof Error ? err.message : "Check your connection and try again."
+      );
     }
-  }, []);
+  }, [error]);
 
   // ─── Block CRUD ─────────────────────────────────────────────────────────
 
@@ -506,11 +517,16 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
 
     if (thisWeekCount === 0) return;
 
-    const confirmed = window.confirm(
-      `This will copy ${thisWeekCount} change${thisWeekCount > 1 ? "s" : ""} from this week to next week. Continue?`
-    );
-    if (!confirmed) return;
+    confirmCopyWeek({
+      title: "Copy this week to next week?",
+      description: `This will copy ${thisWeekCount} change${thisWeekCount > 1 ? "s" : ""} from this week to the same days next week.`,
+      confirmLabel: "Copy",
+      variant: "default",
+      onConfirm: () => runCopyWeek(),
+    });
+  };
 
+  const runCopyWeek = async () => {
     setCopyingWeek(true);
     try {
       const res = await fetch("/api/athlete/availability/overrides/copy-week", {
@@ -584,6 +600,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <ScrollProgressBar />
+      <CopyWeekConfirmDialog />
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">

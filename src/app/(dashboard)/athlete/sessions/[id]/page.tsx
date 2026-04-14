@@ -2,18 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components";
 import { formatImplementWeight } from "@/lib/throws";
-import {
-  ArrowLeft,
-  Clock,
-  Target,
-  Dumbbell,
-  Activity,
-  CircleDot,
-} from "lucide-react";
-import {
-  requireAthleteSession,
-  getSessionWithPrescription,
-} from "@/lib/data/athlete";
+import { ArrowLeft, Clock, Target, Dumbbell, Activity, CircleDot } from "lucide-react";
+import { requireAthleteSession, getSessionWithPrescription } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import { CompleteSessionButton } from "./_complete-button";
 import { SessionLogger } from "./_session-logger";
@@ -68,11 +58,7 @@ type LogItem = {
 
 function ExerciseLogTable({ logs }: { logs: LogItem[] }) {
   if (logs.length === 0) {
-    return (
-      <p className="text-sm text-muted py-4 text-center">
-        No exercise logs recorded.
-      </p>
-    );
+    return <p className="text-sm text-muted py-4 text-center">No exercise logs recorded.</p>;
   }
 
   return (
@@ -93,18 +79,10 @@ function ExerciseLogTable({ logs }: { logs: LogItem[] }) {
             <tr key={log.id}>
               <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
                 {log.exerciseName}
-                {log.notes && (
-                  <p className="text-xs text-muted font-normal mt-0.5">
-                    {log.notes}
-                  </p>
-                )}
+                {log.notes && <p className="text-xs text-muted font-normal mt-0.5">{log.notes}</p>}
               </td>
-              <td className="py-2.5 pr-4 text-right tabular-nums">
-                {log.sets}
-              </td>
-              <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                {log.reps ?? "—"}
-              </td>
+              <td className="py-2.5 pr-4 text-right tabular-nums">{log.sets}</td>
+              <td className="py-2.5 pr-4 text-right tabular-nums text-muted">{log.reps ?? "—"}</td>
               <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
                 {log.weight != null ? `${log.weight}kg` : "—"}
               </td>
@@ -135,11 +113,7 @@ type ThrowItem = {
 
 function ThrowLogTable({ throws }: { throws: ThrowItem[] }) {
   if (throws.length === 0) {
-    return (
-      <p className="text-sm text-muted py-4 text-center">
-        No throws recorded.
-      </p>
-    );
+    return <p className="text-sm text-muted py-4 text-center">No throws recorded.</p>;
   }
 
   return (
@@ -158,11 +132,7 @@ function ThrowLogTable({ throws }: { throws: ThrowItem[] }) {
             <tr key={t.id}>
               <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
                 {formatEventName(t.event)}
-                {t.notes && (
-                  <p className="text-xs text-muted font-normal mt-0.5">
-                    {t.notes}
-                  </p>
-                )}
+                {t.notes && <p className="text-xs text-muted font-normal mt-0.5">{t.notes}</p>}
               </td>
               <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
                 {formatImplementWeight(t.implementWeight)}
@@ -235,14 +205,10 @@ function ThrowsPrescriptionCard({ items }: { items: ThrowPrescriptionItem[] }) {
           <div key={i} className="card px-4 py-3 space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-medium text-[var(--foreground)]">
-                  {item.implement}
-                </p>
+                <p className="font-medium text-[var(--foreground)]">{item.implement}</p>
                 <div className="flex flex-wrap gap-2 mt-1">
                   <Badge variant="primary">{item.category}</Badge>
-                  {item.drillType && (
-                    <Badge variant="neutral">{item.drillType}</Badge>
-                  )}
+                  {item.drillType && <Badge variant="neutral">{item.drillType}</Badge>}
                 </div>
               </div>
               <div className="text-right shrink-0">
@@ -296,28 +262,18 @@ function StrengthPrescriptionCard({ items }: { items: StrengthPrescriptionItem[]
               {items.map((item, i) => (
                 <tr key={i}>
                   <td className="py-2.5 pr-4">
-                    <p className="font-medium text-[var(--foreground)]">
-                      {item.exerciseName}
-                    </p>
+                    <p className="font-medium text-[var(--foreground)]">{item.exerciseName}</p>
                     {item.classification && (
-                      <p className="text-xs text-muted mt-0.5">
-                        {item.classification}
-                      </p>
+                      <p className="text-xs text-muted mt-0.5">{item.classification}</p>
                     )}
                   </td>
-                  <td className="py-2.5 pr-4 text-right tabular-nums">
-                    {item.sets}
-                  </td>
-                  <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                    {item.reps}
-                  </td>
+                  <td className="py-2.5 pr-4 text-right tabular-nums">{item.sets}</td>
+                  <td className="py-2.5 pr-4 text-right tabular-nums text-muted">{item.reps}</td>
                   <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
                     {item.loadKg != null ? `${item.loadKg}kg` : "—"}
                   </td>
                   <td className="py-2.5 text-right tabular-nums text-muted">
-                    {item.intensityPercent != null
-                      ? `${item.intensityPercent}%`
-                      : "—"}
+                    {item.intensityPercent != null ? `${item.intensityPercent}%` : "—"}
                   </td>
                 </tr>
               ))}
@@ -352,14 +308,10 @@ function WarmupPrescriptionCard({ items }: { items: WarmupPrescriptionItem[] }) 
                 <p className="text-sm font-medium text-[var(--foreground)]">
                   {item.name}
                   {item.duration && (
-                    <span className="text-muted font-normal ml-2">
-                      {item.duration}
-                    </span>
+                    <span className="text-muted font-normal ml-2">{item.duration}</span>
                   )}
                 </p>
-                {item.notes && (
-                  <p className="text-xs text-muted mt-0.5">{item.notes}</p>
-                )}
+                {item.notes && <p className="text-xs text-muted mt-0.5">{item.notes}</p>}
               </div>
             </li>
           ))}
@@ -391,13 +343,10 @@ function calculateScheduledDate(
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
-export default async function SessionDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { athlete } = await requireAthleteSession();
-  const session = await getSessionWithPrescription(athlete.id, params.id);
+  const session = await getSessionWithPrescription(athlete.id, id);
 
   /* ── TrainingSession found — render existing view ────────────────────── */
   if (session) {
@@ -405,8 +354,7 @@ export default async function SessionDetailPage({
       label: session.status,
       variant: "neutral" as const,
     };
-    const isActive =
-      session.status === "SCHEDULED" || session.status === "IN_PROGRESS";
+    const isActive = session.status === "SCHEDULED" || session.status === "IN_PROGRESS";
     const hasPrescription = session.blocks.length > 0;
 
     return (
@@ -426,9 +374,7 @@ export default async function SessionDetailPage({
             <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
               {session.planName ?? "Training Session"}
             </h1>
-            <p className="text-sm text-muted mt-0.5">
-              {formatDate(session.scheduledDate)}
-            </p>
+            <p className="text-sm text-muted mt-0.5">{formatDate(session.scheduledDate)}</p>
           </div>
           <Badge variant={cfg.variant}>{cfg.label}</Badge>
         </div>
@@ -438,9 +384,7 @@ export default async function SessionDetailPage({
           <div className="flex flex-wrap gap-4">
             {session.completedDate && (
               <div>
-                <p className="text-xs text-muted uppercase tracking-wide">
-                  Completed
-                </p>
+                <p className="text-xs text-muted uppercase tracking-wide">Completed</p>
                 <p className="text-sm font-semibold text-[var(--foreground)]">
                   {formatDate(session.completedDate)}
                 </p>
@@ -460,21 +404,15 @@ export default async function SessionDetailPage({
         {/* Coach notes */}
         {session.coachNotes && (
           <div className="card px-4 py-3 border-l-4 border-primary-500">
-            <p className="text-xs text-muted uppercase tracking-wide mb-1">
-              Coach Notes
-            </p>
-            <p className="text-sm text-[var(--foreground)]">
-              {session.coachNotes}
-            </p>
+            <p className="text-xs text-muted uppercase tracking-wide mb-1">Coach Notes</p>
+            <p className="text-sm text-[var(--foreground)]">{session.coachNotes}</p>
           </div>
         )}
 
         {/* Athlete notes */}
         {session.notes && (
           <div className="card px-4 py-3">
-            <p className="text-xs text-muted uppercase tracking-wide mb-1">
-              My Notes
-            </p>
+            <p className="text-xs text-muted uppercase tracking-wide mb-1">My Notes</p>
             <p className="text-sm text-[var(--foreground)]">{session.notes}</p>
           </div>
         )}
@@ -485,9 +423,7 @@ export default async function SessionDetailPage({
         {/* Active session without prescription: just show empty state */}
         {isActive && !hasPrescription && (
           <div className="card p-6 text-center">
-            <p className="text-muted text-sm">
-              No prescribed workout for this session.
-            </p>
+            <p className="text-muted text-sm">No prescribed workout for this session.</p>
             <p className="text-muted text-xs mt-1">
               You can still mark it complete with your RPE below.
             </p>
@@ -527,7 +463,7 @@ export default async function SessionDetailPage({
 
   /* ── No TrainingSession — try ProgramSession (Bondarchuk programs) ───── */
   const programSession = await prisma.programSession.findFirst({
-    where: { id: params.id, program: { athleteId: athlete.id } },
+    where: { id, program: { athleteId: athlete.id } },
     include: {
       program: { select: { event: true, startDate: true, gender: true } },
       phase: { select: { phase: true, phaseOrder: true } },
@@ -537,15 +473,9 @@ export default async function SessionDetailPage({
   if (!programSession) notFound();
 
   /* ── Parse prescriptions ─────────────────────────────────────────────── */
-  const throwItems = parseJson<ThrowPrescriptionItem>(
-    programSession.throwsPrescription
-  );
-  const strengthItems = parseJson<StrengthPrescriptionItem>(
-    programSession.strengthPrescription
-  );
-  const warmupItems = parseJson<WarmupPrescriptionItem>(
-    programSession.warmupPrescription
-  );
+  const throwItems = parseJson<ThrowPrescriptionItem>(programSession.throwsPrescription);
+  const strengthItems = parseJson<StrengthPrescriptionItem>(programSession.strengthPrescription);
+  const warmupItems = parseJson<WarmupPrescriptionItem>(programSession.warmupPrescription);
 
   const statusCfg = STATUS_CONFIG[programSession.status] ?? {
     label: programSession.status,
@@ -562,10 +492,7 @@ export default async function SessionDetailPage({
         programSession.dayOfWeek
       );
 
-  const totalPrescribedThrows = throwItems.reduce(
-    (sum, t) => sum + t.sets * t.repsPerSet,
-    0
-  );
+  const totalPrescribedThrows = throwItems.reduce((sum, t) => sum + t.sets * t.repsPerSet, 0);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -582,17 +509,13 @@ export default async function SessionDetailPage({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-            {formatEventName(programSession.program.event)} —{" "}
-            {programSession.focusLabel}
+            {formatEventName(programSession.program.event)} — {programSession.focusLabel}
           </h1>
           <p className="text-sm text-muted mt-0.5">{displayDate}</p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            <Badge variant={phaseVariant}>
-              {programSession.phase.phase}
-            </Badge>
+            <Badge variant={phaseVariant}>{programSession.phase.phase}</Badge>
             <span className="text-xs text-muted">
-              Week {programSession.weekNumber} &middot; Day{" "}
-              {programSession.dayType}
+              Week {programSession.weekNumber} &middot; Day {programSession.dayType}
             </span>
           </div>
         </div>
@@ -602,37 +525,30 @@ export default async function SessionDetailPage({
       {/* Meta stats row */}
       <div className="flex flex-wrap gap-4">
         <div>
-          <p className="text-xs text-muted uppercase tracking-wide">
-            Total Throws Target
-          </p>
+          <p className="text-xs text-muted uppercase tracking-wide">Total Throws Target</p>
           <p className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
             {programSession.totalThrowsTarget}
           </p>
         </div>
-        {totalPrescribedThrows > 0 && totalPrescribedThrows !== programSession.totalThrowsTarget && (
-          <div>
-            <p className="text-xs text-muted uppercase tracking-wide">
-              Prescribed Throws
-            </p>
-            <p className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
-              {totalPrescribedThrows}
-            </p>
-          </div>
-        )}
+        {totalPrescribedThrows > 0 &&
+          totalPrescribedThrows !== programSession.totalThrowsTarget && (
+            <div>
+              <p className="text-xs text-muted uppercase tracking-wide">Prescribed Throws</p>
+              <p className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                {totalPrescribedThrows}
+              </p>
+            </div>
+          )}
         {programSession.estimatedDuration != null && (
           <div>
-            <p className="text-xs text-muted uppercase tracking-wide">
-              Est. Duration
-            </p>
+            <p className="text-xs text-muted uppercase tracking-wide">Est. Duration</p>
             <p className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
               {programSession.estimatedDuration} min
             </p>
           </div>
         )}
         <div>
-          <p className="text-xs text-muted uppercase tracking-wide">
-            Session Type
-          </p>
+          <p className="text-xs text-muted uppercase tracking-wide">Session Type</p>
           <p className="text-sm font-semibold text-[var(--foreground)]">
             {programSession.sessionType.replace(/_/g, " ")}
           </p>
@@ -658,9 +574,7 @@ export default async function SessionDetailPage({
             <div className="flex flex-wrap gap-4">
               {programSession.actualThrows != null && (
                 <div>
-                  <p className="text-xs text-muted uppercase tracking-wide">
-                    Actual Throws
-                  </p>
+                  <p className="text-xs text-muted uppercase tracking-wide">Actual Throws</p>
                   <p className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
                     {programSession.actualThrows}
                   </p>
@@ -668,9 +582,7 @@ export default async function SessionDetailPage({
               )}
               {programSession.bestMark != null && (
                 <div>
-                  <p className="text-xs text-muted uppercase tracking-wide">
-                    Best Mark
-                  </p>
+                  <p className="text-xs text-muted uppercase tracking-wide">Best Mark</p>
                   <p className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
                     {programSession.bestMark.toFixed(2)}m
                   </p>
@@ -678,9 +590,7 @@ export default async function SessionDetailPage({
               )}
               {programSession.rpe != null && (
                 <div>
-                  <p className="text-xs text-muted uppercase tracking-wide">
-                    RPE
-                  </p>
+                  <p className="text-xs text-muted uppercase tracking-wide">RPE</p>
                   <p className="text-sm font-semibold tabular-nums text-[var(--foreground)]">
                     {programSession.rpe} / 10
                   </p>
@@ -688,9 +598,7 @@ export default async function SessionDetailPage({
               )}
               {programSession.selfFeeling && (
                 <div>
-                  <p className="text-xs text-muted uppercase tracking-wide">
-                    Feeling
-                  </p>
+                  <p className="text-xs text-muted uppercase tracking-wide">Feeling</p>
                   <p className="text-sm font-semibold text-[var(--foreground)]">
                     {programSession.selfFeeling.replace(/_/g, " ")}
                   </p>
@@ -704,30 +612,21 @@ export default async function SessionDetailPage({
       {/* Session notes */}
       {programSession.sessionNotes && (
         <div className="card px-4 py-3">
-          <p className="text-xs text-muted uppercase tracking-wide mb-1">
-            Session Notes
-          </p>
-          <p className="text-sm text-[var(--foreground)]">
-            {programSession.sessionNotes}
-          </p>
+          <p className="text-xs text-muted uppercase tracking-wide mb-1">Session Notes</p>
+          <p className="text-sm text-[var(--foreground)]">{programSession.sessionNotes}</p>
         </div>
       )}
 
       {/* Modification notice */}
       {programSession.wasModified && programSession.modificationNotes && (
         <div className="card px-4 py-3 border-l-4 border-warning-500">
-          <p className="text-xs text-muted uppercase tracking-wide mb-1">
-            Session Modified
-          </p>
-          <p className="text-sm text-[var(--foreground)]">
-            {programSession.modificationNotes}
-          </p>
+          <p className="text-xs text-muted uppercase tracking-wide mb-1">Session Modified</p>
+          <p className="text-sm text-[var(--foreground)]">{programSession.modificationNotes}</p>
         </div>
       )}
 
       {/* Read-only notice for planned/scheduled sessions */}
-      {(programSession.status === "PLANNED" ||
-        programSession.status === "SCHEDULED") && (
+      {(programSession.status === "PLANNED" || programSession.status === "SCHEDULED") && (
         <div className="card p-6 text-center">
           <p className="text-muted text-sm">
             This is a prescribed session from your Bondarchuk program.

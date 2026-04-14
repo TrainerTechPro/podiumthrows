@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trophy, Target } from "lucide-react";
+import { Trophy, Target, ChevronRight } from "lucide-react";
 import { AnimatedNumber } from "@/components";
 import type { PRTrackerData } from "@/lib/data/dashboard-progress";
 
@@ -16,13 +16,14 @@ function formatEventName(event: string): string {
 }
 
 function formatRelativeDate(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Today";
+  const ts = new Date(iso).getTime();
+  if (!Number.isFinite(ts)) return "—";
+  const days = Math.floor((Date.now() - ts) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "Today";
   if (days === 1) return "Yesterday";
   if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
 }
 
 /* ─── Widget ─────────────────────────────────────────────────────────────── */
@@ -35,8 +36,12 @@ export function PRTrackerWidget({ data }: { data: PRTrackerData }) {
           <Trophy className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           PR Tracker
         </h3>
-        <Link href="/athlete/throws/history" className="text-xs text-primary-500 hover:underline">
-          All throws &gt;
+        <Link
+          href="/athlete/throws/history"
+          className="text-xs text-primary-500 hover:underline inline-flex items-center gap-0.5"
+        >
+          All throws
+          <ChevronRight className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
         </Link>
       </div>
 

@@ -10,6 +10,20 @@ import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { Input } from "@/components/ui/Input";
 
+/** Parse a numeric form input, preserving 0 as a valid value.
+ *  Returns undefined only when the field is blank or the input is non-numeric. */
+function parseNumericField(raw: string): number | undefined {
+  if (raw === "" || raw == null) return undefined;
+  const n = parseFloat(raw);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function parseIntField(raw: string): number | undefined {
+  if (raw === "" || raw == null) return undefined;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
 const EVENTS = [
@@ -252,9 +266,11 @@ export function LogSessionWizard({
     if (!editSessionId) return;
     setEditLoading(true);
     fetch(`${apiEndpoint}/${editSessionId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!data.success || !data.data) return;
+      .then(async (r) => {
+        const data = await r.json();
+        if (!r.ok || !data.success || !data.data) {
+          throw new Error(data.error || `Failed to load session (${r.status})`);
+        }
         const s = data.data;
         setEvent(s.event || "");
         setDate(s.date || localToday());
@@ -290,9 +306,14 @@ export function LogSessionWizard({
           );
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error("log-session edit load failed", err);
+        toast.error(
+          err instanceof Error ? err.message : "Couldn't load session — refresh and try again"
+        );
+      })
       .finally(() => setEditLoading(false));
-  }, [editSessionId, apiEndpoint]);
+  }, [editSessionId, apiEndpoint, toast]);
 
   useEffect(() => {
     if (!event) {
@@ -304,7 +325,11 @@ export function LogSessionWizard({
       .then((d) => {
         if (d.success) setPastDrills(d.data);
       })
-      .catch(() => {});
+      .catch((err) => {
+        // Non-fatal — past-drill suggestions are a nice-to-have. Log for
+        // diagnostics but don't interrupt the athlete's flow with a toast.
+        console.error("past-drills fetch failed", err);
+      });
   }, [event]);
 
   // Warn before navigating away mid-session
@@ -381,22 +406,21 @@ export function LogSessionWizard({
           drills: drills
             .filter((d) => d.drillType)
             .map((d) => {
-              const raw = d.bestMark ? parseFloat(d.bestMark) : undefined;
-              const best = raw && distanceUnit === "feet" ? raw * 0.3048 : raw;
-              const implWeight = d.implementWeight
-                ? d.implementUnit === "lbs"
-                  ? parseFloat(d.implementWeight) * LBS_TO_KG
-                  : parseFloat(d.implementWeight)
-                : undefined;
+              // Preserve 0 as a valid value — athletes log bodyweight (0kg),
+              // fouled throws (0.00m), and unweighted drills. Blank fields
+              // are represented by `undefined`, not `0`.
+              const rawBest = parseNumericField(d.bestMark);
+              const best = rawBest != null && distanceUnit === "feet" ? rawBest * 0.3048 : rawBest;
+              const rawImpl = parseNumericField(d.implementWeight);
+              const implWeight =
+                rawImpl != null && d.implementUnit === "lbs" ? rawImpl * LBS_TO_KG : rawImpl;
               return {
                 drillType: d.drillType,
                 implementWeight: implWeight,
                 implementWeightUnit: d.implementUnit,
-                implementWeightOriginal: d.implementWeight
-                  ? parseFloat(d.implementWeight)
-                  : undefined,
+                implementWeightOriginal: rawImpl,
                 wireLength: event === "HAMMER" ? d.wireLength : undefined,
-                throwCount: parseInt(d.throwCount, 10) || 0,
+                throwCount: parseIntField(d.throwCount) ?? 0,
                 bestMark: best,
                 notes: d.notes.trim() || undefined,
               };
@@ -405,9 +429,11 @@ export function LogSessionWizard({
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save session");
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `Failed to save session (${res.status})`);
+      }
 
-      // Capture PR and warning data from response
+      // Capture PR and warning data from response (top-level, not under .data)
       if (data.prs?.length) {
         setResponsePRs(data.prs);
         for (const pr of data.prs) {
@@ -416,12 +442,18 @@ export function LogSessionWizard({
             description: pr.implement || event.replace(/_/g, " "),
           });
         }
+      } else {
+        // Always confirm the save succeeded — PR celebrations are rare and
+        // shouldn't be the only feedback on a successful submit.
+        toast.success(isEditing ? "Session updated" : "Session saved");
       }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
 
       setStep("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

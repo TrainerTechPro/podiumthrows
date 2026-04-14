@@ -9,31 +9,32 @@ interface SaveResumeBarProps {
   enabled: boolean;
 }
 
-export function SaveResumeBar({
-  questionnaireId,
-  answers,
-  enabled,
-}: SaveResumeBarProps) {
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
-    "idle"
-  );
+export function SaveResumeBar({ questionnaireId, answers, enabled }: SaveResumeBarProps) {
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const lastSavedRef = useRef<string>("");
 
+  // Keep the latest `answers` reachable from the unmount effect without
+  // re-binding the cleanup on every keystroke. Previously the cleanup
+  // closed over whatever `saveDraft` was at mount, silently losing
+  // recent typing on navigate-away.
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
   const saveDraft = useCallback(async () => {
-    const serialized = JSON.stringify(answers);
+    const current = answersRef.current;
+    const serialized = JSON.stringify(current);
     if (serialized === lastSavedRef.current) return;
 
     setStatus("saving");
     try {
-      const res = await fetch(
-        `/api/athlete/questionnaires/${questionnaireId}/draft`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ draftAnswers: answers }),
-        }
-      );
+      const res = await fetch(`/api/athlete/questionnaires/${questionnaireId}/draft`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ draftAnswers: current }),
+      });
       if (res.ok) {
         lastSavedRef.current = serialized;
         setStatus("saved");
@@ -41,10 +42,11 @@ export function SaveResumeBar({
       } else {
         setStatus("error");
       }
-    } catch {
+    } catch (err) {
+      console.error("draft save failed", err);
       setStatus("error");
     }
-  }, [questionnaireId, answers]);
+  }, [questionnaireId]);
 
   // Auto-save every 30 seconds
   useEffect(() => {
@@ -53,19 +55,22 @@ export function SaveResumeBar({
     return () => clearInterval(timerRef.current);
   }, [enabled, saveDraft]);
 
-  // Save on unmount
+  // Save on unmount — reads `answersRef.current` so it captures the
+  // athlete's latest typing even if the interval hadn't fired yet.
   useEffect(() => {
     if (!enabled) return;
     return () => {
-      saveDraft();
+      void saveDraft();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [enabled, saveDraft]);
 
   if (!enabled || status === "idle") return null;
 
   return (
-    <div className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] shadow-card text-xs text-muted flex items-center gap-2 animate-fade-in" style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}>
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] shadow-card text-xs text-muted flex items-center gap-2 animate-fade-in"
+      style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+    >
       {status === "saving" && (
         <>
           <div className="w-3 h-3 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
@@ -88,9 +93,7 @@ export function SaveResumeBar({
           <span>Draft saved</span>
         </>
       )}
-      {status === "error" && (
-        <span className="text-danger-500">Failed to save draft</span>
-      )}
+      {status === "error" && <span className="text-danger-500">Failed to save draft</span>}
     </div>
   );
 }

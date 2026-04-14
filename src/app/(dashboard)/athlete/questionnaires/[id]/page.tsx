@@ -6,10 +6,11 @@ import { QuestionnaireForm } from "./_questionnaire-form";
 export default async function FillQuestionnairePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const { athlete } = await requireAthleteSession();
-  const questionnaire = await getQuestionnaireForFill(params.id, athlete.id);
+  const questionnaire = await getQuestionnaireForFill(id, athlete.id);
 
   if (!questionnaire) notFound();
 
@@ -40,9 +41,7 @@ export default async function FillQuestionnairePage({
         </div>
         <div className="card p-8 text-center space-y-3">
           <div className="text-4xl">✅</div>
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">
-            Already Completed
-          </h2>
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Already Completed</h2>
           <p className="text-sm text-muted">
             You have already submitted your responses for this questionnaire.
           </p>

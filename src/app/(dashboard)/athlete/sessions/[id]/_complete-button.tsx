@@ -22,16 +22,17 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
           body: JSON.stringify({ rpe, notes: notes.trim() || undefined }),
         });
 
-        if (!res.ok) {
-          const data = await res.json();
-          setError(data.error ?? "Something went wrong.");
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          setError(data?.error ?? `Something went wrong (${res.status}).`);
           return;
         }
 
         // Navigate to the full-screen recap — it will read the final state
         // from the database, so we don't need to thread the summary through.
         router.push(`/athlete/sessions/${sessionId}/recap`);
-      } catch {
+      } catch (err) {
+        console.error("complete session failed", err);
         setError("Failed to complete session. Please try again.");
       }
     });
@@ -45,10 +46,10 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
         {/* RPE slider */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-[var(--foreground)]">
-              Session RPE
-            </label>
-            <span className="text-sm font-bold tabular-nums text-primary-500">{rpe.toFixed(1)}</span>
+            <label className="text-sm font-medium text-[var(--foreground)]">Session RPE</label>
+            <span className="text-sm font-bold tabular-nums text-primary-500">
+              {rpe.toFixed(1)}
+            </span>
           </div>
           <input
             type="range"
@@ -91,11 +92,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
           >
             Cancel
           </button>
-          <button
-            onClick={handleComplete}
-            disabled={isPending}
-            className="btn btn-primary flex-1"
-          >
+          <button onClick={handleComplete} disabled={isPending} className="btn btn-primary flex-1">
             {isPending ? "Saving\u2026" : "Mark Complete"}
           </button>
         </div>
@@ -104,10 +101,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
   }
 
   return (
-    <button
-      onClick={() => setShowForm(true)}
-      className="btn btn-primary w-full"
-    >
+    <button onClick={() => setShowForm(true)} className="btn btn-primary w-full">
       Mark Session Complete
     </button>
   );

@@ -37,18 +37,23 @@ export function StaleSessionChecker() {
         };
         if (cancelled || !data.staleSession) return;
 
-        // Mark the session complete (best effort). If this fails, the session
-        // stays open and the athlete can complete it manually.
-        await fetch(`/api/athlete/sessions/${data.staleSession.id}/complete`, {
+        // Mark the session complete before redirecting. If the complete call
+        // fails we stay put — redirecting to the recap with an IN_PROGRESS
+        // session would render the wrong view and confuse the athlete.
+        const completeRes = await fetch(`/api/athlete/sessions/${data.staleSession.id}/complete`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({}),
-        }).catch(() => null);
+        }).catch((err) => {
+          console.warn("stale session complete failed", err);
+          return null;
+        });
+        if (cancelled || !completeRes?.ok) return;
 
-        if (cancelled) return;
         router.push(`/athlete/sessions/${data.staleSession.id}/recap`);
-      } catch {
-        // Silent fail — feature is optional
+      } catch (err) {
+        // Non-fatal — feature is optional, but still log for diagnostics.
+        console.warn("stale session check failed", err);
       }
     })();
 

@@ -316,15 +316,29 @@ export default function ThrowsLogPage() {
   // Past drills for smart suggestions
   const [pastDrills, setPastDrills] = useState<string[]>([]);
 
-  // Fetch own athleteId once on mount
+  // Fetch own athleteId once on mount. Without this the handleSave
+  // precondition guard below would silently block saves — we want to know
+  // immediately if the athlete profile can't be resolved.
   useEffect(() => {
     fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setAthleteId(d.data?.user?.athleteProfile?.id ?? null);
+      .then(async (r) => {
+        const d = await r.json().catch(() => null);
+        if (!r.ok || !d?.success) {
+          throw new Error(d?.error || `Couldn't load profile (${r.status})`);
+        }
+        const id = d.data?.user?.athleteProfile?.id ?? null;
+        setAthleteId(id);
+        if (!id) {
+          toast.error("No athlete profile — check-in and log features disabled");
+        }
       })
-      .catch(() => {});
-  }, []);
+      .catch((err) => {
+        console.error("auth/me fetch failed", err);
+        toast.error(
+          err instanceof Error ? err.message : "Couldn't load profile — refresh to try again"
+        );
+      });
+  }, [toast]);
 
   // Handle ?edit=sessionId from navigation
   useEffect(() => {
@@ -452,8 +466,15 @@ export default function ThrowsLogPage() {
       const n = parseFloat(raw);
       return Number.isFinite(n) ? n : null;
     };
+    // Parse best-mark preserving 0 as a valid value (e.g. a foul / scratch).
+    // Using `d.bestMark ? parseFloat(...) : null` would collapse "0" to null.
+    const parseBestMark = (raw: string): number | null => {
+      if (raw === "" || raw == null) return null;
+      const n = parseFloat(raw);
+      return Number.isFinite(n) ? n : null;
+    };
     const drillLogs = drills
-      .filter((d) => d.throwCount > 0 || d.bestMark)
+      .filter((d) => d.throwCount > 0 || d.bestMark !== "")
       .map((d) => {
         const original = parseImplementWeight(d.implementWeight);
         const implKg =
@@ -465,7 +486,7 @@ export default function ThrowsLogPage() {
           implementWeightOriginal: original,
           wireLength: selectedEvent === "HAMMER" ? d.wireLength : null,
           throwCount: d.throwCount,
-          bestMark: d.bestMark ? parseFloat(d.bestMark) : null,
+          bestMark: parseBestMark(d.bestMark),
           notes: d.notes || null,
         };
       });

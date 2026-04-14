@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { useToast } from "@/components/ui/Toast";
 import type {
   FormBlock,
   FormDisplayMode,
@@ -51,22 +52,18 @@ export function FormRendererShell({
   const router = useRouter();
 
   // Find welcome/thankyou screens
-  const welcomeBlock = blocks.find(
-    (b) => b.type === "welcome_screen"
-  ) as WelcomeScreenBlock | undefined;
-  const thankYouBlock = blocks.find(
-    (b) => b.type === "thank_you_screen"
-  ) as ThankYouScreenBlock | undefined;
+  const welcomeBlock = blocks.find((b) => b.type === "welcome_screen") as
+    | WelcomeScreenBlock
+    | undefined;
+  const thankYouBlock = blocks.find((b) => b.type === "thank_you_screen") as
+    | ThankYouScreenBlock
+    | undefined;
 
   // Phase management
-  const [phase, setPhase] = useState<Phase>(
-    welcomeBlock ? "welcome" : "form"
-  );
+  const [phase, setPhase] = useState<Phase>(welcomeBlock ? "welcome" : "form");
 
   // Answer state (load from draft if available)
-  const [answers, setAnswers] = useState<Record<string, unknown>>(
-    draftAnswers ?? {}
-  );
+  const [answers, setAnswers] = useState<Record<string, unknown>>(draftAnswers ?? {});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -82,15 +79,18 @@ export function FormRendererShell({
   // Required input blocks that are visible
   const visibleInputBlocks = useMemo(() => {
     const visibleSet = new Set(visibleBlockIds);
-    return blocks.filter(
-      (b) => visibleSet.has(b.id) && INPUT_BLOCK_TYPES.includes(b.type)
-    );
+    return blocks.filter((b) => visibleSet.has(b.id) && INPUT_BLOCK_TYPES.includes(b.type));
   }, [blocks, visibleBlockIds]);
 
   const requiredVisible = visibleInputBlocks.filter((b) => b.required);
+  // Preserve 0 as a valid answered value. `val !== ""` previously treated
+  // a numeric answer of 0 as unanswered (CLAUDE.md rule 3).
   const allRequiredAnswered = requiredVisible.every((b) => {
     const val = answers[b.id];
-    return val !== undefined && val !== null && val !== "";
+    if (val === undefined || val === null) return false;
+    if (typeof val === "string" && val === "") return false;
+    if (Array.isArray(val) && val.length === 0) return false;
+    return true;
   });
 
   // Handle answer change
@@ -124,6 +124,8 @@ export function FormRendererShell({
     setShowConfirm(true);
   }, [validate]);
 
+  const toast = useToast();
+
   const confirmSubmit = useCallback(async () => {
     setSubmitError(null);
     setSubmitting(true);
@@ -136,18 +138,17 @@ export function FormRendererShell({
     };
 
     try {
-      const res = await fetch(
-        `/api/athlete/questionnaires/${questionnaireId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`/api/athlete/questionnaires/${questionnaireId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify(payload),
+      });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setSubmitError(data.error || "Failed to submit");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        const msg = data?.error || `Failed to submit (${res.status})`;
+        setSubmitError(msg);
+        toast.error(msg);
         return;
       }
 
@@ -156,20 +157,18 @@ export function FormRendererShell({
       } else {
         setPhase("submitted");
       }
+      toast.success("Questionnaire submitted");
       onComplete?.();
-    } catch {
-      setSubmitError("Something went wrong. Please try again.");
+    } catch (err) {
+      console.error("questionnaire submit failed", err);
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
       setShowConfirm(false);
     }
-  }, [
-    answers,
-    questionnaireId,
-    startedAt,
-    thankYouBlock,
-    onComplete,
-  ]);
+  }, [answers, questionnaireId, startedAt, thankYouBlock, onComplete, toast]);
 
   const goBack = useCallback(() => {
     router.push("/athlete/questionnaires");
@@ -177,22 +176,12 @@ export function FormRendererShell({
 
   // ─── Welcome Phase ──────────────────────────────────────────────────────
   if (phase === "welcome" && welcomeBlock) {
-    return (
-      <WelcomeScreen
-        block={welcomeBlock}
-        onStart={() => setPhase("form")}
-      />
-    );
+    return <WelcomeScreen block={welcomeBlock} onStart={() => setPhase("form")} />;
   }
 
   // ─── Thank You Phase ────────────────────────────────────────────────────
   if (phase === "thankyou" && thankYouBlock) {
-    return (
-      <ThankYouScreen
-        block={thankYouBlock}
-        onDone={goBack}
-      />
-    );
+    return <ThankYouScreen block={thankYouBlock} onDone={goBack} />;
   }
 
   // ─── Submitted (no thank-you screen) ────────────────────────────────────
@@ -212,12 +201,8 @@ export function FormRendererShell({
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-[var(--foreground)]">
-          Submitted Successfully
-        </h2>
-        <p className="text-sm text-muted">
-          Your responses have been recorded. Thank you!
-        </p>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">Submitted Successfully</h2>
+        <p className="text-sm text-muted">Your responses have been recorded. Thank you!</p>
         <button
           onClick={goBack}
           className="px-6 py-2 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
@@ -233,12 +218,8 @@ export function FormRendererShell({
     <div className="space-y-4">
       {/* Title */}
       <div>
-        <h2 className="text-xl font-bold font-heading text-[var(--foreground)]">
-          {title}
-        </h2>
-        {description && (
-          <p className="text-sm text-muted mt-1">{description}</p>
-        )}
+        <h2 className="text-xl font-bold font-heading text-[var(--foreground)]">{title}</h2>
+        {description && <p className="text-sm text-muted mt-1">{description}</p>}
       </div>
 
       {submitError && (

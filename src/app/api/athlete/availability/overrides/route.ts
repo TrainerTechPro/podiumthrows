@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, AvailabilityOverrideSchema } from "@/lib/api-schemas";
 import { createAvailabilityOverride } from "@/lib/data/availability";
 
 /* ─── POST — create a date-specific availability override ────────────────── */
@@ -21,22 +22,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { date, startTime, endTime, type, reason } = body as Record<string, unknown>;
-
-    if (typeof date !== "string" || !date) {
-      return NextResponse.json({ success: false, error: "date is required." }, { status: 400 });
-    }
-    if (typeof type !== "string" || !type) {
-      return NextResponse.json({ success: false, error: "type is required." }, { status: 400 });
-    }
+    const parsed = await parseBody(req, AvailabilityOverrideSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { date, startTime, endTime, type, reason } = parsed;
 
     const override = await createAvailabilityOverride(athlete.id, {
       date,
-      startTime: typeof startTime === "string" ? startTime : null,
-      endTime: typeof endTime === "string" ? endTime : null,
+      startTime: startTime ?? null,
+      endTime: endTime ?? null,
       type,
-      reason: typeof reason === "string" ? reason : null,
+      reason: reason ?? null,
     });
 
     return NextResponse.json({ success: true, data: override }, { status: 201 });

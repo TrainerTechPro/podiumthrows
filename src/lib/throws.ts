@@ -11,10 +11,7 @@ import prisma from "@/lib/prisma";
 
 export const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
 
-export const COMPETITION_WEIGHTS: Record<
-  string,
-  { male: number; female: number }
-> = {
+export const COMPETITION_WEIGHTS: Record<string, { male: number; female: number }> = {
   SHOT_PUT: { male: 7.26, female: 4.0 },
   DISCUS: { male: 2.0, female: 1.0 },
   HAMMER: { male: 7.26, female: 4.0 },
@@ -25,10 +22,7 @@ export const COMPETITION_WEIGHTS: Record<
  * Common implement weights used in training by event + gender.
  * Includes competition weight plus typical over/underweight implements.
  */
-export const IMPLEMENT_PRESETS: Record<
-  string,
-  { male: number[]; female: number[] }
-> = {
+export const IMPLEMENT_PRESETS: Record<string, { male: number[]; female: number[] }> = {
   SHOT_PUT: {
     male: [9.0, 8.0, 7.26, 6.0, 5.0],
     female: [5.0, 4.5, 4.0, 3.0],
@@ -86,7 +80,7 @@ export const KG_TO_LBS = 2.20462;
 export function formatImplementWeight(
   weightKg: number | null | undefined,
   unit?: string | null,
-  original?: number | null,
+  original?: number | null
 ): string {
   if (weightKg == null) return "—";
   if (original != null && unit) {
@@ -109,53 +103,98 @@ export function isValidEvent(event: unknown): event is string {
   return typeof event === "string" && VALID_EVENTS.includes(event as never);
 }
 
-export function getCompetitionWeight(
-  event: string,
-  gender: "male" | "female"
-): number {
+export function getCompetitionWeight(event: string, gender: "male" | "female"): number {
   return COMPETITION_WEIGHTS[event]?.[gender] ?? 0;
 }
 
-export function getImplementPresets(
-  event: string,
-  gender: "male" | "female"
-): number[] {
+export function getImplementPresets(event: string, gender: "male" | "female"): number[] {
   return IMPLEMENT_PRESETS[event]?.[gender] ?? [];
+}
+
+/* ─── Implement String Parsing ───────────────────────────────────────────── */
+
+/**
+ * Parses an implement label like "7.26kg", "800g", "14lbs" into a numeric
+ * kilogram value. Returns null when the string can't be parsed or is
+ * non-positive. Used for PR detection and analytics where the implement is
+ * stored as a free-text string (ThrowsBlockLog.implement, PracticeAttempt.implement).
+ *
+ * Javelins are sometimes labeled in grams; lbs is supported for legacy data.
+ */
+export function parseImplementKg(implement: string | null | undefined): number | null {
+  if (!implement) return null;
+  const trimmed = implement.trim().toLowerCase();
+  const match = trimmed.match(/^([0-9]+(?:\.[0-9]+)?)\s*(kg|g|lb|lbs)?$/);
+  if (!match) {
+    const n = parseFloat(implement.replace(/[^0-9.]/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  const n = parseFloat(match[1]);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const unit = match[2] ?? "kg";
+  if (unit === "g") return n / 1000;
+  if (unit === "lb" || unit === "lbs") return n * LBS_TO_KG;
+  return n;
 }
 
 /* ─── PR Detection ───────────────────────────────────────────────────────── */
 
 /**
  * Checks if a throw is a personal best for the given event + implement combo.
- * If it is, unmarks any previous PR and returns `isPersonalBest: true`.
  *
- * This logic is shared between session-based logging and standalone logging.
+ * Consults ThrowsPR (the canonical PR table with unique constraint on
+ * athlete+event+implement) as the primary source of truth — this covers
+ * both standalone throws (ThrowLog) and live-session throws (ThrowsBlockLog).
+ * Falls back to ThrowLog for pre-ThrowsPR legacy data.
+ *
+ * Also unmarks any previously-flagged ThrowLog PR for this (event, implement)
+ * so history filtering stays consistent. Callers that create ThrowLog rows
+ * are responsible for flagging the NEW row as isPersonalBest themselves.
  */
 export async function checkAndSetPR(
   athleteId: string,
   event: string,
   implementWeight: number,
   distance: number
-): Promise<{ isPersonalBest: boolean }> {
-  const existingBest = await prisma.throwLog.findFirst({
+): Promise<{ isPersonalBest: boolean; previousDistance: number | null }> {
+  const implementStr = `${implementWeight}kg`;
+
+  const existingPR = await prisma.throwsPR.findUnique({
     where: {
-      athleteId,
-      event: event as never,
-      implementWeight,
-      isPersonalBest: true,
+      athleteId_event_implement: { athleteId, event, implement: implementStr },
     },
-    select: { id: true, distance: true },
+    select: { distance: true },
   });
 
-  const isPersonalBest = !existingBest || existingBest.distance == null || distance > existingBest.distance;
+  let previousDistance: number | null = existingPR?.distance ?? null;
 
-  // If new PR, unmark the old one
-  if (isPersonalBest && existingBest) {
-    await prisma.throwLog.update({
-      where: { id: existingBest.id },
+  if (previousDistance == null) {
+    const legacyBest = await prisma.throwLog.findFirst({
+      where: {
+        athleteId,
+        event: event as never,
+        implementWeight,
+        distance: { not: null },
+      },
+      orderBy: { distance: "desc" },
+      select: { distance: true },
+    });
+    previousDistance = legacyBest?.distance ?? null;
+  }
+
+  const isPersonalBest = previousDistance == null || distance > previousDistance;
+
+  if (isPersonalBest) {
+    await prisma.throwLog.updateMany({
+      where: {
+        athleteId,
+        event: event as never,
+        implementWeight,
+        isPersonalBest: true,
+      },
       data: { isPersonalBest: false },
     });
   }
 
-  return { isPersonalBest };
+  return { isPersonalBest, previousDistance };
 }
