@@ -9,6 +9,7 @@ This is **Podium Throws**, a subscription coaching SaaS for Olympic-level track 
 **Competitors we must outperform:** BridgeAthletic, TrainHeroic, TeamBuildr, CoachMePlus.
 
 ### Tech Stack (Do NOT Change)
+
 - Next.js 14.2 App Router + React 18.3 + TypeScript
 - PostgreSQL via Prisma ORM (Vercel Postgres)
 - Custom JWT auth (HttpOnly cookies, 7-day expiry, bcrypt)
@@ -22,6 +23,7 @@ This is **Podium Throws**, a subscription coaching SaaS for Olympic-level track 
 - Custom components: RPE slider, plate calculator, rest timer, voice recorder/player, video annotator, shimmer skeletons
 
 ### Key Directories
+
 ```
 src/app/(auth)/              — login, register, forgot/reset-password
 src/app/(dashboard)/coach/   — all coach pages
@@ -35,11 +37,13 @@ prisma/seed.ts               — test data seeder
 ```
 
 ### Database Migrations
+
 - **Local dev:** `npm run db:migrate` — creates and applies migrations via `prisma migrate dev`
 - **Production (build):** `prisma migrate deploy` — applies pending migrations only, never creates new ones
 - **Do NOT use `prisma db push`** in production — it can silently drop data
 
 ### Test Accounts (after db:seed)
+
 - Coach: coach@example.com / coach123
 - Athlete 1: athlete1@example.com / athlete123
 - Athlete 2: athlete2@example.com / athlete123
@@ -51,26 +55,30 @@ prisma/seed.ts               — test data seeder
 The entire app implements Dr. Anatoliy Bondarchuk's Transfer of Training methodology. These rules are NON-NEGOTIABLE and must be enforced in any code that touches throws sessions, exercise selection, or implement sequencing:
 
 ### Implement Weight Sequencing
+
 **DESCENDING weight order is the ONLY correct sequence for natural athletes.**
 
-| Sequence | Status |
-|---|---|
-| 9kg → 8kg → 7.26kg (heavy → comp) | ✅ CORRECT |
-| 8kg only (single implement) | ✅ CORRECT |
-| 6kg only, no heavy same day | ✅ CORRECT |
-| 6kg → 8kg (ascending) | ❌ FORBIDDEN — causes 2-4m performance decrease |
-| 7.26kg → 8kg (comp before heavy) | ❌ FORBIDDEN |
-| Any light implement before any heavy implement | ❌ FORBIDDEN |
+| Sequence                                       | Status                                          |
+| ---------------------------------------------- | ----------------------------------------------- |
+| 9kg → 8kg → 7.26kg (heavy → comp)              | ✅ CORRECT                                      |
+| 8kg only (single implement)                    | ✅ CORRECT                                      |
+| 6kg only, no heavy same day                    | ✅ CORRECT                                      |
+| 6kg → 8kg (ascending)                          | ❌ FORBIDDEN — causes 2-4m performance decrease |
+| 7.26kg → 8kg (comp before heavy)               | ❌ FORBIDDEN                                    |
+| Any light implement before any heavy implement | ❌ FORBIDDEN                                    |
 
 **Source:** Volume IV, p.114-117. All natural athletes in the study DECREASED 2-4 meters with ascending sequences.
 
 ### Session Structure
+
 ```
 Throwing Block 1 (heaviest) → Strength Block → Throwing Block 2 (lighter) → Strength Block
 ```
+
 NEVER two consecutive throwing blocks. Strength blocks between throwing blocks enable passive activation transfer.
 
 ### 15-20% Weight Differential Rule
+
 Paired implements differing by more than 15-20% from competition weight create separate adaptations, not transfer. Flag these.
 
 If you see ANY code that sequences light → heavy implements, it is WRONG. Fix it immediately.
@@ -80,24 +88,28 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 ## Workflow Orchestration
 
 ### 1. Plan Node Default
+
 - Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
 - If something goes sideways, STOP and re-plan immediately — don't keep pushing
 - Use plan mode for verification steps, not just building
 - Write detailed specs upfront to reduce ambiguity
 
 ### 2. Subagent Strategy
+
 - Use subagents liberally to keep main context window clean
 - Offload research, exploration, and parallel analysis to subagents
 - For complex problems, throw more compute at it via subagents
 - One task per subagent for focused execution
 
 ### 3. Self-Improvement Loop
+
 - After ANY correction from the user: update `tasks/lessons.md` with the pattern
 - Write rules for yourself that prevent the same mistake
 - Ruthlessly iterate on these lessons until mistake rate drops
 - Review lessons at session start for relevant project
 
 ### 4. Verification Before Done
+
 - Never mark a task complete without proving it works
 - Diff behavior between main and your changes when relevant
 - Ask yourself: "Would a staff engineer approve this?"
@@ -105,12 +117,14 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 - Run `tsc --noEmit` after any code changes
 
 ### 5. Demand Elegance (Balanced)
+
 - For non-trivial changes: pause and ask "is there a more elegant way?"
 - If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
 - Skip this for simple, obvious fixes — don't over-engineer
 - Challenge your own work before presenting it
 
 ### 6. Autonomous Bug Fixing
+
 - When given a bug report: just fix it. Don't ask for hand-holding
 - Point at logs, errors, failing tests — then resolve them
 - Zero context switching required from the user
@@ -150,7 +164,9 @@ These rules exist because each one was violated in a recent bug. Read them befor
 // ❌ NEVER
 try {
   await save();
-} catch { /* ignore */ }
+} catch {
+  /* ignore */
+}
 
 // ❌ ALSO BAD — silent on the user's side
 try {
@@ -183,6 +199,7 @@ All API routes MUST return one of these two shapes:
 ```
 
 NOT:
+
 - `{ ok: true, data: T }` (the legacy shape — being phased out)
 - `{ success: true, user: T }` or other ad-hoc keys
 - `{ success: true, ...flat fields }`
@@ -209,10 +226,13 @@ const result = payload.data; // ← always read from .data
 const weight = parseFloat(input) || null;
 
 // ✅ ALWAYS — preserves 0 as a valid value
-const weight = input === "" || input == null ? null : (() => {
-  const n = parseFloat(input);
-  return Number.isFinite(n) ? n : null;
-})();
+const weight =
+  input === "" || input == null
+    ? null
+    : (() => {
+        const n = parseFloat(input);
+        return Number.isFinite(n) ? n : null;
+      })();
 ```
 
 **Why:** Athletes use bodyweight (0kg), unweighted implements (0kg), and zero RPE for recovery days. `value || null` silently destroys these values. The throws session save was storing "no implement" for athletes who explicitly entered 0.
@@ -223,10 +243,10 @@ const weight = input === "" || input == null ? null : (() => {
 
 ```typescript
 // ❌ FAILS when client sends null (e.g., from React form state)
-field: z.number().optional()
+field: z.number().optional();
 
 // ✅ Accepts both null and undefined
-field: z.number().nullable().optional()
+field: z.number().nullable().optional();
 ```
 
 **Why:** React form state typically uses `null` for unset values (e.g., `useState<number | null>(null)`). When this hits a Zod schema with `.optional()` (which only accepts `undefined`), validation fails with no obvious error. This has caused at least 3 separate "save doesn't work" bugs in this codebase.
@@ -237,18 +257,12 @@ field: z.number().nullable().optional()
 
 ```typescript
 // ❌ Old sync pattern — works but inconsistent
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await prisma.session.findUnique({ where: { id: params.id } });
 }
 
 // ✅ New async pattern — required by Next.js 15+, used throughout this codebase
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await prisma.session.findUnique({ where: { id } });
 }
@@ -277,6 +291,7 @@ const { event, drillLogs } = parsed;
 ### 7. Form Submit Buttons Need User Feedback After Save
 
 After a successful save, the user MUST see feedback through at least TWO of these channels:
+
 - A toast notification (`toast.success("Saved")`)
 - A visual state change (form replaced by success card, button color flip, etc.)
 - A redirect or navigation
@@ -321,17 +336,20 @@ async function handleSave() {
 ## Design System Rules (ALWAYS Follow)
 
 ### Cards
+
 - **Navigable cards** (href, onClick that navigates, or opens detail view): ALWAYS add `card-interactive` CSS class. This gives hover scale (1.02), touch press-down (0.97) with spring-back, cursor pointer, and respects `prefers-reduced-motion`.
 - **Static display cards** (data, settings, forms): Use plain `card` CSS class. No interactive effects.
 - **Pattern**: `<Link className="card card-interactive p-4 ...">` or `<Card href="..." interactive>`.
 - **Never** add manual `hover:shadow-md transition-shadow` to card Links — use `card-interactive` instead.
 
 ### Icons
+
 - **Always Lucide React** — no inline SVGs, no other icon libraries.
 - `strokeWidth={1.75}` on all icons (consistent weight).
 - Add `aria-hidden="true"` to decorative icons.
 
 ### Color Tokens
+
 - One brand accent (amber/gold `#FFC800`) + semantic status colors + neutral dark surfaces.
 - Use CSS custom properties: `var(--card-bg)`, `var(--card-border)`, `var(--foreground)`, `var(--muted)`.
 - Brand/accent: `text-primary-500`, `bg-primary-500`, or `text-brand` for the single gold accent.
@@ -340,6 +358,7 @@ async function handleSave() {
 - **Never hardcode hex colors** — use the theme tokens.
 
 ### Typography
+
 - Headings: `font-heading` (Chakra Petch) — applied automatically to h1-h6.
 - Body: `font-body` (DM Sans) — applied automatically to body.
 - Data/numbers: `font-mono` (IBM Plex Mono) — distances, timestamps, statistics, IDs, code only.
@@ -348,11 +367,13 @@ async function handleSave() {
 - **Never use `font-mono` for prose, labels, descriptions, or marketing copy** — only for data values.
 
 ### Responsive
+
 - Mobile-first approach with `sm:`, `md:`, `lg:` breakpoints.
 - Tables on desktop → stacked cards on mobile.
 - Horizontal scroll with `overflow-x-auto custom-scrollbar` for card rows.
 
 ### Hover & Interaction States
+
 - Card hover: `hover:bg-surface-50 dark:hover:bg-surface-800/50` for row items.
 - Interactive cards: `card-interactive` class (CSS handles everything).
 - **`<Button>` component** has spring bounce on click: primary/danger variants get `0.95→1.03→1.0` spring (300ms), secondary/outline/ghost get a subtle `0.97→1.0` settle (200ms). This is automatic — no extra props needed.
@@ -360,6 +381,7 @@ async function handleSave() {
 - Links: `text-primary-500 hover:underline` for inline text links.
 
 ### Confirmations
+
 - **High-stakes actions on mobile** (submit session, delete data): Use `<SlideToConfirm>` from `src/components/ui/SlideToConfirm.tsx`. Shows on mobile (`sm:hidden`), falls back to standard button or `ConfirmDialog` on desktop (`hidden sm:flex`).
 - **Props**: `label` (text in track), `onConfirm` (callback), `disabled`, `variant` (`"confirm"` = amber, `"destructive"` = red).
 - **Pattern**: Wrap both in the same parent — `<div className="sm:hidden"><SlideToConfirm /></div>` + `<div className="hidden sm:flex">...buttons...</div>`.
@@ -367,9 +389,11 @@ async function handleSave() {
 - **Desktop**: Keep `ConfirmDialog` or `window.confirm()` for destructive actions. `SlideToConfirm` is mobile-only.
 
 ### Numeric Display
+
 Two components handle numeric animation — choose based on the use case:
 
 **`<AnimatedNumber>`** — One-shot count-up on viewport entry (dashboard stats, hero numbers):
+
 - Any prominent numeric value (stat cards, hero numbers, scores, distances, ratios, percentages) MUST use `<AnimatedNumber>` from `src/components/ui/AnimatedNumber.tsx`.
 - **`StatCard` and `MiniStat` auto-animate**: Pass `value` as a `number` (not string) and animation happens automatically. Use `decimals` prop for decimal places (0 for counts, 1 for scores, 2 for distances/ratios).
 - **`ScoreIndicator` auto-animates**: All variants (circle, pill, badge) already include animated count-up.
@@ -379,6 +403,7 @@ Two components handle numeric animation — choose based on the use case:
 - **Never render raw numbers** for dashboard/detail page hero stats — always use `AnimatedNumber` or a component that wraps it.
 
 **`<NumberFlow>`** — Smooth transitions between value changes (sliders, timers, live totals):
+
 - Use for any number that changes while the user is interacting: RPE slider display, rest timer countdown, running throw counts, live weight totals.
 - Props: `value`, `decimals`, `suffix` ("kg", "m"), `prefix` ("$"), `duration` (default 400ms).
 - Applies `font-variant-numeric: tabular-nums` automatically so digits don't shift layout.
@@ -388,6 +413,7 @@ Two components handle numeric animation — choose based on the use case:
 **Both respect** `prefers-reduced-motion: reduce` — animation is skipped automatically.
 
 ### Tabs
+
 - Use `<Tabs>`, `<TabList>`, `<TabTrigger>`, `<TabPanel>` from `src/components/ui/Tabs.tsx`.
 - **Underline variant** has a sliding indicator that smoothly translates to the active tab (250ms ease-out). Do NOT manually add `border-b-2` to tab triggers — the indicator handles it.
 - **Content transitions are automatic**: outgoing panel fades out (150ms), incoming fades in with slide-up (200ms). No extra code needed.
@@ -395,6 +421,7 @@ Two components handle numeric animation — choose based on the use case:
 - Three variants: `"underline"` (default), `"pills"`, `"boxed"`. Pass the variant to both `<TabList>` and each `<TabTrigger>`.
 
 ### Toasts & Celebrations
+
 - Use `useToast()` from `src/components/ui/Toast.tsx` for all notifications.
 - **Standard variants**: `success()`, `error()`, `warning()`, `info()` — each has appropriate duration and color.
 - **Celebration variant**: `celebration(title, { description?, highlight?, duration? })` — amber/gold gradient background, pulsing trophy icon, CSS confetti burst, large highlight text for PR distances.
@@ -403,17 +430,20 @@ Two components handle numeric animation — choose based on the use case:
 - **Legacy compat**: `useToast()` from `src/components/toast.tsx` also supports `toast(message, "celebration")`.
 
 ### Progress Bars
+
 - `<ProgressBar>` auto-animates: fill starts at 0% and grows to target over 800ms with a gradient shimmer sweep, triggered by IntersectionObserver on viewport entry. No extra props needed — `animate` defaults to `true`.
 - **Value changes after entrance** animate smoothly with 300ms ease-out (e.g. upload progress ticking up).
 - Pass `animate={false}` only for bars that must render at their target instantly (rare).
 - Respects `prefers-reduced-motion`.
 
 ### Loading States
+
 - **DashboardWidget**: Pass `loading={true}` to show shimmer skeletons, then `loading={false}` to fade in real content with slide-up transition.
 - **Skeleton → content pattern**: When data loads asynchronously in a widget, always transition from skeleton to content with a fade+slide, not a hard swap.
 - Use the existing `shimmer` CSS class for skeleton placeholders.
 
 ### Scroll Progress
+
 - **Any page with significant scroll depth** (wizards, long forms, detail pages with 3+ sections): Add `<ScrollProgressBar />` from `src/components/ui/ScrollProgressBar.tsx` as the first child inside the page wrapper.
 - 3px amber/gold gradient bar fixed at the top of the viewport, fills left→right based on scroll position.
 - Self-hides when the page isn't scrollable. `pointer-events: none`, `z-index: 9999`.
@@ -421,6 +451,7 @@ Two components handle numeric animation — choose based on the use case:
 - **Pattern**: `<div className="..."><ScrollProgressBar />{/* page content */}</div>`.
 
 ### Animation
+
 - Page transitions: handled by `src/app/(dashboard)/coach/template.tsx` (framer-motion).
 - Entry animations: `animate-fade-slide-in`, `animate-spring-up`.
 - Animated numbers: `<AnimatedNumber>` for all visible numeric stats (see Numeric Display above).
@@ -449,3 +480,79 @@ Every screen must pass this test:
 > "If an Olympic throws coach opened this for the first time, would they immediately understand what they're looking at, trust the data, and feel like this tool was built specifically for them?"
 
 If any screen makes you hesitate — fix it until the answer is yes.
+
+---
+
+## Notion Activity Logging (AUTOMATIC)
+
+**After completing ANY meaningful task** (feature, bug fix, refactor, research, etc.), log it to the Notion Activity Log database. This is non-optional — every session's work must be tracked.
+
+### Database Reference
+
+- **Activity Log data_source_id:** `ff7d9578-fe8d-4d1e-bfcb-884abd75cee2` (every task logged here)
+- **Prompts DB data_source_id:** `3a39fca6-f655-47bd-b878-0bd00dc5e0e7` (queued + completed prompts)
+- **Bug Tracker data_source_id:** `7fe0a5de-b0cc-45bc-b671-be4411e41e14` (reported bugs)
+- **Release Log data_source_id:** `360602a3-6352-4561-9977-1913eb644acb` (every production deploy)
+- **Decision Log data_source_id:** `91ba4b7b-d8f2-4307-bfff-13397d85f529` (architectural decisions)
+- **User Feedback data_source_id:** `d92a0779-d139-427c-be30-24cded5707c2` (tester feedback)
+- **Project Hub page:** `3417789a96bc8158a90ec7c7037a0ef5`
+
+### When to Log
+
+- After completing a feature, bug fix, refactor, or any code change
+- After completing research or investigation (even if no code changed)
+- After a failed attempt that produced useful findings
+- After schema migrations, deployment, or infrastructure changes
+- **Do NOT log** trivial actions (reading files, answering questions, no meaningful work done)
+
+### How to Log
+
+Use the Notion MCP tool `mcp__claude_ai_Notion__notion-create-pages` with parent `{"type": "data_source_id", "data_source_id": "ff7d9578-fe8d-4d1e-bfcb-884abd75cee2"}`.
+
+Required fields:
+
+```
+Task:          Short title of what was done (imperative: "Add proxy profiles", "Fix JWT validation")
+Category:      One of: Feature, Bug Fix, Refactor, Accessibility, Security, Performance, UI/Design, Database, DevOps, Research, Documentation, Testing
+Status:        Completed | In Progress | Blocked | Reverted
+Impact:        Critical | High | Medium | Low
+Description:   1-3 sentences on what was done and why
+Date:          Today's date (use date:Date:start field with ISO format)
+```
+
+Optional fields:
+
+```
+Files Changed: Key file paths modified (abbreviated, not exhaustive)
+Commit:        Git commit hash if a commit was made
+Branch:        Current git branch name
+```
+
+### When to Update the Prompts Database
+
+If a prompt from the Claude Code Prompts database was executed during this session, update its Status from "To Run" to "Completed" and set the Date Completed field.
+
+### When to Log to Other Databases
+
+**Bug Tracker** (`7fe0a5de-b0cc-45bc-b671-be4411e41e14`):
+
+- When the user reports a bug \u2014 create an entry with severity, reproduction steps, area
+- When fixing a bug \u2014 set Status to "Fixed", link the Activity Log entry via "Fixed By Activity" relation, set Date Fixed
+- When discovering a bug during development \u2014 log it even if fixing immediately
+
+**Release Log** (`360602a3-6352-4561-9977-1913eb644acb`):
+
+- After every production deployment \u2014 create entry with commit range, summary of what shipped, any incidents
+- Include commit range as "from_hash..to_hash" for traceability
+- Link to Activity Log entries via "Activities Included" relation
+
+**Decision Log** (`91ba4b7b-d8f2-4307-bfff-13397d85f529`):
+
+- When a significant architectural, tech stack, or product decision is made \u2014 capture Context, Decision, Alternatives, Consequences
+- Especially important for decisions that affect the whole app (auth approach, database choice, deployment strategy, domain rules)
+- Don't log trivial decisions (which icon to use, variable naming)
+
+**User Feedback** (`d92a0779-d139-427c-be30-24cded5707c2`):
+
+- When the user reports tester feedback or their own review findings \u2014 create entries with source, sentiment, area, priority
+- Multiple findings from a single session = multiple entries (one per distinct issue)

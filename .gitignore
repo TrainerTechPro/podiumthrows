@@ -43,6 +43,7 @@ next-env.d.ts
 .claude/settings.local.json
 .claude/worktrees/
 .claude/skills/
+.mcp.json
 
 # Dev artifacts
 .superpowers/

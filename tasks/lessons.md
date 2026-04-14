@@ -12,3 +12,12 @@ Review this file at the start of every session.
 - ALWAYS run tsc --noEmit after code changes
 - ALWAYS preserve warm amber/gold color palette — don't introduce new colors
 -->
+
+- **Native-binding deploys require explicit target declaration AND a post-deploy smoke test.** When the deploy bundle includes `.node` files (Prisma query engines, bcrypt native, sharp, canvas, etc.), `prisma generate` / `npm install` on the developer's machine only produces binaries for the local arch. The prebuilt deploy flow (`./scripts/deploy.sh`) ships those local artifacts to Vercel without re-compiling on the target runtime. If Vercel's runtime arch doesn't match the developer's, the bundle deploys successfully but every request 500s.
+  - Prior incident: 2026-04-13. Vercel silently moved Fluid Compute to Linux ARM64 around April 11. Prebuilt bundles compiled on macOS ARM64 shipped `darwin-arm64` Prisma engine; runtime needed `linux-arm64-openssl-3.0.x`. Login route 500'd for all users. /coach/dashboard 500'd (PODIUM-THROWS-5, 13 events over 2 days). Structured logger suppressed stack traces in prod (since fixed), Sentry server SDK was a no-op (missing DSN + missing `onRequestError`; both since fixed), so the actual error hid for 2+ days.
+  - Preventive measures now in place:
+    - `prisma/schema.prisma` declares `binaryTargets` for both Linux arm64 and rhel-openssl-3.0.x (x64).
+    - `./scripts/deploy.sh` runs a post-deploy smoke test against `/api/auth/login` and auto-rolls-back on non-401.
+    - `./scripts/deploy.sh prod` uses Vercel's cloud builder (not prebuilt), so `prisma generate` runs on Linux matching the runtime. Preview deploys still use prebuilt for speed.
+    - `src/lib/logger.ts` logs stacks in production.
+    - `src/instrumentation.ts` exports `onRequestError`, and Sentry configs fall back to `NEXT_PUBLIC_SENTRY_DSN` — server-side RSC errors now reach Sentry with real stacks.
