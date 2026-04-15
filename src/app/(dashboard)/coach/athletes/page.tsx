@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { AddAthleteButton } from "./_invite";
+import { BulkInviteBar } from "./_bulk-invite-bar";
 import { CsvImportButton } from "./_csv-import-button";
 import { TeamFilter } from "./_team-filter";
 import { RosterClient } from "./_roster-client";
@@ -35,10 +36,22 @@ export default async function AthletesPage({
   // Fetch teams for the filter dropdown
   const teams = await prisma.team.findMany({
     where: { coachId: coach.id },
-    select: { id: true, name: true, _count: { select: { members: true } } },
-    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      name: true,
+      parentTeamId: true,
+      order: true,
+      _count: { select: { members: true } },
+    },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
-  const teamOptions = teams.map((t) => ({ id: t.id, name: t.name, memberCount: t._count.members }));
+  const teamOptions = teams.map((t) => ({
+    id: t.id,
+    name: t.name,
+    parentTeamId: t.parentTeamId,
+    order: t.order,
+    memberCount: t._count.members,
+  }));
 
   // Resolve teamId: URL param takes precedence, then saved preference
   let resolvedTeamId = searchParams.teamId ?? null;
@@ -221,13 +234,16 @@ export default async function AthletesPage({
 
       {/* Invitations tab */}
       {tab === "invitations" && (
-        <InvitationsClient
-          initialInvitations={invitations.map((inv) => ({
-            ...inv,
-            expiresAt: inv.expiresAt.toISOString(),
-            createdAt: inv.createdAt.toISOString(),
-          }))}
-        />
+        <>
+          <BulkInviteBar data={sorted} />
+          <InvitationsClient
+            initialInvitations={invitations.map((inv) => ({
+              ...inv,
+              expiresAt: inv.expiresAt.toISOString(),
+              createdAt: inv.createdAt.toISOString(),
+            }))}
+          />
+        </>
       )}
 
       {/* Throws tab */}

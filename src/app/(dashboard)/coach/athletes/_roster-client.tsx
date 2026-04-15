@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { AthletesTable } from "./_table";
-import { BulkInviteBar } from "./_bulk-invite-bar";
 import type { AthleteRosterItem } from "@/lib/data/coach";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
@@ -280,7 +279,6 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
         </div>
       </div>
 
-      <BulkInviteBar data={filtered} />
       <AthletesTable data={filtered} />
     </div>
   );
