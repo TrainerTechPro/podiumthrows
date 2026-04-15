@@ -150,6 +150,10 @@ export function AddAthleteButton({
   const [error, setError] = useState("");
   const [canShare, setCanShare] = useState(false);
   const [sentViaEmail, setSentViaEmail] = useState(false);
+  /// True when coach chose email mode but Resend returned emailSent:false.
+  /// The invitation still exists (token in response) — the coach can copy
+  /// the link — but we must NOT claim the email was delivered.
+  const [emailDeliveryFailed, setEmailDeliveryFailed] = useState(false);
 
   const atLimit = planLimit !== Infinity && athleteCount >= planLimit;
   const success = !!inviteLink;
@@ -168,6 +172,7 @@ export function AddAthleteButton({
     setEmail("");
     setCopied(false);
     setSentViaEmail(false);
+    setEmailDeliveryFailed(false);
     setMode("email");
   }
 
@@ -271,7 +276,12 @@ export function AddAthleteButton({
       const token = data.data?.token;
       const link = `${window.location.origin}/athletes/claim/${token}`;
       setInviteLink(link);
-      setSentViaEmail(inviteMode === "email");
+      // Delivery status comes from the server's emailSent flag, NOT the
+      // request mode. If Resend fails, the invitation still exists and the
+      // link is valid, but claiming "Email delivered" would mislead the coach.
+      const deliverySucceeded = data.emailSent === true;
+      setSentViaEmail(inviteMode === "email" && deliverySucceeded);
+      setEmailDeliveryFailed(inviteMode === "email" && !deliverySucceeded);
       setEmail("");
       setCanShare(typeof navigator !== "undefined" && !!navigator.share);
     } catch (err) {
@@ -314,6 +324,7 @@ export function AddAthleteButton({
     setEmail("");
     setCopied(false);
     setSentViaEmail(false);
+    setEmailDeliveryFailed(false);
   }
 
   // Footer is only shown for the Create tab and the Send Invite (email) flow.
@@ -491,31 +502,51 @@ export function AddAthleteButton({
           <TabPanel id="invite">
             {success ? (
               <div className="space-y-5 py-1">
-                {/* Success header */}
+                {/* Success header — three states: emailed, link-only, email-failed */}
                 <div className="text-center py-2">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-2">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#10b981"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </div>
-                  <p className="font-semibold text-[var(--foreground)]">
-                    {sentViaEmail ? "Invitation sent!" : "Invite link created!"}
-                  </p>
-                  <p className="text-sm text-muted mt-1">
-                    {sentViaEmail
-                      ? "Email delivered. You can also share the link directly."
-                      : "Share this one-time link with your athlete."}
-                  </p>
+                  {emailDeliveryFailed ? (
+                    <>
+                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-2">
+                        <AlertTriangle
+                          className="w-6 h-6 text-amber-600 dark:text-amber-400"
+                          strokeWidth={1.75}
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <p className="font-semibold text-[var(--foreground)]">
+                        Email couldn&apos;t be delivered
+                      </p>
+                      <p className="text-sm text-muted mt-1">
+                        The invitation is valid — share the link below directly with your athlete.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-2">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#10b981"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                      <p className="font-semibold text-[var(--foreground)]">
+                        {sentViaEmail ? "Invitation sent!" : "Invite link created!"}
+                      </p>
+                      <p className="text-sm text-muted mt-1">
+                        {sentViaEmail
+                          ? "Email delivered. You can also share the link directly."
+                          : "Share this one-time link with your athlete."}
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Action buttons */}
