@@ -5,12 +5,20 @@ import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseBody, RegisterClaimSchema } from "@/lib/api-schemas";
 import { hashInvitationToken } from "@/lib/invitation-token";
+import { logAudit, auditRequestInfo } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
+  const auditInfo = auditRequestInfo(request);
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const ip = auditInfo.ip;
     const rl = await rateLimit(`register-claim:${ip}`, { maxAttempts: 5, windowMs: 60_000 });
     if (!rl.success) {
+      void logAudit({
+        action: "ATHLETE_CLAIM_ATTEMPT",
+        resource: "invitation:unknown",
+        metadata: { reason: "rate_limited" },
+        ...auditInfo,
+      });
       return NextResponse.json(
         { success: false, error: "Too many requests. Please try again later." },
         { status: 429 }
@@ -30,6 +38,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!invitation || invitation.status !== "PENDING") {
+      void logAudit({
+        action: "ATHLETE_CLAIM_ATTEMPT",
+        resource: invitation ? `invitation:${invitation.id}` : "invitation:unknown",
+        metadata: { reason: invitation ? `status_${invitation.status}` : "token_not_found" },
+        ...auditInfo,
+      });
       return NextResponse.json(
         { success: false, error: "Invalid or expired invite" },
         { status: 400 }
@@ -37,6 +51,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (invitation.expiresAt < new Date()) {
+      void logAudit({
+        action: "ATHLETE_CLAIM_ATTEMPT",
+        resource: `invitation:${invitation.id}`,
+        metadata: { reason: "expired", expiresAt: invitation.expiresAt.toISOString() },
+        ...auditInfo,
+      });
       return NextResponse.json(
         { success: false, error: "This invite has expired. Ask your coach to send a new one." },
         { status: 410 }
@@ -44,6 +64,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!invitation.athleteProfileId || !invitation.athleteProfile) {
+      void logAudit({
+        action: "ATHLETE_CLAIM_ATTEMPT",
+        resource: `invitation:${invitation.id}`,
+        metadata: { reason: "no_athlete_profile" },
+        ...auditInfo,
+      });
       return NextResponse.json(
         { success: false, error: "This invite is not linked to an athlete profile" },
         { status: 400 }
@@ -55,6 +81,12 @@ export async function POST(request: NextRequest) {
       where: { email: normalizedEmail },
     });
     if (existingUser && existingUser.id !== invitation.athleteProfile.userId) {
+      void logAudit({
+        action: "ATHLETE_CLAIM_ATTEMPT",
+        resource: `invitation:${invitation.id}`,
+        metadata: { reason: "email_conflict" },
+        ...auditInfo,
+      });
       return NextResponse.json(
         { success: false, error: "Email is already in use" },
         { status: 409 }
@@ -108,6 +140,18 @@ export async function POST(request: NextRequest) {
     const hasGender = !!profile.gender && profile.gender !== "OTHER";
     const redirectTo = hasEvents && hasGender ? "/athlete/review-profile" : "/athlete/onboarding";
 
+    void logAudit({
+      userId: result.user.id,
+      action: "ATHLETE_CLAIM_SUCCESS",
+      resource: `invitation:${invitation.id}`,
+      metadata: {
+        athleteProfileId: result.profile.id,
+        coachId: invitation.coachId,
+        redirectTo,
+      },
+      ...auditInfo,
+    });
+
     const response = NextResponse.json({
       success: true,
       data: { userId: result.user.id, role: result.user.role, redirectTo },
@@ -119,6 +163,12 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     logger.error("Error claiming account", { context: "api", error });
+    void logAudit({
+      action: "ATHLETE_CLAIM_ATTEMPT",
+      resource: "invitation:unknown",
+      metadata: { reason: "server_error" },
+      ...auditInfo,
+    });
     return NextResponse.json({ success: false, error: "Failed to claim account" }, { status: 500 });
   }
 }
