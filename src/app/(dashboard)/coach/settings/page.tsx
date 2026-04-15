@@ -9,10 +9,9 @@ import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 
-const ProfilePictureEditor = dynamic(
-  () => import("@/components/profile-picture-editor"),
-  { ssr: false }
-);
+const ProfilePictureEditor = dynamic(() => import("@/components/profile-picture-editor"), {
+  ssr: false,
+});
 
 interface Profile {
   firstName: string;
@@ -42,7 +41,6 @@ interface ActivityItem {
 interface InvitationItem {
   id: string;
   email: string;
-  token: string;
   status: string;
   sport: string | null;
   position: string | null;
@@ -132,7 +130,6 @@ export default function CoachSettingsPage() {
   const [inviteForm, setInviteForm] = useState({ email: "", sport: "", position: "" });
   const [inviteSending, setInviteSending] = useState(false);
   const [inviteMessage, setInviteMessage] = useState<{ type: string; text: string } | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Portal loading
   const [portalLoading, setPortalLoading] = useState(false);
@@ -170,7 +167,9 @@ export default function CoachSettingsPage() {
               currentPeriodEnd: cp.currentPeriodEnd || null,
             });
             try {
-              const mods = cp.enabledModules ? JSON.parse(cp.enabledModules) : ["general", "throws"];
+              const mods = cp.enabledModules
+                ? JSON.parse(cp.enabledModules)
+                : ["general", "throws"];
               setEnabledModules(Array.isArray(mods) ? mods : ["general", "throws"]);
             } catch {
               setEnabledModules(["general", "throws"]);
@@ -247,7 +246,10 @@ export default function CoachSettingsPage() {
   }
 
   async function handleRemoveCoachProfilePicture() {
-    const res = await fetch("/api/coach/profile-picture", { method: "DELETE", headers: csrfHeaders() });
+    const res = await fetch("/api/coach/profile-picture", {
+      method: "DELETE",
+      headers: csrfHeaders(),
+    });
     const data = await res.json();
     if (data.success) {
       setProfile((p) => ({ ...p, avatarUrl: "" }));
@@ -337,7 +339,10 @@ export default function CoachSettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setInviteMessage({ type: "success", text: "Invitation sent! Share the link with your athlete." });
+        setInviteMessage({
+          type: "success",
+          text: "Invitation sent! Share the link with your athlete.",
+        });
         toast("Invitation sent successfully");
         setInviteForm({ email: "", sport: "", position: "" });
         loadInvitations();
@@ -370,13 +375,9 @@ export default function CoachSettingsPage() {
     }
   }
 
-  function copyInviteLink(invitation: InvitationItem) {
-    const baseUrl = window.location.origin;
-    const url = `${baseUrl}/register?invite=${invitation.token}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(invitation.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  }
+  // Note: coaches can no longer copy an existing invitation's link after
+  // creation — invitation tokens are now stored as SHA-256 hashes. The raw
+  // token lives only in the recipient's email. To re-share, revoke and reissue.
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "profile", label: "Profile" },
@@ -428,7 +429,9 @@ export default function CoachSettingsPage() {
       <div className="max-w-2xl">
         <div className="mb-8">
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Settings</h1>
-          <p className="text-surface-700 dark:text-surface-300 mt-1">Manage your profile, billing, and preferences</p>
+          <p className="text-surface-700 dark:text-surface-300 mt-1">
+            Manage your profile, billing, and preferences
+          </p>
         </div>
 
         {/* Tabs */}
@@ -475,7 +478,8 @@ export default function CoachSettingsPage() {
                       />
                     ) : (
                       <div className="w-[72px] h-[72px] rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl border-2 border-[var(--card-border)]">
-                        {profile.firstName?.[0] || "C"}{profile.lastName?.[0] || ""}
+                        {profile.firstName?.[0] || "C"}
+                        {profile.lastName?.[0] || ""}
                       </div>
                     )}
                     <button
@@ -484,9 +488,24 @@ export default function CoachSettingsPage() {
                       className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       title="Edit profile photo"
                     >
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-5 h-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -504,7 +523,9 @@ export default function CoachSettingsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="firstName" className="label">First Name</label>
+                    <label htmlFor="firstName" className="label">
+                      First Name
+                    </label>
                     <input
                       id="firstName"
                       type="text"
@@ -514,7 +535,9 @@ export default function CoachSettingsPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="label">Last Name</label>
+                    <label htmlFor="lastName" className="label">
+                      Last Name
+                    </label>
                     <input
                       id="lastName"
                       type="text"
@@ -525,7 +548,9 @@ export default function CoachSettingsPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="email" className="label">Email</label>
+                  <label htmlFor="email" className="label">
+                    Email
+                  </label>
                   <input
                     id="email"
                     type="email"
@@ -536,7 +561,9 @@ export default function CoachSettingsPage() {
                   <p className="text-xs text-muted mt-1">Email cannot be changed</p>
                 </div>
                 <div>
-                  <label htmlFor="bio" className="label">Bio</label>
+                  <label htmlFor="bio" className="label">
+                    Bio
+                  </label>
                   <textarea
                     id="bio"
                     value={profile.bio}
@@ -547,7 +574,9 @@ export default function CoachSettingsPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="organization" className="label">Organization</label>
+                  <label htmlFor="organization" className="label">
+                    Organization
+                  </label>
                   <input
                     id="organization"
                     type="text"
@@ -562,7 +591,12 @@ export default function CoachSettingsPage() {
                 {saved && (
                   <span className="text-sm text-green-600 font-medium flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     Saved
                   </span>
@@ -576,7 +610,9 @@ export default function CoachSettingsPage() {
 
             {/* Password Section */}
             <form onSubmit={handleChangePassword} className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Change Password</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+                Change Password
+              </h2>
               {pwMessage && (
                 <div
                   className={`mb-4 p-3 rounded-lg text-sm ${
@@ -591,7 +627,9 @@ export default function CoachSettingsPage() {
               )}
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="currentPassword" className="label">Current Password</label>
+                  <label htmlFor="currentPassword" className="label">
+                    Current Password
+                  </label>
                   <input
                     id="currentPassword"
                     type="password"
@@ -604,7 +642,9 @@ export default function CoachSettingsPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="newPassword" className="label">New Password</label>
+                  <label htmlFor="newPassword" className="label">
+                    New Password
+                  </label>
                   <input
                     id="newPassword"
                     type="password"
@@ -617,7 +657,9 @@ export default function CoachSettingsPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="confirmPassword" className="label">Confirm New Password</label>
+                  <label htmlFor="confirmPassword" className="label">
+                    Confirm New Password
+                  </label>
                   <input
                     id="confirmPassword"
                     type="password"
@@ -650,11 +692,15 @@ export default function CoachSettingsPage() {
               <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Current Plan</h2>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${planColors[subscription.plan] || planColors.FREE}`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-semibold ${planColors[subscription.plan] || planColors.FREE}`}
+                  >
                     {subscription.plan}
                   </span>
                   {subscription.plan === "FREE" ? (
-                    <span className="text-sm text-surface-700 dark:text-surface-300">Free Plan</span>
+                    <span className="text-sm text-surface-700 dark:text-surface-300">
+                      Free Plan
+                    </span>
                   ) : subscription.paymentFailedAt ? (
                     <span className="text-sm text-amber-500 font-medium">Past Due</span>
                   ) : subscription.cancelAtPeriodEnd ? (
@@ -680,14 +726,19 @@ export default function CoachSettingsPage() {
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-surface-700 dark:text-surface-300">Athletes</span>
                   <span className="text-[var(--foreground)] font-medium">
-                    {subscription.athleteCount} / {PLAN_LIMITS[subscription.plan] === Infinity ? "Unlimited" : PLAN_LIMITS[subscription.plan]}
+                    {subscription.athleteCount} /{" "}
+                    {PLAN_LIMITS[subscription.plan] === Infinity
+                      ? "Unlimited"
+                      : PLAN_LIMITS[subscription.plan]}
                   </span>
                 </div>
                 {PLAN_LIMITS[subscription.plan] !== Infinity && (
                   <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
                     <div
                       className="bg-amber-500 h-2 rounded-full transition-all"
-                      style={{ width: `${Math.min(100, (subscription.athleteCount / (PLAN_LIMITS[subscription.plan] || 1)) * 100)}%` }}
+                      style={{
+                        width: `${Math.min(100, (subscription.athleteCount / (PLAN_LIMITS[subscription.plan] || 1)) * 100)}%`,
+                      }}
                     />
                   </div>
                 )}
@@ -721,15 +772,51 @@ export default function CoachSettingsPage() {
               {subscription.plan === "FREE" && (
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Up to 3 athletes
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Session logging &amp; throw tracking
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Readiness check-ins
                   </li>
                 </ul>
@@ -737,19 +824,67 @@ export default function CoachSettingsPage() {
               {subscription.plan === "PRO" && (
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Up to 25 athletes
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Program builder
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     ACWR analytics
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Athlete progress exports
                   </li>
                 </ul>
@@ -757,19 +892,67 @@ export default function CoachSettingsPage() {
               {subscription.plan === "ELITE" && (
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Unlimited athletes
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Everything in Pro
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Video annotation (coming soon)
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    <svg
+                      className="w-4 h-4 text-green-500 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
                     Priority support
                   </li>
                 </ul>
@@ -782,9 +965,12 @@ export default function CoachSettingsPage() {
         {activeTab === "invitations" && (
           <div className="animate-spring-up space-y-6">
             <form onSubmit={handleSendInvite} className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Invite an Athlete</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+                Invite an Athlete
+              </h2>
               <p className="text-sm text-surface-700 dark:text-surface-300 mb-4">
-                Send an invitation link to an athlete. They&apos;ll be automatically linked to your account when they register.
+                Send an invitation link to an athlete. They&apos;ll be automatically linked to your
+                account when they register.
               </p>
               {inviteMessage && (
                 <div
@@ -799,7 +985,9 @@ export default function CoachSettingsPage() {
               )}
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="inviteEmail" className="label">Athlete Email</label>
+                  <label htmlFor="inviteEmail" className="label">
+                    Athlete Email
+                  </label>
                   <input
                     id="inviteEmail"
                     type="email"
@@ -812,7 +1000,9 @@ export default function CoachSettingsPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="inviteSport" className="label">Event (optional)</label>
+                    <label htmlFor="inviteSport" className="label">
+                      Event (optional)
+                    </label>
                     <input
                       id="inviteSport"
                       type="text"
@@ -823,7 +1013,9 @@ export default function CoachSettingsPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="invitePosition" className="label">Classification (optional)</label>
+                    <label htmlFor="invitePosition" className="label">
+                      Classification (optional)
+                    </label>
                     <input
                       id="invitePosition"
                       type="text"
@@ -843,17 +1035,33 @@ export default function CoachSettingsPage() {
             </form>
 
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Sent Invitations</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+                Sent Invitations
+              </h2>
               {invitations.length === 0 ? (
                 <div className="flex flex-col items-center text-center py-8 gap-2">
                   <div className="text-surface-300 dark:text-surface-600">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                       <polyline points="22,6 12,13 2,6" />
                     </svg>
                   </div>
-                  <p className="text-sm font-semibold text-[var(--foreground)]">No invitations sent</p>
-                  <p className="text-xs text-muted max-w-full sm:max-w-[220px]">Invite athletes from the Athletes page to grow your roster.</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">
+                    No invitations sent
+                  </p>
+                  <p className="text-xs text-muted max-w-full sm:max-w-[220px]">
+                    Invite athletes from the Athletes page to grow your roster.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -863,7 +1071,9 @@ export default function CoachSettingsPage() {
                       className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-[var(--muted-bg)] gap-2"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-[var(--foreground)] truncate">{inv.email}</p>
+                        <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                          {inv.email}
+                        </p>
                         <p className="text-xs text-surface-700 dark:text-surface-300">
                           {inv.sport && `${inv.sport}`}
                           {inv.sport && inv.position && " - "}
@@ -878,8 +1088,8 @@ export default function CoachSettingsPage() {
                             inv.status === "PENDING"
                               ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                               : inv.status === "ACCEPTED"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
                           }`}
                         >
                           {inv.status === "PENDING" && new Date(inv.expiresAt) < new Date()
@@ -887,12 +1097,7 @@ export default function CoachSettingsPage() {
                             : inv.status.charAt(0) + inv.status.slice(1).toLowerCase()}
                         </span>
                         {inv.status === "PENDING" && new Date(inv.expiresAt) >= new Date() && (
-                          <button
-                            onClick={() => copyInviteLink(inv)}
-                            className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
-                          >
-                            {copiedId === inv.id ? "Copied!" : "Copy Link"}
-                          </button>
+                          <span className="text-xs text-muted">Link delivered by email</span>
                         )}
                       </div>
                     </div>
@@ -907,16 +1112,30 @@ export default function CoachSettingsPage() {
         {activeTab === "activity" && (
           <div className="animate-spring-up">
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Recent Activity</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
+                Recent Activity
+              </h2>
               {activities.length === 0 ? (
                 <div className="flex flex-col items-center text-center py-8 gap-2">
                   <div className="text-surface-300 dark:text-surface-600">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                     </svg>
                   </div>
                   <p className="text-sm font-semibold text-[var(--foreground)]">No activity yet</p>
-                  <p className="text-xs text-muted max-w-full sm:max-w-[220px]">Account actions like sign-ins and athlete changes will appear here.</p>
+                  <p className="text-xs text-muted max-w-full sm:max-w-[220px]">
+                    Account actions like sign-ins and athlete changes will appear here.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -926,8 +1145,18 @@ export default function CoachSettingsPage() {
                       className="flex items-start gap-3 p-3 rounded-lg bg-[var(--muted-bg)]"
                     >
                       <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 mt-0.5">
-                        <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-4 h-4 text-amber-600 dark:text-amber-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1">
@@ -935,7 +1164,9 @@ export default function CoachSettingsPage() {
                           {ACTION_LABELS[act.action] || act.action}
                         </p>
                         {act.details && (
-                          <p className="text-xs text-surface-700 dark:text-surface-300 truncate">{act.details}</p>
+                          <p className="text-xs text-surface-700 dark:text-surface-300 truncate">
+                            {act.details}
+                          </p>
                         )}
                       </div>
                       <span className="text-xs text-muted shrink-0">
@@ -954,14 +1185,24 @@ export default function CoachSettingsPage() {
           <div className="animate-spring-up space-y-6">
             {/* Global Default Page */}
             <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">Default Landing Page</h2>
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">
+                Default Landing Page
+              </h2>
               <p className="text-sm text-surface-700 dark:text-surface-300 mb-5">
                 Choose which page opens when you first launch the app.
               </p>
               <div className="space-y-2">
                 {[
-                  { href: "/coach", label: "Coach Dashboard", desc: "General overview and metrics" },
-                  { href: "/coach/throws", label: "Throws Roster", desc: "Throws roster pulse view" },
+                  {
+                    href: "/coach",
+                    label: "Coach Dashboard",
+                    desc: "General overview and metrics",
+                  },
+                  {
+                    href: "/coach/throws",
+                    label: "Throws Roster",
+                    desc: "Throws roster pulse view",
+                  },
                   { href: "/coach/athletes", label: "Athletes", desc: "Your full roster" },
                   { href: "/coach/calendar", label: "Calendar", desc: "Scheduled sessions" },
                 ].map((page) => (
@@ -1019,14 +1260,19 @@ export default function CoachSettingsPage() {
                             type="radio"
                             name="throwsDefault"
                             value={page.href}
-                            checked={(preferences.workspaceDefaults?.throws ?? "/coach/throws") === page.href}
+                            checked={
+                              (preferences.workspaceDefaults?.throws ?? "/coach/throws") ===
+                              page.href
+                            }
                             onChange={() =>
                               handleSavePreferences({
                                 workspaceDefaults: { throws: page.href },
                               })
                             }
                           />
-                          <span className="text-sm font-medium text-[var(--foreground)]">{page.label}</span>
+                          <span className="text-sm font-medium text-[var(--foreground)]">
+                            {page.label}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -1046,13 +1292,28 @@ export default function CoachSettingsPage() {
 
               {trainingEnabled ? (
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-success-50 dark:bg-success-500/10 border border-success-200 dark:border-success-500/20">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success-600 dark:text-success-400 shrink-0" aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-success-600 dark:text-success-400 shrink-0"
+                    aria-hidden="true"
+                  >
                     <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
                     <polyline points="22 4 12 14.01 9 11.01" />
                   </svg>
                   <div>
-                    <p className="text-sm font-semibold text-success-700 dark:text-success-400">Training Mode Active</p>
-                    <p className="text-xs text-success-600/80 dark:text-success-400/70">Switch between Coach and Training using the toggle in the top bar.</p>
+                    <p className="text-sm font-semibold text-success-700 dark:text-success-400">
+                      Training Mode Active
+                    </p>
+                    <p className="text-xs text-success-600/80 dark:text-success-400/70">
+                      Switch between Coach and Training using the toggle in the top bar.
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -1067,7 +1328,10 @@ export default function CoachSettingsPage() {
                       const data = await res.json();
                       if (data.success) {
                         setTrainingEnabled(true);
-                        toast("Training Mode enabled! Use the toggle in the header to switch.", "success");
+                        toast(
+                          "Training Mode enabled! Use the toggle in the header to switch.",
+                          "success"
+                        );
                       } else {
                         toast(data.error || "Failed to enable Training Mode", "error");
                       }
@@ -1087,7 +1351,17 @@ export default function CoachSettingsPage() {
                     </>
                   ) : (
                     <>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
                         <path d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       Enable Training Mode
@@ -1103,7 +1377,14 @@ export default function CoachSettingsPage() {
             {prefSaving && (
               <div className="text-xs text-muted flex items-center gap-1.5">
                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
                 Saving...

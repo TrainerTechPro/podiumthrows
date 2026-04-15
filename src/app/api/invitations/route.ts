@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes } from "crypto";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { PLAN_LIMITS } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
+import { generateInvitationToken } from "@/lib/invitation-token";
 
 /* ── GET — list all invitations for the authenticated coach ── */
 export async function GET() {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -19,9 +19,12 @@ export async function GET() {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
+    // Note: `token` is intentionally excluded from the response.
+    // After POST-creation, only the recipient's email holds the raw token;
+    // the DB stores only the hash. Re-sharing a link requires a new invite.
     const invitations = await prisma.invitation.findMany({
       where: { coachId: coach.id },
       orderBy: { createdAt: "desc" },
@@ -29,7 +32,6 @@ export async function GET() {
       select: {
         id: true,
         email: true,
-        token: true,
         status: true,
         expiresAt: true,
         createdAt: true,
@@ -39,7 +41,10 @@ export async function GET() {
     return NextResponse.json({ success: true, data: invitations });
   } catch (err) {
     logger.error("GET /api/invitations", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Failed to fetch invitations." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch invitations." },
+      { status: 500 }
+    );
   }
 }
 
@@ -49,7 +54,7 @@ export async function POST(req: NextRequest) {
     /* ── Auth ── */
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -62,7 +67,7 @@ export async function POST(req: NextRequest) {
       },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
     /* ── Plan limit (exclude self-coached athlete created by Training Mode) ── */
@@ -90,7 +95,10 @@ export async function POST(req: NextRequest) {
 
     if (mode === "email") {
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return NextResponse.json({ success: false, error:"A valid email address is required." }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: "A valid email address is required." },
+          { status: 400 }
+        );
       }
 
       /* ── Check if athlete already exists for this coach ── */
@@ -102,7 +110,7 @@ export async function POST(req: NextRequest) {
       });
       if (existingAthlete) {
         return NextResponse.json(
-          { success: false, error:"An athlete with this email is already on your roster." },
+          { success: false, error: "An athlete with this email is already on your roster." },
           { status: 409 }
         );
       }
@@ -119,7 +127,10 @@ export async function POST(req: NextRequest) {
     }
 
     /* ── Create invitation ── */
-    const token = randomBytes(32).toString("hex");
+    // We store only the hash in the DB. The raw token is returned once in
+    // this response (for the client's "copy link" clipboard) and also sent
+    // via email. Neither persists server-side after this handler returns.
+    const { raw, hashed } = generateInvitationToken();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     const invitation = await prisma.invitation.create({
@@ -127,14 +138,13 @@ export async function POST(req: NextRequest) {
         coachId: coach.id,
         ...(email ? { email } : {}),
         ...(athleteProfileId ? { athleteProfileId } : {}),
-        token,
+        token: hashed,
         status: "PENDING",
         expiresAt,
       },
       select: {
         id: true,
         email: true,
-        token: true,
         status: true,
         expiresAt: true,
         createdAt: true,
@@ -147,7 +157,7 @@ export async function POST(req: NextRequest) {
       try {
         const { sendInvitationEmail } = await import("@/lib/email");
         const coachName = `${coach.firstName} ${coach.lastName}`;
-        await sendInvitationEmail(email, coachName, token);
+        await sendInvitationEmail(email, coachName, raw);
         emailSent = true;
       } catch (emailErr) {
         logger.error("POST /api/invitations Email send failed", {
@@ -166,10 +176,17 @@ export async function POST(req: NextRequest) {
       ...auditRequestInfo(req),
     });
 
-    return NextResponse.json({ success: true, data: invitation, emailSent });
+    return NextResponse.json({
+      success: true,
+      data: { ...invitation, token: raw },
+      emailSent,
+    });
   } catch (err) {
     logger.error("POST /api/invitations", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ success: false, error:`Failed to create invitation: ${message}` }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: `Failed to create invitation: ${message}` },
+      { status: 500 }
+    );
   }
 }

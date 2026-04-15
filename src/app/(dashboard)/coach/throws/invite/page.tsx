@@ -7,7 +7,9 @@ import Link from "next/link";
 interface InvitationRow {
   id: string;
   email: string | null;
-  token: string;
+  // `token` is only present on freshly-created invites (from the POST response).
+  // The GET /api/invitations list omits it because the DB stores only the hash.
+  token?: string;
   status: string;
   expiresAt: string;
   createdAt: string;
@@ -132,11 +134,7 @@ export default function ThrowsInvitePage() {
       </div>
 
       {/* Invite Form */}
-      <form
-        onSubmit={handleGenerate}
-        className="card space-y-5"
-        aria-label="Invite athlete form"
-      >
+      <form onSubmit={handleGenerate} className="card space-y-5" aria-label="Invite athlete form">
         <div className="flex items-center gap-3 mb-1">
           <div
             className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center"
@@ -158,11 +156,10 @@ export default function ThrowsInvitePage() {
             </svg>
           </div>
           <div>
-            <h2 className="text-base font-semibold text-[var(--foreground)]">
-              New Athlete Invite
-            </h2>
+            <h2 className="text-base font-semibold text-[var(--foreground)]">New Athlete Invite</h2>
             <p className="text-xs text-muted">
-              Enter the athlete&apos;s email — they&apos;ll get an email and you&apos;ll get a link to share
+              Enter the athlete&apos;s email — they&apos;ll get an email and you&apos;ll get a link
+              to share
             </p>
           </div>
         </div>
@@ -265,9 +262,7 @@ export default function ThrowsInvitePage() {
       {/* Recent Invites */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[var(--foreground)]">
-            Recent Invites
-          </h2>
+          <h2 className="text-base font-semibold text-[var(--foreground)]">Recent Invites</h2>
           <Link
             href="/coach/athletes?tab=invitations"
             className="text-xs text-amber-600 dark:text-amber-400 hover:underline"
@@ -289,9 +284,11 @@ export default function ThrowsInvitePage() {
         ) : (
           <div className="space-y-2" role="list" aria-label="Recent invitations">
             {recentInvites.map((inv) => {
-              const link = buildLink(inv.token);
-              const isPending =
-                inv.status === "PENDING" && new Date(inv.expiresAt) > new Date();
+              // `inv.token` is only present for invites freshly created in this
+              // session (from the POST response). Invites loaded from the server
+              // omit it because tokens are now stored as SHA-256 hashes.
+              const link = inv.token ? buildLink(inv.token) : null;
+              const isPending = inv.status === "PENDING" && new Date(inv.expiresAt) > new Date();
 
               return (
                 <div
@@ -314,14 +311,14 @@ export default function ThrowsInvitePage() {
                         inv.status === "ACCEPTED"
                           ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
                           : isPending
-                          ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
-                          : "bg-[var(--surface-raised)] text-muted"
+                            ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                            : "bg-[var(--surface-raised)] text-muted"
                       }`}
                     >
                       {inv.status}
                     </span>
                   </div>
-                  {isPending && (
+                  {isPending && link && (
                     <button
                       onClick={() => copyLink(link, inv.id)}
                       aria-label={

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { hashInvitationToken } from "@/lib/invitation-token";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     const invitation = await prisma.invitation.findUnique({
-      where: { token },
+      where: { token: hashInvitationToken(token) },
       include: {
         athleteProfile: {
           select: {
@@ -34,11 +35,17 @@ export async function GET(request: NextRequest) {
     }
 
     if (invitation.status === "ACCEPTED") {
-      return NextResponse.json({ success: false, error: "This invite has already been used." }, { status: 410 });
+      return NextResponse.json(
+        { success: false, error: "This invite has already been used." },
+        { status: 410 }
+      );
     }
 
     if (invitation.status === "REVOKED") {
-      return NextResponse.json({ success: false, error: "This invite has been revoked." }, { status: 410 });
+      return NextResponse.json(
+        { success: false, error: "This invite has been revoked." },
+        { status: 410 }
+      );
     }
 
     if (invitation.expiresAt < new Date()) {
@@ -48,12 +55,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Note: `token` is intentionally excluded from the response. The caller
+    // already has the raw token (they passed it in the query string); echoing
+    // it back would be a needless extra exposure.
     return NextResponse.json({
       success: true,
       data: {
         invitation: {
           id: invitation.id,
-          token: invitation.token,
           status: invitation.status,
           expiresAt: invitation.expiresAt,
         },
@@ -63,6 +72,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error("Error verifying invitation", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to verify invitation" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to verify invitation" },
+      { status: 500 }
+    );
   }
 }

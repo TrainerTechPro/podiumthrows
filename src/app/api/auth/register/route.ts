@@ -41,13 +41,17 @@ export async function POST(request: NextRequest) {
     // If registering as athlete via invitation, validate the token
     let invitation = null;
     if (role === "ATHLETE" && inviteToken) {
+      const { hashInvitationToken } = await import("@/lib/invitation-token");
       invitation = await prisma.invitation.findUnique({
-        where: { token: inviteToken },
+        where: { token: hashInvitationToken(inviteToken) },
         include: { coach: { include: { user: { select: { email: true } } } } },
       });
 
       if (!invitation || invitation.status !== "PENDING" || invitation.expiresAt < new Date()) {
-        return NextResponse.json({ success: false, error: "Invalid or expired invitation" }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: "Invalid or expired invitation" },
+          { status: 400 }
+        );
       }
     }
 
@@ -76,7 +80,10 @@ export async function POST(request: NextRequest) {
       } else if (role === "ATHLETE") {
         if (!invitation) {
           return NextResponse.json(
-            { success: false, error: "Athletes must register via an invitation link from their coach" },
+            {
+              success: false,
+              error: "Athletes must register via an invitation link from their coach",
+            },
             { status: 400 }
           );
         }
@@ -179,6 +186,9 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     logger.error("register Registration failed", { context: "api", error });
-    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }

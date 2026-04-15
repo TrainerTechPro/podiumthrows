@@ -4,6 +4,7 @@ import { hashPassword, signToken, setAuthCookie, setCsrfCookie } from "@/lib/aut
 import { rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseBody, RegisterClaimSchema } from "@/lib/api-schemas";
+import { hashInvitationToken } from "@/lib/invitation-token";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,14 +23,17 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Verify token
+    // Verify token — lookup by SHA-256 hash since the DB stores only the hash.
     const invitation = await prisma.invitation.findUnique({
-      where: { token },
+      where: { token: hashInvitationToken(token) },
       include: { athleteProfile: true },
     });
 
     if (!invitation || invitation.status !== "PENDING") {
-      return NextResponse.json({ success: false, error: "Invalid or expired invite" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Invalid or expired invite" },
+        { status: 400 }
+      );
     }
 
     if (invitation.expiresAt < new Date()) {
@@ -40,7 +44,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!invitation.athleteProfileId || !invitation.athleteProfile) {
-      return NextResponse.json({ success: false, error: "This invite is not linked to an athlete profile" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "This invite is not linked to an athlete profile" },
+        { status: 400 }
+      );
     }
 
     // Check email not taken by a different user
@@ -48,7 +55,10 @@ export async function POST(request: NextRequest) {
       where: { email: normalizedEmail },
     });
     if (existingUser && existingUser.id !== invitation.athleteProfile.userId) {
-      return NextResponse.json({ success: false, error: "Email is already in use" }, { status: 409 });
+      return NextResponse.json(
+        { success: false, error: "Email is already in use" },
+        { status: 409 }
+      );
     }
 
     const hashed = await hashPassword(password);
@@ -96,8 +106,7 @@ export async function POST(request: NextRequest) {
     const profile = result.profile;
     const hasEvents = Array.isArray(profile.events) && profile.events.length > 0;
     const hasGender = !!profile.gender && profile.gender !== "OTHER";
-    const redirectTo =
-      hasEvents && hasGender ? "/athlete/review-profile" : "/athlete/onboarding";
+    const redirectTo = hasEvents && hasGender ? "/athlete/review-profile" : "/athlete/onboarding";
 
     const response = NextResponse.json({
       success: true,

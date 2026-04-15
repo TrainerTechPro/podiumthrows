@@ -83,7 +83,10 @@ export default async function AthletesPage({
   const noCheckInCount = roster.filter((a) => !a.latestReadiness).length;
   const needsAttention = lowCount + noCheckInCount;
 
-  // Fetch invitations for the invitations tab
+  // Fetch invitations for the invitations tab.
+  // `token` is intentionally not selected — the DB stores only the SHA-256
+  // hash, so the value is useless to the client. The raw token lives only
+  // in the recipient's email.
   const invitations =
     tab === "invitations"
       ? await prisma.invitation.findMany({
@@ -93,7 +96,6 @@ export default async function AthletesPage({
           select: {
             id: true,
             email: true,
-            token: true,
             status: true,
             expiresAt: true,
             createdAt: true,
