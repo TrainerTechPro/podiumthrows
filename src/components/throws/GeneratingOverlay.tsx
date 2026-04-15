@@ -22,9 +22,7 @@ export function GeneratingOverlay({ isGenerating }: { isGenerating: boolean }) {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     for (let i = 0; i < STEPS.length; i++) {
-      timers.push(
-        setTimeout(() => setActiveStep(i + 1), STEPS[i].delayMs),
-      );
+      timers.push(setTimeout(() => setActiveStep(i + 1), STEPS[i].delayMs));
     }
 
     return () => timers.forEach(clearTimeout);
@@ -34,7 +32,7 @@ export function GeneratingOverlay({ isGenerating }: { isGenerating: boolean }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="w-full max-w-md mx-4 rounded-xl bg-surface-900/95 border border-surface-700 shadow-2xl p-6">
+      <div className="w-full max-w-md mx-4 rounded-xl bg-[var(--surface-overlay)] border border-surface-700 shadow-2xl p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-5">
           <div className="w-8 h-8 rounded-lg bg-primary-500/20 flex items-center justify-center">
@@ -53,12 +51,8 @@ export function GeneratingOverlay({ isGenerating }: { isGenerating: boolean }) {
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">
-              Generating Program
-            </h3>
-            <p className="text-xs text-surface-400">
-              Building your Bondarchuk training plan
-            </p>
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">Generating Program</h3>
+            <p className="text-xs text-surface-400">Building your Bondarchuk training plan</p>
           </div>
         </div>
 

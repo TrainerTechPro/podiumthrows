@@ -25,11 +25,10 @@ export function DropdownInput({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const filtered = block.searchable && search
-    ? block.options.filter((o) =>
-        o.label.toLowerCase().includes(search.toLowerCase())
-      )
-    : block.options;
+  const filtered =
+    block.searchable && search
+      ? block.options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+      : block.options;
 
   const selectedLabel = block.options.find((o) => o.value === value)?.label;
 
@@ -41,21 +40,27 @@ export function DropdownInput({
           onClick={() => !disabled && setOpen(!open)}
           disabled={disabled}
           className={`w-full text-left px-3 py-2 rounded-xl text-sm border transition-colors flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed ${
-            open
-              ? "border-primary-500 ring-2 ring-primary-500/30"
-              : "border-[var(--card-border)]"
+            open ? "border-primary-500 ring-2 ring-primary-500/30" : "border-[var(--card-border)]"
           } bg-[var(--card-bg)] text-[var(--foreground)]`}
         >
-          <span className={selectedLabel ? "" : "text-muted"}>
-            {selectedLabel ?? "Select..."}
-          </span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-muted transition-transform ${open ? "rotate-180" : ""}`}>
+          <span className={selectedLabel ? "" : "text-muted"}>{selectedLabel ?? "Select..."}</span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-muted transition-transform ${open ? "rotate-180" : ""}`}
+          >
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
 
         {open && (
-          <div className="absolute z-20 mt-1 w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-lg max-h-60 overflow-auto">
+          <div className="absolute z-20 mt-1 w-full rounded-xl border border-[var(--card-border)] bg-[var(--surface-overlay)] shadow-lg max-h-60 overflow-auto">
             {block.searchable && (
               <div className="p-2 border-b border-[var(--card-border)]">
                 <input
@@ -92,9 +97,7 @@ export function DropdownInput({
           </div>
         )}
       </div>
-      {error && (
-        <p className="text-xs text-danger-500 dark:text-danger-400">{error}</p>
-      )}
+      {error && <p className="text-xs text-danger-500 dark:text-danger-400">{error}</p>}
     </div>
   );
 }

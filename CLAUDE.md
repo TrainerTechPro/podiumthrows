@@ -342,6 +342,26 @@ async function handleSave() {
 - **Pattern**: `<Link className="card card-interactive p-4 ...">` or `<Card href="..." interactive>`.
 - **Never** add manual `hover:shadow-md transition-shadow` to card Links — use `card-interactive` instead.
 
+### Overlay Surfaces (CRITICAL — Dark Mode Readability)
+
+**Any floating UI that renders above the page content MUST use a fully opaque surface in BOTH themes.** This includes modals, dialogs, popovers, dropdowns, select menus, notification panels, toasts, tooltips, sheets, drawers, and any portaled content.
+
+- **Use `bg-[var(--surface-overlay)]`** for the content panel of any overlay. This token resolves to `#ffffff` in light mode and `#1a1a20` in dark mode — fully opaque, slightly elevated above `--card-bg`.
+- **Never use opacity-suffix backgrounds** (`bg-surface-900/80`, `bg-black/50`, `bg-white/90`, `bg-gray-800/50`, etc.) on overlay content panels. These made the notification dropdown and Add Athlete modal unreadable in dark mode.
+- **Never use `backdrop-blur-*` without a solid opaque base layer** behind it. Blur on a translucent surface = invisible content.
+- **Translucency is allowed ONLY for backdrop scrims** (`bg-black/70` on the full-screen dimmer behind a modal) — never the content itself.
+- **Need intentional translucency** for a decorative badge over a known opaque parent? Use `bg-[var(--surface-glass)]` — it's the explicit opt-in token and signals the intent.
+
+**Why this rule exists:** The dark-mode `--card-bg` token was `rgba(255,255,255,0.04)` (4% white), which cascaded into every overlay consumer. Overlays render in portals, detached from their parent DOM — they can't rely on anything behind them. Stacking translucent layers produces unreadable content. The fix is tokenized: one opaque surface for inline content (`--card-bg`), a second opaque surface for floating UI (`--surface-overlay`), and glass effects behind an explicit opt-in.
+
+**Audit checklist before shipping any new overlay:**
+
+- [ ] Content panel uses `bg-[var(--surface-overlay)]` (or `bg-surface-100 dark:bg-surface-900` with explicit opaque values)
+- [ ] No `bg-*/\d+` opacity suffix on the content panel
+- [ ] No `backdrop-blur` on the content panel (only on optional decorative layers)
+- [ ] Tested in BOTH light and dark modes
+- [ ] Tested on mobile (where the backdrop scrim tends to be lighter)
+
 ### Icons
 
 - **Always Lucide React** — no inline SVGs, no other icon libraries.

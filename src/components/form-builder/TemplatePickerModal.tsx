@@ -17,11 +17,7 @@ interface TemplatePickerModalProps {
   onClose: () => void;
 }
 
-export function TemplatePickerModal({
-  onSelect,
-  onBlank,
-  onClose,
-}: TemplatePickerModalProps) {
+export function TemplatePickerModal({ onSelect, onBlank, onClose }: TemplatePickerModalProps) {
   const [search, setSearch] = useState("");
 
   const filtered = FORM_TEMPLATES.filter(
@@ -33,13 +29,10 @@ export function TemplatePickerModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-[var(--background)] rounded-2xl border border-[var(--card-border)] shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+      <div className="relative bg-[var(--surface-overlay)] rounded-2xl border border-[var(--card-border)] shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-[var(--card-border)]">
           <div className="flex items-center justify-between mb-4">
@@ -135,9 +128,7 @@ export function TemplatePickerModal({
                     <div className="text-sm font-semibold text-[var(--foreground)] group-hover:text-primary-600 dark:group-hover:text-primary-400">
                       {template.name}
                     </div>
-                    <p className="text-xs text-muted mt-0.5 line-clamp-2">
-                      {template.description}
-                    </p>
+                    <p className="text-xs text-muted mt-0.5 line-clamp-2">{template.description}</p>
                     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                       <Badge variant="neutral" className="text-[10px]">
                         {template.blocks.length} blocks

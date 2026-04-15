@@ -369,7 +369,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-[360px] sm:w-[400px] max-h-[480px] rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] shadow-xl z-50 flex flex-col overflow-hidden max-sm:fixed max-sm:inset-x-3 max-sm:right-3 max-sm:w-auto">
+        <div className="absolute right-0 top-full mt-1.5 w-[360px] sm:w-[400px] max-h-[480px] rounded-xl bg-[var(--surface-overlay)] border border-[var(--card-border)] shadow-xl z-50 flex flex-col overflow-hidden max-sm:fixed max-sm:inset-x-3 max-sm:right-3 max-sm:w-auto">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--card-border)]">
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Notifications</h3>

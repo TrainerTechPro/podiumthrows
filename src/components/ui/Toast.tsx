@@ -35,10 +35,13 @@ interface ToastContextValue {
   toast: (input: ToastInput) => string;
   dismiss: (id: string) => void;
   success: (title: string, description?: string) => string;
-  error:   (title: string, description?: string) => string;
+  error: (title: string, description?: string) => string;
   warning: (title: string, description?: string) => string;
-  info:    (title: string, description?: string) => string;
-  celebration: (title: string, opts?: { description?: string; highlight?: string; duration?: number }) => string;
+  info: (title: string, description?: string) => string;
+  celebration: (
+    title: string,
+    opts?: { description?: string; highlight?: string; duration?: number }
+  ) => string;
 }
 
 /* ─── Context ────────────────────────────────────────────────────────────── */
@@ -99,7 +102,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ToastContext.Provider value={{ toasts, toast, dismiss, success, error, warning, info, celebration }}>
+    <ToastContext.Provider
+      value={{ toasts, toast, dismiss, success, error, warning, info, celebration }}
+    >
       {children}
       <Toaster toasts={toasts} dismiss={dismiss} />
     </ToastContext.Provider>
@@ -169,19 +174,21 @@ function CelebrationConfetti() {
         <span
           key={i}
           className="toast-confetti-particle"
-          style={{
-            position: "absolute",
-            left: 20,
-            top: "50%",
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.color,
-            borderRadius: i % 2 === 0 ? "1px" : "50%",
-            // CSS custom properties for the keyframe
-            "--dx": `${p.dx}px`,
-            "--dy": `${p.dy}px`,
-            animationDelay: `${p.delay}ms`,
-          } as React.CSSProperties}
+          style={
+            {
+              position: "absolute",
+              left: 20,
+              top: "50%",
+              width: p.size,
+              height: p.size,
+              backgroundColor: p.color,
+              borderRadius: i % 2 === 0 ? "1px" : "50%",
+              // CSS custom properties for the keyframe
+              "--dx": `${p.dx}px`,
+              "--dy": `${p.dy}px`,
+              animationDelay: `${p.delay}ms`,
+            } as React.CSSProperties
+          }
         />
       ))}
     </>
@@ -210,7 +217,9 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
       setPhase("exit");
       setTimeout(onDismiss, 200);
     }, t.duration);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [t.duration, onDismiss]);
 
   const handleDismiss = () => {
@@ -250,7 +259,7 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
         // Base card style
         isCelebration
           ? "bg-gradient-to-r from-primary-50 via-primary-50/80 to-amber-50 dark:from-primary-950/60 dark:via-primary-950/40 dark:to-amber-950/30 border rounded-xl shadow-lg"
-          : "bg-[var(--card-bg)] border rounded-xl shadow-lg",
+          : "bg-[var(--surface-overlay)] border rounded-xl shadow-lg",
         enterClass,
         transitionClass,
         container
@@ -267,10 +276,12 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
           {icon}
         </span>
         <div className="flex-1 min-w-0">
-          <p className={cn(
-            "font-semibold text-[var(--foreground)]",
-            isCelebration ? "text-base font-heading" : "text-sm"
-          )}>
+          <p
+            className={cn(
+              "font-semibold text-[var(--foreground)]",
+              isCelebration ? "text-base font-heading" : "text-sm"
+            )}
+          >
             {t.title}
           </p>
           {t.highlight && (
@@ -279,10 +290,12 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
             </p>
           )}
           {t.description && (
-            <p className={cn(
-              "text-xs text-muted mt-0.5 leading-relaxed",
-              isCelebration && "text-primary-700/70 dark:text-primary-300/70"
-            )}>
+            <p
+              className={cn(
+                "text-xs text-muted mt-0.5 leading-relaxed",
+                isCelebration && "text-primary-700/70 dark:text-primary-300/70"
+              )}
+            >
               {t.description}
             </p>
           )}

@@ -40,10 +40,7 @@ export function CompletionBottomSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onCancel}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
 
       {/* Sheet */}
       <div className="relative w-full max-w-lg bg-white dark:bg-surface-900 rounded-t-2xl shadow-xl bottom-sheet-enter max-h-[85vh] overflow-y-auto overscroll-contain">
@@ -58,7 +55,7 @@ export function CompletionBottomSheet({
           </h2>
 
           {/* Auto-summary */}
-          <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+          <div className="p-3 rounded-xl bg-gray-50 dark:bg-surface-800">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500 dark:text-gray-400">Throws Logged</span>
               <span className="font-semibold text-gray-900 dark:text-white tabular-nums">
@@ -132,8 +129,18 @@ export function CompletionBottomSheet({
                 }`}
               >
                 {wasModified && (
-                  <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-3 h-3 text-black"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 )}
               </div>
@@ -155,11 +162,7 @@ export function CompletionBottomSheet({
 
           {/* Buttons */}
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="btn-secondary flex-1 py-3"
-            >
+            <button type="button" onClick={onCancel} className="btn-secondary flex-1 py-3">
               Cancel
             </button>
             <button

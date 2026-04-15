@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  ReactNode,
-  useCallback,
-} from "react";
+import { useEffect, useRef, ReactNode, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
@@ -27,10 +22,10 @@ export interface ModalProps {
 }
 
 const sizeClasses: Record<ModalSize, string> = {
-  sm:   "max-w-sm",
-  md:   "max-w-md",
-  lg:   "max-w-lg",
-  xl:   "max-w-2xl",
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-2xl",
   full: "max-w-[95vw] h-[90vh] flex flex-col",
 };
 
@@ -53,13 +48,17 @@ export function Modal({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [open]);
 
   /* Escape key */
   useEffect(() => {
     if (!open || preventClose) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [open, preventClose, onClose]);
@@ -94,16 +93,13 @@ export function Modal({
       aria-labelledby={title ? "modal-title" : undefined}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 animate-fade-in"
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/70 animate-fade-in" aria-hidden="true" />
 
       {/* Panel */}
       <div
         ref={panelRef}
         className={cn(
-          "relative w-full bg-[var(--card-bg)] border border-[var(--card-border)]",
+          "relative w-full bg-[var(--surface-overlay)] border border-[var(--card-border)]",
           "rounded-2xl shadow-2xl animate-spring-up",
           size === "full" && "overflow-hidden",
           sizeClasses[size],
@@ -116,16 +112,11 @@ export function Modal({
           <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-[var(--card-border)]">
             <div className="min-w-0">
               {title && (
-                <h2
-                  id="modal-title"
-                  className="text-base font-semibold text-[var(--foreground)]"
-                >
+                <h2 id="modal-title" className="text-base font-semibold text-[var(--foreground)]">
                   {title}
                 </h2>
               )}
-              {description && (
-                <p className="text-sm text-muted mt-1">{description}</p>
-              )}
+              {description && <p className="text-sm text-muted mt-1">{description}</p>}
             </div>
             {!preventClose && (
               <button
@@ -140,12 +131,7 @@ export function Modal({
         )}
 
         {/* Body */}
-        <div
-          className={cn(
-            "px-6 py-5",
-            size === "full" && "flex-1 overflow-y-auto"
-          )}
-        >
+        <div className={cn("px-6 py-5", size === "full" && "flex-1 overflow-y-auto")}>
           {children}
         </div>
 
@@ -169,8 +155,8 @@ export function useModal(initial = false) {
   const [open, setOpen] = useState(initial);
   return {
     open,
-    onOpen:  () => setOpen(true),
+    onOpen: () => setOpen(true),
     onClose: () => setOpen(false),
-    toggle:  () => setOpen((v) => !v),
+    toggle: () => setOpen((v) => !v),
   };
 }
