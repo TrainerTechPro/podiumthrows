@@ -257,6 +257,36 @@ export async function notifyCoachAthleteJoined(
   });
 }
 
+/**
+ * Fire when an invitation passes expiresAt without being claimed. Coach
+ * can follow up by sending a new invite from the roster. Identity of the
+ * expired invitee comes from the invitation itself — either a linked
+ * athleteProfile (proxy path) or the email on record (direct-invite path).
+ */
+export async function notifyCoachInvitationExpired(
+  coachId: string,
+  inviteeLabel: string,
+  metadata: {
+    invitationId: string;
+    athleteProfileId?: string;
+    email?: string;
+  }
+): Promise<void> {
+  await createNotification({
+    type: "INVITATION_EXPIRED",
+    coachId,
+    athleteProfileId: metadata.athleteProfileId,
+    title: `Invite expired — ${inviteeLabel}`,
+    body: `Your invite for ${inviteeLabel} expired before they could claim it. Send a new one from your roster.`,
+    metadata: {
+      ...metadata,
+      url: metadata.athleteProfileId
+        ? `/coach/athletes/${metadata.athleteProfileId}`
+        : "/coach/athletes",
+    },
+  });
+}
+
 export async function notifyCoachQuestionnaireComplete(
   coachId: string,
   athleteProfileId: string,
