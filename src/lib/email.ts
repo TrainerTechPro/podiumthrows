@@ -37,13 +37,13 @@ const transporter = nodemailer.createTransport(
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 if (!APP_URL && process.env.NODE_ENV === "production") {
   // Use logger if available, but email.ts is imported early so logger may not be ready
-  console.error("[email] CRITICAL: NEXT_PUBLIC_APP_URL is not set — password reset and invite links will point to localhost");
+  console.error(
+    "[email] CRITICAL: NEXT_PUBLIC_APP_URL is not set — password reset and invite links will point to localhost"
+  );
 }
 const baseUrl = APP_URL || "http://localhost:3000";
 const FROM_EMAIL =
-  process.env.RESEND_FROM ||
-  process.env.SMTP_FROM ||
-  "Podium Throws <noreply@podiumthrows.com>";
+  process.env.RESEND_FROM || process.env.SMTP_FROM || "Podium Throws <noreply@podiumthrows.com>";
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
@@ -75,7 +75,10 @@ export async function sendInvitationEmail(
   coachName: string,
   token: string
 ): Promise<void> {
-  const inviteUrl = `${baseUrl}/register?invite=${token}`;
+  // Points at the claim preview page (not /register directly). The preview
+  // shows the athlete who invited them and what profile they're about to
+  // claim before any credentials are entered — higher-trust UX.
+  const inviteUrl = `${baseUrl}/athletes/claim/${token}`;
 
   await transporter.sendMail({
     from: FROM_EMAIL,

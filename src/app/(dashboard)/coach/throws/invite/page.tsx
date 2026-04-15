@@ -58,7 +58,7 @@ export default function ThrowsInvitePage() {
         return;
       }
       const token = data.data?.token;
-      const link = `${window.location.origin}/register?invite=${token}`;
+      const link = `${window.location.origin}/athletes/claim/${token}`;
       setInviteLink(link);
       setEmailSent(!!data.emailSent);
       const newInv: InvitationRow = data.data;
@@ -93,8 +93,8 @@ export default function ThrowsInvitePage() {
 
   function buildLink(token: string) {
     return typeof window !== "undefined"
-      ? `${window.location.origin}/register?invite=${token}`
-      : `/register?invite=${token}`;
+      ? `${window.location.origin}/athletes/claim/${token}`
+      : `/athletes/claim/${token}`;
   }
 
   return (

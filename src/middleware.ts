@@ -13,7 +13,8 @@ const PUBLIC_PATHS = [
   "/pricing",
   "/deficit-finder",
   "/privacy",
-  "/availability",         // public read-only share links /availability/[token]
+  "/availability", // public read-only share links /availability/[token]
+  "/athletes/claim", // public athlete-invite preview /athletes/claim/[token]
   "/api/whoop/callback",
   "/api/oura/callback",
 ];
@@ -93,14 +94,23 @@ export async function middleware(request: NextRequest) {
     response = NextResponse.redirect(new URL(dashboardUrl, request.url));
   }
   // Redirect unauthenticated users to login
-  else if (!payload && pathname !== "/" && !PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+  else if (
+    !payload &&
+    pathname !== "/" &&
+    !PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  ) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     response = NextResponse.redirect(loginUrl);
   }
   // Role-based route protection (admins bypass)
   else if (payload && !payload.isAdmin) {
-    if (pathname.startsWith("/athlete") && payload.role !== "ATHLETE") {
+    // Use a trailing slash so `/athlete/` matches /athlete and /athlete/...
+    // but does NOT accidentally match unrelated prefixes like /athletes/.
+    if (
+      (pathname === "/athlete" || pathname.startsWith("/athlete/")) &&
+      payload.role !== "ATHLETE"
+    ) {
       const activeMode = request.cookies.get("active-mode")?.value;
       if (payload.role !== "COACH" || activeMode !== "TRAINING") {
         response = NextResponse.redirect(new URL("/coach/dashboard", request.url));
@@ -122,8 +132,7 @@ export async function middleware(request: NextRequest) {
     const flags = await getFlags();
     const flag = flags[gatedRoute.flag];
     if (!flag?.enabled) {
-      const dashboardUrl =
-        payload?.role === "ATHLETE" ? "/athlete/dashboard" : "/coach/dashboard";
+      const dashboardUrl = payload?.role === "ATHLETE" ? "/athlete/dashboard" : "/coach/dashboard";
       return NextResponse.redirect(new URL(dashboardUrl, request.url));
     }
   }

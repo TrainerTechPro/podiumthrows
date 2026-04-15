@@ -168,7 +168,7 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      const link = `${window.location.origin}/register?invite=${data.data.token}`;
+      const link = `${window.location.origin}/athletes/claim/${data.data.token}`;
       await navigator.clipboard.writeText(link);
       setInviteCopied(athleteId);
       setTimeout(() => setInviteCopied(null), 3000);

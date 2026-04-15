@@ -248,7 +248,7 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       if (!res.ok || !payload.success) {
         throw new Error(payload.error || `Request failed (${res.status})`);
       }
-      const link = `${window.location.origin}/register?invite=${payload.data.token}`;
+      const link = `${window.location.origin}/athletes/claim/${payload.data.token}`;
       try {
         await navigator.clipboard.writeText(link);
         toast.success("Invite link copied to clipboard");
