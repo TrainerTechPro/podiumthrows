@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -23,10 +23,17 @@ import type { AthletePickerItem } from "@/lib/data/coach";
 export function PlanActions({
   planId,
   planName,
+  planEvent,
   athletes,
 }: {
   planId: string;
   planName: string;
+  /**
+   * Optional event the plan is built for. When set, the assign modal sorts
+   * matching athletes to the top so the coach sees them first — purely a
+   * visual hint, not a filter.
+   */
+  planEvent?: string | null;
   athletes: AthletePickerItem[];
 }) {
   const router = useRouter();
@@ -40,6 +47,21 @@ export function PlanActions({
   const [scheduledDate, setScheduledDate] = useState("");
   const [coachNotes, setCoachNotes] = useState("");
   const [assigning, setAssigning] = useState(false);
+
+  // Sort athletes: event-matching first, then alphabetical within each group.
+  // Stable sort preserves the server's last-name alphabetical order for ties.
+  const sortedAthletes = useMemo(() => {
+    if (!planEvent) return athletes;
+    const matches: AthletePickerItem[] = [];
+    const rest: AthletePickerItem[] = [];
+    for (const a of athletes) {
+      if (a.events.includes(planEvent)) matches.push(a);
+      else rest.push(a);
+    }
+    return [...matches, ...rest];
+  }, [athletes, planEvent]);
+
+  const matchingCount = planEvent ? athletes.filter((a) => a.events.includes(planEvent)).length : 0;
 
   function toggleAthlete(id: string) {
     setSelectedAthletes((prev) => {
@@ -187,31 +209,45 @@ export function PlanActions({
                 </Link>
               </p>
             ) : (
-              <div className="max-h-64 overflow-y-auto custom-scrollbar border border-[var(--card-border)] rounded-lg divide-y divide-[var(--card-border)]">
-                {athletes.map((a) => {
-                  const checked = selectedAthletes.has(a.id);
-                  return (
-                    <label
-                      key={a.id}
-                      className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleAthlete(a.id)}
-                        className="rounded border-[var(--card-border)] text-primary-500 focus:ring-primary-500/50"
-                      />
-                      <Avatar name={`${a.firstName} ${a.lastName}`} src={a.avatarUrl} size="sm" />
-                      <span className="text-sm font-medium">
-                        {a.firstName} {a.lastName}
-                      </span>
-                      {a.events.length > 0 && (
-                        <span className="text-xs text-muted ml-auto">{a.events.join(", ")}</span>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
+              <>
+                {planEvent && matchingCount > 0 && (
+                  <p className="text-xs text-muted mb-1.5">
+                    {matchingCount} athlete{matchingCount === 1 ? "" : "s"} on your roster throw
+                    {matchingCount === 1 ? "s" : ""} {planEvent.replace(/_/g, " ").toLowerCase()} —
+                    shown first below.
+                  </p>
+                )}
+                <div className="max-h-64 overflow-y-auto custom-scrollbar border border-[var(--card-border)] rounded-lg divide-y divide-[var(--card-border)]">
+                  {sortedAthletes.map((a) => {
+                    const checked = selectedAthletes.has(a.id);
+                    const eventMatch = planEvent ? a.events.includes(planEvent) : false;
+                    return (
+                      <label
+                        key={a.id}
+                        className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleAthlete(a.id)}
+                          className="rounded border-[var(--card-border)] text-primary-500 focus:ring-primary-500/50"
+                        />
+                        <Avatar name={`${a.firstName} ${a.lastName}`} src={a.avatarUrl} size="sm" />
+                        <span className="text-sm font-medium">
+                          {a.firstName} {a.lastName}
+                        </span>
+                        {a.events.length > 0 && (
+                          <span
+                            className={`text-xs ml-auto ${eventMatch ? "text-primary-500 font-medium" : "text-muted"}`}
+                          >
+                            {a.events.join(", ")}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
 

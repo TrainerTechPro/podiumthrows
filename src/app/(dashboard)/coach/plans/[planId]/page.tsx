@@ -70,7 +70,12 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           {plan.description && <p className="text-sm text-muted">{plan.description}</p>}
         </div>
 
-        <PlanActions planId={plan.id} planName={plan.name} athletes={athletes} />
+        <PlanActions
+          planId={plan.id}
+          planName={plan.name}
+          planEvent={plan.event}
+          athletes={athletes}
+        />
       </div>
 
       {/* Metadata row */}
