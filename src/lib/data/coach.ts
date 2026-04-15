@@ -1315,6 +1315,16 @@ export type BlockExerciseDetail = {
   implementKg: number | null;
 };
 
+export type PlanAssignmentItem = {
+  id: string;
+  athleteId: string;
+  athleteFirstName: string;
+  athleteLastName: string;
+  athleteAvatarUrl: string | null;
+  scheduledDate: string;
+  status: string;
+};
+
 export type WorkoutPlanDetail = {
   id: string;
   name: string;
@@ -1325,6 +1335,8 @@ export type WorkoutPlanDetail = {
   blocks: WorkoutBlockDetail[];
   /// Number of TrainingSession rows referencing this plan (legacy assign path).
   assignedSessionCount: number;
+  /// Capped list of assignments (most-recent first, up to 100) for display.
+  assignments: PlanAssignmentItem[];
   createdAt: string;
 };
 
@@ -1389,6 +1401,18 @@ export async function getWorkoutPlanDetail(
           },
         },
       },
+      sessions: {
+        orderBy: { scheduledDate: "desc" },
+        take: 100,
+        select: {
+          id: true,
+          scheduledDate: true,
+          status: true,
+          athlete: {
+            select: { id: true, firstName: true, lastName: true, avatarUrl: true },
+          },
+        },
+      },
       _count: { select: { sessions: true } },
     },
   });
@@ -1403,6 +1427,15 @@ export async function getWorkoutPlanDetail(
     phase: plan.phase as string | null,
     isTemplate: plan.isTemplate,
     assignedSessionCount: plan._count.sessions,
+    assignments: plan.sessions.map((s) => ({
+      id: s.id,
+      athleteId: s.athlete.id,
+      athleteFirstName: s.athlete.firstName,
+      athleteLastName: s.athlete.lastName,
+      athleteAvatarUrl: s.athlete.avatarUrl,
+      scheduledDate: s.scheduledDate.toISOString(),
+      status: s.status as string,
+    })),
     createdAt: plan.createdAt.toISOString(),
     blocks: plan.blocks.map((b) => ({
       id: b.id,

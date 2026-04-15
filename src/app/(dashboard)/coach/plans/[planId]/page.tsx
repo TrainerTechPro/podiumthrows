@@ -2,9 +2,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireCoachSession, getWorkoutPlanDetail, getAthletePickerList } from "@/lib/data/coach";
 import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { formatEventType } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
 import { PlanActions } from "./_plan-actions";
+
+const STATUS_VARIANTS: Record<string, "info" | "warning" | "success" | "neutral" | "danger"> = {
+  SCHEDULED: "info",
+  IN_PROGRESS: "warning",
+  COMPLETED: "success",
+  SKIPPED: "neutral",
+  CANCELLED: "danger",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  SCHEDULED: "Scheduled",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  SKIPPED: "Skipped",
+  CANCELLED: "Cancelled",
+};
 
 const PHASE_LABELS: Record<string, string> = {
   GPP: "GPP — General Physical Preparation",
@@ -118,6 +135,50 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           </dd>
         </div>
       </div>
+
+      {/* Assignments */}
+      {plan.assignments.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+              Assigned To
+            </h2>
+            <span className="text-xs text-muted tabular-nums">
+              {plan.assignments.length} of {plan.assignedSessionCount}
+            </span>
+          </div>
+          <div className="card divide-y divide-[var(--card-border)]">
+            {plan.assignments.map((a) => (
+              <Link
+                key={a.id}
+                href={`/coach/athletes/${a.athleteId}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+              >
+                <Avatar
+                  name={`${a.athleteFirstName} ${a.athleteLastName}`}
+                  src={a.athleteAvatarUrl}
+                  size="sm"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                    {a.athleteFirstName} {a.athleteLastName}
+                  </p>
+                  <p className="text-xs text-muted tabular-nums">
+                    {new Date(a.scheduledDate).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <Badge variant={STATUS_VARIANTS[a.status] ?? "neutral"}>
+                  {STATUS_LABELS[a.status] ?? a.status}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Blocks */}
       <div className="space-y-4">
