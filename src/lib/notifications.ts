@@ -9,6 +9,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { formatEventType } from "@/lib/utils";
+import { isCoachNotificationEnabled } from "@/lib/notifications/coach-preferences";
 
 // ─── Notification Types ───────────────────────────────────────────────────────
 
@@ -194,6 +195,7 @@ export async function notifyCoachPR(
   distance: number,
   unit: string = "m"
 ): Promise<void> {
+  if (!(await isCoachNotificationEnabled(coachId, "PR_ALERT"))) return;
   const eventLabel = formatEventType(event);
   await createNotification({
     type: "PR_ALERT",
@@ -212,6 +214,7 @@ export async function notifyCoachLowReadiness(
   score: number
 ): Promise<void> {
   if (score > 4) return;
+  if (!(await isCoachNotificationEnabled(coachId, "LOW_READINESS"))) return;
   await createNotification({
     type: "LOW_READINESS",
     coachId,
@@ -239,6 +242,7 @@ export async function notifyCoachAthleteJoined(
   athleteName: string,
   via: "invite" | "proxy-claim"
 ): Promise<void> {
+  if (!(await isCoachNotificationEnabled(coachId, "ATHLETE_JOINED"))) return;
   const bodyByVia =
     via === "proxy-claim"
       ? `${athleteName} claimed the profile you set up. They now have app access.`
@@ -274,6 +278,7 @@ export async function notifyCoachProgramCheckpoint(
     recommendation: string;
   }
 ): Promise<void> {
+  if (!(await isCoachNotificationEnabled(coachId, "PROGRAM_CHECKPOINT"))) return;
   // Humanize the recommendation code for the body copy.
   const recLabel = args.recommendation
     .replace(/_/g, " ")
@@ -307,6 +312,7 @@ export async function notifyCoachComplexRotated(
     complexNumber: number;
   }
 ): Promise<void> {
+  if (!(await isCoachNotificationEnabled(coachId, "COMPLEX_ROTATED"))) return;
   await createNotification({
     type: "COMPLEX_ROTATED",
     coachId,
@@ -421,6 +427,7 @@ export async function notifyCoachInvitationExpired(
     email?: string;
   }
 ): Promise<void> {
+  if (!(await isCoachNotificationEnabled(coachId, "INVITATION_EXPIRED"))) return;
   await createNotification({
     type: "INVITATION_EXPIRED",
     coachId,
@@ -466,6 +473,7 @@ export async function notifyCoachQuestionnaireComplete(
   athleteName: string,
   questionnaireName: string
 ): Promise<void> {
+  if (!(await isCoachNotificationEnabled(coachId, "QUESTIONNAIRE_COMPLETE"))) return;
   await createNotification({
     type: "QUESTIONNAIRE_COMPLETE",
     coachId,
@@ -495,7 +503,9 @@ export async function notifyCoachProgrammingRequested(
     bondarchukType: string | null;
   }
 ): Promise<void> {
-  // Delete any existing PROGRAMMING_REQUESTED for this athlete to prevent dupes
+  // Delete any existing PROGRAMMING_REQUESTED for this athlete to prevent dupes.
+  // Runs BEFORE the pref check so a muted coach doesn't accumulate stale
+  // pending-request rows — if they unmute later, the tray stays accurate.
   await prisma.notification.deleteMany({
     where: {
       coachId,
@@ -503,6 +513,8 @@ export async function notifyCoachProgrammingRequested(
       athleteProfileId,
     },
   });
+
+  if (!(await isCoachNotificationEnabled(coachId, "PROGRAMMING_REQUESTED"))) return;
 
   // Build summary body
   const parts: string[] = [];
