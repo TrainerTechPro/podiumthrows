@@ -28,7 +28,9 @@ export function StepBasics({
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-bold text-[var(--foreground)]">Session Basics</h2>
-        <p className="text-sm text-muted mt-1">Name your session and optionally scope it to a specific event.</p>
+        <p className="text-sm text-muted mt-1">
+          Name your session and optionally scope it to a specific event.
+        </p>
       </div>
 
       <Input

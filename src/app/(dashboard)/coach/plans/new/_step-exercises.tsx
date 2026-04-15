@@ -113,9 +113,7 @@ export function StepExercises({
 
   function removeExercise(exIdx: number) {
     const updated = blocks.map((b, i) =>
-      i === activeBlockIdx
-        ? { ...b, exercises: b.exercises.filter((_, j) => j !== exIdx) }
-        : b
+      i === activeBlockIdx ? { ...b, exercises: b.exercises.filter((_, j) => j !== exIdx) } : b
     );
     onChange(updated);
   }
@@ -159,10 +157,11 @@ export function StepExercises({
       {!implementValidation.valid && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 space-y-1">
           {implementValidation.warnings.map((w, i) => (
-            <p key={i} className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2">
-              <span className="shrink-0 mt-0.5">
-                {w.severity === "error" ? "!!" : "!"}
-              </span>
+            <p
+              key={i}
+              className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2"
+            >
+              <span className="shrink-0 mt-0.5">{w.severity === "error" ? "!!" : "!"}</span>
               {w.message}
             </p>
           ))}
@@ -236,10 +235,14 @@ export function StepExercises({
                           {exercise.category}
                         </Badge>
                         {exercise.event && (
-                          <span className="text-xs text-muted">{formatEventName(exercise.event)}</span>
+                          <span className="text-xs text-muted">
+                            {formatEventName(exercise.event)}
+                          </span>
                         )}
                         {exercise.implementWeight && (
-                          <span className="text-xs text-muted tabular-nums">{formatImplementWeight(exercise.implementWeight)}</span>
+                          <span className="text-xs text-muted tabular-nums">
+                            {formatImplementWeight(exercise.implementWeight)}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -273,7 +276,9 @@ export function StepExercises({
                   {/* Header */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs text-muted font-mono w-5 shrink-0">{exIdx + 1}.</span>
+                      <span className="text-xs text-muted font-mono w-5 shrink-0">
+                        {exIdx + 1}.
+                      </span>
                       <p className="text-sm font-medium text-[var(--foreground)] truncate">
                         {ex.exerciseName}
                       </p>
@@ -289,20 +294,54 @@ export function StepExercises({
                         disabled={exIdx === 0}
                         className="p-0.5 rounded hover:bg-surface-200 dark:hover:bg-surface-800 disabled:opacity-30"
                       >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15" /></svg>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="18 15 12 9 6 15" />
+                        </svg>
                       </button>
                       <button
                         onClick={() => moveExercise(exIdx, 1)}
                         disabled={exIdx === activeBlock.exercises.length - 1}
                         className="p-0.5 rounded hover:bg-surface-200 dark:hover:bg-surface-800 disabled:opacity-30"
                       >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
                       </button>
                       <button
                         onClick={() => removeExercise(exIdx)}
                         className="p-0.5 rounded hover:bg-red-500/10 text-red-500 ml-1"
                       >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
                       </button>
                     </div>
                   </div>

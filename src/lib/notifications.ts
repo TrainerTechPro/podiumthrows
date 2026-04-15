@@ -174,10 +174,7 @@ export async function markAsRead(
 /**
  * Mark all notifications as read for a user.
  */
-export async function markAllAsRead(
-  profileId: string,
-  role: "COACH" | "ATHLETE"
-): Promise<void> {
+export async function markAllAsRead(profileId: string, role: "COACH" | "ATHLETE"): Promise<void> {
   await prisma.notification.updateMany({
     where: {
       ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
@@ -272,7 +269,9 @@ export async function notifyCoachProgrammingRequested(
   // Build summary body
   const parts: string[] = [];
   if (context.daysSinceLastSession != null) {
-    parts.push(`Last session ${context.daysSinceLastSession} day${context.daysSinceLastSession !== 1 ? "s" : ""} ago`);
+    parts.push(
+      `Last session ${context.daysSinceLastSession} day${context.daysSinceLastSession !== 1 ? "s" : ""} ago`
+    );
   } else {
     parts.push("No sessions yet");
   }
@@ -293,7 +292,7 @@ export async function notifyCoachProgrammingRequested(
     metadata: {
       ...context,
       athleteName,
-      link: `/coach/programming?athlete=${athleteProfileId}`,
+      link: `/coach/schedule?athlete=${athleteProfileId}`,
     },
   });
 }

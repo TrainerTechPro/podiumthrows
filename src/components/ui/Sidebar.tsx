@@ -26,6 +26,7 @@ import {
   Trophy,
   PlusCircle,
   Clock,
+  FileText,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -350,7 +351,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Training",
         href: "/coach/throws",
         icon: <Dumbbell {...iconSize} />,
-        matchPaths: ["/coach/throws", "/coach/programming"],
+        matchPaths: ["/coach/throws", "/coach/schedule", "/coach/plans"],
         children: [
           {
             label: "Throws Hub",
@@ -359,10 +360,16 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             matchPaths: ["/coach/throws"],
           },
           {
-            label: "Programming",
-            href: "/coach/programming",
+            label: "Schedule",
+            href: "/coach/schedule",
             icon: <CalendarRange {...iconSize} />,
-            matchPaths: ["/coach/programming"],
+            matchPaths: ["/coach/schedule"],
+          },
+          {
+            label: "Plans",
+            href: "/coach/plans",
+            icon: <FileText {...iconSize} />,
+            matchPaths: ["/coach/plans"],
           },
           {
             label: "Live Practice",

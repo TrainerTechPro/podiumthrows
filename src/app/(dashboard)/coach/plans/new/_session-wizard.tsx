@@ -128,7 +128,7 @@ export function SessionWizard({
           }
         }
 
-        router.push("/coach/sessions");
+        router.push("/coach/plans");
         router.refresh();
       } catch {
         setError("Something went wrong. Please try again.");
@@ -139,13 +139,24 @@ export function SessionWizard({
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Link
-        href="/coach/sessions"
+        href="/coach/plans"
         className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
         </svg>
-        Back to Sessions
+        Back to Plans
       </Link>
 
       {/* Step Indicator */}
@@ -180,7 +191,16 @@ export function SessionWizard({
                 }`}
               >
                 {i < step ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 ) : (
@@ -195,12 +215,8 @@ export function SessionWizard({
 
       {/* Step Content */}
       <div className="card p-6">
-        {step === 0 && (
-          <StepBasics data={basics} onChange={setBasics} />
-        )}
-        {step === 1 && (
-          <StepBlocks blocks={blocks} onChange={setBlocks} />
-        )}
+        {step === 0 && <StepBasics data={basics} onChange={setBasics} />}
+        {step === 1 && <StepBlocks blocks={blocks} onChange={setBlocks} />}
         {step === 2 && (
           <StepExercises
             blocks={blocks}
@@ -228,9 +244,7 @@ export function SessionWizard({
       </div>
 
       {/* Error */}
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {/* Navigation */}
       <div className="flex items-center justify-between">
@@ -243,11 +257,7 @@ export function SessionWizard({
         </Button>
 
         {step < STEPS.length - 1 ? (
-          <Button
-            variant="primary"
-            onClick={() => setStep((s) => s + 1)}
-            disabled={!canAdvance()}
-          >
+          <Button variant="primary" onClick={() => setStep((s) => s + 1)} disabled={!canAdvance()}>
             Next
           </Button>
         ) : (

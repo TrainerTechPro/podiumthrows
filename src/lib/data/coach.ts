@@ -1279,9 +1279,13 @@ export type WorkoutPlanItem = {
   name: string;
   description: string | null;
   event: string | null;
+  phase: string | null;
   isTemplate: boolean;
   blockCount: number;
   sessionCount: number;
+  /// Count of ProgrammedSession rows linked to this plan (post-H-2 schema).
+  /// Distinct from `sessionCount` (TrainingSession, legacy assignment path).
+  programmedSessionCount: number;
   createdAt: string;
 };
 
@@ -1316,6 +1320,7 @@ export type WorkoutPlanDetail = {
   name: string;
   description: string | null;
   event: string | null;
+  phase: string | null;
   isTemplate: boolean;
   blocks: WorkoutBlockDetail[];
   createdAt: string;
@@ -1343,9 +1348,10 @@ export async function getWorkoutPlans(coachId: string): Promise<WorkoutPlanItem[
       name: true,
       description: true,
       event: true,
+      phase: true,
       isTemplate: true,
       createdAt: true,
-      _count: { select: { blocks: true, sessions: true } },
+      _count: { select: { blocks: true, sessions: true, programmedSessions: true } },
     },
   });
 
@@ -1354,9 +1360,11 @@ export async function getWorkoutPlans(coachId: string): Promise<WorkoutPlanItem[
     name: p.name,
     description: p.description,
     event: p.event as string | null,
+    phase: p.phase as string | null,
     isTemplate: p.isTemplate,
     blockCount: p._count.blocks,
     sessionCount: p._count.sessions,
+    programmedSessionCount: p._count.programmedSessions,
     createdAt: p.createdAt.toISOString(),
   }));
 }
@@ -1389,6 +1397,7 @@ export async function getWorkoutPlanDetail(
     name: plan.name,
     description: plan.description,
     event: plan.event as string | null,
+    phase: plan.phase as string | null,
     isTemplate: plan.isTemplate,
     createdAt: plan.createdAt.toISOString(),
     blocks: plan.blocks.map((b) => ({
@@ -2840,7 +2849,7 @@ export async function getOnboardingStatus(
       label: "Build your first program",
       description: "Generate a Bondarchuk training program",
       completed: hasProgram,
-      href: "/coach/throws/program-builder",
+      href: "/coach/plans/new",
       ctaLabel: "Build Program",
       requiresPrevious: true,
     },

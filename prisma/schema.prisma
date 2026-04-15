@@ -157,19 +157,29 @@ enum NoteCategory {
   GENERAL
 }
 
+/// Bondarchuk macrocycle phase (Volume IV). Nullable on WorkoutPlan so ad-hoc
+/// plans without periodization remain valid; set it when a plan represents a
+/// specific block in the annual cycle.
+enum PhaseType {
+  GPP
+  SPP
+  COMPETITION
+  TRANSITION
+}
+
 // ─── USER & AUTH ────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String?   // null for unclaimed placeholder users
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String? // null for unclaimed placeholder users
   claimedAt    DateTime? // null = coach-created placeholder, set when athlete claims
   role         UserRole
-  isAdmin      Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isAdmin      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  activeMode          String         @default("COACH")
+  activeMode String @default("COACH")
 
   coachProfile        CoachProfile?
   athleteProfile      AthleteProfile?
@@ -184,47 +194,47 @@ model User {
 // ─── COACH ──────────────────────────────────────────────────────────────────
 
 model CoachProfile {
-  id                   String           @id @default(cuid())
-  userId               String           @unique
-  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  firstName            String
-  lastName             String
-  bio                  String?
-  organization         String?
-  avatarUrl            String?
-  plan                 SubscriptionPlan @default(FREE)
-  stripeCustomerId     String?          @unique
-  stripeSubscriptionId String?          @unique
-  currentPeriodEnd     DateTime?
-  paymentFailedAt      DateTime?
-  cancelAtPeriodEnd    Boolean          @default(false)
-  leadId               String?          // ID of the Lead record that converted into this coach (deficit-finder funnel)
-  preferences          String?          @default("{}")
-  enabledModules       String?          @default("[\"general\",\"throws\"]") @db.Text
-  onboardingCompletedAt DateTime?       // null = not completed; timestamp = completed/dismissed
-  trainingEnabled       Boolean         @default(false)
-  events        EventType[] @default([]) // coach's own throwing events for self-training
+  id                    String           @id @default(cuid())
+  userId                String           @unique
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName             String
+  lastName              String
+  bio                   String?
+  organization          String?
+  avatarUrl             String?
+  plan                  SubscriptionPlan @default(FREE)
+  stripeCustomerId      String?          @unique
+  stripeSubscriptionId  String?          @unique
+  currentPeriodEnd      DateTime?
+  paymentFailedAt       DateTime?
+  cancelAtPeriodEnd     Boolean          @default(false)
+  leadId                String? // ID of the Lead record that converted into this coach (deficit-finder funnel)
+  preferences           String?          @default("{}")
+  enabledModules        String?          @default("[\"general\",\"throws\"]") @db.Text
+  onboardingCompletedAt DateTime? // null = not completed; timestamp = completed/dismissed
+  trainingEnabled       Boolean          @default(false)
+  events                EventType[]      @default([]) // coach's own throwing events for self-training
 
   // Timezone (IANA name, e.g. "America/New_York"). NULL = not yet detected.
-  timezone  String?
+  timezone String?
 
   // MFA (multi-factor authentication)
-  mfaSecret        String?   // AES-256-GCM encrypted TOTP secret
-  mfaEnabled       Boolean   @default(false)
-  mfaBackupCodes   String[]  // bcrypt-hashed one-time backup codes
+  mfaSecret      String? // AES-256-GCM encrypted TOTP secret
+  mfaEnabled     Boolean  @default(false)
+  mfaBackupCodes String[] // bcrypt-hashed one-time backup codes
 
   // Core relations (existing PT models)
-  athletes       AthleteProfile[]
-  exercises      Exercise[]
-  workoutPlans   WorkoutPlan[]
-  questionnaires Questionnaire[]
-  videoUploads   VideoUpload[]
-  eventGroups    EventGroup[]
+  athletes           AthleteProfile[]
+  exercises          Exercise[]
+  workoutPlans       WorkoutPlan[]
+  questionnaires     Questionnaire[]
+  videoUploads       VideoUpload[]
+  eventGroups        EventGroup[]
   programmedSessions ProgrammedSession[]
-  invitations    Invitation[]
-  drills         Drill[]
-  notifications  Notification[]
-  teamActivities TeamActivity[]
+  invitations        Invitation[]
+  drills             Drill[]
+  notifications      Notification[]
+  teamActivities     TeamActivity[]
 
   // Throws module relations (from TrainingTracker)
   throwsSessions    ThrowsSession[]
@@ -236,17 +246,17 @@ model CoachProfile {
   drillVideos       DrillVideo[]
 
   // Coach self-training
-  selfLoggedSessions   CoachThrowsSession[]
-  coachPRs             CoachPR[]
-  coachTyping          CoachTyping?
+  selfLoggedSessions CoachThrowsSession[]
+  coachPRs           CoachPR[]
+  coachTyping        CoachTyping?
 
   // Coach lifting program
   liftingPrograms    LiftingProgram[]
   liftingWorkoutLogs LiftingWorkoutLog[]
 
   // Utility relations (from TrainingTracker)
-  voiceNotes   VoiceNote[]
-  activityLogs ActivityLog[]
+  voiceNotes     VoiceNote[]
+  activityLogs   ActivityLog[]
   coachNotes     CoachNote[]
   uploadedVideos AthleteVideo[] @relation("UploadedVideos")
 
@@ -308,15 +318,15 @@ model AthleteProfile {
   dashboardConfig Json?
 
   // Master Profile — Core Info (Section 1)
-  turnDirection   String?   // "LEFT" | "RIGHT"
-  classStanding   String?   // "FR" | "SO" | "JR" | "SR" | "GRAD" | "PRO"
-  gradYear        Int?
+  turnDirection String? // "LEFT" | "RIGHT"
+  classStanding String? // "FR" | "SO" | "JR" | "SR" | "GRAD" | "PRO"
+  gradYear      Int?
 
   // Master Profile — Competition & Distance Bands (Section 2)
   competitionGoals Json?
 
   // Master Profile — Strength Numbers (Section 4)
-  strengthNumbers  Json?
+  strengthNumbers Json?
 
   // Master Profile — Technical Profile (Section 5, coach-managed)
   technicalProfile Json?
@@ -325,13 +335,13 @@ model AthleteProfile {
   movementRestrictions Json?
 
   // Master Profile — Injury History (coach-managed)
-  injuryHistory          Json?
+  injuryHistory Json?
 
   // Master Profile — Competition PRs (coach-managed)
-  competitionPRs         Json?
+  competitionPRs Json?
 
   // Master Profile — Implement PRs (coach-managed)
-  implementPRs           Json?
+  implementPRs Json?
 
   // Core relations (existing PT models)
   trainingSessions         TrainingSession[]
@@ -350,26 +360,26 @@ model AthleteProfile {
   teamActivities           TeamActivity[]
 
   // Throws module relations (from TrainingTracker)
-  throwsAssignments        ThrowsAssignment[]
-  throwsPRs                ThrowsPR[]
-  throwsDrillPRs           ThrowsDrillPR[]
-  throwsCheckIns           ThrowsCheckIn[]
-  assessmentOverrides      AssessmentOverride[]
-  throwsTyping             ThrowsTyping?
-  throwsComplexes          ThrowsComplex[]
-  throwsCompetitions       ThrowsCompetition[]
-  selfLoggedSessions       AthleteThrowsSession[]
-  throwAnalyses            ThrowAnalysis[]
-  videoAnalyses            VideoAnalysis[]
-  drillVideos              DrillVideo[]
-  throwsProfiles           ThrowsProfile[]
-  throwsTestingRecords     ThrowsTestingRecord[]
-  throwsInjuries           ThrowsInjury[]
-  practiceAttempts         PracticeAttempt[]
-  trainingPrograms         TrainingProgram[]
-  equipmentInventory       EquipmentInventory?
-  exercises                Exercise[]
-  selfProgramConfigs       SelfProgramConfig[]
+  throwsAssignments    ThrowsAssignment[]
+  throwsPRs            ThrowsPR[]
+  throwsDrillPRs       ThrowsDrillPR[]
+  throwsCheckIns       ThrowsCheckIn[]
+  assessmentOverrides  AssessmentOverride[]
+  throwsTyping         ThrowsTyping?
+  throwsComplexes      ThrowsComplex[]
+  throwsCompetitions   ThrowsCompetition[]
+  selfLoggedSessions   AthleteThrowsSession[]
+  throwAnalyses        ThrowAnalysis[]
+  videoAnalyses        VideoAnalysis[]
+  drillVideos          DrillVideo[]
+  throwsProfiles       ThrowsProfile[]
+  throwsTestingRecords ThrowsTestingRecord[]
+  throwsInjuries       ThrowsInjury[]
+  practiceAttempts     PracticeAttempt[]
+  trainingPrograms     TrainingProgram[]
+  equipmentInventory   EquipmentInventory?
+  exercises            Exercise[]
+  selfProgramConfigs   SelfProgramConfig[]
 
   // Lifting program
   liftingPrograms    LiftingProgram[]
@@ -379,28 +389,28 @@ model AthleteProfile {
   whoopConnection WhoopConnection?
 
   // Oura Ring integration
-  ouraConnection  OuraConnection?
+  ouraConnection OuraConnection?
 
   // Utility relations (from TrainingTracker)
-  voiceNotes       VoiceNote[]
-  injuries         Injury[]
-  riskAssessments  RiskAssessment[]
-  smartGoals       AthleteGoal[]
-  invitations      Invitation[]
-  notifications    Notification[]
-  coachNotes       CoachNote[]
-  videos           AthleteVideo[]
+  voiceNotes      VoiceNote[]
+  injuries        Injury[]
+  riskAssessments RiskAssessment[]
+  smartGoals      AthleteGoal[]
+  invitations     Invitation[]
+  notifications   Notification[]
+  coachNotes      CoachNote[]
+  videos          AthleteVideo[]
 
   // Availability
-  availabilityShareToken String?               @unique
-  availability          AthleteAvailability[]
-  availabilityOverrides AvailabilityOverride[]
+  availabilityShareToken String?                @unique
+  availability           AthleteAvailability[]
+  availabilityOverrides  AvailabilityOverride[]
 
   // Practice scheduling
   practiceAttendance ScheduledPracticeAttendance[] @relation("AthleteScheduledPracticeAttendance")
 
   // Timezone (IANA name, e.g. "America/New_York"). NULL = not yet detected.
-  timezone  String?
+  timezone String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -414,11 +424,11 @@ model AthleteAvailability {
   id        String         @id @default(cuid())
   athleteId String
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  dayOfWeek Int            // 0=Sunday...6=Saturday
-  startTime String         // "14:00" (24h format)
-  endTime   String         // "17:30"
-  type      String         // AVAILABLE | UNAVAILABLE | CONDITIONAL
-  label     String?        // "Class", "Work", "Open"
+  dayOfWeek Int // 0=Sunday...6=Saturday
+  startTime String // "14:00" (24h format)
+  endTime   String // "17:30"
+  type      String // AVAILABLE | UNAVAILABLE | CONDITIONAL
+  label     String? // "Class", "Work", "Open"
   notes     String?
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
@@ -430,10 +440,10 @@ model AvailabilityOverride {
   id        String         @id @default(cuid())
   athleteId String
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  date      String         // "2026-04-15" (YYYY-MM-DD)
-  startTime String?        // null = whole day
+  date      String // "2026-04-15" (YYYY-MM-DD)
+  startTime String? // null = whole day
   endTime   String?
-  type      String         // AVAILABLE | UNAVAILABLE
+  type      String // AVAILABLE | UNAVAILABLE
   reason    String?
   createdAt DateTime       @default(now())
 
@@ -447,15 +457,15 @@ model ScheduledPractice {
   coachId     String
   coach       CoachProfile                  @relation("CoachScheduledPractices", fields: [coachId], references: [id], onDelete: Cascade)
   title       String
-  date        String                        // YYYY-MM-DD
-  startTime   String                        // "15:00" (24h)
-  endTime     String                        // "17:00"
+  date        String // YYYY-MM-DD
+  startTime   String // "15:00" (24h)
+  endTime     String // "17:00"
   location    String?
   notes       String?
   status      String                        @default("SCHEDULED") // SCHEDULED | CANCELLED | COMPLETED
-  groupId     String?                       // null = all athletes on coach's roster
+  groupId     String? // null = all athletes on coach's roster
   group       EventGroup?                   @relation("EventGroupScheduledPractices", fields: [groupId], references: [id], onDelete: SetNull)
-  recurringId String?                       // shared id for instances of a recurring series
+  recurringId String? // shared id for instances of a recurring series
   createdAt   DateTime                      @default(now())
   updatedAt   DateTime                      @updatedAt
   attendance  ScheduledPracticeAttendance[]
@@ -470,8 +480,8 @@ model ScheduledPracticeAttendance {
   practice   ScheduledPractice @relation(fields: [practiceId], references: [id], onDelete: Cascade)
   athleteId  String
   athlete    AthleteProfile    @relation("AthleteScheduledPracticeAttendance", fields: [athleteId], references: [id], onDelete: Cascade)
-  status     String            // PRESENT | ABSENT | EXCUSED | LATE
-  markedBy   String            // coachId who marked it
+  status     String // PRESENT | ABSENT | EXCUSED | LATE
+  markedBy   String // coachId who marked it
   markedAt   DateTime          @default(now())
   notes      String?
 
@@ -482,22 +492,22 @@ model ScheduledPracticeAttendance {
 // ─── EXERCISES ──────────────────────────────────────────────────────────────
 
 model Exercise {
-  id              String           @id @default(cuid())
-  coachId         String?
-  coach           CoachProfile?    @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  id               String           @id @default(cuid())
+  coachId          String?
+  coach            CoachProfile?    @relation(fields: [coachId], references: [id], onDelete: SetNull)
   athleteProfileId String?
-  athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id], onDelete: SetNull)
-  name            String
-  description     String?
-  videoUrl        String?
-  category        ExerciseCategory
-  event           EventType?
-  implementWeight Float? // kg — for throws exercises
-  equipment       String? // "barbell" | "implement" | "medicine ball" | "bodyweight" | "dumbbell" | "kettlebell" | "band"
-  defaultSets     Int? // Convenience defaults for session builder
-  defaultReps     String? // "3" or "3-5" or "AMRAP"
-  correlationData Json? // Bondarchuk correlation coefficients
-  isGlobal        Boolean          @default(false) // System-provided vs coach-created
+  athleteProfile   AthleteProfile?  @relation(fields: [athleteProfileId], references: [id], onDelete: SetNull)
+  name             String
+  description      String?
+  videoUrl         String?
+  category         ExerciseCategory
+  event            EventType?
+  implementWeight  Float? // kg — for throws exercises
+  equipment        String? // "barbell" | "implement" | "medicine ball" | "bodyweight" | "dumbbell" | "kettlebell" | "band"
+  defaultSets      Int? // Convenience defaults for session builder
+  defaultReps      String? // "3" or "3-5" or "AMRAP"
+  correlationData  Json? // Bondarchuk correlation coefficients
+  isGlobal         Boolean          @default(false) // System-provided vs coach-created
 
   blockExercises BlockExercise[]
 
@@ -520,16 +530,19 @@ model WorkoutPlan {
   name        String
   description String?
   event       EventType?
+  phase       PhaseType?
   isTemplate  Boolean      @default(false)
 
-  blocks   WorkoutBlock[]
-  sessions TrainingSession[]
+  blocks             WorkoutBlock[]
+  sessions           TrainingSession[]
+  programmedSessions ProgrammedSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([coachId])
   @@index([event])
+  @@index([phase])
 }
 
 model WorkoutBlock {
@@ -625,24 +638,24 @@ model SessionLog {
 // ─── THROW LOGS (PT legacy — links to TrainingSession) ──────────────────────
 
 model ThrowLog {
-  id              String           @id @default(cuid())
-  athleteId       String
-  athlete         AthleteProfile   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  sessionId       String?
-  session         TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  event           EventType
+  id                      String           @id @default(cuid())
+  athleteId               String
+  athlete                 AthleteProfile   @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  sessionId               String?
+  session                 TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  event                   EventType
   implementWeight         Float // kg (always stored in kg for calculations)
-  implementWeightUnit     String   @default("kg") // "kg" | "lbs" — what the user entered
+  implementWeightUnit     String           @default("kg") // "kg" | "lbs" — what the user entered
   implementWeightOriginal Float? // original value the user typed (e.g. 14 for 14lbs)
-  distance        Float? // meters (nullable — Quick Log allows tap-to-count without distance)
-  date            DateTime         @default(now())
-  isPersonalBest  Boolean          @default(false)
-  isCompetition   Boolean          @default(false)
-  rpe             Float? // 1-10 per-throw RPE
-  attemptNumber   Int? // ordering within a session
-  wireLength      String? // FULL | THREE_QUARTER | HALF — hammer only
-  notes           String?
-  videoUrl        String?
+  distance                Float? // meters (nullable — Quick Log allows tap-to-count without distance)
+  date                    DateTime         @default(now())
+  isPersonalBest          Boolean          @default(false)
+  isCompetition           Boolean          @default(false)
+  rpe                     Float? // 1-10 per-throw RPE
+  attemptNumber           Int? // ordering within a session
+  wireLength              String? // FULL | THREE_QUARTER | HALF — hammer only
+  notes                   String?
+  videoUrl                String?
 
   @@index([athleteId])
   @@index([athleteId, event])
@@ -657,26 +670,26 @@ model ThrowLog {
 
 /// Threaded comments between coach and athlete on throws or sessions.
 model ThrowComment {
-  id        String  @id @default(cuid())
-  authorId  String  // userId of the author (coach or athlete)
+  id         String @id @default(cuid())
+  authorId   String // userId of the author (coach or athlete)
   authorRole String // "COACH" or "ATHLETE"
 
   // Polymorphic target — exactly one should be set
   throwLogId         String?
-  practiceAttemptId   String?
-  trainingSessionId   String?
-  throwsAssignmentId  String?
+  practiceAttemptId  String?
+  trainingSessionId  String?
+  throwsAssignmentId String?
 
   // Content — either body (text) OR audioUrl (voice note). At least one set.
-  body             String   @db.Text
-  audioUrl         String?  // R2 URL or local /uploads/ path
-  audioDurationSec Int?     // duration of the voice note, rounded up
+  body             String  @db.Text
+  audioUrl         String? // R2 URL or local /uploads/ path
+  audioDurationSec Int? // duration of the voice note, rounded up
 
   // Recipient-side acknowledgment fields. Populated when the OTHER party
   // (not the author) opens/reads/reacts.
   readAt    DateTime?
-  reaction  String?   // "THUMBS_UP" | "THUMBS_DOWN"
-  replyText String?   // one-word or very short acknowledgment
+  reaction  String? // "THUMBS_UP" | "THUMBS_DOWN"
+  replyText String? // one-word or very short acknowledgment
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -708,14 +721,14 @@ model BondarchukAssessment {
 /// whose Bondarchuk assessment was expired (>90 days). Valid for 24 hours from createdAt.
 /// Used by POST /api/throws/assignments to gate session-assign for expired-assessment athletes.
 model AssessmentOverride {
-  id                   String         @id @default(cuid())
-  coachId              String
-  coach                CoachProfile   @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  athleteId            String
-  athlete              AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  assessmentDaysStale  Int // snapshot of days since last assessment at override time
-  reason               String? // optional free-text reason from coach
-  createdAt            DateTime       @default(now())
+  id                  String         @id @default(cuid())
+  coachId             String
+  coach               CoachProfile   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId           String
+  athlete             AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  assessmentDaysStale Int // snapshot of days since last assessment at override time
+  reason              String? // optional free-text reason from coach
+  createdAt           DateTime       @default(now())
 
   @@index([coachId, createdAt])
   @@index([athleteId, createdAt])
@@ -766,11 +779,11 @@ model ReadinessCheckIn {
   notes        String?
 
   // WHOOP integration fields
-  hrvMs        Float?
-  restingHR    Float?
-  spo2         Float?
-  whoopStrain  Float?
-  source       String    @default("MANUAL")
+  hrvMs       Float?
+  restingHR   Float?
+  spo2        Float?
+  whoopStrain Float?
+  source      String @default("MANUAL")
 
   // Oura Ring integration fields (raw 0-100 scores)
   ouraReadiness        Float?
@@ -958,7 +971,7 @@ model VideoUpload {
   transcodedKey   String? // R2 storage key for transcoded file
   transcodeStatus String? @default("pending") // "pending" | "processing" | "ready" | "failed"
   fps             Float?  @default(60) // Detected or assumed FPS
-  gopInterval     Int?    // Group of Pictures size (15 after transcode)
+  gopInterval     Int? // Group of Pictures size (15 after transcode)
 
   frameAnnotations FrameAnnotation[]
 
@@ -978,9 +991,9 @@ model FrameAnnotation {
   id        String      @id @default(cuid())
   videoId   String
   video     VideoUpload @relation(fields: [videoId], references: [id], onDelete: Cascade)
-  timestamp Float       // Time in seconds (snapped to frame boundary)
+  timestamp Float // Time in seconds (snapped to frame boundary)
   source    String      @default("mediapipe") // "mediapipe" | "manual"
-  payload   Json        // { landmarks: PoseLandmark[], angles: { [key]: { value: number, label: string } } }
+  payload   Json // { landmarks: PoseLandmark[], angles: { [key]: { value: number, label: string } } }
   createdAt DateTime    @default(now())
 
   @@unique([videoId, timestamp, source])
@@ -1053,33 +1066,39 @@ model TeamMember {
 // ─── PROGRAMMED SESSIONS (Trickle-Down Scheduling) ──────────────────────────
 
 model ProgrammedSession {
-  id              String            @id @default(cuid())
+  id              String              @id @default(cuid())
   coachId         String
-  coach           CoachProfile      @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coach           CoachProfile        @relation(fields: [coachId], references: [id], onDelete: Cascade)
   title           String
   scheduledDate   String
   notes           String?
   throwsSessionId String
-  throwsSession   ThrowsSession     @relation(fields: [throwsSessionId], references: [id], onDelete: Cascade)
+  throwsSession   ThrowsSession       @relation(fields: [throwsSessionId], references: [id], onDelete: Cascade)
   tier            String
   groupId         String?
-  group           EventGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  group           EventGroup?         @relation(fields: [groupId], references: [id], onDelete: SetNull)
   athleteId       String?
-  athlete         AthleteProfile?   @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  athlete         AthleteProfile?     @relation(fields: [athleteId], references: [id], onDelete: SetNull)
   parentId        String?
   parent          ProgrammedSession?  @relation("SessionOverrides", fields: [parentId], references: [id], onDelete: Cascade)
   overrides       ProgrammedSession[] @relation("SessionOverrides")
   assignments     ThrowsAssignment[]
-  status          String    @default("DRAFT")
+  /// Optional link to the WorkoutPlan (template) this session was scheduled
+  /// from. Null for ad-hoc sessions. SetNull on delete so historic schedules
+  /// survive template deletion.
+  planId          String?
+  plan            WorkoutPlan?        @relation(fields: [planId], references: [id], onDelete: SetNull)
+  status          String              @default("DRAFT")
   publishedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
   @@index([coachId, scheduledDate])
   @@index([groupId])
   @@index([athleteId])
   @@index([parentId])
   @@index([tier])
+  @@index([planId])
 }
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
@@ -1093,10 +1112,10 @@ model ProgrammedSession {
 /// When opted out, the emit helper skips the insert entirely — no
 /// "hidden" rows in the database.
 model TeamActivity {
-  id        String         @id @default(cuid())
-  coachId   String         // the "team" — all athletes under this coach see it
-  coach     CoachProfile   @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  athleteId String?        // the actor. Null for COACH_POST rows.
+  id        String          @id @default(cuid())
+  coachId   String // the "team" — all athletes under this coach see it
+  coach     CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId String? // the actor. Null for COACH_POST rows.
   athlete   AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   /// "PR" | "SESSION" | "STREAK_MILESTONE" | "GOAL_COMPLETED" | "COACH_POST"
@@ -1126,8 +1145,8 @@ model TeamActivityReaction {
   id         String       @id @default(cuid())
   activityId String
   activity   TeamActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  userId     String       // User.id (coach or athlete)
-  emoji      String       // "fire" | "lift" | "hundred"
+  userId     String // User.id (coach or athlete)
+  emoji      String // "fire" | "lift" | "hundred"
   createdAt  DateTime     @default(now())
 
   @@unique([activityId, userId, emoji])
@@ -1138,16 +1157,16 @@ model TeamActivityReaction {
 /// (user, browser, device) — each subscribe call creates a new row
 /// unless the same endpoint already exists (upsert on endpoint).
 model PushSubscription {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  endpoint       String   @unique @db.Text
-  p256dh         String   @db.Text // browser-generated public key
-  authSecret     String   @db.Text // browser-generated auth secret
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint       String    @unique @db.Text
+  p256dh         String    @db.Text // browser-generated public key
+  authSecret     String    @db.Text // browser-generated auth secret
   expirationTime DateTime?
-  userAgent      String?  // best-effort device hint for debugging
-  createdAt      DateTime @default(now())
-  lastUsedAt     DateTime @default(now())
+  userAgent      String? // best-effort device hint for debugging
+  createdAt      DateTime  @default(now())
+  lastUsedAt     DateTime  @default(now())
 
   @@index([userId])
 }
@@ -1158,10 +1177,10 @@ model Notification {
   coach            CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: Cascade)
   athleteProfileId String?
   athleteProfile   AthleteProfile? @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
-  type             String          // notification type key
+  type             String // notification type key
   title            String
   body             String
-  metadata         Json?           // { event, distance, unit, url, etc. }
+  metadata         Json? // { event, distance, unit, url, etc. }
   read             Boolean         @default(false)
   createdAt        DateTime        @default(now())
 
@@ -1177,7 +1196,7 @@ model Invitation {
   id        String           @id @default(cuid())
   coachId   String
   coach     CoachProfile     @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  email     String?          // null for link-only invites (coach shares link manually)
+  email     String? // null for link-only invites (coach shares link manually)
   token     String           @unique @default(cuid())
   status    InvitationStatus @default(PENDING)
   expiresAt DateTime
@@ -1288,7 +1307,6 @@ model ActivityLog {
 
 // ─── BODY MEASUREMENTS ──────────────────────────────────────────────────────
 
-
 // ─── GENERAL INJURY & RISK ──────────────────────────────────────────────────
 
 model Injury {
@@ -1335,7 +1353,6 @@ model RiskAssessment {
 }
 
 // ─── MOBILITY ASSESSMENT ────────────────────────────────────────────────────
-
 
 // ─── SMART GOALS ────────────────────────────────────────────────────────────
 
@@ -1386,9 +1403,9 @@ model ThrowsSession {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  blocks              ThrowsBlock[]
-  assignments         ThrowsAssignment[]
-  programmedSessions  ProgrammedSession[]
+  blocks             ThrowsBlock[]
+  assignments        ThrowsAssignment[]
+  programmedSessions ProgrammedSession[]
 
   @@index([coachId])
   @@index([createdAt])
@@ -1397,14 +1414,14 @@ model ThrowsSession {
 
 /// A block (throwing, strength, warmup, etc.) within a ThrowsSession.
 model ThrowsBlock {
-  id        String        @id @default(cuid())
+  id        String           @id @default(cuid())
   sessionId String
-  session   ThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session   ThrowsSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   blockType SessionBlockType
   position  Int // Order in session (0-based)
   config    String // JSON: block-type-specific configuration
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
   throwLogs ThrowsBlockLog[]
 
@@ -1680,17 +1697,17 @@ model AthleteThrowsSession {
   energyLevel   Int? // 1-5
 
   // Post-session feedback
-  sessionRpe      Int?    // 1-10
+  sessionRpe      Int? // 1-10
   sessionFeeling  String? // GREAT, GOOD, OK, POOR, BAD
-  techniqueRating Int?    // 1-5
-  mentalFocus     Int?    // 1-5
+  techniqueRating Int? // 1-5
+  mentalFocus     Int? // 1-5
   bestPart        String? // What went well
   improvementArea String? // What needs work
 
   loggedByCoach Boolean @default(false)
 
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   drillLogs AthleteDrillLog[]
 
@@ -1700,31 +1717,31 @@ model AthleteThrowsSession {
 
 /// Individual drill entry within an AthleteThrowsSession.
 model AthleteDrillLog {
-  id              String               @id @default(cuid())
-  sessionId       String
-  session         AthleteThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  drillType                String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
-  implementWeight          Float? // kg (always stored in kg for calculations)
-  implementWeightUnit      String   @default("kg") // "kg" | "lbs"
-  implementWeightOriginal  Float? // original value the user typed
-  wireLength               String? // FULL | THREE_QUARTER | HALF — hammer only
-  throwCount               Int                  @default(0)
-  bestMark                 Float? // meters
-  notes                    String?
-  createdAt                DateTime             @default(now())
+  id                      String               @id @default(cuid())
+  sessionId               String
+  session                 AthleteThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  drillType               String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
+  implementWeight         Float? // kg (always stored in kg for calculations)
+  implementWeightUnit     String               @default("kg") // "kg" | "lbs"
+  implementWeightOriginal Float? // original value the user typed
+  wireLength              String? // FULL | THREE_QUARTER | HALF — hammer only
+  throwCount              Int                  @default(0)
+  bestMark                Float? // meters
+  notes                   String?
+  createdAt               DateTime             @default(now())
 
   @@index([sessionId])
 }
 
 /// Coach self-logged training session (mirrors AthleteThrowsSession).
 model CoachThrowsSession {
-  id        String       @id @default(cuid())
-  coachId   String
-  coach     CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  event     EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
-  date      String // YYYY-MM-DD
-  focus     String?
-  notes     String?
+  id      String       @id @default(cuid())
+  coachId String
+  coach   CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  event   EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  date    String // YYYY-MM-DD
+  focus   String?
+  notes   String?
 
   sleepQuality  Int?
   sorenessLevel Int?
@@ -1748,18 +1765,18 @@ model CoachThrowsSession {
 
 /// Individual drill entry within a CoachThrowsSession.
 model CoachDrillLog {
-  id                       String              @id @default(cuid())
-  sessionId                String
-  session                  CoachThrowsSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  drillType                String
-  implementWeight          Float?
-  implementWeightUnit      String   @default("kg") // "kg" | "lbs"
-  implementWeightOriginal  Float? // original value the user typed
-  wireLength               String? // FULL | THREE_QUARTER | HALF — hammer only
-  throwCount               Int                 @default(0)
-  bestMark                 Float?
-  notes                    String?
-  createdAt                DateTime            @default(now())
+  id                      String             @id @default(cuid())
+  sessionId               String
+  session                 CoachThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  drillType               String
+  implementWeight         Float?
+  implementWeightUnit     String             @default("kg") // "kg" | "lbs"
+  implementWeightOriginal Float? // original value the user typed
+  wireLength              String? // FULL | THREE_QUARTER | HALF — hammer only
+  throwCount              Int                @default(0)
+  bestMark                Float?
+  notes                   String?
+  createdAt               DateTime           @default(now())
 
   @@index([sessionId])
 }
@@ -1773,10 +1790,10 @@ model LiftingProgram {
   athleteId       String?
   athlete         AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   name            String
-  goals           String?         // JSON array
+  goals           String? // JSON array
   workoutsPerWeek Int
   totalWeeks      Int
-  rpeTargets      String?         // JSON array
+  rpeTargets      String? // JSON array
   status          String          @default("ACTIVE")
   startDate       String?
   completedDate   String?
@@ -1821,8 +1838,8 @@ model LiftingProgramExercise {
   prescribedDuration  String?
   prescribedLoad      String?
   isIsometric         Boolean             @default(false)
-  durationProgression String?             // JSON array
-  setsProgression     String?             // JSON array
+  durationProgression String? // JSON array
+  setsProgression     String? // JSON array
   notes               String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
@@ -1890,16 +1907,16 @@ model LiftingExerciseLog {
 
 /// Per (event, implementWeight) PR tracking for coach self-training.
 model CoachPR {
-  id              String       @id @default(cuid())
-  coachId         String
-  coach           CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  event           EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
-  implement       String // e.g. "7.26kg"
-  distance        Float
-  achievedAt      DateTime     @default(now())
-  sessionId       String?
-  drillType       String?
-  source          String?      @default("session") // "session" | "manual"
+  id         String       @id @default(cuid())
+  coachId    String
+  coach      CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  event      EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  implement  String // e.g. "7.26kg"
+  distance   Float
+  achievedAt DateTime     @default(now())
+  sessionId  String?
+  drillType  String?
+  source     String?      @default("session") // "session" | "manual"
 
   @@unique([coachId, event, implement])
   @@index([coachId])
@@ -1907,9 +1924,9 @@ model CoachPR {
 
 /// Bondarchuk typing quiz results for a coach (mirrors athlete ThrowsTyping).
 model CoachTyping {
-  id                String       @id @default(cuid())
-  coachId           String       @unique
-  coach             CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  id      String       @id @default(cuid())
+  coachId String       @unique
+  coach   CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
 
   // Raw quiz responses (JSON arrays of score objects)
   adaptationSpeedResponses String? @db.Text
@@ -1919,30 +1936,29 @@ model CoachTyping {
   recoveryResponses        String? @db.Text
 
   // Computed classification
-  adaptationGroup    Int?    // 1, 2, or 3
-  adaptationLabel    String?
-  adaptationConf     Int?    // confidence 0-100
-  transferType       String? // "heavy-dominant" | "competition-dominant" | "balanced"
-  transferLabel      String?
-  transferConf       Int?
+  adaptationGroup     Int? // 1, 2, or 3
+  adaptationLabel     String?
+  adaptationConf      Int? // confidence 0-100
+  transferType        String? // "heavy-dominant" | "competition-dominant" | "balanced"
+  transferLabel       String?
+  transferConf        Int?
   selfFeelingAccuracy String? // "accurate" | "moderate" | "poor"
-  selfFeelingLabel   String?
-  selfFeelingConf    Int?
-  lightImplResponse  String? // "normal-87pct" | "tolerant-13pct"
-  lightImplLabel     String?
-  lightImplConf      Int?
-  recoveryProfile    String? // "fast" | "standard" | "slow"
-  recoveryLabel      String?
-  recoveryConf       Int?
-  recommendedMethod  String?
-  methodReason       String? @db.Text
-  complexDuration    String?
-  sessionsToForm     Int?
+  selfFeelingLabel    String?
+  selfFeelingConf     Int?
+  lightImplResponse   String? // "normal-87pct" | "tolerant-13pct"
+  lightImplLabel      String?
+  lightImplConf       Int?
+  recoveryProfile     String? // "fast" | "standard" | "slow"
+  recoveryLabel       String?
+  recoveryConf        Int?
+  recommendedMethod   String?
+  methodReason        String? @db.Text
+  complexDuration     String?
+  sessionsToForm      Int?
 
   completedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
-
 
 // ─── THROWFLOW — AI BIOMECHANICAL ANALYSIS ──────────────────────────────────
 
@@ -1988,24 +2004,24 @@ model ThrowAnalysis {
 }
 
 model VideoAnalysis {
-  id            String          @id @default(cuid())
-  athleteId     String
-  athlete       AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  coachId       String
-  coach         CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  title         String
-  description   String?
-  event         EventType          // SHOT_PUT, DISCUS, HAMMER, JAVELIN
-  videoUrl      String          // URL to uploaded video file
-  thumbnailUrl  String?         // Auto-generated thumbnail
-  duration      Float?          // Video duration in seconds
-  fps           Float?          // Detected frames per second
-  status        String          @default("UPLOADED") // UPLOADED, ANALYZING, COMPLETED, FAILED
-  annotations   Json?           // Saved pose landmarks + angles per frame { frames: [{ timestamp, landmarks, angles }] }
-  keyPositions  Json?           // Coach-marked key positions { positions: [{ timestamp, label, angles, notes }] }
+  id           String         @id @default(cuid())
+  athleteId    String
+  athlete      AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  coachId      String
+  coach        CoachProfile   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  event        EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
+  videoUrl     String // URL to uploaded video file
+  thumbnailUrl String? // Auto-generated thumbnail
+  duration     Float? // Video duration in seconds
+  fps          Float? // Detected frames per second
+  status       String         @default("UPLOADED") // UPLOADED, ANALYZING, COMPLETED, FAILED
+  annotations  Json? // Saved pose landmarks + angles per frame { frames: [{ timestamp, landmarks, angles }] }
+  keyPositions Json? // Coach-marked key positions { positions: [{ timestamp, label, angles, notes }] }
 
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([athleteId])
   @@index([coachId])
@@ -2013,8 +2029,6 @@ model VideoAnalysis {
 }
 
 // ─── VIDEO ANALYSIS PLATFORM ────────────────────────────────────────────────
-
-
 
 // ─── THROWS PROFILING SYSTEM ─────────────────────────────────────────────────
 
@@ -2031,7 +2045,7 @@ model ThrowsProfile {
   // Core classification
   event  EventType // SHOT_PUT | DISCUS | HAMMER | JAVELIN
   gender String // MALE | FEMALE
-  status String @default("active") // active | inactive
+  status String    @default("active") // active | inactive
 
   // Competition PB (meters) — drives distance band + KPI analysis
   competitionPb       Float?
@@ -2065,8 +2079,8 @@ model ThrowsProfile {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  testingRecords     ThrowsTestingRecord[]
-  throwsInjuries     ThrowsInjury[]
+  testingRecords ThrowsTestingRecord[]
+  throwsInjuries ThrowsInjury[]
 
   @@unique([athleteId, event])
   @@index([enrolledBy])
@@ -2143,7 +2157,6 @@ model ThrowsTestingRecord {
   @@index([throwsProfileId])
   @@index([athleteId, testDate])
 }
-
 
 /// Throws-specific injury record (separate from general Injury model).
 model ThrowsInjury {
@@ -2252,24 +2265,24 @@ model TrainingProgram {
   coach     CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: SetNull)
 
   // Coach self-program flag
-  isCoachSelfProgram Boolean @default(false)
+  isCoachSelfProgram Boolean       @default(false)
   source             ProgramSource @default(COACH_PRESCRIBED)
 
   // Classification
   event  EventType // HAMMER (future: SHOT_PUT, DISCUS, JAVELIN)
   gender String // MALE | FEMALE
-  status String @default("ACTIVE") // ACTIVE | PAUSED | COMPLETED | ARCHIVED
+  status String    @default("ACTIVE") // ACTIVE | PAUSED | COMPLETED | ARCHIVED
 
   // Goal
   startDate    String // YYYY-MM-DD
   targetDate   String // YYYY-MM-DD
-  goalDistance  Float // meters target
+  goalDistance Float // meters target
   startingPr   Float // competition PR at program creation
 
   // Coach program enrichments
   shortTermGoalLabel   String?
   longTermGoalLabel    String?
-  longTermGoalDistance  Float?
+  longTermGoalDistance Float?
   longTermGoalDate     String? // YYYY-MM-DD
   competitionCalendar  String? // JSON: [{name, date, event, priority}]
   mobilityNotes        String? // JSON: {regions: [{area, severity, notes}]}
@@ -2522,17 +2535,17 @@ model AdaptationCheckpoint {
 /// A coach-reviewable suggestion produced by the autoregulation engine.
 /// Created at week-to-week, block-to-block, and program-to-program boundaries.
 model AutoregulationSuggestion {
-  id           String    @id @default(cuid())
+  id           String  @id @default(cuid())
   programId    String
   athleteId    String?
-  checkpointId String?   // FK to AdaptationCheckpoint (block-to-block only)
+  checkpointId String? // FK to AdaptationCheckpoint (block-to-block only)
 
   timescale       String // WEEK_TO_WEEK | BLOCK_TO_BLOCK | PROGRAM_TO_PROGRAM
-  status          String    @default("PENDING") // PENDING | APPROVED | REJECTED | AUTO_APPROVED
-  suggestedChange String    // JSON
+  status          String @default("PENDING") // PENDING | APPROVED | REJECTED | AUTO_APPROVED
+  suggestedChange String // JSON
   reasoning       String
 
-  expiresAt    DateTime
+  expiresAt     DateTime
   autoApproveAt DateTime? // set for AUTO mode; cron auto-approves at this time
 
   createdAt DateTime @default(now())
@@ -2550,7 +2563,7 @@ model ProgramCarryforward {
   completedProgramId     String  @unique
   athleteId              String
   coachId                String?
-  previousProgramContext String  // JSON: PreviousProgramContext
+  previousProgramContext String // JSON: PreviousProgramContext
   consumed               Boolean @default(false)
 
   createdAt DateTime @default(now())
@@ -2566,8 +2579,8 @@ model AutoregulationSettings {
   coachId   String
   athleteId String? // null = coach-global default; non-null = athlete override
 
-  mode             String @default("NOTIFY") // OFF | NOTIFY | AUTO | APPROVAL_REQUIRED
-  timescalesJson   String @default("{\"intraSession\":true,\"sessionToSession\":true,\"weekToWeek\":true,\"blockToBlock\":true,\"programToProgram\":true}")
+  mode           String @default("NOTIFY") // OFF | NOTIFY | AUTO | APPROVAL_REQUIRED
+  timescalesJson String @default("{\"intraSession\":true,\"sessionToSession\":true,\"weekToWeek\":true,\"blockToBlock\":true,\"programToProgram\":true}")
 
   // Legacy per-timescale mode columns (kept for resolve-settings compatibility)
   weekToWeek       String @default("SUGGEST")
@@ -2586,19 +2599,19 @@ model AutoregulationSettings {
 /// Captured from squeeze pages and lead magnets.
 /// Integration point: sync rows to ConvertKit/Mailchimp via webhook or cron.
 model Lead {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  source    String   @default("deficit-finder") // which lead magnet
-  event     String?  // SP, DT, HT, JT
-  gender    String?  // M, F
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String?
+  source          String   @default("deficit-finder") // which lead magnet
+  event           String? // SP, DT, HT, JT
+  gender          String? // M, F
   // Deficit finder specific data
-  deficitResult Json?  // snapshot of their result for follow-up emails
-  utmSource    String?
-  utmMedium    String?
-  utmCampaign  String?
-  convertedToUser Boolean @default(false)
-  createdAt DateTime @default(now())
+  deficitResult   Json? // snapshot of their result for follow-up emails
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  convertedToUser Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
   @@index([source])
   @@index([createdAt])
@@ -2610,19 +2623,19 @@ model Lead {
 // ─── THROWS CODEX ────────────────────────────────────────────────────────────
 
 model CodexEntry {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event     EventType
-  implement String    // e.g. "7.26kg", "2kg"
-  distance  Float     // meters
-  videoUrl     String    // R2 URL or local path
-  thumbnailUrl String?   // captured frame thumbnail
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event        EventType
+  implement    String // e.g. "7.26kg", "2kg"
+  distance     Float // meters
+  videoUrl     String // R2 URL or local path
+  thumbnailUrl String? // captured frame thumbnail
   fileSize     Int       @default(0) // bytes
-  notes     String?
-  thrownAt  DateTime  @default(now())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  notes        String?
+  thrownAt     DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([userId, thrownAt])
   @@index([userId, event])
@@ -2631,8 +2644,8 @@ model CodexEntry {
 
 /// Uses the Stripe event ID (evt_xxx) as the primary key — a natural idempotency key.
 model StripeEvent {
-  id          String   @id          // Stripe event ID — NOT auto-generated
-  type        String               // e.g. "checkout.session.completed"
+  id          String   @id // Stripe event ID — NOT auto-generated
+  type        String // e.g. "checkout.session.completed"
   processedAt DateTime @default(now())
 
   @@index([type])
@@ -2642,8 +2655,8 @@ model StripeEvent {
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?
-  action    String   // e.g. "LOGIN_SUCCESS", "LOGIN_FAILED", "PASSWORD_RESET"
-  resource  String?  // e.g. "athlete:abc123", "invitation:xyz"
+  action    String // e.g. "LOGIN_SUCCESS", "LOGIN_FAILED", "PASSWORD_RESET"
+  resource  String? // e.g. "athlete:abc123", "invitation:xyz"
   ip        String?
   userAgent String?
   metadata  Json?
@@ -2667,40 +2680,40 @@ model TokenBlacklist {
 // ── SELF-PROGRAMMING ──────────────────────────────────────────────────────
 
 model SelfProgramConfig {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   athleteProfileId  String
-  athleteProfile    AthleteProfile  @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
-  trainingProgramId String?         @unique
+  athleteProfile    AthleteProfile   @relation(fields: [athleteProfileId], references: [id], onDelete: Cascade)
+  trainingProgramId String?          @unique
   trainingProgram   TrainingProgram? @relation(fields: [trainingProgramId], references: [id], onDelete: SetNull)
 
   // Wizard answers
-  programType         String          // "THROWS_ONLY" | "THROWS_AND_LIFTING"
-  event               EventType          // "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN"
-  gender              String          // "MALE" | "FEMALE"
+  programType         String // "THROWS_ONLY" | "THROWS_AND_LIFTING"
+  event               EventType // "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN"
+  gender              String // "MALE" | "FEMALE"
   yearsExperience     Int
-  competitionLevel    String          // "HIGH_SCHOOL" | "COLLEGIATE" | "POST_COLLEGIATE" | "ELITE"
-  currentPR           Float           // meters
-  goalDistance         Float           // target PR meters
-  currentWeeklyVolume Int?            // throws/week
-  availableImplements Json            // [{weightKg, type}]
-  daysPerWeek         Int             // 2-5
-  sessionsPerDay      Int             // 1 or 2
-  preferredDays       Json            // ["MONDAY", ...]
+  competitionLevel    String // "HIGH_SCHOOL" | "COLLEGIATE" | "POST_COLLEGIATE" | "ELITE"
+  currentPR           Float // meters
+  goalDistance        Float // target PR meters
+  currentWeeklyVolume Int? // throws/week
+  availableImplements Json // [{weightKg, type}]
+  daysPerWeek         Int // 2-5
+  sessionsPerDay      Int // 1 or 2
+  preferredDays       Json // ["MONDAY", ...]
   startDate           DateTime
-  competitionDates    Json?           // [{date, name, priority}]
-  primaryGoal         String          // "DISTANCE" | "TECHNIQUE" | "CONSISTENCY"
-  generationMode      String          // "AUTOPILOT" | "GUIDED"
-  exercisePreferences Json?           // {preferred: [], avoided: [], favoriteDrills: []}
+  competitionDates    Json? // [{date, name, priority}]
+  primaryGoal         String // "DISTANCE" | "TECHNIQUE" | "CONSISTENCY"
+  generationMode      String // "AUTOPILOT" | "GUIDED"
+  exercisePreferences Json? // {preferred: [], avoided: [], favoriteDrills: []}
 
   // Typing
-  usedExistingTyping Boolean         @default(false)
+  usedExistingTyping Boolean @default(false)
   inlineTypingData   Json?
 
   // Rolling program state
-  isActive          Boolean          @default(true)
-  isDraft           Boolean          @default(true)
-  generationCount   Int              @default(0)
-  currentPhaseIndex Int              @default(0)
+  isActive          Boolean @default(true)
+  isDraft           Boolean @default(true)
+  generationCount   Int     @default(0)
+  currentPhaseIndex Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2711,18 +2724,18 @@ model SelfProgramConfig {
 // ─── WHOOP INTEGRATION ────────────────────────────────────────────────────────
 
 model WhoopConnection {
-  id             String         @id @default(cuid())
-  athleteId      String         @unique
-  athlete        AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  id             String               @id @default(cuid())
+  athleteId      String               @unique
+  athlete        AthleteProfile       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   whoopUserId    Int
   accessToken    String
   refreshToken   String
   tokenExpiresAt DateTime
   scopes         String
-  syncMode       String         @default("ASSISTED")
+  syncMode       String               @default("ASSISTED")
   lastSyncAt     DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
   snapshots      WhoopDailySnapshot[]
 
   @@index([whoopUserId])
@@ -2746,7 +2759,7 @@ model WhoopDailySnapshot {
   remSleepMs       Int?
   strain           Float?
   rawData          String?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime        @default(now())
 
   @@unique([connectionId, date])
   @@index([connectionId, date])
@@ -2805,8 +2818,8 @@ model TeamLink {
   coach     CoachProfile @relation("CoachTeamLinks", fields: [coachId], references: [id], onDelete: Cascade)
   title     String
   url       String
-  category  String?      // "Facilities" | "Compliance" | "Training" | "Other" — free-form
-  icon      String?      // emoji or lucide icon name
+  category  String? // "Facilities" | "Compliance" | "Training" | "Other" — free-form
+  icon      String? // emoji or lucide icon name
   order     Int          @default(0)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -2819,9 +2832,9 @@ model TeamFile {
   coachId   String
   coach     CoachProfile @relation("CoachTeamFiles", fields: [coachId], references: [id], onDelete: Cascade)
   name      String
-  fileUrl   String       // R2 public URL
-  fileKey   String       // R2 object key (for deletion)
-  fileSize  Int          // bytes
+  fileUrl   String // R2 public URL
+  fileKey   String // R2 object key (for deletion)
+  fileSize  Int // bytes
   mimeType  String
   category  String?
   createdAt DateTime     @default(now())
@@ -2838,7 +2851,7 @@ model TeamAnnouncement {
   priority   String       @default("NORMAL") // NORMAL | URGENT
   pinned     Boolean      @default(false)
   targetType String       @default("ALL") // ALL | GROUP | INDIVIDUAL
-  targetId   String?      // groupId or athleteId, depending on targetType
+  targetId   String? // groupId or athleteId, depending on targetType
   expiresAt  DateTime?
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt

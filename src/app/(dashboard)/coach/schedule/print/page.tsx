@@ -123,9 +123,7 @@ export default async function PrintProgramPage({
   if (athleteFilter) {
     sessions = sessions.filter(
       (s) =>
-        s.athlete?.id === athleteFilter ||
-        s.tier === "TEAM" ||
-        (s.tier === "GROUP" && !s.athlete)
+        s.athlete?.id === athleteFilter || s.tier === "TEAM" || (s.tier === "GROUP" && !s.athlete)
     );
   }
 
@@ -153,7 +151,7 @@ export default async function PrintProgramPage({
     }
   }
 
-  const backHref = "/coach/programming";
+  const backHref = "/coach/schedule";
 
   return (
     <div className="max-w-[800px] mx-auto print:max-w-none">
@@ -164,12 +162,12 @@ export default async function PrintProgramPage({
 
       {/* Header */}
       <div className="mb-6 pb-4 border-b-2 border-black dark:border-white print:border-black">
-        <h1 className="text-xl font-heading font-bold print:text-black">
-          Weekly Program
-        </h1>
+        <h1 className="text-xl font-heading font-bold print:text-black">Weekly Program</h1>
         <div className="flex items-baseline justify-between gap-4 mt-1">
           <p className="text-sm print:text-black">
-            <span className="font-semibold">{coach.firstName} {coach.lastName}</span>
+            <span className="font-semibold">
+              {coach.firstName} {coach.lastName}
+            </span>
             {coach.organization && (
               <span className="text-muted print:text-gray-600"> &mdash; {coach.organization}</span>
             )}
@@ -180,7 +178,10 @@ export default async function PrintProgramPage({
         </div>
         {athleteFilter && sessions[0]?.athlete && (
           <p className="text-sm mt-1 print:text-black">
-            Athlete: <span className="font-semibold">{sessions[0].athlete.firstName} {sessions[0].athlete.lastName}</span>
+            Athlete:{" "}
+            <span className="font-semibold">
+              {sessions[0].athlete.firstName} {sessions[0].athlete.lastName}
+            </span>
           </p>
         )}
       </div>
@@ -208,7 +209,9 @@ export default async function PrintProgramPage({
                       event={s.throwsSession.event}
                       tier={s.tier}
                       groupName={s.group?.name ?? null}
-                      athleteName={s.athlete ? `${s.athlete.firstName} ${s.athlete.lastName}` : null}
+                      athleteName={
+                        s.athlete ? `${s.athlete.firstName} ${s.athlete.lastName}` : null
+                      }
                       notes={s.notes}
                       blocks={blocks}
                     />
@@ -304,7 +307,10 @@ function SessionBlock({
               {throwingBlocks.map((b) => {
                 const cfg = parseConfig<ThrowingConfig>(b.config);
                 return (
-                  <tr key={b.id} className="border-b border-gray-100 dark:border-surface-800 print:border-gray-200">
+                  <tr
+                    key={b.id}
+                    className="border-b border-gray-100 dark:border-surface-800 print:border-gray-200"
+                  >
                     <td className="py-1 font-mono">{cfg?.implementWeight || "\u2014"}</td>
                     <td className="py-1 text-right font-mono">{cfg?.throwCount ?? "\u2014"}</td>
                     <td className="py-1 text-right font-mono">
@@ -342,7 +348,10 @@ function SessionBlock({
                 const cfg = parseConfig<StrengthConfig>(b.config);
                 if (!cfg?.exercises?.length) return [];
                 return cfg.exercises.map((ex, i) => (
-                  <tr key={`${b.id}-${i}`} className="border-b border-gray-100 dark:border-surface-800 print:border-gray-200">
+                  <tr
+                    key={`${b.id}-${i}`}
+                    className="border-b border-gray-100 dark:border-surface-800 print:border-gray-200"
+                  >
                     <td className="py-1">{ex.name || "\u2014"}</td>
                     <td className="py-1 text-right font-mono">
                       {ex.sets} x {ex.reps}
@@ -375,11 +384,7 @@ function SessionBlock({
       )}
 
       {/* Session notes */}
-      {notes && (
-        <p className="text-xs text-muted print:text-gray-500 mt-1 italic">
-          {notes}
-        </p>
-      )}
+      {notes && <p className="text-xs text-muted print:text-gray-500 mt-1 italic">{notes}</p>}
     </div>
   );
 }

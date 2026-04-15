@@ -88,7 +88,8 @@ export function StepBlocks({
       <div>
         <h2 className="text-lg font-bold text-[var(--foreground)]">Build Blocks</h2>
         <p className="text-sm text-muted mt-1">
-          Structure your session into blocks. Throwing blocks should be separated by strength blocks.
+          Structure your session into blocks. Throwing blocks should be separated by strength
+          blocks.
         </p>
       </div>
 
@@ -96,10 +97,11 @@ export function StepBlocks({
       {!validation.valid && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 space-y-1">
           {validation.warnings.map((w, i) => (
-            <p key={i} className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2">
-              <span className="shrink-0 mt-0.5">
-                {w.severity === "error" ? "!!" : "!"}
-              </span>
+            <p
+              key={i}
+              className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2"
+            >
+              <span className="shrink-0 mt-0.5">{w.severity === "error" ? "!!" : "!"}</span>
               {w.message}
             </p>
           ))}
@@ -115,9 +117,7 @@ export function StepBlocks({
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Badge variant={TYPE_BADGE[block.blockType] ?? "neutral"}>
-                  {block.blockType}
-                </Badge>
+                <Badge variant={TYPE_BADGE[block.blockType] ?? "neutral"}>{block.blockType}</Badge>
                 <span className="text-xs text-muted">Block {idx + 1}</span>
               </div>
               <div className="flex items-center gap-1">
@@ -127,7 +127,16 @@ export function StepBlocks({
                   className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-800 disabled:opacity-30 transition-colors"
                   aria-label="Move up"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="18 15 12 9 6 15" />
                   </svg>
                 </button>
@@ -137,7 +146,16 @@ export function StepBlocks({
                   className="p-1 rounded hover:bg-surface-200 dark:hover:bg-surface-800 disabled:opacity-30 transition-colors"
                   aria-label="Move down"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
@@ -146,7 +164,16 @@ export function StepBlocks({
                   className="p-1 rounded hover:bg-red-500/10 text-red-500 transition-colors ml-1"
                   aria-label="Remove block"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>

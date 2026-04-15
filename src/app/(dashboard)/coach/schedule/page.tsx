@@ -201,7 +201,7 @@ export default function ProgrammingPage() {
           )}
 
           <Link
-            href={`/coach/programming/print?start=${toDateStr(weekStart)}`}
+            href={`/coach/schedule/print?start=${toDateStr(weekStart)}`}
             target="_blank"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
             aria-label="Print this week's program"

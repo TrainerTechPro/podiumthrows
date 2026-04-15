@@ -56,6 +56,39 @@ const nextConfig = {
         destination: '/coach/athletes?tab=throws&moved=1',
         permanent: true,
       },
+
+      // H-2: Flat programming IA — Schedule + Plans as peers.
+      // /coach/programming* → /coach/schedule* (week calendar lives here now)
+      {
+        source: '/coach/programming',
+        destination: '/coach/schedule',
+        permanent: true,
+      },
+      {
+        source: '/coach/programming/:path*',
+        destination: '/coach/schedule/:path*',
+        permanent: true,
+      },
+      // /coach/sessions* → /coach/plans* (plans are the template library;
+      // scheduled instances live on /coach/schedule).
+      {
+        source: '/coach/sessions',
+        destination: '/coach/plans',
+        permanent: true,
+      },
+      {
+        source: '/coach/sessions/new',
+        destination: '/coach/plans/new',
+        permanent: true,
+      },
+      // Legacy throws wizard — same job as the unified plan builder.
+      // Note: keeps as 308 rather than 301 so the user's history/back button
+      // reaches the new canonical URL on refresh.
+      {
+        source: '/coach/throws/program-builder',
+        destination: '/coach/plans/new',
+        permanent: true,
+      },
     ];
   },
   async headers() {

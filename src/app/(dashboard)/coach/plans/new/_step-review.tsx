@@ -87,7 +87,9 @@ export function StepReview({
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-[var(--foreground)]">Review & Save</h2>
-        <p className="text-sm text-muted mt-1">Review your session, then save or assign to athletes.</p>
+        <p className="text-sm text-muted mt-1">
+          Review your session, then save or assign to athletes.
+        </p>
       </div>
 
       {/* Session Summary */}
@@ -96,9 +98,7 @@ export function StepReview({
           <h3 className="font-bold text-[var(--foreground)]">{basics.name}</h3>
           {basics.event && <Badge variant="neutral">{formatEventName(basics.event)}</Badge>}
         </div>
-        {basics.description && (
-          <p className="text-sm text-muted">{basics.description}</p>
-        )}
+        {basics.description && <p className="text-sm text-muted">{basics.description}</p>}
         <div className="flex flex-wrap gap-4 text-sm">
           <div>
             <span className="text-muted">Blocks:</span>{" "}
@@ -118,15 +118,27 @@ export function StepReview({
       </div>
 
       {/* Bondarchuk Compliance */}
-      <div className={`rounded-lg border px-4 py-3 ${
-        validation.valid
-          ? "border-emerald-500/30 bg-emerald-500/10"
-          : "border-amber-500/30 bg-amber-500/10"
-      }`}>
+      <div
+        className={`rounded-lg border px-4 py-3 ${
+          validation.valid
+            ? "border-emerald-500/30 bg-emerald-500/10"
+            : "border-amber-500/30 bg-amber-500/10"
+        }`}
+      >
         <div className="flex items-center gap-2 mb-1">
           {validation.valid ? (
             <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-emerald-500"
+              >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
@@ -136,7 +148,17 @@ export function StepReview({
             </>
           ) : (
             <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-amber-500"
+              >
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -163,9 +185,7 @@ export function StepReview({
         {blocks.map((block, idx) => (
           <div key={idx} className="border border-[var(--card-border)] rounded-lg p-3">
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant={TYPE_BADGE[block.blockType] ?? "neutral"}>
-                {block.blockType}
-              </Badge>
+              <Badge variant={TYPE_BADGE[block.blockType] ?? "neutral"}>{block.blockType}</Badge>
               <span className="text-sm font-medium text-[var(--foreground)]">{block.name}</span>
               {block.restSeconds > 0 && (
                 <span className="text-xs text-muted ml-auto">{block.restSeconds}s rest</span>
@@ -212,7 +232,9 @@ export function StepReview({
         />
         <div>
           <span className="text-sm font-medium text-[var(--foreground)]">Save as Template</span>
-          <p className="text-xs text-muted">Templates can be reused and cloned for future sessions.</p>
+          <p className="text-xs text-muted">
+            Templates can be reused and cloned for future sessions.
+          </p>
         </div>
       </label>
 
@@ -223,8 +245,12 @@ export function StepReview({
             Assign to Athletes
           </h3>
           <div className="flex gap-2">
-            <button onClick={selectAll} className="text-xs text-primary-500 hover:underline">Select All</button>
-            <button onClick={selectNone} className="text-xs text-muted hover:underline">Clear</button>
+            <button onClick={selectAll} className="text-xs text-primary-500 hover:underline">
+              Select All
+            </button>
+            <button onClick={selectNone} className="text-xs text-muted hover:underline">
+              Clear
+            </button>
           </div>
         </div>
 
@@ -254,13 +280,24 @@ export function StepReview({
                       {athlete.firstName} {athlete.lastName}
                     </p>
                   </div>
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
-                    selected
-                      ? "bg-primary-500 border-primary-500"
-                      : "border-surface-300 dark:border-surface-600"
-                  }`}>
+                  <div
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
+                      selected
+                        ? "bg-primary-500 border-primary-500"
+                        : "border-surface-300 dark:border-surface-600"
+                    }`}
+                  >
                     {selected && (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )}
