@@ -45,7 +45,7 @@ export async function PATCH(
 
     const parsed = await parseBody(request, TeamUpdateSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { name, description } = parsed;
+    const { name, description, parentTeamId, order } = parsed;
 
     // Name uniqueness check (exclude current team)
     if (name !== undefined) {
@@ -64,11 +64,50 @@ export async function PATCH(
       }
     }
 
+    // Parent change validation: 2-level cap + no self-parent + no orphaning children
+    if (parentTeamId !== undefined && parentTeamId !== null) {
+      if (parentTeamId === teamId) {
+        return NextResponse.json(
+          { success: false, error: "A group cannot be its own parent" },
+          { status: 400 }
+        );
+      }
+      const parent = await prisma.team.findFirst({
+        where: { id: parentTeamId, coachId: coach.id },
+        select: { id: true, parentTeamId: true },
+      });
+      if (!parent) {
+        return NextResponse.json(
+          { success: false, error: "Parent group not found" },
+          { status: 404 }
+        );
+      }
+      if (parent.parentTeamId !== null) {
+        return NextResponse.json(
+          { success: false, error: "Sub-groups cannot contain further sub-groups (2-level max)" },
+          { status: 400 }
+        );
+      }
+      // If THIS group has children, it cannot become a sub-group (would create grandchildren)
+      const childCount = await prisma.team.count({ where: { parentTeamId: teamId } });
+      if (childCount > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "This group has sub-groups and can't be moved under another group",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const updated = await prisma.team.update({
       where: { id: teamId },
       data: {
         ...(name !== undefined ? { name } : {}),
         ...(description !== undefined ? { description: description ?? null } : {}),
+        ...(parentTeamId !== undefined ? { parentTeamId: parentTeamId ?? null } : {}),
+        ...(order !== undefined && order !== null ? { order } : {}),
       },
     });
 

@@ -421,6 +421,8 @@ export const TeamCreateSchema = z.object({
     .max(100)
     .transform((s) => s.trim()),
   description: z.string().max(500).nullable().optional(),
+  parentTeamId: z.string().cuid().nullable().optional(),
+  order: z.number().int().min(0).nullable().optional(),
 });
 
 export const TeamUpdateSchema = z.object({
@@ -431,6 +433,8 @@ export const TeamUpdateSchema = z.object({
     .transform((s) => s.trim())
     .optional(),
   description: z.string().max(500).nullable().optional(),
+  parentTeamId: z.string().cuid().nullable().optional(),
+  order: z.number().int().min(0).nullable().optional(),
 });
 
 export const TeamAddMembersSchema = z.object({

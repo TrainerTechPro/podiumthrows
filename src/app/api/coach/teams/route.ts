@@ -31,7 +31,7 @@ export async function GET() {
           },
         },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     });
 
     const data = teams.map((team) => {
@@ -45,6 +45,8 @@ export async function GET() {
         id: team.id,
         name: team.name,
         description: team.description,
+        parentTeamId: team.parentTeamId,
+        order: team.order,
         memberCount: team.members.length,
         eventBreakdown,
         createdAt: team.createdAt,
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, TeamCreateSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { name, description } = parsed;
+    const { name, description, parentTeamId, order } = parsed;
 
     // Case-insensitive name uniqueness check
     const existing = await prisma.team.findFirst({
@@ -92,11 +94,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Parent validation: must belong to same coach AND be top-level (2-level cap)
+    if (parentTeamId) {
+      const parent = await prisma.team.findFirst({
+        where: { id: parentTeamId, coachId: coach.id },
+        select: { id: true, parentTeamId: true },
+      });
+      if (!parent) {
+        return NextResponse.json(
+          { success: false, error: "Parent group not found" },
+          { status: 404 }
+        );
+      }
+      if (parent.parentTeamId !== null) {
+        return NextResponse.json(
+          { success: false, error: "Sub-groups cannot contain further sub-groups (2-level max)" },
+          { status: 400 }
+        );
+      }
+    }
+
     const team = await prisma.team.create({
       data: {
         coachId: coach.id,
         name,
         description: description ?? null,
+        parentTeamId: parentTeamId ?? null,
+        order: order ?? 0,
       },
     });
 

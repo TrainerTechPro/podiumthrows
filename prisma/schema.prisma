@@ -1042,16 +1042,26 @@ model EventGroupMember {
 // ─── ROSTER GROUPS (Coach-Defined Teams) ────────────────────────────────────
 
 model Team {
-  id          String       @id @default(cuid())
-  coachId     String
-  coach       CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  members     TeamMember[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id            String       @id @default(cuid())
+  coachId       String
+  coach         CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  /// Self-referential parent for 2-level nesting (group → sub-group).
+  /// Top-level groups have parentTeamId = null. Sub-groups cannot themselves
+  /// have children — enforced in the API layer, not the schema.
+  parentTeamId  String?
+  parent        Team?        @relation("TeamHierarchy", fields: [parentTeamId], references: [id], onDelete: Cascade)
+  children      Team[]       @relation("TeamHierarchy")
+  /// Manual sort order within each parent scope (top-level or sibling
+  /// sub-groups). Lower values render first; ties broken by createdAt.
+  order         Int          @default(0)
+  members       TeamMember[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([coachId])
+  @@index([parentTeamId])
 }
 
 model TeamMember {
