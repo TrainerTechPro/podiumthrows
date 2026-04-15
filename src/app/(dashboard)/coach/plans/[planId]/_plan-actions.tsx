@@ -41,6 +41,7 @@ export function PlanActions({
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
 
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedAthletes, setSelectedAthletes] = useState<Set<string>>(new Set());
@@ -118,6 +119,30 @@ export function PlanActions({
       error("Assign failed", err instanceof Error ? err.message : "Network error");
     } finally {
       setAssigning(false);
+    }
+  }
+
+  async function handleDuplicate() {
+    setDuplicating(true);
+    try {
+      const res = await fetch(`/api/coach/plans/${planId}/clone`, {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        error("Duplicate failed", data.error ?? "Could not duplicate plan.");
+        return;
+      }
+      // Clone endpoint returns { id, name } unwrapped, not in the canonical
+      // { success, data } envelope — parse directly.
+      const created = (await res.json()) as { id: string; name: string };
+      success("Plan duplicated", `"${created.name}" is ready to edit.`);
+      router.push(`/coach/plans/${created.id}`);
+    } catch (err) {
+      error("Duplicate failed", err instanceof Error ? err.message : "Network error");
+    } finally {
+      setDuplicating(false);
     }
   }
 
@@ -274,6 +299,9 @@ export function PlanActions({
       <div className="flex items-center gap-2 flex-wrap">
         <Button variant="primary" onClick={() => setAssignOpen(true)}>
           Assign to athletes
+        </Button>
+        <Button variant="secondary" onClick={handleDuplicate} loading={duplicating}>
+          Duplicate
         </Button>
         <Button
           variant="ghost"
