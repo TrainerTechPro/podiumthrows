@@ -739,7 +739,7 @@ export async function getAthleteFull(athleteId: string, coachId: string) {
   return prisma.athleteProfile.findFirst({
     where: { id: athleteId, coachId },
     include: {
-      user: { select: { email: true, createdAt: true } },
+      user: { select: { email: true, createdAt: true, claimedAt: true } },
     },
   });
 }
