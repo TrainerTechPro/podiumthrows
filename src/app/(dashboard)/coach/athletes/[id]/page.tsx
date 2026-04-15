@@ -27,6 +27,7 @@ import {
 } from "@/lib/data/coach";
 import type { AthletePREvent } from "@/lib/data/personal-records";
 import { getAthleteAttendanceStats } from "@/lib/data/practices";
+import { AssessmentStatusBadge } from "@/components/bondarchuk/AssessmentStatusBadge";
 import { SectionNav } from "./_section-nav";
 import { DistanceTrend } from "./_distance-trend";
 import { CoachActionBar } from "./_action-bar";
@@ -63,9 +64,7 @@ function formatShortDate(iso: string): string {
 
 function calcAge(dob: Date | null): string {
   if (!dob) return "—";
-  return String(
-    Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-  );
+  return String(Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000)));
 }
 
 const BONDARCHUK_COLORS: Record<string, "warning" | "primary" | "success" | "danger"> = {
@@ -96,11 +95,7 @@ function AthleteHeader({
         <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
       </Link>
 
-      <Avatar
-        name={`${athlete.firstName} ${athlete.lastName}`}
-        src={athlete.avatarUrl}
-        size="lg"
-      />
+      <Avatar name={`${athlete.firstName} ${athlete.lastName}`} src={athlete.avatarUrl} size="lg" />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -114,18 +109,17 @@ function AthleteHeader({
           )}
         </div>
         <div className="flex flex-wrap gap-1.5 mt-2">
-          {events.length > 0
-            ? events.map((e) => (
-                <Badge key={e} variant="neutral">
-                  {formatEventName(e)}
-                </Badge>
-              ))
-            : <span className="text-xs text-muted">No events assigned</span>
-          }
+          {events.length > 0 ? (
+            events.map((e) => (
+              <Badge key={e} variant="neutral">
+                {formatEventName(e)}
+              </Badge>
+            ))
+          ) : (
+            <span className="text-xs text-muted">No events assigned</span>
+          )}
           {athlete.currentStreak > 0 && (
-            <Badge variant="warning">
-              🔥 {athlete.currentStreak}d streak
-            </Badge>
+            <Badge variant="warning">🔥 {athlete.currentStreak}d streak</Badge>
           )}
         </div>
       </div>
@@ -148,23 +142,32 @@ function DecisionHero({
 }) {
   const readinessScore = latestReadiness?.overallScore ?? null;
   const readinessColor =
-    readinessScore === null ? "text-surface-400"
-    : readinessScore >= 8 ? "text-emerald-500"
-    : readinessScore >= 5 ? "text-amber-500"
-    : "text-red-500";
+    readinessScore === null
+      ? "text-surface-400"
+      : readinessScore >= 8
+        ? "text-emerald-500"
+        : readinessScore >= 5
+          ? "text-amber-500"
+          : "text-red-500";
 
   const acwrRatio = acwr?.ratio ?? null;
   const acwrLabel = acwr
-    ? acwr.ratio > 1.5 ? "High Risk"
-      : acwr.ratio > 1.3 ? "Elevated"
-      : acwr.ratio < 0.8 ? "Under-trained"
-      : "Optimal"
+    ? acwr.ratio > 1.5
+      ? "High Risk"
+      : acwr.ratio > 1.3
+        ? "Elevated"
+        : acwr.ratio < 0.8
+          ? "Under-trained"
+          : "Optimal"
     : "ACWR";
   const acwrColor =
-    acwr === null ? "text-surface-400"
-    : acwr.ratio > 1.5 ? "text-red-500"
-    : acwr.ratio > 1.3 || acwr.ratio < 0.8 ? "text-amber-500"
-    : "text-emerald-500";
+    acwr === null
+      ? "text-surface-400"
+      : acwr.ratio > 1.5
+        ? "text-red-500"
+        : acwr.ratio > 1.3 || acwr.ratio < 0.8
+          ? "text-amber-500"
+          : "text-emerald-500";
 
   const injuryStatus = latestReadiness?.injuryStatus ?? null;
   const isInjured = injuryStatus === "ACTIVE";
@@ -182,7 +185,9 @@ function DecisionHero({
             <p className={cn("text-3xl font-bold font-heading tabular-nums", readinessColor)}>
               {readinessScore !== null ? (
                 <AnimatedNumber value={readinessScore} decimals={1} />
-              ) : "—"}
+              ) : (
+                "—"
+              )}
             </p>
             <p className="text-[11px] text-muted mt-0.5">Readiness</p>
           </div>
@@ -190,9 +195,7 @@ function DecisionHero({
           {/* ACWR */}
           <div className="text-center">
             <p className={cn("text-3xl font-bold font-heading tabular-nums", acwrColor)}>
-              {acwrRatio !== null ? (
-                <AnimatedNumber value={acwrRatio} decimals={2} />
-              ) : "—"}
+              {acwrRatio !== null ? <AnimatedNumber value={acwrRatio} decimals={2} /> : "—"}
             </p>
             <p className="text-[11px] text-muted mt-0.5">{acwrLabel}</p>
           </div>
@@ -200,16 +203,20 @@ function DecisionHero({
           {/* Injury */}
           <div className="text-center">
             <div className="flex items-center justify-center gap-1.5">
-              <span className={cn(
-                "w-2 h-2 rounded-full shrink-0",
-                isInjured ? "bg-red-500" : "bg-emerald-500"
-              )} />
-              <p className={cn(
-                "text-sm font-bold",
-                isInjured
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-emerald-600 dark:text-emerald-400"
-              )}>
+              <span
+                className={cn(
+                  "w-2 h-2 rounded-full shrink-0",
+                  isInjured ? "bg-red-500" : "bg-emerald-500"
+                )}
+              />
+              <p
+                className={cn(
+                  "text-sm font-bold",
+                  isInjured
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-emerald-600 dark:text-emerald-400"
+                )}
+              >
                 {isInjured ? "Injured" : "Healthy"}
               </p>
             </div>
@@ -240,20 +247,20 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
     stats.rate >= 90
       ? "text-emerald-600 dark:text-emerald-400"
       : stats.rate >= 75
-      ? "text-amber-500 dark:text-amber-400"
-      : "text-red-600 dark:text-red-400";
+        ? "text-amber-500 dark:text-amber-400"
+        : "text-red-600 dark:text-red-400";
 
   const rateBg =
     stats.rate >= 90
       ? "bg-emerald-500/10 border-emerald-500/20"
       : stats.rate >= 75
-      ? "bg-amber-500/10 border-amber-500/20"
-      : "bg-red-500/10 border-red-500/20";
+        ? "bg-amber-500/10 border-amber-500/20"
+        : "bg-red-500/10 border-red-500/20";
 
   const breakdown = [
     { label: "Present", value: stats.present, color: "text-emerald-600 dark:text-emerald-400" },
-    { label: "Late",    value: stats.late,    color: "text-amber-500 dark:text-amber-400" },
-    { label: "Absent",  value: stats.absent,  color: "text-red-600 dark:text-red-400" },
+    { label: "Late", value: stats.late, color: "text-amber-500 dark:text-amber-400" },
+    { label: "Absent", value: stats.absent, color: "text-red-600 dark:text-red-400" },
     { label: "Excused", value: stats.excused, color: "text-blue-600 dark:text-blue-400" },
   ];
 
@@ -266,9 +273,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
           </h3>
           <p className="text-xs text-muted mt-0.5">Last 30 days</p>
         </div>
-        {stats.total === 0 && (
-          <span className="text-xs text-muted">No practices recorded</span>
-        )}
+        {stats.total === 0 && <span className="text-xs text-muted">No practices recorded</span>}
       </div>
 
       {stats.total > 0 && (
@@ -324,12 +329,22 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
 
 function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
   const { ratio, acute, chronic, sessionsInAcute, sessionsInChronic } = acwr;
-  const isDanger  = ratio > 1.5;
+  const isDanger = ratio > 1.5;
   const isWarning = (!isDanger && ratio > 1.3) || ratio < 0.8;
 
   const ratioColor = isDanger ? "text-red-500" : isWarning ? "text-amber-500" : "text-emerald-500";
-  const badgeVariant: "danger" | "warning" | "success" = isDanger ? "danger" : isWarning ? "warning" : "success";
-  const statusLabel = isDanger ? "High Risk" : isWarning ? (ratio < 0.8 ? "Under-trained" : "Elevated") : "Optimal";
+  const badgeVariant: "danger" | "warning" | "success" = isDanger
+    ? "danger"
+    : isWarning
+      ? "warning"
+      : "success";
+  const statusLabel = isDanger
+    ? "High Risk"
+    : isWarning
+      ? ratio < 0.8
+        ? "Under-trained"
+        : "Elevated"
+      : "Optimal";
 
   // Position pointer: clamp ratio 0–2.5 to 0–100%
   const pointerPct = Math.min(95, Math.max(5, (ratio / 2.5) * 100));
@@ -365,7 +380,7 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
       <div className="space-y-1.5">
         <div className="relative h-2.5 rounded-full overflow-hidden flex">
           {/* Danger low */}
-          <div className="h-full bg-red-200 dark:bg-red-900/50"  style={{ width: "32%" }} />
+          <div className="h-full bg-red-200 dark:bg-red-900/50" style={{ width: "32%" }} />
           {/* Warning low */}
           <div className="h-full bg-amber-200 dark:bg-amber-900/50" style={{ width: "4%" }} />
           {/* Optimal */}
@@ -373,7 +388,7 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
           {/* Warning high */}
           <div className="h-full bg-amber-200 dark:bg-amber-900/50" style={{ width: "8%" }} />
           {/* Danger high */}
-          <div className="h-full bg-red-200 dark:bg-red-900/50"  style={{ width: "36%" }} />
+          <div className="h-full bg-red-200 dark:bg-red-900/50" style={{ width: "36%" }} />
           {/* Pointer */}
           <div
             className="absolute top-0 bottom-0 w-0.5 bg-[var(--foreground)] rounded-full"
@@ -382,7 +397,9 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
         </div>
         <div className="flex justify-between text-[10px] text-muted">
           <span>0.0</span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-medium">0.8 – 1.3 optimal</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+            0.8 – 1.3 optimal
+          </span>
           <span>2.5</span>
         </div>
       </div>
@@ -406,13 +423,21 @@ function OverviewTab({
   attendanceStats: AttendanceStats;
 }) {
   const infoRows = [
-    { label: "Age",        value: calcAge(athlete.dateOfBirth) },
-    { label: "Gender",     value: athlete.gender ? athlete.gender.charAt(0) + athlete.gender.slice(1).toLowerCase() : "—" },
-    { label: "Height",     value: athlete.heightCm   ? `${athlete.heightCm} cm`   : "—" },
-    { label: "Weight",     value: athlete.weightKg   ? `${athlete.weightKg} kg`   : "—" },
-    { label: "Email",      value: athlete.user.email },
-    { label: "Joined",     value: formatDate(athlete.user.createdAt.toISOString()) },
-    { label: "Best Streak",value: athlete.longestStreak > 0 ? `${athlete.longestStreak} days` : "—" },
+    { label: "Age", value: calcAge(athlete.dateOfBirth) },
+    {
+      label: "Gender",
+      value: athlete.gender
+        ? athlete.gender.charAt(0) + athlete.gender.slice(1).toLowerCase()
+        : "—",
+    },
+    { label: "Height", value: athlete.heightCm ? `${athlete.heightCm} cm` : "—" },
+    { label: "Weight", value: athlete.weightKg ? `${athlete.weightKg} kg` : "—" },
+    { label: "Email", value: athlete.user.email },
+    { label: "Joined", value: formatDate(athlete.user.createdAt.toISOString()) },
+    {
+      label: "Best Streak",
+      value: athlete.longestStreak > 0 ? `${athlete.longestStreak} days` : "—",
+    },
   ];
 
   return (
@@ -442,19 +467,18 @@ function OverviewTab({
           </h3>
           {bondarchukType ? (
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant={BONDARCHUK_COLORS[bondarchukType] ?? "neutral"}>
                   {bondarchukType.replace(/_/g, " ")}
                 </Badge>
+                <AssessmentStatusBadge assessmentDate={lastAssessmentDate} />
               </div>
               {lastAssessmentDate && (
-                <p className="text-xs text-muted">
-                  Last assessed {formatDate(lastAssessmentDate)}
-                </p>
+                <p className="text-xs text-muted">Last assessed {formatDate(lastAssessmentDate)}</p>
               )}
             </div>
           ) : (
-            <p className="text-xs text-muted">No assessment yet</p>
+            <AssessmentStatusBadge assessmentDate={null} />
           )}
           <Link
             href={`/coach/throws/assessment/${athlete.id}`}
@@ -463,7 +487,6 @@ function OverviewTab({
             {bondarchukType ? "Re-assess Athlete" : "Run Assessment"} →
           </Link>
         </div>
-
       </div>
 
       {/* Right: ACWR + Recent PRs */}
@@ -476,7 +499,8 @@ function OverviewTab({
               Acute:Chronic Workload Ratio
             </h3>
             <p className="text-sm text-muted">
-              Not enough session data. At least one completed session with RPE in the last 28 days is required.
+              Not enough session data. At least one completed session with RPE in the last 28 days
+              is required.
             </p>
           </div>
         )}
@@ -497,7 +521,17 @@ function OverviewTab({
             <EmptyState
               compact
               icon={
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <circle cx="12" cy="8" r="7" />
                   <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
                 </svg>
@@ -511,10 +545,7 @@ function OverviewTab({
                 const primary = pr.competitionPR ?? pr.practiceBest;
                 if (!primary) {
                   return (
-                    <div
-                      key={pr.event}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                    >
+                    <div key={pr.event} className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
                       <div className="w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0 text-base text-muted">
                         🏆
                       </div>
@@ -544,7 +575,8 @@ function OverviewTab({
                         {primary.distance.toFixed(2)}m
                       </p>
                       <p className="text-xs text-muted">
-                        {formatEventName(pr.event)} · {formatImplementWeight(pr.competitionWeightKg)}
+                        {formatEventName(pr.event)} ·{" "}
+                        {formatImplementWeight(pr.competitionWeightKg)}
                         {pr.practiceExceedsPR && pr.practiceBest && (
                           <> · practice {pr.practiceBest.distance.toFixed(2)}m</>
                         )}
@@ -573,25 +605,36 @@ function OverviewTab({
 
 /* ─── Training Tab ───────────────────────────────────────────────────────── */
 
-const SESSION_STATUS: Record<string, { label: string; variant: "success" | "danger" | "warning" | "neutral" | "info" }> = {
-  COMPLETED:   { label: "Completed",   variant: "success"  },
-  PARTIAL:     { label: "Partial",     variant: "warning"  },
-  SKIPPED:     { label: "Skipped",     variant: "danger"   },
-  IN_PROGRESS: { label: "In Progress", variant: "warning"  },
-  SCHEDULED:   { label: "Scheduled",   variant: "neutral"  },
-  ASSIGNED:    { label: "Assigned",    variant: "info"     },
-  NOTIFIED:    { label: "Notified",    variant: "info"     },
+const SESSION_STATUS: Record<
+  string,
+  { label: string; variant: "success" | "danger" | "warning" | "neutral" | "info" }
+> = {
+  COMPLETED: { label: "Completed", variant: "success" },
+  PARTIAL: { label: "Partial", variant: "warning" },
+  SKIPPED: { label: "Skipped", variant: "danger" },
+  IN_PROGRESS: { label: "In Progress", variant: "warning" },
+  SCHEDULED: { label: "Scheduled", variant: "neutral" },
+  ASSIGNED: { label: "Assigned", variant: "info" },
+  NOTIFIED: { label: "Notified", variant: "info" },
 };
 
 const FEELING_COLORS: Record<string, string> = {
-  GREAT:     "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  GOOD:      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  AVERAGE:   "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  POOR:      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  GREAT: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  GOOD: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  AVERAGE: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  POOR: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   VERY_POOR: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
-function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionItem[]; assignments: ThrowsAssignmentItem[]; athleteId: string }) {
+function TrainingTab({
+  sessions,
+  assignments,
+  athleteId,
+}: {
+  sessions: SessionItem[];
+  assignments: ThrowsAssignmentItem[];
+  athleteId: string;
+}) {
   const totalCount = assignments.length + sessions.length;
 
   return (
@@ -608,16 +651,23 @@ function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionIt
 
           <div className="space-y-2">
             {assignments.map((a) => {
-              const status = SESSION_STATUS[a.status] ?? { label: a.status, variant: "neutral" as const };
-              const feelingClass = a.selfFeeling ? FEELING_COLORS[a.selfFeeling] ?? "" : "";
-              const throwLabel = a.prescribedThrows > 0
-                ? `${a.throwCount}/${a.prescribedThrows} throws`
-                : a.throwCount > 0
-                  ? `${a.throwCount} throws`
-                  : null;
-              const throwColor = a.prescribedThrows > 0
-                ? a.throwCount >= a.prescribedThrows ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
-                : "";
+              const status = SESSION_STATUS[a.status] ?? {
+                label: a.status,
+                variant: "neutral" as const,
+              };
+              const feelingClass = a.selfFeeling ? (FEELING_COLORS[a.selfFeeling] ?? "") : "";
+              const throwLabel =
+                a.prescribedThrows > 0
+                  ? `${a.throwCount}/${a.prescribedThrows} throws`
+                  : a.throwCount > 0
+                    ? `${a.throwCount} throws`
+                    : null;
+              const throwColor =
+                a.prescribedThrows > 0
+                  ? a.throwCount >= a.prescribedThrows
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-amber-600 dark:text-amber-400"
+                  : "";
 
               return (
                 <Link
@@ -631,11 +681,14 @@ function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionIt
                         <span className="text-sm font-semibold text-[var(--foreground)]">
                           {a.sessionName}
                         </span>
-                        <Badge variant={status.variant}>
-                          {status.label}
-                        </Badge>
+                        <Badge variant={status.variant}>{status.label}</Badge>
                         {a.selfFeeling && (
-                          <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize", feelingClass)}>
+                          <span
+                            className={cn(
+                              "text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize",
+                              feelingClass
+                            )}
+                          >
                             {a.selfFeeling.toLowerCase().replace("_", " ")}
                           </span>
                         )}
@@ -654,9 +707,7 @@ function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionIt
                           </span>
                         )}
                         {throwLabel && (
-                          <span className={cn("font-medium", throwColor)}>
-                            {throwLabel}
-                          </span>
+                          <span className={cn("font-medium", throwColor)}>{throwLabel}</span>
                         )}
                       </div>
 
@@ -696,18 +747,17 @@ function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionIt
 
           <div className="card divide-y divide-[var(--card-border)]">
             {sessions.map((s) => {
-              const status = SESSION_STATUS[s.status] ?? { label: s.status, variant: "neutral" as const };
+              const status = SESSION_STATUS[s.status] ?? {
+                label: s.status,
+                variant: "neutral" as const,
+              };
               return (
                 <div key={s.id} className="px-5 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant={status.variant}>
-                          {status.label}
-                        </Badge>
-                        {s.planName && (
-                          <span className="text-xs text-muted">{s.planName}</span>
-                        )}
+                        <Badge variant={status.variant}>{status.label}</Badge>
+                        {s.planName && <span className="text-xs text-muted">{s.planName}</span>}
                       </div>
                       <div className="flex items-center gap-4 flex-wrap text-xs text-muted tabular-nums">
                         <span>{formatDate(s.scheduledDate)}</span>
@@ -739,7 +789,17 @@ function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionIt
           <EmptyState
             compact
             icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -757,7 +817,13 @@ function TrainingTab({ sessions, assignments, athleteId }: { sessions: SessionIt
 
 /* ─── Throws Tab ─────────────────────────────────────────────────────────── */
 
-function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrows: ThrowLogItem[] }) {
+function ThrowsTab({
+  throws,
+  chartThrows,
+}: {
+  throws: ThrowLogItem[];
+  chartThrows: ThrowLogItem[];
+}) {
   // Compute per-event summary
   const eventMap = throws.reduce<Record<string, { count: number; best: number }>>((acc, t) => {
     if (!acc[t.event]) acc[t.event] = { count: 0, best: 0 };
@@ -772,10 +838,12 @@ function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrow
     <div className="pt-6 space-y-6">
       {/* Per-event summary */}
       {events.length > 0 && (
-        <div className={cn(
-          "grid gap-3",
-          events.length <= 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"
-        )}>
+        <div
+          className={cn(
+            "grid gap-3",
+            events.length <= 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"
+          )}
+        >
           {events.map(([event, { count, best }]) => (
             <div key={event} className="card px-4 py-3 space-y-0.5">
               <p className="text-xs text-muted">{formatEventName(event)}</p>
@@ -796,9 +864,7 @@ function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrow
       {/* Log table */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Throw Log
-          </h2>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Throw Log</h2>
           <p className="text-xs text-muted">{throws.length} throws</p>
         </div>
 
@@ -807,7 +873,17 @@ function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrow
             <EmptyState
               compact
               icon={
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <circle cx="12" cy="12" r="6" />
                   <circle cx="12" cy="12" r="2" />
@@ -824,11 +900,11 @@ function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrow
                 <thead>
                   <tr className="border-b border-[var(--card-border)]">
                     {[
-                      { label: "Date",      align: "left",  hide: false, w: ""     },
-                      { label: "Event",     align: "left",  hide: false, w: ""     },
-                      { label: "Implement", align: "right", hide: true,  w: ""     },
-                      { label: "Distance",  align: "right", hide: false, w: ""     },
-                      { label: "",          align: "right", hide: false, w: "w-24" },
+                      { label: "Date", align: "left", hide: false, w: "" },
+                      { label: "Event", align: "left", hide: false, w: "" },
+                      { label: "Implement", align: "right", hide: true, w: "" },
+                      { label: "Distance", align: "right", hide: false, w: "" },
+                      { label: "", align: "right", hide: false, w: "w-24" },
                     ].map(({ label, align, hide, w }, i) => (
                       <th
                         key={i}
@@ -860,23 +936,21 @@ function ThrowsTab({ throws, chartThrows }: { throws: ThrowLogItem[]; chartThrow
                         {formatImplementWeight(t.implementWeight)}
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <span className={cn(
-                          "text-sm font-semibold tabular-nums",
-                          t.isPersonalBest
-                            ? "text-amber-600 dark:text-amber-400"
-                            : "text-[var(--foreground)]"
-                        )}>
+                        <span
+                          className={cn(
+                            "text-sm font-semibold tabular-nums",
+                            t.isPersonalBest
+                              ? "text-amber-600 dark:text-amber-400"
+                              : "text-[var(--foreground)]"
+                          )}
+                        >
                           {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
                         </span>
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex gap-1 justify-end">
-                          {t.isPersonalBest && (
-                            <Badge variant="warning">PR</Badge>
-                          )}
-                          {t.isCompetition && (
-                            <Badge variant="primary">Comp</Badge>
-                          )}
+                          {t.isPersonalBest && <Badge variant="warning">PR</Badge>}
+                          {t.isCompetition && <Badge variant="primary">Comp</Badge>}
                         </div>
                       </td>
                     </tr>
@@ -908,18 +982,30 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
     value: p.overallScore,
   }));
 
-  const sleepData: LineChartDataPoint[]    = trend.map((p) => ({ label: formatShortDate(p.date), value: p.sleepQuality }));
-  const sorenessData: LineChartDataPoint[] = trend.map((p) => ({ label: formatShortDate(p.date), value: p.soreness }));
-  const stressData: LineChartDataPoint[]   = trend.map((p) => ({ label: formatShortDate(p.date), value: p.stressLevel }));
-  const energyData: LineChartDataPoint[]   = trend.map((p) => ({ label: formatShortDate(p.date), value: p.energyMood }));
+  const sleepData: LineChartDataPoint[] = trend.map((p) => ({
+    label: formatShortDate(p.date),
+    value: p.sleepQuality,
+  }));
+  const sorenessData: LineChartDataPoint[] = trend.map((p) => ({
+    label: formatShortDate(p.date),
+    value: p.soreness,
+  }));
+  const stressData: LineChartDataPoint[] = trend.map((p) => ({
+    label: formatShortDate(p.date),
+    value: p.stressLevel,
+  }));
+  const energyData: LineChartDataPoint[] = trend.map((p) => ({
+    label: formatShortDate(p.date),
+    value: p.energyMood,
+  }));
 
   const metrics = latest
     ? [
-        { label: "Overall",       value: latest.overallScore     },
-        { label: "Sleep Quality", value: latest.sleepQuality     },
-        { label: "Energy & Mood", value: latest.energyMood       },
-        { label: "Soreness",      value: latest.soreness         },
-        { label: "Stress Level",  value: latest.stressLevel      },
+        { label: "Overall", value: latest.overallScore },
+        { label: "Sleep Quality", value: latest.sleepQuality },
+        { label: "Energy & Mood", value: latest.energyMood },
+        { label: "Soreness", value: latest.soreness },
+        { label: "Stress Level", value: latest.stressLevel },
       ]
     : [];
 
@@ -936,7 +1022,8 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           </p>
           {criticallyLow && (
             <p className="text-sm text-[var(--foreground)]">
-              Score is critically low ({latest!.overallScore.toFixed(1)}) — consider adjusting today&apos;s training load.
+              Score is critically low ({latest!.overallScore.toFixed(1)}) — consider adjusting
+              today&apos;s training load.
             </p>
           )}
           {consecutive3declining && (
@@ -954,12 +1041,16 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
             Overall Readiness — 30 Days
           </h3>
           {latest && (
-            <span className={cn(
-              "text-sm font-bold tabular-nums",
-              latest.overallScore >= 8 ? "text-emerald-500"
-              : latest.overallScore >= 5 ? "text-amber-500"
-              : "text-red-500"
-            )}>
+            <span
+              className={cn(
+                "text-sm font-bold tabular-nums",
+                latest.overallScore >= 8
+                  ? "text-emerald-500"
+                  : latest.overallScore >= 5
+                    ? "text-amber-500"
+                    : "text-red-500"
+              )}
+            >
               {latest.overallScore.toFixed(1)} latest
             </span>
           )}
@@ -1012,52 +1103,59 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
             </div>
             <div className="text-xs">
               <span className="text-muted">Hydration:</span>{" "}
-              <span className="font-semibold capitalize">
-                {latest.hydration.toLowerCase()}
-              </span>
+              <span className="font-semibold capitalize">{latest.hydration.toLowerCase()}</span>
             </div>
             <div className="text-xs">
               <span className="text-muted">Injury:</span>{" "}
-              <span className={cn(
-                "font-semibold",
-                latest.injuryStatus === "ACTIVE"     ? "text-red-500"
-                : latest.injuryStatus === "MONITORING" ? "text-amber-500"
-                : "text-emerald-500"
-              )}>
-                {latest.injuryStatus === "ACTIVE" ? "Active"
-                  : latest.injuryStatus === "MONITORING" ? "Monitoring"
-                  : "None"}
+              <span
+                className={cn(
+                  "font-semibold",
+                  latest.injuryStatus === "ACTIVE"
+                    ? "text-red-500"
+                    : latest.injuryStatus === "MONITORING"
+                      ? "text-amber-500"
+                      : "text-emerald-500"
+                )}
+              >
+                {latest.injuryStatus === "ACTIVE"
+                  ? "Active"
+                  : latest.injuryStatus === "MONITORING"
+                    ? "Monitoring"
+                    : "None"}
               </span>
             </div>
-            {latest.sorenessArea && (() => {
-              const { isStructured, areas, legacyText } = parseSorenessArea(latest.sorenessArea);
-              return (
-                <div className="text-xs">
-                  <span className="text-muted">Soreness area:</span>{" "}
-                  {isStructured && areas.length > 0 ? (
-                    <span className="inline-flex flex-wrap gap-1 ml-1">
-                      {areas.map((area) => (
-                        <span
-                          key={`${area.slug}-${area.side ?? "center"}`}
-                          className={cn(
-                            "text-[10px] font-medium px-2 py-0.5 rounded-full border",
-                            area.severity === 3
-                              ? "bg-red-500/12 text-red-400 border-red-500/20"
-                              : area.severity === 2
-                              ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
-                              : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
-                          )}
-                        >
-                          {area.region}
-                        </span>
-                      ))}
-                    </span>
-                  ) : legacyText ? (
-                    <span className="font-semibold capitalize">{legacyText.replace(/_/g, " ")}</span>
-                  ) : null}
-                </div>
-              );
-            })()}
+            {latest.sorenessArea &&
+              (() => {
+                const { isStructured, areas, legacyText } = parseSorenessArea(latest.sorenessArea);
+                return (
+                  <div className="text-xs">
+                    <span className="text-muted">Soreness area:</span>{" "}
+                    {isStructured && areas.length > 0 ? (
+                      <span className="inline-flex flex-wrap gap-1 ml-1">
+                        {areas.map((area) => (
+                          <span
+                            key={`${area.slug}-${area.side ?? "center"}`}
+                            className={cn(
+                              "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                              area.severity === 3
+                                ? "bg-red-500/12 text-red-400 border-red-500/20"
+                                : area.severity === 2
+                                  ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
+                                  : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                            )}
+                          >
+                            {area.region}
+                          </span>
+                        ))}
+                      </span>
+                    ) : legacyText ? (
+                      <span className="font-semibold capitalize">
+                        {legacyText.replace(/_/g, " ")}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })()}
             {latest.injuryNotes && (
               <div className="text-xs w-full">
                 <span className="text-muted">Injury notes:</span>{" "}
@@ -1077,7 +1175,17 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           <EmptyState
             compact
             icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
             }
@@ -1094,12 +1202,14 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
             Factor Trends — 30 Days
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            {([
-              { label: "Sleep Quality", data: sleepData,    color: "#3b82f6" },
-              { label: "Soreness",      data: sorenessData, color: "#f59e0b" },
-              { label: "Stress Level",  data: stressData,   color: "#8b5cf6" },
-              { label: "Energy & Mood", data: energyData,   color: "#10b981" },
-            ] as const).map(({ label, data, color }) => (
+            {(
+              [
+                { label: "Sleep Quality", data: sleepData, color: "#3b82f6" },
+                { label: "Soreness", data: sorenessData, color: "#f59e0b" },
+                { label: "Stress Level", data: stressData, color: "#8b5cf6" },
+                { label: "Energy & Mood", data: energyData, color: "#10b981" },
+              ] as const
+            ).map(({ label, data, color }) => (
               <div key={label} className="card p-4 space-y-1">
                 <p className="text-xs font-semibold text-muted uppercase tracking-wider">{label}</p>
                 <LineChart
@@ -1129,16 +1239,22 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--card-border)]">
-                            {[
-                      { label: "Date",      hide: false },
-                      { label: "Score",     hide: false },
-                      { label: "Sleep",     hide: true  },
-                      { label: "Soreness",  hide: true  },
-                      { label: "Stress",    hide: true  },
-                      { label: "Energy",    hide: true  },
-                      { label: "Hydration", hide: true  },
+                    {[
+                      { label: "Date", hide: false },
+                      { label: "Score", hide: false },
+                      { label: "Sleep", hide: true },
+                      { label: "Soreness", hide: true },
+                      { label: "Stress", hide: true },
+                      { label: "Energy", hide: true },
+                      { label: "Hydration", hide: true },
                     ].map(({ label, hide }) => (
-                      <th key={label} className={cn("px-4 py-2.5 text-left text-[10px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap", hide && "hidden sm:table-cell")}>
+                      <th
+                        key={label}
+                        className={cn(
+                          "px-4 py-2.5 text-left text-[10px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap",
+                          hide && "hidden sm:table-cell"
+                        )}
+                      >
                         {label}
                       </th>
                     ))}
@@ -1146,22 +1262,41 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
                 </thead>
                 <tbody className="divide-y divide-[var(--card-border)]">
                   {history.map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors">
-                      <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">{formatShortDate(p.date)}</td>
+                    <tr
+                      key={p.id}
+                      className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors"
+                    >
+                      <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">
+                        {formatShortDate(p.date)}
+                      </td>
                       <td className="px-4 py-2.5 font-bold tabular-nums">
-                        <span className={cn(
-                          p.overallScore >= 8 ? "text-emerald-600 dark:text-emerald-400"
-                          : p.overallScore >= 5 ? "text-amber-600 dark:text-amber-400"
-                          : "text-red-600 dark:text-red-400"
-                        )}>
+                        <span
+                          className={cn(
+                            p.overallScore >= 8
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : p.overallScore >= 5
+                                ? "text-amber-600 dark:text-amber-400"
+                                : "text-red-600 dark:text-red-400"
+                          )}
+                        >
                           {p.overallScore.toFixed(1)}
                         </span>
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.sleepQuality}/10</td>
-                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.soreness}/10</td>
-                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.stressLevel}/10</td>
-                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">{p.energyMood}/10</td>
-                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs capitalize">{p.hydration.toLowerCase()}</td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">
+                        {p.sleepQuality}/10
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">
+                        {p.soreness}/10
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">
+                        {p.stressLevel}/10
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs tabular-nums">
+                        {p.energyMood}/10
+                      </td>
+                      <td className="hidden sm:table-cell px-4 py-2.5 text-xs capitalize">
+                        {p.hydration.toLowerCase()}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1177,7 +1312,9 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
 /* ─── Wellness Tab ───────────────────────────────────────────────────────── */
 
 function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
-  const avgOf = (key: "sleepQuality" | "energyMood" | "sleepHours" | "soreness" | "stressLevel"): string => {
+  const avgOf = (
+    key: "sleepQuality" | "energyMood" | "sleepHours" | "soreness" | "stressLevel"
+  ): string => {
     if (trend.length === 0) return "—";
     const total = trend.reduce((s, p) => s + p[key], 0);
     return (total / trend.length).toFixed(1);
@@ -1185,14 +1322,28 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
 
   const summaryCards = [
     { label: "Sleep Quality", value: avgOf("sleepQuality"), color: "text-blue-500" },
-    { label: "Energy & Mood", value: avgOf("energyMood"),   color: "text-emerald-500" },
-    { label: "Avg Sleep",     value: `${avgOf("sleepHours")}h`, color: "text-indigo-500" },
-    { label: "Soreness",      value: avgOf("soreness"),     color: "text-amber-500",  note: "lower = better" },
+    { label: "Energy & Mood", value: avgOf("energyMood"), color: "text-emerald-500" },
+    { label: "Avg Sleep", value: `${avgOf("sleepHours")}h`, color: "text-indigo-500" },
+    {
+      label: "Soreness",
+      value: avgOf("soreness"),
+      color: "text-amber-500",
+      note: "lower = better",
+    },
   ];
 
-  const sleepData:     LineChartDataPoint[] = trend.map((p) => ({ label: formatShortDate(p.date), value: p.sleepQuality }));
-  const energyData:    LineChartDataPoint[] = trend.map((p) => ({ label: formatShortDate(p.date), value: p.energyMood }));
-  const composureData: LineChartDataPoint[] = trend.map((p) => ({ label: formatShortDate(p.date), value: 10 - p.stressLevel }));
+  const sleepData: LineChartDataPoint[] = trend.map((p) => ({
+    label: formatShortDate(p.date),
+    value: p.sleepQuality,
+  }));
+  const energyData: LineChartDataPoint[] = trend.map((p) => ({
+    label: formatShortDate(p.date),
+    value: p.energyMood,
+  }));
+  const composureData: LineChartDataPoint[] = trend.map((p) => ({
+    label: formatShortDate(p.date),
+    value: 10 - p.stressLevel,
+  }));
 
   return (
     <div className="pt-6 space-y-6">
@@ -1203,15 +1354,20 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           const numericPart = match ? parseFloat(match[1]) : NaN;
           const suffix = match ? match[2] : "";
           return (
-          <div key={label} className="card px-4 py-3 space-y-0.5">
-            <p className="text-xs text-muted">{label}</p>
-            <p className={cn("text-2xl font-bold font-heading tabular-nums", color)}>
-              {!isNaN(numericPart) ? (
-                <><AnimatedNumber value={numericPart} decimals={1} />{suffix}</>
-              ) : value}
-            </p>
-            <p className="text-[11px] text-muted">{note ?? "30-day avg"}</p>
-          </div>
+            <div key={label} className="card px-4 py-3 space-y-0.5">
+              <p className="text-xs text-muted">{label}</p>
+              <p className={cn("text-2xl font-bold font-heading tabular-nums", color)}>
+                {!isNaN(numericPart) ? (
+                  <>
+                    <AnimatedNumber value={numericPart} decimals={1} />
+                    {suffix}
+                  </>
+                ) : (
+                  value
+                )}
+              </p>
+              <p className="text-[11px] text-muted">{note ?? "30-day avg"}</p>
+            </div>
           );
         })}
       </div>
@@ -1226,8 +1382,8 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
               </h3>
               <div className="flex gap-4">
                 {[
-                  { label: "Sleep",     color: "#3b82f6" },
-                  { label: "Energy",    color: "#10b981" },
+                  { label: "Sleep", color: "#3b82f6" },
+                  { label: "Energy", color: "#10b981" },
                   { label: "Composure", color: "#8b5cf6" },
                 ].map((l) => (
                   <span key={l.label} className="flex items-center gap-1.5 text-xs text-muted">
@@ -1242,8 +1398,8 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
             </div>
             <LineChart
               series={[
-                { data: sleepData,     color: "#3b82f6", label: "Sleep Quality" },
-                { data: energyData,    color: "#10b981", label: "Energy & Mood" },
+                { data: sleepData, color: "#3b82f6", label: "Sleep Quality" },
+                { data: energyData, color: "#10b981", label: "Energy & Mood" },
                 { data: composureData, color: "#8b5cf6", label: "Composure" },
               ]}
               height={220}
@@ -1265,8 +1421,8 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
                   p.injuryStatus === "ACTIVE"
                     ? "bg-red-500"
                     : p.injuryStatus === "MONITORING"
-                    ? "bg-amber-400"
-                    : "bg-emerald-400";
+                      ? "bg-amber-400"
+                      : "bg-emerald-400";
                 return (
                   <div
                     key={p.date}
@@ -1294,7 +1450,17 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           <EmptyState
             compact
             icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
             }
@@ -1309,8 +1475,11 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
 
 /* ─── Goals Tab ──────────────────────────────────────────────────────────── */
 
-const GOAL_STATUS: Record<string, { label: string; variant: "success" | "danger" | "primary" | "neutral" }> = {
-  ACTIVE:    { label: "Active",    variant: "primary" },
+const GOAL_STATUS: Record<
+  string,
+  { label: string; variant: "success" | "danger" | "primary" | "neutral" }
+> = {
+  ACTIVE: { label: "Active", variant: "primary" },
   COMPLETED: { label: "Completed", variant: "success" },
   ABANDONED: { label: "Abandoned", variant: "neutral" },
 };
@@ -1326,11 +1495,7 @@ function GoalCard({ goal }: { goal: GoalItem }) {
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-[var(--foreground)]">{goal.title}</p>
-            {goal.event && (
-              <Badge variant="neutral">
-                {formatEventName(goal.event)}
-              </Badge>
-            )}
+            {goal.event && <Badge variant="neutral">{formatEventName(goal.event)}</Badge>}
           </div>
           {goal.description && (
             <p className="text-xs text-muted line-clamp-2">{goal.description}</p>
@@ -1348,11 +1513,7 @@ function GoalCard({ goal }: { goal: GoalItem }) {
         animate
       />
 
-      {goal.deadline && (
-        <p className="text-xs text-muted">
-          Deadline: {formatDate(goal.deadline)}
-        </p>
-      )}
+      {goal.deadline && <p className="text-xs text-muted">Deadline: {formatDate(goal.deadline)}</p>}
     </div>
   );
 }
@@ -1368,7 +1529,17 @@ function GoalsTab({ goals }: { goals: GoalItem[] }) {
           <EmptyState
             compact
             icon={
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="22" y1="12" x2="18" y2="12" />
                 <line x1="6" y1="12" x2="2" y2="12" />
@@ -1445,20 +1616,37 @@ export default async function AthleteProfilePage({
     getAthleteAttendanceStats(athlete.id, 30),
   ]);
 
-  const acwr = results[0].status === "fulfilled" ? results[0].value as AthleteACWR : null as AthleteACWR;
-  const recentPRs = results[1].status === "fulfilled"
-    ? (results[1].value as AthletePREvent[])
-    : ([] as AthletePREvent[]);
-  const sessions = results[2].status === "fulfilled" ? results[2].value as SessionItem[] : [] as SessionItem[];
-  const throws = results[3].status === "fulfilled" ? results[3].value as ThrowLogItem[] : [] as ThrowLogItem[];
-  const trend = results[4].status === "fulfilled" ? results[4].value as ReadinessTrendPoint[] : [] as ReadinessTrendPoint[];
-  const goals = results[5].status === "fulfilled" ? results[5].value as GoalItem[] : [] as GoalItem[];
+  const acwr =
+    results[0].status === "fulfilled" ? (results[0].value as AthleteACWR) : (null as AthleteACWR);
+  const recentPRs =
+    results[1].status === "fulfilled"
+      ? (results[1].value as AthletePREvent[])
+      : ([] as AthletePREvent[]);
+  const sessions =
+    results[2].status === "fulfilled" ? (results[2].value as SessionItem[]) : ([] as SessionItem[]);
+  const throws =
+    results[3].status === "fulfilled"
+      ? (results[3].value as ThrowLogItem[])
+      : ([] as ThrowLogItem[]);
+  const trend =
+    results[4].status === "fulfilled"
+      ? (results[4].value as ReadinessTrendPoint[])
+      : ([] as ReadinessTrendPoint[]);
+  const goals =
+    results[5].status === "fulfilled" ? (results[5].value as GoalItem[]) : ([] as GoalItem[]);
   const latestAssessment = results[6].status === "fulfilled" ? results[6].value : null;
-  const throwsAssignments = results[7].status === "fulfilled" ? results[7].value as ThrowsAssignmentItem[] : [] as ThrowsAssignmentItem[];
-  const chartThrows = results[8].status === "fulfilled" ? results[8].value as ThrowLogItem[] : [] as ThrowLogItem[];
-  const attendanceStats: AttendanceStats = results[9].status === "fulfilled"
-    ? (results[9].value as AttendanceStats)
-    : { total: 0, present: 0, late: 0, absent: 0, excused: 0, rate: 0, currentStreak: 0 };
+  const throwsAssignments =
+    results[7].status === "fulfilled"
+      ? (results[7].value as ThrowsAssignmentItem[])
+      : ([] as ThrowsAssignmentItem[]);
+  const chartThrows =
+    results[8].status === "fulfilled"
+      ? (results[8].value as ThrowLogItem[])
+      : ([] as ThrowLogItem[]);
+  const attendanceStats: AttendanceStats =
+    results[9].status === "fulfilled"
+      ? (results[9].value as AttendanceStats)
+      : { total: 0, present: 0, late: 0, absent: 0, excused: 0, rate: 0, currentStreak: 0 };
 
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
@@ -1490,10 +1678,20 @@ export default async function AthleteProfilePage({
       {/* All sections — single scrollable page */}
       <section id="overview" className="scroll-mt-20">
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Overview</h2>
-        <OverviewTab athlete={athlete} acwr={acwr} recentPRs={recentPRs} bondarchukType={bondarchukType} lastAssessmentDate={lastAssessmentDate} attendanceStats={attendanceStats} />
+        <OverviewTab
+          athlete={athlete}
+          acwr={acwr}
+          recentPRs={recentPRs}
+          bondarchukType={bondarchukType}
+          lastAssessmentDate={lastAssessmentDate}
+          attendanceStats={attendanceStats}
+        />
       </section>
 
-      <section id="training" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+      <section
+        id="training"
+        className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8"
+      >
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Training</h2>
         <TrainingTab sessions={sessions} assignments={throwsAssignments} athleteId={athlete.id} />
       </section>
@@ -1503,12 +1701,18 @@ export default async function AthleteProfilePage({
         <ThrowsTab throws={throws} chartThrows={chartThrows} />
       </section>
 
-      <section id="readiness" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+      <section
+        id="readiness"
+        className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8"
+      >
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Readiness</h2>
         <ReadinessTab trend={trend} />
       </section>
 
-      <section id="wellness" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
+      <section
+        id="wellness"
+        className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8"
+      >
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Wellness</h2>
         <WellnessTab trend={trend} />
       </section>

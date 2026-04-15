@@ -245,6 +245,9 @@ model CoachProfile {
   // Roster Groups
   teams Team[]
 
+  // Bondarchuk assessment staleness overrides (audit trail)
+  assessmentOverrides AssessmentOverride[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -335,6 +338,7 @@ model AthleteProfile {
   throwsPRs                ThrowsPR[]
   throwsDrillPRs           ThrowsDrillPR[]
   throwsCheckIns           ThrowsCheckIn[]
+  assessmentOverrides      AssessmentOverride[]
   throwsTyping             ThrowsTyping?
   throwsComplexes          ThrowsComplex[]
   throwsCompetitions       ThrowsCompetition[]
@@ -682,6 +686,23 @@ model BondarchukAssessment {
 
   @@index([athleteId])
   @@index([completedAt])
+}
+
+/// Audited acknowledgement that a coach knowingly assigned a session to an athlete
+/// whose Bondarchuk assessment was expired (>90 days). Valid for 24 hours from createdAt.
+/// Used by POST /api/throws/assignments to gate session-assign for expired-assessment athletes.
+model AssessmentOverride {
+  id                   String         @id @default(cuid())
+  coachId              String
+  coach                CoachProfile   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  athleteId            String
+  athlete              AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  assessmentDaysStale  Int // snapshot of days since last assessment at override time
+  reason               String? // optional free-text reason from coach
+  createdAt            DateTime       @default(now())
+
+  @@index([coachId, createdAt])
+  @@index([athleteId, createdAt])
 }
 
 // ─── DRILL LIBRARY ─────────────────────────────────────────────────────────

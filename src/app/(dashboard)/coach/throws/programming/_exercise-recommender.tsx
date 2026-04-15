@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Badge } from "@/components";
 import { Select } from "@/components/ui/Select";
 import { formatImplementWeight } from "@/lib/throws";
+import { AssessmentStatusBadge } from "@/components/bondarchuk/AssessmentStatusBadge";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -161,24 +162,13 @@ export function ExerciseRecommender({
                 <Badge variant={BONDARCHUK_COLORS[assessment.athleteType] ?? "neutral"}>
                   {assessment.athleteType.replace(/_/g, " ")}
                 </Badge>
-                <span className="text-xs text-muted">
-                  Assessed {new Date(assessment.completedAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
+                <AssessmentStatusBadge
+                  assessmentDate={assessment.completedAt}
+                  athleteId={selectedAthleteId}
+                />
               </>
             ) : (
-              <span className="text-xs text-muted">
-                No Bondarchuk assessment on file.{" "}
-                <a
-                  href={`/coach/throws/assessment/${selectedAthleteId}`}
-                  className="text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  Run assessment →
-                </a>
-              </span>
+              <AssessmentStatusBadge assessmentDate={null} athleteId={selectedAthleteId} />
             )}
           </div>
         )}
@@ -235,14 +225,10 @@ export function ExerciseRecommender({
                       corr >= 0.7
                         ? "text-green-500"
                         : corr >= 0.4
-                        ? "text-amber-500"
-                        : "text-red-500";
+                          ? "text-amber-500"
+                          : "text-red-500";
                     const bgClass =
-                      corr >= 0.7
-                        ? "bg-green-500/5"
-                        : corr >= 0.4
-                        ? ""
-                        : "bg-red-500/5";
+                      corr >= 0.7 ? "bg-green-500/5" : corr >= 0.4 ? "" : "bg-red-500/5";
 
                     return (
                       <div
@@ -267,9 +253,7 @@ export function ExerciseRecommender({
                                 </span>
                               )}
                               {ex.equipment && (
-                                <span className="text-[10px] text-muted">
-                                  {ex.equipment}
-                                </span>
+                                <span className="text-[10px] text-muted">{ex.equipment}</span>
                               )}
                             </div>
                           </div>
@@ -284,8 +268,8 @@ export function ExerciseRecommender({
                                   corr >= 0.7
                                     ? "bg-green-500"
                                     : corr >= 0.4
-                                    ? "bg-amber-500"
-                                    : "bg-red-500"
+                                      ? "bg-amber-500"
+                                      : "bg-red-500"
                                 }`}
                                 style={{ width: `${Math.max(5, corr * 100)}%` }}
                               />

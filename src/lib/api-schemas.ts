@@ -119,6 +119,11 @@ export const ThrowsAssignmentCreateSchema = z.object({
   sessionId: z.string().min(1, "Session ID is required"),
   athleteIds: z.array(z.string()).min(1, "At least one athlete is required"),
   assignedDate: z.string().min(1, "Assigned date is required"),
+  // Coach-acknowledged override for athletes whose Bondarchuk assessment is
+  // >90 days stale. Required when any target athlete is in the `expired` tier;
+  // ignored otherwise. Never valid for `never`-tier athletes (no assessment).
+  overrideAssessment: z.boolean().optional().default(false),
+  overrideReason: z.string().max(500).nullable().optional(),
 });
 
 // Assignment PUT: discriminated union on `action`. Each variant declares its
