@@ -258,6 +258,29 @@ export async function notifyCoachAthleteJoined(
 }
 
 /**
+ * Fire when an athlete's training streak has lapsed. Only meaningful
+ * streaks (>= MIN_STREAK_FOR_NOTIFICATION days) are worth mourning;
+ * short streaks breaking silently is better UX than a nag. Called by
+ * the daily detect-broken-streaks cron after flipping currentStreak to
+ * 0 in the database.
+ */
+export async function notifyAthleteStreakBroken(
+  athleteProfileId: string,
+  previousStreak: number
+): Promise<void> {
+  await createNotification({
+    type: "STREAK_BROKEN",
+    athleteProfileId,
+    title: `Your ${previousStreak}-day streak ended`,
+    body: `Log a throw today to start a new one. The best streaks come back stronger.`,
+    metadata: {
+      previousStreak,
+      url: "/athlete/quick-log",
+    },
+  });
+}
+
+/**
  * Fire when an invitation passes expiresAt without being claimed. Coach
  * can follow up by sending a new invite from the roster. Identity of the
  * expired invitee comes from the invitation itself — either a linked
