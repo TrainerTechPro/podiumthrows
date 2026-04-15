@@ -258,6 +258,31 @@ export async function notifyCoachAthleteJoined(
 }
 
 /**
+ * Fire when a coach shares a video with an athlete. Only fires for
+ * newly-added athletes (re-saving the share with the same athlete in
+ * the list doesn't re-notify) — the calling route is responsible for
+ * diffing against the existing sharedWithAthletes array.
+ */
+export async function notifyAthleteVideoShared(
+  athleteProfileId: string,
+  videoId: string,
+  videoTitle: string | null
+): Promise<void> {
+  const label = videoTitle?.trim() || "a new video";
+  await createNotification({
+    type: "VIDEO_SHARED",
+    athleteProfileId,
+    title: "Coach shared a video",
+    body: `Your coach shared ${label} with you. Tap to watch.`,
+    metadata: {
+      videoId,
+      videoTitle: videoTitle ?? null,
+      url: `/athlete/videos/${videoId}`,
+    },
+  });
+}
+
+/**
  * Fire when an athlete's upcoming competition crosses a reminder threshold.
  * Two thresholds fire per competition: 7 days out (planning horizon) and
  * 1 day out (tomorrow). Each threshold fires on exactly one calendar day

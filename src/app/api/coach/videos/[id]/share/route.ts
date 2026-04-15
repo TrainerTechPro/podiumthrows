@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { notifyAthleteVideoShared } from "@/lib/notifications";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -14,7 +12,7 @@ export async function POST(
     // Verify ownership
     const video = await prisma.videoUpload.findFirst({
       where: { id: id, coachId: coach.id },
-      select: { id: true, sharedWithAthletes: true },
+      select: { id: true, sharedWithAthletes: true, title: true },
     });
 
     if (!video) {
@@ -45,18 +43,37 @@ export async function POST(
       );
     }
 
-    // Merge with existing shared athletes (deduplicate)
+    // Merge with existing shared athletes (deduplicate). Capture the diff
+    // up front so only newly-added athletes get notified — re-saving the
+    // share with the same recipient shouldn't re-notify.
     const existingSet = new Set(video.sharedWithAthletes);
-    for (const id of validIds) existingSet.add(id);
+    const newlyAdded = validIds.filter((aid) => !existingSet.has(aid));
+    for (const aid of validIds) existingSet.add(aid);
 
     await prisma.videoUpload.update({
       where: { id: id },
       data: { sharedWithAthletes: Array.from(existingSet) },
     });
 
+    // Fire-and-forget notifications only for newly-added athletes.
+    if (newlyAdded.length > 0) {
+      void Promise.allSettled(
+        newlyAdded.map((aid) => notifyAthleteVideoShared(aid, video.id, video.title))
+      ).then((results) => {
+        const failed = results.filter((r) => r.status === "rejected").length;
+        if (failed > 0) {
+          logger.error("video share: some notifications failed", {
+            context: "api",
+            metadata: { failures: failed, total: results.length },
+          });
+        }
+      });
+    }
+
     return NextResponse.json({
       shared: validIds.length,
       total: existingSet.size,
+      newlyNotified: newlyAdded.length,
     });
   } catch (err) {
     if (err instanceof AuthError) {
