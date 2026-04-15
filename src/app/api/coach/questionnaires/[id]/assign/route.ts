@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachSession } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
+import { notifyAthleteQuestionnaireAssigned } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
     const { id } = await params;
@@ -13,11 +12,14 @@ export async function POST(
     // Verify questionnaire ownership and published status
     const questionnaire = await prisma.questionnaire.findFirst({
       where: { id, coachId: coach.id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, title: true },
     });
 
     if (!questionnaire) {
-      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Questionnaire not found" },
+        { status: 404 }
+      );
     }
     if (questionnaire.status !== "published") {
       return NextResponse.json(
@@ -65,6 +67,23 @@ export async function POST(
 
     const created = results.filter((r) => r.status === "fulfilled").length;
     const skipped = results.filter((r) => r.status === "rejected").length;
+
+    // Fire-and-forget notifications for newly-assigned athletes. Skipped
+    // (duplicate) assignments don't re-notify. Per-notification failure
+    // must not affect the response.
+    const successfulAthleteIds = athleteIds.filter(
+      (_id: string, i: number) => results[i].status === "fulfilled"
+    );
+    Promise.allSettled(
+      successfulAthleteIds.map((athleteId: string) =>
+        notifyAthleteQuestionnaireAssigned(athleteId, questionnaire.title, id)
+      )
+    ).catch((err) =>
+      logger.error("Failed to notify athletes of questionnaire assignment", {
+        context: "api",
+        error: err,
+      })
+    );
 
     return NextResponse.json({
       success: true,

@@ -287,6 +287,30 @@ export async function notifyCoachInvitationExpired(
   });
 }
 
+/**
+ * Fire when a questionnaire is assigned to an athlete — either manually
+ * via /api/coach/questionnaires/[id]/assign or automatically via the
+ * recurring-forms cron. Pairs with the existing notifyCoachQuestionnaireComplete
+ * to close the coach→athlete→coach loop for questionnaires.
+ */
+export async function notifyAthleteQuestionnaireAssigned(
+  athleteProfileId: string,
+  questionnaireName: string,
+  questionnaireId: string
+): Promise<void> {
+  await createNotification({
+    type: "QUESTIONNAIRE_ASSIGNED",
+    athleteProfileId,
+    title: `New form: ${questionnaireName}`,
+    body: `Your coach assigned you a new questionnaire. Tap to fill it out.`,
+    metadata: {
+      questionnaireId,
+      questionnaireName,
+      url: `/athlete/questionnaires/${questionnaireId}`,
+    },
+  });
+}
+
 export async function notifyCoachQuestionnaireComplete(
   coachId: string,
   athleteProfileId: string,

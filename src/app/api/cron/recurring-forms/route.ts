@@ -4,6 +4,7 @@ import { shouldRunToday, calculateNextRunDate } from "@/lib/forms/recurring-sche
 import type { RecurrenceFrequency } from "@/lib/forms/types";
 import { logger } from "@/lib/logger";
 import { getCoachTimezone, getLocalDayOfWeek } from "@/lib/dates";
+import { notifyAthleteQuestionnaireAssigned } from "@/lib/notifications";
 
 export const maxDuration = 60;
 
@@ -18,7 +19,10 @@ export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "CRON_SECRET not configured" },
+      { status: 500 }
+    );
   }
   if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -41,6 +45,7 @@ export async function GET(req: NextRequest) {
             id: true,
             status: true,
             coachId: true,
+            title: true,
           },
         },
       },
@@ -124,6 +129,19 @@ export async function GET(req: NextRequest) {
           });
 
           totalCreated += newAthleteIds.length;
+
+          // Notify each newly-assigned athlete. Fire-and-forget; the
+          // cron response still reports success/failure at the schedule
+          // level, and a notification hiccup shouldn't fail the schedule.
+          void Promise.allSettled(
+            newAthleteIds.map((athleteId) =>
+              notifyAthleteQuestionnaireAssigned(
+                athleteId,
+                schedule.questionnaire.title,
+                schedule.questionnaireId
+              )
+            )
+          );
         }
 
         // Update schedule lastRunAt and nextRunAt
