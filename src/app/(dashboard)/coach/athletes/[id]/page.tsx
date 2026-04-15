@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatImplementWeight } from "@/lib/throws";
-import { Avatar, Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
+import { Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
 import { ArrowLeft, Flame } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { parseSorenessArea } from "@/lib/readiness/parse-soreness";
@@ -31,6 +31,7 @@ import { AssessmentStatusBadge } from "@/components/bondarchuk/AssessmentStatusB
 import { SectionNav } from "./_section-nav";
 import { DistanceTrend } from "./_distance-trend";
 import { CoachActionBar } from "./_action-bar";
+import { AthleteAvatarControl } from "./_avatar-control";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -95,7 +96,12 @@ function AthleteHeader({
         <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
       </Link>
 
-      <Avatar name={`${athlete.firstName} ${athlete.lastName}`} src={athlete.avatarUrl} size="lg" />
+      <AthleteAvatarControl
+        athleteId={athlete.id}
+        name={`${athlete.firstName} ${athlete.lastName}`}
+        avatarUrl={athlete.avatarUrl}
+        isProxy={athlete.user.claimedAt === null}
+      />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
