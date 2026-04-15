@@ -112,6 +112,55 @@ export function StepExercises({
     onChange(updated);
   }
 
+  /**
+   * Adds a recommendation from the right rail to the active block, with
+   * a pre-flight Bondarchuk sequence check. The rail renders a blocked
+   * state per-card when we return `{ ok: false }`; coach can reorder the
+   * block manually and retry.
+   */
+  function addRecommendation(rec: {
+    id: string;
+    name: string;
+    category: string;
+    implementWeight: number | null;
+  }): { ok: true } | { ok: false; reason: string } {
+    if (!activeBlock) return { ok: false, reason: "Select a block first" };
+
+    const candidate: BlockExerciseData = {
+      exerciseId: rec.id,
+      exerciseName: rec.name,
+      exerciseCategory: rec.category,
+      sets: 3,
+      reps: "",
+      weight: "",
+      rpe: 0,
+      restSeconds: activeBlock.blockType === "throwing" ? 60 : 90,
+      notes: "",
+      implementKg: rec.implementWeight ?? 0,
+    };
+
+    const simulated = blocks.map((b, i) =>
+      i === activeBlockIdx ? { ...b, exercises: [...b.exercises, candidate] } : b
+    );
+    const simInputs = simulated.map((b) => ({
+      name: b.name,
+      blockType: b.blockType,
+      exercises: b.exercises.map((e) => ({
+        name: e.exerciseName,
+        implementKg: e.implementKg || null,
+      })),
+    }));
+    const seq = validateImplementSequence(simInputs);
+    const cross = validateCrossBlockSequence(simInputs);
+    const errors = [...seq.warnings, ...cross.warnings].filter((w) => w.severity === "error");
+    if (errors.length > 0) {
+      return { ok: false, reason: errors[0].message };
+    }
+
+    onChange(simulated);
+    return { ok: true };
+  }
+
   function removeExercise(exIdx: number) {
     const updated = blocks.map((b, i) =>
       i === activeBlockIdx ? { ...b, exercises: b.exercises.filter((_, j) => j !== exIdx) } : b
@@ -400,7 +449,7 @@ export function StepExercises({
         </div>
 
         {/* Right rail: Bondarchuk recommendations */}
-        <RecommenderRail event={eventFilter} />
+        <RecommenderRail event={eventFilter} onAdd={addRecommendation} />
       </div>
     </div>
   );

@@ -9,7 +9,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { formatImplementWeight } from "@/lib/throws";
+import { Plus, Check, AlertTriangle } from "lucide-react";
 
 type Recommendation = {
   id: string;
@@ -48,14 +50,24 @@ function correlationBar(corr: number): string {
   return "bg-red-500";
 }
 
+type AddResult = { ok: true } | { ok: false; reason: string };
+
 type Props = {
   event: string;
+  /**
+   * Parent-supplied adder. Runs pre-flight Bondarchuk validation and
+   * returns a structured result so the rail can show per-card feedback.
+   */
+  onAdd?: (rec: Recommendation) => AddResult;
 };
 
-export function RecommenderRail({ event }: Props) {
+type CardState = { status: "idle" } | { status: "added" } | { status: "blocked"; reason: string };
+
+export function RecommenderRail({ event, onAdd }: Props) {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cardState, setCardState] = useState<Record<string, CardState>>({});
 
   useEffect(() => {
     if (!event) {
@@ -88,6 +100,26 @@ export function RecommenderRail({ event }: Props) {
       cancelled = true;
     };
   }, [event]);
+
+  function handleAdd(rec: Recommendation) {
+    if (!onAdd) return;
+    const result = onAdd(rec);
+    if (result.ok) {
+      setCardState((s) => ({ ...s, [rec.id]: { status: "added" } }));
+      // Revert the badge after a beat so the coach can add the same exercise
+      // to a different block without the UI lying about state.
+      setTimeout(() => {
+        setCardState((s) => {
+          if (s[rec.id]?.status !== "added") return s;
+          const next = { ...s };
+          delete next[rec.id];
+          return next;
+        });
+      }, 2500);
+    } else {
+      setCardState((s) => ({ ...s, [rec.id]: { status: "blocked", reason: result.reason } }));
+    }
+  }
 
   const grouped = useMemo(() => {
     const groups: Record<string, Recommendation[]> = {};
@@ -144,40 +176,81 @@ export function RecommenderRail({ event }: Props) {
                   {CATEGORY_LABELS[cat] ?? cat}
                 </h4>
                 <div className="space-y-1">
-                  {items.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="rounded-lg border border-[var(--card-border)] bg-surface-50 dark:bg-surface-900/50 p-2.5 space-y-1.5"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-xs font-medium text-[var(--foreground)] leading-tight">
-                          {rec.name}
-                        </p>
-                        <span
-                          className={`text-xs font-bold tabular-nums shrink-0 ${correlationColor(rec.correlation)}`}
-                        >
-                          {rec.correlation.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="h-1 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${correlationBar(rec.correlation)}`}
-                          style={{ width: `${Math.max(5, rec.correlation * 100)}%` }}
-                        />
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge variant="neutral">{rec.category}</Badge>
-                        {rec.implementWeight ? (
-                          <span className="text-[10px] text-muted tabular-nums">
-                            {formatImplementWeight(rec.implementWeight)}
+                  {items.map((rec) => {
+                    const state = cardState[rec.id] ?? { status: "idle" };
+                    return (
+                      <div
+                        key={rec.id}
+                        className="rounded-lg border border-[var(--card-border)] bg-surface-50 dark:bg-surface-900/50 p-2.5 space-y-1.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs font-medium text-[var(--foreground)] leading-tight">
+                            {rec.name}
+                          </p>
+                          <span
+                            className={`text-xs font-bold tabular-nums shrink-0 ${correlationColor(rec.correlation)}`}
+                          >
+                            {rec.correlation.toFixed(2)}
                           </span>
-                        ) : null}
-                        {rec.equipment ? (
-                          <span className="text-[10px] text-muted">{rec.equipment}</span>
-                        ) : null}
+                        </div>
+                        <div className="h-1 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${correlationBar(rec.correlation)}`}
+                            style={{ width: `${Math.max(5, rec.correlation * 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                            <Badge variant="neutral">{rec.category}</Badge>
+                            {rec.implementWeight ? (
+                              <span className="text-[10px] text-muted tabular-nums">
+                                {formatImplementWeight(rec.implementWeight)}
+                              </span>
+                            ) : null}
+                            {rec.equipment ? (
+                              <span className="text-[10px] text-muted">{rec.equipment}</span>
+                            ) : null}
+                          </div>
+                          {onAdd && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              leftIcon={
+                                state.status === "added" ? (
+                                  <Check
+                                    size={12}
+                                    strokeWidth={2}
+                                    className="text-green-500"
+                                    aria-hidden="true"
+                                  />
+                                ) : (
+                                  <Plus size={12} strokeWidth={2} aria-hidden="true" />
+                                )
+                              }
+                              onClick={() => handleAdd(rec)}
+                              aria-label={`Add ${rec.name} to current block`}
+                              className="!px-2 !py-1 !text-[11px] !h-auto"
+                            >
+                              {state.status === "added" ? "Added" : "Add"}
+                            </Button>
+                          )}
+                        </div>
+                        {state.status === "blocked" && (
+                          <div className="flex items-start gap-1.5 pt-1 border-t border-amber-500/20">
+                            <AlertTriangle
+                              size={12}
+                              strokeWidth={2}
+                              className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+                              aria-hidden="true"
+                            />
+                            <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-tight">
+                              {state.reason}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
