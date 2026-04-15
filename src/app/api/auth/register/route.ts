@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { parseBody, RegisterSchema } from "@/lib/api-schemas";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
 import { sendWelcomeEmail, sendAthleteJoinedEmail } from "@/lib/email";
+import { notifyCoachAthleteJoined } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
   try {
@@ -181,6 +182,27 @@ export async function POST(request: NextRequest) {
       sendAthleteJoinedEmail(invitation.coach.user.email, `${firstName} ${lastName}`).catch((err) =>
         logger.error("Failed to send athlete-joined email", { context: "api", error: err })
       );
+
+      // In-app notification for the coach. Fire-and-forget; the athlete has
+      // already been created in the transaction above, so a lookup by userId
+      // is safe. Any failure here shouldn't block the registration response.
+      prisma.athleteProfile
+        .findUnique({ where: { userId: user.id }, select: { id: true } })
+        .then((athlete) => {
+          if (!athlete) return;
+          return notifyCoachAthleteJoined(
+            invitation.coachId,
+            athlete.id,
+            `${firstName} ${lastName}`,
+            "invite"
+          );
+        })
+        .catch((err) =>
+          logger.error("Failed to create athlete-joined notification", {
+            context: "api",
+            error: err,
+          })
+        );
     }
 
     return response;

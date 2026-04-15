@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { parseBody, RegisterClaimSchema } from "@/lib/api-schemas";
 import { hashInvitationToken } from "@/lib/invitation-token";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
+import { notifyCoachAthleteJoined } from "@/lib/notifications";
 
 export async function POST(request: NextRequest) {
   const auditInfo = auditRequestInfo(request);
@@ -151,6 +152,21 @@ export async function POST(request: NextRequest) {
       },
       ...auditInfo,
     });
+
+    // In-app notification to the coach: their proxy profile has been
+    // claimed. Distinct from the regular invite path (via="invite") so
+    // downstream UI can distinguish new-signup vs proxy-handoff.
+    void notifyCoachAthleteJoined(
+      invitation.coachId,
+      result.profile.id,
+      `${result.profile.firstName} ${result.profile.lastName}`,
+      "proxy-claim"
+    ).catch((err) =>
+      logger.error("Failed to create athlete-joined notification", {
+        context: "api",
+        error: err,
+      })
+    );
 
     const response = NextResponse.json({
       success: true,

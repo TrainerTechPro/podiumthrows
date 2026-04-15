@@ -222,6 +222,41 @@ export async function notifyCoachLowReadiness(
   });
 }
 
+/**
+ * Fire when an athlete joins the coach's roster — either via regular
+ * registration through an email invite or via claiming a coach-created
+ * proxy profile. The coach sees this in their in-app notification tray
+ * alongside the existing `sendAthleteJoinedEmail` email.
+ *
+ * Context ("via") lets future UI surface the distinction: regular invite
+ * claims vs proxy claims have different coach-followup semantics (proxy
+ * claim → athlete inherits coach-populated PRs/notes; regular invite →
+ * blank slate).
+ */
+export async function notifyCoachAthleteJoined(
+  coachId: string,
+  athleteProfileId: string,
+  athleteName: string,
+  via: "invite" | "proxy-claim"
+): Promise<void> {
+  const bodyByVia =
+    via === "proxy-claim"
+      ? `${athleteName} claimed the profile you set up. They now have app access.`
+      : `${athleteName} joined your roster.`;
+  await createNotification({
+    type: "ATHLETE_JOINED",
+    coachId,
+    athleteProfileId,
+    title: `New athlete — ${athleteName}`,
+    body: bodyByVia,
+    metadata: {
+      athleteName,
+      via,
+      url: `/coach/athletes/${athleteProfileId}`,
+    },
+  });
+}
+
 export async function notifyCoachQuestionnaireComplete(
   coachId: string,
   athleteProfileId: string,
