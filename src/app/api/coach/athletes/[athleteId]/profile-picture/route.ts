@@ -48,9 +48,12 @@ async function assertProxyOwnership(
   return { ok: true };
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ athleteId: string }> }
+) {
   try {
-    const { id: athleteId } = await params;
+    const { athleteId } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -86,7 +89,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ success: true, data: { avatarUrl: updated.avatarUrl } });
   } catch (err) {
-    logger.error("PUT /api/coach/athletes/[id]/profile-picture", {
+    logger.error("PUT /api/coach/athletes/[athleteId]/profile-picture", {
       context: "api",
       error: err,
     });
@@ -94,9 +97,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ athleteId: string }> }
+) {
   try {
-    const { id: athleteId } = await params;
+    const { athleteId } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -112,7 +118,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    logger.error("DELETE /api/coach/athletes/[id]/profile-picture", {
+    logger.error("DELETE /api/coach/athletes/[athleteId]/profile-picture", {
       context: "api",
       error: err,
     });
