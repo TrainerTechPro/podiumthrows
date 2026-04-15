@@ -128,6 +128,22 @@ enum BondarchukAthleteType {
   STRENGTH
 }
 
+/// Session block typing. Enforces the Bondarchuk "no two consecutive THROWING blocks"
+/// rule via the block-order validator. Includes legacy values preserved from the
+/// pre-enum String column plus three newer semantic categories (MOBILITY, RECOVERY,
+/// CONDITIONING) that coaches can opt into.
+enum SessionBlockType {
+  THROWING
+  STRENGTH
+  WARMUP
+  COOLDOWN
+  PLYOMETRIC
+  NOTES
+  MOBILITY
+  RECOVERY
+  CONDITIONING
+}
+
 enum ProgramSource {
   COACH_PRESCRIBED
   COACH_SELF_TRAINING
@@ -1384,7 +1400,7 @@ model ThrowsBlock {
   id        String        @id @default(cuid())
   sessionId String
   session   ThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  blockType String // WARMUP, THROWING, STRENGTH, PLYOMETRIC, COOLDOWN, NOTES
+  blockType SessionBlockType
   position  Int // Order in session (0-based)
   config    String // JSON: block-type-specific configuration
   createdAt DateTime      @default(now())

@@ -107,7 +107,11 @@ export async function POST(
       : [];
 
     // Build blocks
-    const blocks: Array<{ blockType: string; position: number; config: string }> = [];
+    const blocks: Array<{
+      blockType: "WARMUP" | "THROWING" | "STRENGTH";
+      position: number;
+      config: string;
+    }> = [];
     let position = 0;
 
     // Warmup blocks
@@ -220,9 +224,6 @@ export async function POST(
       context: "api",
       error,
     });
-    return NextResponse.json(
-      { success: false, error: "Failed to start workout" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to start workout" }, { status: 500 });
   }
 }

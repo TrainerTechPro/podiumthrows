@@ -1,6 +1,19 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { validateImplementSequence } from "@/lib/bondarchuk/sequencing";
+import { validateBlockOrder, type SessionBlockType } from "@/lib/bondarchuk/block-order";
+
+const SessionBlockTypeEnum = z.enum([
+  "THROWING",
+  "STRENGTH",
+  "WARMUP",
+  "COOLDOWN",
+  "PLYOMETRIC",
+  "NOTES",
+  "MOBILITY",
+  "RECOVERY",
+  "CONDITIONING",
+]) satisfies z.ZodType<SessionBlockType>;
 
 // ── Auth Schemas ────────────────────────────────────────────────────────
 
@@ -442,21 +455,45 @@ export const TypingAssignSchema = z.object({
 // ── Throws Session ──────────────────────────────────────────────────────
 
 const ThrowsBlockSchema = z.object({
-  blockType: z.string().min(1),
+  blockType: SessionBlockTypeEnum,
   position: z.number().int().min(0).optional(),
   config: z.unknown(),
 });
 
-export const ThrowsSessionCreateSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  sessionType: z.string().min(1, "Session type is required"),
-  event: z.string().min(1, "Event is required"),
-  targetPhase: z.string().optional().nullable(),
-  estimatedDuration: z.number().optional().nullable(),
-  tags: z.array(z.string()).optional().nullable(),
-  notes: z.string().optional().nullable(),
-  blocks: z.array(ThrowsBlockSchema).optional(),
-});
+export const ThrowsSessionCreateSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    sessionType: z.string().min(1, "Session type is required"),
+    event: z.string().min(1, "Event is required"),
+    targetPhase: z.string().optional().nullable(),
+    estimatedDuration: z.number().optional().nullable(),
+    tags: z.array(z.string()).optional().nullable(),
+    notes: z.string().optional().nullable(),
+    blocks: z.array(ThrowsBlockSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Bondarchuk Vol IV p.113: no two adjacent THROWING blocks. A strength
+    // block (or any non-throwing separator) must come between throws.
+    if (!data.blocks || data.blocks.length === 0) return;
+    const result = validateBlockOrder(
+      data.blocks.map((b, i) => ({
+        type: b.blockType,
+        order: b.position ?? i,
+      }))
+    );
+    if (!result.ok) {
+      // offendingIndex is the block's `order` value; find the array index
+      // so the client's per-field error UI highlights the right row.
+      const arrayIndex = data.blocks.findIndex(
+        (b, i) => (b.position ?? i) === result.offendingIndex
+      );
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["blocks", arrayIndex < 0 ? 0 : arrayIndex, "blockType"],
+        message: `Bondarchuk ordering violation: ${result.violation}`,
+      });
+    }
+  });
 
 // ── Throws Roster / Practice Schemas ────────────────────────────────────
 

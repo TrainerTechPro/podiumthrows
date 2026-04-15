@@ -80,7 +80,9 @@ export interface ValidationResult {
 
 // ── Helper: extract throwing blocks ─────────────────────────────────
 
-function getThrowingBlocks(blocks: SessionBlock[]): { block: SessionBlock; index: number; config: ThrowingBlockConfig }[] {
+function getThrowingBlocks(
+  blocks: SessionBlock[]
+): { block: SessionBlock; index: number; config: ThrowingBlockConfig }[] {
   return blocks
     .map((block, index) => ({ block, index, config: block.config as ThrowingBlockConfig }))
     .filter(({ block }) => block.blockType === "THROWING");
@@ -141,20 +143,22 @@ function checkRule2_PriorityFirst(blocks: SessionBlock[]): ValidationIssue[] {
   const compWeight = getCompWeight(first.event);
 
   // If the first block is NOT competition weight, that's intentional — but inform
-  const hasCompLater = throwingBlocks.slice(1).some(
-    (tb) => tb.config.event === first.event && tb.config.implementWeightKg === compWeight
-  );
+  const hasCompLater = throwingBlocks
+    .slice(1)
+    .some((tb) => tb.config.event === first.event && tb.config.implementWeightKg === compWeight);
 
   if (hasCompLater && first.implementWeightKg !== compWeight) {
-    return [{
-      rule: 2,
-      check: 2,
-      severity: "INFO",
-      title: "Priority Placement Note",
-      message: `Competition weight (${compWeight}kg) appears later in the session. The 1st throwing block gets 3-4x faster adaptation (Ukhtomsky Dominant Principle). Consider whether the priority implement is placed first.`,
-      autoFixable: false,
-      blockIndices: [throwingBlocks[0].index],
-    }];
+    return [
+      {
+        rule: 2,
+        check: 2,
+        severity: "INFO",
+        title: "Priority Placement Note",
+        message: `Competition weight (${compWeight}kg) appears later in the session. The 1st throwing block gets 3-4x faster adaptation (Ukhtomsky Dominant Principle). Consider whether the priority implement is placed first.`,
+        autoFixable: false,
+        blockIndices: [throwingBlocks[0].index],
+      },
+    ];
   }
 
   return [];
@@ -169,12 +173,16 @@ function checkRule3_StrengthBetweenThrows(blocks: SessionBlock[]): ValidationIss
 
   for (let i = 1; i < blocks.length; i++) {
     if (blocks[i].blockType === "THROWING" && blocks[i - 1].blockType === "THROWING") {
+      // Elevated from WARNING to CRITICAL (C-3). Server-side Zod now rejects
+      // consecutive throwing blocks with a 400; the builder Save button is
+      // driven by `canAssign: !hasCritical`, so surfacing this as CRITICAL
+      // gates the UI in lockstep with the server.
       issues.push({
         rule: 3,
         check: 3,
-        severity: "WARNING",
-        title: "Missing Strength Block",
-        message: `Vol IV p.113: A strength block should be programmed between throwing blocks for passive activation transfer. Structure: Throw → Strength → Throw → Strength.`,
+        severity: "CRITICAL",
+        title: "Two Consecutive Throwing Blocks",
+        message: `Vol IV p.113: A non-throwing block (typically STRENGTH) must sit between two throwing blocks to enable passive activation transfer. Structure: Throw → Strength → Throw → Strength.`,
         autoFixable: false,
         blockIndices: [i - 1, i],
       });
@@ -206,7 +214,7 @@ function checkRule4_WeightDifferential(blocks: SessionBlock[]): ValidationIssue[
       const curr = eventBlocks[i].config.implementWeightKg;
       const diff = Math.abs(prev - curr) / Math.max(prev, curr);
 
-      if (diff > 0.20) {
+      if (diff > 0.2) {
         issues.push({
           rule: 4,
           check: 4,
@@ -274,21 +282,26 @@ function checkRule6_IntensityCap(blocks: SessionBlock[]): ValidationIssue[] {
   if (throwingBlocks.length === 0) return [];
 
   const totalThrows = throwingBlocks.reduce((sum, b) => sum + b.config.throwCount, 0);
-  const maxEffortTotal = throwingBlocks.reduce((sum, b) => sum + (b.config.maxEffortThrows || 0), 0);
+  const maxEffortTotal = throwingBlocks.reduce(
+    (sum, b) => sum + (b.config.maxEffortThrows || 0),
+    0
+  );
 
   if (totalThrows === 0) return [];
 
   const maxEffortPercent = (maxEffortTotal / totalThrows) * 100;
 
   if (maxEffortPercent > 15) {
-    return [{
-      rule: 6,
-      check: 6,
-      severity: "WARNING",
-      title: "Intensity Cap Exceeded",
-      message: `${maxEffortTotal} of ${totalThrows} throws (${Math.round(maxEffortPercent)}%) are at max effort. Vol IV recommends ≤15% of throws at 95-100% intensity.`,
-      autoFixable: false,
-    }];
+    return [
+      {
+        rule: 6,
+        check: 6,
+        severity: "WARNING",
+        title: "Intensity Cap Exceeded",
+        message: `${maxEffortTotal} of ${totalThrows} throws (${Math.round(maxEffortPercent)}%) are at max effort. Vol IV recommends ≤15% of throws at 95-100% intensity.`,
+        autoFixable: false,
+      },
+    ];
   }
 
   return [];
@@ -393,7 +406,11 @@ export function autoFixSequence(blocks: SessionBlock[]): SessionBlock[] {
   let currentGroup: number[] = [];
 
   for (const idx of throwingIndices) {
-    if (currentGroup.length === 0 || idx === currentGroup[currentGroup.length - 1] + 1 || idx === currentGroup[currentGroup.length - 1] + 2) {
+    if (
+      currentGroup.length === 0 ||
+      idx === currentGroup[currentGroup.length - 1] + 1 ||
+      idx === currentGroup[currentGroup.length - 1] + 2
+    ) {
       currentGroup.push(idx);
     } else {
       if (currentGroup.length > 0) groups.push(currentGroup);

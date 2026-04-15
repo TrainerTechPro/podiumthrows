@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { NextResponse } from "next/server";
-import { parseQuery, LogSessionSchema } from "@/lib/api-schemas";
+import { parseQuery, LogSessionSchema, ThrowsSessionCreateSchema } from "@/lib/api-schemas";
 
 describe("parseQuery", () => {
   const Schema = z.object({
@@ -110,5 +110,68 @@ describe("LogSessionSchema (Bondarchuk sequencing)", () => {
     if (!parsed.success) {
       expect(parsed.error.issues[0].path).toEqual(["drills", 2, "implementWeight"]);
     }
+  });
+});
+
+describe("ThrowsSessionCreateSchema (block ordering)", () => {
+  const baseSession = {
+    name: "Test session",
+    sessionType: "THROWS",
+    event: "SHOT_PUT",
+  };
+
+  it("accepts the canonical THROWING → STRENGTH → THROWING → STRENGTH structure", () => {
+    const parsed = ThrowsSessionCreateSchema.safeParse({
+      ...baseSession,
+      blocks: [
+        { blockType: "THROWING", position: 0, config: {} },
+        { blockType: "STRENGTH", position: 1, config: {} },
+        { blockType: "THROWING", position: 2, config: {} },
+        { blockType: "STRENGTH", position: 3, config: {} },
+      ],
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it("rejects two adjacent THROWING blocks with a path pointing at the offender", () => {
+    const parsed = ThrowsSessionCreateSchema.safeParse({
+      ...baseSession,
+      blocks: [
+        { blockType: "THROWING", position: 0, config: {} },
+        { blockType: "THROWING", position: 1, config: {} },
+      ],
+    });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      expect(issue.message.toLowerCase()).toContain("bondarchuk");
+      expect(issue.path).toEqual(["blocks", 1, "blockType"]);
+    }
+  });
+
+  it("rejects an unknown blockType string (enum enforcement)", () => {
+    const parsed = ThrowsSessionCreateSchema.safeParse({
+      ...baseSession,
+      blocks: [{ blockType: "BOGUS", position: 0, config: {} }],
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it("accepts sessions with no blocks", () => {
+    const parsed = ThrowsSessionCreateSchema.safeParse(baseSession);
+    expect(parsed.success).toBe(true);
+  });
+
+  it("accepts new semantic types (MOBILITY, RECOVERY, CONDITIONING)", () => {
+    const parsed = ThrowsSessionCreateSchema.safeParse({
+      ...baseSession,
+      blocks: [
+        { blockType: "MOBILITY", position: 0, config: {} },
+        { blockType: "THROWING", position: 1, config: {} },
+        { blockType: "CONDITIONING", position: 2, config: {} },
+        { blockType: "RECOVERY", position: 3, config: {} },
+      ],
+    });
+    expect(parsed.success).toBe(true);
   });
 });
