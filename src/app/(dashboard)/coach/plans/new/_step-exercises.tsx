@@ -7,6 +7,7 @@ import { validateImplementSequence, validateCrossBlockSequence } from "@/lib/bon
 import type { BlockData, BlockExerciseData } from "./_step-blocks";
 import type { ExerciseItem } from "@/lib/data/coach";
 import { formatImplementWeight } from "@/lib/throws";
+import { RecommenderRail } from "./_recommender-rail";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -186,8 +187,8 @@ export function StepExercises({
         ))}
       </div>
 
-      {/* Two-column layout: exercise list + current block exercises */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Three-column layout: exercise picker + current block + recommender rail */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_300px] gap-4">
         {/* Left: Exercise picker */}
         <div className="space-y-3">
           <div className="relative">
@@ -397,6 +398,9 @@ export function StepExercises({
             </div>
           )}
         </div>
+
+        {/* Right rail: Bondarchuk recommendations */}
+        <RecommenderRail event={eventFilter} />
       </div>
     </div>
   );
