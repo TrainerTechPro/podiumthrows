@@ -262,6 +262,9 @@ const COACH_FILTERS: { key: FilterType; label: string }[] = [
   { key: "WORKOUT_COMPLETED", label: "Workouts" },
   { key: "QUESTIONNAIRE_COMPLETE", label: "Questionnaires" },
   { key: "ATHLETE_JOINED", label: "Roster" },
+  { key: "INVITATION_EXPIRED", label: "Invites" },
+  { key: "PROGRAM_CHECKPOINT", label: "Checkpoints" },
+  { key: "COMPLEX_ROTATED", label: "Rotations" },
 ];
 
 const ATHLETE_FILTERS: { key: FilterType; label: string }[] = [
@@ -271,6 +274,7 @@ const ATHLETE_FILTERS: { key: FilterType; label: string }[] = [
   { key: "QUESTIONNAIRE_ASSIGNED", label: "Questionnaires" },
   { key: "VIDEO_SHARED", label: "Videos" },
   { key: "COMPETITION_REMINDER", label: "Competitions" },
+  { key: "STREAK_BROKEN", label: "Streaks" },
 ];
 
 /* ─── Notification Row ──────────────────────────────────────────────────── */
