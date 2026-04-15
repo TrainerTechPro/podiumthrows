@@ -258,6 +258,43 @@ export async function notifyCoachAthleteJoined(
 }
 
 /**
+ * Fire when an athlete's upcoming competition crosses a reminder threshold.
+ * Two thresholds fire per competition: 7 days out (planning horizon) and
+ * 1 day out (tomorrow). Each threshold fires on exactly one calendar day
+ * (the day that's 7 or 1 days before the competition date) so idempotency
+ * is intrinsic to the cron schedule — no dedup query needed.
+ */
+export async function notifyAthleteCompetitionReminder(
+  athleteProfileId: string,
+  competitionId: string,
+  name: string,
+  event: string,
+  date: string,
+  threshold: "7_DAYS" | "1_DAY"
+): Promise<void> {
+  const eventLabel = formatEventType(event);
+  const title = threshold === "1_DAY" ? `${name} is tomorrow` : `${name} is 1 week away`;
+  const body =
+    threshold === "1_DAY"
+      ? `Your ${eventLabel} competition is tomorrow. Good luck!`
+      : `Your ${eventLabel} competition ${name} is 7 days out. Time to finalize prep.`;
+  await createNotification({
+    type: "COMPETITION_REMINDER",
+    athleteProfileId,
+    title,
+    body,
+    metadata: {
+      competitionId,
+      name,
+      event,
+      date,
+      threshold,
+      url: "/athlete/competitions",
+    },
+  });
+}
+
+/**
  * Fire when an athlete's training streak has lapsed. Only meaningful
  * streaks (>= MIN_STREAK_FOR_NOTIFICATION days) are worth mourning;
  * short streaks breaking silently is better UX than a nag. Called by
