@@ -34,7 +34,15 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, number> = {
 
 export type ActivityItem = {
   id: string;
-  type: "check_in" | "personal_best" | "session_complete" | "streak_break" | "injury_change" | "missed_session" | "sports_form" | "autoregulation";
+  type:
+    | "check_in"
+    | "personal_best"
+    | "session_complete"
+    | "streak_break"
+    | "injury_change"
+    | "missed_session"
+    | "sports_form"
+    | "autoregulation";
   athleteId: string;
   athleteName: string;
   athleteAvatar: string | null;
@@ -67,6 +75,15 @@ export type ThrowsAssignmentItem = {
   prescribedThrows: number;
 };
 
+/**
+ * Three-state claim status derived from User.claimedAt and the existence of a
+ * live (PENDING, non-expired) invitation:
+ *   - PROXY   → coach created the athlete, no invite sent yet
+ *   - INVITED → invite sent, awaiting athlete claim
+ *   - CLAIMED → athlete has registered and claimed the profile
+ */
+export type ClaimStatus = "PROXY" | "INVITED" | "CLAIMED";
+
 export type AthleteRosterItem = {
   id: string;
   firstName: string;
@@ -90,6 +107,9 @@ export type AthleteRosterItem = {
   } | null;
   lastSessionDate: string | null;
   claimedAt: string | null;
+  claimStatus: ClaimStatus;
+  /** ID of the live PENDING invitation (for Resend/Revoke actions); null for PROXY or CLAIMED. */
+  pendingInvitationId: string | null;
 };
 
 export type FlaggedAthlete = {
@@ -248,9 +268,7 @@ export async function requireCoachApi() {
  * Verify coach owns this athlete and return both profiles.
  * Returns null if auth fails or athlete doesn't belong to coach.
  */
-export async function requireCoachAthlete(
-  athleteId: string
-): Promise<{
+export async function requireCoachAthlete(athleteId: string): Promise<{
   session: JWTPayload;
   coach: { id: string; plan: SubscriptionPlan };
   athlete: AthleteProfile & { user: { claimedAt: Date | null } };
@@ -388,18 +406,13 @@ export async function getCoachStats(coachId: string): Promise<CoachStats> {
     (a) => a.readinessCheckIns[0]?.injuryStatus === "ACTIVE"
   ).length;
 
-  const completed =
-    sessionStats.find((s) => s.status === "COMPLETED")?._count._all ?? 0;
-  const skipped =
-    sessionStats.find((s) => s.status === "SKIPPED")?._count._all ?? 0;
+  const completed = sessionStats.find((s) => s.status === "COMPLETED")?._count._all ?? 0;
+  const skipped = sessionStats.find((s) => s.status === "SKIPPED")?._count._all ?? 0;
   const totalPast = completed + skipped;
-  const complianceRate =
-    totalPast > 0 ? Math.round((completed / totalPast) * 100) : null;
+  const complianceRate = totalPast > 0 ? Math.round((completed / totalPast) * 100) : null;
 
   const throwsThisWeek =
-    throwsBlockLogCount +
-    practiceAttemptCount +
-    (drillLogThrowsAgg._sum.throwCount ?? 0);
+    throwsBlockLogCount + practiceAttemptCount + (drillLogThrowsAgg._sum.throwCount ?? 0);
 
   const prsThisWeek = throwsPRCount + drillPRCount;
 
@@ -421,80 +434,79 @@ export async function getRecentActivity(
 ): Promise<ActivityItem[]> {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
-  const [checkIns, prs, completedSessions, completedAssignments, ...notableResults] = await Promise.all([
-    prisma.readinessCheckIn.findMany({
-      where: { athlete: { coachId }, date: { gte: cutoff } },
-      include: {
-        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-      },
-      orderBy: { date: "desc" },
-      take: limit,
-    }),
+  const [checkIns, prs, completedSessions, completedAssignments, ...notableResults] =
+    await Promise.all([
+      prisma.readinessCheckIn.findMany({
+        where: { athlete: { coachId }, date: { gte: cutoff } },
+        include: {
+          athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+        orderBy: { date: "desc" },
+        take: limit,
+      }),
 
-    prisma.throwLog.findMany({
-      where: { athlete: { coachId }, isPersonalBest: true, date: { gte: cutoff } },
-      include: {
-        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-      },
-      orderBy: { date: "desc" },
-      take: limit,
-    }),
+      prisma.throwLog.findMany({
+        where: { athlete: { coachId }, isPersonalBest: true, date: { gte: cutoff } },
+        include: {
+          athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        },
+        orderBy: { date: "desc" },
+        take: limit,
+      }),
 
-    // When notableOnly, skip routine session completions entirely
-    notableOnly
-      ? Promise.resolve([])
-      : prisma.trainingSession.findMany({
-          where: {
-            athlete: { coachId },
-            status: "COMPLETED",
-            completedDate: { gte: cutoff },
-          },
-          include: {
-            athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-          },
-          orderBy: { completedDate: "desc" },
-          take: limit,
-        }),
-
-    // ThrowsAssignment completions (always included)
-    prisma.throwsAssignment.findMany({
-      where: {
-        athlete: { coachId },
-        status: "COMPLETED",
-        completedAt: { gte: cutoff },
-      },
-      include: {
-        session: { select: { name: true } },
-        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-        throwLogs: { select: { distance: true } },
-      },
-      orderBy: { completedAt: "desc" },
-      take: limit,
-    }),
-
-    // Missed sessions (only when notableOnly)
-    ...(notableOnly
-      ? [
-          prisma.throwsAssignment.findMany({
+      // When notableOnly, skip routine session completions entirely
+      notableOnly
+        ? Promise.resolve([])
+        : prisma.trainingSession.findMany({
             where: {
               athlete: { coachId },
-              status: "SKIPPED",
-              updatedAt: { gte: cutoff },
+              status: "COMPLETED",
+              completedDate: { gte: cutoff },
             },
             include: {
               athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             },
-            orderBy: { updatedAt: "desc" },
+            orderBy: { completedDate: "desc" },
             take: limit,
           }),
-        ]
-      : []),
-  ]);
+
+      // ThrowsAssignment completions (always included)
+      prisma.throwsAssignment.findMany({
+        where: {
+          athlete: { coachId },
+          status: "COMPLETED",
+          completedAt: { gte: cutoff },
+        },
+        include: {
+          session: { select: { name: true } },
+          athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          throwLogs: { select: { distance: true } },
+        },
+        orderBy: { completedAt: "desc" },
+        take: limit,
+      }),
+
+      // Missed sessions (only when notableOnly)
+      ...(notableOnly
+        ? [
+            prisma.throwsAssignment.findMany({
+              where: {
+                athlete: { coachId },
+                status: "SKIPPED",
+                updatedAt: { gte: cutoff },
+              },
+              include: {
+                athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+              },
+              orderBy: { updatedAt: "desc" },
+              take: limit,
+            }),
+          ]
+        : []),
+    ]);
 
   // Filter check-ins: when notableOnly, only include low scores
-  const filteredCheckIns = notableOnly
-    ? checkIns.filter((c) => c.overallScore < 4.0)
-    : checkIns;
+  const filteredCheckIns = notableOnly ? checkIns.filter((c) => c.overallScore < 4.0) : checkIns;
 
   const items: ActivityItem[] = [
     ...filteredCheckIns.map((c) => ({
@@ -604,7 +616,12 @@ export async function getFlaggedAthletes(coachId: string): Promise<FlaggedAthlet
     };
 
     if (latest?.injuryStatus === "ACTIVE") {
-      flagged.push({ ...base, reason: "injured", injuryStatus: "ACTIVE", score: latest.overallScore });
+      flagged.push({
+        ...base,
+        reason: "injured",
+        injuryStatus: "ACTIVE",
+        score: latest.overallScore,
+      });
     } else if (latest && latest.overallScore < 5) {
       flagged.push({ ...base, reason: "low_readiness", score: latest.overallScore });
     } else if (!latest || latest.date < sevenDaysAgo) {
@@ -620,7 +637,10 @@ export async function getFlaggedAthletes(coachId: string): Promise<FlaggedAthlet
 
 /* ─── Athletes Roster ─────────────────────────────────────────────────────── */
 
-export async function getAthleteRoster(coachId: string, teamId?: string): Promise<AthleteRosterItem[]> {
+export async function getAthleteRoster(
+  coachId: string,
+  teamId?: string
+): Promise<AthleteRosterItem[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let where: any = { coachId };
   if (teamId === "unassigned") {
@@ -629,6 +649,7 @@ export async function getAthleteRoster(coachId: string, teamId?: string): Promis
     where = { coachId, teamMemberships: { some: { teamId } } };
   }
 
+  const now = new Date();
   const athletes = await prisma.athleteProfile.findMany({
     where,
     select: {
@@ -661,35 +682,54 @@ export async function getAthleteRoster(coachId: string, teamId?: string): Promis
         take: 1,
         select: { completedDate: true },
       },
+      // Live invitations (PENDING and not yet expired) bound to this profile.
+      // We only need the most recent to decide INVITED vs PROXY status.
+      invitations: {
+        where: { status: "PENDING", expiresAt: { gt: now } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { id: true },
+      },
     },
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
 
-  return athletes.map((a) => ({
-    id: a.id,
-    firstName: a.firstName,
-    lastName: a.lastName,
-    events: a.events as string[],
-    avatarUrl: a.avatarUrl,
-    currentStreak: a.currentStreak,
-    gender: a.gender as string | null,
-    classStanding: a.classStanding,
-    availabilityCount: a._count.availability,
-    latestReadiness: a.readinessCheckIns[0]
-      ? {
-          score: a.readinessCheckIns[0].overallScore,
-          injuryStatus: a.readinessCheckIns[0].injuryStatus as string,
-          date: a.readinessCheckIns[0].date.toISOString(),
-          sleepQuality: a.readinessCheckIns[0].sleepQuality,
-          soreness: a.readinessCheckIns[0].soreness,
-          stressLevel: a.readinessCheckIns[0].stressLevel,
-          energyMood: a.readinessCheckIns[0].energyMood,
-        }
-      : null,
-    lastSessionDate:
-      a.trainingSessions[0]?.completedDate?.toISOString() ?? null,
-    claimedAt: a.user.claimedAt?.toISOString() ?? null,
-  }));
+  return athletes.map((a) => {
+    const claimedAt = a.user.claimedAt?.toISOString() ?? null;
+    const pendingInvitation = a.invitations[0] ?? null;
+    const claimStatus: ClaimStatus = claimedAt
+      ? "CLAIMED"
+      : pendingInvitation
+        ? "INVITED"
+        : "PROXY";
+
+    return {
+      id: a.id,
+      firstName: a.firstName,
+      lastName: a.lastName,
+      events: a.events as string[],
+      avatarUrl: a.avatarUrl,
+      currentStreak: a.currentStreak,
+      gender: a.gender as string | null,
+      classStanding: a.classStanding,
+      availabilityCount: a._count.availability,
+      latestReadiness: a.readinessCheckIns[0]
+        ? {
+            score: a.readinessCheckIns[0].overallScore,
+            injuryStatus: a.readinessCheckIns[0].injuryStatus as string,
+            date: a.readinessCheckIns[0].date.toISOString(),
+            sleepQuality: a.readinessCheckIns[0].sleepQuality,
+            soreness: a.readinessCheckIns[0].soreness,
+            stressLevel: a.readinessCheckIns[0].stressLevel,
+            energyMood: a.readinessCheckIns[0].energyMood,
+          }
+        : null,
+      lastSessionDate: a.trainingSessions[0]?.completedDate?.toISOString() ?? null,
+      claimedAt,
+      claimStatus,
+      pendingInvitationId: pendingInvitation?.id ?? null,
+    };
+  });
 }
 
 /* ─── Athlete Profile ─────────────────────────────────────────────────────── */
@@ -783,10 +823,7 @@ export async function getAthleteThrowHistory(
   }));
 }
 
-export async function getAthleteSessions(
-  athleteId: string,
-  limit = 20
-): Promise<SessionItem[]> {
+export async function getAthleteSessions(athleteId: string, limit = 20): Promise<SessionItem[]> {
   const sessions = await prisma.trainingSession.findMany({
     where: { athleteId },
     orderBy: { scheduledDate: "desc" },
@@ -829,9 +866,7 @@ export async function getAthleteThrowsAssignments(
   });
 
   return assignments.map((a) => {
-    const distances = a.throwLogs
-      .map((l) => l.distance)
-      .filter((d): d is number => d != null);
+    const distances = a.throwLogs.map((l) => l.distance).filter((d): d is number => d != null);
     const bestMark = distances.length > 0 ? Math.max(...distances) : null;
 
     let prescribedThrows = 0;
@@ -840,7 +875,9 @@ export async function getAthleteThrowsAssignments(
         try {
           const cfg = JSON.parse(block.config) as Record<string, unknown>;
           prescribedThrows += (cfg.throwCount as number) ?? 0;
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
 
@@ -919,12 +956,7 @@ export async function getAthleteGoals(athleteId: string): Promise<GoalItem[]> {
     let projectedCompletionDate: string | null = null;
     const daysElapsed = (now - g.createdAt.getTime()) / 86_400_000;
     const remaining = g.targetValue - g.currentValue;
-    if (
-      g.startingValue !== null &&
-      daysElapsed > 0 &&
-      gained > 0 &&
-      remaining > 0
-    ) {
+    if (g.startingValue !== null && daysElapsed > 0 && gained > 0 && remaining > 0) {
       const ratePerDay = gained / daysElapsed;
       const daysToCompletion = remaining / ratePerDay;
       projectedCompletionDate = new Date(now + daysToCompletion * 86_400_000).toISOString();
@@ -993,12 +1025,7 @@ export async function getTeamGoals(coachId: string): Promise<TeamGoalItem[]> {
     let projectedCompletionDate: string | null = null;
     const daysElapsed = (now - g.createdAt.getTime()) / 86_400_000;
     const remaining = g.targetValue - g.currentValue;
-    if (
-      g.startingValue !== null &&
-      daysElapsed > 0 &&
-      gained > 0 &&
-      remaining > 0
-    ) {
+    if (g.startingValue !== null && daysElapsed > 0 && gained > 0 && remaining > 0) {
       const ratePerDay = gained / daysElapsed;
       const daysToCompletion = remaining / ratePerDay;
       projectedCompletionDate = new Date(now + daysToCompletion * 86_400_000).toISOString();
@@ -1229,10 +1256,7 @@ export async function updateExercise(
   };
 }
 
-export async function deleteExercise(
-  exerciseId: string,
-  coachId: string
-): Promise<void> {
+export async function deleteExercise(exerciseId: string, coachId: string): Promise<void> {
   // Verify ownership
   const existing = await prisma.exercise.findFirst({
     where: { id: exerciseId, coachId, isGlobal: false },
@@ -1569,7 +1593,12 @@ export type TeamThrowSummaryItem = {
   avatarUrl: string | null;
   events: string[];
   totalThrows: number;
-  latestPR: { event: string; distance: number | null; date: string; implementWeight: number } | null;
+  latestPR: {
+    event: string;
+    distance: number | null;
+    date: string;
+    implementWeight: number;
+  } | null;
   recentThrowCount: number; // last 7 days
   bondarchukType: string | null;
 };
@@ -1603,14 +1632,22 @@ export async function getAthleteThrowStats(athleteId: string): Promise<ThrowStat
   return Object.entries(byEvent).map(([event, eventThrows]) => {
     const distances = eventThrows.map((t) => t.distance).filter((d): d is number => d != null);
     const recent5 = distances.slice(0, 5);
-    const implementWeights = Array.from(new Set(eventThrows.map((t) => t.implementWeight))).sort((a, b) => b - a);
+    const implementWeights = Array.from(new Set(eventThrows.map((t) => t.implementWeight))).sort(
+      (a, b) => b - a
+    );
 
     return {
       event,
       totalThrows: eventThrows.length,
       bestDistance: distances.length > 0 ? Math.max(...distances) : 0,
-      avgDistance: distances.length > 0 ? parseFloat((distances.reduce((s, d) => s + d, 0) / distances.length).toFixed(2)) : 0,
-      recentAvgDistance: recent5.length > 0 ? parseFloat((recent5.reduce((s, d) => s + d, 0) / recent5.length).toFixed(2)) : 0,
+      avgDistance:
+        distances.length > 0
+          ? parseFloat((distances.reduce((s, d) => s + d, 0) / distances.length).toFixed(2))
+          : 0,
+      recentAvgDistance:
+        recent5.length > 0
+          ? parseFloat((recent5.reduce((s, d) => s + d, 0) / recent5.length).toFixed(2))
+          : 0,
       implementWeights,
     };
   });
@@ -1669,7 +1706,14 @@ export async function getTeamThrowSummary(coachId: string): Promise<TeamThrowSum
       avatarUrl: true,
       events: true,
       throwLogs: {
-        select: { id: true, event: true, distance: true, implementWeight: true, date: true, isPersonalBest: true },
+        select: {
+          id: true,
+          event: true,
+          distance: true,
+          implementWeight: true,
+          date: true,
+          isPersonalBest: true,
+        },
         orderBy: { date: "desc" },
       },
       assessments: {
@@ -1960,12 +2004,10 @@ export async function getAthleteACWR(athleteId: string): Promise<AthleteACWR> {
 
   const acuteAvg =
     acuteSessions.length > 0
-      ? acuteSessions.reduce((s, sess) => s + (sess.rpe ?? 0), 0) /
-        acuteSessions.length
+      ? acuteSessions.reduce((s, sess) => s + (sess.rpe ?? 0), 0) / acuteSessions.length
       : 0;
   const chronicAvg =
-    chronicSessions.reduce((s, sess) => s + (sess.rpe ?? 0), 0) /
-    chronicSessions.length;
+    chronicSessions.reduce((s, sess) => s + (sess.rpe ?? 0), 0) / chronicSessions.length;
 
   if (chronicAvg === 0) return null;
 
@@ -2263,9 +2305,7 @@ export type TeamReadinessEntry = {
   trend: "up" | "down" | "stable" | null;
 };
 
-export async function getTeamReadinessTrends(
-  coachId: string
-): Promise<TeamReadinessEntry[]> {
+export async function getTeamReadinessTrends(coachId: string): Promise<TeamReadinessEntry[]> {
   // Find all readiness/check-in questionnaires for this coach that have scoring
   const readinessQuestionnaires = await prisma.questionnaire.findMany({
     where: {
@@ -2336,10 +2376,7 @@ export async function getTeamReadinessTrends(
       const prevScores = prev.scores as unknown as {
         compositeScore: number | null;
       } | null;
-      if (
-        latestScores?.compositeScore != null &&
-        prevScores?.compositeScore != null
-      ) {
+      if (latestScores?.compositeScore != null && prevScores?.compositeScore != null) {
         const diff = latestScores.compositeScore - prevScores.compositeScore;
         trend = diff > 0.5 ? "up" : diff < -0.5 ? "down" : "stable";
       }
@@ -2387,9 +2424,7 @@ export type TeamReadinessDetail = {
   categories: ReadinessCategories;
 };
 
-export async function getTeamReadinessDetail(
-  coachId: string
-): Promise<TeamReadinessDetail[]> {
+export async function getTeamReadinessDetail(coachId: string): Promise<TeamReadinessDetail[]> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -2578,9 +2613,7 @@ export async function getCoachVideos(
       category: v.category,
       status: v.status,
       athleteId: v.athleteId,
-      athleteName: v.athlete
-        ? `${v.athlete.firstName} ${v.athlete.lastName}`
-        : null,
+      athleteName: v.athlete ? `${v.athlete.firstName} ${v.athlete.lastName}` : null,
       durationSec: v.durationSec,
       fileSizeMb: v.fileSizeMb,
       annotationCount: annotations.length,
@@ -2590,10 +2623,7 @@ export async function getCoachVideos(
   });
 }
 
-export async function getVideoById(
-  id: string,
-  coachId: string
-): Promise<VideoDetail | null> {
+export async function getVideoById(id: string, coachId: string): Promise<VideoDetail | null> {
   const video = await prisma.videoUpload.findFirst({
     where: { id, coachId },
     include: {
@@ -2621,18 +2651,14 @@ export async function getVideoById(
     fileSizeMb: video.fileSizeMb,
     coachId: video.coachId,
     athleteId: video.athleteId,
-    athleteName: video.athlete
-      ? `${video.athlete.firstName} ${video.athlete.lastName}`
-      : null,
+    athleteName: video.athlete ? `${video.athlete.firstName} ${video.athlete.lastName}` : null,
     sharedWithAthletes: video.sharedWithAthletes,
     createdAt: video.createdAt.toISOString(),
     updatedAt: video.updatedAt.toISOString(),
   };
 }
 
-export async function getCoachVideoStats(
-  coachId: string
-): Promise<VideoStats> {
+export async function getCoachVideoStats(coachId: string): Promise<VideoStats> {
   const videos = await prisma.videoUpload.findMany({
     where: { coachId, status: "ready" },
     select: { event: true, createdAt: true },
@@ -2723,12 +2749,12 @@ export async function getOnboardingStatus(
   const onboardingCompletedAt =
     cachedCompletedAt !== undefined
       ? cachedCompletedAt
-      : (
+      : ((
           await prisma.coachProfile.findUnique({
             where: { id: coachId },
             select: { onboardingCompletedAt: true },
           })
-        )?.onboardingCompletedAt ?? null;
+        )?.onboardingCompletedAt ?? null);
 
   const TOTAL_STEPS = 5;
 
@@ -2743,21 +2769,28 @@ export async function getOnboardingStatus(
   }
 
   // Derive step completion from actual data
-  const [coachProfile, athleteCount, pendingInviteCount, throwsProfileCount, profileWithPb, programCount, sessionCount] =
-    await Promise.all([
-      prisma.coachProfile.findUnique({
-        where: { id: coachId },
-        select: { bio: true, organization: true, avatarUrl: true },
-      }),
-      prisma.athleteProfile.count({ where: { coachId } }),
-      prisma.invitation.count({ where: { coachId, status: "PENDING" } }),
-      prisma.throwsProfile.count({ where: { enrolledBy: coachId } }),
-      prisma.throwsProfile.count({
-        where: { enrolledBy: coachId, competitionPb: { not: null } },
-      }),
-      prisma.trainingProgram.count({ where: { coachId } }),
-      prisma.throwsSession.count({ where: { coachId } }),
-    ]);
+  const [
+    coachProfile,
+    athleteCount,
+    pendingInviteCount,
+    throwsProfileCount,
+    profileWithPb,
+    programCount,
+    sessionCount,
+  ] = await Promise.all([
+    prisma.coachProfile.findUnique({
+      where: { id: coachId },
+      select: { bio: true, organization: true, avatarUrl: true },
+    }),
+    prisma.athleteProfile.count({ where: { coachId } }),
+    prisma.invitation.count({ where: { coachId, status: "PENDING" } }),
+    prisma.throwsProfile.count({ where: { enrolledBy: coachId } }),
+    prisma.throwsProfile.count({
+      where: { enrolledBy: coachId, competitionPb: { not: null } },
+    }),
+    prisma.trainingProgram.count({ where: { coachId } }),
+    prisma.throwsSession.count({ where: { coachId } }),
+  ]);
 
   const hasProfile = !!(coachProfile?.bio || coachProfile?.organization || coachProfile?.avatarUrl);
   const hasAthlete = athleteCount > 0 || pendingInviteCount > 0;

@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, UserRoundPlus } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Avatar, Badge, DataTable, type Column } from "@/components";
-import type { AthleteRosterItem } from "@/lib/data/coach";
+import { useToast } from "@/components/ui/Toast";
+import { csrfHeaders } from "@/lib/csrf-client";
+import type { AthleteRosterItem, ClaimStatus } from "@/lib/data/coach";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -24,34 +26,36 @@ function formatRelativeDate(iso: string | null): string {
   return `${days}d ago`;
 }
 
-/* ─── Cell Renderers ─────────────────────────────────────────────────────── */
+/* ─── Status pill ─────────────────────────────────────────────────────────── */
+
+function StatusPill({ status }: { status: ClaimStatus }) {
+  if (status === "CLAIMED") return null;
+  if (status === "INVITED") {
+    return (
+      <Badge variant="warning" className="ml-1.5">
+        Invited
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="neutral" className="ml-1.5">
+      Not invited
+    </Badge>
+  );
+}
+
+/* ─── Cell renderers ─────────────────────────────────────────────────────── */
 
 function AthleteCell({ row }: { row: AthleteRosterItem }) {
   return (
     <div className="flex items-center gap-3">
-      <Avatar
-        name={`${row.firstName} ${row.lastName}`}
-        src={row.avatarUrl}
-        size="sm"
-      />
+      <Avatar name={`${row.firstName} ${row.lastName}`} src={row.avatarUrl} size="sm" />
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-[var(--foreground)] truncate flex items-center">
+        <p className="text-sm font-semibold text-[var(--foreground)] truncate flex items-center flex-wrap gap-y-0.5">
           <span className="truncate">
             {row.firstName} {row.lastName}
           </span>
-          {!row.claimedAt && (
-            <span
-              className="ml-1.5 inline-flex shrink-0"
-              title="Profile managed by coach — not yet claimed by athlete"
-            >
-              <UserRoundPlus
-                size={14}
-                strokeWidth={1.75}
-                className="text-[var(--muted)] opacity-60"
-                aria-hidden="true"
-              />
-            </span>
-          )}
+          <StatusPill status={row.claimStatus} />
         </p>
       </div>
     </div>
@@ -73,12 +77,6 @@ function EventsCell({ row }: { row: AthleteRosterItem }) {
   );
 }
 
-/**
- * Mini 4-bar breakdown of readiness sub-scores. Each bar's height represents
- * the *wellness* value of that dimension on a unified "higher = better" scale:
- * soreness/stress are inverted (11 - raw) so a coach can glance at a row and
- * immediately see which factor is dragging the overall score down.
- */
 function ReadinessBreakdown({
   sleep,
   soreness,
@@ -90,7 +88,6 @@ function ReadinessBreakdown({
   stress: number;
   energy: number;
 }) {
-  // Normalize: all factors on 1-10 where higher = better.
   const factors = [
     { label: "Sleep", raw: sleep, wellness: sleep },
     { label: "Soreness", raw: soreness, wellness: 11 - soreness },
@@ -99,18 +96,10 @@ function ReadinessBreakdown({
   ];
 
   return (
-    <div
-      className="flex items-end gap-0.5 h-3.5"
-      aria-hidden="true"
-    >
+    <div className="flex items-end gap-0.5 h-3.5" aria-hidden="true">
       {factors.map((f) => {
         const color =
-          f.wellness >= 8
-            ? "bg-emerald-500"
-            : f.wellness >= 5
-              ? "bg-amber-500"
-              : "bg-red-500";
-        // Height: min 2px (so zero isn't invisible), scales up to 14px.
+          f.wellness >= 8 ? "bg-emerald-500" : f.wellness >= 5 ? "bg-amber-500" : "bg-red-500";
         const heightPx = 2 + Math.round((f.wellness / 10) * 12);
         return (
           <span
@@ -127,14 +116,10 @@ function ReadinessBreakdown({
 
 function ReadinessCell({ row }: { row: AthleteRosterItem }) {
   const r = row.latestReadiness;
-  if (!r) {
-    return <span className="text-muted text-sm">—</span>;
-  }
+  if (!r) return <span className="text-muted text-sm">—</span>;
 
-  const dotColor =
-    r.score >= 8 ? "bg-emerald-500" : r.score >= 5 ? "bg-amber-500" : "bg-red-500";
+  const dotColor = r.score >= 8 ? "bg-emerald-500" : r.score >= 5 ? "bg-amber-500" : "bg-red-500";
 
-  // Show only the highest-priority status
   const statusBadge =
     r.injuryStatus === "ACTIVE" ? (
       <Badge variant="danger">Injured</Badge>
@@ -155,8 +140,8 @@ function ReadinessCell({ row }: { row: AthleteRosterItem }) {
         energy={r.energyMood}
       />
       <span className="sr-only">
-        Sleep {r.sleepQuality} of 10, soreness {r.soreness} of 10, stress{" "}
-        {r.stressLevel} of 10, energy {r.energyMood} of 10.
+        Sleep {r.sleepQuality} of 10, soreness {r.soreness} of 10, stress {r.stressLevel} of 10,
+        energy {r.energyMood} of 10.
       </span>
       {statusBadge}
     </div>
@@ -173,71 +158,69 @@ function StreakCell({ row }: { row: AthleteRosterItem }) {
 }
 
 function ActionCell() {
-  // Whole row is clickable (see AthletesTable below). This is a visual
-  // affordance only — no own click handler, no Link.
+  return <ChevronRight size={18} strokeWidth={1.75} className="text-muted" aria-hidden="true" />;
+}
+
+/* ─── Last session / invite action cell ───────────────────────────────────── */
+
+function LastSessionOrInviteCell({
+  row,
+  onSendInvite,
+  onRevoke,
+  busyId,
+  copiedId,
+}: {
+  row: AthleteRosterItem;
+  onSendInvite: (row: AthleteRosterItem) => void;
+  onRevoke: (row: AthleteRosterItem) => void;
+  busyId: string | null;
+  copiedId: string | null;
+}) {
+  // Stop propagation so clicks here don't trigger the row-level navigation.
+  const stop = (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation();
+
+  if (row.claimStatus === "PROXY") {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          stop(e);
+          onSendInvite(row);
+        }}
+        onKeyDown={stop}
+        disabled={busyId === row.id}
+        className="text-xs font-semibold text-primary-600 dark:text-primary-300 hover:underline disabled:opacity-60 disabled:no-underline"
+      >
+        {busyId === row.id ? "Sending…" : copiedId === row.id ? "Link copied!" : "Send invite →"}
+      </button>
+    );
+  }
+
+  if (row.claimStatus === "INVITED") {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          stop(e);
+          onRevoke(row);
+        }}
+        onKeyDown={stop}
+        disabled={busyId === row.id}
+        className="text-xs font-medium text-muted hover:text-red-600 dark:hover:text-red-400 disabled:opacity-60"
+      >
+        {busyId === row.id ? "Revoking…" : "Revoke invite"}
+      </button>
+    );
+  }
+
   return (
-    <ChevronRight
-      size={18}
-      strokeWidth={1.75}
-      className="text-muted"
-      aria-hidden="true"
-    />
+    <span className="text-sm text-muted tabular-nums">
+      {formatRelativeDate(row.lastSessionDate)}
+    </span>
   );
 }
 
 /* ─── Table ──────────────────────────────────────────────────────────────── */
-
-const columns: Column<AthleteRosterItem>[] = [
-  {
-    key: "firstName",
-    header: "Athlete",
-    cell: (row) => <AthleteCell row={row} />,
-    sortable: true,
-  },
-  {
-    key: "events",
-    header: "Events",
-    cell: (row) => <EventsCell row={row} />,
-    hideOnMobile: true,
-  },
-  {
-    key: "latestReadiness",
-    header: "Readiness",
-    cell: (row) => <ReadinessCell row={row} />,
-  },
-  {
-    key: "currentStreak",
-    header: "Streak",
-    cell: (row) => <StreakCell row={row} />,
-    sortable: true,
-    hideOnMobile: true,
-  },
-  {
-    key: "lastSessionDate",
-    header: "Last Session",
-    cell: (row) =>
-      !row.claimedAt && !row.lastSessionDate ? (
-        <Link
-          href={`/coach/athletes/${row.id}`}
-          className="text-xs text-primary-500 hover:underline font-medium"
-          onClick={(e) => e.stopPropagation()}
-        >
-          Invite →
-        </Link>
-      ) : (
-        <span className="text-sm text-muted tabular-nums">
-          {formatRelativeDate(row.lastSessionDate)}
-        </span>
-      ),
-    hideOnMobile: true,
-  },
-  {
-    key: "id",
-    header: "",
-    cell: () => <ActionCell />,
-    className: "w-10 text-right",
-  },
-];
 
 function getRowClassName(row: AthleteRosterItem): string | undefined {
   const r = row.latestReadiness;
@@ -249,6 +232,109 @@ function getRowClassName(row: AthleteRosterItem): string | undefined {
 
 export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
   const router = useRouter();
+  const toast = useToast();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  async function handleSendInvite(row: AthleteRosterItem) {
+    setBusyId(row.id);
+    try {
+      const res = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ mode: "link", athleteProfileId: row.id }),
+      });
+      const payload = await res.json();
+      if (!res.ok || !payload.success) {
+        throw new Error(payload.error || `Request failed (${res.status})`);
+      }
+      const link = `${window.location.origin}/register?invite=${payload.data.token}`;
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Invite link copied to clipboard");
+        setCopiedId(row.id);
+        setTimeout(() => setCopiedId(null), 3000);
+      } catch {
+        toast.info(`Invite created. Link: ${link}`);
+      }
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create invite");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleRevoke(row: AthleteRosterItem) {
+    if (!row.pendingInvitationId) return;
+    if (
+      !confirm(`Revoke invite for ${row.firstName} ${row.lastName}? The link will stop working.`)
+    ) {
+      return;
+    }
+    setBusyId(row.id);
+    try {
+      const res = await fetch(`/api/invitations/${row.pendingInvitationId}`, {
+        method: "PATCH",
+        headers: csrfHeaders(),
+      });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      toast.success("Invite revoked");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to revoke invite");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const columns: Column<AthleteRosterItem>[] = [
+    {
+      key: "firstName",
+      header: "Athlete",
+      cell: (row) => <AthleteCell row={row} />,
+      sortable: true,
+    },
+    {
+      key: "events",
+      header: "Events",
+      cell: (row) => <EventsCell row={row} />,
+      hideOnMobile: true,
+    },
+    {
+      key: "latestReadiness",
+      header: "Readiness",
+      cell: (row) => <ReadinessCell row={row} />,
+    },
+    {
+      key: "currentStreak",
+      header: "Streak",
+      cell: (row) => <StreakCell row={row} />,
+      sortable: true,
+      hideOnMobile: true,
+    },
+    {
+      key: "lastSessionDate",
+      header: "Last Session",
+      cell: (row) => (
+        <LastSessionOrInviteCell
+          row={row}
+          onSendInvite={handleSendInvite}
+          onRevoke={handleRevoke}
+          busyId={busyId}
+          copiedId={copiedId}
+        />
+      ),
+      hideOnMobile: true,
+    },
+    {
+      key: "id",
+      header: "",
+      cell: () => <ActionCell />,
+      className: "w-10 text-right",
+    },
+  ];
+
   return (
     <DataTable
       data={data}
