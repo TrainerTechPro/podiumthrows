@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { canAccessProgram } from "@/lib/authorize";
 import { rotateComplex, complexDiff } from "@/lib/throws/engine";
+import { notifyCoachComplexRotated } from "@/lib/notifications";
 import type { ProgramConfig, ExerciseComplexEntry } from "@/lib/throws/engine";
 import type { TrainingPhase } from "@/lib/throws/constants";
 
@@ -18,48 +19,42 @@ export async function POST(req: NextRequest, { params }: Params) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { programId } = await params;
 
-    // Fetch program with active phase and generation config
+    // Fetch program with active phase and generation config.
+    // Include athlete for the post-success notification body.
     const program = await prisma.trainingProgram.findUnique({
       where: { id: programId },
       include: {
         phases: {
           orderBy: { phaseOrder: "asc" },
         },
+        athlete: {
+          select: { id: true, firstName: true, lastName: true },
+        },
       },
     });
 
     if (!program) {
-      return NextResponse.json(
-        { success: false, error: "Program not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ success: false, error: "Program not found" }, { status: 404 });
     }
 
     // Verify ownership (supports both athletes and their coaches)
-    const allowed = await canAccessProgram(user.userId, user.role as "COACH" | "ATHLETE", programId);
+    const allowed = await canAccessProgram(
+      user.userId,
+      user.role as "COACH" | "ATHLETE",
+      programId
+    );
     if (!allowed) {
-      return NextResponse.json(
-        { success: false, error: "Not authorized" },
-        { status: 403 },
-      );
+      return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
     }
 
-    const activePhase = program.phases.find(
-      (p) => p.id === program.currentPhaseId,
-    );
+    const activePhase = program.phases.find((p) => p.id === program.currentPhaseId);
     if (!activePhase) {
-      return NextResponse.json(
-        { success: false, error: "No active phase found" },
-        { status: 400 },
-      );
+      return NextResponse.json({ success: false, error: "No active phase found" }, { status: 400 });
     }
 
     // Parse the current exercise complex
@@ -111,7 +106,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       sessionsToForm: program.sessionsToForm ?? 30,
       recommendedMethod: program.recommendedMethod ?? "COMPLEX",
       transferType: (generationConfig.transferType as string) ?? undefined,
-      availableImplements: (generationConfig.availableImplements as ProgramConfig["availableImplements"]) ?? [],
+      availableImplements:
+        (generationConfig.availableImplements as ProgramConfig["availableImplements"]) ?? [],
       facilities: (generationConfig.facilities as ProgramConfig["facilities"]) ?? {
         hasCage: true,
         hasRing: true,
@@ -131,7 +127,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       liftingPrs: (generationConfig.liftingPrs as ProgramConfig["liftingPrs"]) ?? {
         bodyWeightKg: 90,
       },
-      yearsThrowing: (generationConfig.yearsThrowing as number) ?? (generationConfig.yearsThowing as number) ?? 3,
+      yearsThrowing:
+        (generationConfig.yearsThrowing as number) ??
+        (generationConfig.yearsThowing as number) ??
+        3,
       deficitPrimary: (generationConfig.deficitPrimary as string) ?? undefined,
       deficitSecondary: (generationConfig.deficitSecondary as string) ?? undefined,
     };
@@ -173,12 +172,31 @@ export async function POST(req: NextRequest, { params }: Params) {
       data: { applied: true },
     });
 
+    const newComplexNumber = (program.currentComplexNum ?? 1) + 1;
+
+    // Fire-and-forget coach notification. Only applicable when the program
+    // is coach-prescribed — coach self-programs have no separate coach to
+    // notify, and athlete-authored programs aren't coach-observable.
+    if (program.coachId && program.athlete && !program.isCoachSelfProgram) {
+      void notifyCoachComplexRotated(
+        program.coachId,
+        program.athlete.id,
+        `${program.athlete.firstName} ${program.athlete.lastName}`,
+        { programId, complexNumber: newComplexNumber }
+      ).catch((err) =>
+        logger.error("notifyCoachComplexRotated failed", {
+          context: "api",
+          error: err,
+        })
+      );
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         newComplex,
         diff,
-        complexNumber: (program.currentComplexNum ?? 1) + 1,
+        complexNumber: newComplexNumber,
       },
     });
   } catch (error) {
@@ -188,7 +206,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     });
     return NextResponse.json(
       { success: false, error: "Failed to rotate exercise complex" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

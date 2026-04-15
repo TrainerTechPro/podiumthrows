@@ -258,6 +258,70 @@ export async function notifyCoachAthleteJoined(
 }
 
 /**
+ * Fire when an adaptation checkpoint is created for an athlete's Program.
+ * Coach-facing; athletes don't see the underlying periodization bookkeeping.
+ * Body surfaces the engine's recommendation so the coach can act without
+ * drilling in.
+ */
+export async function notifyCoachProgramCheckpoint(
+  coachId: string,
+  athleteProfileId: string,
+  athleteName: string,
+  args: {
+    programId: string;
+    checkpointId: string;
+    weekNumber: number;
+    recommendation: string;
+  }
+): Promise<void> {
+  // Humanize the recommendation code for the body copy.
+  const recLabel = args.recommendation
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+  await createNotification({
+    type: "PROGRAM_CHECKPOINT",
+    coachId,
+    athleteProfileId,
+    title: `Checkpoint: ${athleteName}`,
+    body: `Engine recommends ${recLabel} at week ${args.weekNumber}. Tap to review.`,
+    metadata: {
+      ...args,
+      athleteName,
+      url: `/coach/athletes/${athleteProfileId}`,
+    },
+  });
+}
+
+/**
+ * Fire when an athlete's exercise complex rotates (Bondarchuk 45-day rule
+ * or explicit coach trigger). Coach-facing so they know to walk the
+ * athlete through the new exercises at the next session.
+ */
+export async function notifyCoachComplexRotated(
+  coachId: string,
+  athleteProfileId: string,
+  athleteName: string,
+  args: {
+    programId: string;
+    complexNumber: number;
+  }
+): Promise<void> {
+  await createNotification({
+    type: "COMPLEX_ROTATED",
+    coachId,
+    athleteProfileId,
+    title: `Complex rotated: ${athleteName}`,
+    body: `Complex #${args.complexNumber} is live. Walk through the new exercises at the next session.`,
+    metadata: {
+      ...args,
+      athleteName,
+      url: `/coach/athletes/${athleteProfileId}`,
+    },
+  });
+}
+
+/**
  * Fire when a coach shares a video with an athlete. Only fires for
  * newly-added athletes (re-saving the share with the same athlete in
  * the list doesn't re-notify) — the calling route is responsible for

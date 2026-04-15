@@ -6,6 +6,7 @@ import { canAccessProgram } from "@/lib/authorize";
 import { checkAdaptation } from "@/lib/throws/engine";
 import type { AdaptationCheckParams } from "@/lib/throws/engine";
 import { triggerBlockToBlock } from "@/lib/throws/autoregulation/triggers/block-to-block";
+import { notifyCoachProgramCheckpoint } from "@/lib/notifications";
 
 interface Params {
   params: Promise<{ programId: string }>;
@@ -18,15 +19,13 @@ export async function POST(req: NextRequest, { params }: Params) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { programId } = await params;
 
-    // Fetch program with adaptation state
+    // Fetch program with adaptation state. Include athlete for post-success
+    // coach notification.
     const program = await prisma.trainingProgram.findUnique({
       where: { id: programId },
       include: {
@@ -34,23 +33,24 @@ export async function POST(req: NextRequest, { params }: Params) {
           where: { status: "ACTIVE" },
           take: 1,
         },
+        athlete: {
+          select: { id: true, firstName: true, lastName: true },
+        },
       },
     });
 
     if (!program) {
-      return NextResponse.json(
-        { success: false, error: "Program not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ success: false, error: "Program not found" }, { status: 404 });
     }
 
     // Verify ownership (supports both athletes and their coaches)
-    const allowed = await canAccessProgram(user.userId, user.role as "COACH" | "ATHLETE", programId);
+    const allowed = await canAccessProgram(
+      user.userId,
+      user.role as "COACH" | "ATHLETE",
+      programId
+    );
     if (!allowed) {
-      return NextResponse.json(
-        { success: false, error: "Not authorized" },
-        { status: 403 },
-      );
+      return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
     }
 
     // Gather recent throw results (last 15 competition-implement marks)
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     // Map RPE to soreness estimate (RPE 1-10 → soreness 1-10)
     const recentSorenessScores = recentSessions
       .filter((s) => s.rpe != null)
-      .map((s) => Math.min(10, (s.rpe ?? 5)))
+      .map((s) => Math.min(10, s.rpe ?? 5))
       .reverse();
 
     // Gather recent strength results
@@ -134,9 +134,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       orderBy: { createdAt: "asc" },
       select: { distance: true },
     });
-    const historicalMarks = allThrows
-      .map((t) => t.distance)
-      .filter((d): d is number => d != null);
+    const historicalMarks = allThrows.map((t) => t.distance).filter((d): d is number => d != null);
 
     // Prescribed vs actual throws volume
     const completedSessions = await prisma.programSession.findMany({
@@ -148,15 +146,10 @@ export async function POST(req: NextRequest, { params }: Params) {
     });
     const prescribedThrowsTotal = completedSessions.reduce(
       (sum, s) => sum + (s.totalThrowsTarget ?? 0),
-      0,
+      0
     );
-    const actualThrowsTotal = completedSessions.reduce(
-      (sum, s) => sum + (s.actualThrows ?? 0),
-      0,
-    );
-    const rpeValues = completedSessions
-      .filter((s) => s.rpe != null)
-      .map((s) => s.rpe as number);
+    const actualThrowsTotal = completedSessions.reduce((sum, s) => sum + (s.actualThrows ?? 0), 0);
+    const rpeValues = completedSessions.filter((s) => s.rpe != null).map((s) => s.rpe as number);
 
     // Build params for the adaptation checker
     const checkParams: AdaptationCheckParams = {
@@ -188,9 +181,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
     if (lastFormCheckpoint) {
       const checkDateMs = new Date(lastFormCheckpoint.checkDate).getTime();
-      const weeksSinceRotation = Math.floor(
-        (Date.now() - checkDateMs) / (7 * 24 * 60 * 60 * 1000),
-      );
+      const weeksSinceRotation = Math.floor((Date.now() - checkDateMs) / (7 * 24 * 60 * 60 * 1000));
       // If last rotation was recent, consider form entered
       if (weeksSinceRotation < 6) {
         checkParams.enteredSportsForm = true;
@@ -202,16 +193,17 @@ export async function POST(req: NextRequest, { params }: Params) {
     const assessment = checkAdaptation(checkParams);
 
     // Build feedbackData JSON for Gap 5 extensibility
-    const feedbackData = assessment.predictedMark != null
-      ? JSON.stringify({
-          predictedMark: assessment.predictedMark,
-          actualVsPredicted: assessment.actualVsPredicted,
-          complexEffectiveness: assessment.complexEffectiveness,
-          deficitAttribution: assessment.deficitAttribution,
-          volumeAdjustment: assessment.volumeAdjustment,
-          feedbackConfidence: assessment.feedbackConfidence,
-        })
-      : undefined;
+    const feedbackData =
+      assessment.predictedMark != null
+        ? JSON.stringify({
+            predictedMark: assessment.predictedMark,
+            actualVsPredicted: assessment.actualVsPredicted,
+            complexEffectiveness: assessment.complexEffectiveness,
+            deficitAttribution: assessment.deficitAttribution,
+            volumeAdjustment: assessment.volumeAdjustment,
+            feedbackConfidence: assessment.feedbackConfidence,
+          })
+        : undefined;
 
     // Save checkpoint (include program relation for autoregulation trigger)
     const checkpoint = await prisma.adaptationCheckpoint.create({
@@ -242,6 +234,34 @@ export async function POST(req: NextRequest, { params }: Params) {
       logger.error("autoregulation block-to-block trigger failed", { context: "api", error: err });
     }
 
+    // Fire-and-forget coach notification for the checkpoint. Skip CONTINUE
+    // recommendations — they're "no action required" outcomes and would be
+    // noisy at scale. Coach only needs to know when the engine wants their
+    // attention.
+    if (
+      program.coachId &&
+      program.athlete &&
+      !program.isCoachSelfProgram &&
+      assessment.recommendation !== "CONTINUE"
+    ) {
+      void notifyCoachProgramCheckpoint(
+        program.coachId,
+        program.athlete.id,
+        `${program.athlete.firstName} ${program.athlete.lastName}`,
+        {
+          programId,
+          checkpointId: checkpoint.id,
+          weekNumber: program.currentWeekNumber,
+          recommendation: assessment.recommendation,
+        }
+      ).catch((err) =>
+        logger.error("notifyCoachProgramCheckpoint failed", {
+          context: "api",
+          error: err,
+        })
+      );
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -256,7 +276,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     });
     return NextResponse.json(
       { success: false, error: "Failed to run adaptation check" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
