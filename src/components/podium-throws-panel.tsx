@@ -116,23 +116,17 @@ function RatioBar({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-gray-600 dark:text-gray-400 font-medium">
-          {label}
-        </span>
+        <span className="text-gray-600 dark:text-gray-400 font-medium">{label}</span>
         <span className="text-gray-500 dark:text-gray-500">
           {pr != null ? (
             <>
               <span className="font-semibold text-gray-800 dark:text-gray-200">
                 {pr.toFixed(2)}m
               </span>
-              {kg != null && (
-                <span className="ml-1 text-gray-400">({kg}kg)</span>
-              )}
+              {kg != null && <span className="ml-1 text-gray-400">({kg}kg)</span>}
               {pb != null && ratio != null && (
                 <span
-                  className={`ml-2 font-semibold ${
-                    status ? DEFICIT_LEVEL_COLORS[status] : ""
-                  }`}
+                  className={`ml-2 font-semibold ${status ? DEFICIT_LEVEL_COLORS[status] : ""}`}
                 >
                   {(ratio * 100).toFixed(0)}%
                 </span>
@@ -150,7 +144,7 @@ function RatioBar({
             style={{
               width: `${Math.min(pct, 100)}%`,
               backgroundColor: status
-                ? RATIO_STATUS_COLORS[status] ?? RATIO_STATUS_COLORS.far
+                ? (RATIO_STATUS_COLORS[status] ?? RATIO_STATUS_COLORS.far)
                 : FALLBACK_GRAY,
             }}
           />
@@ -196,11 +190,7 @@ function StrengthRow({
 
 // ── Main Component ──────────────────────────────────────────────────────────
 
-export default function PodiumThrowsPanel({
-  athleteId,
-}: {
-  athleteId: string;
-}) {
+export default function PodiumThrowsPanel({ athleteId }: { athleteId: string }) {
   const [profile, setProfile] = useState<ThrowsProfileData | null>(null);
   const [records, setRecords] = useState<TestingRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,9 +226,7 @@ export default function PodiumThrowsPanel({
     setLoading(true);
     Promise.all([
       fetch(`/api/throws/podium-roster/${athleteId}`).then((r) => r.json()),
-      fetch(`/api/throws/podium-roster/${athleteId}/testing`).then((r) =>
-        r.json()
-      ),
+      fetch(`/api/throws/podium-roster/${athleteId}/testing`).then((r) => r.json()),
     ])
       .then(([profileData, recordsData]) => {
         if (profileData.success) {
@@ -269,44 +257,23 @@ export default function PodiumThrowsPanel({
         ...(testForm.competitionMark
           ? { competitionMark: parseFloat(testForm.competitionMark) }
           : {}),
-        ...(testForm.heavyImplMark
-          ? { heavyImplMark: parseFloat(testForm.heavyImplMark) }
-          : {}),
-        ...(testForm.heavyImplKg
-          ? { heavyImplKg: parseFloat(testForm.heavyImplKg) }
-          : {}),
-        ...(testForm.lightImplMark
-          ? { lightImplMark: parseFloat(testForm.lightImplMark) }
-          : {}),
-        ...(testForm.lightImplKg
-          ? { lightImplKg: parseFloat(testForm.lightImplKg) }
-          : {}),
-        ...(testForm.squatKg
-          ? { squatKg: parseFloat(testForm.squatKg) }
-          : {}),
-        ...(testForm.benchKg
-          ? { benchKg: parseFloat(testForm.benchKg) }
-          : {}),
-        ...(testForm.cleanKg
-          ? { cleanKg: parseFloat(testForm.cleanKg) }
-          : {}),
-        ...(testForm.snatchKg
-          ? { snatchKg: parseFloat(testForm.snatchKg) }
-          : {}),
-        ...(testForm.bodyWeightKg
-          ? { bodyWeightKg: parseFloat(testForm.bodyWeightKg) }
-          : {}),
+        ...(testForm.heavyImplMark ? { heavyImplMark: parseFloat(testForm.heavyImplMark) } : {}),
+        ...(testForm.heavyImplKg ? { heavyImplKg: parseFloat(testForm.heavyImplKg) } : {}),
+        ...(testForm.lightImplMark ? { lightImplMark: parseFloat(testForm.lightImplMark) } : {}),
+        ...(testForm.lightImplKg ? { lightImplKg: parseFloat(testForm.lightImplKg) } : {}),
+        ...(testForm.squatKg ? { squatKg: parseFloat(testForm.squatKg) } : {}),
+        ...(testForm.benchKg ? { benchKg: parseFloat(testForm.benchKg) } : {}),
+        ...(testForm.cleanKg ? { cleanKg: parseFloat(testForm.cleanKg) } : {}),
+        ...(testForm.snatchKg ? { snatchKg: parseFloat(testForm.snatchKg) } : {}),
+        ...(testForm.bodyWeightKg ? { bodyWeightKg: parseFloat(testForm.bodyWeightKg) } : {}),
         ...(testForm.notes ? { notes: testForm.notes } : {}),
       };
 
-      const res = await fetch(
-        `/api/throws/podium-roster/${athleteId}/testing`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`/api/throws/podium-roster/${athleteId}/testing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify(payload),
+      });
       const data = await res.json();
       if (data.success) {
         setShowTestForm(false);
@@ -366,13 +333,11 @@ export default function PodiumThrowsPanel({
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-              Podium Throws
-            </p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">Podium Throws</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
               Athlete is not enrolled in Podium Throws.{" "}
               <a
-                href="/coach/throws/roster"
+                href="/coach/athletes?tab=throws"
                 className="text-primary-600 dark:text-primary-400 hover:underline"
               >
                 Enroll from Roster →
@@ -434,9 +399,7 @@ export default function PodiumThrowsPanel({
             </svg>
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">
-              Podium Throws
-            </p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Podium Throws</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span
                 className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
@@ -465,12 +428,7 @@ export default function PodiumThrowsPanel({
           }}
           className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5 flex-shrink-0"
         >
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -483,7 +441,6 @@ export default function PodiumThrowsPanel({
       </div>
 
       <div className="p-5 space-y-5">
-
         {/* ── Record Test Form ─────────────────────────────────────── */}
         {showTestForm && (
           <div className="rounded-2xl border-2 border-primary-200 dark:border-primary-800 p-4 space-y-4">
@@ -496,7 +453,12 @@ export default function PodiumThrowsPanel({
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-0.5 rounded"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -510,9 +472,7 @@ export default function PodiumThrowsPanel({
                 <input
                   type="date"
                   value={testForm.testDate}
-                  onChange={(e) =>
-                    setTestForm((f) => ({ ...f, testDate: e.target.value }))
-                  }
+                  onChange={(e) => setTestForm((f) => ({ ...f, testDate: e.target.value }))}
                   required
                   className={inputCls}
                 />
@@ -662,18 +622,12 @@ export default function PodiumThrowsPanel({
                   rows={2}
                   placeholder="Conditions, observations…"
                   value={testForm.notes}
-                  onChange={(e) =>
-                    setTestForm((f) => ({ ...f, notes: e.target.value }))
-                  }
+                  onChange={(e) => setTestForm((f) => ({ ...f, notes: e.target.value }))}
                   className={`${inputCls} resize-none`}
                 />
               </div>
 
-              {saveError && (
-                <p className="text-xs text-red-600 dark:text-red-400">
-                  {saveError}
-                </p>
-              )}
+              {saveError && <p className="text-xs text-red-600 dark:text-red-400">{saveError}</p>}
 
               <div className="flex gap-2 pt-1">
                 <button
@@ -704,15 +658,11 @@ export default function PodiumThrowsPanel({
 
         {/* ── Deficit Summary ──────────────────────────────────────── */}
         {hasDeficitData && deficitLevel ? (
-          <div
-            className={`rounded-2xl p-4 ${DEFICIT_LEVEL_BG[deficitLevel]}`}
-          >
+          <div className={`rounded-2xl p-4 ${DEFICIT_LEVEL_BG[deficitLevel]}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className={`text-sm font-bold ${DEFICIT_LEVEL_COLORS[deficitLevel]}`}
-                  >
+                  <span className={`text-sm font-bold ${DEFICIT_LEVEL_COLORS[deficitLevel]}`}>
                     {DEFICIT_TYPE_LABELS[deficitType!]}
                   </span>
                   <span
@@ -729,9 +679,7 @@ export default function PodiumThrowsPanel({
                 {deficitSecondary && deficitSecondary !== "none" && (
                   <p className="text-[11px] text-gray-500 dark:text-gray-400">
                     Secondary:{" "}
-                    <span className="font-medium">
-                      {DEFICIT_TYPE_LABELS[deficitSecondary]}
-                    </span>
+                    <span className="font-medium">{DEFICIT_TYPE_LABELS[deficitSecondary]}</span>
                   </p>
                 )}
               </div>
@@ -771,9 +719,9 @@ export default function PodiumThrowsPanel({
               ratio={heavyRatio}
               status={
                 heavyRatio != null && deficitLevel
-                  ? (profile.deficitPrimary === "heavy_implement"
-                      ? deficitLevel
-                      : null)
+                  ? profile.deficitPrimary === "heavy_implement"
+                    ? deficitLevel
+                    : null
                   : null
               }
               pr={profile.heavyImplementPr}
@@ -785,9 +733,9 @@ export default function PodiumThrowsPanel({
               ratio={lightRatio}
               status={
                 lightRatio != null && deficitLevel
-                  ? (profile.deficitPrimary === "light_implement"
-                      ? deficitLevel
-                      : null)
+                  ? profile.deficitPrimary === "light_implement"
+                    ? deficitLevel
+                    : null
                   : null
               }
               pr={profile.lightImplementPr}
@@ -803,11 +751,7 @@ export default function PodiumThrowsPanel({
             Strength Snapshot
           </p>
           <div className="rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden px-3">
-            <StrengthRow
-              label="Body weight"
-              kg={benchmarks.bodyWeightKg}
-              bwKg={null}
-            />
+            <StrengthRow label="Body weight" kg={benchmarks.bodyWeightKg} bwKg={null} />
             <StrengthRow
               label="Back squat"
               kg={benchmarks.squatKg}
@@ -823,11 +767,7 @@ export default function PodiumThrowsPanel({
               kg={benchmarks.cleanKg}
               bwKg={benchmarks.bodyWeightKg}
             />
-            <StrengthRow
-              label="Snatch"
-              kg={benchmarks.snatchKg}
-              bwKg={benchmarks.bodyWeightKg}
-            />
+            <StrengthRow label="Snatch" kg={benchmarks.snatchKg} bwKg={benchmarks.bodyWeightKg} />
           </div>
         </div>
 
@@ -867,10 +807,11 @@ export default function PodiumThrowsPanel({
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-gray-800 dark:text-gray-200">
-                        {new Date(rec.testDate + "T12:00:00").toLocaleDateString(
-                          "en-US",
-                          { month: "short", day: "numeric", year: "numeric" }
-                        )}
+                        {new Date(rec.testDate + "T12:00:00").toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
                       </span>
                       {rec.deficitPrimaryAtTest && rec.deficitPrimaryAtTest !== "none" && (
                         <span className="text-[10px] text-gray-500 dark:text-gray-400">
@@ -880,19 +821,38 @@ export default function PodiumThrowsPanel({
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-gray-500 dark:text-gray-400">
                       {rec.competitionMark && (
-                        <span>Comp: <b className="text-gray-700 dark:text-gray-300">{rec.competitionMark.toFixed(2)}m</b></span>
+                        <span>
+                          Comp:{" "}
+                          <b className="text-gray-700 dark:text-gray-300">
+                            {rec.competitionMark.toFixed(2)}m
+                          </b>
+                        </span>
                       )}
                       {rec.heavyImplMark && (
-                        <span>Heavy: <b className="text-gray-700 dark:text-gray-300">{rec.heavyImplMark.toFixed(2)}m</b></span>
+                        <span>
+                          Heavy:{" "}
+                          <b className="text-gray-700 dark:text-gray-300">
+                            {rec.heavyImplMark.toFixed(2)}m
+                          </b>
+                        </span>
                       )}
                       {rec.lightImplMark && (
-                        <span>Light: <b className="text-gray-700 dark:text-gray-300">{rec.lightImplMark.toFixed(2)}m</b></span>
+                        <span>
+                          Light:{" "}
+                          <b className="text-gray-700 dark:text-gray-300">
+                            {rec.lightImplMark.toFixed(2)}m
+                          </b>
+                        </span>
                       )}
                       {rec.squatKg && (
-                        <span>Squat: <b className="text-gray-700 dark:text-gray-300">{rec.squatKg}kg</b></span>
+                        <span>
+                          Squat: <b className="text-gray-700 dark:text-gray-300">{rec.squatKg}kg</b>
+                        </span>
                       )}
                       {rec.cleanKg && (
-                        <span>Clean: <b className="text-gray-700 dark:text-gray-300">{rec.cleanKg}kg</b></span>
+                        <span>
+                          Clean: <b className="text-gray-700 dark:text-gray-300">{rec.cleanKg}kg</b>
+                        </span>
                       )}
                     </div>
                     {rec.notes && (

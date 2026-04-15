@@ -4,6 +4,8 @@ import { AlertTriangle } from "lucide-react";
 import { AddAthleteButton } from "./_invite";
 import { TeamFilter } from "./_team-filter";
 import { RosterClient } from "./_roster-client";
+import { ThrowsView } from "./_views/throws-view";
+import { MovedBanner } from "./_views/moved-banner";
 import {
   requireCoachSession,
   getAthleteRoster,
@@ -14,13 +16,20 @@ import prisma from "@/lib/prisma";
 import type { PlanName } from "@/lib/stripe";
 import { InvitationsClient } from "../invitations/_invitations-client";
 
+type Tab = "roster" | "invitations" | "throws";
+
 export default async function AthletesPage({
   searchParams,
 }: {
-  searchParams: { tab?: string; teamId?: string };
+  searchParams: { tab?: string; teamId?: string; moved?: string };
 }) {
   const { coach } = await requireCoachSession();
-  const tab = searchParams.tab === "invitations" ? "invitations" : "roster";
+  const tab: Tab =
+    searchParams.tab === "invitations"
+      ? "invitations"
+      : searchParams.tab === "throws"
+        ? "throws"
+        : "roster";
 
   // Fetch teams for the filter dropdown
   const teams = await prisma.team.findMany({
@@ -40,10 +49,16 @@ export default async function AthletesPage({
       } else if (prefs.lastTeamId === "unassigned") {
         resolvedTeamId = "unassigned";
       }
-    } catch { /* ignore parse error */ }
+    } catch {
+      /* ignore parse error */
+    }
   }
   // Validate that selected team still exists (might have been deleted)
-  if (resolvedTeamId && resolvedTeamId !== "unassigned" && !teams.some((t) => t.id === resolvedTeamId)) {
+  if (
+    resolvedTeamId &&
+    resolvedTeamId !== "unassigned" &&
+    !teams.some((t) => t.id === resolvedTeamId)
+  ) {
     resolvedTeamId = null;
   }
 
@@ -69,30 +84,36 @@ export default async function AthletesPage({
   const needsAttention = lowCount + noCheckInCount;
 
   // Fetch invitations for the invitations tab
-  const invitations = tab === "invitations"
-    ? await prisma.invitation.findMany({
-        where: { coachId: coach.id },
-        orderBy: { createdAt: "desc" },
-        take: 100,
-        select: { id: true, email: true, token: true, status: true, expiresAt: true, createdAt: true },
-      })
-    : [];
+  const invitations =
+    tab === "invitations"
+      ? await prisma.invitation.findMany({
+          where: { coachId: coach.id },
+          orderBy: { createdAt: "desc" },
+          take: 100,
+          select: {
+            id: true,
+            email: true,
+            token: true,
+            status: true,
+            expiresAt: true,
+            createdAt: true,
+          },
+        })
+      : [];
 
-  const pendingCount = tab === "roster"
-    ? await prisma.invitation.count({ where: { coachId: coach.id, status: "PENDING" } })
-    : invitations.filter((i) => i.status === "PENDING").length;
+  const pendingCount =
+    tab === "roster"
+      ? await prisma.invitation.count({ where: { coachId: coach.id, status: "PENDING" } })
+      : invitations.filter((i) => i.status === "PENDING").length;
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-            Athletes
-          </h1>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Athletes</h1>
           <p className="text-sm text-muted mt-0.5">
-            {roster.length}{" "}
-            {roster.length === 1 ? "athlete" : "athletes"}
+            {roster.length} {roster.length === 1 ? "athlete" : "athletes"}
             {resolvedTeamId ? " in this group" : " on your roster"}
           </p>
         </div>
@@ -104,50 +125,80 @@ export default async function AthletesPage({
             athleteCount={roster.length}
             planLimit={planLimit}
             currentPlan={coach.plan as PlanName}
-            selectedTeamId={resolvedTeamId && resolvedTeamId !== "unassigned" ? resolvedTeamId : undefined}
+            selectedTeamId={
+              resolvedTeamId && resolvedTeamId !== "unassigned" ? resolvedTeamId : undefined
+            }
           />
         </div>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 bg-surface-100 dark:bg-surface-800 rounded-xl p-1">
-        {([
+        {[
           { id: "roster" as const, label: "Roster", badge: undefined as number | undefined },
-          { id: "invitations" as const, label: "Invitations", badge: pendingCount > 0 ? pendingCount : undefined },
-        ]).map((t) => (
-          <Link
-            key={t.id}
-            href={t.id === "roster" ? "/coach/athletes" : `/coach/athletes?tab=${t.id}`}
-            replace
-            className={`flex-1 text-center py-2 px-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
-              tab === t.id
-                ? "bg-white dark:bg-surface-700 text-[var(--foreground)] shadow-sm"
-                : "text-muted hover:text-[var(--foreground)]"
-            }`}
-          >
-            {t.label}
-            {t.badge != null && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary-500 text-white">
-                {t.badge}
-              </span>
-            )}
-          </Link>
-        ))}
+          { id: "throws" as const, label: "Throws", badge: undefined },
+          {
+            id: "invitations" as const,
+            label: "Invitations",
+            badge: pendingCount > 0 ? pendingCount : undefined,
+          },
+        ].map((t) => {
+          const params = new URLSearchParams();
+          if (t.id !== "roster") params.set("tab", t.id);
+          if (resolvedTeamId) params.set("teamId", resolvedTeamId);
+          const qs = params.toString();
+          return (
+            <Link
+              key={t.id}
+              href={qs ? `/coach/athletes?${qs}` : "/coach/athletes"}
+              replace
+              className={`flex-1 text-center py-2 px-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+                tab === t.id
+                  ? "bg-white dark:bg-surface-700 text-[var(--foreground)] shadow-sm"
+                  : "text-muted hover:text-[var(--foreground)]"
+              }`}
+            >
+              {t.label}
+              {t.badge != null && (
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary-500 text-white">
+                  {t.badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </div>
+
+      {tab === "throws" && searchParams.moved === "1" && <MovedBanner />}
 
       {/* Roster tab */}
       {tab === "roster" && (
         <>
           {needsAttention > 0 && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
-              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" strokeWidth={1.75} aria-hidden="true" />
+              <AlertTriangle
+                className="w-4 h-4 text-red-500 shrink-0 mt-0.5"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
               <p className="text-sm text-red-700 dark:text-red-400 leading-snug">
                 {lowCount > 0 && noCheckInCount > 0 ? (
-                  <><strong>{lowCount}</strong> {lowCount === 1 ? "athlete has" : "athletes have"} low readiness and <strong>{noCheckInCount}</strong> {noCheckInCount === 1 ? "hasn't" : "haven't"} checked in recently.</>
+                  <>
+                    <strong>{lowCount}</strong> {lowCount === 1 ? "athlete has" : "athletes have"}{" "}
+                    low readiness and <strong>{noCheckInCount}</strong>{" "}
+                    {noCheckInCount === 1 ? "hasn't" : "haven't"} checked in recently.
+                  </>
                 ) : lowCount > 0 ? (
-                  <><strong>{lowCount}</strong> {lowCount === 1 ? "athlete has" : "athletes have"} a readiness score below 5 — consider adjusting training load.</>
+                  <>
+                    <strong>{lowCount}</strong> {lowCount === 1 ? "athlete has" : "athletes have"} a
+                    readiness score below 5 — consider adjusting training load.
+                  </>
                 ) : (
-                  <><strong>{noCheckInCount}</strong> {noCheckInCount === 1 ? "athlete hasn't" : "athletes haven't"} submitted a readiness check-in yet.</>
+                  <>
+                    <strong>{noCheckInCount}</strong>{" "}
+                    {noCheckInCount === 1 ? "athlete hasn't" : "athletes haven't"} submitted a
+                    readiness check-in yet.
+                  </>
                 )}
               </p>
             </div>
@@ -166,6 +217,13 @@ export default async function AthletesPage({
             expiresAt: inv.expiresAt.toISOString(),
             createdAt: inv.createdAt.toISOString(),
           }))}
+        />
+      )}
+
+      {/* Throws tab */}
+      {tab === "throws" && (
+        <ThrowsView
+          teamId={resolvedTeamId && resolvedTeamId !== "unassigned" ? resolvedTeamId : null}
         />
       )}
     </div>

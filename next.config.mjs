@@ -51,6 +51,11 @@ const nextConfig = {
         destination: '/athlete/throws/readiness',
         permanent: true,
       },
+      {
+        source: '/coach/throws/roster',
+        destination: '/coach/athletes?tab=throws&moved=1',
+        permanent: true,
+      },
     ];
   },
   async headers() {

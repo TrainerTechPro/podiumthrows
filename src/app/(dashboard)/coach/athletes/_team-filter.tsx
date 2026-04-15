@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 type TeamOption = {
@@ -18,6 +18,7 @@ export function TeamFilter({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   function handleChange(value: string) {
     // Persist preference (best-effort, non-blocking)
@@ -27,9 +28,10 @@ export function TeamFilter({
       body: JSON.stringify({ lastTeamId: value || null }),
     }).catch(() => {});
 
-    // Navigate with search param to trigger server re-render
-    const params = new URLSearchParams();
+    // Preserve other query params (tab, etc.) when updating teamId
+    const params = new URLSearchParams(searchParams.toString());
     if (value) params.set("teamId", value);
+    else params.delete("teamId");
     const qs = params.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }

@@ -11,6 +11,7 @@ import {
   UsersRound,
   Calendar,
   Target,
+  Zap,
   Dumbbell,
   Heart,
   Settings,
@@ -300,6 +301,11 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             matchPaths: ["/coach/athletes"],
           },
           {
+            label: "Throws",
+            href: "/coach/athletes?tab=throws",
+            icon: <Zap {...iconSize} />,
+          },
+          {
             label: "Groups",
             href: "/coach/teams",
             icon: <UsersRound {...iconSize} />,
@@ -344,10 +350,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Training",
         href: "/coach/throws",
         icon: <Dumbbell {...iconSize} />,
-        matchPaths: [
-          "/coach/throws",
-          "/coach/programming",
-        ],
+        matchPaths: ["/coach/throws", "/coach/programming"],
         children: [
           {
             label: "Throws Hub",
@@ -375,9 +378,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Analyze",
         href: "/coach/video-analysis",
         icon: <BarChart3 {...iconSize} />,
-        matchPaths: [
-          "/coach/video-analysis",
-        ],
+        matchPaths: ["/coach/video-analysis"],
         children: [
           {
             label: "Pose Analysis",
