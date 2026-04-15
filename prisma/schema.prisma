@@ -210,6 +210,10 @@ model CoachProfile {
   cancelAtPeriodEnd     Boolean          @default(false)
   leadId                String? // ID of the Lead record that converted into this coach (deficit-finder funnel)
   preferences           String?          @default("{}")
+  /// Notification opt-outs keyed by NotificationType. Shape:
+  /// { inApp: { PR_ALERT: bool, LOW_READINESS: bool, ... } }
+  /// Missing keys default to TRUE (coach receives the notification).
+  notificationPreferences Json?
   enabledModules        String?          @default("[\"general\",\"throws\"]") @db.Text
   onboardingCompletedAt DateTime? // null = not completed; timestamp = completed/dismissed
   trainingEnabled       Boolean          @default(false)
