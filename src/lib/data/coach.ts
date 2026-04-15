@@ -1323,6 +1323,8 @@ export type WorkoutPlanDetail = {
   phase: string | null;
   isTemplate: boolean;
   blocks: WorkoutBlockDetail[];
+  /// Number of TrainingSession rows referencing this plan (legacy assign path).
+  assignedSessionCount: number;
   createdAt: string;
 };
 
@@ -1387,6 +1389,7 @@ export async function getWorkoutPlanDetail(
           },
         },
       },
+      _count: { select: { sessions: true } },
     },
   });
 
@@ -1399,6 +1402,7 @@ export async function getWorkoutPlanDetail(
     event: plan.event as string | null,
     phase: plan.phase as string | null,
     isTemplate: plan.isTemplate,
+    assignedSessionCount: plan._count.sessions,
     createdAt: plan.createdAt.toISOString(),
     blocks: plan.blocks.map((b) => ({
       id: b.id,

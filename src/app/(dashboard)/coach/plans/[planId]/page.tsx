@@ -89,17 +89,34 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           </div>
           <div>
             <dt className="text-xs font-semibold text-muted uppercase tracking-wider mb-1">
-              Created
+              Assigned
             </dt>
-            <dd className="text-sm text-muted tabular-nums">
-              {new Date(plan.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+            <dd className="text-sm tabular-nums text-[var(--foreground)]">
+              {plan.assignedSessionCount > 0 ? (
+                <>
+                  {plan.assignedSessionCount}{" "}
+                  <span className="text-muted text-xs">
+                    session{plan.assignedSessionCount === 1 ? "" : "s"}
+                  </span>
+                </>
+              ) : (
+                <span className="text-muted">Not assigned</span>
+              )}
             </dd>
           </div>
         </dl>
+        <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
+          <dt className="text-xs font-semibold text-muted uppercase tracking-wider mb-1">
+            Created
+          </dt>
+          <dd className="text-sm text-muted tabular-nums">
+            {new Date(plan.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </dd>
+        </div>
       </div>
 
       {/* Blocks */}
