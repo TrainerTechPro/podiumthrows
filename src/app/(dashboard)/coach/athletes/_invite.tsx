@@ -2,12 +2,97 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle, ArrowUpCircle } from "lucide-react";
 import { Button, Input, Modal, UpgradeModal, useModal } from "@/components";
 import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import type { PlanName } from "@/lib/stripe";
 import { csrfHeaders } from "@/lib/csrf-client";
+
+/**
+ * Tier-limit status visible at the top of every add-athlete flow.
+ *
+ * Tiers:
+ *   - Unlimited (ELITE / Infinity): render nothing — no useful signal.
+ *   - 3+ remaining: muted plain counter, unchanged from the prior UX.
+ *   - 1-2 remaining: amber warning — nudges the coach to think about upgrade
+ *     before they run out mid-batch.
+ *   - At limit: red card with a direct upgrade CTA. The outer button already
+ *     intercepts and opens UpgradeModal at this state, but if a future caller
+ *     opens the modal by a different path this banner still catches it.
+ */
+function PlanLimitBanner({
+  athleteCount,
+  planLimit,
+  currentPlan,
+  onUpgrade,
+}: {
+  athleteCount: number;
+  planLimit: number;
+  currentPlan: PlanName;
+  onUpgrade: () => void;
+}) {
+  if (planLimit === Infinity) return null;
+
+  const remaining = Math.max(0, planLimit - athleteCount);
+  const planLabel = currentPlan.charAt(0) + currentPlan.slice(1).toLowerCase();
+
+  if (remaining === 0) {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 flex items-start gap-2">
+        <AlertTriangle
+          className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
+        <div className="flex-1">
+          <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+            Plan limit reached ({athleteCount}/{planLimit})
+          </p>
+          <button
+            type="button"
+            onClick={onUpgrade}
+            className="text-xs font-semibold text-primary-600 dark:text-primary-300 hover:underline mt-0.5 inline-flex items-center gap-1"
+          >
+            <ArrowUpCircle className="w-3 h-3" strokeWidth={1.75} aria-hidden="true" />
+            Upgrade your {planLabel} plan
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (remaining <= 2) {
+    return (
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex items-start gap-2">
+        <AlertTriangle
+          className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
+        <div className="flex-1">
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+            {remaining} slot{remaining === 1 ? "" : "s"} remaining on your {planLabel} plan
+          </p>
+          <button
+            type="button"
+            onClick={onUpgrade}
+            className="text-xs text-primary-600 dark:text-primary-300 hover:underline mt-0.5"
+          >
+            Upgrade to add more
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-xs text-muted">
+      {athleteCount} / {planLimit} athletes on your {planLabel} plan.
+    </p>
+  );
+}
 
 type InviteMode = "email" | "link";
 type TopTab = "create" | "invite";
@@ -390,11 +475,15 @@ export function AddAthleteButton({
                 <p className="text-sm text-danger-600 dark:text-danger-400">{createError}</p>
               )}
 
-              {planLimit !== Infinity && (
-                <p className="text-xs text-muted">
-                  {athleteCount} / {planLimit} athletes on your plan.
-                </p>
-              )}
+              <PlanLimitBanner
+                athleteCount={athleteCount}
+                planLimit={planLimit}
+                currentPlan={currentPlan}
+                onUpgrade={() => {
+                  modal.onClose();
+                  upgradeModal.onOpen();
+                }}
+              />
             </form>
           </TabPanel>
 
@@ -575,11 +664,15 @@ export function AddAthleteButton({
                       required
                       error={error}
                     />
-                    {planLimit !== Infinity && (
-                      <p className="text-xs text-muted">
-                        {athleteCount} / {planLimit} athletes on your plan.
-                      </p>
-                    )}
+                    <PlanLimitBanner
+                      athleteCount={athleteCount}
+                      planLimit={planLimit}
+                      currentPlan={currentPlan}
+                      onUpgrade={() => {
+                        modal.onClose();
+                        upgradeModal.onOpen();
+                      }}
+                    />
                   </form>
                 ) : (
                   <div className="space-y-4">
@@ -640,11 +733,15 @@ export function AddAthleteButton({
                     {error && (
                       <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>
                     )}
-                    {planLimit !== Infinity && (
-                      <p className="text-xs text-muted">
-                        {athleteCount} / {planLimit} athletes on your plan.
-                      </p>
-                    )}
+                    <PlanLimitBanner
+                      athleteCount={athleteCount}
+                      planLimit={planLimit}
+                      currentPlan={currentPlan}
+                      onUpgrade={() => {
+                        modal.onClose();
+                        upgradeModal.onOpen();
+                      }}
+                    />
                   </div>
                 )}
               </div>
