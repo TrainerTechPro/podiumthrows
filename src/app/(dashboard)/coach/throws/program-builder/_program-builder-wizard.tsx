@@ -925,12 +925,13 @@ function StepSelectAthleteOrTest({
               >
                 <div className="w-10 h-10 rounded-full bg-[var(--muted-bg)] flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {a.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={a.avatarUrl}
                       alt=""
                       className="w-full h-full object-cover"
                       loading="lazy"
-                    /> // eslint-disable-line @next/next/no-img-element
+                    />
                   ) : (
                     <span className="text-sm font-semibold text-surface-700 dark:text-surface-300">
                       {a.firstName?.[0]}
