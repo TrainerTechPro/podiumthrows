@@ -8,6 +8,7 @@ import { useAccessibility } from "@/components/accessibility-provider";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
+import { Bell, ChevronRight } from "lucide-react";
 
 const ProfilePictureEditor = dynamic(() => import("@/components/profile-picture-editor"), {
   ssr: false,
@@ -1183,6 +1184,31 @@ export default function CoachSettingsPage() {
         {/* Preferences Tab */}
         {activeTab === "preferences" && (
           <div className="animate-spring-up space-y-6">
+            {/* Notifications link */}
+            <Link
+              href="/coach/settings/notifications"
+              className="card card-interactive p-4 flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
+                <Bell
+                  size={20}
+                  className="text-primary-500"
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[var(--foreground)]">Notifications</p>
+                <p className="text-xs text-muted">Choose which in-app alerts reach your tray</p>
+              </div>
+              <ChevronRight
+                size={20}
+                className="text-muted"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+            </Link>
+
             {/* Global Default Page */}
             <div className="card">
               <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">
