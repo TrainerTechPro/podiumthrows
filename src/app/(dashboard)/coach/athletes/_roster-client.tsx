@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { AthletesTable } from "./_table";
+import { BulkInviteBar } from "./_bulk-invite-bar";
 import type { AthleteRosterItem } from "@/lib/data/coach";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
@@ -73,18 +74,9 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Read filter state from URL params
-  const selectedEvents = useMemo(
-    () => paramToSet(searchParams.get("events")),
-    [searchParams]
-  );
-  const selectedGenders = useMemo(
-    () => paramToSet(searchParams.get("genders")),
-    [searchParams]
-  );
-  const selectedClasses = useMemo(
-    () => paramToSet(searchParams.get("classes")),
-    [searchParams]
-  );
+  const selectedEvents = useMemo(() => paramToSet(searchParams.get("events")), [searchParams]);
+  const selectedGenders = useMemo(() => paramToSet(searchParams.get("genders")), [searchParams]);
+  const selectedClasses = useMemo(() => paramToSet(searchParams.get("classes")), [searchParams]);
   const availabilityFilter = searchParams.get("availability") ?? "";
 
   // Update a URL param without losing others
@@ -102,11 +94,7 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
     [router, pathname, searchParams]
   );
 
-  function toggleSetParam(
-    key: string,
-    current: Set<string>,
-    value: string
-  ) {
+  function toggleSetParam(key: string, current: Set<string>, value: string) {
     const next = new Set(current);
     if (next.has(value)) next.delete(value);
     else next.add(value);
@@ -132,18 +120,12 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
   const filtered = useMemo(() => {
     return data.filter((athlete) => {
       // Event filter
-      if (
-        selectedEvents.size > 0 &&
-        !athlete.events.some((e) => selectedEvents.has(e))
-      ) {
+      if (selectedEvents.size > 0 && !athlete.events.some((e) => selectedEvents.has(e))) {
         return false;
       }
 
       // Gender filter
-      if (
-        selectedGenders.size > 0 &&
-        (!athlete.gender || !selectedGenders.has(athlete.gender))
-      ) {
+      if (selectedGenders.size > 0 && (!athlete.gender || !selectedGenders.has(athlete.gender))) {
         return false;
       }
 
@@ -196,11 +178,7 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
         </div>
 
         {/* Filter bar — always visible on sm+, toggle-controlled on mobile */}
-        <div
-          className={`mt-3 sm:mt-0 ${
-            filtersOpen ? "block" : "hidden"
-          } sm:block`}
-        >
+        <div className={`mt-3 sm:mt-0 ${filtersOpen ? "block" : "hidden"} sm:block`}>
           <div className="flex flex-wrap gap-x-6 gap-y-3 items-start p-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)]">
             {/* Event */}
             <div className="flex flex-col gap-1.5">
@@ -263,20 +241,14 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
                   label="Has Availability"
                   active={availabilityFilter === "has"}
                   onClick={() =>
-                    updateParam(
-                      "availability",
-                      availabilityFilter === "has" ? "" : "has"
-                    )
+                    updateParam("availability", availabilityFilter === "has" ? "" : "has")
                   }
                 />
                 <FilterPill
                   label="No Availability"
                   active={availabilityFilter === "none"}
                   onClick={() =>
-                    updateParam(
-                      "availability",
-                      availabilityFilter === "none" ? "" : "none"
-                    )
+                    updateParam("availability", availabilityFilter === "none" ? "" : "none")
                   }
                 />
               </div>
@@ -301,19 +273,14 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
           {hasActiveFilters && (
             <p className="mt-1.5 text-xs text-muted">
               Showing{" "}
-              <span className="font-semibold text-[var(--foreground)]">
-                {filtered.length}
-              </span>{" "}
-              of{" "}
-              <span className="font-semibold text-[var(--foreground)]">
-                {data.length}
-              </span>{" "}
-              athletes
+              <span className="font-semibold text-[var(--foreground)]">{filtered.length}</span> of{" "}
+              <span className="font-semibold text-[var(--foreground)]">{data.length}</span> athletes
             </p>
           )}
         </div>
       </div>
 
+      <BulkInviteBar data={filtered} />
       <AthletesTable data={filtered} />
     </div>
   );

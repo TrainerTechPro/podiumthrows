@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { AddAthleteButton } from "./_invite";
+import { CsvImportButton } from "./_csv-import-button";
 import { TeamFilter } from "./_team-filter";
 import { RosterClient } from "./_roster-client";
 import { ThrowsView } from "./_views/throws-view";
@@ -119,10 +120,11 @@ export default async function AthletesPage({
             {resolvedTeamId ? " in this group" : " on your roster"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {teamOptions.length > 0 && (
             <TeamFilter teams={teamOptions} currentTeamId={resolvedTeamId} />
           )}
+          <CsvImportButton athleteCount={roster.length} planLimit={planLimit} />
           <AddAthleteButton
             athleteCount={roster.length}
             planLimit={planLimit}
