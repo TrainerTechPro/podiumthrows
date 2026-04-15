@@ -20,9 +20,14 @@ export default async function CoachPlansPage() {
             Reusable training templates. Assign to athletes to schedule sessions.
           </p>
         </div>
-        <Link href="/coach/plans/new">
-          <Button variant="primary">New Plan</Button>
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link href="/coach/plans/generate">
+            <Button variant="secondary">Generate with Bondarchuk</Button>
+          </Link>
+          <Link href="/coach/plans/new">
+            <Button variant="primary">New Plan</Button>
+          </Link>
+        </div>
       </div>
 
       <PlansList plans={plans} />

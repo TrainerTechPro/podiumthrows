@@ -81,12 +81,14 @@ const nextConfig = {
         destination: '/coach/plans/new',
         permanent: true,
       },
-      // Legacy throws wizard — same job as the unified plan builder.
-      // Note: keeps as 308 rather than 301 so the user's history/back button
-      // reaches the new canonical URL on refresh.
+      // Bondarchuk program generator — relocated from /coach/throws/* into
+      // the /coach/plans/* namespace. Distinct from /coach/plans/new (blank
+      // session template). The generator produces a multi-week periodized
+      // Program (macrocycle), the blank builder produces a single-session
+      // WorkoutPlan (template).
       {
         source: '/coach/throws/program-builder',
-        destination: '/coach/plans/new',
+        destination: '/coach/plans/generate',
         permanent: true,
       },
     ];

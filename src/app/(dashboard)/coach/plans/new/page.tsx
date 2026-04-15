@@ -34,7 +34,14 @@ export default async function NewPlanPage() {
         <div>
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">New Plan</h1>
           <p className="text-sm text-muted mt-0.5">
-            Build a workout plan template. Configure blocks and exercises, then assign to athletes.
+            Build a single-session template. For a multi-week periodized program,{" "}
+            <Link
+              href="/coach/plans/generate"
+              className="text-primary-500 hover:underline font-medium"
+            >
+              use the Bondarchuk generator
+            </Link>{" "}
+            instead.
           </p>
         </div>
       </div>

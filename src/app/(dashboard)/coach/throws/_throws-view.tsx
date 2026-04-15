@@ -365,7 +365,7 @@ export function ThrowsView({
           <Link href="/coach/athletes?tab=throws" className="btn-secondary whitespace-nowrap">
             Roster
           </Link>
-          <Link href="/coach/plans/new" className="btn-secondary whitespace-nowrap">
+          <Link href="/coach/plans/generate" className="btn-secondary whitespace-nowrap">
             Build Program
           </Link>
           <Link href="/coach/throws/builder" className="btn-primary whitespace-nowrap">
@@ -459,7 +459,7 @@ export function ThrowsView({
           </div>
         </Link>
         <Link
-          href="/coach/plans/new"
+          href="/coach/plans/generate"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
           <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">

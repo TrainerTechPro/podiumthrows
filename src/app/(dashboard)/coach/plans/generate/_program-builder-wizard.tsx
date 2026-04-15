@@ -521,9 +521,9 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-1">
           <Link
-            href="/coach/throws"
+            href="/coach/plans"
             className="text-muted hover:text-[var(--foreground)] transition-colors"
-            aria-label="Back to throws"
+            aria-label="Back to plans"
           >
             <svg
               width="18"

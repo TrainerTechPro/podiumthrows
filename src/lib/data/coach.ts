@@ -2849,7 +2849,7 @@ export async function getOnboardingStatus(
       label: "Build your first program",
       description: "Generate a Bondarchuk training program",
       completed: hasProgram,
-      href: "/coach/plans/new",
+      href: "/coach/plans/generate",
       ctaLabel: "Build Program",
       requiresPrevious: true,
     },
