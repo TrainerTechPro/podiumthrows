@@ -194,9 +194,17 @@ function parseCsv(raw: string): { rows: ParsedRow[]; missingColumns: string[] } 
 export function CsvImportButton({
   athleteCount,
   planLimit,
+  selectedTeamId,
 }: {
   athleteCount: number;
   planLimit: number;
+  /**
+   * When set, successfully-imported athletes are also added to this team in
+   * one batched POST /api/coach/teams/[id]/members call. Matches the
+   * per-single-athlete behavior of AddAthleteButton so a coach filtered to a
+   * specific group sees their imports land there by default.
+   */
+  selectedTeamId?: string;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -262,6 +270,36 @@ export function CsvImportButton({
         error: s.reason instanceof Error ? s.reason.message : "Failed",
       };
     });
+
+    // If the coach is filtered to a specific team, batch-add successfully
+    // created athletes to that team in one request. Non-blocking: if the
+    // team assignment fails, the athletes still got created — we surface
+    // a softer warning rather than rolling back.
+    if (selectedTeamId) {
+      const createdIds = settled.flatMap((s) =>
+        s.status === "fulfilled" && s.value?.id ? [s.value.id as string] : []
+      );
+      if (createdIds.length > 0) {
+        try {
+          const teamRes = await fetch(`/api/coach/teams/${selectedTeamId}/members`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            body: JSON.stringify({ athleteIds: createdIds }),
+          });
+          if (!teamRes.ok) {
+            toast.warning(
+              "Imported but group assignment failed",
+              "Athletes are on your roster. Add them to the group manually."
+            );
+          }
+        } catch {
+          toast.warning(
+            "Imported but group assignment failed",
+            "Athletes are on your roster. Add them to the group manually."
+          );
+        }
+      }
+    }
 
     setResults(out);
     setImporting(false);

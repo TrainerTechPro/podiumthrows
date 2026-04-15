@@ -124,7 +124,13 @@ export default async function AthletesPage({
           {teamOptions.length > 0 && (
             <TeamFilter teams={teamOptions} currentTeamId={resolvedTeamId} />
           )}
-          <CsvImportButton athleteCount={roster.length} planLimit={planLimit} />
+          <CsvImportButton
+            athleteCount={roster.length}
+            planLimit={planLimit}
+            selectedTeamId={
+              resolvedTeamId && resolvedTeamId !== "unassigned" ? resolvedTeamId : undefined
+            }
+          />
           <AddAthleteButton
             athleteCount={roster.length}
             planLimit={planLimit}
