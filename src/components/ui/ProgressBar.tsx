@@ -26,16 +26,21 @@ const fillColors: Record<ProgressVariant, string> = {
   primary: "bg-primary-500",
   success: "bg-success-500",
   warning: "bg-warning-500",
-  danger:  "bg-danger-500",
-  info:    "bg-info-500",
+  danger: "bg-danger-500",
+  info: "bg-info-500",
 };
 
-const trackColors: Record<ProgressVariant, string> = {
-  primary: "bg-primary-100  dark:bg-primary-500/20",
-  success: "bg-success-50   dark:bg-success-500/20",
-  warning: "bg-warning-50   dark:bg-warning-500/20",
-  danger:  "bg-danger-50    dark:bg-danger-500/20",
-  info:    "bg-info-50      dark:bg-info-500/20",
+/* Track always sits on the base surface; neomorphic inset shadow gives
+   the carved-in feel, so we keep a single neutral background for all
+   variants and let the fill (with its glow) carry the color identity. */
+const trackBase = "bg-[var(--card-bg)] neo-inset-sm";
+
+const fillGlow: Record<ProgressVariant, string> = {
+  primary: "shadow-[0_0_10px_rgba(255,200,0,0.45)]",
+  success: "shadow-[0_0_10px_rgba(0,255,136,0.35)]",
+  warning: "shadow-[0_0_10px_rgba(255,136,0,0.35)]",
+  danger: "shadow-[0_0_10px_rgba(255,34,34,0.35)]",
+  info: "shadow-[0_0_10px_rgba(68,136,255,0.35)]",
 };
 
 /** Auto-picks variant based on score (used for readiness / RPE displays) */
@@ -67,9 +72,7 @@ export function ProgressBar({
   const reducedMotion = useRef(false);
 
   useEffect(() => {
-    reducedMotion.current = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (!animate || reducedMotion.current) {
       setRendered(true);
@@ -127,7 +130,7 @@ export function ProgressBar({
 
       <div
         ref={trackRef}
-        className={cn("w-full rounded-full overflow-hidden", trackHeight[size], trackColors[variant])}
+        className={cn("w-full rounded-full overflow-hidden", trackHeight[size], trackBase)}
         role="progressbar"
         aria-valuenow={clamped}
         aria-valuemin={0}
@@ -138,6 +141,7 @@ export function ProgressBar({
           className={cn(
             "h-full rounded-full relative",
             fillColors[variant],
+            fillGlow[variant],
             shimmer && "progress-shimmer"
           )}
           style={{
@@ -164,15 +168,29 @@ export interface SegmentedProgressBarProps {
   className?: string;
 }
 
-export function SegmentedProgressBar({ segments, size = "md", className }: SegmentedProgressBarProps) {
+export function SegmentedProgressBar({
+  segments,
+  size = "md",
+  className,
+}: SegmentedProgressBarProps) {
   const total = segments.reduce((sum, s) => sum + s.value, 0);
 
   return (
-    <div className={cn("flex w-full rounded-full overflow-hidden gap-0.5", trackHeight[size], className)}>
+    <div
+      className={cn(
+        "flex w-full rounded-full overflow-hidden gap-0.5 neo-inset-sm",
+        trackHeight[size],
+        className
+      )}
+    >
       {segments.map((seg, i) => (
         <div
           key={i}
-          className={cn("h-full transition-[width] duration-700 ease-out first:rounded-l-full last:rounded-r-full", fillColors[seg.variant])}
+          className={cn(
+            "h-full transition-[width] duration-700 ease-out first:rounded-l-full last:rounded-r-full",
+            fillColors[seg.variant],
+            fillGlow[seg.variant]
+          )}
           style={{ width: `${(seg.value / total) * 100}%` }}
           title={seg.label}
           role="presentation"

@@ -19,6 +19,26 @@
     --surface-overlay: #ffffff;
     --surface-glass: rgba(0, 0, 0, 0.04);
 
+    /* Neomorphic (soft UI) shadow tokens. Light mode: strong white highlight
+       + soft neutral depth on near-white surfaces. These compose two shadows
+       so anything wearing them appears carved from a single material. */
+    --neo-highlight: rgba(255, 255, 255, 1);
+    --neo-depth: rgba(17, 17, 22, 0.08);
+    --neo-raised:
+      -4px -4px 10px var(--neo-highlight),
+      4px 4px 14px var(--neo-depth);
+    --neo-raised-sm:
+      -2px -2px 5px var(--neo-highlight),
+      2px 2px 7px var(--neo-depth);
+    --neo-inset:
+      inset 3px 3px 7px var(--neo-depth),
+      inset -3px -3px 7px var(--neo-highlight);
+    --neo-inset-sm:
+      inset 2px 2px 4px var(--neo-depth),
+      inset -2px -2px 4px var(--neo-highlight);
+    --neo-glow-primary: 0 0 14px rgba(255, 200, 0, 0.28);
+    --neo-glow-primary-strong: 0 0 20px rgba(255, 200, 0, 0.4);
+
     /* Landing page tokens — always dark regardless of theme */
     --landing-bg: #06060a;
     --landing-surface: #0a0a0e;
@@ -47,6 +67,27 @@
     /* Overlay surfaces — see :root for usage rules. */
     --surface-overlay: #1a1a20;
     --surface-glass: rgba(255, 255, 255, 0.04);
+
+    /* Neomorphic dark variants. Highlight is a faint white glow on the
+       top-left; depth leans into near-black on the bottom-right. The base
+       background is already near-black so we rely on a glowier highlight
+       rather than a deeper shadow for depth perception. */
+    --neo-highlight: rgba(255, 255, 255, 0.035);
+    --neo-depth: rgba(0, 0, 0, 0.65);
+    --neo-raised:
+      -4px -4px 10px var(--neo-highlight),
+      4px 4px 14px var(--neo-depth);
+    --neo-raised-sm:
+      -2px -2px 5px var(--neo-highlight),
+      2px 2px 7px var(--neo-depth);
+    --neo-inset:
+      inset 3px 3px 7px var(--neo-depth),
+      inset -3px -3px 7px var(--neo-highlight);
+    --neo-inset-sm:
+      inset 2px 2px 4px var(--neo-depth),
+      inset -2px -2px 4px var(--neo-highlight);
+    --neo-glow-primary: 0 0 14px rgba(255, 200, 0, 0.3);
+    --neo-glow-primary-strong: 0 0 22px rgba(255, 200, 0, 0.5);
 
     /* Landing page tokens */
     --landing-bg: #06060a;
@@ -99,8 +140,80 @@
     background: rgba(20, 20, 24, 0.95);
   }
 
+  /* Neomorphic rounded card — depth via dual shadow, no border.
+     Use for any rounded surface that ISN'T clip-path'd (the cyberpunk
+     .card variant keeps its cut corners + hairline border). */
   .card-rounded {
-    @apply bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl shadow-card;
+    @apply bg-[var(--card-bg)] rounded-2xl;
+    box-shadow: var(--neo-raised);
+  }
+
+  /* ── Neomorphic utilities ──────────────────────────────────────────
+     Reusable soft-UI surfaces. Apply alongside a rounded-* utility and
+     let the shadow do the elevation work — do not add borders.
+     Skip on clip-path elements: clip-path clips outer box-shadow, so
+     the extrusion won't render. */
+  .neo-raised {
+    box-shadow: var(--neo-raised);
+  }
+  .neo-raised-sm {
+    box-shadow: var(--neo-raised-sm);
+  }
+  .neo-inset {
+    box-shadow: var(--neo-inset);
+  }
+  .neo-inset-sm {
+    box-shadow: var(--neo-inset-sm);
+  }
+  .neo-glow-primary {
+    box-shadow: var(--neo-glow-primary);
+  }
+  /* Press-down state for raised neomorphic elements — compresses into
+     the surface. Apply on :active or toggle 'is-pressed'. */
+  .neo-raised.is-pressed,
+  .neo-raised:active:not(:disabled) {
+    box-shadow: var(--neo-inset-sm);
+  }
+
+  /* Neomorphic switch primitives. Pair .neo-switch (the track) with
+     .neo-switch-thumb (the knob). Add .is-on to the track when active
+     to flip the track to brand accent + sink the knob. */
+  .neo-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 2.75rem;   /* w-11 */
+    height: 1.5rem;   /* h-6 */
+    border-radius: 9999px;
+    background: var(--card-bg);
+    box-shadow: var(--neo-inset-sm);
+    cursor: pointer;
+    transition: background-color 200ms ease-out, box-shadow 200ms ease-out;
+  }
+  .neo-switch.is-on {
+    background: var(--gold);
+    box-shadow: var(--neo-inset-sm), var(--neo-glow-primary);
+  }
+  .neo-switch-thumb {
+    position: absolute;
+    top: 0.125rem;
+    left: 0.125rem;
+    width: 1.25rem;   /* h-5 w-5 */
+    height: 1.25rem;
+    border-radius: 9999px;
+    background: var(--card-bg);
+    box-shadow: var(--neo-raised-sm);
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+  }
+  .neo-switch.is-on .neo-switch-thumb {
+    transform: translateX(1.25rem);
+    box-shadow: var(--neo-raised-sm), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .neo-switch,
+    .neo-switch-thumb {
+      transition: none !important;
+    }
   }
 
   .card-hover {
@@ -293,21 +406,25 @@
   }
 }
 
-/* ─── RPE Slider Custom Styles ─────────────────────────────────────────────── */
+/* ─── RPE Slider Custom Styles (Neomorphic) ──────────────────────────────────
+   Track appears debossed into the surface via inset shadows; the filled
+   gradient (set inline from the component) still reads through. Thumb is
+   a raised knob with a soft amber glow tinted by the current RPE color. */
 .rpe-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 8px;
-  border-radius: 4px;
+  height: 10px;
+  border-radius: 999px;
   outline: none;
   cursor: pointer;
   background: transparent;
+  box-shadow: var(--neo-inset-sm);
 }
 
 .rpe-slider::-webkit-slider-runnable-track {
-  height: 8px;
-  border-radius: 4px;
+  height: 10px;
+  border-radius: 999px;
 }
 
 .rpe-slider::-webkit-slider-thumb {
@@ -316,33 +433,56 @@
   height: 22px;
   width: 22px;
   border-radius: 50%;
-  background: white;
-  border: 2.5px solid var(--rpe-color, #FFC800);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
-  margin-top: -7px;
+  background: var(--card-bg);
+  border: none;
+  box-shadow:
+    var(--neo-raised-sm),
+    0 0 12px color-mix(in srgb, var(--rpe-color, #FFC800) 45%, transparent);
+  margin-top: -6px;
   cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
 }
 
 .rpe-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  transform: scale(1.1);
+  box-shadow:
+    var(--neo-raised),
+    0 0 18px color-mix(in srgb, var(--rpe-color, #FFC800) 60%, transparent);
+}
+
+.rpe-slider:active::-webkit-slider-thumb {
+  box-shadow:
+    var(--neo-inset-sm),
+    0 0 14px color-mix(in srgb, var(--rpe-color, #FFC800) 55%, transparent);
 }
 
 .rpe-slider::-moz-range-track {
-  height: 8px;
-  border-radius: 4px;
+  height: 10px;
+  border-radius: 999px;
 }
 
 .rpe-slider::-moz-range-thumb {
   height: 22px;
   width: 22px;
   border-radius: 50%;
-  background: white;
-  border: 2.5px solid var(--rpe-color, #FFC800);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
+  background: var(--card-bg);
+  border: none;
+  box-shadow:
+    var(--neo-raised-sm),
+    0 0 12px color-mix(in srgb, var(--rpe-color, #FFC800) 45%, transparent);
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.rpe-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rpe-slider::-webkit-slider-thumb,
+  .rpe-slider::-moz-range-thumb {
+    transition: none !important;
+  }
 }
 
 /* ─── Sidebar transition ──────────────────────────────────────────────────── */

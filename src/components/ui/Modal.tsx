@@ -95,12 +95,13 @@ export function Modal({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 animate-fade-in" aria-hidden="true" />
 
-      {/* Panel */}
+      {/* Panel — neomorphic: no border, depth via dual shadow. Keeps the
+          opaque --surface-overlay per dark-mode readability rule. */}
       <div
         ref={panelRef}
         className={cn(
-          "relative w-full bg-[var(--surface-overlay)] border border-[var(--card-border)]",
-          "rounded-2xl shadow-2xl animate-spring-up",
+          "relative w-full bg-[var(--surface-overlay)] neo-raised",
+          "rounded-2xl animate-spring-up",
           size === "full" && "overflow-hidden",
           sizeClasses[size],
           className
@@ -109,7 +110,7 @@ export function Modal({
       >
         {/* Header */}
         {(title || !preventClose) && (
-          <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-[var(--card-border)]">
+          <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-4 border-b border-[var(--card-border)]/40">
             <div className="min-w-0">
               {title && (
                 <h2 id="modal-title" className="text-base font-semibold text-[var(--foreground)]">
@@ -137,7 +138,7 @@ export function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--card-border)]">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--card-border)]/40">
             {footer}
           </div>
         )}
