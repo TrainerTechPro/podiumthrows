@@ -80,41 +80,59 @@ function StatBar({
   teamAttendance,
 }: {
   stats: CoachStats;
-  teamAttendance: { rate: number; totalPractices: number; flaggedAthletes: Array<{ id: string; firstName: string; lastName: string; avatarUrl: string | null; rate: number }> } | null;
+  teamAttendance: {
+    rate: number;
+    totalPractices: number;
+    flaggedAthletes: Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      avatarUrl: string | null;
+      rate: number;
+    }>;
+  } | null;
 }) {
   const attendanceColor =
     teamAttendance === null || teamAttendance.totalPractices === 0
       ? "text-[var(--foreground)]"
       : teamAttendance.rate >= 90
-      ? "text-emerald-600 dark:text-emerald-400"
-      : teamAttendance.rate >= 75
-      ? "text-amber-500 dark:text-amber-400"
-      : "text-red-600 dark:text-red-400";
+        ? "text-emerald-600 dark:text-emerald-400"
+        : teamAttendance.rate >= 75
+          ? "text-amber-500 dark:text-amber-400"
+          : "text-red-600 dark:text-red-400";
 
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted border-b border-[var(--card-border)] pb-6">
       <span>
-        <span className="font-semibold tabular-nums text-[var(--foreground)]"><AnimatedNumber value={stats.totalAthletes} /></span>
+        <span className="font-semibold tabular-nums text-[var(--foreground)]">
+          <AnimatedNumber value={stats.totalAthletes} />
+        </span>
         {" athletes on roster"}
       </span>
 
       {stats.sessionsToday > 0 && (
         <span>
-          <span className="font-semibold tabular-nums text-[var(--foreground)]"><AnimatedNumber value={stats.sessionsToday} /></span>
-          {" session"}{stats.sessionsToday !== 1 ? "s" : ""}{" today"}
+          <span className="font-semibold tabular-nums text-[var(--foreground)]">
+            <AnimatedNumber value={stats.sessionsToday} />
+          </span>
+          {" session"}
+          {stats.sessionsToday !== 1 ? "s" : ""}
+          {" today"}
         </span>
       )}
 
       {stats.complianceRate !== null && (
         <span>
-          <span className={cn(
-            "font-semibold tabular-nums",
-            stats.complianceRate >= 80
-              ? "text-emerald-600 dark:text-emerald-400"
-              : stats.complianceRate < 60
-              ? "text-amber-500"
-              : "text-[var(--foreground)]"
-          )}>
+          <span
+            className={cn(
+              "font-semibold tabular-nums",
+              stats.complianceRate >= 80
+                ? "text-emerald-600 dark:text-emerald-400"
+                : stats.complianceRate < 60
+                  ? "text-amber-500"
+                  : "text-[var(--foreground)]"
+            )}
+          >
             <AnimatedNumber value={stats.complianceRate} />%
           </span>
           {" 30-day compliance"}
@@ -123,7 +141,9 @@ function StatBar({
 
       {stats.throwsThisWeek > 0 && (
         <span>
-          <span className="font-semibold tabular-nums text-[var(--foreground)]"><AnimatedNumber value={stats.throwsThisWeek} /></span>
+          <span className="font-semibold tabular-nums text-[var(--foreground)]">
+            <AnimatedNumber value={stats.throwsThisWeek} />
+          </span>
           {" throws this week"}
         </span>
       )}
@@ -135,16 +155,10 @@ function StatBar({
       )}
 
       {stats.lowReadiness > 0 && (
-        <Badge variant="warning">
-          {stats.lowReadiness} low readiness
-        </Badge>
+        <Badge variant="warning">{stats.lowReadiness} low readiness</Badge>
       )}
 
-      {stats.injured > 0 && (
-        <Badge variant="danger">
-          {stats.injured} injured
-        </Badge>
-      )}
+      {stats.injured > 0 && <Badge variant="danger">{stats.injured} injured</Badge>}
 
       {teamAttendance !== null && teamAttendance.totalPractices > 0 && (
         <span>
@@ -196,15 +210,13 @@ function ActivityDescription({ item }: { item: ActivityItem }) {
       (item.score ?? 0) >= 8
         ? "text-emerald-600 dark:text-emerald-400"
         : (item.score ?? 0) >= 5
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-red-600 dark:text-red-400";
+          ? "text-amber-600 dark:text-amber-400"
+          : "text-red-600 dark:text-red-400";
     return (
       <span>
         <span className="font-medium text-[var(--foreground)]">{item.athleteName}</span>
         {" submitted a readiness check-in · "}
-        <span className={cn("font-semibold", scoreColor)}>
-          {item.score?.toFixed(1)}
-        </span>
+        <span className={cn("font-semibold", scoreColor)}>{item.score?.toFixed(1)}</span>
       </span>
     );
   }
@@ -224,10 +236,14 @@ function ActivityDescription({ item }: { item: ActivityItem }) {
   return (
     <span>
       <span className="font-medium text-[var(--foreground)]">{item.athleteName}</span>
-      {item.sessionName
-        ? <>{" completed "}<span className="font-medium">{item.sessionName}</span></>
-        : " completed a training session"
-      }
+      {item.sessionName ? (
+        <>
+          {" completed "}
+          <span className="font-medium">{item.sessionName}</span>
+        </>
+      ) : (
+        " completed a training session"
+      )}
       {item.rpe != null && (
         <>
           {" · RPE "}
@@ -237,7 +253,9 @@ function ActivityDescription({ item }: { item: ActivityItem }) {
       {item.distance != null && (
         <>
           {", Best: "}
-          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{item.distance.toFixed(2)}m</span>
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+            {item.distance.toFixed(2)}m
+          </span>
         </>
       )}
     </span>
@@ -249,7 +267,11 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
     return (
       <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
         <div className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
-          <Activity className="w-5 h-5 text-surface-400 dark:text-surface-500" strokeWidth={1.75} aria-hidden="true" />
+          <Activity
+            className="w-5 h-5 text-surface-400 dark:text-surface-500"
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
         </div>
         <div className="max-w-[200px]">
           <p className="text-sm font-semibold text-[var(--foreground)]">No recent activity</p>
@@ -271,21 +293,21 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
           ? `/coach/athletes/${item.athleteId}/sessions/${item.assignmentId}`
           : `/coach/athletes/${item.athleteId}`;
         return (
-        <Link
-          key={item.id}
-          href={href}
-          className="relative flex items-start gap-3 px-1 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-        >
-          <div className="relative z-10 shrink-0">
-            <ActivityIcon type={item.type} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-surface-600 dark:text-surface-400 leading-snug">
-              <ActivityDescription item={item} />
-            </p>
-            <p className="text-xs text-muted mt-0.5">{formatRelativeTime(item.date)}</p>
-          </div>
-        </Link>
+          <Link
+            key={item.id}
+            href={href}
+            className="relative flex items-start gap-3 px-1 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+          >
+            <div className="relative z-10 shrink-0">
+              <ActivityIcon type={item.type} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-surface-600 dark:text-surface-400 leading-snug">
+                <ActivityDescription item={item} />
+              </p>
+              <p className="text-xs text-muted mt-0.5">{formatRelativeTime(item.date)}</p>
+            </div>
+          </Link>
         );
       })}
     </div>
@@ -296,15 +318,105 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
 
 function TrendIcon({ trend }: { trend: TeamReadinessEntry["trend"] }) {
   if (trend === "up") {
-    return <TrendingUp size={14} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />;
+    return (
+      <TrendingUp size={14} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />
+    );
   }
   if (trend === "down") {
-    return <TrendingDown size={14} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />;
+    return (
+      <TrendingDown size={14} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
+    );
   }
   if (trend === "stable") {
     return <Minus size={14} strokeWidth={1.75} className="text-surface-400" aria-hidden="true" />;
   }
   return null;
+}
+
+/**
+ * Compact 28-day sparkline for a team-readiness row. Intentionally minimal:
+ * stroke-only polyline with explicit gaps for days that have no check-in,
+ * so coaches see both the shape of recent readiness AND its sparsity
+ * (sparse check-ins are themselves a signal). Null scores split the line
+ * into segments rather than interpolating through missing data.
+ */
+function ReadinessSparkline({
+  series,
+  maxScore,
+  strokeClass,
+}: {
+  series: { date: string; score: number | null }[];
+  maxScore: number;
+  strokeClass: string;
+}) {
+  const W = 80;
+  const H = 20;
+  const PAD = 1.5;
+
+  if (series.length === 0 || maxScore <= 0) {
+    return <div className="h-5 w-20" aria-hidden="true" />;
+  }
+
+  // Build contiguous non-null segments. Each segment becomes its own polyline
+  // so gaps render as visual discontinuities instead of interpolated lines.
+  const segments: { x: number; y: number }[][] = [];
+  let current: { x: number; y: number }[] = [];
+
+  series.forEach((pt, i) => {
+    if (pt.score == null) {
+      if (current.length > 0) {
+        segments.push(current);
+        current = [];
+      }
+      return;
+    }
+    const x = PAD + (i / Math.max(1, series.length - 1)) * (W - 2 * PAD);
+    const yNorm = Math.min(1, Math.max(0, pt.score / maxScore));
+    const y = PAD + (1 - yNorm) * (H - 2 * PAD);
+    current.push({ x, y });
+  });
+  if (current.length > 0) segments.push(current);
+
+  if (segments.length === 0) {
+    return (
+      <div className="h-5 w-20 flex items-center text-[10px] text-surface-400" aria-hidden="true">
+        No data
+      </div>
+    );
+  }
+
+  return (
+    <svg
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      className="overflow-visible"
+      aria-hidden="true"
+    >
+      {segments.map((seg, idx) =>
+        seg.length === 1 ? (
+          // Single point — render a dot so the signal doesn't disappear
+          <circle
+            key={idx}
+            cx={seg[0].x}
+            cy={seg[0].y}
+            r={1.2}
+            className={`fill-current ${strokeClass}`}
+          />
+        ) : (
+          <polyline
+            key={idx}
+            points={seg.map((p) => `${p.x},${p.y}`).join(" ")}
+            fill="none"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`stroke-current ${strokeClass}`}
+          />
+        )
+      )}
+    </svg>
+  );
 }
 
 function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
@@ -314,9 +426,7 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
     <section className="space-y-3">
       <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
         Team Readiness
-        <span className="ml-2 text-xs font-normal normal-case text-surface-400">
-          latest scores
-        </span>
+        <span className="ml-2 text-xs font-normal normal-case text-surface-400">last 28 days</span>
       </h2>
       <div className="divide-y divide-[var(--card-border)] border-t border-[var(--card-border)]">
         {entries.map((entry) => {
@@ -328,14 +438,8 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
             pct >= 70
               ? "text-emerald-600 dark:text-emerald-400"
               : pct >= 40
-              ? "text-amber-600 dark:text-amber-400"
-              : "text-red-600 dark:text-red-400";
-          const barColorClass =
-            pct >= 70
-              ? "bg-emerald-500"
-              : pct >= 40
-              ? "bg-amber-500"
-              : "bg-red-500";
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-red-600 dark:text-red-400";
 
           return (
             <Link
@@ -343,32 +447,25 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
               href={`/coach/athletes/${entry.athleteId}`}
               className="group flex items-center gap-3 px-1 py-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
             >
-              <Avatar
-                name={entry.athleteName}
-                src={entry.avatarUrl}
-                size="sm"
-              />
+              <Avatar name={entry.athleteName} src={entry.avatarUrl} size="sm" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--foreground)] truncate">
                   {entry.athleteName}
                 </p>
-                <div className="mt-1 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 group-hover:bg-surface-300 dark:group-hover:bg-surface-600 overflow-hidden transition-colors">
-                  <div
-                    className={`h-full rounded-full ${barColorClass}`}
-                    style={{ width: `${Math.min(pct, 100)}%` }}
+                <div className="mt-1">
+                  <ReadinessSparkline
+                    series={entry.series}
+                    maxScore={entry.maxScore}
+                    strokeClass={scoreColorClass}
                   />
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <TrendIcon trend={entry.trend} />
                 <span className={cn("text-sm font-semibold tabular-nums", scoreColorClass)}>
-                  {entry.latestScore !== null
-                    ? entry.latestScore.toFixed(1)
-                    : "—"}
+                  {entry.latestScore !== null ? entry.latestScore.toFixed(1) : "—"}
                 </span>
-                <span className="text-[10px] text-muted">
-                  / {entry.maxScore}
-                </span>
+                <span className="text-[10px] text-muted">/ {entry.maxScore}</span>
               </div>
             </Link>
           );
@@ -403,43 +500,65 @@ export default async function CoachDashboardPage() {
     weeklyVolumeResult,
     seasonGainsResult,
     teamAttendanceResult,
-  ] = await withTiming("coach-dashboard-data", () => Promise.allSettled([
-    cachedGetCoachStats(coach.id),
-    cachedGetRecentActivity(coach.id, 20, true),
-    cachedGetFlaggedAthletes(coach.id),
-    getTeamReadinessTrends(coach.id),
-    getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
-    getCoachingActions(coach.id),
-    getRecentTeamPRs(coach.id),
-    getTeamLoadOverview(coach.id),
-    mode === "competition" ? getUpcomingCompetitions(coach.id) : Promise.resolve([]),
-    getTeamDistanceDelta(coach.id, analyticsPeriod),
-    getWeeklyVolumeBreakdown(coach.id),
-    getSeasonGains(coach.id, analyticsPeriod),
-    getTeamAttendanceStats(coach.id, 7),
-  ]));
+  ] = await withTiming("coach-dashboard-data", () =>
+    Promise.allSettled([
+      cachedGetCoachStats(coach.id),
+      cachedGetRecentActivity(coach.id, 20, true),
+      cachedGetFlaggedAthletes(coach.id),
+      getTeamReadinessTrends(coach.id),
+      getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
+      getCoachingActions(coach.id),
+      getRecentTeamPRs(coach.id),
+      getTeamLoadOverview(coach.id),
+      mode === "competition" ? getUpcomingCompetitions(coach.id) : Promise.resolve([]),
+      getTeamDistanceDelta(coach.id, analyticsPeriod),
+      getWeeklyVolumeBreakdown(coach.id),
+      getSeasonGains(coach.id, analyticsPeriod),
+      getTeamAttendanceStats(coach.id, 7),
+    ])
+  );
 
-  const stats: CoachStats = statsResult.status === "fulfilled"
-    ? statsResult.value
-    : { totalAthletes: 0, lowReadiness: 0, sessionsToday: 0, injured: 0, complianceRate: null, throwsThisWeek: 0, prsThisWeek: 0 };
+  const stats: CoachStats =
+    statsResult.status === "fulfilled"
+      ? statsResult.value
+      : {
+          totalAthletes: 0,
+          lowReadiness: 0,
+          sessionsToday: 0,
+          injured: 0,
+          complianceRate: null,
+          throwsThisWeek: 0,
+          prsThisWeek: 0,
+        };
   const activity = activityResult.status === "fulfilled" ? activityResult.value : [];
   const flagged = flaggedResult.status === "fulfilled" ? flaggedResult.value : [];
   const readiness = readinessResult.status === "fulfilled" ? readinessResult.value : [];
-  const onboarding = onboardingResult.status === "fulfilled"
-    ? onboardingResult.value
-    : { isCompleted: true, completedAt: null, steps: [], completedCount: 0, totalSteps: 0 };
+  const onboarding =
+    onboardingResult.status === "fulfilled"
+      ? onboardingResult.value
+      : { isCompleted: true, completedAt: null, steps: [], completedCount: 0, totalSteps: 0 };
   const coachingActions = actionsResult.status === "fulfilled" ? actionsResult.value : [];
   const teamPRs = prsResult.status === "fulfilled" ? prsResult.value : [];
   const teamLoad = loadResult.status === "fulfilled" ? loadResult.value : [];
   const competitions = competitionsResult.status === "fulfilled" ? competitionsResult.value : [];
-  const distanceDelta = distanceDeltaResult.status === "fulfilled"
-    ? distanceDeltaResult.value
-    : { avgDeltaPercent: 0, athleteCount: 0, totalAthletes: 0 };
-  const weeklyVolume = weeklyVolumeResult.status === "fulfilled"
-    ? weeklyVolumeResult.value
-    : { days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((l) => ({ label: l, throws: 0, date: "" })), todayIndex: 0 };
+  const distanceDelta =
+    distanceDeltaResult.status === "fulfilled"
+      ? distanceDeltaResult.value
+      : { avgDeltaPercent: 0, athleteCount: 0, totalAthletes: 0 };
+  const weeklyVolume =
+    weeklyVolumeResult.status === "fulfilled"
+      ? weeklyVolumeResult.value
+      : {
+          days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((l) => ({
+            label: l,
+            throws: 0,
+            date: "",
+          })),
+          todayIndex: 0,
+        };
   const seasonGains = seasonGainsResult.status === "fulfilled" ? seasonGainsResult.value : [];
-  const teamAttendance = teamAttendanceResult.status === "fulfilled" ? teamAttendanceResult.value : null;
+  const teamAttendance =
+    teamAttendanceResult.status === "fulfilled" ? teamAttendanceResult.value : null;
 
   // Adaptation progress — Training Block + Advanced depth only
   const adaptationRows: AdaptationRow[] = [];
@@ -487,8 +606,7 @@ export default async function CoachDashboardPage() {
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const today = now.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -515,10 +633,7 @@ export default async function CoachDashboardPage() {
 
       {/* Upgrade nudge for free coaches near their athlete limit */}
       {coach.plan === "FREE" && stats.totalAthletes >= 2 && (
-        <UpgradeBanner
-          athleteCount={stats.totalAthletes}
-          planLimit={planLimit}
-        />
+        <UpgradeBanner athleteCount={stats.totalAthletes} planLimit={planLimit} />
       )}
 
       {/* ═══ ZONE 1: TRIAGE ═══ */}
@@ -529,11 +644,18 @@ export default async function CoachDashboardPage() {
         if (injured.length === 0) return null;
         return (
           <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 flex items-center gap-3">
-            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <AlertTriangle
+              className="w-4 h-4 text-red-500 shrink-0"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
             <p className="text-sm text-red-700 dark:text-red-400 flex-1">
               {injured.length === 1 ? (
                 <>
-                  <Link href={`/coach/athletes/${injured[0].id}`} className="font-semibold hover:underline">
+                  <Link
+                    href={`/coach/athletes/${injured[0].id}`}
+                    className="font-semibold hover:underline"
+                  >
                     {injured[0].firstName} {injured[0].lastName}
                   </Link>
                   {" has an active injury"}

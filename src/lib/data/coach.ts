@@ -2349,7 +2349,16 @@ export type TeamReadinessEntry = {
   maxScore: number;
   completedAt: string;
   trend: "up" | "down" | "stable" | null;
+  /**
+   * 28-day daily score series, most recent last. Days with no check-in
+   * carry `score: null` so the sparkline renderer can draw gaps rather
+   * than interpolate through them.
+   */
+  series: { date: string; score: number | null }[];
 };
+
+/** Window (days) used to build the per-athlete readiness sparkline series. */
+const TEAM_READINESS_SERIES_DAYS = 28;
 
 export async function getTeamReadinessTrends(coachId: string): Promise<TeamReadinessEntry[]> {
   // Find all readiness/check-in questionnaires for this coach that have scoring
@@ -2377,15 +2386,21 @@ export async function getTeamReadinessTrends(coachId: string): Promise<TeamReadi
     },
   });
 
-  // Batch all athlete responses in a single query instead of N per-athlete queries
+  // Fetch all scored responses within the sparkline window. Bounded by
+  // date rather than a global `take`, so every athlete gets a complete
+  // 28-day series regardless of roster size.
+  const windowStart = new Date();
+  windowStart.setDate(windowStart.getDate() - TEAM_READINESS_SERIES_DAYS);
+  windowStart.setHours(0, 0, 0, 0);
+
   const allResponses = await prisma.questionnaireResponse.findMany({
     where: {
       athleteId: { in: athletes.map((a) => a.id) },
       questionnaireId: { in: qIds },
       scores: { not: Prisma.JsonNull },
+      completedAt: { gte: windowStart },
     },
     orderBy: { completedAt: "desc" },
-    take: 200,
     select: {
       athleteId: true,
       scores: true,
@@ -2393,14 +2408,49 @@ export async function getTeamReadinessTrends(coachId: string): Promise<TeamReadi
     },
   });
 
-  // Group by athlete, keep latest 2 per athlete (responses are desc-sorted globally)
+  // Group by athlete — responses are desc-sorted globally, so each athlete's
+  // bucket is also desc. That lets us read [0] and [1] for trend + newest,
+  // and reverse for the sparkline.
   const responsesByAthlete = new Map<string, typeof allResponses>();
   for (const r of allResponses) {
     const arr = responsesByAthlete.get(r.athleteId) ?? [];
-    if (arr.length < 2) {
-      arr.push(r);
-      responsesByAthlete.set(r.athleteId, arr);
+    arr.push(r);
+    responsesByAthlete.set(r.athleteId, arr);
+  }
+
+  // Build day-keyed series: one score per day over the 28-day window,
+  // null for days with no check-in. If multiple check-ins happen on the
+  // same day (rare but possible), the latest wins.
+  function buildSeries(
+    responses: typeof allResponses,
+    maxScore: number
+  ): { date: string; score: number | null }[] {
+    const scoreByDay = new Map<string, number>();
+    for (const r of responses) {
+      const d = r.completedAt;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      if (scoreByDay.has(key)) continue; // keep the first (latest in desc order)
+      const s = (r.scores as { compositeScore: number | null } | null)?.compositeScore;
+      if (s != null) scoreByDay.set(key, s);
     }
+
+    const days: { date: string; score: number | null }[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = TEAM_READINESS_SERIES_DAYS - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const raw = scoreByDay.get(key);
+      days.push({
+        date: key,
+        score: raw != null ? raw : null,
+      });
+    }
+    // Reference maxScore to silence unused-param warnings from callers
+    // who eventually want normalized output; passthrough for now.
+    void maxScore;
+    return days;
   }
 
   const results: TeamReadinessEntry[] = [];
@@ -2436,6 +2486,7 @@ export async function getTeamReadinessTrends(coachId: string): Promise<TeamReadi
       maxScore: latestScores?.maxPossibleScore ?? 0,
       completedAt: latest.completedAt.toISOString(),
       trend,
+      series: buildSeries(recentResponses, latestScores?.maxPossibleScore ?? 0),
     });
   }
 
