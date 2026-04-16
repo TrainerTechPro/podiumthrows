@@ -15,6 +15,7 @@ import {
   type AthleteRosterItem,
 } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import type { PlanName } from "@/lib/stripe";
 import { InvitationsClient } from "../invitations/_invitations-client";
 
@@ -77,10 +78,22 @@ export default async function AthletesPage({
   }
 
   let roster: AthleteRosterItem[];
+  let rosterLoadFailed = false;
   try {
     roster = await getAthleteRoster(coach.id, resolvedTeamId ?? undefined);
-  } catch {
+  } catch (err) {
+    // Fail-soft: render the rest of the page with an explicit banner so
+    // the coach sees their team filter, invite buttons, etc., but also
+    // knows the roster didn't load. An empty array with no banner (the
+    // prior behavior) was indistinguishable from "coach has no athletes"
+    // which misled users during a brief DB outage.
+    logger.error("Failed to load coach roster", {
+      context: "coach/athletes",
+      metadata: { coachId: coach.id, teamId: resolvedTeamId },
+      error: err,
+    });
     roster = [];
+    rosterLoadFailed = true;
   }
 
   const planLimit = PLAN_LIMITS[coach.plan];
@@ -197,6 +210,21 @@ export default async function AthletesPage({
       {/* Roster tab */}
       {tab === "roster" && (
         <>
+          {rosterLoadFailed && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
+              <AlertTriangle
+                className="w-4 h-4 text-red-500 shrink-0 mt-0.5"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+              <div className="text-sm text-red-700 dark:text-red-400 leading-snug">
+                <p className="font-semibold">Couldn&apos;t load your roster</p>
+                <p className="text-xs mt-0.5 opacity-80">
+                  Refresh to retry. If this keeps happening, contact support.
+                </p>
+              </div>
+            </div>
+          )}
           {needsAttention > 0 && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
               <AlertTriangle

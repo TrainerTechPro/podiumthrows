@@ -16,7 +16,53 @@ const TYPE_LABELS: Record<string, string> = {
   CUSTOM: "Custom",
 };
 
-const TYPE_BADGE_VARIANT: Record<string, "primary" | "success" | "warning" | "info" | "neutral" | "danger"> = {
+/**
+ * Compact completion indicator that collapses three numbers (completed /
+ * assigned / overdue) into one pill. Color carries the urgency:
+ *   - muted gray when every assignment is done
+ *   - amber when any are outstanding
+ *   - red when any are past due
+ */
+function CompletionPill({
+  completed,
+  total,
+  overdue,
+}: {
+  completed: number;
+  total: number;
+  overdue: number;
+}) {
+  const allDone = completed >= total;
+  const tone =
+    overdue > 0
+      ? "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400"
+      : allDone
+        ? "border-[var(--card-border)] bg-surface-100 dark:bg-surface-800 text-muted"
+        : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
+
+  return (
+    <div
+      className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-semibold tabular-nums ${tone}`}
+      title={
+        overdue > 0
+          ? `${completed} of ${total} completed · ${overdue} overdue`
+          : `${completed} of ${total} completed`
+      }
+    >
+      <span>
+        {completed} / {total}
+      </span>
+      {overdue > 0 && (
+        <span className="text-[10px] font-bold uppercase tracking-wider">{overdue} late</span>
+      )}
+    </div>
+  );
+}
+
+const TYPE_BADGE_VARIANT: Record<
+  string,
+  "primary" | "success" | "warning" | "info" | "neutral" | "danger"
+> = {
   ONBOARDING: "info",
   ASSESSMENT: "warning",
   CHECK_IN: "primary",
@@ -119,13 +165,9 @@ export default async function QuestionnairesPage() {
                     <Badge variant={q.status === "published" ? "success" : "neutral"}>
                       {q.status === "published" ? "Published" : "Draft"}
                     </Badge>
-                    {q.scoringEnabled && (
-                      <Badge variant="info">Scored</Badge>
-                    )}
+                    {q.scoringEnabled && <Badge variant="info">Scored</Badge>}
                   </div>
-                  {q.description && (
-                    <p className="text-sm text-muted truncate">{q.description}</p>
-                  )}
+                  {q.description && <p className="text-sm text-muted truncate">{q.description}</p>}
                 </div>
 
                 <div className="flex items-center gap-6 text-sm text-muted shrink-0">
@@ -137,10 +179,18 @@ export default async function QuestionnairesPage() {
                     <div className="font-semibold text-[var(--foreground)]">{q.responseCount}</div>
                     <div className="text-[10px]">responses</div>
                   </div>
-                  <div className="text-center hidden sm:block">
-                    <div className="font-semibold text-[var(--foreground)]">{q.assignmentCount}</div>
-                    <div className="text-[10px]">assigned</div>
-                  </div>
+                  {q.assignmentCount > 0 ? (
+                    <CompletionPill
+                      completed={q.completedCount}
+                      total={q.assignmentCount}
+                      overdue={q.overdueCount}
+                    />
+                  ) : (
+                    <div className="text-center hidden sm:block">
+                      <div className="font-semibold text-[var(--foreground)]">0</div>
+                      <div className="text-[10px]">assigned</div>
+                    </div>
+                  )}
                 </div>
 
                 <svg

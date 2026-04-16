@@ -2080,6 +2080,10 @@ export type QuestionnaireListItem = {
   scoringEnabled: boolean;
   responseCount: number;
   assignmentCount: number;
+  /** Assignments with completedAt set. Bounded above by assignmentCount. */
+  completedCount: number;
+  /** Incomplete assignments past their dueDate. Null-due assignments are never overdue. */
+  overdueCount: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -2098,6 +2102,34 @@ export async function getCoachQuestionnaires(coachId: string): Promise<Questionn
     orderBy: { updatedAt: "desc" },
   });
 
+  // Completed + overdue counts can't come from a single include-count query
+  // because Prisma doesn't support filtered relation counts in _count yet.
+  // Two parallel groupBy calls scoped to this coach's questionnaire IDs
+  // keep the total query count bounded (3 regardless of roster size).
+  const qIds = questionnaires.map((q) => q.id);
+  const now = new Date();
+  const [completedGroups, overdueGroups] = qIds.length
+    ? await Promise.all([
+        prisma.questionnaireAssignment.groupBy({
+          by: ["questionnaireId"],
+          where: { questionnaireId: { in: qIds }, completedAt: { not: null } },
+          _count: { _all: true },
+        }),
+        prisma.questionnaireAssignment.groupBy({
+          by: ["questionnaireId"],
+          where: {
+            questionnaireId: { in: qIds },
+            completedAt: null,
+            dueDate: { not: null, lt: now },
+          },
+          _count: { _all: true },
+        }),
+      ])
+    : [[], []];
+
+  const completedMap = new Map(completedGroups.map((g) => [g.questionnaireId, g._count._all]));
+  const overdueMap = new Map(overdueGroups.map((g) => [g.questionnaireId, g._count._all]));
+
   return questionnaires.map((q) => ({
     id: q.id,
     title: q.title,
@@ -2110,6 +2142,8 @@ export async function getCoachQuestionnaires(coachId: string): Promise<Questionn
     scoringEnabled: q.scoringEnabled,
     responseCount: q._count.responses,
     assignmentCount: q._count.assignments,
+    completedCount: completedMap.get(q.id) ?? 0,
+    overdueCount: overdueMap.get(q.id) ?? 0,
     createdAt: q.createdAt.toISOString(),
     updatedAt: q.updatedAt.toISOString(),
   }));
