@@ -7,7 +7,7 @@ import { Button } from "@/components";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { Tabs, TabList, TabTrigger } from "@/components/ui/Tabs";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { WeekCalendar } from "./_week-calendar";
+import { WeekCalendar, type CompetitionMarker } from "./_week-calendar";
 import { SessionSidebar } from "./_session-sidebar";
 import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 import Link from "next/link";
@@ -52,6 +52,7 @@ export default function ProgrammingPage() {
   const [weekStart, setWeekStart] = useState<Date>(() => getMonday(new Date()));
   const [sessions, setSessions] = useState<ProgrammedSessionWithDetails[]>([]);
   const [groups, setGroups] = useState<EventGroupItem[]>([]);
+  const [competitions, setCompetitions] = useState<CompetitionMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeGroupFilter, setActiveGroupFilter] = useState<string | null>(null);
 
@@ -80,6 +81,49 @@ export default function ProgrammingPage() {
     }
   }, []);
 
+  /**
+   * Upcoming competitions power the taper-phase tints and day-header chips.
+   * Fetched independently from sessions because their cadence differs:
+   * competitions change on meet-creation (infrequent), sessions change on
+   * every programming edit.
+   */
+  const fetchCompetitions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/coach/competitions?filter=upcoming");
+      if (!res.ok) throw new Error("Failed to load competitions");
+      const json = await res.json();
+      // API groups by meet; flatten to per-athlete markers for the calendar.
+      type MeetEntry = {
+        id: string;
+        athleteId: string;
+        athleteName: string;
+        event: string;
+      };
+      type Meet = {
+        name: string;
+        date: string;
+        priority: string;
+        entries: MeetEntry[];
+      };
+      const meets = (json.data ?? []) as Meet[];
+      const flat: CompetitionMarker[] = meets.flatMap((m) =>
+        m.entries.map((e) => ({
+          id: e.id,
+          date: m.date,
+          meetName: m.name,
+          priority: m.priority,
+          athleteId: e.athleteId,
+          athleteName: e.athleteName,
+          event: e.event,
+        }))
+      );
+      setCompetitions(flat);
+    } catch (err) {
+      console.error("[programming] fetch competitions error:", err);
+      setCompetitions([]);
+    }
+  }, []);
+
   const fetchGroups = useCallback(async () => {
     try {
       const res = await fetch("/api/coach/event-groups");
@@ -94,7 +138,8 @@ export default function ProgrammingPage() {
   /* ── Effects ───────────────────────────────────────────────────────── */
   useEffect(() => {
     fetchGroups();
-  }, [fetchGroups]);
+    fetchCompetitions();
+  }, [fetchGroups, fetchCompetitions]);
 
   useEffect(() => {
     setLoading(true);
@@ -244,6 +289,7 @@ export default function ProgrammingPage() {
       ) : (
         <WeekCalendar
           sessions={sessions}
+          competitions={competitions}
           weekStart={weekStart}
           onClickDay={handleClickDay}
           onClickSession={handleClickSession}
