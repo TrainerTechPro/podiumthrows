@@ -226,7 +226,7 @@ export default function ProgrammingPage() {
           </Button>
 
           <h1 className="text-lg sm:text-xl font-heading font-bold text-[var(--foreground)] whitespace-nowrap">
-            {formatWeekLabel(weekStart)}
+            <time dateTime={toDateStr(weekStart)}>{formatWeekLabel(weekStart)}</time>
           </h1>
 
           <Button variant="ghost" size="sm" onClick={goToNextWeek} aria-label="Next week">

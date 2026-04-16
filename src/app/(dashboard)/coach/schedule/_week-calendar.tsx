@@ -210,14 +210,15 @@ export function WeekCalendar({
               )}
 
               {/* Day header */}
-              <div
+              <time
+                dateTime={day.dateStr}
                 className={cn(
-                  "px-2.5 py-2 text-xs font-semibold uppercase tracking-wider border-b border-[var(--card-border)]",
+                  "block px-2.5 py-2 text-xs font-semibold uppercase tracking-wider border-b border-[var(--card-border)]",
                   day.isToday ? "text-primary-600 dark:text-primary-400" : "text-muted"
                 )}
               >
                 {day.dayLabel}
-              </div>
+              </time>
 
               {/* Session list */}
               <div className="flex-1 p-1.5 space-y-1.5">
