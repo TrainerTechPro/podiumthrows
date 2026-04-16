@@ -258,16 +258,11 @@ function TopBar({
 
       {/* Mode toggle — always visible in header when training enabled */}
       {user.trainingEnabled && (
-        <ModeToggle
-          activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"}
-        />
+        <ModeToggle activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"} />
       )}
 
       {/* Notification bell */}
-      <NotificationBell
-        initialCount={notificationCount ?? 0}
-        role={user.role}
-      />
+      <NotificationBell initialCount={notificationCount ?? 0} role={user.role} />
 
       {/* Theme toggle */}
       <ThemeToggle />
@@ -308,7 +303,8 @@ export function DashboardLayout({
         : ATHLETE_NAV_SECTIONS);
 
   // Inject unread badge onto the Notifications nav item (both roles)
-  const notifHref = user.role === "COACH" || isTrainingMode ? "/coach/notifications" : "/athlete/notifications";
+  const notifHref =
+    user.role === "COACH" || isTrainingMode ? "/coach/notifications" : "/athlete/notifications";
   const sections =
     notificationCount && notificationCount > 0
       ? baseSections.map((section) => ({
@@ -329,8 +325,6 @@ export function DashboardLayout({
           footer={<SidebarFooter user={user} />}
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
-          trainingEnabled={user.trainingEnabled}
-          activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"}
         />
 
         {/* Cmd+K command palette */}

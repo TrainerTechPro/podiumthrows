@@ -4,7 +4,6 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ModeToggle } from "@/components/ui/ModeToggle";
 import {
   LayoutDashboard,
   Users,
@@ -57,10 +56,6 @@ export interface SidebarProps {
   open: boolean;
   onClose: () => void;
   className?: string;
-  /** Whether the coach has enabled training mode */
-  trainingEnabled?: boolean;
-  /** Current active mode */
-  activeMode?: "COACH" | "TRAINING";
 }
 
 /* ─── Nav Item ───────────────────────────────────────────────────────────── */
@@ -185,16 +180,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
 
 /* ─── Sidebar ────────────────────────────────────────────────────────────── */
 
-export function Sidebar({
-  sections,
-  header,
-  footer,
-  open,
-  onClose,
-  className,
-  trainingEnabled,
-  activeMode,
-}: SidebarProps) {
+export function Sidebar({ sections, header, footer, open, onClose, className }: SidebarProps) {
   return (
     <>
       {/* Mobile overlay */}
@@ -231,12 +217,8 @@ export function Sidebar({
           </div>
         )}
 
-        {/* Mode toggle (coach training mode) */}
-        {trainingEnabled && activeMode && (
-          <div className="px-4 pt-3 shrink-0">
-            <ModeToggle activeMode={activeMode} />
-          </div>
-        )}
+        {/* Mode toggle lives in the header (DashboardLayout) — not rendered
+            here to avoid two copies of the same control on desktop. */}
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto custom-scrollbar py-3 px-3 space-y-5">
