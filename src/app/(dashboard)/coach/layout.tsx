@@ -4,12 +4,9 @@ import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
 import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getUnreadCount } from "@/lib/notifications";
+import { BetaFeedbackButton } from "@/components/feedback/BetaFeedbackButton";
 
-export default async function CoachLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function CoachLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session || session.role !== "COACH") redirect("/login");
 
@@ -38,6 +35,7 @@ export default async function CoachLayout({
   return (
     <DashboardLayout user={user} notificationCount={notificationCount}>
       {children}
+      <BetaFeedbackButton />
     </DashboardLayout>
   );
 }

@@ -5,7 +5,7 @@ import { DashboardLayout, type DashboardUser } from "@/components";
 import { getUnreadCount } from "@/lib/notifications";
 import { WhoopAutoSync } from "./_whoop-auto-sync";
 import { OuraAutoSync } from "./_oura-auto-sync";
-
+import { BetaFeedbackButton } from "@/components/feedback/BetaFeedbackButton";
 
 export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -51,6 +51,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
       {hasWhoop && <WhoopAutoSync />}
       {hasOura && <OuraAutoSync />}
       {children}
+      <BetaFeedbackButton />
     </DashboardLayout>
   );
 }

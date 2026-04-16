@@ -186,6 +186,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   codexEntries        CodexEntry[]
   pushSubscriptions   PushSubscription[]
+  betaFeedback        BetaFeedback[]
 
   @@index([email])
   @@index([role])
@@ -2873,4 +2874,37 @@ model TeamAnnouncement {
   @@index([coachId, createdAt])
   @@index([coachId, pinned])
   @@index([targetType, targetId])
+}
+
+/// Beta-tester feedback widget submissions. Distinct from coach-to-athlete
+/// feedback notes (which live on SessionLog / ThrowLog). Each row captures
+/// one click of the floating feedback button plus auto-collected debug
+/// context. Screenshot (optional) is stored in R2; `screenshotKey` is the
+/// object key, rendered via getPublicUrl().
+model BetaFeedback {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userRole      String // "COACH" | "ATHLETE"
+
+  /// "BUG" | "CONFUSION" | "FEATURE" | "PRAISE"
+  type String
+  body String @db.Text
+
+  /// Auto-captured context at submit time.
+  url           String
+  userAgent     String?
+  viewport      String? // e.g. "1920x1080"
+  /// Last ~10 console errors buffered by the client widget.
+  consoleErrors Json?
+
+  /// R2 object key for optional screenshot upload. null when no image attached.
+  screenshotKey String?
+
+  /// "NEW" | "TRIAGED" | "RESOLVED" | "WONTFIX"
+  status    String   @default("NEW")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([status, createdAt])
 }
