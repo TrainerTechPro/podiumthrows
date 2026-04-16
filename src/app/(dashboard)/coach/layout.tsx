@@ -5,6 +5,7 @@ import { DashboardLayout, type DashboardUser } from "@/components";
 import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getUnreadCount } from "@/lib/notifications";
 import { BetaFeedbackButton } from "@/components/feedback/BetaFeedbackButton";
+import { WhatsNewModal } from "@/components/feedback/WhatsNewModal";
 
 export default async function CoachLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -36,6 +37,7 @@ export default async function CoachLayout({ children }: { children: React.ReactN
     <DashboardLayout user={user} notificationCount={notificationCount}>
       {children}
       <BetaFeedbackButton />
+      <WhatsNewModal />
     </DashboardLayout>
   );
 }

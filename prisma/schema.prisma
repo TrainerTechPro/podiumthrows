@@ -181,6 +181,10 @@ model User {
 
   activeMode String @default("COACH")
 
+  /// Slug of the most recent Release this user has acknowledged via the
+  /// what's-new modal. Null = never seen any release.
+  lastSeenReleaseSlug String?
+
   coachProfile        CoachProfile?
   athleteProfile      AthleteProfile?
   passwordResetTokens PasswordResetToken[]
@@ -2907,4 +2911,28 @@ model BetaFeedback {
 
   @@index([userId])
   @@index([status, createdAt])
+}
+
+/// User-facing release notes shown once in a "what's new" modal the first
+/// time the user opens the app after publishedAt. Distinct from the
+/// Notion Release Log, which is internal and wraps the whole commit range.
+/// These entries are curated for the UX audience and limited to 3-5
+/// bullets at most.
+model Release {
+  id          String   @id @default(cuid())
+  /// URL-safe identifier, e.g. "2026-04-16-beta-feedback". Also the value
+  /// written to User.lastSeenReleaseSlug on acknowledgement.
+  slug        String   @unique
+  /// "COACH" | "ATHLETE" | "BOTH" — controls who sees the modal.
+  audience    String
+  title       String
+  /// JSON array of strings. Each entry is one bullet in the modal body.
+  bullets     Json
+  /// Optional call-to-action. Both must be set for the button to render.
+  ctaText     String?
+  ctaHref     String?
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([audience, publishedAt])
 }

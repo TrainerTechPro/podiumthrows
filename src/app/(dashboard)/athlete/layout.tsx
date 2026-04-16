@@ -6,6 +6,7 @@ import { getUnreadCount } from "@/lib/notifications";
 import { WhoopAutoSync } from "./_whoop-auto-sync";
 import { OuraAutoSync } from "./_oura-auto-sync";
 import { BetaFeedbackButton } from "@/components/feedback/BetaFeedbackButton";
+import { WhatsNewModal } from "@/components/feedback/WhatsNewModal";
 
 export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -52,6 +53,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
       {hasOura && <OuraAutoSync />}
       {children}
       <BetaFeedbackButton />
+      <WhatsNewModal />
     </DashboardLayout>
   );
 }
