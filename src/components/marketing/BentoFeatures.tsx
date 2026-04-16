@@ -9,15 +9,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import { useRef, useCallback, useEffect, useState } from "react";
-import {
-  CirclePlus,
-  Target,
-  RefreshCw,
-  PenLine,
-  Grid3x3,
-  Zap,
-  BarChart3,
-} from "lucide-react";
+import { CirclePlus, Target, RefreshCw, PenLine, Grid3x3, Zap, BarChart3 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 import MonoLabel from "./MonoLabel";
@@ -193,7 +185,9 @@ function BentoCard({ card, spotlightEnabled }: BentoCardProps) {
         padding: 28,
         position: "relative",
         overflow: "hidden",
-        transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.4s cubic-bezier(0.16,1,0.3,1)",
+        boxShadow: "var(--landing-neo-raised)",
+        transition:
+          "transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.4s cubic-bezier(0.16,1,0.3,1)",
       }}
     >
       {/* Corner marks on featured card */}
@@ -213,7 +207,8 @@ function BentoCard({ card, spotlightEnabled }: BentoCardProps) {
             position: "absolute",
             inset: 0,
             opacity: 0,
-            background: "radial-gradient(circle 250px at var(--mx, 50%) var(--my, 50%), var(--landing-amber-glow), transparent)",
+            background:
+              "radial-gradient(circle 250px at var(--mx, 50%) var(--my, 50%), var(--landing-amber-glow), transparent)",
             transition: "opacity 0.3s",
             pointerEvents: "none",
             zIndex: 0,
@@ -322,23 +317,15 @@ export default function BentoFeatures() {
               margin: 0,
             }}
           >
-            Every feature designed specifically for throws coaches. Not adapted
-            from a gym app.
+            Every feature designed specifically for throws coaches. Not adapted from a gym app.
           </p>
         </div>
       </ScrollReveal>
 
       {/* ── Bento grid ─────────────────────────────────────────────────── */}
-      <div
-        className="grid grid-cols-1 md:grid-cols-12"
-        style={{ gap: 12 }}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-12" style={{ gap: 12 }}>
         {CARDS.map((card, i) => (
-          <ScrollReveal
-            key={card.title}
-            delay={i * 0.03}
-            className={card.span}
-          >
+          <ScrollReveal key={card.title} delay={i * 0.03} className={card.span}>
             <BentoCard card={card} spotlightEnabled={spotlightEnabled} />
           </ScrollReveal>
         ))}
@@ -364,7 +351,7 @@ export default function BentoFeatures() {
 
         .bento-card:hover {
           transform: translateY(-3px);
-          box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+          box-shadow: var(--landing-neo-raised-hover);
           border-color: var(--landing-border-light);
         }
         .bento-card:hover .bento-spotlight {

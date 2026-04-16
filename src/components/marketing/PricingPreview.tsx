@@ -138,8 +138,8 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         overflow: "hidden",
         transform: tier.featured ? "translateY(-8px)" : "none",
         boxShadow: tier.featured
-          ? "0 24px 64px rgba(0,0,0,0.35), 0 0 40px rgba(245,158,11,0.12)"
-          : "none",
+          ? "var(--landing-neo-raised), 0 24px 64px rgba(0,0,0,0.35), 0 0 40px rgba(245,158,11,0.2)"
+          : "var(--landing-neo-raised)",
         transition: "0.4s cubic-bezier(0.16,1,0.3,1)",
         transitionProperty: "transform, box-shadow",
       }}
@@ -318,8 +318,7 @@ export default function PricingPreview() {
               margin: 0,
             }}
           >
-            Every plan includes session validation, performance tracking, and
-            practice tools.
+            Every plan includes session validation, performance tracking, and practice tools.
           </p>
         </div>
       </ScrollReveal>
@@ -376,12 +375,12 @@ export default function PricingPreview() {
         /* Hover lift */
         .pricing-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+          box-shadow: var(--landing-neo-raised-hover);
         }
 
         .pricing-card--featured:hover {
           transform: translateY(-12px);
-          box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 48px rgba(245,158,11,0.18);
+          box-shadow: var(--landing-neo-raised-hover), 0 0 48px rgba(245,158,11,0.22);
         }
 
         @media (prefers-reduced-motion: reduce) {

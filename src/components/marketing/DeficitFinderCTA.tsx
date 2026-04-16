@@ -130,6 +130,7 @@ export default function DeficitFinderCTA() {
           borderRadius: 20,
           position: "relative",
           overflow: "hidden",
+          boxShadow: "var(--landing-neo-raised)",
         }}
       >
         {/* Diagonal beam */}
@@ -155,10 +156,7 @@ export default function DeficitFinderCTA() {
           {/* ── Left side ──────────────────────────────────────────────── */}
           <div>
             {/* Section label */}
-            <div
-              className="flex items-center"
-              style={{ gap: 12, marginBottom: 20 }}
-            >
+            <div className="flex items-center" style={{ gap: 12, marginBottom: 20 }}>
               <div
                 aria-hidden="true"
                 style={{
@@ -208,8 +206,8 @@ export default function DeficitFinderCTA() {
                 margin: "12px 0 0",
               }}
             >
-              Answer a few questions about your training sequence and we&apos;ll
-              identify exactly where your transfer is breaking down — for free.
+              Answer a few questions about your training sequence and we&apos;ll identify exactly
+              where your transfer is breaking down — for free.
             </p>
 
             {/* CTA button */}
@@ -226,20 +224,17 @@ export default function DeficitFinderCTA() {
                   padding: "14px 32px",
                   borderRadius: 10,
                   textDecoration: "none",
-                  transition:
-                    "background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
+                  transition: "background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.background = "#d97706";
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translateY(-1px)";
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
                     "0 8px 24px rgba(245,158,11,0.35)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.background = "#f59e0b";
-                  (e.currentTarget as HTMLElement).style.transform =
-                    "translateY(0)";
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                   (e.currentTarget as HTMLElement).style.boxShadow = "none";
                 }}
               >

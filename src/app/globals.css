@@ -52,6 +52,18 @@
     --landing-text-dim: #2a2a34;
     --landing-amber-glow: rgba(255,200,0,0.07);
     --landing-amber-glow-strong: rgba(255,200,0,0.14);
+
+    /* Landing neomorphic shadows — tuned for --landing-bg #06060a. Base is
+       near-black so depth leans on a dense black shadow; highlight is a very
+       faint gold-tinted glow to feel branded rather than sterile white. */
+    --landing-neo-highlight: rgba(255, 200, 0, 0.025);
+    --landing-neo-depth: rgba(0, 0, 0, 0.8);
+    --landing-neo-raised:
+      -5px -5px 14px var(--landing-neo-highlight),
+      6px 6px 20px var(--landing-neo-depth);
+    --landing-neo-raised-hover:
+      -6px -6px 18px var(--landing-neo-highlight),
+      10px 14px 36px var(--landing-neo-depth);
   }
 
   .dark {
