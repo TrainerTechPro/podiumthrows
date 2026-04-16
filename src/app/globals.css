@@ -187,6 +187,28 @@
     box-shadow: var(--neo-inset-sm);
   }
 
+  /* Mode toggle — responsive sizing + tuned shadow strength so the
+     amber thumb doesn't overpower a crowded mobile header. Desktop
+     keeps the 36px thumb with the strong glow that reads from across
+     the dashboard; mobile shrinks to 32px with the softer glow so it
+     sits politely among the other header icons. Track uses
+     --surface-overlay (one shade lighter than --card-bg) so the
+     inset shadow actually reads as carved at phone distance. */
+  .mode-toggle-track {
+    --mt-cell: 44px;
+    --mt-thumb: 36px;
+    --mt-inset: 4px;
+    --mt-thumb-glow: var(--neo-glow-primary-strong);
+    background: var(--surface-overlay);
+  }
+  @media (max-width: 640px) {
+    .mode-toggle-track {
+      --mt-thumb: 32px;
+      --mt-inset: 6px;
+      --mt-thumb-glow: var(--neo-glow-primary);
+    }
+  }
+
   /* Neomorphic switch primitives. Pair .neo-switch (the track) with
      .neo-switch-thumb (the knob). Add .is-on to the track when active
      to flip the track to brand accent + sink the knob. */

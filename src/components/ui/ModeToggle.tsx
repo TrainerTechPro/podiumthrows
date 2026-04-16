@@ -20,11 +20,11 @@ const MODES: { value: Mode; label: string; path: string; Icon: LucideIcon }[] = 
   { value: "TRAINING", label: "Training mode", path: "/athlete/dashboard", Icon: Dumbbell },
 ];
 
-/* Geometry — tuned once, referenced everywhere so the thumb, click cells,
-   and dim background icons stay aligned. */
-const CELL = 44; // button hit size (w-11 h-11)
-const THUMB = 36; // raised amber pill size (w-9 h-9)
-const INSET = (CELL - THUMB) / 2; // 4px padding inside the track
+/* Geometry — CELL is the click target and stays 44px (iOS hit minimum).
+   Thumb size + inset are driven by CSS custom properties on
+   .mode-toggle-track so we can shrink on mobile without re-rendering.
+   The slide distance equals CELL so framer-motion still gets a number. */
+const CELL = 44;
 
 export function ModeToggle({ activeMode, className }: ModeToggleProps) {
   const router = useRouter();
@@ -94,7 +94,7 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
       role="radiogroup"
       aria-label="Workspace mode"
       className={cn(
-        "relative inline-flex items-center rounded-full bg-[var(--card-bg)] neo-inset",
+        "mode-toggle-track relative inline-flex items-center rounded-full neo-inset",
         className
       )}
       style={{ height: CELL, width: CELL * 2 }}
@@ -120,16 +120,17 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
       </div>
 
       {/* Sliding amber thumb — neomorphic raised + soft gold glow. Rides the
-          optimistic state, not the prop. */}
+          optimistic state, not the prop. Size and glow strength come from
+          the track's CSS vars so they respond to the mobile breakpoint. */}
       <motion.div
         aria-hidden="true"
         className="absolute rounded-full bg-[var(--gold)] flex items-center justify-center"
         style={{
-          width: THUMB,
-          height: THUMB,
-          top: INSET,
-          left: INSET,
-          boxShadow: "var(--neo-raised-sm), var(--neo-glow-primary-strong)",
+          width: "var(--mt-thumb)",
+          height: "var(--mt-thumb)",
+          top: "var(--mt-inset)",
+          left: "var(--mt-inset)",
+          boxShadow: "var(--neo-raised-sm), var(--mt-thumb-glow)",
         }}
         animate={{ x: activeIndex * CELL }}
         transition={springTransition}
