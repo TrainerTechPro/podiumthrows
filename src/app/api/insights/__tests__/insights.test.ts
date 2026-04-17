@@ -45,7 +45,7 @@ describe("GET /api/insights", () => {
     expect(body.data.insights).toHaveLength(3);
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { athleteId: "a1" },
+        where: expect.objectContaining({ athleteId: "a1" }),
         orderBy: { computedAt: "desc" },
       })
     );
@@ -63,5 +63,52 @@ describe("GET /api/insights", () => {
     const req = new NextRequest("http://t/api/insights");
     const res = await GET(req);
     expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/insights (includeDismissed)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("filters out dismissed rows by default in mode=all", async () => {
+    mocks.findMany.mockResolvedValue([{ id: "i1" }]);
+    const req = new NextRequest("http://t/api/insights?athleteId=a1&mode=all");
+    await GET(req);
+
+    const args = mocks.findMany.mock.calls[0][0];
+    expect(args.where).toMatchObject({ athleteId: "a1", dismissedAt: null });
+  });
+
+  it("returns all rows when includeDismissed=true in mode=all", async () => {
+    mocks.findMany.mockResolvedValue([{ id: "i1" }, { id: "i2" }]);
+    const req = new NextRequest(
+      "http://t/api/insights?athleteId=a1&mode=all&includeDismissed=true"
+    );
+    await GET(req);
+
+    const args = mocks.findMany.mock.calls[0][0];
+    expect(args.where).toEqual({ athleteId: "a1" });
+    expect(args.where.dismissedAt).toBeUndefined();
+  });
+
+  it("includes dismissed filter in raw SQL for mode=latest by default", async () => {
+    mocks.queryRaw.mockResolvedValue([]);
+    const req = new NextRequest("http://t/api/insights?athleteId=a1&mode=latest");
+    await GET(req);
+
+    const sqlArg = mocks.queryRaw.mock.calls[0][0];
+    const combined = Array.isArray(sqlArg.strings) ? sqlArg.strings.join("") : String(sqlArg);
+    expect(combined).toContain(`dismissedAt`);
+  });
+
+  it("omits dismiss filter from raw SQL when includeDismissed=true", async () => {
+    mocks.queryRaw.mockResolvedValue([]);
+    const req = new NextRequest(
+      "http://t/api/insights?athleteId=a1&mode=latest&includeDismissed=true"
+    );
+    await GET(req);
+
+    const sqlArg = mocks.queryRaw.mock.calls[0][0];
+    const combined = Array.isArray(sqlArg.strings) ? sqlArg.strings.join("") : String(sqlArg);
+    expect(combined).not.toContain(`dismissedAt`);
   });
 });

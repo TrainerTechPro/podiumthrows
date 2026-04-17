@@ -1,3 +1,4 @@
+// src/app/api/insights/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { athleteId, mode, category, limit } = parsed.data;
+    const { athleteId, mode, category, limit, includeDismissed } = parsed.data;
 
     if (
       !(await canAccessAthlete(
@@ -39,17 +40,24 @@ export async function GET(request: NextRequest) {
       const categoryFilter = category
         ? Prisma.sql`AND "category"::text = ${category}`
         : Prisma.empty;
+      const dismissFilter = includeDismissed ? Prisma.empty : Prisma.sql`AND "dismissedAt" IS NULL`;
+
       insights = await prisma.$queryRaw<unknown[]>(Prisma.sql`
         SELECT DISTINCT ON ("athleteId", "category", "metric") *
         FROM "AthleteInsight"
         WHERE "athleteId" = ${athleteId}
           ${categoryFilter}
+          ${dismissFilter}
         ORDER BY "athleteId", "category", "metric", "computedAt" DESC
         LIMIT ${limit}
       `);
     } else {
       insights = await prisma.athleteInsight.findMany({
-        where: { athleteId, ...(category ? { category } : {}) },
+        where: {
+          athleteId,
+          ...(category ? { category } : {}),
+          ...(includeDismissed ? {} : { dismissedAt: null }),
+        },
         orderBy: { computedAt: "desc" },
         take: limit,
       });
