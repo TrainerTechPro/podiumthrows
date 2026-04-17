@@ -278,3 +278,24 @@ describe("LegacyPromoteSchema", () => {
     expect(r).toEqual({});
   });
 });
+
+describe("CompetitionThrowUpdateSchema", () => {
+  it("accepts a notes-only body", () => {
+    const r = S.CompetitionThrowUpdateSchema.parse({ notes: "great technique" });
+    expect(r).toMatchObject({ notes: "great technique" });
+  });
+
+  it("accepts a full MARK update", () => {
+    const r = S.CompetitionThrowUpdateSchema.parse({
+      round: "PRELIM",
+      attemptInRound: 2,
+      resultType: "MARK",
+      distance: 18.5,
+    });
+    expect(r).toMatchObject({ resultType: "MARK", distance: 18.5 });
+  });
+
+  it("still rejects MARK without distance when resultType IS provided", () => {
+    expect(() => S.CompetitionThrowUpdateSchema.parse({ resultType: "MARK" })).toThrow();
+  });
+});

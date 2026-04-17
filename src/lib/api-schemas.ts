@@ -280,10 +280,38 @@ export const CompetitionThrowCreateSchema = z.intersection(
   z.intersection(ThrowResultSchema, ThrowOptionalsSchema)
 );
 
-export const CompetitionThrowUpdateSchema = z.intersection(
-  ThrowSlotSchema.partial(),
-  z.intersection(ThrowResultSchema, ThrowOptionalsSchema.partial())
-);
+// PATCH allows omitting resultType entirely (e.g., notes-only edit),
+// but if present, it must fully satisfy one of MARK/FOUL/PASS branches.
+export const CompetitionThrowUpdateSchema = z
+  .object({
+    // slot fields (all optional)
+    round: z.enum(["PRELIM", "FINALS"]).optional(),
+    attemptInRound: z.number().int().min(1).max(4).optional(),
+    // result fields (all optional at the top level)
+    resultType: z.enum(["MARK", "FOUL", "PASS"]).optional(),
+    distance: z.number().positive().optional(),
+    foulType: z.enum(["RING", "SECTOR"]).optional(),
+    // optionals
+    videoUrl: z.string().url().nullable().optional(),
+    notes: z.string().max(2000).nullable().optional(),
+    wireLength: z.enum(["FULL", "THREE_QUARTER", "HALF"]).nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.resultType === "MARK" && data.distance == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["distance"],
+        message: "distance is required when resultType is MARK",
+      });
+    }
+    if (data.resultType === "FOUL" && data.foulType == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["foulType"],
+        message: "foulType is required when resultType is FOUL",
+      });
+    }
+  });
 
 // ── Legacy promotion ────────────────────────────────────────────────────
 // POST body is empty — the competition ID comes from the URL.
