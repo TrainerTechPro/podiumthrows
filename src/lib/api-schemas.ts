@@ -1119,3 +1119,16 @@ export function parseQuery<T>(request: Request, schema: z.ZodType<T>): T | NextR
 
   return result.data;
 }
+
+// ── Insights ────────────────────────────────────────────────────────────
+
+export const InsightsListQuerySchema = z.object({
+  athleteId: z.string().min(1),
+  mode: z.enum(["latest", "all"]).optional().default("latest"),
+  category: z.enum(["TRAINING_PATTERN", "LIFT_THROW", "READINESS_COMPETITION"]).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+});
+
+export const InsightComputeSchema = z.object({
+  athleteId: z.string().min(1, "Athlete ID is required"),
+});
