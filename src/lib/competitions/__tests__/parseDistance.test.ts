@@ -35,12 +35,18 @@ describe("parseDistance", () => {
     expect(parseDistance("abc")).toBeNull();
     expect(parseDistance("-5")).toBeNull();
     expect(parseDistance("60'15\"")).toBeNull(); // inches >= 12 invalid
+    expect(parseDistance(`0'0"`)).toBeNull(); // zero-foot zero-inch is not a valid throw
   });
 });
 
 describe("formatDistance", () => {
   it("formats meters", () => {
     expect(formatDistance(18.42, "m")).toBe("18.42m");
+  });
+
+  it("preserves two decimal places for whole-meter values", () => {
+    expect(formatDistance(18, "m")).toBe("18.00m");
+    expect(formatDistance(18.5, "m")).toBe("18.50m");
   });
 
   it("formats feet as ft'in\"", () => {

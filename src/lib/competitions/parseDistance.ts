@@ -30,6 +30,7 @@ export function parseDistance(raw: string | null | undefined): ParsedDistance | 
     if (!Number.isFinite(ft) || !Number.isFinite(inches) || inches < 0 || inches >= IN_PER_FT)
       return null;
     const totalFt = ft + inches / IN_PER_FT;
+    if (totalFt <= 0) return null;
     return { meters: totalFt * M_PER_FT, unit: "ft", original: totalFt };
   }
 
@@ -55,7 +56,7 @@ export function parseDistance(raw: string | null | undefined): ParsedDistance | 
 export function formatDistance(meters: number | null | undefined, unit: "m" | "ft"): string {
   if (meters == null) return "—";
   if (unit === "m") {
-    return `${parseFloat(meters.toFixed(2))}m`;
+    return `${meters.toFixed(2)}m`;
   }
   // feet: convert and split into ft + inches
   const totalFt = meters / M_PER_FT;
