@@ -15,7 +15,23 @@ export async function POST(request: NextRequest) {
 
     const parsed = await parseBody(request, CompetitionCreateSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { athleteId, name, date, event, priority, result, notes } = parsed;
+    const {
+      athleteId,
+      name,
+      date,
+      event,
+      priority,
+      result,
+      notes,
+      implementWeightKg,
+      placeFinish,
+      meetStatus,
+      venueType,
+      weather,
+      windMps,
+      format,
+      madeFinals,
+    } = parsed;
 
     if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
@@ -30,6 +46,14 @@ export async function POST(request: NextRequest) {
         priority: priority || "B",
         result: result ?? null,
         notes: notes ?? null,
+        implementWeightKg: implementWeightKg ?? null,
+        placeFinish: placeFinish ?? null,
+        meetStatus: meetStatus ?? "COMPLETED",
+        venueType: venueType ?? null,
+        weather: weather ?? null,
+        windMps: windMps ?? null,
+        format: format ?? "THREE_PLUS_THREE",
+        madeFinals: madeFinals ?? null,
       },
     });
 
