@@ -91,12 +91,13 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
   return (
     <button
       type="button"
+      data-budge-target
       onClick={handleToggle}
       disabled={switching}
       aria-label={nextLabel}
       title={nextLabel}
       className={cn(
-        "relative flex items-center justify-center h-11 w-11 rounded-full",
+        "relative flex items-center justify-center h-9 w-9 rounded-full",
         "bg-[var(--gold)] text-surface-950",
         "transition-transform duration-150 active:scale-[0.94] hover:scale-[1.04]",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
@@ -114,7 +115,7 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
           transition={iconTransition}
           className="flex items-center justify-center"
         >
-          <Icon size={20} strokeWidth={2} aria-hidden="true" />
+          <Icon size={18} strokeWidth={2} aria-hidden="true" />
         </motion.span>
       </AnimatePresence>
     </button>

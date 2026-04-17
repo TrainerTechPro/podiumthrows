@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Chakra_Petch, DM_Sans, IBM_Plex_Mono } from "next/font/google";
+import Script from "next/script";
 import { cookies } from "next/headers";
 import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
 import { Analytics } from "@vercel/analytics/next";
@@ -53,8 +54,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
   openGraph: {
     title: "Podium Throws — Elite Throws Coaching Platform",
-    description:
-      "The coaching platform built for Olympic-level track & field throws coaches.",
+    description: "The coaching platform built for Olympic-level track & field throws coaches.",
     url: APP_URL,
     siteName: "Podium Throws",
     images: [{ url: `${APP_URL}/api/og`, width: 1200, height: 630, alt: "Podium Throws" }],
@@ -63,8 +63,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Podium Throws — Elite Throws Coaching Platform",
-    description:
-      "The coaching platform built for Olympic-level track & field throws coaches.",
+    description: "The coaching platform built for Olympic-level track & field throws coaches.",
     images: [`${APP_URL}/api/og`],
   },
 };
@@ -96,6 +95,41 @@ export default async function RootLayout({
         <ServiceWorkerProvider>{children}</ServiceWorkerProvider>
         <WebVitalsReporter />
         <Analytics />
+        <Script src="https://skills-pearl.vercel.app/budge.iife.js" strategy="afterInteractive" />
+        <div
+          data-budge={JSON.stringify({
+            slides: [
+              {
+                label: "size",
+                property: "width",
+                min: 24,
+                max: 56,
+                value: 36,
+                original: 44,
+                unit: "px",
+              },
+              {
+                label: "icon",
+                property: "font-size",
+                min: 12,
+                max: 28,
+                value: 18,
+                original: 20,
+                unit: "px",
+              },
+              {
+                label: "glow",
+                property: "box-shadow",
+                min: 0,
+                max: 30,
+                value: 14,
+                original: 14,
+                unit: "px",
+              },
+            ],
+          })}
+          hidden
+        />
       </body>
     </html>
   );
