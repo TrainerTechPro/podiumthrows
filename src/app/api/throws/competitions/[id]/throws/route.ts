@@ -3,10 +3,17 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
-import { parseBody, CompetitionThrowCreateSchema, CompetitionThrowUpdateSchema } from "@/lib/api-schemas";
+import {
+  parseBody,
+  CompetitionThrowCreateSchema,
+  CompetitionThrowUpdateSchema,
+} from "@/lib/api-schemas";
 import { validateThrowSlot } from "@/lib/competitions/validate";
 import { getAthletePRs } from "@/lib/data/personal-records";
 import { notifyCompetitionEvent } from "@/lib/competitions/notify";
+import { waitUntil } from "@vercel/functions";
+import { runInsights } from "@/lib/insights/runInsights";
+import { isMeetComplete } from "@/lib/insights/trigger";
 import type { EventType, ThrowRound, FoulType } from "@prisma/client";
 
 // Gender-default competition weights (matches personal-records.ts)
@@ -100,11 +107,7 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
 
     // Validate throw slot against competition format
     const format = (meet.format ?? "THREE_PLUS_THREE") as "THREE_PLUS_THREE" | "FOUR_STRAIGHT";
-    const slotError = validateThrowSlot(
-      format,
-      parsed.round as ThrowRound,
-      parsed.attemptInRound
-    );
+    const slotError = validateThrowSlot(format, parsed.round as ThrowRound, parsed.attemptInRound);
     if (slotError) {
       return NextResponse.json({ success: false, error: slotError }, { status: 400 });
     }
@@ -196,6 +199,32 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
       isFirstThrow,
     });
 
+    // Trigger post-competition insights if this throw completes the meet
+    const throwsAfter = [
+      ...meet.throws.filter(
+        (t): t is { round: "PRELIM" | "FINALS"; attemptInRound: number } =>
+          t.round === "PRELIM" || t.round === "FINALS"
+      ),
+      { round: parsed.round as "PRELIM" | "FINALS", attemptInRound: parsed.attemptInRound },
+    ];
+    if (
+      isMeetComplete(
+        (meet.format ?? "THREE_PLUS_THREE") as "THREE_PLUS_THREE" | "FOUR_STRAIGHT",
+        meet.madeFinals,
+        throwsAfter
+      )
+    ) {
+      waitUntil(
+        runInsights({
+          athleteId: meet.athleteId,
+          trigger: "MEET_COMPLETE",
+          triggerMeetId: meet.id,
+        }).catch((err) => {
+          logger.error("post-meet insights failed", { metadata: { meetId: meet.id }, error: err });
+        })
+      );
+    }
+
     return NextResponse.json({ success: true, data: { throwLog, prCelebration } });
   } catch (error) {
     logger.error("Create competition throw error", { context: "competitions/throws", error });
@@ -214,17 +243,32 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
     const { searchParams } = new URL(request.url);
     const throwLogId = searchParams.get("throwLogId");
     if (!throwLogId) {
-      return NextResponse.json({ success: false, error: "throwLogId is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "throwLogId is required" },
+        { status: 400 }
+      );
     }
 
     const meet = await prisma.throwsCompetition.findUnique({
       where: { id: competitionId },
-      select: { athleteId: true, event: true, format: true, name: true, athlete: { select: { gender: true } } },
+      select: {
+        athleteId: true,
+        event: true,
+        format: true,
+        name: true,
+        athlete: { select: { gender: true } },
+      },
     });
     if (!meet) {
       return NextResponse.json({ success: false, error: "Competition not found" }, { status: 404 });
     }
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", meet.athleteId))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        meet.athleteId
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -242,10 +286,12 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
     // Build the column diff — only include fields explicitly provided
     const data: Record<string, unknown> = {};
     if ("round" in parsed && parsed.round !== undefined) data.round = parsed.round;
-    if ("attemptInRound" in parsed && parsed.attemptInRound !== undefined) data.attemptInRound = parsed.attemptInRound;
+    if ("attemptInRound" in parsed && parsed.attemptInRound !== undefined)
+      data.attemptInRound = parsed.attemptInRound;
     if ("notes" in parsed && parsed.notes !== undefined) data.notes = parsed.notes;
     if ("videoUrl" in parsed && parsed.videoUrl !== undefined) data.videoUrl = parsed.videoUrl;
-    if ("wireLength" in parsed && parsed.wireLength !== undefined) data.wireLength = parsed.wireLength;
+    if ("wireLength" in parsed && parsed.wireLength !== undefined)
+      data.wireLength = parsed.wireLength;
 
     if ("resultType" in parsed && parsed.resultType !== undefined) {
       if (parsed.resultType === "MARK") {
@@ -311,7 +357,10 @@ export async function DELETE(request: NextRequest, ctx: RouteCtx) {
     const { searchParams } = new URL(request.url);
     const throwLogId = searchParams.get("throwLogId");
     if (!throwLogId) {
-      return NextResponse.json({ success: false, error: "throwLogId is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "throwLogId is required" },
+        { status: 400 }
+      );
     }
 
     const meet = await prisma.throwsCompetition.findUnique({
@@ -321,7 +370,13 @@ export async function DELETE(request: NextRequest, ctx: RouteCtx) {
     if (!meet) {
       return NextResponse.json({ success: false, error: "Competition not found" }, { status: 404 });
     }
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", meet.athleteId))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        meet.athleteId
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 

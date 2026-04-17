@@ -10,6 +10,8 @@ const mockThrowDelete = vi.fn();
 const mockCompUpdate = vi.fn();
 const mockGetAthletePRs = vi.fn();
 const mockNotify = vi.fn();
+const mockWaitUntil = vi.fn();
+const mockRunInsights = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   default: {
@@ -36,6 +38,16 @@ vi.mock("@/lib/data/personal-records", () => ({
 }));
 vi.mock("@/lib/competitions/notify", () => ({
   notifyCompetitionEvent: (...a: unknown[]) => mockNotify(...a),
+}));
+vi.mock("@vercel/functions", () => ({
+  waitUntil: (promise: Promise<unknown>) => {
+    mockWaitUntil(promise);
+    // Execute synchronously in tests so assertions work
+    return Promise.resolve(promise).catch(() => undefined);
+  },
+}));
+vi.mock("@/lib/insights/runInsights", () => ({
+  runInsights: (...a: unknown[]) => mockRunInsights(...a),
 }));
 
 import { GET, POST, PATCH, DELETE } from "../route";
@@ -86,7 +98,9 @@ describe("POST /api/throws/competitions/[id]/throws", () => {
     mockThrowCreate.mockResolvedValue({ id: "t1", distance: 18.42 });
     mockGetAthletePRs
       .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: null }] })
-      .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.42 } }] });
+      .mockResolvedValueOnce({
+        events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.42 } }],
+      });
 
     const req = new NextRequest("http://t", {
       method: "POST",
@@ -170,7 +184,9 @@ describe("PATCH /api/throws/competitions/[id]/throws", () => {
     mockThrowUpdate.mockResolvedValue({ id: "t1", distance: 19.0 });
     mockGetAthletePRs
       .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.0 } }] })
-      .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 19.0 } }] });
+      .mockResolvedValueOnce({
+        events: [{ event: "SHOT_PUT", competitionPR: { distance: 19.0 } }],
+      });
 
     const req = new NextRequest("http://t?throwLogId=t1", {
       method: "PATCH",
@@ -249,5 +265,126 @@ describe("DELETE /api/throws/competitions/[id]/throws", () => {
     const req = new NextRequest("http://t?throwLogId=t1", { method: "DELETE" });
     const res = await DELETE(req, ctx("m1"));
     expect(res.status).toBe(404);
+  });
+});
+
+describe("POST fires runInsights on meet-complete", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("fires runInsights when the final prelim completes a THREE_PLUS_THREE madeFinals=false meet", async () => {
+    mockCompFindUnique.mockResolvedValue({
+      id: "m1",
+      athleteId: "a1",
+      event: "SHOT_PUT",
+      implementWeightKg: null,
+      format: "THREE_PLUS_THREE",
+      madeFinals: false,
+      name: "Dual",
+      result: null,
+      throws: [
+        { round: "PRELIM", attemptInRound: 1 },
+        { round: "PRELIM", attemptInRound: 2 },
+      ],
+      athlete: { gender: "MALE" },
+    });
+    mockThrowCreate.mockResolvedValue({ id: "t3", distance: 18.0 });
+    mockGetAthletePRs
+      .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.0 } }] })
+      .mockResolvedValueOnce({
+        events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.0 } }],
+      });
+    mockRunInsights.mockResolvedValue({ persistedCount: 0, skippedAnalyzers: [] });
+
+    const req = new NextRequest("http://t", {
+      method: "POST",
+      body: JSON.stringify({
+        round: "PRELIM",
+        attemptInRound: 3,
+        resultType: "MARK",
+        distance: 18.0,
+      }),
+    });
+    const res = await POST(req, ctx("m1"));
+    expect(res.status).toBe(200);
+    expect(mockWaitUntil).toHaveBeenCalledTimes(1);
+    expect(mockRunInsights).toHaveBeenCalledWith(
+      expect.objectContaining({
+        athleteId: "a1",
+        trigger: "MEET_COMPLETE",
+        triggerMeetId: "m1",
+      })
+    );
+  });
+
+  it("does NOT fire runInsights when the meet is not yet complete", async () => {
+    mockCompFindUnique.mockResolvedValue({
+      id: "m1",
+      athleteId: "a1",
+      event: "SHOT_PUT",
+      implementWeightKg: null,
+      format: "THREE_PLUS_THREE",
+      madeFinals: false,
+      name: "Dual",
+      result: null,
+      throws: [{ round: "PRELIM", attemptInRound: 1 }],
+      athlete: { gender: "MALE" },
+    });
+    mockThrowCreate.mockResolvedValue({ id: "t2", distance: 17.5 });
+    mockGetAthletePRs
+      .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.0 } }] })
+      .mockResolvedValueOnce({
+        events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.0 } }],
+      });
+
+    const req = new NextRequest("http://t", {
+      method: "POST",
+      body: JSON.stringify({
+        round: "PRELIM",
+        attemptInRound: 2,
+        resultType: "MARK",
+        distance: 17.5,
+      }),
+    });
+    await POST(req, ctx("m1"));
+    expect(mockWaitUntil).not.toHaveBeenCalled();
+    expect(mockRunInsights).not.toHaveBeenCalled();
+  });
+
+  it("a failure inside runInsights does not fail the throw save", async () => {
+    mockCompFindUnique.mockResolvedValue({
+      id: "m1",
+      athleteId: "a1",
+      event: "SHOT_PUT",
+      implementWeightKg: null,
+      format: "FOUR_STRAIGHT",
+      madeFinals: null,
+      name: "Dual",
+      result: null,
+      throws: [
+        { round: "PRELIM", attemptInRound: 1 },
+        { round: "PRELIM", attemptInRound: 2 },
+        { round: "PRELIM", attemptInRound: 3 },
+      ],
+      athlete: { gender: "MALE" },
+    });
+    mockThrowCreate.mockResolvedValue({ id: "t4", distance: 18.2 });
+    mockGetAthletePRs
+      .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: null }] })
+      .mockResolvedValueOnce({
+        events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.2 } }],
+      });
+    mockRunInsights.mockRejectedValue(new Error("boom"));
+
+    const req = new NextRequest("http://t", {
+      method: "POST",
+      body: JSON.stringify({
+        round: "PRELIM",
+        attemptInRound: 4,
+        resultType: "MARK",
+        distance: 18.2,
+      }),
+    });
+    const res = await POST(req, ctx("m1"));
+    expect(res.status).toBe(200);
   });
 });
