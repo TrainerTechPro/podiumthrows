@@ -243,8 +243,8 @@ export const CompetitionUpdateSchema = z.object({
   resultBy: z.string().nullable().optional(),
 
   // v2 per-meet context
-  name: z.string().min(1).optional(),
-  date: z.string().min(1).optional(),
+  name: z.string().min(1).nullable().optional(),
+  date: z.string().min(1).nullable().optional(),
   priority: z.enum(["A", "B", "C"]).nullable().optional(),
   implementWeightKg: z.number().positive().nullable().optional(),
   placeFinish: z.number().int().min(1).nullable().optional(),

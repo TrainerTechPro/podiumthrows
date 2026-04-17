@@ -143,6 +143,7 @@ describe("CompetitionCreateSchema (extended)", () => {
       ...base,
       implementWeightKg: null,
       placeFinish: null,
+      meetStatus: null,
       venueType: null,
       weather: null,
       windMps: null,
