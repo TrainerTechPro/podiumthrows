@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const SECTIONS = [
-  { id: "overview",  label: "Overview"  },
-  { id: "training",  label: "Training"  },
-  { id: "throws",    label: "Throws"    },
+  { id: "overview", label: "Overview" },
+  { id: "training", label: "Training" },
+  { id: "throws", label: "Throws" },
   { id: "readiness", label: "Readiness" },
-  { id: "wellness",  label: "Wellness"  },
-  { id: "goals",     label: "Goals"     },
+  { id: "wellness", label: "Wellness" },
+  { id: "goals", label: "Goals" },
+  { id: "insights", label: "Insights" },
 ];
 
 export function SectionNav({ initialSection }: { initialSection?: string }) {
@@ -29,9 +30,9 @@ export function SectionNav({ initialSection }: { initialSection?: string }) {
 
   // IntersectionObserver for scroll spy
   useEffect(() => {
-    const elements = SECTIONS
-      .map((s) => document.getElementById(s.id))
-      .filter(Boolean) as HTMLElement[];
+    const elements = SECTIONS.map((s) => document.getElementById(s.id)).filter(
+      Boolean
+    ) as HTMLElement[];
     if (elements.length === 0) return;
 
     observerRef.current = new IntersectionObserver(

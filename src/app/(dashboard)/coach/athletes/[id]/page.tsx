@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Prisma } from "@prisma/client";
+import type { AthleteInsight } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { formatImplementWeight } from "@/lib/throws";
 import { Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
@@ -32,12 +34,23 @@ import { SectionNav } from "./_section-nav";
 import { DistanceTrend } from "./_distance-trend";
 import { CoachActionBar } from "./_action-bar";
 import { AthleteAvatarControl } from "./_avatar-control";
+import { CoachInsightsSection } from "./_coach-insights-section";
+import { toWire } from "@/lib/insights/serialize";
+import prisma from "@/lib/prisma";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
 type AthleteProfile = NonNullable<Awaited<ReturnType<typeof getAthleteFull>>>;
 
-const VALID_SECTIONS = ["overview", "training", "throws", "readiness", "wellness", "goals"];
+const VALID_SECTIONS = [
+  "overview",
+  "training",
+  "throws",
+  "readiness",
+  "wellness",
+  "goals",
+  "insights",
+];
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -1657,6 +1670,22 @@ export default async function AthleteProfilePage({
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
 
+  // Insights: one row per (category, metric) — latest non-dismissed
+  const insightRows = await prisma.$queryRaw<AthleteInsight[]>(Prisma.sql`
+    SELECT DISTINCT ON ("athleteId", "category", "metric") *
+    FROM "AthleteInsight"
+    WHERE "athleteId" = ${athlete.id}
+      AND "dismissedAt" IS NULL
+    ORDER BY "athleteId", "category", "metric", "computedAt" DESC
+    LIMIT 50
+  `);
+  const insights = insightRows.map(toWire);
+
+  const athleteName =
+    `${athlete.firstName ?? ""} ${athlete.lastName ?? ""}`.trim() ||
+    athlete.user.email ||
+    "Athlete";
+
   const latestReadiness = trend.length > 0 ? trend[trend.length - 1] : null;
 
   return (
@@ -1727,6 +1756,14 @@ export default async function AthleteProfilePage({
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Goals</h2>
         <GoalsTab goals={goals} />
       </section>
+
+      <div className="border-t border-[var(--card-border)] pt-8 mt-8">
+        <CoachInsightsSection
+          athleteId={athlete.id}
+          athleteName={athleteName}
+          initialInsights={insights}
+        />
+      </div>
     </div>
   );
 }
