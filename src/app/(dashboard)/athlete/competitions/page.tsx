@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -30,7 +29,7 @@ export default async function AthleteCompetitionsPage() {
     const valid = c.throws
       .filter((t) => !t.isFoul && !t.isPass && t.distance != null)
       .map((t) => t.distance as number);
-    const bestMark = valid.length > 0 ? Math.max(...valid) : c.result ?? null;
+    const bestMark = valid.length > 0 ? Math.max(...valid) : (c.result ?? null);
     return {
       id: c.id,
       name: c.name,
@@ -49,12 +48,8 @@ export default async function AthleteCompetitionsPage() {
       <h1 className="mb-4 font-heading text-2xl">Competitions</h1>
       {items.length === 0 ? (
         <div className="card p-6 text-center text-muted">
-          No competitions logged yet.{" "}
-          {/* TODO: wire to /athlete/competitions/new once that page exists */}
-          <Link href="/athlete/competitions/new" className="text-primary-500 hover:underline">
-            Log your first meet
-          </Link>
-          .
+          No competitions logged yet. Ask your coach to add a meet to your schedule — or check back
+          after your next competition is entered.
         </div>
       ) : (
         <StaggeredList className="grid gap-3">
