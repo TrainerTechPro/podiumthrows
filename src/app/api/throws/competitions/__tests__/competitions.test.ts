@@ -26,7 +26,7 @@ vi.mock("@/lib/authorize", () => ({
 }));
 vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
-import { POST, GET } from "../route";
+import { POST, GET, PATCH, DELETE } from "../route";
 
 describe("POST /api/throws/competitions", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -113,5 +113,45 @@ describe("GET /api/throws/competitions", () => {
     const body = await res.json();
     expect(body.data[0].bestMark).toBe(17.3);
     expect(body.data[0].throwCount).toBe(0);
+  });
+});
+
+describe("PATCH /api/throws/competitions", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("updates v2 fields", async () => {
+    mockFindUnique.mockResolvedValue({ id: "m1", athleteId: "a1" });
+    mockUpdate.mockResolvedValue({ id: "m1", athleteId: "a1", placeFinish: 2 });
+    const req = new NextRequest("http://t/api/throws/competitions", {
+      method: "PATCH",
+      body: JSON.stringify({ id: "m1", placeFinish: 2, madeFinals: true }),
+    });
+    const res = await PATCH(req);
+    expect(res.status).toBe(200);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ placeFinish: 2, madeFinals: true }),
+      })
+    );
+  });
+});
+
+describe("DELETE /api/throws/competitions", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("deletes meet after authorization", async () => {
+    mockFindUnique.mockResolvedValue({ id: "m1", athleteId: "a1" });
+    mockDelete.mockResolvedValue({ id: "m1" });
+    const req = new NextRequest("http://t/api/throws/competitions?id=m1", { method: "DELETE" });
+    const res = await DELETE(req);
+    expect(res.status).toBe(200);
+    expect(mockDelete).toHaveBeenCalledWith({ where: { id: "m1" } });
+  });
+
+  it("returns 404 if not found", async () => {
+    mockFindUnique.mockResolvedValue(null);
+    const req = new NextRequest("http://t/api/throws/competitions?id=missing", { method: "DELETE" });
+    const res = await DELETE(req);
+    expect(res.status).toBe(404);
   });
 });

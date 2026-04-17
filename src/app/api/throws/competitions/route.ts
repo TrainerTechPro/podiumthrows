@@ -73,7 +73,7 @@ export async function PATCH(request: NextRequest) {
 
     const parsed = await parseBody(request, CompetitionUpdateSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { id, result, notes, resultBy } = parsed;
+    const { id, ...updates } = parsed;
 
     // Verify the caller has access to this competition's athlete
     const existing = await prisma.throwsCompetition.findUnique({
@@ -87,19 +87,53 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
+    // Strip undefined, leave null values (null clears the column)
+    const data: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(updates)) {
+      if (v !== undefined) data[k] = v;
+    }
+
     const competition = await prisma.throwsCompetition.update({
       where: { id },
-      data: {
-        ...(result !== undefined && { result: result ?? null }),
-        ...(notes !== undefined && { notes: notes || null }),
-        ...(resultBy !== undefined && { resultBy }),
-      },
+      data,
     });
 
     return NextResponse.json({ success: true, data: competition });
   } catch (error) {
     logger.error("Update competition error", { context: "throws/competitions", error: error });
     return NextResponse.json({ success: false, error: "Failed to update competition" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ success: false, error: "id is required" }, { status: 400 });
+    }
+
+    const existing = await prisma.throwsCompetition.findUnique({
+      where: { id },
+      select: { athleteId: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Competition not found" }, { status: 404 });
+    }
+    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", existing.athleteId))) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
+    await prisma.throwsCompetition.delete({ where: { id } });
+    return NextResponse.json({ success: true, data: { id } });
+  } catch (error) {
+    logger.error("Delete competition error", { context: "throws/competitions", error: error });
+    return NextResponse.json({ success: false, error: "Failed to delete competition" }, { status: 500 });
   }
 }
 
