@@ -1,0 +1,72 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getSession } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+import { CompetitionListCard } from "@/components/competitions/CompetitionListCard";
+import { StaggeredList } from "@/components/ui/StaggeredList";
+
+export const metadata = { title: "Competitions — Podium Throws" };
+
+export default async function AthleteCompetitionsPage() {
+  const session = await getSession();
+  if (!session) return notFound();
+
+  const athlete = await prisma.athleteProfile.findUnique({
+    where: { userId: session.userId },
+    select: { id: true },
+  });
+  if (!athlete) return notFound();
+
+  const competitions = await prisma.throwsCompetition.findMany({
+    where: { athleteId: athlete.id },
+    orderBy: { date: "desc" },
+    include: {
+      _count: { select: { throws: true } },
+      throws: { select: { distance: true, isFoul: true, isPass: true } },
+    },
+  });
+
+  const items = competitions.map((c) => {
+    const valid = c.throws
+      .filter((t) => !t.isFoul && !t.isPass && t.distance != null)
+      .map((t) => t.distance as number);
+    const bestMark = valid.length > 0 ? Math.max(...valid) : c.result ?? null;
+    return {
+      id: c.id,
+      name: c.name,
+      date: c.date,
+      event: c.event as string,
+      placeFinish: c.placeFinish ?? null,
+      meetStatus: (c.meetStatus ?? null) as "COMPLETED" | "DNS" | "DNF" | "DQ" | null,
+      venueType: (c.venueType ?? null) as "INDOOR" | "OUTDOOR" | null,
+      bestMark,
+      throwCount: c._count.throws,
+    };
+  });
+
+  return (
+    <div className="mx-auto max-w-4xl p-4">
+      <h1 className="mb-4 font-heading text-2xl">Competitions</h1>
+      {items.length === 0 ? (
+        <div className="card p-6 text-center text-muted">
+          No competitions logged yet.{" "}
+          {/* TODO: wire to /athlete/competitions/new once that page exists */}
+          <Link href="/athlete/competitions/new" className="text-primary-500 hover:underline">
+            Log your first meet
+          </Link>
+          .
+        </div>
+      ) : (
+        <StaggeredList className="grid gap-3">
+          {items.map((item) => (
+            <CompetitionListCard
+              key={item.id}
+              item={item}
+              href={`/athlete/competitions/${item.id}`}
+            />
+          ))}
+        </StaggeredList>
+      )}
+    </div>
+  );
+}

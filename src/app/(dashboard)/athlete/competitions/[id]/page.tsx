@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { MeetDetailClient } from "./_meet-detail-client";
+import { MeetDetailClient } from "@/components/competitions/MeetDetailClient";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props) {
   return { title: meet ? `${meet.name} — Podium Throws` : "Meet — Podium Throws" };
 }
 
-export default async function CoachMeetDetailPage({ params }: Props) {
+export default async function AthleteMeetDetailPage({ params }: Props) {
   const { id } = await params;
   const session = await getSession();
   if (!session) return notFound();
@@ -22,9 +22,7 @@ export default async function CoachMeetDetailPage({ params }: Props) {
   const meet = await prisma.throwsCompetition.findUnique({
     where: { id },
     include: {
-      athlete: {
-        select: { id: true, userId: true, user: { select: { email: true } } },
-      },
+      athlete: { select: { id: true, userId: true } },
       throws: {
         orderBy: [{ round: "asc" }, { attemptInRound: "asc" }],
       },
@@ -32,7 +30,9 @@ export default async function CoachMeetDetailPage({ params }: Props) {
   });
   if (!meet) return notFound();
 
-  // Serialize prisma enums → plain strings for the client component
+  // Safety net: athlete can only see their own competitions
+  if (meet.athlete.userId !== session.userId) return notFound();
+
   const serialized = {
     id: meet.id,
     athleteId: meet.athleteId,
@@ -64,5 +64,11 @@ export default async function CoachMeetDetailPage({ params }: Props) {
       })),
   };
 
-  return <MeetDetailClient meet={serialized} backHref="/coach/competitions" backLabel="All Competitions" />;
+  return (
+    <MeetDetailClient
+      meet={serialized}
+      backHref="/athlete/competitions"
+      backLabel="All Competitions"
+    />
+  );
 }
