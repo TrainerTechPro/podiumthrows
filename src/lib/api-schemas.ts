@@ -222,13 +222,38 @@ export const CompetitionCreateSchema = z.object({
   priority: z.enum(["A", "B", "C"]).optional(),
   result: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
+
+  // v2 per-meet context (all nullable + optional per project rule #4)
+  implementWeightKg: z.number().positive().nullable().optional(),
+  placeFinish: z.number().int().min(1).nullable().optional(),
+  meetStatus: z.enum(["COMPLETED", "DNS", "DNF", "DQ"]).nullable().optional(),
+  venueType: z.enum(["INDOOR", "OUTDOOR"]).nullable().optional(),
+  weather: z.string().max(200).nullable().optional(),
+  windMps: z.number().nullable().optional(), // allow negative for headwind
+  format: z.enum(["THREE_PLUS_THREE", "FOUR_STRAIGHT"]).nullable().optional(),
+  madeFinals: z.boolean().nullable().optional(),
 });
 
 export const CompetitionUpdateSchema = z.object({
   id: z.string().min(1, "Competition ID is required"),
+
+  // legacy editable fields
   result: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
   resultBy: z.string().nullable().optional(),
+
+  // v2 per-meet context
+  name: z.string().min(1).optional(),
+  date: z.string().min(1).optional(),
+  priority: z.enum(["A", "B", "C"]).nullable().optional(),
+  implementWeightKg: z.number().positive().nullable().optional(),
+  placeFinish: z.number().int().min(1).nullable().optional(),
+  meetStatus: z.enum(["COMPLETED", "DNS", "DNF", "DQ"]).nullable().optional(),
+  venueType: z.enum(["INDOOR", "OUTDOOR"]).nullable().optional(),
+  weather: z.string().max(200).nullable().optional(),
+  windMps: z.number().nullable().optional(),
+  format: z.enum(["THREE_PLUS_THREE", "FOUR_STRAIGHT"]).nullable().optional(),
+  madeFinals: z.boolean().nullable().optional(),
 });
 
 // ── Athlete Throws Session ──────────────────────────────────────────────

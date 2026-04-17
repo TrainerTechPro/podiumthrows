@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { parseQuery, LogSessionSchema, ThrowsSessionCreateSchema } from "@/lib/api-schemas";
+import * as S from "@/lib/api-schemas";
 
 describe("parseQuery", () => {
   const Schema = z.object({
@@ -110,6 +111,53 @@ describe("LogSessionSchema (Bondarchuk sequencing)", () => {
     if (!parsed.success) {
       expect(parsed.error.issues[0].path).toEqual(["drills", 2, "implementWeight"]);
     }
+  });
+});
+
+describe("CompetitionCreateSchema (extended)", () => {
+  const base = {
+    athleteId: "a1",
+    name: "NCAA East",
+    date: "2026-05-15",
+    event: "SHOT_PUT",
+  };
+
+  it("accepts all new optional fields", () => {
+    const parsed = S.CompetitionCreateSchema.parse({
+      ...base,
+      implementWeightKg: 7.26,
+      placeFinish: 3,
+      meetStatus: "COMPLETED",
+      venueType: "OUTDOOR",
+      weather: "70°F sunny",
+      windMps: -1.2,
+      format: "THREE_PLUS_THREE",
+      madeFinals: true,
+    });
+    expect(parsed.placeFinish).toBe(3);
+    expect(parsed.windMps).toBe(-1.2);
+  });
+
+  it("accepts null for all new optional fields", () => {
+    const parsed = S.CompetitionCreateSchema.parse({
+      ...base,
+      implementWeightKg: null,
+      placeFinish: null,
+      venueType: null,
+      weather: null,
+      windMps: null,
+      format: null,
+      madeFinals: null,
+    });
+    expect(parsed.placeFinish).toBeNull();
+  });
+
+  it("rejects placeFinish < 1", () => {
+    expect(() => S.CompetitionCreateSchema.parse({ ...base, placeFinish: 0 })).toThrow();
+  });
+
+  it("rejects invalid meetStatus", () => {
+    expect(() => S.CompetitionCreateSchema.parse({ ...base, meetStatus: "CANCELLED" })).toThrow();
   });
 });
 
