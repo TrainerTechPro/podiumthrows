@@ -1,5 +1,6 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
+import { parseDistance } from "@/lib/competitions/parseDistance";
 
 export type CompThrowRow = {
   id: string;
@@ -54,22 +55,31 @@ function slotsFor(
 }
 
 /** Format a distance without trailing zeros: 17.50 → "17.5", 18.00 → "18" */
-function formatDistance(n: number): string {
+function formatDistanceShort(n: number): string {
   return parseFloat(n.toFixed(2)).toString();
 }
 
-function formatExisting(t: CompThrowRow): string {
-  if (t.isFoul) return `Foul (${t.foulType?.toLowerCase() ?? "unknown"})`;
-  if (t.isPass) return "Pass";
-  if (t.distance != null) return `${formatDistance(t.distance)}m`;
-  return "—";
+type RowResultType = "MARK" | "FOUL" | "PASS" | null;
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+function SaveStatusDot({ state }: { state: SaveState }) {
+  const color =
+    state === "saving"
+      ? "bg-primary-500 animate-pulse"
+      : state === "saved"
+        ? "bg-success-500"
+        : state === "error"
+          ? "bg-danger-500"
+          : "bg-transparent";
+  return <span className={`h-2 w-2 rounded-full ${color}`} aria-label={`save ${state}`} />;
 }
 
-// Placeholder row — replaced with interactive controls in Task 16.
-// Defined outside CompetitionThrowsTable to satisfy rerender-no-inline-components.
 function ThrowRow({
   slot,
+  meet: _meet,
   existing,
+  onSave,
+  onDelete,
 }: {
   slot: Slot;
   meet: CompMeet;
@@ -77,13 +87,137 @@ function ThrowRow({
   onSave: (input: ThrowSaveInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
+  const [resultType, setResultType] = useState<RowResultType>(() => {
+    if (!existing) return null;
+    if (existing.isFoul) return "FOUL";
+    if (existing.isPass) return "PASS";
+    return "MARK";
+  });
+  const [distanceInput, setDistanceInput] = useState<string>(
+    existing?.distance != null ? existing.distance.toFixed(2) : ""
+  );
+  const [foulType, setFoulType] = useState<"RING" | "SECTOR" | null>(
+    existing?.foulType ?? null
+  );
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    },
+    []
+  );
+
+  const commit = async () => {
+    if (resultType == null) return;
+
+    let distance: number | null = null;
+    if (resultType === "MARK") {
+      const parsed = parseDistance(distanceInput);
+      if (!parsed) return;
+      distance = parsed.meters;
+    }
+    if (resultType === "FOUL" && !foulType) return;
+
+    setSaveState("saving");
+    try {
+      await onSave({
+        id: existing?.id,
+        round: slot.round,
+        attemptInRound: slot.attemptInRound,
+        distance,
+        isFoul: resultType === "FOUL",
+        isPass: resultType === "PASS",
+        foulType: resultType === "FOUL" ? foulType : null,
+        notes: existing?.notes ?? null,
+        videoUrl: existing?.videoUrl ?? null,
+        wireLength: existing?.wireLength ?? null,
+      });
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  };
+
+  const handleRowBlur: React.FocusEventHandler<HTMLDivElement> = (e) => {
+    // Only save if focus truly left the row
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        void commit();
+      }, 500);
+    }
+  };
+
   return (
     <div
       data-testid={`throw-row-${slot.round}-${slot.attemptInRound}`}
-      className="flex items-center gap-2 rounded border border-[var(--card-border)] p-2"
+      className="flex flex-wrap items-center gap-2 rounded border border-[var(--card-border)] p-2 sm:flex-nowrap"
+      onBlur={handleRowBlur}
     >
       <span className="w-8 text-sm text-muted">{slot.attemptInRound}</span>
-      <span className="text-sm">{existing ? formatExisting(existing) : "(empty)"}</span>
+
+      <div role="radiogroup" className="flex gap-1">
+        {(["MARK", "FOUL", "PASS"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            data-type={t}
+            onClick={() => {
+              setResultType(t);
+              if (t !== "MARK") setDistanceInput("");
+              if (t !== "FOUL") setFoulType(null);
+            }}
+            className={`rounded px-2 py-1 text-xs ${
+              resultType === t ? "bg-primary-500 text-black" : "bg-surface-800 text-muted"
+            }`}
+          >
+            {t === "MARK" ? "Mark" : t === "FOUL" ? "Foul" : "Pass"}
+          </button>
+        ))}
+      </div>
+
+      {resultType === "MARK" && (
+        <input
+          data-testid="distance-input"
+          value={distanceInput}
+          onChange={(e) => setDistanceInput(e.target.value)}
+          placeholder={`18.42 or 60'4"`}
+          className="w-32 rounded bg-surface-800 px-2 py-1 font-mono text-sm tabular-nums"
+        />
+      )}
+
+      {resultType === "FOUL" && (
+        <div data-testid="foul-type-picker" className="flex gap-1">
+          {(["RING", "SECTOR"] as const).map((ft) => (
+            <button
+              key={ft}
+              type="button"
+              onClick={() => setFoulType(ft)}
+              className={`rounded px-2 py-1 text-xs ${
+                foulType === ft ? "bg-danger-500 text-black" : "bg-surface-800 text-muted"
+              }`}
+            >
+              {ft.toLowerCase()}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="ml-auto flex items-center gap-2">
+        <SaveStatusDot state={saveState} />
+        {existing && (
+          <button
+            type="button"
+            onClick={() => onDelete(existing.id)}
+            className="text-xs text-muted hover:text-danger-500"
+            aria-label="Delete throw"
+          >
+            ×
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -113,7 +247,7 @@ export function CompetitionThrowsTable({
           className="mb-4 rounded border border-warning-500 bg-warning-500/10 p-3 text-sm"
         >
           This meet was logged before per-throw entry. Add throws below to upgrade — your existing
-          result of <strong>{formatDistance(meet.result!)}m</strong> will be replaced.
+          result of <strong>{formatDistanceShort(meet.result!)}m</strong> will be replaced.
           {onPromoteLegacy != null ? (
             <button
               className="btn-secondary ml-2"

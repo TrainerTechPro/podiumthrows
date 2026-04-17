@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { CompetitionThrowsTable } from "../CompetitionThrowsTable";
 
 const baseMeet = {
@@ -63,5 +64,40 @@ describe("CompetitionThrowsTable — base rendering", () => {
       />
     );
     expect(screen.queryByTestId("legacy-banner")).toBeNull();
+  });
+});
+
+describe("CompetitionThrowsTable — interactions", () => {
+  it("switching to Foul reveals foulType picker", async () => {
+    const user = userEvent.setup();
+    render(
+      <CompetitionThrowsTable meet={baseMeet} throws={[]} onSave={vi.fn()} onDelete={vi.fn()} />
+    );
+    const row = screen.getByTestId("throw-row-PRELIM-1");
+    const foulBtn = row.querySelector('[data-type="FOUL"]') as HTMLElement;
+    await user.click(foulBtn);
+    expect(row.querySelector('[data-testid="foul-type-picker"]')).not.toBeNull();
+  });
+
+  it("saves on row blur when distance + Mark selected", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    render(<CompetitionThrowsTable meet={baseMeet} throws={[]} onSave={onSave} onDelete={vi.fn()} />);
+    const row = screen.getByTestId("throw-row-PRELIM-1");
+    await user.click(row.querySelector('[data-type="MARK"]') as HTMLElement);
+    const input = row.querySelector('input[data-testid="distance-input"]') as HTMLInputElement;
+    await user.type(input, "18.42");
+    fireEvent.blur(row);
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({
+          round: "PRELIM",
+          attemptInRound: 1,
+          distance: 18.42,
+          isFoul: false,
+          isPass: false,
+        })
+      );
+    }, { timeout: 2000 });
   });
 });
