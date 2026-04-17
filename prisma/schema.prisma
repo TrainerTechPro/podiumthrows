@@ -194,6 +194,24 @@ enum FoulType {
   SECTOR
 }
 
+enum InsightCategory {
+  TRAINING_PATTERN
+  LIFT_THROW
+  READINESS_COMPETITION
+}
+
+enum ConfidenceBand {
+  WEAK
+  MEDIUM
+  STRONG
+}
+
+enum InsightTrigger {
+  MEET_COMPLETE
+  ON_DEMAND
+  CRON
+}
+
 // ─── USER & AUTH ────────────────────────────────────────────────────────────
 
 model User {
@@ -447,6 +465,9 @@ model AthleteProfile {
 
   // Timezone (IANA name, e.g. "America/New_York"). NULL = not yet detected.
   timezone String?
+
+  // Trend insight layer
+  insights AthleteInsight[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2987,4 +3008,39 @@ model Release {
   createdAt   DateTime @default(now())
 
   @@index([audience, publishedAt])
+}
+
+// ─── TREND INSIGHT LAYER ─────────────────────────────────────────────────────
+
+model AthleteInsight {
+  id        String         @id @default(cuid())
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  category InsightCategory
+  metric   String
+  event    EventType?
+
+  title  String
+  body   String
+  detail String?
+
+  confidenceBand ConfidenceBand
+  dataPoints     Int
+  coefficient    Float?
+  effectSize     Float?
+  effectUnit     String?
+
+  evidence Json
+
+  readByCoachAt   DateTime?
+  readByAthleteAt DateTime?
+  dismissedAt     DateTime?
+
+  triggerKind   InsightTrigger
+  triggerMeetId String?
+  computedAt    DateTime       @default(now())
+
+  @@index([athleteId, category, computedAt])
+  @@index([athleteId, computedAt])
 }
