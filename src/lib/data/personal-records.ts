@@ -29,6 +29,10 @@ export type AthletePREvent = {
   competitionPR: PRRecord | null;
   practiceBest: PRRecord | null;
   practiceExceedsPR: boolean;
+  /** Best competition throw ever logged, BEFORE the manual-override merge.
+   *  Use this to surface a "Best logged competition throw" badge when the
+   *  manual competitionPRs JSON override is higher than any logged throw. */
+  bestLoggedCompThrow: PRRecord | null;
 };
 
 export type AthletePRs = {
@@ -174,6 +178,7 @@ export const getAthletePRs = cache(async (athleteId: string): Promise<AthletePRs
       competitionPR,
       practiceBest,
       practiceExceedsPR,
+      bestLoggedCompThrow: competitionPRCandidate, // best ThrowLog comp row, independent of manual merge
     };
   });
 
