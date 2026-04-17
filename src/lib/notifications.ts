@@ -31,7 +31,8 @@ export type NotificationType =
   | "INVITATION_EXPIRED"
   | "PROGRAMMING_REQUESTED"
   | "COMPETITION_PR"
-  | "COMPETITION_LOGGED";
+  | "COMPETITION_LOGGED"
+  | "INSIGHT_NEW";
 
 export type NotificationItem = {
   id: string;
