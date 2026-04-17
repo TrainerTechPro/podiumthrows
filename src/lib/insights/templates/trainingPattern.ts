@@ -9,7 +9,7 @@ export type TrainingPatternEvidence = {
   personalR: number;
   populationR: number;
   blendedR: number;
-  personalWeight: number;
+  confidence: number;
 };
 
 export function renderTrainingPattern(insight: StructuredInsight<TrainingPatternEvidence>): {
