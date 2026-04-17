@@ -18,7 +18,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
-import type { MeetSummary, AthletePickerItem } from "@/lib/data/coach";
+import { CompetitionListCard } from "@/components/competitions/CompetitionListCard";
+import type { MeetSummary, AthletePickerItem, CompetitionListRecord } from "@/lib/data/coach";
 import { AddMeetModal } from "./_add-meet-modal";
 
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
@@ -51,10 +52,13 @@ function MeetCard({ meet }: { meet: MeetSummary }) {
   const upcoming = isUpcoming(meet.date);
   const prio = PRIORITY_STYLES[meet.priority] || PRIORITY_STYLES.B;
   const fillRate = meet.totalEntries > 0 ? Math.round((meet.totalResults / meet.totalEntries) * 100) : 0;
+  // Link to first entry's detail page; if multiple entries exist, show the grouped view via first id
+  const firstEntryId = meet.entries[0]?.id;
+  const href = firstEntryId ? `/coach/competitions/${firstEntryId}` : "#";
 
   return (
     <Link
-      href={`/coach/competitions/results?meet=${encodeURIComponent(meet.name)}&date=${meet.date}`}
+      href={href}
       className="card card-interactive p-5 flex flex-col gap-3"
     >
       {/* Header */}
@@ -128,9 +132,11 @@ function MeetCard({ meet }: { meet: MeetSummary }) {
 export function CompetitionsClient({
   initialMeets,
   athletes,
+  competitionList,
 }: {
   initialMeets: MeetSummary[];
   athletes: AthletePickerItem[];
+  competitionList: CompetitionListRecord[];
 }) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -198,6 +204,34 @@ export function CompetitionsClient({
           <StaggeredList className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {past.map((m) => (
               <MeetCard key={`${m.name}::${m.date}`} meet={m} />
+            ))}
+          </StaggeredList>
+        </section>
+      )}
+
+      {/* All Individual Competition Records */}
+      {competitionList.length > 0 && (
+        <section>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">
+            All Competitions
+          </h2>
+          <StaggeredList className="grid gap-3">
+            {competitionList.map((c) => (
+              <CompetitionListCard
+                key={c.id}
+                item={{
+                  id: c.id,
+                  name: c.name,
+                  date: c.date,
+                  event: c.event,
+                  placeFinish: c.placeFinish ?? null,
+                  meetStatus: c.meetStatus ?? null,
+                  venueType: c.venueType ?? null,
+                  bestMark: c.bestMark ?? null,
+                  throwCount: c.throwCount ?? 0,
+                }}
+                href={`/coach/competitions/${c.id}`}
+              />
             ))}
           </StaggeredList>
         </section>

@@ -1608,6 +1608,49 @@ export async function getCoachMeets(coachId: string): Promise<MeetSummary[]> {
   }));
 }
 
+/* ─── Flat Competition List (per-athlete-record) ─────────────────────────── */
+
+export type CompetitionListRecord = {
+  id: string;
+  name: string;
+  date: string;
+  event: string;
+  placeFinish: number | null;
+  meetStatus: "COMPLETED" | "DNS" | "DNF" | "DQ" | null;
+  venueType: "INDOOR" | "OUTDOOR" | null;
+  bestMark: number | null;
+  throwCount: number;
+};
+
+export async function getCoachCompetitionList(coachId: string): Promise<CompetitionListRecord[]> {
+  const competitions = await prisma.throwsCompetition.findMany({
+    where: { athlete: { coachId } },
+    orderBy: { date: "desc" },
+    include: {
+      _count: { select: { throws: true } },
+      throws: { select: { distance: true, isFoul: true, isPass: true } },
+    },
+  });
+
+  return competitions.map((c) => {
+    const validDistances = c.throws
+      .filter((t) => !t.isFoul && !t.isPass && t.distance != null)
+      .map((t) => t.distance as number);
+    const bestFromThrows = validDistances.length > 0 ? Math.max(...validDistances) : null;
+    return {
+      id: c.id,
+      name: c.name,
+      date: c.date,
+      event: c.event,
+      placeFinish: c.placeFinish ?? null,
+      meetStatus: (c.meetStatus as CompetitionListRecord["meetStatus"]) ?? null,
+      venueType: (c.venueType as CompetitionListRecord["venueType"]) ?? null,
+      bestMark: bestFromThrows ?? c.result ?? null,
+      throwCount: c._count.throws,
+    };
+  });
+}
+
 /* ─── Throw Analytics ────────────────────────────────────────────────────── */
 
 export type ThrowStatsByEvent = {
