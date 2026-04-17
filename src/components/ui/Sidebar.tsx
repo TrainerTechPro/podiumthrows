@@ -26,6 +26,7 @@ import {
   PlusCircle,
   Clock,
   FileText,
+  Sparkles,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -480,6 +481,7 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
   {
     title: "Insights",
     items: [
+      { label: "Insights", href: "/athlete/insights", icon: <Sparkles {...iconSize} /> },
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
     ],
   },
