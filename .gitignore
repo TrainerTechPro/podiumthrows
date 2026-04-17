@@ -6,6 +6,9 @@
 .pnp.js
 .yarn/install-state.gz
 
+# git worktrees
+/.worktrees/
+
 # testing
 /coverage
 /e2e-results/
