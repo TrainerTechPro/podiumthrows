@@ -469,6 +469,12 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
         icon: <Calendar {...iconSize} />,
         matchPaths: ["/athlete/availability"],
       },
+      {
+        label: "Competitions",
+        href: "/athlete/competitions",
+        icon: <Trophy {...iconSize} />,
+        matchPaths: ["/athlete/competitions"],
+      },
     ],
   },
   {
