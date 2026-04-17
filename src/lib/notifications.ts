@@ -29,7 +29,9 @@ export type NotificationType =
   | "VIDEO_SHARED"
   | "COMPETITION_REMINDER"
   | "INVITATION_EXPIRED"
-  | "PROGRAMMING_REQUESTED";
+  | "PROGRAMMING_REQUESTED"
+  | "COMPETITION_PR"
+  | "COMPETITION_LOGGED";
 
 export type NotificationItem = {
   id: string;
