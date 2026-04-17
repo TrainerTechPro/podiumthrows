@@ -3,6 +3,7 @@ import { useState, useCallback, useTransition } from "react";
 import { useToast } from "@/components/toast";
 import { InsightList } from "@/components/insights/InsightList";
 import { InsightEvidenceDrawer } from "@/components/insights/InsightEvidenceDrawer";
+import { csrfHeaders } from "@/lib/csrf-client";
 import type { AthleteInsightWire } from "@/lib/insights/types";
 
 type Props = {
@@ -20,7 +21,7 @@ export function CoachInsightsSection({ athleteId, athleteName, initialInsights }
 
   const markRead = useCallback(async (id: string) => {
     try {
-      await fetch(`/api/insights/${id}/read`, { method: "PATCH" });
+      await fetch(`/api/insights/${id}/read`, { method: "PATCH", headers: csrfHeaders() });
       setInsights((prev) =>
         prev.map((i) => (i.id === id ? { ...i, readByCoachAt: new Date().toISOString() } : i))
       );
@@ -36,7 +37,7 @@ export function CoachInsightsSection({ athleteId, athleteName, initialInsights }
       try {
         const res = await fetch(`/api/insights/${id}/dismiss`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: "{}",
         });
         const json = await res.json();
@@ -79,7 +80,7 @@ export function CoachInsightsSection({ athleteId, athleteName, initialInsights }
       try {
         const res = await fetch(`/api/insights/compute`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ athleteId }),
         });
         const json = await res.json();
