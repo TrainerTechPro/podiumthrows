@@ -6,6 +6,7 @@ import type { InsightCategory } from "./types";
 
 type NewInsightInput = {
   category: InsightCategory;
+  metric?: string;
   title: string;
   body: string;
 };
