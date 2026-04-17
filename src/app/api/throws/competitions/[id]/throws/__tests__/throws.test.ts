@@ -4,6 +4,9 @@ import { NextRequest } from "next/server";
 const mockCompFindUnique = vi.fn();
 const mockThrowFindMany = vi.fn();
 const mockThrowCreate = vi.fn();
+const mockThrowFindUnique = vi.fn();
+const mockThrowUpdate = vi.fn();
+const mockThrowDelete = vi.fn();
 const mockCompUpdate = vi.fn();
 const mockGetAthletePRs = vi.fn();
 const mockNotify = vi.fn();
@@ -16,7 +19,10 @@ vi.mock("@/lib/prisma", () => ({
     },
     throwLog: {
       findMany: (...a: unknown[]) => mockThrowFindMany(...a),
+      findUnique: (...a: unknown[]) => mockThrowFindUnique(...a),
       create: (...a: unknown[]) => mockThrowCreate(...a),
+      update: (...a: unknown[]) => mockThrowUpdate(...a),
+      delete: (...a: unknown[]) => mockThrowDelete(...a),
     },
   },
 }));
@@ -32,7 +38,7 @@ vi.mock("@/lib/competitions/notify", () => ({
   notifyCompetitionEvent: (...a: unknown[]) => mockNotify(...a),
 }));
 
-import { GET, POST } from "../route";
+import { GET, POST, PATCH, DELETE } from "../route";
 
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
 const competitionWeight = 7.26;
@@ -146,5 +152,102 @@ describe("POST /api/throws/competitions/[id]/throws", () => {
     });
     const res = await POST(req, ctx("m1"));
     expect(res.status).toBe(400);
+  });
+});
+
+describe("PATCH /api/throws/competitions/[id]/throws", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("updates a throw and returns prCelebration if PR improves", async () => {
+    mockCompFindUnique.mockResolvedValue({
+      athleteId: "a1",
+      event: "SHOT_PUT",
+      format: "THREE_PLUS_THREE",
+      name: "Big Invite",
+      athlete: { gender: "MALE" },
+    });
+    mockThrowFindUnique.mockResolvedValue({ id: "t1", competitionId: "m1" });
+    mockThrowUpdate.mockResolvedValue({ id: "t1", distance: 19.0 });
+    mockGetAthletePRs
+      .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.0 } }] })
+      .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 19.0 } }] });
+
+    const req = new NextRequest("http://t?throwLogId=t1", {
+      method: "PATCH",
+      body: JSON.stringify({ resultType: "MARK", distance: 19.0 }),
+    });
+    const res = await PATCH(req, ctx("m1"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.prCelebration).toEqual({
+      event: "SHOT_PUT",
+      oldPR: 18.0,
+      newPR: 19.0,
+    });
+  });
+
+  it("accepts a notes-only PATCH", async () => {
+    mockCompFindUnique.mockResolvedValue({
+      athleteId: "a1",
+      event: "SHOT_PUT",
+      format: "THREE_PLUS_THREE",
+      name: "Big Invite",
+      athlete: { gender: "MALE" },
+    });
+    mockThrowFindUnique.mockResolvedValue({ id: "t1", competitionId: "m1" });
+    mockThrowUpdate.mockResolvedValue({ id: "t1", notes: "great setup" });
+    mockGetAthletePRs.mockResolvedValue({ events: [{ event: "SHOT_PUT", competitionPR: null }] });
+
+    const req = new NextRequest("http://t?throwLogId=t1", {
+      method: "PATCH",
+      body: JSON.stringify({ notes: "great setup" }),
+    });
+    const res = await PATCH(req, ctx("m1"));
+    expect(res.status).toBe(200);
+    expect(mockThrowUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "t1" },
+        data: expect.objectContaining({ notes: "great setup" }),
+      })
+    );
+  });
+
+  it("returns 404 if throwLogId doesn't belong to this meet", async () => {
+    mockCompFindUnique.mockResolvedValue({
+      athleteId: "a1",
+      event: "SHOT_PUT",
+      format: "THREE_PLUS_THREE",
+      name: "X",
+      athlete: { gender: "MALE" },
+    });
+    mockThrowFindUnique.mockResolvedValue({ id: "t1", competitionId: "OTHER_MEET" });
+    const req = new NextRequest("http://t?throwLogId=t1", {
+      method: "PATCH",
+      body: JSON.stringify({ notes: "hi" }),
+    });
+    const res = await PATCH(req, ctx("m1"));
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("DELETE /api/throws/competitions/[id]/throws", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("deletes by throwLogId", async () => {
+    mockCompFindUnique.mockResolvedValue({ athleteId: "a1" });
+    mockThrowFindUnique.mockResolvedValue({ competitionId: "m1" });
+    mockThrowDelete.mockResolvedValue({ id: "t1" });
+    const req = new NextRequest("http://t?throwLogId=t1", { method: "DELETE" });
+    const res = await DELETE(req, ctx("m1"));
+    expect(res.status).toBe(200);
+    expect(mockThrowDelete).toHaveBeenCalledWith({ where: { id: "t1" } });
+  });
+
+  it("returns 404 if throw doesn't belong to this meet", async () => {
+    mockCompFindUnique.mockResolvedValue({ athleteId: "a1" });
+    mockThrowFindUnique.mockResolvedValue({ competitionId: "OTHER_MEET" });
+    const req = new NextRequest("http://t?throwLogId=t1", { method: "DELETE" });
+    const res = await DELETE(req, ctx("m1"));
+    expect(res.status).toBe(404);
   });
 });
