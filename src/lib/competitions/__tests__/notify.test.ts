@@ -21,7 +21,7 @@ describe("notifyCompetitionEvent", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("fires PR notification to coach when athlete logs", async () => {
-    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1" });
+    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1", isSelfCoached: false });
     await notifyCompetitionEvent({
       athleteId: "a1",
       actorRole: "ATHLETE",
@@ -39,7 +39,7 @@ describe("notifyCompetitionEvent", () => {
   });
 
   it("fires PR notification to athlete when coach logs", async () => {
-    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1" });
+    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1", isSelfCoached: false });
     await notifyCompetitionEvent({
       athleteId: "a1",
       actorRole: "COACH",
@@ -57,7 +57,7 @@ describe("notifyCompetitionEvent", () => {
   });
 
   it("fires COMPETITION_LOGGED only on first throw", async () => {
-    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1" });
+    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1", isSelfCoached: false });
     await notifyCompetitionEvent({
       athleteId: "a1",
       actorRole: "ATHLETE",
@@ -83,7 +83,7 @@ describe("notifyCompetitionEvent", () => {
   });
 
   it("does not throw if notification create fails", async () => {
-    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1" });
+    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1", isSelfCoached: false });
     mockCreateNotification.mockRejectedValueOnce(new Error("db down"));
     await expect(
       notifyCompetitionEvent({
@@ -95,5 +95,18 @@ describe("notifyCompetitionEvent", () => {
         isFirstThrow: false,
       })
     ).resolves.toBeUndefined();
+  });
+
+  it("does not notify anyone for a self-coached athlete logging their own PR", async () => {
+    mockFindUnique.mockResolvedValue({ id: "a1", coachId: "c1", isSelfCoached: true });
+    await notifyCompetitionEvent({
+      athleteId: "a1",
+      actorRole: "ATHLETE",
+      meetName: "Solo Meet",
+      competitionId: "m1",
+      prCelebration: { event: "SHOT_PUT", oldPR: 18.0, newPR: 18.42 },
+      isFirstThrow: false,
+    });
+    expect(mockCreateNotification).not.toHaveBeenCalled();
   });
 });

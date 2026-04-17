@@ -33,13 +33,13 @@ export async function notifyCompetitionEvent(input: NotifyInput): Promise<void> 
   try {
     const athlete = await prisma.athleteProfile.findUnique({
       where: { id: input.athleteId },
-      select: { id: true, coachId: true },
+      select: { id: true, coachId: true, isSelfCoached: true },
     });
     if (!athlete) return;
 
     // Decide recipient. Athlete logged → notify coach (if linked). Coach logged → notify athlete.
     const targetCoachId =
-      input.actorRole === "ATHLETE" && athlete.coachId ? athlete.coachId : undefined;
+      input.actorRole === "ATHLETE" && !athlete.isSelfCoached ? athlete.coachId : undefined;
     const targetAthleteId = input.actorRole === "COACH" ? athlete.id : undefined;
 
     // No recipient (e.g., self-coached athlete with no coach) — nothing to send for the PR case.
