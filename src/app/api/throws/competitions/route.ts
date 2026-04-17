@@ -123,10 +123,29 @@ export async function GET(request: NextRequest) {
 
     const competitions = await prisma.throwsCompetition.findMany({
       where: { athleteId },
-      orderBy: { date: "asc" },
+      orderBy: { date: "desc" },
+      include: {
+        _count: { select: { throws: true } },
+        throws: {
+          select: { distance: true, isFoul: true, isPass: true },
+        },
+      },
     });
 
-    return NextResponse.json({ success: true, data: competitions });
+    const shaped = competitions.map((c) => {
+      const throwCount = c._count.throws;
+      const validDistances = c.throws
+        .filter((t) => !t.isFoul && !t.isPass && t.distance != null)
+        .map((t) => t.distance as number);
+      const bestFromThrows = validDistances.length > 0 ? Math.max(...validDistances) : null;
+      // Fall back to legacy `result` if no structured throws yet
+      const bestMark = bestFromThrows ?? c.result ?? null;
+      // Do not include full throws array in the list payload
+      const { throws: _throws, _count, ...rest } = c;
+      return { ...rest, bestMark, throwCount };
+    });
+
+    return NextResponse.json({ success: true, data: shaped });
   } catch (error) {
     logger.error("Get competitions error", { context: "throws/competitions", error: error });
     return NextResponse.json({ success: false, error: "Failed to fetch competitions" }, { status: 500 });
