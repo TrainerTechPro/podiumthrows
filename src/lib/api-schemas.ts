@@ -256,6 +256,39 @@ export const CompetitionUpdateSchema = z.object({
   madeFinals: z.boolean().nullable().optional(),
 });
 
+// ── Competition Throws (v2) ─────────────────────────────────────────────
+
+const ThrowResultSchema = z.discriminatedUnion("resultType", [
+  z.object({ resultType: z.literal("MARK"), distance: z.number().positive() }),
+  z.object({ resultType: z.literal("FOUL"), foulType: z.enum(["RING", "SECTOR"]) }),
+  z.object({ resultType: z.literal("PASS") }),
+]);
+
+const ThrowSlotSchema = z.object({
+  round: z.enum(["PRELIM", "FINALS"]),
+  attemptInRound: z.number().int().min(1).max(4),
+});
+
+const ThrowOptionalsSchema = z.object({
+  videoUrl: z.string().url().nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  wireLength: z.enum(["FULL", "THREE_QUARTER", "HALF"]).nullable().optional(),
+});
+
+export const CompetitionThrowCreateSchema = z.intersection(
+  ThrowSlotSchema,
+  z.intersection(ThrowResultSchema, ThrowOptionalsSchema)
+);
+
+export const CompetitionThrowUpdateSchema = z.intersection(
+  ThrowSlotSchema.partial(),
+  z.intersection(ThrowResultSchema, ThrowOptionalsSchema.partial())
+);
+
+// ── Legacy promotion ────────────────────────────────────────────────────
+// POST body is empty — the competition ID comes from the URL.
+export const LegacyPromoteSchema = z.object({});
+
 // ── Athlete Throws Session ──────────────────────────────────────────────
 
 const DrillLogSchema = z.object({

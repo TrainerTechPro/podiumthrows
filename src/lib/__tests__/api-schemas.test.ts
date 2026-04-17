@@ -224,3 +224,57 @@ describe("ThrowsSessionCreateSchema (block ordering)", () => {
     expect(parsed.success).toBe(true);
   });
 });
+
+describe("CompetitionThrowCreateSchema (discriminated union)", () => {
+  const base = { round: "PRELIM" as const, attemptInRound: 1 };
+
+  it("accepts MARK with positive distance", () => {
+    const r = S.CompetitionThrowCreateSchema.parse({
+      ...base,
+      resultType: "MARK",
+      distance: 18.42,
+    });
+    expect(r.resultType).toBe("MARK");
+  });
+
+  it("accepts FOUL with foulType", () => {
+    const r = S.CompetitionThrowCreateSchema.parse({
+      ...base,
+      resultType: "FOUL",
+      foulType: "RING",
+    });
+    expect(r.resultType).toBe("FOUL");
+  });
+
+  it("accepts PASS with nothing else", () => {
+    const r = S.CompetitionThrowCreateSchema.parse({ ...base, resultType: "PASS" });
+    expect(r.resultType).toBe("PASS");
+  });
+
+  it("rejects MARK without distance", () => {
+    expect(() => S.CompetitionThrowCreateSchema.parse({ ...base, resultType: "MARK" })).toThrow();
+  });
+
+  it("rejects negative distance", () => {
+    expect(() =>
+      S.CompetitionThrowCreateSchema.parse({ ...base, resultType: "MARK", distance: -5 })
+    ).toThrow();
+  });
+
+  it("rejects FOUL without foulType", () => {
+    expect(() => S.CompetitionThrowCreateSchema.parse({ ...base, resultType: "FOUL" })).toThrow();
+  });
+
+  it("rejects attemptInRound < 1", () => {
+    expect(() =>
+      S.CompetitionThrowCreateSchema.parse({ ...base, attemptInRound: 0, resultType: "PASS" })
+    ).toThrow();
+  });
+});
+
+describe("LegacyPromoteSchema", () => {
+  it("accepts the bare competitionId param (body is empty)", () => {
+    const r = S.LegacyPromoteSchema.parse({});
+    expect(r).toEqual({});
+  });
+});
