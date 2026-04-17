@@ -33,3 +33,31 @@ export type RenderedInsight<TEvidence = unknown> = StructuredInsight<TEvidence> 
   body: string;
   detail: string | null;
 };
+
+/**
+ * Client-bound shape of an AthleteInsight row — Dates serialized to ISO strings
+ * so the wire/JSON boundary is explicit. Use `toWire()` from serialize.ts
+ * whenever passing Prisma rows to a client component.
+ */
+export type AthleteInsightWire = {
+  id: string;
+  athleteId: string;
+  category: InsightCategory;
+  metric: string;
+  event: InsightEvent | null;
+  title: string;
+  body: string;
+  detail: string | null;
+  confidenceBand: ConfidenceBand;
+  dataPoints: number;
+  coefficient: number | null;
+  effectSize: number | null;
+  effectUnit: string | null;
+  evidence: unknown;
+  readByCoachAt: string | null;
+  readByAthleteAt: string | null;
+  dismissedAt: string | null;
+  triggerKind: "MEET_COMPLETE" | "ON_DEMAND" | "CRON";
+  triggerMeetId: string | null;
+  computedAt: string;
+};
