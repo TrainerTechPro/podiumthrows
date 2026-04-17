@@ -1127,8 +1127,13 @@ export const InsightsListQuerySchema = z.object({
   mode: z.enum(["latest", "all"]).optional().default("latest"),
   category: z.enum(["TRAINING_PATTERN", "LIFT_THROW", "READINESS_COMPETITION"]).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  includeDismissed: z.coerce.boolean().optional().default(false),
 });
 
 export const InsightComputeSchema = z.object({
   athleteId: z.string().min(1, "Athlete ID is required"),
+});
+
+export const InsightDismissSchema = z.object({
+  undismiss: z.boolean().optional(),
 });
