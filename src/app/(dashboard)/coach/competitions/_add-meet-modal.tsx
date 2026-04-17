@@ -43,6 +43,14 @@ export function AddMeetModal({
   const [selectedAthletes, setSelectedAthletes] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
 
+  // v2 optional fields
+  const [venueType, setVenueType] = useState("");
+  const [format, setFormat] = useState("THREE_PLUS_THREE");
+  const [implementWeightKg, setImplementWeightKg] = useState("");
+  const [placeFinish, setPlaceFinish] = useState("");
+  const [windMps, setWindMps] = useState("");
+  const [weather, setWeather] = useState("");
+
   // Filter athletes who have at least one selected event
   const eligibleAthletes = athletes.filter((a) =>
     a.events.some((e) => selectedEvents.has(e)),
@@ -92,7 +100,27 @@ export function AddMeetModal({
       const res = await fetch("/api/coach/competitions", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ name: name.trim(), date, priority, entries }),
+        body: JSON.stringify({
+          name: name.trim(),
+          date,
+          priority,
+          entries,
+          venueType: venueType || null,
+          format,
+          implementWeightKg:
+            implementWeightKg === "" || implementWeightKg == null
+              ? null
+              : (() => { const n = parseFloat(implementWeightKg); return Number.isFinite(n) ? n : null; })(),
+          placeFinish:
+            placeFinish === "" || placeFinish == null
+              ? null
+              : (() => { const n = parseInt(placeFinish, 10); return Number.isFinite(n) ? n : null; })(),
+          windMps:
+            windMps === "" || windMps == null
+              ? null
+              : (() => { const n = parseFloat(windMps); return Number.isFinite(n) ? n : null; })(),
+          weather: weather.trim() || null,
+        }),
       });
 
       if (!res.ok) {
@@ -258,6 +286,116 @@ export function AddMeetModal({
             )}
           </div>
         )}
+
+        {/* More details — v2 optional fields */}
+        <details className="group">
+          <summary className="flex items-center gap-2 cursor-pointer select-none list-none text-sm font-semibold text-muted uppercase tracking-wider hover:text-[var(--foreground)] transition-colors">
+            <span
+              className="inline-block transition-transform duration-200 group-open:rotate-90"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+            More details
+          </summary>
+
+          <div className="mt-4 space-y-4">
+            {/* Venue type + Format */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                  Venue type
+                </label>
+                <select
+                  value={venueType}
+                  onChange={(e) => setVenueType(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                >
+                  <option value="">— unspecified —</option>
+                  <option value="INDOOR">Indoor</option>
+                  <option value="OUTDOOR">Outdoor</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                  Format
+                </label>
+                <select
+                  value={format}
+                  onChange={(e) => setFormat(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                >
+                  <option value="THREE_PLUS_THREE">3+3 (qualify → final)</option>
+                  <option value="FOUR_STRAIGHT">4 straight throws</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Implement weight + Place finish */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                  Implement weight (kg)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="default for event"
+                  value={implementWeightKg}
+                  onChange={(e) => setImplementWeightKg(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                  Place finish
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g. 1"
+                  value={placeFinish}
+                  onChange={(e) => setPlaceFinish(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Wind + Weather */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                  Wind (m/s)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  placeholder="e.g. +1.2"
+                  value={windMps}
+                  onChange={(e) => setWindMps(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                  Weather / conditions
+                </label>
+                <input
+                  type="text"
+                  placeholder="70°F sunny, windy, rain…"
+                  value={weather}
+                  onChange={(e) => setWeather(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
     </Modal>
   );
