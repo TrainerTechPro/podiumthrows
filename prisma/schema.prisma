@@ -167,6 +167,33 @@ enum PhaseType {
   TRANSITION
 }
 
+enum MeetStatus {
+  COMPLETED
+  DNS
+  DNF
+  DQ
+}
+
+enum VenueType {
+  INDOOR
+  OUTDOOR
+}
+
+enum CompFormat {
+  THREE_PLUS_THREE
+  FOUR_STRAIGHT
+}
+
+enum ThrowRound {
+  PRELIM
+  FINALS
+}
+
+enum FoulType {
+  RING
+  SECTOR
+}
+
 // ─── USER & AUTH ────────────────────────────────────────────────────────────
 
 model User {
@@ -666,6 +693,15 @@ model ThrowLog {
   notes                   String?
   videoUrl                String?
 
+  // NEW competition linkage (all nullable — practice rows leave null)
+  competitionId  String?
+  competition    ThrowsCompetition? @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  round          ThrowRound?
+  attemptInRound Int?
+  isFoul         Boolean            @default(false)
+  foulType       FoulType?
+  isPass         Boolean            @default(false)
+
   @@index([athleteId])
   @@index([athleteId, event])
   @@index([athleteId, date])
@@ -673,6 +709,7 @@ model ThrowLog {
   @@index([event])
   @@index([date])
   @@index([isPersonalBest])
+  @@index([competitionId])
 }
 
 // ─── THROW / SESSION COMMENTS ────────────────────────────────────────────────
@@ -1687,13 +1724,28 @@ model ThrowsCompetition {
   athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   name      String
   date      String // YYYY-MM-DD
-  event     EventType // SHOT_PUT, DISCUS, HAMMER, JAVELIN
-  priority  String         @default("B") // A, B, C
-  result    Float? // meters (filled after competition)
-  resultBy  String? // COACH | ATHLETE — who entered the result
-  notes     String?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  event     EventType
+  priority  String         @default("B") // A, B, C — kept
+
+  // Legacy single-result mode (preserved for existing rows)
+  result   Float? // meters; null on new per-throw rows
+  resultBy String? // COACH | ATHLETE — kept for legacy rows
+
+  // NEW per-meet context
+  implementWeightKg Float?
+  placeFinish       Int?
+  meetStatus        MeetStatus  @default(COMPLETED)
+  venueType         VenueType?
+  weather           String?
+  windMps           Float?
+  notes             String?
+  format            CompFormat? @default(THREE_PLUS_THREE)
+  madeFinals        Boolean?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  throws ThrowLog[]
 
   @@index([athleteId, date])
 }
