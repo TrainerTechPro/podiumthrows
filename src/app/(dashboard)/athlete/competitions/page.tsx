@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { CompetitionListCard } from "@/components/competitions/CompetitionListCard";
 import { StaggeredList } from "@/components/ui/StaggeredList";
+import { AthleteAddMeetButton } from "./_add-meet-button";
 
 export const metadata = { title: "Competitions — Podium Throws" };
 
@@ -12,9 +13,10 @@ export default async function AthleteCompetitionsPage() {
 
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
-    select: { id: true },
+    select: { id: true, events: true },
   });
   if (!athlete) return notFound();
+  const athleteEvents = (athlete.events as string[] | null) ?? [];
 
   const competitions = await prisma.throwsCompetition.findMany({
     where: { athleteId: athlete.id },
@@ -45,11 +47,21 @@ export default async function AthleteCompetitionsPage() {
 
   return (
     <div className="mx-auto max-w-4xl p-4">
-      <h1 className="mb-4 font-heading text-2xl">Competitions</h1>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="font-heading text-2xl">Competitions</h1>
+        <AthleteAddMeetButton athleteId={athlete.id} athleteEvents={athleteEvents} />
+      </div>
       {items.length === 0 ? (
-        <div className="card p-6 text-center text-muted">
-          No competitions logged yet. Ask your coach to add a meet to your schedule — or check back
-          after your next competition is entered.
+        <div className="card flex flex-col items-center gap-3 p-6 text-center text-muted">
+          <p>
+            No competitions logged yet. Log a meet you&apos;ve already thrown at, or wait for your
+            coach to add one.
+          </p>
+          <AthleteAddMeetButton
+            athleteId={athlete.id}
+            athleteEvents={athleteEvents}
+            variant="empty"
+          />
         </div>
       ) : (
         <StaggeredList className="grid gap-3">

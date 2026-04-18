@@ -40,7 +40,16 @@ export async function persistInsights(athleteId: string, items: PersistItem[]): 
     triggerMeetId: i.triggerMeetId,
   }));
 
-  const result = await prisma.athleteInsight.createMany({ data: rows });
+  // Dedupe: one row per (athleteId, category, metric). Delete prior rows for
+  // the slots we're about to write, then insert fresh. Transactional so
+  // readers never see a partial or empty state for a slot mid-write.
+  const slots = items.map((i) => ({ category: i.category, metric: i.metric }));
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.athleteInsight.deleteMany({
+      where: { athleteId, OR: slots },
+    });
+    return tx.athleteInsight.createMany({ data: rows });
+  });
 
   // Only fire notifications for brand-new (category, metric) slots.
   // Wrap in waitUntil so the dispatch survives the response returning —

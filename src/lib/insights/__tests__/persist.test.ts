@@ -4,18 +4,31 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   createMany: vi.fn(),
+  deleteMany: vi.fn(),
   notifyInsightsNew: vi.fn(),
   loggerError: vi.fn(),
 }));
 
-vi.mock("@/lib/prisma", () => ({
-  default: {
+vi.mock("@/lib/prisma", () => {
+  type PrismaLike = {
+    athleteInsight: {
+      findMany: (...a: unknown[]) => unknown;
+      createMany: (...a: unknown[]) => unknown;
+      deleteMany: (...a: unknown[]) => unknown;
+    };
+    $transaction: (fn: (tx: PrismaLike) => unknown) => unknown;
+  };
+  const prismaClient: PrismaLike = {
     athleteInsight: {
       findMany: (...a: unknown[]) => mocks.findMany(...a),
       createMany: (...a: unknown[]) => mocks.createMany(...a),
+      deleteMany: (...a: unknown[]) => mocks.deleteMany(...a),
     },
-  },
-}));
+    // Callback form: pass the same mock client as the transactional client.
+    $transaction: (fn) => fn(prismaClient),
+  };
+  return { default: prismaClient };
+});
 
 vi.mock("../notify", () => ({
   notifyInsightsNew: (...a: unknown[]) => mocks.notifyInsightsNew(...a),

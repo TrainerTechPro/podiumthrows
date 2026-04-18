@@ -154,6 +154,10 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
     toast.success("Throw removed");
   };
 
+  const handleVideoChange = (throwLogId: string, videoUrl: string | null) => {
+    setThrows((prev) => prev.map((t) => (t.id === throwLogId ? { ...t, videoUrl } : t)));
+  };
+
   const promoteLegacy = async () => {
     const res = await fetch(`/api/throws/competitions/${meetState.id}/promote-legacy`, {
       method: "POST",
@@ -199,6 +203,7 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
           throws={throws}
           onSave={saveThrow}
           onDelete={deleteThrow}
+          onVideoChange={handleVideoChange}
           onPromoteLegacy={promoteLegacy}
         />
       </div>

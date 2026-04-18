@@ -1,8 +1,9 @@
 "use client";
 import { useMemo, useState, useRef, useEffect } from "react";
-import { StickyNote } from "lucide-react";
+import { StickyNote, Video, X } from "lucide-react";
 import { parseDistance } from "@/lib/competitions/parseDistance";
 import { useToast } from "@/components/ui/Toast";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 export type CompThrowRow = {
   id: string;
@@ -34,6 +35,7 @@ type Props = {
   throws: CompThrowRow[];
   onSave: (input: ThrowSaveInput) => Promise<void>;
   onDelete: (throwLogId: string) => Promise<void>;
+  onVideoChange?: (throwLogId: string, videoUrl: string | null) => void;
   onPromoteLegacy?: () => Promise<void>;
 };
 
@@ -83,12 +85,14 @@ function ThrowRow({
   existing,
   onSave,
   onDelete,
+  onVideoChange,
 }: {
   slot: Slot;
   meet: CompMeet;
   existing: CompThrowRow | null;
   onSave: (input: ThrowSaveInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onVideoChange?: (throwLogId: string, videoUrl: string | null) => void;
 }) {
   const isHammer = meet.event === "HAMMER";
   const [resultType, setResultType] = useState<RowResultType>(() => {
@@ -243,6 +247,14 @@ function ThrowRow({
       )}
 
       <div className="ml-auto flex items-center gap-2">
+        {existing ? (
+          <VideoButton
+            meetId={meet.id}
+            throwLogId={existing.id}
+            videoUrl={existing.videoUrl}
+            onChange={onVideoChange}
+          />
+        ) : null}
         <button
           type="button"
           onClick={() => setNotesOpen((v) => !v)}
@@ -285,7 +297,133 @@ function ThrowRow({
   );
 }
 
-export function CompetitionThrowsTable({ meet, throws, onSave, onDelete, onPromoteLegacy }: Props) {
+function VideoButton({
+  meetId,
+  throwLogId,
+  videoUrl,
+  onChange,
+}: {
+  meetId: string;
+  throwLogId: string;
+  videoUrl: string | null;
+  onChange?: (throwLogId: string, videoUrl: string | null) => void;
+}) {
+  const toast = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    try {
+      const form = new FormData();
+      form.append("video", file);
+      const res = await fetch(`/api/throws/competitions/${meetId}/throws/${throwLogId}/video`, {
+        method: "POST",
+        headers: csrfHeaders(),
+        body: form,
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error ?? "Video upload failed");
+        return;
+      }
+      toast.success("Video attached");
+      onChange?.(throwLogId, json.data.videoUrl ?? null);
+    } catch {
+      toast.error("Network error uploading video");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeVideo() {
+    if (!confirm("Remove the video from this throw?")) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/throws/competitions/${meetId}/throws/${throwLogId}/video`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        toast.error(json.error ?? "Couldn't remove video");
+        return;
+      }
+      toast.success("Video removed");
+      setPreview(false);
+      onChange?.(throwLogId, null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => (videoUrl ? setPreview((v) => !v) : inputRef.current?.click())}
+        disabled={busy}
+        className={`rounded p-1 transition-colors ${
+          videoUrl
+            ? "text-primary-500 hover:text-primary-400"
+            : "text-muted hover:text-[var(--foreground)]"
+        } disabled:opacity-50`}
+        aria-label={
+          videoUrl
+            ? preview
+              ? "Hide video"
+              : "Show video"
+            : busy
+              ? "Uploading video"
+              : "Upload video"
+        }
+        aria-expanded={videoUrl ? preview : undefined}
+        title={
+          videoUrl ? (preview ? "Hide video" : "Show video") : busy ? "Uploading…" : "Upload video"
+        }
+      >
+        <Video size={14} strokeWidth={1.75} aria-hidden="true" />
+      </button>
+      <input ref={inputRef} type="file" accept="video/*" onChange={handleFile} className="hidden" />
+      {videoUrl && preview && (
+        <div className="basis-full pt-2">
+          <div className="relative overflow-hidden rounded-lg border border-[var(--card-border)] bg-black">
+            <video
+              src={videoUrl}
+              controls
+              playsInline
+              preload="metadata"
+              className="w-full max-h-72 object-contain"
+            />
+            <button
+              type="button"
+              onClick={removeVideo}
+              disabled={busy}
+              className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white hover:bg-danger-500 disabled:opacity-50"
+              aria-label="Remove video"
+              title="Remove video"
+            >
+              <X size={14} strokeWidth={2} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function CompetitionThrowsTable({
+  meet,
+  throws,
+  onSave,
+  onDelete,
+  onVideoChange,
+  onPromoteLegacy,
+}: Props) {
   const slots = useMemo(
     () => slotsFor(meet.format, meet.madeFinals),
     [meet.format, meet.madeFinals]
@@ -328,6 +466,7 @@ export function CompetitionThrowsTable({ meet, throws, onSave, onDelete, onPromo
               existing={existing}
               onSave={onSave}
               onDelete={onDelete}
+              onVideoChange={onVideoChange}
             />
           );
         })}
