@@ -1,13 +1,7 @@
 // src/lib/insights/analyzers/liftThrowCorrelation.ts
 import prisma from "@/lib/prisma";
 import { pearsonCorrelation } from "@/lib/throws/profile-utils";
-import {
-  canonicalLift,
-  estimateOneRM,
-  estimateThreeRM,
-  lbsToKg,
-  type CanonicalLift,
-} from "../rep-max";
+import { canonicalLift, estimateOneRM, lbsToKg, type CanonicalLift } from "../rep-max";
 import type { Analyzer, ConfidenceBand, InsightEvent, StructuredInsight } from "../types";
 import type { LiftThrowEvidence } from "../templates/liftThrowCorrelation";
 
@@ -77,7 +71,9 @@ export const liftThrowAnalyzer: Analyzer<LiftThrowEvidence> = {
     if (liftLogs.length === 0) return [];
 
     const earliestLiftMs = liftLogs[0].createdAt.getTime();
-    const liftWindows: Record<CanonicalLift, Map<number, { max1RM: number; max3RM: number }>> = {
+    // Epley 1RM only: 3RM is a constant scalar of 1RM (30/33), so Pearson and
+    // slope are scale-invariant — a 3RM basis added no new signal.
+    const liftWindows: Record<CanonicalLift, Map<number, number>> = {
       BACK_SQUAT: new Map(),
       FRONT_SQUAT: new Map(),
       POWER_CLEAN: new Map(),
@@ -91,15 +87,11 @@ export const liftThrowAnalyzer: Analyzer<LiftThrowEvidence> = {
       if (log.load == null || log.reps == null) continue;
       const weightKg = log.loadUnit === "lbs" ? lbsToKg(log.load) : log.load;
       const oneRM = estimateOneRM(weightKg, log.reps);
-      const threeRM = estimateThreeRM(weightKg, log.reps);
       if (oneRM === 0) continue;
       const idx = windowIndex(log.createdAt, earliestLiftMs);
       const existing = liftWindows[canon].get(idx);
-      if (!existing) {
-        liftWindows[canon].set(idx, { max1RM: oneRM, max3RM: threeRM });
-      } else {
-        if (oneRM > existing.max1RM) existing.max1RM = oneRM;
-        if (threeRM > existing.max3RM) existing.max3RM = threeRM;
+      if (existing == null || oneRM > existing) {
+        liftWindows[canon].set(idx, oneRM);
       }
     }
 
@@ -147,43 +139,38 @@ export const liftThrowAnalyzer: Analyzer<LiftThrowEvidence> = {
           .sort((a, b) => a - b);
         if (pairedIndexes.length < MIN_PAIRS) continue;
 
-        const one = pairedIndexes.map((i) => liftMap.get(i)!.max1RM);
-        const three = pairedIndexes.map((i) => liftMap.get(i)!.max3RM);
+        const one = pairedIndexes.map((i) => liftMap.get(i)!);
         const throws = pairedIndexes.map((i) => throwMap.get(i)!);
 
-        const r1 = pearsonCorrelation(one, throws) ?? 0;
-        const r3 = pearsonCorrelation(three, throws) ?? 0;
-        const useThreeRM = Math.abs(r3) > Math.abs(r1);
-        const chosenR = useThreeRM ? r3 : r1;
-        if (Math.abs(chosenR) < MIN_ABS_R) continue;
+        const r = pearsonCorrelation(one, throws) ?? 0;
+        if (Math.abs(r) < MIN_ABS_R) continue;
 
-        const xs = useThreeRM ? three : one;
-        const slope = simpleLinearSlope(xs, throws);
+        const slope = simpleLinearSlope(one, throws);
 
         const pairs = pairedIndexes.map((i, srcIdx) => ({
           windowStart: new Date(earliestLiftMs + i * WINDOW_MS).toISOString(),
-          repMaxKg: useThreeRM ? three[srcIdx] : one[srcIdx],
+          repMaxKg: one[srcIdx],
           bestMarkM: throws[srcIdx],
         }));
 
         results.push({
           category: "LIFT_THROW",
-          metric: `${canon.toLowerCase()}_${useThreeRM ? "3rm" : "1rm"}.${event.toLowerCase()}`,
+          metric: `${canon.toLowerCase()}_1rm.${event.toLowerCase()}`,
           event,
           confidenceBand: bandFor(pairedIndexes.length),
           dataPoints: pairedIndexes.length,
-          coefficient: chosenR,
+          coefficient: r,
           effectSize: slope,
           effectUnit: "meters per kg",
           evidence: {
             lift: canon,
             event,
-            repMaxBasis: useThreeRM ? "3RM" : "1RM",
+            repMaxBasis: "1RM",
             pairs,
-            pearsonR: chosenR,
+            pearsonR: r,
             regressionSlope: slope,
           },
-          renderInputs: { lift: canon, repMaxBasis: useThreeRM ? "3RM" : "1RM" },
+          renderInputs: { lift: canon, repMaxBasis: "1RM" },
         });
       }
     }

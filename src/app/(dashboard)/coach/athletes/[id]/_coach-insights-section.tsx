@@ -19,21 +19,33 @@ export function CoachInsightsSection({ athleteId, athleteName, initialInsights }
   const [evidenceFor, setEvidenceFor] = useState<AthleteInsightWire | null>(null);
   const [isRecomputing, startRecomputing] = useTransition();
 
-  const markRead = useCallback(async (id: string) => {
-    try {
-      await fetch(`/api/insights/${id}/read`, { method: "PATCH", headers: csrfHeaders() });
-      setInsights((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, readByCoachAt: new Date().toISOString() } : i))
-      );
-    } catch (err) {
-      console.error("mark read failed", err);
-    }
-  }, []);
+  const markRead = useCallback(
+    async (id: string) => {
+      try {
+        const res = await fetch(`/api/insights/${id}/read`, {
+          method: "PATCH",
+          headers: csrfHeaders(),
+        });
+        if (!res.ok) throw new Error(`mark read failed (${res.status})`);
+        setInsights((prev) =>
+          prev.map((i) => (i.id === id ? { ...i, readByCoachAt: new Date().toISOString() } : i))
+        );
+      } catch (err) {
+        toast(err instanceof Error ? err.message : "Mark-read failed", "error");
+      }
+    },
+    [toast]
+  );
 
   const dismiss = useCallback(
     async (id: string) => {
-      const prev = insights;
-      setInsights(prev.filter((i) => i.id !== id));
+      // Snapshot from latest state so rapid successive dismisses roll back
+      // only their own item rather than reverting other concurrent changes.
+      let target: AthleteInsightWire | undefined;
+      setInsights((prev) => {
+        target = prev.find((i) => i.id === id);
+        return prev.filter((i) => i.id !== id);
+      });
       try {
         const res = await fetch(`/api/insights/${id}/dismiss`, {
           method: "PATCH",
@@ -46,10 +58,15 @@ export function CoachInsightsSection({ athleteId, athleteName, initialInsights }
         }
       } catch (err) {
         toast(err instanceof Error ? err.message : "Failed to dismiss", "error");
-        setInsights(prev);
+        if (target) {
+          const restored = target;
+          setInsights((prev) =>
+            prev.some((i) => i.id === restored.id) ? prev : [...prev, restored]
+          );
+        }
       }
     },
-    [insights, toast]
+    [toast]
   );
 
   const showEvidence = (id: string) => {

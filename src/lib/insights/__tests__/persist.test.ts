@@ -25,6 +25,12 @@ vi.mock("@/lib/logger", () => ({
   logger: { error: mocks.loggerError, warn: vi.fn(), info: vi.fn() },
 }));
 
+// Passthrough: let the wrapped promise resolve/reject naturally so the
+// inner .catch() runs and we can assert logger error vs notify calls.
+vi.mock("@vercel/functions", () => ({
+  waitUntil: (p: Promise<unknown>) => p,
+}));
+
 import { persistInsights } from "../persist";
 
 function row(

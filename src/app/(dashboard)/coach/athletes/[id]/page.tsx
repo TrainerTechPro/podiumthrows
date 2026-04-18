@@ -1679,7 +1679,7 @@ export default async function AthleteProfilePage({
     ORDER BY "athleteId", "category", "metric", "computedAt" DESC
     LIMIT 50
   `);
-  const insights = insightRows.map(toWire);
+  const insights = insightRows.map((row) => toWire(row, "COACH"));
 
   const athleteName =
     `${athlete.firstName ?? ""} ${athlete.lastName ?? ""}`.trim() ||

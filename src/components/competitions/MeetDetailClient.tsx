@@ -4,10 +4,14 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { CompetitionThrowsTable } from "@/components/competitions/CompetitionThrowsTable";
-import type { CompThrowRow, ThrowSaveInput } from "@/components/competitions/CompetitionThrowsTable";
+import type {
+  CompThrowRow,
+  ThrowSaveInput,
+} from "@/components/competitions/CompetitionThrowsTable";
 import { CompetitionMeetHeader } from "@/components/competitions/CompetitionMeetHeader";
 import type { MeetHeaderValue } from "@/components/competitions/CompetitionMeetHeader";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
+import { csrfHeaders } from "@/lib/csrf-client";
 
 type MeetRow = {
   id: string;
@@ -55,7 +59,7 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
   const saveHeader = async (patch: Partial<MeetHeaderValue>) => {
     const res = await fetch("/api/throws/competitions", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...csrfHeaders() },
       body: JSON.stringify({ id: meetState.id, ...patch }),
     });
     const json = await res.json();
@@ -105,7 +109,7 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
 
     const res = await fetch(`/api/throws/competitions/${meetState.id}/throws${qs}`, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...csrfHeaders() },
       body: JSON.stringify(body),
     });
     const json = await res.json();
@@ -139,6 +143,7 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
   const deleteThrow = async (id: string) => {
     const res = await fetch(`/api/throws/competitions/${meetState.id}/throws?throwLogId=${id}`, {
       method: "DELETE",
+      headers: { ...csrfHeaders() },
     });
     const json = await res.json();
     if (!res.ok || !json.success) {
@@ -152,7 +157,7 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
   const promoteLegacy = async () => {
     const res = await fetch(`/api/throws/competitions/${meetState.id}/promote-legacy`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...csrfHeaders() },
       body: "{}",
     });
     const json = await res.json();

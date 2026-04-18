@@ -65,7 +65,8 @@ describe("InsightCard", () => {
     expect(screen.getByText("Your best shot put throws follow 8kg shot weeks")).toBeInTheDocument();
     expect(screen.getByText(/Weeks with more 8kg shot sessions/)).toBeInTheDocument();
     expect(screen.getByText(/Pattern strength: Medium/)).toBeInTheDocument();
-    expect(screen.getByText(/MEDIUM/i)).toBeInTheDocument();
+    // The band badge carries the full value in an aria-label for a11y.
+    expect(screen.getByLabelText("Confidence: MEDIUM")).toBeInTheDocument();
   });
 
   it("shows NEW dot when unread for caller's role", () => {

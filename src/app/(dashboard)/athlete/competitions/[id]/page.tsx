@@ -23,15 +23,21 @@ export default async function AthleteMeetDetailPage({ params }: Props) {
     where: { id },
     include: {
       athlete: { select: { id: true, userId: true } },
-      throws: {
-        orderBy: [{ round: "asc" }, { attemptInRound: "asc" }],
-      },
+      throws: true,
     },
   });
   if (!meet) return notFound();
 
   // Safety net: athlete can only see their own competitions
   if (meet.athlete.userId !== session.userId) return notFound();
+
+  // Hand-sort: Postgres sorts the ThrowRound enum alphabetically (FINALS < PRELIM).
+  const roundOrder: Record<string, number> = { PRELIM: 0, FINALS: 1 };
+  meet.throws.sort((a, b) => {
+    const ro = (roundOrder[a.round ?? ""] ?? 99) - (roundOrder[b.round ?? ""] ?? 99);
+    if (ro !== 0) return ro;
+    return (a.attemptInRound ?? 0) - (b.attemptInRound ?? 0);
+  });
 
   const serialized = {
     id: meet.id,

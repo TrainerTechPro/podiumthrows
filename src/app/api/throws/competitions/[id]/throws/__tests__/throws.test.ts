@@ -69,12 +69,12 @@ describe("GET /api/throws/competitions/[id]/throws", () => {
     const body = await res.json();
     expect(body.success).toBe(true);
     expect(body.data).toHaveLength(2);
+    // Ordering is applied in JS (to avoid Postgres alphabetical enum sort);
+    // assert the fetched scope + the resulting order.
     expect(mockThrowFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { competitionId: "m1" },
-        orderBy: [{ round: "asc" }, { attemptInRound: "asc" }],
-      })
+      expect.objectContaining({ where: { competitionId: "m1" } })
     );
+    expect(body.data.map((t: { id: string }) => t.id)).toEqual(["t1", "t2"]);
   });
 });
 
@@ -177,10 +177,11 @@ describe("PATCH /api/throws/competitions/[id]/throws", () => {
       athleteId: "a1",
       event: "SHOT_PUT",
       format: "THREE_PLUS_THREE",
+      madeFinals: false,
       name: "Big Invite",
       athlete: { gender: "MALE" },
+      throws: [{ id: "t1", round: "PRELIM", attemptInRound: 1 }],
     });
-    mockThrowFindUnique.mockResolvedValue({ id: "t1", competitionId: "m1" });
     mockThrowUpdate.mockResolvedValue({ id: "t1", distance: 19.0 });
     mockGetAthletePRs
       .mockResolvedValueOnce({ events: [{ event: "SHOT_PUT", competitionPR: { distance: 18.0 } }] })
@@ -207,10 +208,11 @@ describe("PATCH /api/throws/competitions/[id]/throws", () => {
       athleteId: "a1",
       event: "SHOT_PUT",
       format: "THREE_PLUS_THREE",
+      madeFinals: false,
       name: "Big Invite",
       athlete: { gender: "MALE" },
+      throws: [{ id: "t1", round: "PRELIM", attemptInRound: 1 }],
     });
-    mockThrowFindUnique.mockResolvedValue({ id: "t1", competitionId: "m1" });
     mockThrowUpdate.mockResolvedValue({ id: "t1", notes: "great setup" });
     mockGetAthletePRs.mockResolvedValue({ events: [{ event: "SHOT_PUT", competitionPR: null }] });
 
@@ -233,10 +235,12 @@ describe("PATCH /api/throws/competitions/[id]/throws", () => {
       athleteId: "a1",
       event: "SHOT_PUT",
       format: "THREE_PLUS_THREE",
+      madeFinals: false,
       name: "X",
       athlete: { gender: "MALE" },
+      // Throw t1 is NOT in this meet's throws array → PATCH should 404.
+      throws: [{ id: "other-throw", round: "PRELIM", attemptInRound: 2 }],
     });
-    mockThrowFindUnique.mockResolvedValue({ id: "t1", competitionId: "OTHER_MEET" });
     const req = new NextRequest("http://t?throwLogId=t1", {
       method: "PATCH",
       body: JSON.stringify({ notes: "hi" }),

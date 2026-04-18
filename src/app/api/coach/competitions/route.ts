@@ -101,7 +101,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("coach competitions GET error", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch competitions" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch competitions" },
+      { status: 500 }
+    );
   }
 }
 
@@ -111,17 +114,34 @@ export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
     const body = await req.json();
-    const { name, date, priority, entries } = body as {
+    const {
+      name,
+      date,
+      priority,
+      entries,
+      venueType,
+      format,
+      implementWeightKg,
+      placeFinish,
+      windMps,
+      weather,
+    } = body as {
       name: string;
       date: string;
       priority?: string;
       entries: { athleteId: string; event: string }[];
+      venueType?: "INDOOR" | "OUTDOOR" | null;
+      format?: "THREE_PLUS_THREE" | "FOUR_STRAIGHT" | null;
+      implementWeightKg?: number | null;
+      placeFinish?: number | null;
+      windMps?: number | null;
+      weather?: string | null;
     };
 
     if (!name?.trim() || !date?.trim() || !entries?.length) {
       return NextResponse.json(
         { success: false, error: "name, date, and entries[] are required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -136,11 +156,11 @@ export async function POST(req: NextRequest) {
     if (invalidIds.length > 0) {
       return NextResponse.json(
         { success: false, error: `Athletes not on your roster: ${invalidIds.join(", ")}` },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
-    // Create all competition entries in a transaction
+    // Create all competition entries in a transaction, preserving v2 context fields.
     const created = await prisma.$transaction(
       entries.map((entry) =>
         prisma.throwsCompetition.create({
@@ -150,9 +170,15 @@ export async function POST(req: NextRequest) {
             date: date.trim(),
             event: entry.event as EventType,
             priority: priority || "B",
+            venueType: venueType ?? null,
+            format: format ?? "THREE_PLUS_THREE",
+            implementWeightKg: implementWeightKg ?? null,
+            placeFinish: placeFinish ?? null,
+            windMps: windMps ?? null,
+            weather: weather ?? null,
           },
-        }),
-      ),
+        })
+      )
     );
 
     return NextResponse.json({ success: true, data: created });
@@ -161,7 +187,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("coach competitions POST error", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to create competition entries" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to create competition entries" },
+      { status: 500 }
+    );
   }
 }
 
@@ -201,7 +230,10 @@ export async function PATCH(req: NextRequest) {
     for (const r of results) {
       const comp = existingMap.get(r.id);
       if (!comp) {
-        return NextResponse.json({ success: false, error: `Competition ${r.id} not found` }, { status: 404 });
+        return NextResponse.json(
+          { success: false, error: `Competition ${r.id} not found` },
+          { status: 404 }
+        );
       }
       if (comp.athlete.coachId !== coach.id) {
         return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
@@ -285,7 +317,10 @@ export async function PATCH(req: NextRequest) {
               distance: r.result,
               previousDistance: existingPR?.distance ?? null,
             }).catch((err) =>
-              logger.error("Team activity PR emit failed", { context: "coach/competitions", error: err })
+              logger.error("Team activity PR emit failed", {
+                context: "coach/competitions",
+                error: err,
+              })
             );
           }
         }
@@ -302,6 +337,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("coach competitions PATCH error", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update results" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update results" },
+      { status: 500 }
+    );
   }
 }

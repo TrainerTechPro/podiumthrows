@@ -17,21 +17,33 @@ export function AthleteInsightsClient({ athleteId, initialInsights }: Props) {
   const [showDismissed, setShowDismissed] = useState(false);
   const [isRecomputing, startRecomputing] = useTransition();
 
-  const markRead = useCallback(async (id: string) => {
-    try {
-      await fetch(`/api/insights/${id}/read`, { method: "PATCH", headers: csrfHeaders() });
-      setInsights((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, readByAthleteAt: new Date().toISOString() } : i))
-      );
-    } catch (err) {
-      console.error("mark read failed", err);
-    }
-  }, []);
+  const markRead = useCallback(
+    async (id: string) => {
+      try {
+        const res = await fetch(`/api/insights/${id}/read`, {
+          method: "PATCH",
+          headers: csrfHeaders(),
+        });
+        if (!res.ok) throw new Error(`mark read failed (${res.status})`);
+        setInsights((prev) =>
+          prev.map((i) => (i.id === id ? { ...i, readByAthleteAt: new Date().toISOString() } : i))
+        );
+      } catch (err) {
+        toast(err instanceof Error ? err.message : "Mark-read failed", "error");
+      }
+    },
+    [toast]
+  );
 
   const dismiss = useCallback(
     async (id: string) => {
-      const prev = insights;
-      setInsights(prev.filter((i) => i.id !== id));
+      // Snapshot the target item from the latest state (not a captured closure)
+      // so rapid successive dismisses can each roll back just their own item.
+      let target: AthleteInsightWire | undefined;
+      setInsights((prev) => {
+        target = prev.find((i) => i.id === id);
+        return prev.filter((i) => i.id !== id);
+      });
       try {
         const res = await fetch(`/api/insights/${id}/dismiss`, {
           method: "PATCH",
@@ -44,10 +56,16 @@ export function AthleteInsightsClient({ athleteId, initialInsights }: Props) {
         }
       } catch (err) {
         toast(err instanceof Error ? err.message : "Failed to dismiss", "error");
-        setInsights(prev);
+        // Restore only the affected item; leave any other concurrent changes alone.
+        if (target) {
+          const restored = target;
+          setInsights((prev) =>
+            prev.some((i) => i.id === restored.id) ? prev : [...prev, restored]
+          );
+        }
       }
     },
-    [insights, toast]
+    [toast]
   );
 
   const toggleDismissed = async () => {

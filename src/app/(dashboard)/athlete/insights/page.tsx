@@ -25,7 +25,7 @@ export default async function AthleteInsightsPage() {
     LIMIT 50
   `);
 
-  const insights = rawRows.map((row) => toWire(row));
+  const insights = rawRows.map((row) => toWire(row, "ATHLETE"));
 
   return <AthleteInsightsClient athleteId={profile.id} initialInsights={insights} />;
 }

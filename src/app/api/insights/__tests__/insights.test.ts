@@ -20,13 +20,41 @@ vi.mock("@/lib/logger", () => ({ logger: { error: vi.fn() } }));
 
 import { GET } from "../route";
 
+// Minimal row factory — the route now runs each row through toWire(),
+// which dereferences Date fields, so tests must supply realistic shapes.
+function row(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "i1",
+    athleteId: "a1",
+    category: "TRAINING_PATTERN",
+    metric: "m1",
+    event: null,
+    title: "T",
+    body: "B",
+    detail: null,
+    confidenceBand: "MEDIUM",
+    dataPoints: 10,
+    coefficient: 0.5,
+    effectSize: null,
+    effectUnit: null,
+    evidence: {},
+    readByCoachAt: null,
+    readByAthleteAt: null,
+    dismissedAt: null,
+    triggerKind: "ON_DEMAND",
+    triggerMeetId: null,
+    computedAt: new Date("2026-04-17T00:00:00Z"),
+    ...overrides,
+  };
+}
+
 describe("GET /api/insights", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns latest-per-slot when mode=latest", async () => {
     mocks.queryRaw.mockResolvedValue([
-      { id: "i1", category: "TRAINING_PATTERN", metric: "ex1", title: "T1" },
-      { id: "i2", category: "LIFT_THROW", metric: "l1", title: "L1" },
+      row({ id: "i1", category: "TRAINING_PATTERN", metric: "ex1", title: "T1" }),
+      row({ id: "i2", category: "LIFT_THROW", metric: "l1", title: "L1" }),
     ]);
     const req = new NextRequest("http://t/api/insights?athleteId=a1&mode=latest");
     const res = await GET(req);
@@ -38,7 +66,7 @@ describe("GET /api/insights", () => {
   });
 
   it("returns full history when mode=all", async () => {
-    mocks.findMany.mockResolvedValue([{ id: "i1" }, { id: "i2" }, { id: "i3" }]);
+    mocks.findMany.mockResolvedValue([row({ id: "i1" }), row({ id: "i2" }), row({ id: "i3" })]);
     const req = new NextRequest("http://t/api/insights?athleteId=a1&mode=all");
     const res = await GET(req);
     const body = await res.json();
@@ -70,7 +98,7 @@ describe("GET /api/insights (includeDismissed)", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("filters out dismissed rows by default in mode=all", async () => {
-    mocks.findMany.mockResolvedValue([{ id: "i1" }]);
+    mocks.findMany.mockResolvedValue([row({ id: "i1" })]);
     const req = new NextRequest("http://t/api/insights?athleteId=a1&mode=all");
     await GET(req);
 
@@ -79,7 +107,7 @@ describe("GET /api/insights (includeDismissed)", () => {
   });
 
   it("returns all rows when includeDismissed=true in mode=all", async () => {
-    mocks.findMany.mockResolvedValue([{ id: "i1" }, { id: "i2" }]);
+    mocks.findMany.mockResolvedValue([row({ id: "i1" }), row({ id: "i2" })]);
     const req = new NextRequest(
       "http://t/api/insights?athleteId=a1&mode=all&includeDismissed=true"
     );

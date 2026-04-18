@@ -30,7 +30,9 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
     setDirty((d) => ({ ...d, [key]: v }));
   };
 
-  const handleBlur = async () => {
+  const handleBlur: React.FocusEventHandler<HTMLDivElement> = async (e) => {
+    // Don't save when focus moves between fields inside the same card.
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
     if (Object.keys(dirty).length === 0) return;
     await onChange(dirty);
     setDirty({});
@@ -61,9 +63,13 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
             type="number"
             min={1}
             value={merged.placeFinish ?? ""}
-            onChange={(e) =>
-              handleField("placeFinish", e.target.value ? Number(e.target.value) : null)
-            }
+            onChange={(e) => {
+              const v = e.target.value;
+              handleField(
+                "placeFinish",
+                v === "" ? null : Number.isFinite(Number(v)) ? Number(v) : null
+              );
+            }}
             className="w-16 rounded bg-surface-800 px-2 py-1 font-mono tabular-nums"
           />
         </label>
@@ -88,10 +94,7 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
           <select
             value={merged.venueType ?? ""}
             onChange={(e) =>
-              handleField(
-                "venueType",
-                (e.target.value || null) as MeetHeaderValue["venueType"],
-              )
+              handleField("venueType", (e.target.value || null) as MeetHeaderValue["venueType"])
             }
             className="rounded bg-surface-800 px-2 py-1"
           >
@@ -106,9 +109,13 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
             type="number"
             step="0.1"
             value={merged.windMps ?? ""}
-            onChange={(e) =>
-              handleField("windMps", e.target.value ? Number(e.target.value) : null)
-            }
+            onChange={(e) => {
+              const v = e.target.value;
+              handleField(
+                "windMps",
+                v === "" ? null : Number.isFinite(Number(v)) ? Number(v) : null
+              );
+            }}
             className="w-20 rounded bg-surface-800 px-2 py-1 font-mono tabular-nums"
           />
         </label>
@@ -125,9 +132,7 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
           <span className="text-muted">Format</span>
           <select
             value={merged.format}
-            onChange={(e) =>
-              handleField("format", e.target.value as MeetHeaderValue["format"])
-            }
+            onChange={(e) => handleField("format", e.target.value as MeetHeaderValue["format"])}
             className="rounded bg-surface-800 px-2 py-1"
           >
             <option value="THREE_PLUS_THREE">3 + 3</option>

@@ -1,5 +1,6 @@
 // src/lib/insights/persist.ts
 import { Prisma } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { notifyInsightsNew } from "./notify";
@@ -41,26 +42,30 @@ export async function persistInsights(athleteId: string, items: PersistItem[]): 
 
   const result = await prisma.athleteInsight.createMany({ data: rows });
 
-  // Fire-and-forget: only for NEW slots. Failure never breaks persist.
+  // Only fire notifications for brand-new (category, metric) slots.
+  // Wrap in waitUntil so the dispatch survives the response returning —
+  // Next.js 14.2 on Vercel kills un-waited promises after the handler resolves.
   const newSlotItems = items.filter((i) => !seenSet.has(`${i.category}:${i.metric}`));
   if (newSlotItems.length > 0) {
-    void Promise.resolve(
-      notifyInsightsNew(
-        athleteId,
-        newSlotItems.map((i) => ({
-          category: i.category,
-          metric: i.metric,
-          title: i.title,
-          body: i.body,
-        }))
-      )
-    ).catch((err) => {
-      logger.error("insight notification dispatch failed", {
-        context: "insights/persist",
-        metadata: { athleteId },
-        error: err,
-      });
-    });
+    waitUntil(
+      Promise.resolve(
+        notifyInsightsNew(
+          athleteId,
+          newSlotItems.map((i) => ({
+            category: i.category,
+            metric: i.metric,
+            title: i.title,
+            body: i.body,
+          }))
+        )
+      ).catch((err) => {
+        logger.error("insight notification dispatch failed", {
+          context: "insights/persist",
+          metadata: { athleteId },
+          error: err,
+        });
+      })
+    );
   }
 
   return result.count;

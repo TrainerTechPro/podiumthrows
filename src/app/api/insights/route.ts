@@ -1,11 +1,12 @@
 // src/app/api/insights/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
+import { Prisma, type AthleteInsight } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { InsightsListQuerySchema } from "@/lib/api-schemas";
+import { toWire } from "@/lib/insights/serialize";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    let insights: unknown[];
+    let rawRows: AthleteInsight[];
 
     if (mode === "latest") {
       const categoryFilter = category
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
         : Prisma.empty;
       const dismissFilter = includeDismissed ? Prisma.empty : Prisma.sql`AND "dismissedAt" IS NULL`;
 
-      insights = await prisma.$queryRaw<unknown[]>(Prisma.sql`
+      rawRows = await prisma.$queryRaw<AthleteInsight[]>(Prisma.sql`
         SELECT DISTINCT ON ("athleteId", "category", "metric") *
         FROM "AthleteInsight"
         WHERE "athleteId" = ${athleteId}
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
         LIMIT ${limit}
       `);
     } else {
-      insights = await prisma.athleteInsight.findMany({
+      rawRows = await prisma.athleteInsight.findMany({
         where: {
           athleteId,
           ...(category ? { category } : {}),
@@ -62,6 +63,10 @@ export async function GET(request: NextRequest) {
         take: limit,
       });
     }
+
+    // Strip coach-only evidence from athlete payloads.
+    const role = currentUser.role === "COACH" ? "COACH" : "ATHLETE";
+    const insights = rawRows.map((r) => toWire(r, role));
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
+import type { ReactElement } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CompetitionThrowsTable } from "../CompetitionThrowsTable";
+import { ToastProvider } from "@/components/ui/Toast";
+
+function renderWithToast(ui: ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
 
 const baseMeet = {
   id: "m1",
@@ -15,7 +21,7 @@ const baseMeet = {
 
 describe("CompetitionThrowsTable — base rendering", () => {
   it("renders 3 prelim rows for THREE_PLUS_THREE", () => {
-    render(
+    renderWithToast(
       <CompetitionThrowsTable meet={baseMeet} throws={[]} onSave={vi.fn()} onDelete={vi.fn()} />
     );
     expect(screen.getAllByTestId(/^throw-row-PRELIM-/)).toHaveLength(3);
@@ -23,14 +29,19 @@ describe("CompetitionThrowsTable — base rendering", () => {
   });
 
   it("shows finals section when madeFinals=true", () => {
-    render(
-      <CompetitionThrowsTable meet={{ ...baseMeet, madeFinals: true }} throws={[]} onSave={vi.fn()} onDelete={vi.fn()} />
+    renderWithToast(
+      <CompetitionThrowsTable
+        meet={{ ...baseMeet, madeFinals: true }}
+        throws={[]}
+        onSave={vi.fn()}
+        onDelete={vi.fn()}
+      />
     );
     expect(screen.getAllByTestId(/^throw-row-FINALS-/)).toHaveLength(3);
   });
 
   it("renders 4 rows for FOUR_STRAIGHT", () => {
-    render(
+    renderWithToast(
       <CompetitionThrowsTable
         meet={{ ...baseMeet, format: "FOUR_STRAIGHT" }}
         throws={[]}
@@ -42,7 +53,7 @@ describe("CompetitionThrowsTable — base rendering", () => {
   });
 
   it("shows legacy banner when result != null and no throws", () => {
-    render(
+    renderWithToast(
       <CompetitionThrowsTable
         meet={{ ...baseMeet, result: 17.5 }}
         throws={[]}
@@ -55,10 +66,23 @@ describe("CompetitionThrowsTable — base rendering", () => {
   });
 
   it("hides legacy banner when throws exist", () => {
-    render(
+    renderWithToast(
       <CompetitionThrowsTable
         meet={{ ...baseMeet, result: 17.5 }}
-        throws={[{ id: "t1", round: "PRELIM", attemptInRound: 1, distance: 18, isFoul: false, isPass: false, foulType: null, notes: null, videoUrl: null, wireLength: null }]}
+        throws={[
+          {
+            id: "t1",
+            round: "PRELIM",
+            attemptInRound: 1,
+            distance: 18,
+            isFoul: false,
+            isPass: false,
+            foulType: null,
+            notes: null,
+            videoUrl: null,
+            wireLength: null,
+          },
+        ]}
         onSave={vi.fn()}
         onDelete={vi.fn()}
       />
@@ -70,7 +94,7 @@ describe("CompetitionThrowsTable — base rendering", () => {
 describe("CompetitionThrowsTable — interactions", () => {
   it("switching to Foul reveals foulType picker", async () => {
     const user = userEvent.setup();
-    render(
+    renderWithToast(
       <CompetitionThrowsTable meet={baseMeet} throws={[]} onSave={vi.fn()} onDelete={vi.fn()} />
     );
     const row = screen.getByTestId("throw-row-PRELIM-1");
@@ -82,22 +106,27 @@ describe("CompetitionThrowsTable — interactions", () => {
   it("saves on row blur when distance + Mark selected", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
-    render(<CompetitionThrowsTable meet={baseMeet} throws={[]} onSave={onSave} onDelete={vi.fn()} />);
+    renderWithToast(
+      <CompetitionThrowsTable meet={baseMeet} throws={[]} onSave={onSave} onDelete={vi.fn()} />
+    );
     const row = screen.getByTestId("throw-row-PRELIM-1");
     await user.click(row.querySelector('[data-type="MARK"]') as HTMLElement);
     const input = row.querySelector('input[data-testid="distance-input"]') as HTMLInputElement;
     await user.type(input, "18.42");
     fireEvent.blur(row);
-    await waitFor(() => {
-      expect(onSave).toHaveBeenCalledWith(
-        expect.objectContaining({
-          round: "PRELIM",
-          attemptInRound: 1,
-          distance: 18.42,
-          isFoul: false,
-          isPass: false,
-        })
-      );
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(onSave).toHaveBeenCalledWith(
+          expect.objectContaining({
+            round: "PRELIM",
+            attemptInRound: 1,
+            distance: 18.42,
+            isFoul: false,
+            isPass: false,
+          })
+        );
+      },
+      { timeout: 2000 }
+    );
   });
 });

@@ -64,10 +64,18 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 
     const throws = await prisma.throwLog.findMany({
       where: { competitionId: id },
-      orderBy: [{ round: "asc" }, { attemptInRound: "asc" }],
     });
 
-    return NextResponse.json({ success: true, data: throws });
+    // Postgres sorts the ThrowRound enum alphabetically (FINALS < PRELIM);
+    // hand-sort so PRELIM always comes before FINALS.
+    const roundOrder: Record<string, number> = { PRELIM: 0, FINALS: 1 };
+    const sorted = [...throws].sort((a, b) => {
+      const ro = (roundOrder[a.round ?? ""] ?? 99) - (roundOrder[b.round ?? ""] ?? 99);
+      if (ro !== 0) return ro;
+      return (a.attemptInRound ?? 0) - (b.attemptInRound ?? 0);
+    });
+
+    return NextResponse.json({ success: true, data: sorted });
   } catch (error) {
     logger.error("Get competition throws error", { context: "competitions/throws", error });
     return NextResponse.json({ success: false, error: "Failed to fetch throws" }, { status: 500 });
@@ -255,8 +263,10 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
         athleteId: true,
         event: true,
         format: true,
+        madeFinals: true,
         name: true,
         athlete: { select: { gender: true } },
+        throws: { select: { id: true, round: true, attemptInRound: true } },
       },
     });
     if (!meet) {
@@ -272,16 +282,36 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const existing = await prisma.throwLog.findUnique({
-      where: { id: throwLogId },
-      select: { id: true, competitionId: true },
-    });
-    if (!existing || existing.competitionId !== competitionId) {
+    const existing = meet.throws.find((t) => t.id === throwLogId);
+    if (!existing) {
       return NextResponse.json({ success: false, error: "Throw not found" }, { status: 404 });
     }
 
     const parsed = await parseBody(request, CompetitionThrowUpdateSchema);
     if (parsed instanceof NextResponse) return parsed;
+
+    // If the slot is changing, re-validate against format + check uniqueness.
+    const nextRound = parsed.round ?? (existing.round as "PRELIM" | "FINALS" | null);
+    const nextAttempt = parsed.attemptInRound ?? existing.attemptInRound;
+    if (nextRound != null && nextAttempt != null) {
+      const format = (meet.format ?? "THREE_PLUS_THREE") as "THREE_PLUS_THREE" | "FOUR_STRAIGHT";
+      const slotError = validateThrowSlot(format, nextRound as ThrowRound, nextAttempt);
+      if (slotError) {
+        return NextResponse.json({ success: false, error: slotError }, { status: 400 });
+      }
+      const duplicate = meet.throws.some(
+        (t) => t.id !== throwLogId && t.round === nextRound && t.attemptInRound === nextAttempt
+      );
+      if (duplicate) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Attempt ${nextAttempt} of ${nextRound} already logged`,
+          },
+          { status: 409 }
+        );
+      }
+    }
 
     // Build the column diff — only include fields explicitly provided
     const data: Record<string, unknown> = {};
@@ -338,6 +368,35 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
       prCelebration,
       isFirstThrow: false,
     });
+
+    // Retroactive edits can complete a meet (e.g., fixing the 6th throw).
+    // Mirror POST's meet-complete check so insights fire in that case too.
+    const throwsAfterEdit = meet.throws
+      .filter(
+        (t): t is { id: string; round: "PRELIM" | "FINALS"; attemptInRound: number } =>
+          (t.round === "PRELIM" || t.round === "FINALS") && t.attemptInRound != null
+      )
+      .map((t) => ({ round: t.round, attemptInRound: t.attemptInRound }));
+    if (
+      isMeetComplete(
+        (meet.format ?? "THREE_PLUS_THREE") as "THREE_PLUS_THREE" | "FOUR_STRAIGHT",
+        meet.madeFinals,
+        throwsAfterEdit
+      )
+    ) {
+      waitUntil(
+        runInsights({
+          athleteId: meet.athleteId,
+          trigger: "MEET_COMPLETE",
+          triggerMeetId: competitionId,
+        }).catch((err) => {
+          logger.error("post-meet insights failed", {
+            metadata: { meetId: competitionId },
+            error: err,
+          });
+        })
+      );
+    }
 
     return NextResponse.json({ success: true, data: { throwLog, prCelebration } });
   } catch (error) {

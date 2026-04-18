@@ -3,9 +3,15 @@ import type { AthleteInsightWire } from "./types";
 
 /**
  * Convert a Prisma AthleteInsight row to its client-bound wire shape.
- * All `Date` fields become ISO strings; everything else is passed through.
+ *
+ * `evidence` carries coach-only internals (session IDs, meet IDs, raw pair
+ * arrays) surfaced in the Evidence drawer. It is stripped from the athlete
+ * payload so the data never leaves the server for athlete-bound responses.
  */
-export function toWire(insight: AthleteInsight): AthleteInsightWire {
+export function toWire(
+  insight: AthleteInsight,
+  role: "COACH" | "ATHLETE" = "COACH"
+): AthleteInsightWire {
   return {
     id: insight.id,
     athleteId: insight.athleteId,
@@ -20,7 +26,7 @@ export function toWire(insight: AthleteInsight): AthleteInsightWire {
     coefficient: insight.coefficient,
     effectSize: insight.effectSize,
     effectUnit: insight.effectUnit,
-    evidence: insight.evidence,
+    evidence: role === "COACH" ? insight.evidence : null,
     readByCoachAt: insight.readByCoachAt?.toISOString() ?? null,
     readByAthleteAt: insight.readByAthleteAt?.toISOString() ?? null,
     dismissedAt: insight.dismissedAt?.toISOString() ?? null,

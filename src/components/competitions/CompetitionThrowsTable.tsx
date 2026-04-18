@@ -1,6 +1,8 @@
 "use client";
 import { useMemo, useState, useRef, useEffect } from "react";
+import { StickyNote } from "lucide-react";
 import { parseDistance } from "@/lib/competitions/parseDistance";
+import { useToast } from "@/components/ui/Toast";
 
 export type CompThrowRow = {
   id: string;
@@ -37,19 +39,13 @@ type Props = {
 
 type Slot = { round: "PRELIM" | "FINALS"; attemptInRound: number };
 
-function slotsFor(
-  format: CompMeet["format"],
-  madeFinals: boolean | null
-): Slot[] {
+function slotsFor(format: CompMeet["format"], madeFinals: boolean | null): Slot[] {
   if (format === "FOUR_STRAIGHT") {
     return [1, 2, 3, 4].map((n) => ({ round: "PRELIM" as const, attemptInRound: n }));
   }
   const prelims: Slot[] = [1, 2, 3].map((n) => ({ round: "PRELIM" as const, attemptInRound: n }));
   if (madeFinals) {
-    return [
-      ...prelims,
-      ...[1, 2, 3].map((n) => ({ round: "FINALS" as const, attemptInRound: n })),
-    ];
+    return [...prelims, ...[1, 2, 3].map((n) => ({ round: "FINALS" as const, attemptInRound: n }))];
   }
   return prelims;
 }
@@ -74,9 +70,16 @@ function SaveStatusDot({ state }: { state: SaveState }) {
   return <span className={`h-2 w-2 rounded-full ${color}`} aria-label={`save ${state}`} />;
 }
 
+const WIRE_OPTIONS = ["FULL", "THREE_QUARTER", "HALF"] as const;
+const WIRE_LABEL: Record<(typeof WIRE_OPTIONS)[number], string> = {
+  FULL: "Full",
+  THREE_QUARTER: "3/4",
+  HALF: "1/2",
+};
+
 function ThrowRow({
   slot,
-  meet: _meet,
+  meet,
   existing,
   onSave,
   onDelete,
@@ -87,6 +90,7 @@ function ThrowRow({
   onSave: (input: ThrowSaveInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
+  const isHammer = meet.event === "HAMMER";
   const [resultType, setResultType] = useState<RowResultType>(() => {
     if (!existing) return null;
     if (existing.isFoul) return "FOUL";
@@ -96,15 +100,19 @@ function ThrowRow({
   const [distanceInput, setDistanceInput] = useState<string>(
     existing?.distance != null ? existing.distance.toFixed(2) : ""
   );
-  const [foulType, setFoulType] = useState<"RING" | "SECTOR" | null>(
-    existing?.foulType ?? null
-  );
+  const [foulType, setFoulType] = useState<"RING" | "SECTOR" | null>(existing?.foulType ?? null);
+  const [notes, setNotes] = useState<string>(existing?.notes ?? "");
+  const [wireLength, setWireLength] = useState<string | null>(existing?.wireLength ?? null);
+  const [notesOpen, setNotesOpen] = useState<boolean>(Boolean(existing?.notes));
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toast = useToast();
 
   useEffect(
     () => () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (savedResetRef.current) clearTimeout(savedResetRef.current);
     },
     []
   );
@@ -115,10 +123,18 @@ function ThrowRow({
     let distance: number | null = null;
     if (resultType === "MARK") {
       const parsed = parseDistance(distanceInput);
-      if (!parsed) return;
+      if (!parsed) {
+        setSaveState("error");
+        toast.error(`Couldn't parse "${distanceInput}" — try 18.42 or 60'4"`);
+        return;
+      }
       distance = parsed.meters;
     }
-    if (resultType === "FOUL" && !foulType) return;
+    if (resultType === "FOUL" && !foulType) {
+      setSaveState("error");
+      toast.error("Pick a foul type (ring or sector)");
+      return;
+    }
 
     setSaveState("saving");
     try {
@@ -130,11 +146,13 @@ function ThrowRow({
         isFoul: resultType === "FOUL",
         isPass: resultType === "PASS",
         foulType: resultType === "FOUL" ? foulType : null,
-        notes: existing?.notes ?? null,
+        notes: notes.trim() ? notes.trim() : null,
         videoUrl: existing?.videoUrl ?? null,
-        wireLength: existing?.wireLength ?? null,
+        wireLength: isHammer ? wireLength : null,
       });
       setSaveState("saved");
+      if (savedResetRef.current) clearTimeout(savedResetRef.current);
+      savedResetRef.current = setTimeout(() => setSaveState("idle"), 2000);
     } catch {
       setSaveState("error");
     }
@@ -205,7 +223,38 @@ function ThrowRow({
         </div>
       )}
 
+      {isHammer && resultType === "MARK" && (
+        <div role="radiogroup" aria-label="Wire length" className="flex gap-1">
+          {WIRE_OPTIONS.map((w) => (
+            <button
+              key={w}
+              type="button"
+              onClick={() => setWireLength(wireLength === w ? null : w)}
+              className={`rounded px-2 py-1 text-xs ${
+                wireLength === w ? "bg-primary-500 text-black" : "bg-surface-800 text-muted"
+              }`}
+              aria-pressed={wireLength === w}
+              title={`Wire ${WIRE_LABEL[w]}`}
+            >
+              {WIRE_LABEL[w]}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="ml-auto flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setNotesOpen((v) => !v)}
+          className={`rounded p-1 transition-colors ${
+            notes.trim() ? "text-primary-500" : "text-muted hover:text-[var(--foreground)]"
+          }`}
+          aria-label={notesOpen ? "Hide notes" : "Add notes"}
+          aria-expanded={notesOpen}
+          title={notes.trim() ? "Edit notes" : "Add notes"}
+        >
+          <StickyNote size={14} strokeWidth={1.75} aria-hidden="true" />
+        </button>
         <SaveStatusDot state={saveState} />
         {existing && (
           <button
@@ -218,17 +267,25 @@ function ThrowRow({
           </button>
         )}
       </div>
+
+      {notesOpen && (
+        <div className="basis-full">
+          <textarea
+            data-testid="notes-input"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Note about this throw (technique, feel, conditions…)"
+            rows={2}
+            maxLength={2000}
+            className="w-full rounded bg-surface-800 px-2 py-1 text-sm placeholder:text-muted"
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-export function CompetitionThrowsTable({
-  meet,
-  throws,
-  onSave,
-  onDelete,
-  onPromoteLegacy,
-}: Props) {
+export function CompetitionThrowsTable({ meet, throws, onSave, onDelete, onPromoteLegacy }: Props) {
   const slots = useMemo(
     () => slotsFor(meet.format, meet.madeFinals),
     [meet.format, meet.madeFinals]

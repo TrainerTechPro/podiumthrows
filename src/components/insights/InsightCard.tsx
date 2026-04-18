@@ -23,15 +23,9 @@ const BAND_CLASSES: Record<"WEAK" | "MEDIUM" | "STRONG", string> = {
   STRONG: "bg-primary-500/20 text-primary-500",
 };
 
-/**
- * Short display labels for the badge.
- * Note: avoid repeating words used in detail text to prevent
- * multiple-element matches in getByText queries (MEDIUM badge vs detail text).
- * The aria-label carries the full value for screen readers.
- */
 const BAND_LABEL: Record<"WEAK" | "MEDIUM" | "STRONG", string> = {
   WEAK: "Low",
-  MEDIUM: "Mid",
+  MEDIUM: "Medium",
   STRONG: "High",
 };
 

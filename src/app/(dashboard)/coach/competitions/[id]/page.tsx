@@ -25,12 +25,30 @@ export default async function CoachMeetDetailPage({ params }: Props) {
       athlete: {
         select: { id: true, userId: true, user: { select: { email: true } } },
       },
-      throws: {
-        orderBy: [{ round: "asc" }, { attemptInRound: "asc" }],
-      },
+      throws: true,
     },
   });
   if (!meet) return notFound();
+
+  // Verify this coach has access to the meet's athlete (roster scope).
+  const coach = await prisma.coachProfile.findUnique({
+    where: { userId: session.userId },
+    select: { id: true },
+  });
+  if (!coach) return notFound();
+  const athlete = await prisma.athleteProfile.findUnique({
+    where: { id: meet.athleteId },
+    select: { coachId: true },
+  });
+  if (!athlete || athlete.coachId !== coach.id) return notFound();
+
+  // Hand-sort: Postgres sorts the ThrowRound enum alphabetically (FINALS < PRELIM).
+  const roundOrder: Record<string, number> = { PRELIM: 0, FINALS: 1 };
+  meet.throws.sort((a, b) => {
+    const ro = (roundOrder[a.round ?? ""] ?? 99) - (roundOrder[b.round ?? ""] ?? 99);
+    if (ro !== 0) return ro;
+    return (a.attemptInRound ?? 0) - (b.attemptInRound ?? 0);
+  });
 
   // Serialize prisma enums → plain strings for the client component
   const serialized = {
@@ -64,5 +82,11 @@ export default async function CoachMeetDetailPage({ params }: Props) {
       })),
   };
 
-  return <MeetDetailClient meet={serialized} backHref="/coach/competitions" backLabel="All Competitions" />;
+  return (
+    <MeetDetailClient
+      meet={serialized}
+      backHref="/coach/competitions"
+      backLabel="All Competitions"
+    />
+  );
 }
