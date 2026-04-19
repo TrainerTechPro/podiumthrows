@@ -1,15 +1,17 @@
 /**
- * Bondarchuk Transfer of Training — Validation Logic
+ * Bondarchuk Transfer of Training — Session-level validators
  *
- * Enforces Dr. Anatoliy Bondarchuk's implement sequencing and session
- * structure rules. Returns warnings (not hard errors) so coaches can
- * override with acknowledgment.
+ * Operate on BlockInput[] (a structured session plan). Internally compose
+ * the exercise-level primitive from ./sequencing so the monotonic rule has
+ * a single source of truth.
  *
  * Key rules (Volume IV, p.114-117):
  * 1. Implements MUST descend in weight within a throwing block (heavy → light)
  * 2. Strength blocks MUST separate consecutive throwing blocks
- * 3. Implements >20% from competition weight create separate adaptations
+ * 3. Later throwing blocks should use equal or lighter implements
  */
+
+import { validateImplementSequence as validateExerciseSequence } from "./sequencing";
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 
@@ -41,21 +43,15 @@ export type ExerciseInput = {
   implementKg?: number | null;
 };
 
-/* ─── Competition Weights ───────────────────────────────────────────────── */
-
-export const COMPETITION_WEIGHTS: Record<string, { male: number; female: number }> = {
-  SHOT_PUT: { male: 7.26, female: 4.0 },
-  DISCUS: { male: 2.0, female: 1.0 },
-  HAMMER: { male: 7.26, female: 4.0 },
-  JAVELIN: { male: 0.8, female: 0.6 },
-};
-
 /* ─── Validators ────────────────────────────────────────────────────────── */
 
 /**
  * Rule 1: Within each throwing block, implement weights must descend.
- * 9kg → 8kg → 7.26kg = OK
- * 6kg → 8kg = FORBIDDEN (ascending)
+ *
+ * Composes the exercise-level primitive (./sequencing.validateImplementSequence)
+ * so the monotonic rule is defined in ONE place. This function adds
+ * session-level reporting: per-block iteration, warning shape with block/exercise
+ * indices, and support for multiple throwing blocks in one session.
  */
 export function validateImplementSequence(blocks: BlockInput[]): ValidationResult {
   const warnings: BondarchukWarning[] = [];
@@ -63,19 +59,38 @@ export function validateImplementSequence(blocks: BlockInput[]): ValidationResul
   blocks.forEach((block, blockIdx) => {
     if (block.blockType !== "throwing") return;
 
-    const throwExercises = block.exercises.filter((e) => e.implementKg != null);
-    for (let i = 1; i < throwExercises.length; i++) {
-      const prev = throwExercises[i - 1].implementKg!;
-      const curr = throwExercises[i].implementKg!;
-      if (curr > prev) {
-        warnings.push({
-          type: "ascending_weight",
-          message: `Block "${block.name}": ${throwExercises[i].name} (${curr}kg) is heavier than preceding ${throwExercises[i - 1].name} (${prev}kg). Ascending weight order causes 2-4m performance decrease in natural athletes.`,
-          severity: "error",
-          blockIndex: blockIdx,
-          exerciseIndex: i,
-        });
-      }
+    // Keep only exercises with an implement weight — match the primitive's contract.
+    const weighted = block.exercises
+      .map((exercise, exerciseIndex) => ({ exercise, exerciseIndex }))
+      .filter(({ exercise }) => exercise.implementKg != null);
+
+    const primitiveResult = validateExerciseSequence(
+      weighted.map(({ exercise, exerciseIndex }) => ({
+        implementWeightKg: exercise.implementKg!,
+        orderIndex: exerciseIndex,
+      }))
+    );
+
+    if (!primitiveResult.ok) {
+      const offender = weighted.find(
+        ({ exerciseIndex }) => exerciseIndex === primitiveResult.offendingIndex
+      );
+      // Find preceding weighted exercise for the message
+      const offenderPosition = weighted.findIndex(
+        ({ exerciseIndex }) => exerciseIndex === primitiveResult.offendingIndex
+      );
+      const predecessor = offenderPosition > 0 ? weighted[offenderPosition - 1] : null;
+
+      warnings.push({
+        type: "ascending_weight",
+        message:
+          predecessor && offender
+            ? `Block "${block.name}": ${offender.exercise.name} (${offender.exercise.implementKg}kg) is heavier than preceding ${predecessor.exercise.name} (${predecessor.exercise.implementKg}kg). Ascending weight order causes 2-4m performance decrease in natural athletes.`
+            : primitiveResult.violation,
+        severity: "error",
+        blockIndex: blockIdx,
+        exerciseIndex: offender?.exerciseIndex,
+      });
     }
   });
 
@@ -161,34 +176,7 @@ export function validateCrossBlockSequence(blocks: BlockInput[]): ValidationResu
 }
 
 /**
- * Rule 4: Flag implements that differ >20% from competition weight.
- * These create separate adaptations rather than positive transfer.
- */
-export function validateWeightDifferential(
-  implementKg: number,
-  event: string,
-  gender: "male" | "female" = "male"
-): ValidationResult {
-  const warnings: BondarchukWarning[] = [];
-  const compWeights = COMPETITION_WEIGHTS[event];
-  if (!compWeights) return { valid: true, warnings };
-
-  const compWeight = compWeights[gender];
-  const diffPct = Math.abs(implementKg - compWeight) / compWeight;
-
-  if (diffPct > 0.2) {
-    warnings.push({
-      type: "weight_differential",
-      message: `${implementKg}kg is ${Math.round(diffPct * 100)}% ${implementKg > compWeight ? "above" : "below"} competition weight (${compWeight}kg). Implements differing >15-20% create separate adaptations, not transfer.`,
-      severity: "warning",
-    });
-  }
-
-  return { valid: warnings.length === 0, warnings };
-}
-
-/**
- * Combined validation — runs all checks on a full session plan.
+ * Combined validation — runs all session-level checks.
  */
 export function validateFullSession(blocks: BlockInput[]): ValidationResult {
   const results = [

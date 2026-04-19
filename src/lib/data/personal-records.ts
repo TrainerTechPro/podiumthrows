@@ -1,14 +1,6 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-
-// Gender-correct competition weight per event (kg).
-// Matches the values in src/lib/throws.ts.
-const COMPETITION_WEIGHTS: Record<string, { male: number; female: number }> = {
-  SHOT_PUT: { male: 7.26, female: 4.0 },
-  DISCUS: { male: 2.0, female: 1.0 },
-  HAMMER: { male: 7.26, female: 4.0 },
-  JAVELIN: { male: 0.8, female: 0.6 },
-};
+import { COMPETITION_WEIGHTS_BY_EVENT as COMPETITION_WEIGHTS } from "@/lib/throws/constants";
 
 // Tolerance for matching implement weights (e.g. 7.3 counts as 7.26).
 const WEIGHT_TOLERANCE_KG = 0.05;

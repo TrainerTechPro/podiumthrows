@@ -6,17 +6,19 @@
  */
 
 import prisma from "@/lib/prisma";
+import { COMPETITION_WEIGHTS_BY_EVENT } from "@/lib/throws/constants";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
 export const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
 
-export const COMPETITION_WEIGHTS: Record<string, { male: number; female: number }> = {
-  SHOT_PUT: { male: 7.26, female: 4.0 },
-  DISCUS: { male: 2.0, female: 1.0 },
-  HAMMER: { male: 7.26, female: 4.0 },
-  JAVELIN: { male: 0.8, female: 0.6 },
-};
+/**
+ * Competition implement weights keyed by ThrowEvent ("SHOT_PUT") + lowercase
+ * gender ("male"). Re-exported for back-compat with legacy consumers.
+ * The canonical source (keyed by EventCode/GenderCode) lives in
+ * @/lib/throws/constants; changes should be made there.
+ */
+export const COMPETITION_WEIGHTS = COMPETITION_WEIGHTS_BY_EVENT;
 
 /**
  * Common implement weights used in training by event + gender.

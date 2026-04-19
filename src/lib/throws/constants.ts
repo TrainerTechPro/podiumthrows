@@ -57,6 +57,13 @@ export const EVENTS: Record<ThrowEvent, { label: string; color: string; darkColo
 };
 
 // ── Competition Weights ─────────────────────────────────────────────
+//
+// Canonical source of truth for IAAF competition implement weights (kg).
+// Keyed by EventCode (SP/DT/HT/JT) + GenderCode (M/F).
+//
+// Legacy consumers using {SHOT_PUT/DISCUS/HAMMER/JAVELIN}×{male/female}
+// should import COMPETITION_WEIGHTS_BY_EVENT below, or prefer the
+// getCompetitionWeightKg() tolerant accessor for new code.
 
 export const COMPETITION_WEIGHTS: Record<EventCode, Record<GenderCode, number>> = {
   SP: { M: 7.26, F: 4 },
@@ -64,6 +71,58 @@ export const COMPETITION_WEIGHTS: Record<EventCode, Record<GenderCode, number>> 
   HT: { M: 7.26, F: 4 },
   JT: { M: 0.8, F: 0.6 },
 };
+
+/**
+ * Legacy-shape view of COMPETITION_WEIGHTS keyed by ThrowEvent
+ * (SHOT_PUT/DISCUS/HAMMER/JAVELIN) with lowercase gender keys.
+ *
+ * Derived from the canonical COMPETITION_WEIGHTS — the numeric values
+ * are not duplicated. Use this only for back-compat with code that
+ * already consumes the lowercase shape; new code should prefer
+ * COMPETITION_WEIGHTS (EventCode/GenderCode) or getCompetitionWeightKg().
+ *
+ * The index type is `Record<string, ...>` rather than
+ * `Record<ThrowEvent, ...>` to match the legacy API — most callers index
+ * with a `string` event field from Prisma rows. Unknown keys return
+ * undefined, which is safely handled by the `?.` chains at call sites.
+ */
+export const COMPETITION_WEIGHTS_BY_EVENT: Record<string, { male: number; female: number }> = {
+  SHOT_PUT: { male: COMPETITION_WEIGHTS.SP.M, female: COMPETITION_WEIGHTS.SP.F },
+  DISCUS: { male: COMPETITION_WEIGHTS.DT.M, female: COMPETITION_WEIGHTS.DT.F },
+  HAMMER: { male: COMPETITION_WEIGHTS.HT.M, female: COMPETITION_WEIGHTS.HT.F },
+  JAVELIN: { male: COMPETITION_WEIGHTS.JT.M, female: COMPETITION_WEIGHTS.JT.F },
+};
+
+/**
+ * Tolerant accessor: returns the competition weight (kg) for any
+ * supported event/gender key combination. Returns 0 for unknown inputs.
+ *
+ * Accepts:
+ *  - event:  ThrowEvent ("SHOT_PUT") or EventCode ("SP")
+ *  - gender: Gender ("MALE"), GenderCode ("M"), or lowercase ("male")
+ */
+export function getCompetitionWeightKg(
+  event: ThrowEvent | EventCode | string,
+  gender: Gender | GenderCode | "male" | "female" | string
+): number {
+  const eventCode: EventCode | null =
+    event === "SP" || event === "DT" || event === "HT" || event === "JT"
+      ? event
+      : (EVENT_CODE_MAP[event as ThrowEvent] ?? null);
+  if (!eventCode) return 0;
+
+  const genderCode: GenderCode | null =
+    gender === "M" || gender === "F"
+      ? gender
+      : gender === "MALE" || gender === "male"
+        ? "M"
+        : gender === "FEMALE" || gender === "female"
+          ? "F"
+          : null;
+  if (!genderCode) return 0;
+
+  return COMPETITION_WEIGHTS[eventCode]?.[genderCode] ?? 0;
+}
 
 // ── Distance Bands ──────────────────────────────────────────────────
 
