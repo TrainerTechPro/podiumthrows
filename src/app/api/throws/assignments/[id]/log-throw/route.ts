@@ -3,7 +3,8 @@ import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { checkAndSetPR, parseImplementKg } from "@/lib/throws";
+import { parseImplementKg } from "@/lib/throws";
+import { recordThrow } from "@/lib/throws/pr";
 import { notifyCoachPR } from "@/lib/notifications";
 import { awardPRAchievement } from "@/lib/achievements";
 import { emitPR } from "@/lib/team-activity";
@@ -121,33 +122,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const implementKg = parseImplementKg(implement);
 
       if (event && implementKg != null && implementKg > 0) {
-        const prResult = await checkAndSetPR(user.athleteProfile.id, event, implementKg, distance);
+        const prResult = await recordThrow({
+          athleteId: user.athleteProfile.id,
+          event,
+          implementWeightKg: implementKg,
+          distance,
+        });
         isPersonalBest = prResult.isPersonalBest;
 
         if (isPersonalBest) {
-          // Update or create ThrowsPR record
-          const implementStr = `${implementKg}kg`;
-          const today = new Date().toISOString().split("T")[0];
-
-          await prisma.throwsPR.upsert({
-            where: {
-              athleteId_event_implement: {
-                athleteId: user.athleteProfile.id,
-                event,
-                implement: implementStr,
-              },
-            },
-            update: { distance, achievedAt: today, source: "TRAINING" },
-            create: {
-              athleteId: user.athleteProfile.id,
-              event,
-              implement: implementStr,
-              distance,
-              achievedAt: today,
-              source: "TRAINING",
-            },
-          });
-
           // Fire coach notification (fire-and-forget)
           if (user.athleteProfile.coachId) {
             const name =

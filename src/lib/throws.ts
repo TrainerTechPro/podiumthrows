@@ -5,7 +5,6 @@
  * standalone throw log route (quick-log throws).
  */
 
-import prisma from "@/lib/prisma";
 import { COMPETITION_WEIGHTS_BY_EVENT } from "@/lib/throws/constants";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
@@ -140,63 +139,8 @@ export function parseImplementKg(implement: string | null | undefined): number |
 }
 
 /* ─── PR Detection ───────────────────────────────────────────────────────── */
-
-/**
- * Checks if a throw is a personal best for the given event + implement combo.
- *
- * Consults ThrowsPR (the canonical PR table with unique constraint on
- * athlete+event+implement) as the primary source of truth — this covers
- * both standalone throws (ThrowLog) and live-session throws (ThrowsBlockLog).
- * Falls back to ThrowLog for pre-ThrowsPR legacy data.
- *
- * Also unmarks any previously-flagged ThrowLog PR for this (event, implement)
- * so history filtering stays consistent. Callers that create ThrowLog rows
- * are responsible for flagging the NEW row as isPersonalBest themselves.
- */
-export async function checkAndSetPR(
-  athleteId: string,
-  event: string,
-  implementWeight: number,
-  distance: number
-): Promise<{ isPersonalBest: boolean; previousDistance: number | null }> {
-  const implementStr = `${implementWeight}kg`;
-
-  const existingPR = await prisma.throwsPR.findUnique({
-    where: {
-      athleteId_event_implement: { athleteId, event, implement: implementStr },
-    },
-    select: { distance: true },
-  });
-
-  let previousDistance: number | null = existingPR?.distance ?? null;
-
-  if (previousDistance == null) {
-    const legacyBest = await prisma.throwLog.findFirst({
-      where: {
-        athleteId,
-        event: event as never,
-        implementWeight,
-        distance: { not: null },
-      },
-      orderBy: { distance: "desc" },
-      select: { distance: true },
-    });
-    previousDistance = legacyBest?.distance ?? null;
-  }
-
-  const isPersonalBest = previousDistance == null || distance > previousDistance;
-
-  if (isPersonalBest) {
-    await prisma.throwLog.updateMany({
-      where: {
-        athleteId,
-        event: event as never,
-        implementWeight,
-        isPersonalBest: true,
-      },
-      data: { isPersonalBest: false },
-    });
-  }
-
-  return { isPersonalBest, previousDistance };
-}
+//
+// The canonical PR write path now lives in @/lib/throws/pr.
+// Use recordThrow() from there for atomic ThrowsPR + ThrowLog.isPersonalBest
+// updates. The old checkAndSetPR function was removed in the PR unification
+// refactor (every caller now uses recordThrow).

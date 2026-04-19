@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
-import { isValidEvent, checkAndSetPR } from "@/lib/throws";
+import { isValidEvent } from "@/lib/throws";
+import { recordThrow } from "@/lib/throws/pr";
 import { awardPRAchievement } from "@/lib/achievements";
 import { notifyCoachPR } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
@@ -91,8 +92,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       typeof distance === "number" &&
       distance > 0
     ) {
-      const { isPersonalBest } = await checkAndSetPR(athlete.id, event, implementKg, distance);
-
       throwLog = await prisma.throwLog.create({
         data: {
           athleteId: athlete.id,
@@ -100,7 +99,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           event: event as never,
           implementWeight: implementKg,
           distance,
-          isPersonalBest,
+          isPersonalBest: false,
           notes: notes?.trim() || null,
         },
         select: {
@@ -111,6 +110,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           isPersonalBest: true,
         },
       });
+
+      const prResult = await recordThrow({
+        athleteId: athlete.id,
+        event,
+        implementWeightKg: implementKg,
+        distance,
+      });
+      const isPersonalBest = prResult.isPersonalBest;
+
+      if (isPersonalBest) {
+        await prisma.throwLog.update({
+          where: { id: throwLog.id },
+          data: { isPersonalBest: true },
+        });
+        throwLog.isPersonalBest = true;
+      }
 
       // Fire-and-forget: award achievement + notify coach on new PR
       if (isPersonalBest) {

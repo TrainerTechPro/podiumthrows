@@ -5,6 +5,8 @@ import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { emitPR } from "@/lib/team-activity";
 import { parseBody, ThrowsPrCheckSchema } from "@/lib/api-schemas";
+import { parseImplementKg } from "@/lib/throws";
+import { recordThrow } from "@/lib/throws/pr";
 import { EventType } from "@prisma/client";
 
 // GET /api/throws/prs — get PRs for the current athlete (or by athleteId for coaches)
@@ -91,58 +93,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 403 });
     }
 
-    // Check existing PR
-    const existingPR = await prisma.throwsPR.findUnique({
-      where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
+    const implementKg = parseImplementKg(implement) ?? 0;
+    if (implementKg <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Could not parse implement weight" },
+        { status: 400 }
+      );
+    }
+
+    const prResult = await recordThrow({
+      athleteId,
+      event,
+      implementWeightKg: implementKg,
+      implementLabel: implement,
+      distance,
+      source: source === "COMPETITION" ? "COMPETITION" : "TRAINING",
     });
 
-    const isNewPR = !existingPR || distance > existingPR.distance;
-    const today = new Date().toISOString().split("T")[0];
-
-    if (isNewPR) {
-      const pr = await prisma.throwsPR.upsert({
-        where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
-        update: {
-          distance,
-          achievedAt: today,
-          source: source || "TRAINING",
-        },
-        create: {
-          athleteId,
-          event: event as EventType,
-          implement,
-          distance,
-          achievedAt: today,
-          source: source || "TRAINING",
-        },
-      });
-
-      // Emit team feed PR entry. implementWeight parsed from implement string (e.g. "7.26kg").
-      const implementKg = parseFloat(String(implement).replace("kg", "")) || 0;
+    if (prResult.isPersonalBest) {
+      // Emit team feed PR entry (fire-and-forget).
       void emitPR(athleteId, {
         event,
         implementWeight: implementKg,
         distance,
-        previousDistance: existingPR?.distance ?? null,
+        previousDistance: prResult.previousDistance,
       }).catch((err) => logger.error("Team activity PR emit failed", { context: "throws/prs", error: err }));
 
       return NextResponse.json({
         success: true,
         data: {
-          pr,
+          pr: prResult.pr,
           isNewPR: true,
-          previousDistance: existingPR?.distance || null,
-          improvement: existingPR ? +(distance - existingPR.distance).toFixed(2) : null,
+          previousDistance: prResult.previousDistance,
+          improvement:
+            prResult.previousDistance != null
+              ? +(distance - prResult.previousDistance).toFixed(2)
+              : null,
         },
       });
     }
 
+    // Not a new PR — fetch current PR row to return for caller convenience.
+    const currentPR = await prisma.throwsPR.findUnique({
+      where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
+    });
+
     return NextResponse.json({
       success: true,
       data: {
-        pr: existingPR,
+        pr: currentPR,
         isNewPR: false,
-        currentBest: existingPR.distance,
+        currentBest: currentPR?.distance ?? prResult.previousDistance,
       },
     });
   } catch (error) {

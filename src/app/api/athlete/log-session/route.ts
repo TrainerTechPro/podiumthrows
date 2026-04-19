@@ -5,6 +5,7 @@ import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
 import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
+import { recordThrow } from "@/lib/throws/pr";
 import { EventType } from "@prisma/client";
 
 /* ── GET — list athlete's self-logged sessions ── */
@@ -176,46 +177,21 @@ export async function POST(request: NextRequest) {
           ? `${dl.implementWeightOriginal}${dl.implementWeightUnit ?? "kg"}`
           : `${parseFloat(dl.implementWeight.toFixed(2))}kg`;
 
-        const existing = await prisma.throwsPR.findUnique({
-          where: {
-            athleteId_event_implement: {
-              athleteId: athlete.id,
-              event: event as EventType,
-              implement: implementLabel,
-            },
-          },
-          select: { distance: true },
+        const prResult = await recordThrow({
+          athleteId: athlete.id,
+          event,
+          implementWeightKg: dl.implementWeight,
+          implementLabel,
+          distance: dl.bestMark,
+          achievedAt: date,
         });
 
-        const isPersonalBest = !existing || dl.bestMark > existing.distance;
-        if (isPersonalBest) {
-          await prisma.throwsPR.upsert({
-            where: {
-              athleteId_event_implement: {
-                athleteId: athlete.id,
-                event: event as EventType,
-                implement: implementLabel,
-              },
-            },
-            update: {
-              distance: dl.bestMark,
-              achievedAt: date,
-              source: "TRAINING",
-            },
-            create: {
-              athleteId: athlete.id,
-              event: event as EventType,
-              implement: implementLabel,
-              distance: dl.bestMark,
-              achievedAt: date,
-              source: "TRAINING",
-            },
-          });
+        if (prResult.isPersonalBest) {
           prs.push({
             event,
             implement: implementLabel,
             distance: dl.bestMark,
-            previousBest: existing?.distance,
+            previousBest: prResult.previousDistance ?? undefined,
           });
         }
       }

@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   throwLogUpdate: vi.fn(),
   throwLogFindUnique: vi.fn(),
   throwLogCount: vi.fn(),
-  checkAndSetPR: vi.fn(),
+  recordThrow: vi.fn(),
   updateThrowsStreak: vi.fn(),
   emitPR: vi.fn(),
   revalidateTag: vi.fn(),
@@ -43,7 +43,6 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/lib/throws", () => ({
-  checkAndSetPR: (...a: unknown[]) => mocks.checkAndSetPR(...a),
   COMPETITION_WEIGHTS: {
     SHOT_PUT: { male: 7.26, female: 4 },
     DISCUS: { male: 2, female: 1 },
@@ -56,6 +55,10 @@ vi.mock("@/lib/throws", () => ({
     HAMMER: { male: [6, 7.26, 8], female: [3, 4, 5] },
     JAVELIN: { male: [0.7, 0.8, 0.9], female: [0.5, 0.6, 0.7] },
   },
+}));
+
+vi.mock("@/lib/throws/pr", () => ({
+  recordThrow: (...a: unknown[]) => mocks.recordThrow(...a),
 }));
 
 vi.mock("@/lib/streak", () => ({
@@ -111,7 +114,7 @@ function seedHappyPathStubs() {
     date: new Date("2026-04-18T12:00:00Z"),
   });
   mocks.throwLogCount.mockResolvedValue(1);
-  mocks.checkAndSetPR.mockResolvedValue({ isPersonalBest: false, previousDistance: null });
+  mocks.recordThrow.mockResolvedValue({ isPersonalBest: false, previousDistance: null });
   mocks.updateThrowsStreak.mockResolvedValue(undefined);
 }
 
@@ -189,7 +192,7 @@ describe("POST /api/athlete/quick-log — Zod validation", () => {
     expect(res.status).toBe(200);
     expect(mocks.throwLogCreate).toHaveBeenCalledOnce();
     // distance=0 must skip PR detection
-    expect(mocks.checkAndSetPR).not.toHaveBeenCalled();
+    expect(mocks.recordThrow).not.toHaveBeenCalled();
   });
 
   it("accepts feeling: null (React form state) per CLAUDE.md §4", async () => {
@@ -308,7 +311,7 @@ describe("PATCH /api/athlete/quick-log — Zod validation + ownership", () => {
       isPersonalBest: false,
       date: new Date("2026-04-18T12:00:00Z"),
     });
-    mocks.checkAndSetPR.mockResolvedValue({
+    mocks.recordThrow.mockResolvedValue({
       isPersonalBest: true,
       previousDistance: 14,
     });

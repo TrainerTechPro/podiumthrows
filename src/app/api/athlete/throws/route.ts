@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
-import { isValidEvent, checkAndSetPR } from "@/lib/throws";
+import { isValidEvent } from "@/lib/throws";
+import { recordThrow } from "@/lib/throws/pr";
 import { awardPRAchievement } from "@/lib/achievements";
 import { notifyCoachPR } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
@@ -58,10 +59,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check and set PR
-    const { isPersonalBest } = await checkAndSetPR(athlete.id, event, implementKg, distance);
-
-    // Create throw log (no session — standalone)
+    // Create throw log first (no session — standalone), then atomic PR write.
     const throwLog = await prisma.throwLog.create({
       data: {
         athleteId: athlete.id,
@@ -75,7 +73,7 @@ export async function POST(req: NextRequest) {
         implementWeightOriginal:
           typeof implementWeightOriginal === "number" ? implementWeightOriginal : null,
         distance,
-        isPersonalBest,
+        isPersonalBest: false,
         isCompetition: isCompetition === true,
         rpe: typeof rpe === "number" && rpe >= 1 && rpe <= 10 ? rpe : null,
         attemptNumber: typeof attemptNumber === "number" ? attemptNumber : null,
@@ -97,6 +95,22 @@ export async function POST(req: NextRequest) {
         date: true,
       },
     });
+
+    const { isPersonalBest } = await recordThrow({
+      athleteId: athlete.id,
+      event,
+      implementWeightKg: implementKg,
+      distance,
+      source: isCompetition === true ? "COMPETITION" : "TRAINING",
+    });
+
+    if (isPersonalBest) {
+      await prisma.throwLog.update({
+        where: { id: throwLog.id },
+        data: { isPersonalBest: true },
+      });
+      throwLog.isPersonalBest = true;
+    }
 
     // Fire-and-forget: award achievement + notify coach on new PR
     if (isPersonalBest) {

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { COMPETITION_WEIGHTS } from "@/lib/throws";
+import { recordThrow } from "@/lib/throws/pr";
 import { emitPR } from "@/lib/team-activity";
 import { EventType } from "@prisma/client";
 
@@ -267,47 +268,22 @@ export async function PATCH(req: NextRequest) {
         const gender = comp.athlete.gender === "MALE" ? "male" : "female";
         const compWeight = COMPETITION_WEIGHTS[comp.event]?.[gender];
         if (compWeight) {
-          const implementStr = `${compWeight}kg`;
-          const existingPR = await prisma.throwsPR.findUnique({
-            where: {
-              athleteId_event_implement: {
-                athleteId: comp.athleteId,
-                event: comp.event,
-                implement: implementStr,
-              },
-            },
+          const prResult = await recordThrow({
+            athleteId: comp.athleteId,
+            event: comp.event,
+            implementWeightKg: compWeight,
+            distance: r.result,
+            source: "COMPETITION",
+            achievedAt: comp.date,
           });
 
-          if (!existingPR || r.result > existingPR.distance) {
-            await prisma.throwsPR.upsert({
-              where: {
-                athleteId_event_implement: {
-                  athleteId: comp.athleteId,
-                  event: comp.event,
-                  implement: implementStr,
-                },
-              },
-              update: {
-                distance: r.result,
-                achievedAt: comp.date,
-                source: "COMPETITION",
-              },
-              create: {
-                athleteId: comp.athleteId,
-                event: comp.event,
-                implement: implementStr,
-                distance: r.result,
-                achievedAt: comp.date,
-                source: "COMPETITION",
-              },
-            });
-
+          if (prResult.isPersonalBest) {
             prs.push({
               athleteId: comp.athleteId,
               athleteName: `${comp.athlete.firstName} ${comp.athlete.lastName}`,
               event: comp.event,
               distance: r.result,
-              previousBest: existingPR?.distance ?? null,
+              previousBest: prResult.previousDistance,
             });
 
             // Emit team feed PR entry (fire-and-forget)
@@ -315,7 +291,7 @@ export async function PATCH(req: NextRequest) {
               event: comp.event,
               implementWeight: compWeight,
               distance: r.result,
-              previousDistance: existingPR?.distance ?? null,
+              previousDistance: prResult.previousDistance,
             }).catch((err) =>
               logger.error("Team activity PR emit failed", {
                 context: "coach/competitions",

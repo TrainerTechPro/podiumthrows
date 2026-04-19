@@ -10,7 +10,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { checkAndSetPR, COMPETITION_WEIGHTS, IMPLEMENT_PRESETS } from "@/lib/throws";
+import { COMPETITION_WEIGHTS, IMPLEMENT_PRESETS } from "@/lib/throws";
+import { recordThrow } from "@/lib/throws/pr";
 import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
@@ -291,20 +292,12 @@ export async function POST(req: NextRequest) {
     // 3. PR detection — only when distance is provided
     let isPersonalBest = false;
     if (distanceNum != null && distanceNum > 0) {
-      // Capture the previous best distance BEFORE checkAndSetPR runs so
-      // the team feed row can show the delta. checkAndSetPR unmarks the
-      // old PR when a new one is set, so we have to read first.
-      const priorBest = await prisma.throwLog.findFirst({
-        where: {
-          athleteId: athlete.id,
-          event: event as never,
-          implementWeight,
-          isPersonalBest: true,
-        },
-        select: { distance: true },
+      const prResult = await recordThrow({
+        athleteId: athlete.id,
+        event,
+        implementWeightKg: implementWeight,
+        distance: distanceNum,
       });
-
-      const prResult = await checkAndSetPR(athlete.id, event, implementWeight, distanceNum);
       isPersonalBest = prResult.isPersonalBest;
 
       if (isPersonalBest) {
@@ -319,7 +312,7 @@ export async function POST(req: NextRequest) {
           event,
           implementWeight,
           distance: distanceNum,
-          previousDistance: priorBest?.distance ?? null,
+          previousDistance: prResult.previousDistance,
         }).catch(() => null);
       }
     }
@@ -437,7 +430,12 @@ export async function PATCH(req: NextRequest) {
     // Re-run PR detection if distance changed and is now a positive number
     let isPersonalBest = updated.isPersonalBest;
     if (distanceChanged && newDistance != null && newDistance > 0) {
-      const prResult = await checkAndSetPR(athlete.id, existing.event as string, existing.implementWeight, newDistance);
+      const prResult = await recordThrow({
+        athleteId: athlete.id,
+        event: existing.event as string,
+        implementWeightKg: existing.implementWeight,
+        distance: newDistance,
+      });
       isPersonalBest = prResult.isPersonalBest;
       if (isPersonalBest !== updated.isPersonalBest) {
         await prisma.throwLog.update({

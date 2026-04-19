@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, PracticeAttemptCreateSchema } from "@/lib/api-schemas";
+import { parseImplementKg } from "@/lib/throws";
+import { recordThrow } from "@/lib/throws/pr";
 import { EventType } from "@prisma/client";
 
 // POST /api/throws/practice/[sessionId]/attempts — log a new attempt
@@ -45,22 +47,19 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Not authorized to log attempts for this athlete" }, { status: 403 });
     }
 
-    // Auto-detect PR: compare against existing ThrowsPR
+    // Auto-detect PR: atomic write via canonical recordThrow helper.
     let isPR = false;
     if (distance !== undefined && distance !== null) {
-      const existingPR = await prisma.throwsPR.findUnique({
-        where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
-      });
-
-      if (!existingPR || distance > existingPR.distance) {
-        isPR = true;
-        // Upsert the PR record
-        const today = new Date().toISOString().slice(0, 10);
-        await prisma.throwsPR.upsert({
-          where: { athleteId_event_implement: { athleteId, event: event as EventType, implement } },
-          update: { distance, achievedAt: today, source: "TRAINING" },
-          create: { athleteId, event: event as EventType, implement, distance, achievedAt: today, source: "TRAINING" },
+      const implementKg = parseImplementKg(implement);
+      if (implementKg != null && implementKg > 0) {
+        const prResult = await recordThrow({
+          athleteId,
+          event,
+          implementWeightKg: implementKg,
+          implementLabel: implement,
+          distance,
         });
+        isPR = prResult.isPersonalBest;
       }
     }
 

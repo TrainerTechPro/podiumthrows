@@ -1,8 +1,10 @@
 /**
  * Coach self-training utilities — PR detection for CoachPR model.
  *
- * Mirrors the athlete `checkAndSetPR()` pattern from `src/lib/throws.ts`
- * but uses the dedicated CoachPR table with upsert semantics.
+ * Mirrors the athlete `recordThrow()` pattern from `src/lib/throws/pr.ts`
+ * but writes to the dedicated CoachPR table (different FK, different
+ * enum, different actor — intentionally kept separate per the PR
+ * unification scope decision).
  */
 
 import prisma from "@/lib/prisma";
