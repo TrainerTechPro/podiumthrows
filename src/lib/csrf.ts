@@ -7,8 +7,13 @@
  * 3. Middleware compares header value to cookie value
  *
  * Security relies on:
- * - SameSite=Strict prevents the cookie from being sent on cross-origin requests
- * - CORS prevents cross-origin JS from setting custom headers
+ * - SameSite=Lax: cookie is NOT sent on cross-origin POST/PUT/PATCH/DELETE
+ *   requests (blocks the real CSRF threat — auto-submitted cross-site forms)
+ *   but IS sent on top-level navigations. Strict additionally blocks the
+ *   cookie on top-level navigations, which breaks iOS Safari PWA launches.
+ *   Lax matches the auth-token cookie policy in src/lib/auth.ts.
+ * - Custom X-CSRF-Token header: cross-origin JS cannot set custom headers
+ *   without a CORS preflight, which we don't serve for browser origins.
  */
 
 export const CSRF_COOKIE_NAME = "csrf-token";
@@ -25,7 +30,7 @@ export function generateCsrfToken(): string {
 export function csrfCookieString(token: string, secure: boolean): string {
   return [
     `${CSRF_COOKIE_NAME}=${token}`,
-    "SameSite=Strict",
+    "SameSite=Lax",
     secure ? "Secure" : "",
     "Path=/",
     `Max-Age=${7 * 24 * 60 * 60}`,
@@ -36,5 +41,5 @@ export function csrfCookieString(token: string, secure: boolean): string {
 
 /** Build the Set-Cookie string that clears the CSRF cookie. */
 export function clearCsrfCookieString(): string {
-  return `${CSRF_COOKIE_NAME}=; SameSite=Strict; Path=/; Max-Age=0`;
+  return `${CSRF_COOKIE_NAME}=; SameSite=Lax; Path=/; Max-Age=0`;
 }

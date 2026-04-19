@@ -1048,6 +1048,33 @@ export const AthleteProfileSelfPatchSchema = z.object({
   completeOnboarding: z.boolean().optional(),
 });
 
+// ── Quick Log ────────────────────────────────────────────────────────────
+
+const FeelingEnum = z.enum(["bad", "ok", "great"]);
+const ThrowsEventEnum = z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
+
+/**
+ * POST /api/athlete/quick-log — log a new throw.
+ *
+ * Numeric form fields follow CLAUDE.md §3 (distinguish "" from 0) and §4
+ * (React form state sends null for unset — accept it via .nullable()).
+ */
+export const QuickLogThrowSchema = z.object({
+  event: ThrowsEventEnum,
+  implementWeight: z.number().positive("implementWeight must be greater than 0"),
+  distance: z.number().nullable().optional(),
+  feeling: FeelingEnum.nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+/** PATCH /api/athlete/quick-log — edit an existing throw. */
+export const QuickLogEditSchema = z.object({
+  id: z.string().min(1, "id is required"),
+  distance: z.number().nullable().optional(),
+  feeling: FeelingEnum.nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
 // ── parseBody Helper ────────────────────────────────────────────────────
 
 /**

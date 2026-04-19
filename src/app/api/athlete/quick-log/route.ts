@@ -15,6 +15,7 @@ import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
 import { resolveTimezone, getLocalDate, startOfToday as startOfTodayForTz } from "@/lib/dates";
+import { parseBody, QuickLogThrowSchema, QuickLogEditSchema } from "@/lib/api-schemas";
 // EventType enum import removed — DB column is TEXT, not the enum type
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -240,25 +241,12 @@ export async function POST(req: NextRequest) {
     const today = getLocalDate(tz);
     const startOfTodayUtc = startOfTodayForTz(tz);
 
-    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const { event, implementWeight, distance, feeling, notes } = body;
+    const parsed = await parseBody(req, QuickLogThrowSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { event, implementWeight, distance, feeling, notes } = parsed;
 
-    // Validate required fields
-    if (typeof event !== "string" || !["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-      return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
-    }
-    if (typeof implementWeight !== "number" || implementWeight <= 0) {
-      return NextResponse.json({ success: false, error: "Invalid implementWeight" }, { status: 400 });
-    }
-    if (distance !== undefined && distance !== null && typeof distance !== "number") {
-      return NextResponse.json({ success: false, error: "distance must be a number if provided" }, { status: 400 });
-    }
-    if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
-      return NextResponse.json({ success: false, error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
-    }
-
-    const distanceNum = typeof distance === "number" ? distance : null;
-    const feelingVal = typeof feeling === "string" ? (feeling as Feeling) : null;
+    const distanceNum = distance ?? null;
+    const feelingVal: Feeling | null = feeling ?? null;
     const notesText = typeof notes === "string" ? notes.trim() || null : null;
 
     // 1. Find or create today's AthleteThrowsSession for this event
@@ -405,12 +393,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const { id, distance, feeling, notes } = body;
-
-    if (typeof id !== "string") {
-      return NextResponse.json({ success: false, error: "id is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(req, QuickLogEditSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { id, distance, feeling, notes } = parsed;
 
     // Find and verify ownership
     const existing = await prisma.throwLog.findUnique({
@@ -425,17 +410,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    // Validate incoming fields
-    if (distance !== undefined && distance !== null && typeof distance !== "number") {
-      return NextResponse.json({ success: false, error: "distance must be a number if provided" }, { status: 400 });
-    }
-    if (feeling !== undefined && feeling !== null && !["bad", "ok", "great"].includes(feeling as string)) {
-      return NextResponse.json({ success: false, error: "feeling must be 'bad', 'ok', or 'great'" }, { status: 400 });
-    }
-
-    const newDistance = distance === null ? null : typeof distance === "number" ? distance : existing.distance;
-    const newFeeling = feeling === null ? null : typeof feeling === "string" ? (feeling as Feeling) : null;
-    const newNotesText = notes === null ? null : typeof notes === "string" ? notes.trim() || null : null;
+    const newDistance = distance === undefined ? existing.distance : distance;
+    const newFeeling: Feeling | null = feeling === undefined || feeling === null ? null : feeling;
+    const newNotesText = notes === undefined || notes === null ? null : notes.trim() || null;
 
     // Re-parse existing notes to preserve feeling if only text changes (and vice versa)
     const prevParsed = deserializeNotes(existing.notes);
