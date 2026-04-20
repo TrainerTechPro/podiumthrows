@@ -40,6 +40,7 @@ You embody the ruthless perfectionism and user experience instincts of Steve Job
 > [one-sentence summary in the user's voice]
 >
 > Recommend persisting to:
+>
 > - **CLAUDE.md** §[section] — project-scoped
 > - **Memory** (`feedback_*.md` or `project_*.md`) — user-scoped, cross-project
 > - **Notion** [page] — stakeholder-facing docs
@@ -195,7 +196,7 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 - Run `tsc --noEmit` after any code changes; run tests, check logs, demonstrate correctness
 - Read before write: grep for all usages of a shared function/component before changing its interface
 - Ask yourself: "Would a staff engineer approve this?"
-- **Before any commit on `main`:** run `git fetch origin && git log HEAD..origin/main --oneline` to detect divergence early. If the remote has commits you don't, STOP and reconcile *before* committing on top — a parallel session may have shipped overlapping work via PR. See `feedback_parallel_terminal_git_race.md` for the full pattern.
+- **Before any commit on `main`:** run `git fetch origin && git log HEAD..origin/main --oneline` to detect divergence early. If the remote has commits you don't, STOP and reconcile _before_ committing on top — a parallel session may have shipped overlapping work via PR. See `feedback_parallel_terminal_git_race.md` for the full pattern.
 
 ### 5. Demand Elegance (Balanced)
 
@@ -508,6 +509,19 @@ Both must pass. They are not the same test.
 - **`<Button>` component** has spring bounce on click: primary/danger variants get `0.95→1.03→1.0` spring (300ms), secondary/outline/ghost get a subtle `0.97→1.0` settle (200ms). This is automatic — no extra props needed.
 - **CSS utility buttons** (`btn-primary`, `btn-secondary`, `btn-danger`): keep existing `active:scale-[0.97]`. Prefer the `<Button>` component for new code to get the spring bounce.
 - Links: `text-primary-500 hover:underline` for inline text links.
+
+### Sheets
+
+- Use `<Sheet>` from `src/components/ui/Sheet.tsx` for any non-anchored overlay that slides in from an edge.
+- **Athlete pages:** pass `side="bottom"`. Thumb-zone anchor, consumer register.
+- **Coach pages:** pass `side="right"`. Desk register, preserves canvas.
+- The primitive is product-unaware. The `side` prop is required — the callsite records the product intent.
+- **Always-on:** focus trap, Escape close, click-outside close, body scroll lock, `role=dialog`, `aria-modal=true`. Opt out of Escape + click-outside with `preventClose`.
+- **Accessible name:** pass `title` OR `ariaLabel`. A dev-mode warning fires if both are missing.
+- Use `useSheet()` the same shape as `useModal()`.
+- Do NOT open a `<Sheet>` and `<Modal>` simultaneously — it's a design smell, not prevented programmatically.
+- For anchored dropdowns (notification bell, menu popovers), keep using the inline pattern — `<Sheet>` is for dialog-class overlays only.
+- **Three ad-hoc sheet implementations still exist** (`InsightEvidenceDrawer`, `completion-bottom-sheet`, dropped in favor of `<Sheet>` on the next migration pass). Do not pattern-match against them for new work.
 
 ### Confirmations
 
