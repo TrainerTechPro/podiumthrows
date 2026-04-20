@@ -1,12 +1,13 @@
 import { redirect, notFound } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getAthletePRs } from "@/lib/data/personal-records";
 import { ReviewProfileClient } from "./_review-client";
 
 export default async function ReviewProfilePage() {
   const session = await getSession();
-  if (!session || session.role !== "ATHLETE") redirect("/login");
+  if (!session) redirect("/login");
+  if (!(await canActAsAthlete(session))) redirect("/coach/dashboard");
 
   const profile = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
