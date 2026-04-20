@@ -406,21 +406,49 @@ function AthleteTopBar({
   );
 }
 
+// Routes where we hide the BottomTabBar + feedback FAB — focused-task flows
+// where thumb-zone chrome would compete with the form's own sticky controls
+// and the iOS keyboard. Matches how Strava/Whoop collapse chrome mid-log.
+export const FOCUS_MODE_PREFIXES = [
+  "/athlete/log-session",
+  "/athlete/onboarding",
+  "/athlete/self-program/create",
+  "/coach/log-session",
+];
+
+export function isFocusMode(pathname: string | null | undefined): boolean {
+  if (!pathname) return false;
+  return FOCUS_MODE_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
 function AthleteShell({ user, children, className, notificationCount }: DashboardLayoutProps) {
+  const pathname = usePathname();
+  const focusMode = isFocusMode(pathname);
+
   return (
-    <div className="athlete-shell flex flex-col h-screen bg-[var(--background)] overflow-hidden">
+    <div
+      className={cn(
+        "athlete-shell flex flex-col h-screen bg-[var(--background)] overflow-hidden",
+        focusMode && "athlete-shell-focus"
+      )}
+    >
       <AthleteTopBar user={user} notificationCount={notificationCount} />
 
       <main
         id="main-content"
         className={cn("flex-1 overflow-y-auto custom-scrollbar", "px-4 sm:px-6 py-5", className)}
-        // Bottom padding = tab bar height (64) + safe area + breathing room
-        style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
+        // In focus mode the tab bar is hidden, so main only needs safe-area padding.
+        // Otherwise reserve tab-bar height (64) + safe-area + breathing room.
+        style={{
+          paddingBottom: focusMode
+            ? "calc(1rem + env(safe-area-inset-bottom, 0px))"
+            : "calc(5rem + env(safe-area-inset-bottom, 0px))",
+        }}
       >
         {children}
       </main>
 
-      <BottomTabBar />
+      {!focusMode && <BottomTabBar />}
     </div>
   );
 }

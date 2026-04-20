@@ -635,10 +635,12 @@ export function LogSessionWizard({
         </Section>
       </div>
 
-      {/* Sticky save bar — always visible, enabled when valid */}
+      {/* Sticky save bar — always visible, enabled when valid. Drops to the
+          viewport bottom because the AthleteShell hides the BottomTabBar
+          on focus-mode routes (including log-session). */}
       <div
         className="fixed left-0 right-0 z-20 px-4 py-3 bg-[var(--color-bg-canvas)]/95 backdrop-blur-sm border-t border-[var(--color-border-default)]"
-        style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
+        style={{ bottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="max-w-lg mx-auto">
           {/* Mobile: slide to confirm — lower commitment threshold for a save

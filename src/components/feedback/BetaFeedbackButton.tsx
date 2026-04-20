@@ -25,6 +25,7 @@ import {
   installConsoleErrorCollector,
   getRecentConsoleErrors,
 } from "@/lib/feedback/console-errors";
+import { isFocusMode } from "@/components/layout/DashboardLayout";
 
 type FeedbackType = "BUG" | "CONFUSION" | "FEATURE" | "PRAISE";
 
@@ -43,6 +44,12 @@ const TYPE_OPTIONS: Array<{
 export function BetaFeedbackButton() {
   const pathname = usePathname();
   const toast = useToast();
+
+  // Hide on focused-task routes (log-session, onboarding, self-program create).
+  // These flows have their own sticky save chrome; a floating feedback button
+  // stacks awkwardly with it and the iOS keyboard. Feedback is still reachable
+  // from every other screen. Hooks below still run to keep order stable.
+  const hidden = isFocusMode(pathname);
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType>("BUG");
   const [body, setBody] = useState("");
@@ -147,6 +154,8 @@ export function BetaFeedbackButton() {
       setSubmitting(false);
     }
   }
+
+  if (hidden) return null;
 
   return (
     <>
