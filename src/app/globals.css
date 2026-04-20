@@ -526,6 +526,39 @@
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
 
+  /* ── Athlete shell overrides — per CLAUDE.md §Dual Product Identity ──
+     The athlete app is mobile-primary consumer software. Clip-path cut
+     corners shave reliable tap area off every button and input and add
+     nothing ergonomic on touch devices. Scope the notches off inside
+     `.athlete-shell` and swap to rounded corners. The coach shell keeps
+     the cyberpunk notches — that's its aesthetic register.
+
+     This is a CSS override, not a rewrite: callers still use the same
+     `.btn-primary` / `.input` / `.card` classes. Only the shape
+     changes, scoped to the shell. Reversible by removing this block. */
+  .athlete-shell .btn-primary,
+  .athlete-shell .btn-secondary,
+  .athlete-shell .btn-danger {
+    clip-path: none;
+    border-radius: 0.75rem; /* rounded-xl — matches hero cards */
+  }
+
+  .athlete-shell .input {
+    clip-path: none;
+    border-radius: 0.625rem; /* rounded-lg — comfortable thumb hit */
+  }
+
+  .athlete-shell .card {
+    clip-path: none;
+    border-radius: 1rem; /* rounded-2xl — consumer-app card shape */
+  }
+
+  /* The .shimmer skeleton also wears a clip-path — flatten for athlete. */
+  .athlete-shell .shimmer {
+    clip-path: none;
+    border-radius: 0.75rem;
+  }
+
   .landing-grain::after {
     content: '';
     position: fixed;

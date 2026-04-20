@@ -139,9 +139,9 @@ function ScaleSelector({
           key={n}
           type="button"
           onClick={() => onChange(n)}
-          className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
+          className={`w-11 h-11 rounded-lg text-sm font-semibold transition-all ${
             value === n
-              ? "bg-primary-500 text-white shadow-sm scale-110"
+              ? "bg-primary-500 text-white shadow-sm scale-[1.08]"
               : "bg-surface-100 dark:bg-surface-800 text-muted hover:bg-surface-200 dark:hover:bg-surface-700"
           }`}
           title={labels?.[n - 1]}

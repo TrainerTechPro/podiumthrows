@@ -365,7 +365,7 @@ function AthleteTopBar({
 
 function AthleteShell({ user, children, className, notificationCount }: DashboardLayoutProps) {
   return (
-    <div className="flex flex-col h-screen bg-[var(--background)] overflow-hidden">
+    <div className="athlete-shell flex flex-col h-screen bg-[var(--background)] overflow-hidden">
       <AthleteTopBar user={user} notificationCount={notificationCount} />
 
       <main
