@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession, canActAsAthlete } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { LogSessionWizard } from "./_log-session-wizard";
 
@@ -7,11 +7,11 @@ export default async function AthleteLogSessionPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  // Coaches don't log their own athlete sessions through this route —
-  // their equivalent lives under /coach. Without this redirect, the
-  // AthleteProfile lookup returns null, the wizard shows all events
-  // (bug H4), and a save would 404 server-side anyway.
-  if (session.role !== "ATHLETE") {
+  // Allow athletes OR coaches in training mode (who have an AthleteProfile
+  // linked to their userId). canActAsAthlete() verifies via DB, not the
+  // client-writable active-mode cookie. A coach without a training-mode
+  // opt-in will fail the check and get bounced to their own dashboard.
+  if (!(await canActAsAthlete(session))) {
     redirect("/coach/dashboard");
   }
 
