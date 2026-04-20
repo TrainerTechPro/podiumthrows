@@ -89,6 +89,37 @@ export function SlideToConfirm({
     }
   }, [dragging, disabled, progress, completed, onConfirm]);
 
+  const triggerConfirm = useCallback(() => {
+    if (confirmedRef.current) return;
+    confirmedRef.current = true;
+    setProgress(1);
+    setCompleted(true);
+    onConfirm();
+  }, [onConfirm]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled || completed) return;
+
+      if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setSpringing(false);
+        setProgress((p) => {
+          const next = Math.min(1, p + 0.1);
+          if (next >= COMPLETION_THRESHOLD) {
+            triggerConfirm();
+            return 1;
+          }
+          return next;
+        });
+      } else if (e.key === "End") {
+        e.preventDefault();
+        triggerConfirm();
+      }
+    },
+    [disabled, completed, triggerConfirm]
+  );
+
   // Mouse events
   useEffect(() => {
     if (!dragging) return;
@@ -134,9 +165,10 @@ export function SlideToConfirm({
       className={cn(
         "relative h-[60px] rounded-full select-none overflow-hidden",
         "border",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
         isConfirm
-          ? "bg-primary-50 dark:bg-primary-950/30 border-primary-200 dark:border-primary-800/50"
-          : "bg-danger-50 dark:bg-danger-500/5 border-danger-500/20 dark:border-danger-500/15",
+          ? "bg-primary-50 dark:bg-primary-950/30 border-primary-200 dark:border-primary-800/50 focus-visible:ring-primary-500"
+          : "bg-danger-50 dark:bg-danger-500/5 border-danger-500/20 dark:border-danger-500/15 focus-visible:ring-danger-500",
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}
@@ -145,6 +177,9 @@ export function SlideToConfirm({
       aria-valuenow={Math.round(progress * 100)}
       aria-valuemin={0}
       aria-valuemax={100}
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : 0}
+      onKeyDown={handleKeyDown}
     >
       {/* Fill bar */}
       <div
