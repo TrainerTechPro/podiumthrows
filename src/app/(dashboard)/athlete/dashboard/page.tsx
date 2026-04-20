@@ -1,41 +1,138 @@
 import Link from "next/link";
-import { Zap, ChevronRight } from "lucide-react";
+import { ArrowRight, Flame, Sparkles, Trophy } from "lucide-react";
 import { requireAthleteSession, getAthleteStats } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
-import {
-  resolveConfig,
-  type WidgetId,
-  type DashboardConfig,
-} from "./_widget-registry";
-import { StaggeredList } from "@/components";
-import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
-import { StreakBadge } from "@/components/ui/StreakBadge";
-import { CustomizeTrigger } from "./_customize-trigger";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { StaleSessionChecker } from "./_stale-session-checker";
 import { StreakReminder } from "@/components/notifications/StreakReminder";
-import { FeedbackInboxBadge } from "@/components/feedback/FeedbackInboxBadge";
-import { WearableDashboard } from "../_wearable-dashboard";
-import { avg, type WhoopRow, type OuraRow } from "../_wearable-helpers";
-import { FETCHERS, WidgetRenderer } from "../_shared/widget-renderer";
+
+/* ─── Athlete Home — canonical consumer-app shell ────────────────────────────
+   ONE hero anchor in the thumb zone, state-aware:
+     A. Haven't checked in today → "How are you today?" leads to wellness.
+     B. Checked in, no throws logged → "Ready to train" + log CTA.
+     C. Threw today → recap of today's best.
+
+   Below the hero: a 7-day streak strip and the most recent personal best.
+   No tabs. No widget grid. No customization panel. The athlete should
+   never have to configure their own home.
+
+   Wearables and deeper health data live at /athlete/wellness —
+   home is not a dashboard, it's a decision.
+   ─────────────────────────────────────────────────────────────────────── */
+
+const EVENT_LABEL: Record<string, string> = {
+  SHOT_PUT: "Shot put",
+  DISCUS: "Discus",
+  HAMMER: "Hammer",
+  JAVELIN: "Javelin",
+};
+
+const EVENT_COLOR: Record<string, string> = {
+  SHOT_PUT: "#ff8a3d",
+  DISCUS: "#8b5cf6",
+  HAMMER: "#ef4444",
+  JAVELIN: "#22c55e",
+};
+
+function timeGreeting(hour: number, firstName: string) {
+  if (hour < 5) return `Late night, ${firstName}`;
+  if (hour < 12) return `Morning, ${firstName}`;
+  if (hour < 17) return `Afternoon, ${firstName}`;
+  if (hour < 21) return `Evening, ${firstName}`;
+  return `Evening, ${firstName}`;
+}
+
+function formatReadinessLabel(score: number) {
+  if (score >= 8) return "Ready";
+  if (score >= 6) return "Steady";
+  if (score >= 4) return "Cautious";
+  return "Recover";
+}
+
+function readinessColor(score: number) {
+  if (score >= 8) return "var(--color-status-success-fg)";
+  if (score >= 6) return "var(--color-brand)";
+  if (score >= 4) return "var(--color-status-warning-fg)";
+  return "var(--color-status-danger-fg)";
+}
+
+function sameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 
 export default async function AthleteDashboardPage() {
   const { athlete } = await requireAthleteSession();
 
-  // Fetch dashboard config + notification prefs from athlete profile
-  const profile = await prisma.athleteProfile.findUnique({
-    where: { id: athlete.id },
-    select: { dashboardConfig: true, notificationPreferences: true },
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfStrip = new Date(startOfToday);
+  startOfStrip.setDate(startOfToday.getDate() - 6);
+
+  const [stats, todayThrows, streakWindow, notifPrefs] = await Promise.all([
+    getAthleteStats(athlete.id),
+    prisma.throwLog.findMany({
+      where: { athleteId: athlete.id, date: { gte: startOfToday } },
+      select: { distance: true, event: true, implementWeight: true },
+      orderBy: { distance: "desc" },
+    }),
+    // Last 7 days of session activity for the streak strip
+    prisma.trainingSession.findMany({
+      where: {
+        athleteId: athlete.id,
+        status: "COMPLETED",
+        completedDate: { gte: startOfStrip },
+      },
+      select: { completedDate: true },
+    }),
+    prisma.athleteProfile.findUnique({
+      where: { id: athlete.id },
+      select: { notificationPreferences: true },
+    }),
+  ]);
+
+  // Readiness logged today?
+  const readiness = stats.latestReadiness;
+  const readinessIsToday = readiness !== null && sameDay(new Date(readiness.date), now);
+
+  // Any throws today? Picks the heaviest-distance throw as the day's "best."
+  const bestToday = todayThrows[0] ?? null;
+  const threwToday = bestToday !== null;
+
+  // 7-day streak strip — one dot per day
+  const activeDays = new Set<string>();
+  for (const s of streakWindow) {
+    if (!s.completedDate) continue;
+    const d = new Date(s.completedDate);
+    d.setHours(0, 0, 0, 0);
+    activeDays.add(d.toISOString().slice(0, 10));
+  }
+  const stripDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(startOfStrip);
+    d.setDate(startOfStrip.getDate() + i);
+    return {
+      key: d.toISOString().slice(0, 10),
+      label: d.toLocaleDateString("en-US", { weekday: "short" })[0],
+      active: activeDays.has(d.toISOString().slice(0, 10)),
+      isToday: sameDay(d, now),
+    };
   });
 
-  const config: DashboardConfig = resolveConfig(profile?.dashboardConfig);
+  // Most recent PR (across events)
+  const latestPR =
+    [...stats.personalBests].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )[0] ?? null;
 
-  // Parse notification preferences defensively — the JSON shape is
-  // { streakReminder: { enabled, promptDismissed } } but the column is
-  // nullable and could hold anything. Default both flags to false.
+  // Notif preference plumbing for StreakReminder
   const streakReminderPrefs = (() => {
-    const raw = profile?.notificationPreferences as
+    const raw = notifPrefs?.notificationPreferences as
       | { streakReminder?: { enabled?: unknown; promptDismissed?: unknown } }
       | null
       | undefined;
@@ -45,250 +142,320 @@ export default async function AthleteDashboardPage() {
       promptDismissed: s?.promptDismissed === true,
     };
   })();
-  const enabled = config.order.filter((w) => config.widgets.includes(w));
 
-  // Parallel fetch: enabled widgets + header stats + wearable connections
-  const [stats, whoopConn, ouraConn, ...entries] = await Promise.all([
-    getAthleteStats(athlete.id),
-    prisma.whoopConnection.findUnique({
-      where: { athleteId: athlete.id },
-      select: { id: true, lastSyncAt: true },
-    }),
-    prisma.ouraConnection.findUnique({
-      where: { athleteId: athlete.id },
-      select: { id: true, lastSyncAt: true },
-    }),
-    ...enabled.map(async (w) => [w, await FETCHERS[w](athlete.id)] as const),
-  ]);
-
-  const dataMap = Object.fromEntries(entries as [WidgetId, unknown][]);
-  const hasWearable = whoopConn !== null || ouraConn !== null;
-
-  // Fetch wearable snapshot data if connected
-  const wearableData = await fetchWearableData(whoopConn, ouraConn);
-
-  // Time-of-day greeting
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-
-  // Practice hours: 2pm–8pm local (server-side)
-  const isPracticeHours = hour >= 14 && hour < 20;
+  const greeting = timeGreeting(now.getHours(), athlete.firstName);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-6">
       <StaleSessionChecker />
       <StreakReminder
         currentStreak={stats.currentStreak}
         initialEnabled={streakReminderPrefs.enabled}
         initialPromptDismissed={streakReminderPrefs.promptDismissed}
       />
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-              {greeting}, {athlete.firstName}.
-            </h1>
-            {stats.currentStreak > 0 && (
-              <StreakBadge days={stats.currentStreak} isActive />
-            )}
-          </div>
-          <p className="text-sm text-muted mt-0.5">{today}</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <FeedbackInboxBadge />
-          <CustomizeTrigger config={config} />
-        </div>
-      </div>
 
-      {/* Quick Log CTA */}
-      <Link
-        href="/athlete/quick-log"
-        className="group relative block rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 p-6 shadow-lg transition-transform active:scale-[0.98]"
-        aria-label="Quick Log — tap to log a throw in seconds"
-      >
-        {/* Pulse ring during practice hours */}
-        {isPracticeHours && (
-          <span
-            className="absolute inset-0 rounded-2xl ring-2 ring-primary-400 animate-pulse pointer-events-none"
-            aria-hidden="true"
-          />
-        )}
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <Zap size={28} strokeWidth={2} className="text-white" aria-hidden="true" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="font-heading text-2xl font-bold text-white">Quick Log</h2>
-            <p className="text-sm text-white/80">Tap to log a throw in seconds</p>
-          </div>
-          <ChevronRight
-            size={24}
-            strokeWidth={1.75}
-            className="text-white/60 group-hover:text-white transition-colors shrink-0"
-            aria-hidden="true"
-          />
-        </div>
-        {isPracticeHours && (
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-semibold">
-              🎯 Practice time
-            </span>
-          </div>
-        )}
-      </Link>
+      {/* Greeting — warm, personal, restrained. No emoji, no gradient. */}
+      <header className="pt-1">
+        <h1 className="font-heading text-[28px] leading-[1.05] font-semibold text-[var(--color-text-primary)]">
+          {greeting}
+        </h1>
+        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+          {now.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
+      </header>
 
-      {/* Tabbed view: Training + Health */}
-      {hasWearable ? (
-        <Tabs defaultTab="training">
-          <TabList variant="underline">
-            <TabTrigger id="training" variant="underline">Training</TabTrigger>
-            <TabTrigger id="health" variant="underline">Health</TabTrigger>
-          </TabList>
-
-          <TabPanel id="training">
-            <StaggeredList className="space-y-5" staggerDelay={60}>
-              {enabled.map((widgetId) => (
-                <WidgetRenderer
-                  key={widgetId}
-                  id={widgetId}
-                  data={dataMap[widgetId]}
-                />
-              ))}
-            </StaggeredList>
-          </TabPanel>
-
-          <TabPanel id="health">
-            <div className="space-y-8">
-              {wearableData.whoop && (
-                <WearableDashboard
-                  device="whoop"
-                  today={wearableData.whoop.todayRow}
-                  history={wearableData.whoop.historyRows}
-                  averages={wearableData.whoop.averages}
-                  lastSyncAt={wearableData.whoop.lastSyncAt}
-                />
-              )}
-              {wearableData.oura && (
-                <WearableDashboard
-                  device="oura"
-                  today={wearableData.oura.todayRow}
-                  history={wearableData.oura.historyRows}
-                  averages={wearableData.oura.averages}
-                  lastSyncAt={wearableData.oura.lastSyncAt}
-                />
-              )}
-              <p className="text-xs text-muted text-center">
-                <Link href="/athlete/settings" className="text-primary-500 hover:underline">
-                  Manage integrations
-                </Link>
-              </p>
-            </div>
-          </TabPanel>
-        </Tabs>
+      {/* HERO — state-aware single anchor. One primary action, nothing else. */}
+      {threwToday ? (
+        <TodayRecapHero
+          distance={bestToday.distance}
+          event={bestToday.event}
+          implementKg={bestToday.implementWeight}
+          throwCount={todayThrows.length}
+        />
+      ) : readinessIsToday ? (
+        <ReadyToTrainHero readinessScore={readiness.overallScore} />
       ) : (
-        /* No wearable connected — show training widgets directly (no tabs) */
-        <StaggeredList className="space-y-5" staggerDelay={60}>
-          {enabled.map((widgetId) => (
-            <WidgetRenderer
-              key={widgetId}
-              id={widgetId}
-              data={dataMap[widgetId]}
-            />
-          ))}
-        </StaggeredList>
+        <CheckInHero firstName={athlete.firstName} />
       )}
+
+      {/* Streak strip — 7 days at a glance, lightweight */}
+      <section aria-labelledby="week-heading" className="pt-1">
+        <div className="flex items-baseline justify-between mb-3">
+          <h2
+            id="week-heading"
+            className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]"
+          >
+            This week
+          </h2>
+          {stats.currentStreak > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-primary)]">
+              <Flame
+                size={14}
+                strokeWidth={2}
+                aria-hidden="true"
+                style={{ color: "var(--color-brand)" }}
+              />
+              {stats.currentStreak}-day streak
+            </span>
+          )}
+        </div>
+
+        <ol className="flex items-end justify-between gap-1">
+          {stripDays.map((d) => (
+            <li
+              key={d.key}
+              className="flex-1 flex flex-col items-center gap-2"
+              aria-label={`${d.label}${d.active ? ", trained" : ""}${d.isToday ? ", today" : ""}`}
+            >
+              <span
+                className={
+                  d.active
+                    ? "w-7 h-7 rounded-full bg-[var(--color-brand)]"
+                    : d.isToday
+                      ? "w-7 h-7 rounded-full border-2 border-dashed border-[var(--color-border-strong)]"
+                      : "w-7 h-7 rounded-full bg-[var(--color-bg-surface-sunken)] border border-[var(--color-border-default)]"
+                }
+                aria-hidden="true"
+              />
+              <span
+                className={
+                  d.isToday
+                    ? "text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-primary)]"
+                    : "text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-secondary)]"
+                }
+              >
+                {d.label}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Latest PR — single, confident, big number. No grid of stats. */}
+      {latestPR && latestPR.distance !== null && (
+        <LatestPRCard distance={latestPR.distance} event={latestPR.event} date={latestPR.date} />
+      )}
+
+      {/* Tail — the only secondary link. Kept quiet. */}
+      <div className="pt-1 pb-1">
+        <Link
+          href="/athlete/throws/trends"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+        >
+          See all trends
+          <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
+        </Link>
+      </div>
     </div>
   );
 }
 
-/* ─── Wearable Data Fetcher ─────────────────────────────────────────────── */
+/* ─── Hero variants ──────────────────────────────────────────────────────── */
 
-interface WearableDataResult {
-  whoop: { todayRow: WhoopRow | null; historyRows: WhoopRow[]; averages: Record<string, number | null>; lastSyncAt: Date | null } | null;
-  oura: { todayRow: OuraRow | null; historyRows: OuraRow[]; averages: Record<string, number | null>; lastSyncAt: Date | null } | null;
+/**
+ * State A: No readiness logged today. Coach wants this daily. We ask
+ * softly — no red alarm. Warmth over nag.
+ */
+function CheckInHero({ firstName }: { firstName: string }) {
+  return (
+    <Link
+      href="/athlete/wellness"
+      className="group block rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border-default)] p-5 transition-[transform,border-color] duration-150 active:scale-[0.995] hover:border-[var(--color-border-strong)]"
+    >
+      <div className="flex items-start gap-4">
+        <div className="w-11 h-11 rounded-full bg-[var(--color-brand-subtle)] flex items-center justify-center shrink-0">
+          <Sparkles
+            size={20}
+            strokeWidth={1.75}
+            style={{ color: "var(--color-brand)" }}
+            aria-hidden="true"
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-heading text-xl font-semibold text-[var(--color-text-primary)]">
+            How are you today, {firstName}?
+          </h2>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            A quick check-in — sleep, soreness, energy. Takes 30 seconds.
+          </p>
+        </div>
+        <ArrowRight
+          size={20}
+          strokeWidth={1.75}
+          className="text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors shrink-0 mt-1"
+          aria-hidden="true"
+        />
+      </div>
+    </Link>
+  );
 }
 
-async function fetchWearableData(
-  whoopConn: { id: string; lastSyncAt: Date | null } | null,
-  ouraConn: { id: string; lastSyncAt: Date | null } | null,
-): Promise<WearableDataResult> {
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const result: WearableDataResult = { whoop: null, oura: null };
+/**
+ * State B: Ready to go. Bold amber anchor — the whole page is for this.
+ * No gradient, no glow. Opaque fill, confident shadow.
+ */
+function ReadyToTrainHero({ readinessScore }: { readinessScore: number }) {
+  const label = formatReadinessLabel(readinessScore);
+  const color = readinessColor(readinessScore);
 
-  if (whoopConn) {
-    const snapshots = await prisma.whoopDailySnapshot.findMany({
-      where: { connectionId: whoopConn.id },
-      orderBy: { date: "desc" },
-      take: 30,
-    });
-    const last7 = snapshots.slice(0, 7);
-    const historyRows: WhoopRow[] = snapshots.map((s) => ({
-      id: s.id, date: s.date,
-      recoveryScore: s.recoveryScore, hrvMs: s.hrvMs, restingHR: s.restingHR,
-      spo2: s.spo2, skinTempC: s.skinTempC, strain: s.strain,
-      sleepPerformance: s.sleepPerformance, sleepDurationMs: s.sleepDurationMs,
-      sleepEfficiency: s.sleepEfficiency, lightSleepMs: s.lightSleepMs,
-      swsSleepMs: s.swsSleepMs, remSleepMs: s.remSleepMs,
-    }));
-    result.whoop = {
-      todayRow: historyRows.find((r) => r.date === todayStr) ?? null,
-      historyRows,
-      averages: {
-        recoveryScore: avg(last7.map((s) => s.recoveryScore)),
-        hrvMs: avg(last7.map((s) => s.hrvMs)),
-        restingHR: avg(last7.map((s) => s.restingHR)),
-        spo2: avg(last7.map((s) => s.spo2)),
-        skinTempC: avg(last7.map((s) => s.skinTempC)),
-        strain: avg(last7.map((s) => s.strain)),
-        sleepDurationMs: avg(last7.map((s) => s.sleepDurationMs)),
-        sleepEfficiency: avg(last7.map((s) => s.sleepEfficiency)),
-        sleepPerformance: avg(last7.map((s) => s.sleepPerformance)),
-      },
-      lastSyncAt: whoopConn.lastSyncAt,
-    };
-  }
-
-  if (ouraConn) {
-    const snapshots = await prisma.ouraDailySnapshot.findMany({
-      where: { connectionId: ouraConn.id },
-      orderBy: { date: "desc" },
-      take: 30,
-    });
-    const last7 = snapshots.slice(0, 7);
-    const historyRows: OuraRow[] = snapshots.map((s) => ({
-      id: s.id, date: s.date,
-      readinessScore: s.readinessScore, hrvMs: s.hrvMs, restingHR: s.restingHR,
-      spo2: s.spo2, temperatureDeviation: s.temperatureDeviation,
-      sleepScore: s.sleepScore, sleepDurationSec: s.sleepDurationSec,
-      sleepEfficiency: s.sleepEfficiency, lightSleepSec: s.lightSleepSec,
-      deepSleepSec: s.deepSleepSec, remSleepSec: s.remSleepSec,
-      activityScore: s.activityScore, steps: s.steps,
-    }));
-    result.oura = {
-      todayRow: historyRows.find((r) => r.date === todayStr) ?? null,
-      historyRows,
-      averages: {
-        readinessScore: avg(last7.map((s) => s.readinessScore)),
-        hrvMs: avg(last7.map((s) => s.hrvMs)),
-        restingHR: avg(last7.map((s) => s.restingHR)),
-        spo2: avg(last7.map((s) => s.spo2)),
-        temperatureDeviation: avg(last7.map((s) => s.temperatureDeviation)),
-        sleepScore: avg(last7.map((s) => s.sleepScore)),
-        sleepDurationSec: avg(last7.map((s) => s.sleepDurationSec)),
-        sleepEfficiency: avg(last7.map((s) => s.sleepEfficiency)),
-        activityScore: avg(last7.map((s) => s.activityScore)),
-      },
-      lastSyncAt: ouraConn.lastSyncAt,
-    };
-  }
-
-  return result;
+  return (
+    <Link
+      href="/athlete/log-session"
+      className="group block rounded-2xl bg-[var(--color-brand)] text-[var(--color-text-on-brand)] p-6 shadow-[0_8px_24px_-8px_rgba(255,200,0,0.3)] transition-transform duration-150 active:scale-[0.98]"
+    >
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] opacity-80">
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full"
+          style={{ backgroundColor: color }}
+          aria-hidden="true"
+        />
+        {label} · readiness {readinessScore}/10
+      </div>
+      <h2 className="mt-2 font-heading text-[30px] leading-[1.05] font-bold">
+        Log today&rsquo;s session
+      </h2>
+      <p className="mt-1.5 text-sm opacity-80">
+        Open the wizard — events, implements, throws, notes.
+      </p>
+      <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">
+        Start
+        <ArrowRight
+          size={18}
+          strokeWidth={2.25}
+          aria-hidden="true"
+          className="transition-transform duration-150 group-hover:translate-x-0.5"
+        />
+      </div>
+    </Link>
+  );
 }
 
+/**
+ * State C: Trained today. Confident acknowledgment, not confetti.
+ * One big number — the day's best distance. Everything else is context.
+ */
+function TodayRecapHero({
+  distance,
+  event,
+  implementKg,
+  throwCount,
+}: {
+  distance: number | null;
+  event: string;
+  implementKg: number;
+  throwCount: number;
+}) {
+  const eventLabel = EVENT_LABEL[event] ?? event;
+  const eventColor = EVENT_COLOR[event] ?? "var(--color-brand)";
+
+  return (
+    <div className="rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border-default)] p-6">
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full"
+          style={{ backgroundColor: eventColor }}
+          aria-hidden="true"
+        />
+        {eventLabel} · {implementKg}kg · today
+      </div>
+
+      {distance !== null ? (
+        <div className="mt-2">
+          <div className="flex items-baseline gap-1.5">
+            <AnimatedNumber
+              value={distance}
+              decimals={2}
+              className="font-heading font-bold text-[56px] leading-none tabular-nums text-[var(--color-text-primary)]"
+              duration={900}
+            />
+            <span className="text-2xl font-semibold text-[var(--color-text-secondary)]">m</span>
+          </div>
+          <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+            Best of {throwCount} {throwCount === 1 ? "throw" : "throws"} today.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-2">
+          <p className="font-heading text-2xl font-semibold text-[var(--color-text-primary)]">
+            {throwCount} {throwCount === 1 ? "throw" : "throws"} logged
+          </p>
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            No distances recorded for this session.
+          </p>
+        </div>
+      )}
+
+      <div className="mt-5 flex items-center gap-3">
+        <Link
+          href="/athlete/throws/history"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand-strong)] hover:underline"
+        >
+          Review session
+          <ArrowRight size={14} strokeWidth={2.25} aria-hidden="true" />
+        </Link>
+        <span className="text-[var(--color-border-strong)]">·</span>
+        <Link
+          href="/athlete/log-session"
+          className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+        >
+          Log another
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/* ─── PR Card ────────────────────────────────────────────────────────────── */
+
+function LatestPRCard({
+  distance,
+  event,
+  date,
+}: {
+  distance: number;
+  event: string;
+  date: string;
+}) {
+  const eventLabel = EVENT_LABEL[event] ?? event;
+  const daysAgo = Math.max(0, Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000));
+  const dateLabel =
+    daysAgo === 0
+      ? "Today"
+      : daysAgo === 1
+        ? "Yesterday"
+        : daysAgo < 7
+          ? `${daysAgo} days ago`
+          : new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  return (
+    <Link
+      href="/athlete/throws/trends"
+      className="group flex items-center gap-4 rounded-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border-default)] p-5 transition-[transform,border-color] duration-150 active:scale-[0.995] hover:border-[var(--color-border-strong)]"
+    >
+      <div className="w-11 h-11 rounded-full bg-[var(--color-brand-subtle)] flex items-center justify-center shrink-0">
+        <Trophy
+          size={20}
+          strokeWidth={1.75}
+          style={{ color: "var(--color-brand)" }}
+          aria-hidden="true"
+        />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+          Latest PR · {eventLabel}
+        </p>
+        <p className="mt-0.5 flex items-baseline gap-1.5">
+          <span className="font-heading text-[26px] leading-none font-bold tabular-nums text-[var(--color-text-primary)]">
+            {distance.toFixed(2)}
+          </span>
+          <span className="text-base font-semibold text-[var(--color-text-secondary)]">m</span>
+        </p>
+      </div>
+      <p className="text-xs font-medium text-[var(--color-text-secondary)] shrink-0">{dateLabel}</p>
+    </Link>
+  );
+}

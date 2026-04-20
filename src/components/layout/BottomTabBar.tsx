@@ -45,11 +45,11 @@ const TABS: Tab[] = [
     matchPaths: ["/athlete/sessions", "/athlete/self-program"],
   },
   {
-    href: "/athlete/throws/log",
+    href: "/athlete/log-session",
     label: "Log",
     icon: PlusCircle,
     primary: true,
-    matchPaths: ["/athlete/throws/log", "/athlete/log-session", "/athlete/quick-start"],
+    matchPaths: ["/athlete/log-session", "/athlete/throws/log", "/athlete/quick-start"],
   },
   {
     href: "/athlete/throws/trends",
