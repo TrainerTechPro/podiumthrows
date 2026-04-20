@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const maxDuration = 120; // Allow up to 2 minutes for large uploads
 import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canActAsAthlete } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { isR2Configured, uploadSingleFile, getPublicUrl, saveFileLocally } from "@/lib/r2";
 import { logger } from "@/lib/logger";
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     let videos;
 
-    if (currentUser.role === "ATHLETE") {
+    if (await canActAsAthlete(currentUser)) {
       const profile = await prisma.athleteProfile.findUnique({
         where: { userId: currentUser.userId },
         select: { id: true },
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
     let resolvedCoachId: string | null = null;
     let uploadedBy = "ATHLETE";
 
-    if (currentUser.role === "ATHLETE") {
+    if (await canActAsAthlete(currentUser)) {
       const profile = await prisma.athleteProfile.findUnique({
         where: { userId: currentUser.userId },
         select: { id: true },

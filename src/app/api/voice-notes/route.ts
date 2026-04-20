@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canActAsAthlete } from "@/lib/auth";
 import { canAccessSession } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, VoiceNoteCreateSchema } from "@/lib/api-schemas";
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         );
       }
       whereClause = { sessionId };
-    } else if (currentUser.role === "ATHLETE") {
+    } else if (await canActAsAthlete(currentUser)) {
       const athlete = await prisma.athleteProfile.findUnique({
         where: { userId: currentUser.userId },
       });
@@ -100,18 +100,10 @@ export async function POST(request: NextRequest) {
     let coachId: string | null = null;
     let athleteId: string | null = null;
 
-    if (currentUser.role === "COACH") {
-      const coach = await prisma.coachProfile.findUnique({
-        where: { userId: currentUser.userId },
-      });
-      if (!coach) {
-        return NextResponse.json(
-          { success: false, error: "Coach profile not found" },
-          { status: 404 }
-        );
-      }
-      coachId = coach.id;
-    } else if (currentUser.role === "ATHLETE") {
+    // Prefer athlete identity when the caller can act as one. This covers
+    // training-mode coaches recording notes against their own AthleteProfile
+    // from the athlete app; otherwise fall through to coach identity.
+    if (await canActAsAthlete(currentUser)) {
       const athlete = await prisma.athleteProfile.findUnique({
         where: { userId: currentUser.userId },
       });
@@ -122,6 +114,17 @@ export async function POST(request: NextRequest) {
         );
       }
       athleteId = athlete.id;
+    } else if (currentUser.role === "COACH") {
+      const coach = await prisma.coachProfile.findUnique({
+        where: { userId: currentUser.userId },
+      });
+      if (!coach) {
+        return NextResponse.json(
+          { success: false, error: "Coach profile not found" },
+          { status: 404 }
+        );
+      }
+      coachId = coach.id;
     }
 
     // Prefer R2 storage over inline Base64 to reduce DB bloat (~33% smaller)

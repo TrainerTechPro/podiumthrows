@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canActAsAthlete } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { emitPR } from "@/lib/team-activity";
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     let athleteId: string;
 
-    if (user.role === "ATHLETE" && user.athleteProfile) {
+    if ((await canActAsAthlete(currentUser)) && user.athleteProfile) {
       athleteId = user.athleteProfile.id;
     } else if (user.role === "COACH" && athleteIdParam) {
       if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteIdParam))) {

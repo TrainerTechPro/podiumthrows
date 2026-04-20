@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canActAsAthlete } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, ThrowsAssignmentCreateSchema } from "@/lib/api-schemas";
@@ -189,7 +189,7 @@ export async function GET(req: NextRequest) {
 
     let whereClause: Record<string, unknown> = {};
 
-    if (user.role === "ATHLETE" && user.athleteProfile) {
+    if ((await canActAsAthlete(currentUser)) && user.athleteProfile) {
       whereClause = { athleteId: user.athleteProfile.id };
     } else if (user.role === "COACH" && user.coachProfile) {
       whereClause = athleteId

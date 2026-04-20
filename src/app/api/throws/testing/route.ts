@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, canActAsAthlete } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, TestingBenchmarksPatchSchema } from "@/lib/api-schemas";
@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
-    const athleteId = user.role === "ATHLETE" && user.athleteProfile
+    const actingAsAthlete = await canActAsAthlete(currentUser);
+    const athleteId = actingAsAthlete && user.athleteProfile
       ? user.athleteProfile.id
       : athleteIdParam;
 
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "athleteId required" }, { status: 400 });
     }
 
-    if (user.role !== "ATHLETE" && !(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
+    if (!actingAsAthlete && !(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
