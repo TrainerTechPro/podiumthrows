@@ -135,8 +135,14 @@
       "Read(//Users/anthonysommers/.claude/skills/**)",
       "Bash(cat src/app/\\\\\\(dashboard\\\\\\)/coach/questionnaires/_questionnaire-builder.tsx)",
       "Bash(npm uninstall:*)",
-      "WebFetch(domain:docs.pencil.dev)"
+      "WebFetch(domain:docs.pencil.dev)",
+      "mcp__claude_ai_Notion__notion-create-pages",
+      "Bash(psql \"postgresql://anthonysommers@localhost:5432/podium_throws\" -c \"SELECT 1\")",
+      "mcp__claude_ai_Notion__notion-fetch",
+      "Bash(psql \"postgresql://anthonysommers@localhost:5432/podium_throws\" -c \"SELECT \\\\\"blockType\\\\\", COUNT\\(*\\) FROM \\\\\"ThrowsBlock\\\\\" GROUP BY \\\\\"blockType\\\\\" ORDER BY COUNT\\(*\\) DESC;\")",
+      "Bash(psql \"postgresql://anthonysommers@localhost:5432/podium_throws\" -c \"\\\\d \\\\\"ThrowsBlock\\\\\"\")",
+      "Bash(./scripts/deploy.sh prod:*)"
     ]
   },
-  "outputStyle": "Explanatory"
+  "outputStyle": "default"
 }
