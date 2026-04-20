@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { cn } from "@/lib/utils";
-import { Avatar, Badge, AnimatedNumber } from "@/components";
+import { Avatar } from "@/components";
 import {
   Heart,
   Award,
@@ -19,7 +18,6 @@ import {
   getOnboardingStatus,
   PLAN_LIMITS,
   type ActivityItem,
-  type CoachStats,
   type TeamReadinessEntry,
 } from "@/lib/data/coach";
 import {
@@ -53,6 +51,28 @@ import { AdaptationProgress } from "./_adaptation-progress";
 import type { AdaptationRow } from "./_adaptation-progress";
 import { AnalyticsSection } from "./_analytics-section";
 
+/* ─── Coach Dashboard — editorial, scientific, back-office ────────────────────
+   Per Dual Product Identity: the coach desktop is the tool that sells the
+   subscription. It should feel like research software, not a gamified app.
+   Single editorial column. No greeting. No animated numbers. Dense but
+   calm. Hairlines over cards. Color earns its place — status only.
+
+   What a coach scans on open:
+     1. Alerts (injuries) — if any.
+     2. Meta bar — roster, today, compliance, PRs, flags. One line.
+     3. Coaching actions — what needs a decision.
+     4. Activity + readiness — what happened, how they're feeling.
+     5. Results — PRs, load.
+     6. Analytics — the slow lens.
+
+   Gutted from the old dashboard:
+     - "Good morning, {name}." (greeting ceremony)
+     - Zone headers with ═══ separators
+     - AnimatedNumber on every stat (count-up theatrics erode trust)
+     - Hero gradient cards around simple data
+     - `tracking-wider uppercase` shouting on every section header
+   ─────────────────────────────────────────────────────────────────────── */
+
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 function formatRelativeTime(isoDate: string): string {
@@ -73,107 +93,34 @@ function formatEventName(event: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-/* ─── Stat Bar ───────────────────────────────────────────────────────────── */
-
-function StatBar({
-  stats,
-  teamAttendance,
+/* ─── Editorial Section Header ───────────────────────────────────────────
+   One consistent pattern for every section. No uppercase tracking-wider —
+   that register is reserved for labels, not headings. Editorial weight. */
+function SectionHeader({
+  title,
+  context,
+  action,
 }: {
-  stats: CoachStats;
-  teamAttendance: {
-    rate: number;
-    totalPractices: number;
-    flaggedAthletes: Array<{
-      id: string;
-      firstName: string;
-      lastName: string;
-      avatarUrl: string | null;
-      rate: number;
-    }>;
-  } | null;
+  title: string;
+  context?: string;
+  action?: { label: string; href: string };
 }) {
-  const attendanceColor =
-    teamAttendance === null || teamAttendance.totalPractices === 0
-      ? "text-[var(--foreground)]"
-      : teamAttendance.rate >= 90
-        ? "text-emerald-600 dark:text-emerald-400"
-        : teamAttendance.rate >= 75
-          ? "text-amber-500 dark:text-amber-400"
-          : "text-red-600 dark:text-red-400";
-
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted border-b border-[var(--card-border)] pb-6">
-      <span>
-        <span className="font-semibold tabular-nums text-[var(--foreground)]">
-          <AnimatedNumber value={stats.totalAthletes} />
-        </span>
-        {" athletes on roster"}
-      </span>
-
-      {stats.sessionsToday > 0 && (
-        <span>
-          <span className="font-semibold tabular-nums text-[var(--foreground)]">
-            <AnimatedNumber value={stats.sessionsToday} />
-          </span>
-          {" session"}
-          {stats.sessionsToday !== 1 ? "s" : ""}
-          {" today"}
-        </span>
-      )}
-
-      {stats.complianceRate !== null && (
-        <span>
-          <span
-            className={cn(
-              "font-semibold tabular-nums",
-              stats.complianceRate >= 80
-                ? "text-emerald-600 dark:text-emerald-400"
-                : stats.complianceRate < 60
-                  ? "text-amber-500"
-                  : "text-[var(--foreground)]"
-            )}
-          >
-            <AnimatedNumber value={stats.complianceRate} />%
-          </span>
-          {" 30-day compliance"}
-        </span>
-      )}
-
-      {stats.throwsThisWeek > 0 && (
-        <span>
-          <span className="font-semibold tabular-nums text-[var(--foreground)]">
-            <AnimatedNumber value={stats.throwsThisWeek} />
-          </span>
-          {" throws this week"}
-        </span>
-      )}
-
-      {stats.prsThisWeek > 0 && (
-        <Badge variant="primary">
-          {stats.prsThisWeek} PR{stats.prsThisWeek !== 1 ? "s" : ""} this week
-        </Badge>
-      )}
-
-      {stats.lowReadiness > 0 && (
-        <Badge variant="warning">{stats.lowReadiness} low readiness</Badge>
-      )}
-
-      {stats.injured > 0 && <Badge variant="danger">{stats.injured} injured</Badge>}
-
-      {teamAttendance !== null && teamAttendance.totalPractices > 0 && (
-        <span>
-          <span className={cn("font-semibold tabular-nums", attendanceColor)}>
-            <AnimatedNumber value={teamAttendance.rate} />%
-          </span>
-          {" team attendance this week"}
-        </span>
-      )}
-
-      {teamAttendance !== null && teamAttendance.flaggedAthletes.length > 0 && (
-        <Link href="/coach/athletes" className="inline-flex">
-          <Badge variant="warning">
-            {teamAttendance.flaggedAthletes.length} below 75% attendance
-          </Badge>
+    <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
+      <div className="flex items-baseline gap-2.5 min-w-0">
+        <h2 className="font-heading text-[17px] font-semibold text-[var(--color-text-primary)] tracking-tight">
+          {title}
+        </h2>
+        {context && (
+          <span className="text-xs text-[var(--color-text-secondary)] truncate">{context}</span>
+        )}
+      </div>
+      {action && (
+        <Link
+          href={action.href}
+          className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors shrink-0"
+        >
+          {action.label} →
         </Link>
       )}
     </div>
@@ -185,75 +132,98 @@ function StatBar({
 function ActivityIcon({ type }: { type: ActivityItem["type"] }) {
   if (type === "check_in") {
     return (
-      <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-        <Heart className="w-4 h-4 text-blue-500" strokeWidth={1.75} aria-hidden="true" />
+      <div className="w-7 h-7 rounded-full bg-[var(--color-status-info-bg)] flex items-center justify-center shrink-0">
+        <Heart
+          className="w-3.5 h-3.5"
+          strokeWidth={1.75}
+          style={{ color: "var(--color-status-info-fg)" }}
+          aria-hidden="true"
+        />
       </div>
     );
   }
   if (type === "personal_best") {
     return (
-      <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
-        <Award className="w-4 h-4 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
+      <div className="w-7 h-7 rounded-full bg-[var(--color-brand-subtle)] flex items-center justify-center shrink-0">
+        <Award
+          className="w-3.5 h-3.5"
+          strokeWidth={1.75}
+          style={{ color: "var(--color-brand-strong)" }}
+          aria-hidden="true"
+        />
       </div>
     );
   }
   return (
-    <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-      <CheckCircle className="w-4 h-4 text-emerald-500" strokeWidth={1.75} aria-hidden="true" />
+    <div className="w-7 h-7 rounded-full bg-[var(--color-status-success-bg)] flex items-center justify-center shrink-0">
+      <CheckCircle
+        className="w-3.5 h-3.5"
+        strokeWidth={1.75}
+        style={{ color: "var(--color-status-success-fg)" }}
+        aria-hidden="true"
+      />
     </div>
   );
 }
 
 function ActivityDescription({ item }: { item: ActivityItem }) {
   if (item.type === "check_in") {
-    const scoreColor =
-      (item.score ?? 0) >= 8
-        ? "text-emerald-600 dark:text-emerald-400"
-        : (item.score ?? 0) >= 5
-          ? "text-amber-600 dark:text-amber-400"
-          : "text-red-600 dark:text-red-400";
+    const score = item.score ?? 0;
+    const scoreStyle =
+      score >= 8
+        ? { color: "var(--color-status-success-fg)" }
+        : score >= 5
+          ? { color: "var(--color-status-warning-fg)" }
+          : { color: "var(--color-status-danger-fg)" };
     return (
       <span>
-        <span className="font-medium text-[var(--foreground)]">{item.athleteName}</span>
-        {" submitted a readiness check-in · "}
-        <span className={cn("font-semibold", scoreColor)}>{item.score?.toFixed(1)}</span>
+        <span className="font-medium text-[var(--color-text-primary)]">{item.athleteName}</span>
+        {" checked in · readiness "}
+        <span className="font-semibold tabular-nums" style={scoreStyle}>
+          {item.score?.toFixed(1)}
+        </span>
       </span>
     );
   }
   if (item.type === "personal_best") {
     return (
       <span>
-        <span className="font-medium text-[var(--foreground)]">{item.athleteName}</span>
-        {" set a new PR — "}
-        <span className="font-semibold text-amber-600 dark:text-amber-400">
+        <span className="font-medium text-[var(--color-text-primary)]">{item.athleteName}</span>
+        {" set a PR of "}
+        <span className="font-semibold tabular-nums" style={{ color: "var(--color-brand-strong)" }}>
           {item.distance?.toFixed(2)}m
         </span>
         {" in "}
-        <span className="font-medium">{formatEventName(item.event ?? "")}</span>
+        <span className="font-medium text-[var(--color-text-primary)]">
+          {formatEventName(item.event ?? "")}
+        </span>
       </span>
     );
   }
   return (
     <span>
-      <span className="font-medium text-[var(--foreground)]">{item.athleteName}</span>
+      <span className="font-medium text-[var(--color-text-primary)]">{item.athleteName}</span>
       {item.sessionName ? (
         <>
           {" completed "}
-          <span className="font-medium">{item.sessionName}</span>
+          <span className="font-medium text-[var(--color-text-primary)]">{item.sessionName}</span>
         </>
       ) : (
-        " completed a training session"
+        " completed a session"
       )}
       {item.rpe != null && (
         <>
           {" · RPE "}
-          <span className="font-semibold">{item.rpe.toFixed(1)}</span>
+          <span className="font-semibold tabular-nums">{item.rpe.toFixed(1)}</span>
         </>
       )}
       {item.distance != null && (
         <>
-          {", Best: "}
-          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+          {" · best "}
+          <span
+            className="font-semibold tabular-nums"
+            style={{ color: "var(--color-status-success-fg)" }}
+          >
             {item.distance.toFixed(2)}m
           </span>
         </>
@@ -265,100 +235,100 @@ function ActivityDescription({ item }: { item: ActivityItem }) {
 function ActivityFeed({ items }: { items: ActivityItem[] }) {
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
-        <div className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
-          <Activity
-            className="w-5 h-5 text-surface-400 dark:text-surface-500"
-            strokeWidth={1.75}
-            aria-hidden="true"
-          />
-        </div>
-        <div className="max-w-[200px]">
-          <p className="text-sm font-semibold text-[var(--foreground)]">No recent activity</p>
-          <p className="text-xs text-muted mt-1">
-            Check-ins, sessions, and PRs from your athletes will show up here.
-          </p>
-        </div>
+      <div className="py-8 text-sm text-[var(--color-text-secondary)]">
+        <Activity
+          size={18}
+          strokeWidth={1.75}
+          aria-hidden="true"
+          className="inline-block mr-2 -mt-0.5"
+        />
+        No check-ins, sessions, or PRs yet — activity from your athletes will appear here.
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      {/* Timeline spine */}
-      <div className="absolute left-[19px] top-5 bottom-5 w-0.5 bg-surface-200 dark:bg-surface-700" />
-
+    <ul className="divide-y divide-[var(--color-border-default)]">
       {items.map((item) => {
         const href = item.assignmentId
           ? `/coach/athletes/${item.athleteId}/sessions/${item.assignmentId}`
           : `/coach/athletes/${item.athleteId}`;
         return (
-          <Link
-            key={item.id}
-            href={href}
-            className="relative flex items-start gap-3 px-1 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-          >
-            <div className="relative z-10 shrink-0">
+          <li key={item.id}>
+            <Link
+              href={href}
+              className="flex items-start gap-3 py-3 hover:bg-[var(--color-bg-surface-sunken)] -mx-2 px-2 rounded transition-colors"
+            >
               <ActivityIcon type={item.type} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-surface-600 dark:text-surface-400 leading-snug">
-                <ActivityDescription item={item} />
-              </p>
-              <p className="text-xs text-muted mt-0.5">{formatRelativeTime(item.date)}</p>
-            </div>
-          </Link>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-[var(--color-text-secondary)] leading-snug">
+                  <ActivityDescription item={item} />
+                </p>
+                <p className="text-xs text-[var(--color-text-secondary)] opacity-60 mt-0.5">
+                  {formatRelativeTime(item.date)}
+                </p>
+              </div>
+            </Link>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }
 
-/* ─── Team Readiness Widget ─────────────────────────────────────────────── */
+/* ─── Team Readiness ─────────────────────────────────────────────────────── */
 
 function TrendIcon({ trend }: { trend: TeamReadinessEntry["trend"] }) {
   if (trend === "up") {
     return (
-      <TrendingUp size={14} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />
+      <TrendingUp
+        size={14}
+        strokeWidth={1.75}
+        style={{ color: "var(--color-status-success-fg)" }}
+        aria-hidden="true"
+      />
     );
   }
   if (trend === "down") {
     return (
-      <TrendingDown size={14} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
+      <TrendingDown
+        size={14}
+        strokeWidth={1.75}
+        style={{ color: "var(--color-status-danger-fg)" }}
+        aria-hidden="true"
+      />
     );
   }
   if (trend === "stable") {
-    return <Minus size={14} strokeWidth={1.75} className="text-surface-400" aria-hidden="true" />;
+    return (
+      <Minus
+        size={14}
+        strokeWidth={1.75}
+        style={{ color: "var(--color-text-secondary)" }}
+        aria-hidden="true"
+      />
+    );
   }
   return null;
 }
 
-/**
- * Compact 28-day sparkline for a team-readiness row. Intentionally minimal:
- * stroke-only polyline with explicit gaps for days that have no check-in,
- * so coaches see both the shape of recent readiness AND its sparsity
- * (sparse check-ins are themselves a signal). Null scores split the line
- * into segments rather than interpolating through missing data.
- */
 function ReadinessSparkline({
   series,
   maxScore,
-  strokeClass,
+  strokeVar,
 }: {
   series: { date: string; score: number | null }[];
   maxScore: number;
-  strokeClass: string;
+  strokeVar: string;
 }) {
-  const W = 80;
-  const H = 20;
+  const W = 72;
+  const H = 18;
   const PAD = 1.5;
 
   if (series.length === 0 || maxScore <= 0) {
-    return <div className="h-5 w-20" aria-hidden="true" />;
+    return <div className="h-[18px] w-[72px]" aria-hidden="true" />;
   }
 
-  // Build contiguous non-null segments. Each segment becomes its own polyline
-  // so gaps render as visual discontinuities instead of interpolated lines.
   const segments: { x: number; y: number }[][] = [];
   let current: { x: number; y: number }[] = [];
 
@@ -379,7 +349,11 @@ function ReadinessSparkline({
 
   if (segments.length === 0) {
     return (
-      <div className="h-5 w-20 flex items-center text-[10px] text-surface-400" aria-hidden="true">
+      <div
+        className="h-[18px] w-[72px] flex items-center text-[10px]"
+        style={{ color: "var(--color-text-secondary)" }}
+        aria-hidden="true"
+      >
         No data
       </div>
     );
@@ -395,14 +369,7 @@ function ReadinessSparkline({
     >
       {segments.map((seg, idx) =>
         seg.length === 1 ? (
-          // Single point — render a dot so the signal doesn't disappear
-          <circle
-            key={idx}
-            cx={seg[0].x}
-            cy={seg[0].y}
-            r={1.2}
-            className={`fill-current ${strokeClass}`}
-          />
+          <circle key={idx} cx={seg[0].x} cy={seg[0].y} r={1.2} style={{ fill: strokeVar }} />
         ) : (
           <polyline
             key={idx}
@@ -411,7 +378,7 @@ function ReadinessSparkline({
             strokeWidth={1.5}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`stroke-current ${strokeClass}`}
+            style={{ stroke: strokeVar }}
           />
         )
       )}
@@ -423,55 +390,248 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
   if (entries.length === 0) return null;
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-        Team Readiness
-        <span className="ml-2 text-xs font-normal normal-case text-surface-400">last 28 days</span>
-      </h2>
-      <div className="divide-y divide-[var(--card-border)] border-t border-[var(--card-border)]">
+    <section aria-labelledby="readiness-heading">
+      <SectionHeader title="Team readiness" context="last 28 days" />
+      <ul className="divide-y divide-[var(--color-border-default)]">
         {entries.map((entry) => {
           const pct =
             entry.maxScore > 0 && entry.latestScore !== null
               ? (entry.latestScore / entry.maxScore) * 100
               : 0;
-          const scoreColorClass =
+          const strokeVar =
             pct >= 70
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "var(--color-status-success-fg)"
               : pct >= 40
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-red-600 dark:text-red-400";
+                ? "var(--color-status-warning-fg)"
+                : "var(--color-status-danger-fg)";
 
           return (
-            <Link
-              key={entry.athleteId}
-              href={`/coach/athletes/${entry.athleteId}`}
-              className="group flex items-center gap-3 px-1 py-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
-            >
-              <Avatar name={entry.athleteName} src={entry.avatarUrl} size="sm" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                  {entry.athleteName}
-                </p>
-                <div className="mt-1">
-                  <ReadinessSparkline
-                    series={entry.series}
-                    maxScore={entry.maxScore}
-                    strokeClass={scoreColorClass}
-                  />
+            <li key={entry.athleteId}>
+              <Link
+                href={`/coach/athletes/${entry.athleteId}`}
+                className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded hover:bg-[var(--color-bg-surface-sunken)] transition-colors"
+              >
+                <Avatar name={entry.athleteName} src={entry.avatarUrl} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                    {entry.athleteName}
+                  </p>
+                  <div className="mt-0.5">
+                    <ReadinessSparkline
+                      series={entry.series}
+                      maxScore={entry.maxScore}
+                      strokeVar={strokeVar}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <TrendIcon trend={entry.trend} />
-                <span className={cn("text-sm font-semibold tabular-nums", scoreColorClass)}>
-                  {entry.latestScore !== null ? entry.latestScore.toFixed(1) : "—"}
-                </span>
-                <span className="text-[10px] text-muted">/ {entry.maxScore}</span>
-              </div>
-            </Link>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <TrendIcon trend={entry.trend} />
+                  <span className="text-sm font-semibold tabular-nums" style={{ color: strokeVar }}>
+                    {entry.latestScore !== null ? entry.latestScore.toFixed(1) : "—"}
+                  </span>
+                  <span className="text-[10px] text-[var(--color-text-secondary)]">
+                    / {entry.maxScore}
+                  </span>
+                </div>
+              </Link>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
+  );
+}
+
+/* ─── Meta Bar — the editorial page header ──────────────────────────────
+   Dense, one-line (wraps on narrow), fact-first. No greeting. The date
+   is the heading; every number stands on its own weight. Color is reserved
+   for signals the coach needs to act on (PR, warning, danger). */
+
+function MetaBar({
+  today,
+  totalAthletes,
+  sessionsToday,
+  complianceRate,
+  throwsThisWeek,
+  prsThisWeek,
+  lowReadiness,
+  attendance,
+}: {
+  today: string;
+  totalAthletes: number;
+  sessionsToday: number;
+  complianceRate: number | null;
+  throwsThisWeek: number;
+  prsThisWeek: number;
+  lowReadiness: number;
+  attendance: {
+    rate: number;
+    totalPractices: number;
+    flaggedCount: number;
+  } | null;
+}) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1.5 text-sm text-[var(--color-text-secondary)]">
+      <span className="text-[var(--color-text-primary)] font-medium">{today}</span>
+
+      <Dot />
+
+      <span>
+        <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
+          {totalAthletes}
+        </span>{" "}
+        athlete{totalAthletes === 1 ? "" : "s"}
+      </span>
+
+      {sessionsToday > 0 && (
+        <>
+          <Dot />
+          <span>
+            <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
+              {sessionsToday}
+            </span>{" "}
+            session{sessionsToday === 1 ? "" : "s"} today
+          </span>
+        </>
+      )}
+
+      {complianceRate !== null && (
+        <>
+          <Dot />
+          <span>
+            <span
+              className="font-semibold tabular-nums"
+              style={{
+                color:
+                  complianceRate >= 80
+                    ? "var(--color-status-success-fg)"
+                    : complianceRate < 60
+                      ? "var(--color-status-warning-fg)"
+                      : "var(--color-text-primary)",
+              }}
+            >
+              {complianceRate}%
+            </span>{" "}
+            compliance · 30d
+          </span>
+        </>
+      )}
+
+      {throwsThisWeek > 0 && (
+        <>
+          <Dot />
+          <span>
+            <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
+              {throwsThisWeek}
+            </span>{" "}
+            throws this week
+          </span>
+        </>
+      )}
+
+      {attendance !== null && attendance.totalPractices > 0 && (
+        <>
+          <Dot />
+          <span>
+            <span
+              className="font-semibold tabular-nums"
+              style={{
+                color:
+                  attendance.rate >= 90
+                    ? "var(--color-status-success-fg)"
+                    : attendance.rate >= 75
+                      ? "var(--color-status-warning-fg)"
+                      : "var(--color-status-danger-fg)",
+              }}
+            >
+              {attendance.rate}%
+            </span>{" "}
+            attendance · this week
+          </span>
+        </>
+      )}
+
+      {/* Signals — always at the end so they catch the eye last */}
+      {prsThisWeek > 0 && (
+        <>
+          <Dot />
+          <span style={{ color: "var(--color-brand-strong)" }} className="font-semibold">
+            {prsThisWeek} PR{prsThisWeek === 1 ? "" : "s"} this week
+          </span>
+        </>
+      )}
+
+      {lowReadiness > 0 && (
+        <>
+          <Dot />
+          <span style={{ color: "var(--color-status-warning-fg)" }} className="font-semibold">
+            {lowReadiness} low readiness
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Dot() {
+  return (
+    <span aria-hidden="true" className="opacity-40">
+      ·
+    </span>
+  );
+}
+
+/* ─── Injury Alert — urgent triage ───────────────────────────────────── */
+
+function InjuryAlert({
+  injured,
+}: {
+  injured: { id: string; firstName: string; lastName: string }[];
+}) {
+  if (injured.length === 0) return null;
+
+  return (
+    <div
+      className="flex items-start gap-3 rounded-lg border px-4 py-3"
+      style={{
+        backgroundColor: "var(--color-status-danger-bg)",
+        borderColor: "var(--color-status-danger-fg)",
+        borderWidth: "1px",
+      }}
+    >
+      <AlertTriangle
+        size={16}
+        strokeWidth={2}
+        aria-hidden="true"
+        className="mt-0.5 shrink-0"
+        style={{ color: "var(--color-status-danger-fg)" }}
+      />
+      <p className="flex-1 text-sm" style={{ color: "var(--color-status-danger-fg)" }}>
+        {injured.length === 1 ? (
+          <>
+            <Link
+              href={`/coach/athletes/${injured[0].id}`}
+              className="font-semibold hover:underline"
+            >
+              {injured[0].firstName} {injured[0].lastName}
+            </Link>{" "}
+            has an active injury flag.
+          </>
+        ) : (
+          <>
+            <span className="font-semibold">{injured.length} athletes</span> have active injury
+            flags.
+          </>
+        )}
+      </p>
+      <Link
+        href="/coach/athletes"
+        className="text-xs font-semibold shrink-0 hover:underline"
+        style={{ color: "var(--color-status-danger-fg)" }}
+      >
+        {injured.length === 1 ? "View profile →" : "View all →"}
+      </Link>
+    </div>
   );
 }
 
@@ -480,7 +640,6 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
 export default async function CoachDashboardPage() {
   const { coach } = await requireCoachSession();
 
-  // Read mode/depth preferences from cookies
   const cookieStore = await cookies();
   const mode = (cookieStore.get("dashboard-mode")?.value ?? "training") as DashboardMode;
   const depth = (cookieStore.get("dashboard-depth")?.value ?? "standard") as DashboardDepth;
@@ -503,7 +662,7 @@ export default async function CoachDashboardPage() {
   ] = await withTiming("coach-dashboard-data", () =>
     Promise.allSettled([
       cachedGetCoachStats(coach.id),
-      cachedGetRecentActivity(coach.id, 20, true),
+      cachedGetRecentActivity(coach.id, 15, true),
       cachedGetFlaggedAthletes(coach.id),
       getTeamReadinessTrends(coach.id),
       getOnboardingStatus(coach.id, coach.onboardingCompletedAt),
@@ -518,7 +677,7 @@ export default async function CoachDashboardPage() {
     ])
   );
 
-  const stats: CoachStats =
+  const stats =
     statsResult.status === "fulfilled"
       ? statsResult.value
       : {
@@ -573,7 +732,9 @@ export default async function CoachDashboardPage() {
           program: {
             select: {
               athleteId: true,
-              athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+              athlete: {
+                select: { id: true, firstName: true, lastName: true, avatarUrl: true },
+              },
             },
           },
         },
@@ -604,23 +765,31 @@ export default async function CoachDashboardPage() {
     }
   }
 
-  const now = new Date();
-  const hour = now.getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const today = now.toLocaleDateString("en-US", {
+  const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
 
   const planLimit = PLAN_LIMITS[coach.plan];
+  const injuredAthletes = flagged.filter((a) => a.reason === "injured");
+
+  // Analytics derivation (moved out of JSX for readability)
+  const scored = readiness.filter((e) => e.latestScore !== null);
+  const avgReadiness =
+    scored.length > 0
+      ? scored.reduce((sum, e) => sum + (e.latestScore ?? 0), 0) / scored.length
+      : 0;
+  const ups = readiness.filter((e) => e.trend === "up").length;
+  const downs = readiness.filter((e) => e.trend === "down").length;
+  const readinessTrend: "up" | "down" | "flat" = ups > downs ? "up" : downs > ups ? "down" : "flat";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-10">
       {/* Auto-initiate Stripe Checkout if ?checkout= param present */}
       <CheckoutTrigger />
 
-      {/* Onboarding Checklist — shown only for new coaches */}
+      {/* Onboarding Checklist — new coaches only */}
       {!onboarding.isCompleted && (
         <OnboardingChecklist
           firstName={coach.firstName}
@@ -631,148 +800,110 @@ export default async function CoachDashboardPage() {
         />
       )}
 
-      {/* Upgrade nudge for free coaches near their athlete limit */}
+      {/* Plan upgrade nudge for free coaches near limit */}
       {coach.plan === "FREE" && stats.totalAthletes >= 2 && (
         <UpgradeBanner athleteCount={stats.totalAthletes} planLimit={planLimit} />
       )}
 
-      {/* ═══ ZONE 1: TRIAGE ═══ */}
-
-      {/* Persistent injury alert bar */}
-      {(() => {
-        const injured = flagged.filter((a) => a.reason === "injured");
-        if (injured.length === 0) return null;
-        return (
-          <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 flex items-center gap-3">
-            <AlertTriangle
-              className="w-4 h-4 text-red-500 shrink-0"
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
-            <p className="text-sm text-red-700 dark:text-red-400 flex-1">
-              {injured.length === 1 ? (
-                <>
-                  <Link
-                    href={`/coach/athletes/${injured[0].id}`}
-                    className="font-semibold hover:underline"
-                  >
-                    {injured[0].firstName} {injured[0].lastName}
-                  </Link>
-                  {" has an active injury"}
-                </>
-              ) : (
-                <>
-                  <strong>{injured.length}</strong>
-                  {" athletes need attention"}
-                </>
-              )}
+      {/* ── Editorial header ───────────────────────────────────────────── */}
+      <header className="space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
+              Command
             </p>
-            <Link
-              href="/coach/athletes"
-              className="text-xs font-medium text-red-600 dark:text-red-400 hover:underline shrink-0"
-            >
-              {injured.length === 1 ? "View profile \u2192" : "View all \u2192"}
-            </Link>
-          </div>
-        );
-      })()}
-
-      {/* Header: greeting + mode selector */}
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-              {greeting}, {coach.firstName}.
+            <h1 className="font-heading text-[32px] leading-[1.05] font-semibold text-[var(--color-text-primary)]">
+              Your program, today.
             </h1>
-            <p className="text-sm text-muted mt-0.5">{today}</p>
           </div>
           <ModeSelector mode={mode} depth={depth} />
         </div>
-        <StatBar stats={stats} teamAttendance={teamAttendance} />
-      </div>
 
-      {/* Coaching Action Cards */}
+        <MetaBar
+          today={today}
+          totalAthletes={stats.totalAthletes}
+          sessionsToday={stats.sessionsToday}
+          complianceRate={stats.complianceRate}
+          throwsThisWeek={stats.throwsThisWeek}
+          prsThisWeek={stats.prsThisWeek}
+          lowReadiness={stats.lowReadiness}
+          attendance={
+            teamAttendance
+              ? {
+                  rate: teamAttendance.rate,
+                  totalPractices: teamAttendance.totalPractices,
+                  flaggedCount: teamAttendance.flaggedAthletes.length,
+                }
+              : null
+          }
+        />
+      </header>
+
+      {/* ── Triage: injuries ─────────────────────────────────────────── */}
+      <InjuryAlert injured={injuredAthletes} />
+
+      {/* ── Coaching actions ─────────────────────────────────────────── */}
       <ActionCards actions={coachingActions} depth={depth} />
 
-      {/* ═══ ZONE 2: TEAM PULSE ═══ */}
-
-      {/* Competition Countdown — only in competition prep mode */}
+      {/* ── Competition countdown (competition mode only) ───────────── */}
       {mode === "competition" && competitions.length > 0 && (
         <CompetitionCountdown competitions={competitions} />
       )}
 
-      {/* Two-column: Activity Feed + Readiness */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        {/* Activity Feed — timeline, left column */}
-        <section className="lg:col-span-3 space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Recent Activity
-            <span className="ml-2 text-xs font-normal normal-case text-surface-400">
-              notable events
-            </span>
-          </h2>
+      {/* ── Activity + readiness (two-col on desktop) ────────────────── */}
+      <div className="grid gap-10 lg:grid-cols-5">
+        <section aria-labelledby="activity-heading" className="lg:col-span-3">
+          <SectionHeader
+            title="Recent activity"
+            action={{ label: "All athletes", href: "/coach/athletes" }}
+          />
           <ActivityFeed items={activity} />
-          {activity.length > 0 && (
-            <div className="pt-1 pl-1">
-              <Link
-                href="/coach/athletes"
-                className="text-xs text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 hover:underline transition-colors"
-              >
-                View All &rarr;
-              </Link>
-            </div>
-          )}
         </section>
 
-        {/* Team Readiness — borderless, right column */}
         <div className="lg:col-span-2">
           <ReadinessWidget entries={readiness} />
         </div>
       </div>
 
-      {/* ═══ ZONE 3: INTEL ═══ */}
+      {/* ── Results: PRs + load ──────────────────────────────────────── */}
+      <section aria-labelledby="prs-heading">
+        <SectionHeader title="Recent team PRs" />
+        <PRBoard prs={teamPRs} />
+      </section>
 
-      {/* PR Board */}
-      <PRBoard prs={teamPRs} />
+      <section aria-labelledby="load-heading">
+        <SectionHeader title="Training load" />
+        <LoadOverview entries={teamLoad} depth={depth} />
+      </section>
 
-      {/* Training Load Overview */}
-      <LoadOverview entries={teamLoad} depth={depth} />
-
-      {/* Context section — mode-dependent */}
+      {/* ── Mode-specific context ───────────────────────────────────── */}
       {mode === "training" && depth === "advanced" && adaptationRows.length > 0 && (
-        <AdaptationProgress rows={adaptationRows} />
+        <section aria-labelledby="adaptation-heading">
+          <SectionHeader title="Adaptation status" context="advanced" />
+          <AdaptationProgress rows={adaptationRows} />
+        </section>
       )}
       {mode === "competition" && (
-        <PeakingStatus competitions={competitions} readiness={readiness} />
+        <section aria-labelledby="peaking-heading">
+          <SectionHeader title="Peaking status" />
+          <PeakingStatus competitions={competitions} readiness={readiness} />
+        </section>
       )}
 
-      {/* ═══ ZONE 4: PERFORMANCE LAB ═══ */}
+      {/* ── Analytics (slow lens) ────────────────────────────────────── */}
+      <section aria-labelledby="analytics-heading">
+        <SectionHeader title="Analytics" context={`last ${analyticsPeriod} days`} />
+        <AnalyticsSection
+          period={analyticsPeriod}
+          distanceDelta={distanceDelta}
+          complianceRate={stats.complianceRate}
+          avgReadiness={avgReadiness}
+          readinessTrend={readinessTrend}
+          weeklyVolume={weeklyVolume}
+          seasonGains={seasonGains}
+        />
+      </section>
 
-      {(() => {
-        const scored = readiness.filter((e) => e.latestScore !== null);
-        const avgReadiness =
-          scored.length > 0
-            ? scored.reduce((sum, e) => sum + e.latestScore!, 0) / scored.length
-            : 0;
-        const ups = readiness.filter((e) => e.trend === "up").length;
-        const downs = readiness.filter((e) => e.trend === "down").length;
-        const readinessTrend: "up" | "down" | "flat" =
-          ups > downs ? "up" : downs > ups ? "down" : "flat";
-
-        return (
-          <AnalyticsSection
-            period={analyticsPeriod}
-            distanceDelta={distanceDelta}
-            complianceRate={stats.complianceRate}
-            avgReadiness={avgReadiness}
-            readinessTrend={readinessTrend}
-            weeklyVolume={weeklyVolume}
-            seasonGains={seasonGains}
-          />
-        );
-      })()}
-
-      {/* First-visit contextual hints */}
       <FirstVisitHints />
     </div>
   );
