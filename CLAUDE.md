@@ -195,6 +195,7 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 - Run `tsc --noEmit` after any code changes; run tests, check logs, demonstrate correctness
 - Read before write: grep for all usages of a shared function/component before changing its interface
 - Ask yourself: "Would a staff engineer approve this?"
+- **Before any commit on `main`:** run `git fetch origin && git log HEAD..origin/main --oneline` to detect divergence early. If the remote has commits you don't, STOP and reconcile *before* committing on top — a parallel session may have shipped overlapping work via PR. See `feedback_parallel_terminal_git_race.md` for the full pattern.
 
 ### 5. Demand Elegance (Balanced)
 
