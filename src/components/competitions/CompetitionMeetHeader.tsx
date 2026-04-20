@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Check } from "lucide-react";
 
 export type MeetHeaderValue = {
   id: string;
@@ -21,21 +22,43 @@ type Props = {
   canMakeFinals: boolean;
 };
 
+type SaveState = "idle" | "saving" | "saved" | "error";
+
 export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props) {
   const [dirty, setDirty] = useState<Partial<MeetHeaderValue>>({});
+  const [saveState, setSaveState] = useState<SaveState>("idle");
 
   const merged = { ...value, ...dirty };
+  const hasDirty = Object.keys(dirty).length > 0;
 
   const handleField = <K extends keyof MeetHeaderValue>(key: K, v: MeetHeaderValue[K]) => {
     setDirty((d) => ({ ...d, [key]: v }));
   };
 
-  const handleBlur: React.FocusEventHandler<HTMLDivElement> = async (e) => {
+  // Save immediately, merging any pending text-field edits. Used for
+  // decisive controls (select/checkbox/date) where there is no
+  // "still typing" ambiguity, and for the explicit Save button.
+  const commit = async (patch: Partial<MeetHeaderValue> = {}) => {
+    const combined = { ...dirty, ...patch };
+    if (Object.keys(combined).length === 0) return;
+    setSaveState("saving");
+    try {
+      await onChange(combined);
+      setDirty({});
+      setSaveState("saved");
+      setTimeout(() => setSaveState((s) => (s === "saved" ? "idle" : s)), 2000);
+    } catch {
+      // Keep dirty so user doesn't lose their edits; the onChange caller
+      // surfaces the error toast.
+      setSaveState("error");
+    }
+  };
+
+  const handleBlur: React.FocusEventHandler<HTMLDivElement> = (e) => {
     // Don't save when focus moves between fields inside the same card.
     if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-    if (Object.keys(dirty).length === 0) return;
-    await onChange(dirty);
-    setDirty({});
+    if (!hasDirty) return;
+    void commit();
   };
 
   return (
@@ -50,7 +73,7 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
         <input
           type="date"
           value={merged.date}
-          onChange={(e) => handleField("date", e.target.value)}
+          onChange={(e) => void commit({ date: e.target.value })}
           className="rounded bg-surface-800 px-2 py-1 text-sm"
           aria-label="Meet date"
         />
@@ -78,7 +101,7 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
           <select
             value={merged.meetStatus}
             onChange={(e) =>
-              handleField("meetStatus", e.target.value as MeetHeaderValue["meetStatus"])
+              void commit({ meetStatus: e.target.value as MeetHeaderValue["meetStatus"] })
             }
             className="rounded bg-surface-800 px-2 py-1"
           >
@@ -94,7 +117,9 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
           <select
             value={merged.venueType ?? ""}
             onChange={(e) =>
-              handleField("venueType", (e.target.value || null) as MeetHeaderValue["venueType"])
+              void commit({
+                venueType: (e.target.value || null) as MeetHeaderValue["venueType"],
+              })
             }
             className="rounded bg-surface-800 px-2 py-1"
           >
@@ -132,7 +157,7 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
           <span className="text-muted">Format</span>
           <select
             value={merged.format}
-            onChange={(e) => handleField("format", e.target.value as MeetHeaderValue["format"])}
+            onChange={(e) => void commit({ format: e.target.value as MeetHeaderValue["format"] })}
             className="rounded bg-surface-800 px-2 py-1"
           >
             <option value="THREE_PLUS_THREE">3 + 3</option>
@@ -144,12 +169,40 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
             <input
               type="checkbox"
               checked={merged.madeFinals ?? false}
-              onChange={(e) => handleField("madeFinals", e.target.checked)}
+              onChange={(e) => void commit({ madeFinals: e.target.checked })}
             />
             <span>Made finals</span>
           </label>
         )}
       </div>
+
+      {/* Save affordance. Stays out of the way when nothing is pending;
+          appears the moment a text/number field is edited so coaches on
+          mobile always have an explicit way to commit. */}
+      {(hasDirty || saveState !== "idle") && (
+        <div className="flex items-center justify-end gap-3 border-t border-[var(--card-border)] pt-3">
+          {saveState === "saving" && <span className="text-xs text-muted">Saving…</span>}
+          {saveState === "saved" && !hasDirty && (
+            <span className="flex items-center gap-1 text-xs text-success-500">
+              <Check size={12} strokeWidth={2} aria-hidden="true" />
+              Saved
+            </span>
+          )}
+          {saveState === "error" && hasDirty && (
+            <span className="text-xs text-danger-500">Couldn&apos;t save — try again</span>
+          )}
+          {hasDirty && (
+            <button
+              type="button"
+              onClick={() => void commit()}
+              disabled={saveState === "saving"}
+              className="btn-primary px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              Save changes
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

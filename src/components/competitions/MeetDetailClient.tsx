@@ -65,7 +65,7 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
     const json = await res.json();
     if (!res.ok || !json.success) {
       toast.error(json.error ?? "Failed to save meet");
-      return;
+      throw new Error(json.error ?? "save failed");
     }
     setMeetState((m) => ({ ...m, ...patch }));
     toast.success("Meet updated");
