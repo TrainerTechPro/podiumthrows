@@ -56,17 +56,37 @@ export function useToast(): ToastContextValue {
 
 /* ─── Provider ───────────────────────────────────────────────────────────── */
 
+const MAX_VISIBLE = 5;
+
+interface ToastState {
+  visible: Toast[];
+  queued: Toast[];
+}
+
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [state, setState] = useState<ToastState>({ visible: [], queued: [] });
+  const toasts = state.visible;
 
   const toast = useCallback((input: ToastInput): string => {
     const id = Math.random().toString(36).slice(2);
-    setToasts((prev) => [...prev.slice(-4), { id, ...input }]); // keep max 5
+    const entry: Toast = { id, ...input };
+    setState((s) =>
+      s.visible.length >= MAX_VISIBLE
+        ? { ...s, queued: [...s.queued, entry] }
+        : { ...s, visible: [...s.visible, entry] }
+    );
     return id;
   }, []);
 
   const dismiss = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setState((s) => {
+      const nextVisible = s.visible.filter((t) => t.id !== id);
+      if (s.queued.length > 0 && nextVisible.length < MAX_VISIBLE) {
+        const [head, ...rest] = s.queued;
+        return { visible: [...nextVisible, head], queued: rest };
+      }
+      return { ...s, visible: nextVisible };
+    });
   }, []);
 
   const success = useCallback(
@@ -106,7 +126,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       value={{ toasts, toast, dismiss, success, error, warning, info, celebration }}
     >
       {children}
-      <Toaster toasts={toasts} dismiss={dismiss} />
+      <Toaster toasts={toasts} overflowCount={state.queued.length} dismiss={dismiss} />
     </ToastContext.Provider>
   );
 }
@@ -334,7 +354,15 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
 
 /* ─── Toaster (stacking container) ──────────────────────────────────────── */
 
-function Toaster({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: string) => void }) {
+function Toaster({
+  toasts,
+  overflowCount,
+  dismiss,
+}: {
+  toasts: Toast[];
+  overflowCount: number;
+  dismiss: (id: string) => void;
+}) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
@@ -383,6 +411,17 @@ function Toaster({ toasts, dismiss }: { toasts: Toast[]; dismiss: (id: string) =
             <ToastItem toast={t} onDismiss={() => dismiss(t.id)} />
           </div>
         ))}
+        {overflowCount > 0 && (
+          <div
+            key="overflow"
+            aria-live="polite"
+            className="pointer-events-none flex justify-center sm:justify-end"
+          >
+            <span className="rounded-full border border-[var(--card-border)] bg-[var(--surface-overlay)] px-3 py-1 text-[11px] font-semibold text-muted tabular-nums shadow-sm">
+              +{overflowCount} more
+            </span>
+          </div>
+        )}
       </div>
     </>,
     document.body

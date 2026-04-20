@@ -94,8 +94,7 @@ export function TabList({ variant = "underline", className, children, ...props }
     reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // Measure the active tab button for the sliding indicator
-  useEffect(() => {
+  const measureIndicator = useCallback(() => {
     const container = containerRef.current;
     if (!container || variant !== "underline") return;
 
@@ -108,7 +107,34 @@ export function TabList({ variant = "underline", className, children, ...props }
       left: btnRect.left - containerRect.left + container.scrollLeft,
       width: btnRect.width,
     });
-  }, [active, variant]);
+  }, [variant]);
+
+  // Re-measure on active change
+  useEffect(() => {
+    measureIndicator();
+  }, [active, measureIndicator]);
+
+  // Re-measure on container/button resize, viewport resize, and web-font load
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || variant !== "underline") return;
+
+    const ro = new ResizeObserver(() => measureIndicator());
+    ro.observe(container);
+    container
+      .querySelectorAll<HTMLButtonElement>("[role='tab']")
+      .forEach((btn) => ro.observe(btn));
+
+    window.addEventListener("resize", measureIndicator);
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => measureIndicator()).catch(() => {});
+    }
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measureIndicator);
+    };
+  }, [variant, measureIndicator]);
 
   const variants = {
     underline: "border-b border-[var(--card-border)] gap-0",

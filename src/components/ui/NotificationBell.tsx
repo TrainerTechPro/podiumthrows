@@ -251,10 +251,39 @@ interface NotificationBellProps {
 export function NotificationBell({ initialCount = 0, role }: NotificationBellProps) {
   const [count, setCount] = useState(initialCount);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const reducedMotion = useRef(false);
   const router = useRouter();
+
+  useEffect(() => {
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  // Drive mount/visible phases for slide-in animation
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      if (reducedMotion.current) {
+        setVisible(true);
+        return;
+      }
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setVisible(true));
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+    setVisible(false);
+    if (reducedMotion.current) {
+      setMounted(false);
+      return;
+    }
+    const t = setTimeout(() => setMounted(false), 180);
+    return () => clearTimeout(t);
+  }, [open]);
 
   // Poll unread count
   useEffect(() => {
@@ -368,8 +397,16 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
       </button>
 
       {/* Dropdown panel */}
-      {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-[360px] sm:w-[400px] max-h-[480px] rounded-xl bg-[var(--surface-overlay)] border border-[var(--card-border)] shadow-xl z-50 flex flex-col overflow-hidden max-sm:fixed max-sm:inset-x-3 max-sm:right-3 max-sm:w-auto">
+      {mounted && (
+        <div
+          className={cn(
+            "absolute right-0 top-full mt-1.5 w-[360px] sm:w-[400px] max-h-[480px] rounded-xl bg-[var(--surface-overlay)] border border-[var(--card-border)] shadow-xl z-50 flex flex-col overflow-hidden max-sm:fixed max-sm:inset-x-3 max-sm:right-3 max-sm:w-auto",
+            "origin-top transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
+            visible
+              ? "opacity-100 translate-y-0 max-sm:translate-x-0"
+              : "opacity-0 -translate-y-2 max-sm:translate-y-2"
+          )}
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--card-border)]">
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Notifications</h3>
