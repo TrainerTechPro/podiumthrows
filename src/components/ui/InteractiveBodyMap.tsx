@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { ExtendedBodyPart, Slug } from "react-muscle-highlighter";
 import { cn } from "@/lib/utils";
@@ -107,6 +107,7 @@ export function InteractiveBodyMap({
   className,
 }: InteractiveBodyMapProps) {
   const [viewSide, setViewSide] = useState<"front" | "back">("front");
+  const svgContainerRef = useRef<HTMLDivElement>(null);
 
   /* Build the data array for the Body component from our selected areas.
    *
@@ -203,6 +204,77 @@ export function InteractiveBodyMap({
     [value, onChange]
   );
 
+  /* A11y: enhance the library-rendered SVG paths with keyboard + screen-reader
+   * semantics. The library renders clickable paths as `<path id={slug}>` in
+   * document order: commonPaths → leftPaths → rightPaths per body part. We
+   * walk them, tag each with role/tabIndex/aria-label/aria-pressed, and infer
+   * side from the position of same-id siblings. */
+  useEffect(() => {
+    const container = svgContainerRef.current;
+    if (!container) return;
+
+    const enhance = () => {
+      const paths = container.querySelectorAll<SVGPathElement>("svg path[id]");
+
+      // First pass: count paths per slug so we can map index → side.
+      const totals = new Map<string, number>();
+      paths.forEach((p) => {
+        const id = p.getAttribute("id");
+        if (!id) return;
+        totals.set(id, (totals.get(id) ?? 0) + 1);
+      });
+
+      // Second pass: assign attributes.
+      const seen = new Map<string, number>();
+      paths.forEach((p) => {
+        const id = p.getAttribute("id");
+        if (!id) return;
+        const total = totals.get(id) ?? 1;
+        const idx = seen.get(id) ?? 0;
+        seen.set(id, idx + 1);
+
+        let side: "left" | "right" | undefined;
+        if (total === 2) side = idx === 0 ? "left" : "right";
+        else if (total >= 3) side = idx === 0 ? undefined : idx === 1 ? "left" : "right";
+
+        const slug = id as Slug;
+        const label = slugToRegionLabel(slug, side);
+        const pressed = value.some((a) => a.slug === slug && a.side === side);
+
+        p.setAttribute("role", "button");
+        p.setAttribute("tabindex", disabled ? "-1" : "0");
+        p.setAttribute("aria-label", label);
+        p.setAttribute("aria-pressed", pressed ? "true" : "false");
+      });
+    };
+
+    enhance();
+
+    // The library may re-render paths when data/side changes — observe
+    // childList so we re-apply attributes whenever new paths appear (also
+    // covers the initial dynamic-import mount).
+    const observer = new MutationObserver(enhance);
+    observer.observe(container, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [value, disabled, viewSide, bodyData]);
+
+  /* A11y: handle Enter/Space on a focused path by dispatching a click, which
+   * the library's onClick will turn into onBodyPartPress. */
+  const handleSvgKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled) return;
+      const target = e.target as Element;
+      if (!(target instanceof SVGElement) || target.tagName.toLowerCase() !== "path") return;
+      if (target.getAttribute("role") !== "button") return;
+
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        (target as unknown as { click: () => void }).click();
+      }
+    },
+    [disabled]
+  );
+
   return (
     <div className={cn("space-y-3", className)}>
       {/* Front / Back toggle */}
@@ -235,7 +307,11 @@ export function InteractiveBodyMap({
 
       {/* Body diagram */}
       <div className="flex justify-center">
-        <div className="w-[220px] sm:w-[260px]">
+        <div
+          ref={svgContainerRef}
+          onKeyDown={handleSvgKeyDown}
+          className="w-[220px] sm:w-[260px]"
+        >
           <Body
             data={bodyData}
             side={viewSide}
