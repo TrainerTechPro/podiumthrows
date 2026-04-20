@@ -150,14 +150,18 @@ export function BetaFeedbackButton() {
 
   return (
     <>
-      {/* Floating trigger — bottom-left. On desktop (md+) lifts above the
-          sidebar user footer which otherwise sits underneath it; mobile
-          has no sidebar footer on-screen so bottom-4 is fine. */}
+      {/* Floating trigger — bottom-left. Vertical offset reads from the
+          --fab-bottom-mobile / --fab-bottom-desktop CSS vars so the shell
+          can control it: the athlete shell lifts the button above the
+          BottomTabBar; the coach shell keeps the legacy offsets. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
-        className="fixed bottom-4 md:bottom-24 left-4 z-40 flex items-center gap-2 px-3 py-2 rounded-full bg-primary-500 text-black shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+        className="fixed left-4 z-40 flex items-center gap-2 px-3 py-2 rounded-full bg-primary-500 text-black shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+        style={{
+          bottom: "var(--fab-bottom, 1rem)",
+        }}
       >
         <MessageSquare size={16} strokeWidth={2} aria-hidden="true" />
         <span className="text-sm font-semibold hidden sm:inline">Feedback</span>
