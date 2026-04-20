@@ -26,6 +26,26 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2gb',
     },
+    // Tree-shake barrel exports from these libs on every import site. lucide-react
+    // alone ships 1000+ icon modules behind a single barrel; without this, importing
+    // `{ User }` drags the entire icon set into the page chunk. Same story for
+    // framer-motion feature exports, recharts primitives, and Sentry instrumentation.
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      'recharts',
+      '@sentry/nextjs',
+      'date-fns',
+    ],
+  },
+  modularizeImports: {
+    // Belt-and-suspenders — rewrite `import { User } from 'lucide-react'` into
+    // per-file deep imports at compile time, so unused icons never enter the graph
+    // even on code paths the barrel optimizer misses.
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{ kebabCase member }}',
+      preventFullImport: true,
+    },
   },
   images: {
     formats: ['image/avif', 'image/webp'],

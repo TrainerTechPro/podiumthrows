@@ -48,6 +48,31 @@ next-env.d.ts
 .claude/skills/
 .mcp.json
 
+# AI / IDE tool workspaces — each tool scaffolds its own dotdir; none belong in the repo
+.agents/
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.factory/
+.goose/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.trae/
+.windsurf/
+.zencoder/
+
 # Dev artifacts
 .superpowers/
 .playwright-mcp/

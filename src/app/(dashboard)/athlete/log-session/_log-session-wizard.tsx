@@ -9,6 +9,7 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { Input } from "@/components/ui/Input";
+import { track } from "@/lib/analytics";
 
 /** Parse a numeric form input, preserving 0 as a valid value.
  *  Returns undefined only when the field is blank or the input is non-numeric. */
@@ -433,6 +434,15 @@ export function LogSessionWizard({
         throw new Error(data.error || `Failed to save session (${res.status})`);
       }
 
+      track("session_saved", {
+        sessionType: "throws",
+        isEdit: Boolean(isEditing),
+        throwCount: drills.reduce((sum, d) => {
+          const n = parseInt(d.throwCount, 10);
+          return sum + (Number.isFinite(n) ? n : 0);
+        }, 0),
+      });
+
       // Capture PR and warning data from response (top-level, not under .data)
       if (data.prs?.length) {
         setResponsePRs(data.prs);
@@ -440,6 +450,11 @@ export function LogSessionWizard({
           toast.celebration("New Personal Best!", {
             highlight: `${pr.distance.toFixed(2)}m`,
             description: pr.implement || event.replace(/_/g, " "),
+          });
+          track("pr_celebrated", {
+            event: event as "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN",
+            distanceM: Number(pr.distance) || 0,
+            isCompetition: false,
           });
         }
       } else {
