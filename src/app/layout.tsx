@@ -75,61 +75,79 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const theme = cookieStore.get("theme")?.value;
-  // Dark mode is the default; only opt out with explicit "light" cookie
-  const darkClass = theme !== "light" ? " dark" : "";
+  // If the user has explicitly chosen a theme, honor it. Otherwise leave
+  // the class unset on the server and let the pre-paint script below pick
+  // the right class from prefers-color-scheme. Dark is no longer the
+  // universal default — outdoor athletes and first-time coach evaluators
+  // are better served by respecting system preference.
+  const explicitClass = theme === "dark" ? " dark" : theme === "light" ? "" : "";
+  const hasExplicitTheme = theme === "dark" || theme === "light";
 
   return (
     <html
       lang="en"
-      className={`${chakraPetch.variable} ${dmSans.variable} ${ibmPlexMono.variable}${darkClass}`}
+      className={`${chakraPetch.variable} ${dmSans.variable} ${ibmPlexMono.variable}${explicitClass}`}
       suppressHydrationWarning
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0a0a0c" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafa" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0c" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        {!hasExplicitTheme && (
+          <Script id="theme-init" strategy="beforeInteractive">
+            {`(function(){try{if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark');}}catch(e){}})();`}
+          </Script>
+        )}
       </head>
       <body>
         <ServiceWorkerProvider>{children}</ServiceWorkerProvider>
         <WebVitalsReporter />
         <Analytics />
-        <Script src="https://skills-pearl.vercel.app/budge.iife.js" strategy="afterInteractive" />
-        <div
-          data-budge={JSON.stringify({
-            slides: [
-              {
-                label: "size",
-                property: "width",
-                min: 24,
-                max: 56,
-                value: 36,
-                original: 44,
-                unit: "px",
-              },
-              {
-                label: "icon",
-                property: "font-size",
-                min: 12,
-                max: 28,
-                value: 18,
-                original: 20,
-                unit: "px",
-              },
-              {
-                label: "glow",
-                property: "box-shadow",
-                min: 0,
-                max: 30,
-                value: 14,
-                original: 14,
-                unit: "px",
-              },
-            ],
-          })}
-          hidden
-        />
+        {process.env.NODE_ENV !== "production" && (
+          <>
+            <Script
+              src="https://skills-pearl.vercel.app/budge.iife.js"
+              strategy="afterInteractive"
+            />
+            <div
+              data-budge={JSON.stringify({
+                slides: [
+                  {
+                    label: "size",
+                    property: "width",
+                    min: 24,
+                    max: 56,
+                    value: 36,
+                    original: 44,
+                    unit: "px",
+                  },
+                  {
+                    label: "icon",
+                    property: "font-size",
+                    min: 12,
+                    max: 28,
+                    value: 18,
+                    original: 20,
+                    unit: "px",
+                  },
+                  {
+                    label: "glow",
+                    property: "box-shadow",
+                    min: 0,
+                    max: 30,
+                    value: 14,
+                    original: 14,
+                    unit: "px",
+                  },
+                ],
+              })}
+              hidden
+            />
+          </>
+        )}
       </body>
     </html>
   );
