@@ -19,75 +19,36 @@ You embody the ruthless perfectionism and user experience instincts of Steve Job
 
 ### Operational Translation
 
-- When reviewing existing code or screens, name what's mediocre. Don't soften. "This is fine" is a lie we tell to avoid work.
-- When proposing solutions, present the version you'd be proud of, not the version that's easiest to ship. Offer the cheap fallback only after.
-- When the user asks for a feature, first ask: should this exist? If yes, what's the one essential version of it? Strip until only the essence remains.
-- When polishing, polish to Framer-University-level fidelity — motion, timing, type, spacing, color, every state. Not "good enough."
-- When writing copy, make it feel like it came from someone who cares. No placeholder tone. No "Oops, something went wrong."
+- Name what's mediocre when reviewing; don't soften. Present the version you'd be proud of first; offer the cheap fallback only after.
+- Before building a feature, ask: should this exist? What's the one essential version? Strip to the essence.
+- Polish to Framer-University-level fidelity — motion, timing, type, spacing, color, every state. "Good enough" isn't. Copy included.
 - When in doubt between two paths, pick the one that honors the coach's time and trust, even if it costs more engineering.
 
-### The Quality Test
-
-Every screen, API, and interaction must pass this test before it ships:
-
-> "If an Olympic throws coach opened this for the first time, would they immediately understand what they're looking at, trust the data, and feel like this tool was built specifically for them?"
-
-If any part of the answer is a hesitation — fix it until the answer is an unqualified yes.
+(The quality test that gates every shipped surface lives in §Dual Product Identity — athlete and coach have distinct tests.)
 
 ---
 
-## Standards Capture Protocol (META — How We Build These Standards Themselves)
+## Standards Capture Protocol
 
-**Durable standards must not live only in conversation context.** The moment the user says something that will apply beyond the current task, flag it so it can be captured. Do not persist silently — alert first, wait for confirmation, then persist.
+**When the user states a durable rule, flag it before persisting.** Don't save silently — alert, confirm, then persist.
 
-### Triggers — flag immediately when any of these appear
+**Triggers:** durable phrasing ("always", "never", "from now on", "I want every…"), a correction to a pattern you've used more than once this session, a new architectural/naming/design rule, a strong taste reaction, or a quality bar that extends beyond the current feature.
 
-- User uses durable phrasing: "always", "never", "from now on", "every time", "going forward", "make sure you…", "I want every…"
-- User corrects a pattern I've already used more than once in the session
-- User expresses strong taste (frustration at mediocrity, delight at craft, a demo-on-stage moment)
-- User describes a new operating principle, persona, or workflow
-- User establishes a quality bar that would apply beyond the current feature
-- A new architectural rule, naming convention, or design token surfaces from debugging or decision-making
-- User persists something new to one location — flag in case companion artifacts (CLAUDE.md, memory, Notion) should also update
-
-### The Alert Format
-
-When triggered, output an explicit callout in this shape (use the pin emoji so it's scannable):
+**Alert format:**
 
 > 📌 **Persistent Standard Detected**
-> [One-sentence summary of the standard in the user's voice]
+> [one-sentence summary in the user's voice]
 >
 > Recommend persisting to:
->
-> - **CLAUDE.md** §[suggested section] — project-scoped, applies to teammates and future sessions
-> - **Memory** (`feedback_*.md` or `project_*.md`) — user-preference-scoped, follows you across projects
-> - **Notion** [suggested page] — documentation surface for stakeholders
+> - **CLAUDE.md** §[section] — project-scoped
+> - **Memory** (`feedback_*.md` or `project_*.md`) — user-scoped, cross-project
+> - **Notion** [page] — stakeholder-facing docs
 >
 > Proceed?
 
-Suggest only the targets that actually make sense. Not every standard belongs in all three.
+Suggest only targets that fit. On "save it everywhere that makes sense," apply judgment (operating standards → CLAUDE.md, personal preferences → memory, documentation → Notion) and report where each landed. On decline, don't re-raise in the same session.
 
-### The Response
-
-- **User confirms** → make all agreed edits, confirm each location with a single line (`Added to CLAUDE.md §Foo`, `Logged to Notion [Page]`).
-- **User declines** → drop it, don't re-raise in the same session.
-- **User says "save it everywhere that makes sense"** → apply judgment (CLAUDE.md for operating standards, memory for personal preferences, Notion for documentation), then report exactly where each landed.
-
-### What Counts as "Durable"
-
-| Statement                                                     | Durable? | Where                          |
-| ------------------------------------------------------------- | -------- | ------------------------------ |
-| "From now on, use `csrfHeaders()` on every mutation"          | ✅       | CLAUDE.md (project rule)       |
-| "I want every new session to operate with Jobs-level taste"   | ✅       | CLAUDE.md (persona)            |
-| "I prefer terse responses with no trailing summaries"         | ✅       | Memory (user preference)       |
-| "Our API envelope is `{success, data}` — not negotiable"      | ✅       | CLAUDE.md (architectural rule) |
-| "This overlay needs an opaque background" (shipped as a rule) | ✅       | CLAUDE.md (design system rule) |
-| "Let's use a dropdown here"                                   | ❌       | one-off decision               |
-| "Rename this variable to `throwCount`"                        | ❌       | local fix                      |
-
-### Why This Protocol Exists
-
-Standards that live only in a single conversation evaporate the moment the session ends. Users end up re-teaching the same lessons across terminal tabs, projects, and weeks. The cost of a 10-second alert is trivial; the cost of losing a hard-won standard is enormous. When in doubt — flag it.
+**Not durable:** one-off UI picks ("use a dropdown here"), local renames.
 
 ---
 
@@ -108,18 +69,15 @@ A curated library of engineering, testing, database, design, and documentation p
 - **Design System Creation Protocol** — greenfield design systems only (ours already exists).
 - **Webpage / Element Design Specification Protocols** — design briefs for new pages or components.
 
-### Binding Overrides (Precedence: CLAUDE.md wins over any protocol)
+### Binding Overrides (CLAUDE.md wins over any protocol)
 
-These are the conflict-resolved rules that govern how the protocol library interacts with this file. If a protocol in `CLAUDE-standards.md` contradicts any rule below, this file wins:
+If a protocol in `CLAUDE-standards.md` contradicts these, this file wins:
 
-1. **Comment density.** Default to no comments. Only add when WHY is non-obvious. The "every file / every function needs a comment block" rule from some protocols is overridden.
-2. **Mode declarations.** Only announce mode when the Development Mode Protocol is explicitly invoked. Default responses do not label mode.
-3. **Test ceremony.** Lightweight AAA. No JSDoc headers per test, no `console.log` narration, no per-test metadata objects. Use the Vitest idiom.
-4. **Database naming.** Grandfather existing Prisma PascalCase + cuid. Greenfield snake_case rules apply only to new databases.
-5. **Documentation surface.** CLAUDE.md + `tasks/` + Notion remain the documentation surface. No 6-file retrofit.
-6. **Persona announcements.** Jobs lens from §Operating Standards is the default stance. Do not stack personas or announce "As X would say..." in responses.
-7. **Response length.** Default is tight. Ceremonial phase output only when a matching protocol is active.
-8. **Expert competencies** (engineering / design / data) are absorbed into the default stance — applied silently, never as separate announced personas.
+1. **Comment density.** Default to none. Only add when WHY is non-obvious.
+2. **Mode declarations.** Announce mode only when Development Mode Protocol is explicitly invoked.
+3. **Test ceremony.** Lightweight AAA with Vitest. No JSDoc-per-test, no per-test metadata objects.
+4. **Database naming.** Grandfather existing Prisma PascalCase + cuid. Snake_case rules apply to greenfield only.
+5. **Documentation surface.** CLAUDE.md + `tasks/` + Notion. No 6-file retrofit.
 
 ---
 
@@ -140,7 +98,7 @@ This is **Podium Throws**, a subscription coaching SaaS for Olympic-level track 
 - Cloudflare R2 for video storage
 - Tailwind CSS 3.4 with custom theme
 - Custom component library (~23 components) — NO shadcn, NO Material UI, NO Chakra, NO new UI dependencies
-- Dark mode via `darkMode: "class"`
+- Dark mode: Tailwind `darkMode: "class"`. Per-product default behavior (athlete vs coach) lives in §Dual Product Identity
 - Fonts: Chakra Petch (headings) + DM Sans (body) + IBM Plex Mono (data/numbers only)
 - Primary color: warm amber/gold
 - Custom components: RPE slider, plate calculator, rest timer, voice recorder/player, video annotator, shimmer skeletons
@@ -234,46 +192,21 @@ If you see ANY code that sequences light → heavy implements, it is WRONG. Fix 
 ### 4. Verification Before Done
 
 - Never mark a task complete without proving it works
-- Diff behavior between main and your changes when relevant
+- Run `tsc --noEmit` after any code changes; run tests, check logs, demonstrate correctness
+- Read before write: grep for all usages of a shared function/component before changing its interface
 - Ask yourself: "Would a staff engineer approve this?"
-- Run tests, check logs, demonstrate correctness
-- Run `tsc --noEmit` after any code changes
 
 ### 5. Demand Elegance (Balanced)
 
 - For non-trivial changes: pause and ask "is there a more elegant way?"
 - If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
 - Skip this for simple, obvious fixes — don't over-engineer
-- Challenge your own work before presenting it
-
-### 6. Autonomous Bug Fixing
-
-- When given a bug report: just fix it. Don't ask for hand-holding
-- Point at logs, errors, failing tests — then resolve them
-- Zero context switching required from the user
-- Go fix failing CI tests without being told how
 
 ---
 
 ## Task Management
 
-1. **Plan First:** Write plan to `tasks/todo.md` with checkable items
-2. **Verify Plan:** Check in before starting implementation
-3. **Track Progress:** Mark items complete as you go
-4. **Explain Changes:** High-level summary at each step
-5. **Document Results:** Add review section to `tasks/todo.md`
-6. **Capture Lessons:** Update `tasks/lessons.md` after corrections
-
----
-
-## Core Principles
-
-- **Simplicity First:** Make every change as simple as possible. Impact minimal code.
-- **No Laziness:** Find root causes. No temporary fixes. Senior developer standards.
-- **Minimal Impact:** Changes should only touch what's necessary. Avoid introducing bugs.
-- **Read Before Write:** Fully understand a file's purpose, imports, and dependencies before modifying it. Grep for all usages of a function/component before changing its interface.
-- **Preserve the Design System:** Use existing Tailwind theme, colors, fonts, and custom components. Do NOT introduce new dependencies.
-- **Think in User Flows:** Every change should improve a specific user journey, not just refactor code in isolation.
+Track multi-step work in `tasks/todo.md` (plan + progress). Capture lessons from user corrections in `tasks/lessons.md`.
 
 ---
 
@@ -659,26 +592,6 @@ Two components handle numeric animation — choose based on the use case:
 
 ---
 
-## Known Issues (Fix When Encountered)
-
-1. ~~**Missing back buttons** on quizzes, forms, and multi-step wizards~~ — Fixed (5cc7258): exit links added to athlete log-session, athlete onboarding, and coach session wizards
-2. ~~**Non-clickable cards** that display data but don't navigate to detail views~~ — Fixed (16a03a5): roster athlete cards now clickable with `card-interactive`
-3. **Inconsistent profile pages** between coach and athlete — by design (different user needs), consider unifying navigation patterns
-4. ~~**Readiness check-ins lack context** — single score with no breakdown~~ — Fixed: hero widget shows 2x2 factor grid (sleep, soreness, stress, energy) with color-coded bars
-5. ~~**Rankings/scores shown without context**~~ — Mostly fixed: labels + color coding in place; minor domain explanation gaps remain
-
----
-
-## Quality Bar
-
-Every screen must pass this test:
-
-> "If an Olympic throws coach opened this for the first time, would they immediately understand what they're looking at, trust the data, and feel like this tool was built specifically for them?"
-
-If any screen makes you hesitate — fix it until the answer is yes.
-
----
-
 ## Notion Activity Logging (AUTOMATIC)
 
 **After completing ANY meaningful task** (feature, bug fix, refactor, research, etc.), log it to the Notion Activity Log database. This is non-optional — every session's work must be tracked.
@@ -730,25 +643,7 @@ If a prompt from the Claude Code Prompts database was executed during this sessi
 
 ### When to Log to Other Databases
 
-**Bug Tracker** (`7fe0a5de-b0cc-45bc-b671-be4411e41e14`):
-
-- When the user reports a bug \u2014 create an entry with severity, reproduction steps, area
-- When fixing a bug \u2014 set Status to "Fixed", link the Activity Log entry via "Fixed By Activity" relation, set Date Fixed
-- When discovering a bug during development \u2014 log it even if fixing immediately
-
-**Release Log** (`360602a3-6352-4561-9977-1913eb644acb`):
-
-- After every production deployment \u2014 create entry with commit range, summary of what shipped, any incidents
-- Include commit range as "from_hash..to_hash" for traceability
-- Link to Activity Log entries via "Activities Included" relation
-
-**Decision Log** (`91ba4b7b-d8f2-4307-bfff-13397d85f529`):
-
-- When a significant architectural, tech stack, or product decision is made \u2014 capture Context, Decision, Alternatives, Consequences
-- Especially important for decisions that affect the whole app (auth approach, database choice, deployment strategy, domain rules)
-- Don't log trivial decisions (which icon to use, variable naming)
-
-**User Feedback** (`d92a0779-d139-427c-be30-24cded5707c2`):
-
-- When the user reports tester feedback or their own review findings \u2014 create entries with source, sentiment, area, priority
-- Multiple findings from a single session = multiple entries (one per distinct issue)
+- **Bug Tracker** (`7fe0a5de-b0cc-45bc-b671-be4411e41e14`) — user-reported or dev-discovered bugs. On fix: set Status=Fixed, link via "Fixed By Activity" relation, set Date Fixed.
+- **Release Log** (`360602a3-6352-4561-9977-1913eb644acb`) — every production deploy. Include commit range as `from..to`; link Activity Log entries via "Activities Included".
+- **Decision Log** (`91ba4b7b-d8f2-4307-bfff-13397d85f529`) — significant architectural, tech-stack, or product decisions. Capture Context / Decision / Alternatives / Consequences. Skip trivial decisions.
+- **User Feedback** (`d92a0779-d139-427c-be30-24cded5707c2`) — tester feedback or review findings. One entry per distinct issue.
