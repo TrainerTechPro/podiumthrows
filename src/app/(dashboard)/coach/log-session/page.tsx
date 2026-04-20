@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { LogSessionWizard } from "../../athlete/log-session/_log-session-wizard";
 
 export default async function CoachLogSessionPage({
   searchParams,
 }: {
-  searchParams: { edit?: string };
+  searchParams: Promise<{ edit?: string }>;
 }) {
   const session = await getSession();
   if (!session || session.role !== "COACH") redirect("/login");
@@ -17,14 +16,15 @@ export default async function CoachLogSessionPage({
     select: { events: true },
   });
 
+  const { edit } = await searchParams;
+
   return (
     <div className="py-6 px-4">
-      <ScrollProgressBar />
       <LogSessionWizard
         apiEndpoint="/api/coach/log-session"
         sessionsPath="/athlete/sessions"
         allowedEvents={coach?.events ?? []}
-        editSessionId={searchParams.edit}
+        editSessionId={edit}
       />
     </div>
   );

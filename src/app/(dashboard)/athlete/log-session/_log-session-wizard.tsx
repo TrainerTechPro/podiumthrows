@@ -1,18 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/throws";
-import { NumberFlow } from "@/components/ui/NumberFlow";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { Input } from "@/components/ui/Input";
+import { NumberFlow } from "@/components/ui/NumberFlow";
 import { track } from "@/lib/analytics";
+import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle } from "lucide-react";
 
-/** Parse a numeric form input, preserving 0 as a valid value.
- *  Returns undefined only when the field is blank or the input is non-numeric. */
+/* ─── Log Session — single-screen form (no wizard) ───────────────────────────
+   Consumer-app pattern: one scrollable form with a sticky thumb-zone Save.
+   Athletes log multiple sessions a week; wizards are friction on high-frequency
+   flows. Readiness moved to the home hero (state A). Technique/mental/best-part/
+   improvement-area fields removed — rarely filled, always noise. What's left:
+   event, drills, optional RPE + feeling + notes. Save.
+
+   Shared with the coach log-session page via the apiEndpoint prop.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* ── Parsers that preserve 0 as a valid value (athletes log 0kg, 0.00m, 0 RPE) */
 function parseNumericField(raw: string): number | undefined {
   if (raw === "" || raw == null) return undefined;
   const n = parseFloat(raw);
@@ -25,13 +36,13 @@ function parseIntField(raw: string): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-/* ─── Constants ────────────────────────────────────────────────────────────── */
+/* ─── Constants ───────────────────────────────────────────────────────── */
 
 const EVENTS = [
-  { value: "SHOT_PUT", label: "Shot Put", icon: "🟠" },
-  { value: "DISCUS", label: "Discus", icon: "🟣" },
-  { value: "HAMMER", label: "Hammer", icon: "🔴" },
-  { value: "JAVELIN", label: "Javelin", icon: "🟢" },
+  { value: "SHOT_PUT", label: "Shot put", color: "#ff8a3d" },
+  { value: "DISCUS", label: "Discus", color: "#8b5cf6" },
+  { value: "HAMMER", label: "Hammer", color: "#ef4444" },
+  { value: "JAVELIN", label: "Javelin", color: "#22c55e" },
 ] as const;
 
 const FOCUS_OPTIONS = [
@@ -41,6 +52,14 @@ const FOCUS_OPTIONS = [
   "Volume",
   "Competition Sim",
   "Recovery / Light",
+];
+
+const FEELING_OPTIONS = [
+  { value: "GREAT", label: "Great", tone: "var(--color-status-success-fg)" },
+  { value: "GOOD", label: "Good", tone: "var(--color-status-success-fg)" },
+  { value: "OK", label: "OK", tone: "var(--color-text-secondary)" },
+  { value: "POOR", label: "Poor", tone: "var(--color-status-warning-fg)" },
+  { value: "BAD", label: "Bad", tone: "var(--color-status-danger-fg)" },
 ];
 
 const DRILLS_BY_EVENT: Record<string, string[]> = {
@@ -96,15 +115,7 @@ const DRILLS_BY_EVENT: Record<string, string[]> = {
   ],
 };
 
-const FEELING_OPTIONS = [
-  { value: "GREAT", label: "Great", color: "bg-green-500" },
-  { value: "GOOD", label: "Good", color: "bg-green-400" },
-  { value: "OK", label: "OK", color: "bg-yellow-400" },
-  { value: "POOR", label: "Poor", color: "bg-orange-400" },
-  { value: "BAD", label: "Bad", color: "bg-red-500" },
-];
-
-/* ─── Types ────────────────────────────────────────────────────────────────── */
+/* ─── Types ────────────────────────────────────────────────────────────── */
 
 interface DrillEntry {
   id: string;
@@ -117,152 +128,70 @@ interface DrillEntry {
   notes: string;
 }
 
-type Step = "event" | "readiness" | "drills" | "feedback" | "done";
-
-/* ─── Scale Selector ───────────────────────────────────────────────────────── */
-
-function ScaleSelector({
-  value,
-  onChange,
-  max = 5,
-  labels,
-}: {
-  value: number | null;
-  onChange: (v: number) => void;
-  max?: number;
-  labels?: string[];
-}) {
-  return (
-    <div className="flex gap-1.5">
-      {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
-        <button
-          key={n}
-          type="button"
-          onClick={() => onChange(n)}
-          className={`w-11 h-11 rounded-lg text-sm font-semibold transition-all ${
-            value === n
-              ? "bg-primary-500 text-white shadow-sm scale-[1.08]"
-              : "bg-surface-100 dark:bg-surface-800 text-muted hover:bg-surface-200 dark:hover:bg-surface-700"
-          }`}
-          title={labels?.[n - 1]}
-        >
-          {n}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Step Progress ────────────────────────────────────────────────────────── */
-
-function StepIndicator({ current, steps }: { current: Step; steps: Step[] }) {
-  const activeSteps = steps.filter((s): s is Step => s !== "done");
-  const currentIdx = activeSteps.indexOf(current);
-
-  return (
-    <div className="flex items-center gap-1">
-      {activeSteps.map((step, i) => (
-        <div key={step} className="flex items-center gap-1">
-          <div
-            className={`w-2 h-2 rounded-full transition-colors ${
-              i <= currentIdx ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-700"
-            }`}
-          />
-          {i < activeSteps.length - 1 && (
-            <div
-              className={`w-6 h-0.5 transition-colors ${
-                i < currentIdx ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-700"
-              }`}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Main Wizard ──────────────────────────────────────────────────────────── */
-
 interface WizardProps {
-  /** API endpoint for saving (e.g. "/api/athlete/log-session" or "/api/coach/log-session") */
+  /** API endpoint for saving (athlete or coach-on-behalf) */
   apiEndpoint?: string;
-  /** Where to navigate after "View Sessions" (e.g. "/athlete/sessions" or "/coach/my-training") */
+  /** Where to navigate on cancel / "view sessions" */
   sessionsPath?: string;
   /** Only show these events (empty/undefined = show all) */
   allowedEvents?: string[];
-  /** Limited mode: skip readiness & feedback steps (for coach logging on behalf of athlete) */
-  limitedMode?: boolean;
-  /** If set, load session data and use PUT to update instead of POST */
+  /** If set, loads existing session data and PUTs the update */
   editSessionId?: string;
 }
+
+type PRResult = {
+  event: string;
+  implement: string;
+  distance: number;
+  previousBest?: number;
+};
+
+type WarningResult = { type: string; message: string; severity: string };
+
+/* ─── Main ─────────────────────────────────────────────────────────────── */
 
 export function LogSessionWizard({
   apiEndpoint = "/api/athlete/log-session",
   sessionsPath = "/athlete/sessions",
   allowedEvents,
-  limitedMode = false,
   editSessionId,
 }: WizardProps) {
   const router = useRouter();
   const toast = useToast();
-  const [step, setStep] = useState<Step>("event");
-  const [isEditing, setIsEditing] = useState(!!editSessionId);
-  const [editLoading, setEditLoading] = useState(!!editSessionId);
+  const isEditing = !!editSessionId;
+  const [editLoading, setEditLoading] = useState(isEditing);
 
-  // Dynamic step order based on limitedMode
-  const steps: Step[] = limitedMode
-    ? ["event", "drills", "done"]
-    : ["event", "readiness", "drills", "feedback", "done"];
+  const filteredEvents = useMemo(
+    () => (allowedEvents?.length ? EVENTS.filter((e) => allowedEvents.includes(e.value)) : EVENTS),
+    [allowedEvents]
+  );
 
-  // Filter events based on allowedEvents prop
-  const filteredEvents = allowedEvents?.length
-    ? EVENTS.filter((e) => allowedEvents.includes(e.value))
-    : EVENTS;
-
-  function handleClose() {
-    if (step === "done" || confirm("Discard this session?")) {
-      router.push(sessionsPath);
-    }
-  }
-
-  // Step 1: Event + Focus
-  const [event, setEvent] = useState(filteredEvents.length === 1 ? filteredEvents[0].value : "");
+  // ── Form state ─────────────────────────────────────────────────────
+  const [event, setEvent] = useState<string>(
+    filteredEvents.length === 1 ? filteredEvents[0].value : ""
+  );
   const [focus, setFocus] = useState("");
   const [date, setDate] = useState(localToday());
-
-  // Step 2: Readiness
-  const [sleepQuality, setSleepQuality] = useState<number | null>(null);
-  const [sorenessLevel, setSorenessLevel] = useState<number | null>(null);
-  const [energyLevel, setEnergyLevel] = useState<number | null>(null);
-
-  // Step 3: Drills
   const [drills, setDrills] = useState<DrillEntry[]>([]);
   const [distanceUnit, setDistanceUnit] = useState<"meters" | "feet">("meters");
-
-  // Step 4: Post-session feedback
   const [sessionRpe, setSessionRpe] = useState<number | null>(null);
   const [sessionFeeling, setSessionFeeling] = useState("");
-  const [techniqueRating, setTechniqueRating] = useState<number | null>(null);
-  const [mentalFocus, setMentalFocus] = useState<number | null>(null);
-  const [bestPart, setBestPart] = useState("");
-  const [improvementArea, setImprovementArea] = useState("");
   const [sessionNotes, setSessionNotes] = useState("");
 
   const [pastDrills, setPastDrills] = useState<string[]>([]);
   const [showAllDrills, setShowAllDrills] = useState<Record<string, boolean>>({});
 
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [responsePRs, setResponsePRs] = useState<PRResult[]>([]);
+  const [responseWarnings, setResponseWarnings] = useState<WarningResult[]>([]);
+  const [doneSummary, setDoneSummary] = useState<null | {
+    eventLabel: string;
+    drillCount: number;
+    throwCount: number;
+    sessionBest: number | null;
+  }>(null);
 
-  // Response data for done step
-  const [responsePRs, setResponsePRs] = useState<
-    { event: string; implement: string; distance: number; previousBest?: number }[]
-  >([]);
-  const [responseWarnings, setResponseWarnings] = useState<
-    { type: string; message: string; severity: string }[]
-  >([]);
-
-  // Load existing session data when editing
+  // ── Load existing session for edit mode ────────────────────────────
   useEffect(() => {
     if (!editSessionId) return;
     setEditLoading(true);
@@ -277,15 +206,8 @@ export function LogSessionWizard({
         setDate(s.date || localToday());
         setFocus(s.focus || "");
         setSessionNotes(s.notes || "");
-        setSleepQuality(s.sleepQuality ?? null);
-        setSorenessLevel(s.sorenessLevel ?? null);
-        setEnergyLevel(s.energyLevel ?? null);
         setSessionRpe(s.sessionRpe ?? null);
         setSessionFeeling(s.sessionFeeling || "");
-        setTechniqueRating(s.techniqueRating ?? null);
-        setMentalFocus(s.mentalFocus ?? null);
-        setBestPart(s.bestPart || "");
-        setImprovementArea(s.improvementArea || "");
         if (s.drillLogs?.length) {
           setDrills(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -316,6 +238,7 @@ export function LogSessionWizard({
       .finally(() => setEditLoading(false));
   }, [editSessionId, apiEndpoint, toast]);
 
+  // ── Past drill suggestions ─────────────────────────────────────────
   useEffect(() => {
     if (!event) {
       setPastDrills([]);
@@ -327,22 +250,12 @@ export function LogSessionWizard({
         if (d.success) setPastDrills(d.data);
       })
       .catch((err) => {
-        // Non-fatal — past-drill suggestions are a nice-to-have. Log for
-        // diagnostics but don't interrupt the athlete's flow with a toast.
+        // Non-fatal — past-drill suggestions are a nice-to-have.
         console.error("past-drills fetch failed", err);
       });
   }, [event]);
 
-  // Warn before navigating away mid-session
-  useEffect(() => {
-    if (step === "done" || step === "event") return;
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [step]);
-
+  // ── Drill mutators ─────────────────────────────────────────────────
   function addDrill() {
     setDrills((prev) => [
       ...prev,
@@ -350,7 +263,7 @@ export function LogSessionWizard({
         id: crypto.randomUUID(),
         drillType: DEFAULT_DRILL_BY_EVENT[event] || "",
         implementWeight: "",
-        implementUnit: "kg" as const,
+        implementUnit: "kg",
         wireLength: "FULL",
         throwCount: "",
         bestMark: "",
@@ -367,20 +280,14 @@ export function LogSessionWizard({
     setDrills((prev) => prev.filter((d) => d.id !== id));
   }
 
-  function nextStep() {
-    const idx = steps.indexOf(step);
-    if (idx < steps.length - 1) setStep(steps[idx + 1]);
-  }
+  // ── Validation & save gating ───────────────────────────────────────
+  const hasValidDrill = drills.some((d) => d.drillType);
+  const canSave = !!event && hasValidDrill && !submitting;
 
-  function prevStep() {
-    const idx = steps.indexOf(step);
-    if (idx > 0) setStep(steps[idx - 1]);
-  }
-
+  // ── Submit ─────────────────────────────────────────────────────────
   async function handleSubmit() {
-    setError("");
+    if (!canSave) return;
     setSubmitting(true);
-
     try {
       const url = isEditing ? `${apiEndpoint}/${editSessionId}` : apiEndpoint;
       const res = await fetch(url, {
@@ -391,25 +298,11 @@ export function LogSessionWizard({
           date,
           focus: focus || undefined,
           notes: sessionNotes.trim() || undefined,
-          ...(limitedMode
-            ? {}
-            : {
-                sleepQuality,
-                sorenessLevel,
-                energyLevel,
-                sessionRpe,
-                sessionFeeling: sessionFeeling || undefined,
-                techniqueRating,
-                mentalFocus,
-                bestPart: bestPart.trim() || undefined,
-                improvementArea: improvementArea.trim() || undefined,
-              }),
+          sessionRpe,
+          sessionFeeling: sessionFeeling || undefined,
           drills: drills
             .filter((d) => d.drillType)
             .map((d) => {
-              // Preserve 0 as a valid value — athletes log bodyweight (0kg),
-              // fouled throws (0.00m), and unweighted drills. Blank fields
-              // are represented by `undefined`, not `0`.
               const rawBest = parseNumericField(d.bestMark);
               const best = rawBest != null && distanceUnit === "feet" ? rawBest * 0.3048 : rawBest;
               const rawImpl = parseNumericField(d.implementWeight);
@@ -436,17 +329,13 @@ export function LogSessionWizard({
 
       track("session_saved", {
         sessionType: "throws",
-        isEdit: Boolean(isEditing),
-        throwCount: drills.reduce((sum, d) => {
-          const n = parseInt(d.throwCount, 10);
-          return sum + (Number.isFinite(n) ? n : 0);
-        }, 0),
+        isEdit: isEditing,
+        throwCount: drills.reduce((sum, d) => sum + (parseIntField(d.throwCount) ?? 0), 0),
       });
 
-      // Capture PR and warning data from response (top-level, not under .data)
       if (data.prs?.length) {
         setResponsePRs(data.prs);
-        for (const pr of data.prs) {
+        for (const pr of data.prs as PRResult[]) {
           toast.celebration("New Personal Best!", {
             highlight: `${pr.distance.toFixed(2)}m`,
             description: pr.implement || event.replace(/_/g, " "),
@@ -458,700 +347,664 @@ export function LogSessionWizard({
           });
         }
       } else {
-        // Always confirm the save succeeded — PR celebrations are rare and
-        // shouldn't be the only feedback on a successful submit.
         toast.success(isEditing ? "Session updated" : "Session saved");
       }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
 
-      setStep("done");
+      // Compute the summary BEFORE showing the done screen — once shown,
+      // drills/event aren't needed anymore but the summary needs them.
+      const throwCount = drills.reduce((s, d) => s + (parseIntField(d.throwCount) ?? 0), 0);
+      const bestDistances = drills
+        .map((d) => parseNumericField(d.bestMark))
+        .filter((n): n is number => n != null && n > 0);
+      const sessionBest =
+        bestDistances.length > 0
+          ? distanceUnit === "feet"
+            ? Math.max(...bestDistances) * 0.3048
+            : Math.max(...bestDistances)
+          : null;
+      setDoneSummary({
+        eventLabel: EVENTS.find((e) => e.value === event)?.label ?? event,
+        drillCount: drills.filter((d) => d.drillType).length,
+        throwCount,
+        sessionBest,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      setError(message);
       toast.error(message);
     } finally {
       setSubmitting(false);
     }
   }
 
-  /* ── Back link (shared across steps) ── */
-  const backLink = step !== "done" && (
-    <button
-      type="button"
-      onClick={handleClose}
-      className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors mb-4"
-    >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M19 12H5" />
-        <path d="M12 19l-7-7 7-7" />
-      </svg>
-      Back to Sessions
-    </button>
-  );
-
-  /* ── Loading state for edit mode ── */
+  // ── Loading state for edit mode ────────────────────────────────────
   if (editLoading) {
     return (
-      <div className="max-w-lg mx-auto py-20 text-center space-y-4 animate-spring-up">
-        <div className="w-10 h-10 mx-auto border-3 border-surface-300 dark:border-surface-700 border-t-primary-500 rounded-full animate-spin" />
-        <p className="text-sm text-muted">Loading session...</p>
+      <div className="max-w-lg mx-auto py-24 text-center space-y-4">
+        <div className="w-10 h-10 mx-auto border-[3px] border-[var(--color-border-default)] border-t-[var(--color-brand)] rounded-full animate-spin" />
+        <p className="text-sm text-[var(--color-text-secondary)]">Loading session…</p>
       </div>
     );
   }
 
-  /* ── STEP: Event Selection ── */
-  if (step === "event") {
+  // ── Done state ─────────────────────────────────────────────────────
+  if (doneSummary) {
     return (
-      <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
-        {backLink}
-        <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={steps} />
-          <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
-            {isEditing ? "Edit session" : "What are you throwing today?"}
-          </h2>
-        </div>
-
-        {/* Event buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          {filteredEvents.map((ev) => (
-            <button
-              key={ev.value}
-              type="button"
-              onClick={() => setEvent(ev.value)}
-              className={`card card-interactive p-4 sm:p-5 text-center ${
-                event === ev.value ? "ring-2 ring-primary-500 bg-primary-500/5" : ""
-              }`}
-            >
-              <span className="text-2xl block mb-1">{ev.icon}</span>
-              <span className="font-heading font-semibold text-sm text-[var(--foreground)]">
-                {ev.label}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Focus */}
-        <div>
-          <label className="label">Focus of the day (optional)</label>
-          <div className="flex flex-wrap gap-2">
-            {FOCUS_OPTIONS.map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setFocus(focus === f ? "" : f)}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                  focus === f
-                    ? "bg-primary-500/15 text-primary-600 dark:text-primary-400"
-                    : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Date */}
-        <div>
-          <label htmlFor="session-date" className="label">
-            Date
-          </label>
-          <input
-            id="session-date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="input"
-          />
-        </div>
-
-        <button type="button" onClick={nextStep} disabled={!event} className="btn-primary w-full">
-          Next
-        </button>
-      </div>
+      <DoneScreen
+        isEditing={isEditing}
+        summary={doneSummary}
+        prs={responsePRs}
+        warnings={responseWarnings}
+        sessionsPath={sessionsPath}
+        onLogAnother={() => {
+          setEvent(filteredEvents.length === 1 ? filteredEvents[0].value : "");
+          setFocus("");
+          setDate(localToday());
+          setDrills([]);
+          setSessionRpe(null);
+          setSessionFeeling("");
+          setSessionNotes("");
+          setResponsePRs([]);
+          setResponseWarnings([]);
+          setDoneSummary(null);
+        }}
+      />
     );
   }
 
-  /* ── STEP: Readiness Check ── */
-  if (step === "readiness") {
-    return (
-      <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
-        {backLink}
-        <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={steps} />
-          <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
-            Quick readiness check
-          </h2>
-          <p className="text-sm text-muted">How are you feeling before this session?</p>
-        </div>
-
-        <div className="card p-5 space-y-5">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Sleep Quality</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">
-                1 = poor, 5 = great
-              </span>
-            </div>
-            <ScaleSelector value={sleepQuality} onChange={setSleepQuality} />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Soreness</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">
-                1 = none, 5 = severe
-              </span>
-            </div>
-            <ScaleSelector value={sorenessLevel} onChange={setSorenessLevel} />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Energy Level</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">
-                1 = low, 5 = high
-              </span>
-            </div>
-            <ScaleSelector value={energyLevel} onChange={setEnergyLevel} />
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <button type="button" onClick={prevStep} className="btn-secondary flex-1">
-            Back
-          </button>
-          <button type="button" onClick={nextStep} className="btn-primary flex-1">
-            Next
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── STEP: Drill Logging ── */
-  if (step === "drills") {
-    const eventDrills = DRILLS_BY_EVENT[event] || [];
-
-    return (
-      <div className="relative max-w-2xl mx-auto space-y-5 animate-spring-up">
-        {backLink}
-        <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={steps} />
-          <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
-            Log your drills
-          </h2>
-          <p className="text-sm text-muted">Add each drill variation you did today</p>
-        </div>
-
-        {/* Drill entries */}
-        <div className="space-y-3">
-          {drills.map((drill, idx) => (
-            <div key={drill.id} className="card p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted uppercase tracking-wider">
-                  Drill {idx + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeDrill(drill.id)}
-                  className="text-xs text-muted hover:text-danger-500 transition-colors"
-                >
-                  Remove
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {/* Drill type */}
-                <div className="col-span-2">
-                  <label className="label">Drill</label>
-                  {pastDrills.length > 0 && !showAllDrills[drill.id] ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {pastDrills.map((dt) => (
-                        <button
-                          key={dt}
-                          type="button"
-                          onClick={() => updateDrill(drill.id, "drillType", dt)}
-                          className={`px-3 py-2 text-xs sm:px-2.5 sm:py-1 sm:text-[11px] font-semibold rounded-lg transition-colors ${
-                            drill.drillType === dt
-                              ? "bg-primary-500 text-white"
-                              : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
-                          }`}
-                        >
-                          {dt}
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setShowAllDrills((prev) => ({ ...prev, [drill.id]: true }))}
-                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-dashed border-surface-300 dark:border-surface-700 text-muted hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-400 transition-colors"
-                      >
-                        + New Drill
-                      </button>
-                    </div>
-                  ) : (
-                    <select
-                      value={drill.drillType}
-                      onChange={(e) => updateDrill(drill.id, "drillType", e.target.value)}
-                      className="input"
-                    >
-                      <option value="">Select drill...</option>
-                      {eventDrills.map((d) => (
-                        <option key={d} value={d}>
-                          {d}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                {/* Reps / throw count */}
-                <div>
-                  <label className="label">Reps</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={drill.throwCount}
-                    onChange={(e) => updateDrill(drill.id, "throwCount", e.target.value)}
-                    placeholder="10"
-                  />
-                </div>
-
-                {/* Implement weight */}
-                <div>
-                  <label className="label">Weight</label>
-                  <div className="flex items-center gap-2 sm:gap-1">
-                    <input
-                      type="text"
-                      value={drill.implementWeight}
-                      onChange={(e) => updateDrill(drill.id, "implementWeight", e.target.value)}
-                      className="input flex-1"
-                      placeholder="7.26"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateDrill(
-                          drill.id,
-                          "implementUnit",
-                          drill.implementUnit === "kg" ? "lbs" : "kg"
-                        )
-                      }
-                      className="shrink-0 px-2 py-1.5 text-xs font-bold border border-[var(--card-border)] rounded text-muted hover:border-primary-400 hover:text-primary-500 transition-colors"
-                    >
-                      {drill.implementUnit}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Wire length (hammer only) */}
-              {event === "HAMMER" && (
-                <div>
-                  <label className="label">Wire</label>
-                  <div className="flex gap-1.5">
-                    {WIRE_LENGTH_OPTIONS.map((wl) => (
-                      <button
-                        key={wl.value}
-                        type="button"
-                        onClick={() => updateDrill(drill.id, "wireLength", wl.value)}
-                        className={`px-3 py-2 text-xs sm:px-2 sm:py-1 sm:text-[10px] font-bold rounded-lg transition-colors ${
-                          drill.wireLength === wl.value
-                            ? "bg-purple-600 text-white"
-                            : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
-                        }`}
-                      >
-                        {wl.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Best distance */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="label mb-0">Best Distance (optional)</label>
-                    <div className="flex rounded-lg overflow-hidden border border-[var(--card-border)]">
-                      {(["meters", "feet"] as const).map((unit) => (
-                        <button
-                          key={unit}
-                          type="button"
-                          onClick={() => setDistanceUnit(unit)}
-                          className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
-                            distanceUnit === unit
-                              ? "bg-primary-500 text-white"
-                              : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
-                          }`}
-                        >
-                          {unit === "meters" ? "m" : "ft"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={drill.bestMark}
-                    onChange={(e) => updateDrill(drill.id, "bestMark", e.target.value)}
-                    placeholder={distanceUnit === "meters" ? "18.50" : "60.70"}
-                  />
-                </div>
-                <div>
-                  <label className="label">Notes (optional)</label>
-                  <input
-                    type="text"
-                    value={drill.notes}
-                    onChange={(e) => updateDrill(drill.id, "notes", e.target.value)}
-                    className="input"
-                    placeholder="Timing felt off..."
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Add drill button */}
+  // ── Form ──────────────────────────────────────────────────────────
+  return (
+    <div className="max-w-lg mx-auto pb-28">
+      {/* Header */}
+      <header className="flex items-center justify-between gap-3 mb-6">
         <button
           type="button"
-          onClick={addDrill}
-          className="w-full py-3 rounded-xl border-2 border-dashed border-surface-300 dark:border-surface-700 text-sm font-semibold text-muted hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          onClick={() => router.push(sessionsPath)}
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors min-h-[44px] -ml-1.5 px-1.5"
         >
-          + Add Drill
+          <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
+          Cancel
         </button>
+        <h1 className="font-heading text-base font-semibold text-[var(--color-text-primary)]">
+          {isEditing ? "Edit session" : "Log session"}
+        </h1>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="input w-[128px] text-xs"
+          aria-label="Session date"
+        />
+      </header>
 
-        {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
+      {/* Sections — one scrollable form, no wizard */}
+      <div className="space-y-7">
+        <Section title="Event">
+          <div className="grid grid-cols-2 gap-2">
+            {filteredEvents.map((ev) => {
+              const selected = event === ev.value;
+              return (
+                <button
+                  key={ev.value}
+                  type="button"
+                  onClick={() => setEvent(ev.value)}
+                  aria-pressed={selected}
+                  className={
+                    "flex items-center gap-2.5 px-4 rounded-xl border text-left transition-colors min-h-[56px] " +
+                    (selected
+                      ? "border-[var(--color-brand)] bg-[var(--color-brand-subtle)] text-[var(--color-text-primary)]"
+                      : "border-[var(--color-border-default)] text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)]")
+                  }
+                >
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: ev.color }}
+                    aria-hidden="true"
+                  />
+                  <span className="font-heading text-sm font-semibold">{ev.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Section>
 
-        {limitedMode ? (
-          <>
-            {/* Mobile: slide to confirm in limited mode */}
-            <div className="sm:hidden space-y-3">
-              <button type="button" onClick={prevStep} className="btn-secondary w-full">
-                Back
-              </button>
-              <SlideToConfirm
-                label={
-                  submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"
+        <Section title="Focus" optional>
+          <div className="flex flex-wrap gap-2">
+            {FOCUS_OPTIONS.map((f) => {
+              const selected = focus === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFocus(selected ? "" : f)}
+                  aria-pressed={selected}
+                  className={
+                    "px-3.5 rounded-lg text-xs font-semibold transition-colors min-h-[36px] " +
+                    (selected
+                      ? "bg-[var(--color-brand-subtle)] text-[var(--color-brand-strong)]"
+                      : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
+                  }
+                >
+                  {f}
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        <Section title={`Drills${drills.length > 0 ? ` · ${drills.length}` : ""}`}>
+          <div className="space-y-3">
+            {drills.map((drill, idx) => (
+              <DrillCard
+                key={drill.id}
+                drill={drill}
+                index={idx + 1}
+                event={event}
+                pastDrills={pastDrills}
+                showAll={!!showAllDrills[drill.id]}
+                onToggleShowAll={() =>
+                  setShowAllDrills((prev) => ({ ...prev, [drill.id]: !prev[drill.id] }))
                 }
-                onConfirm={handleSubmit}
-                disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
+                distanceUnit={distanceUnit}
+                onDistanceUnitChange={setDistanceUnit}
+                onUpdate={(field, value) => updateDrill(drill.id, field, value)}
+                onRemove={() => removeDrill(drill.id)}
               />
-            </div>
-            {/* Desktop: standard buttons */}
-            <div className="hidden sm:flex gap-3">
-              <button type="button" onClick={prevStep} className="btn-secondary flex-1">
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={drills.length === 0 || !drills.some((d) => d.drillType) || submitting}
-                className="btn-primary flex-1"
-              >
-                {submitting ? "Saving..." : isEditing ? "Update Session" : "Save Session"}
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="flex gap-3">
-            <button type="button" onClick={prevStep} className="btn-secondary flex-1">
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={nextStep}
-              disabled={drills.length === 0 || !drills.some((d) => d.drillType)}
-              className="btn-primary flex-1"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  /* ── STEP: Post-Session Feedback ── */
-  if (step === "feedback") {
-    return (
-      <div className="relative max-w-lg mx-auto space-y-6 animate-spring-up">
-        {backLink}
-        <div className="text-center space-y-2">
-          <StepIndicator current={step} steps={steps} />
-          <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
-            Session review
-          </h2>
-          <p className="text-sm text-muted">How did the session go?</p>
-        </div>
-
-        <div className="card p-5 space-y-5">
-          {/* RPE */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Session RPE</label>
-              <span className="text-[10px] text-muted uppercase tracking-wider">
-                1 = easy, 10 = max
-              </span>
-            </div>
-            <ScaleSelector value={sessionRpe} onChange={setSessionRpe} max={10} />
+            ))}
           </div>
 
-          {/* Feeling */}
-          <div>
-            <label className="label">How did it feel?</label>
-            <div className="flex flex-wrap gap-2">
-              {FEELING_OPTIONS.map((f) => (
+          <button
+            type="button"
+            onClick={addDrill}
+            disabled={!event}
+            className="mt-3 w-full flex items-center justify-center gap-1.5 min-h-[48px] rounded-xl border-2 border-dashed border-[var(--color-border-default)] text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            {drills.length === 0 ? "Add your first drill" : "Add another drill"}
+          </button>
+        </Section>
+
+        <Section title="How did it feel?" optional>
+          <div className="grid grid-cols-5 gap-1.5 mb-4">
+            {FEELING_OPTIONS.map((f) => {
+              const selected = sessionFeeling === f.value;
+              return (
                 <button
                   key={f.value}
                   type="button"
-                  onClick={() => setSessionFeeling(sessionFeeling === f.value ? "" : f.value)}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                    sessionFeeling === f.value
-                      ? `${f.color} text-white shadow-sm`
-                      : "bg-surface-100 dark:bg-surface-800 text-muted hover:bg-surface-200 dark:hover:bg-surface-700"
-                  }`}
+                  onClick={() => setSessionFeeling(selected ? "" : f.value)}
+                  aria-pressed={selected}
+                  className={
+                    "py-2.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] " +
+                    (selected
+                      ? "bg-[var(--color-brand-subtle)] text-[var(--color-text-primary)]"
+                      : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
+                  }
+                  style={selected ? { boxShadow: `inset 0 0 0 1.5px ${f.tone}` } : undefined}
                 >
                   {f.label}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Technique + Mental */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="label mb-0">Technique</label>
-                <span className="text-[10px] text-muted">1-5</span>
-              </div>
-              <ScaleSelector value={techniqueRating} onChange={setTechniqueRating} />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="label mb-0">Mental Focus</label>
-                <span className="text-[10px] text-muted">1-5</span>
-              </div>
-              <ScaleSelector value={mentalFocus} onChange={setMentalFocus} />
-            </div>
-          </div>
-
-          {/* Text feedback */}
-          <div>
-            <label className="label">What went well?</label>
-            <input
-              type="text"
-              value={bestPart}
-              onChange={(e) => setBestPart(e.target.value)}
-              className="input"
-              placeholder="e.g., Block timing was consistent"
-            />
+              );
+            })}
           </div>
 
           <div>
-            <label className="label">What needs improvement?</label>
-            <input
-              type="text"
-              value={improvementArea}
-              onChange={(e) => setImprovementArea(e.target.value)}
-              className="input"
-              placeholder="e.g., Left leg strike position"
-            />
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+                Session RPE
+              </span>
+              <span className="text-[11px] text-[var(--color-text-secondary)] tabular-nums">
+                {sessionRpe != null ? `${sessionRpe} / 10` : "—"}
+              </span>
+            </div>
+            <div className="grid grid-cols-10 gap-1">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+                const selected = sessionRpe === n;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setSessionRpe(selected ? null : n)}
+                    aria-pressed={selected}
+                    className={
+                      "min-h-[40px] rounded-md text-xs font-semibold transition-colors tabular-nums " +
+                      (selected
+                        ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
+                        : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
+                    }
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        </Section>
 
-          <div>
-            <label className="label">Session notes (optional)</label>
-            <textarea
-              value={sessionNotes}
-              onChange={(e) => setSessionNotes(e.target.value)}
-              className="input min-h-[60px] resize-y"
-              placeholder="Any other thoughts about this session..."
+        <Section title="Notes" optional>
+          <textarea
+            value={sessionNotes}
+            onChange={(e) => setSessionNotes(e.target.value)}
+            className="input w-full min-h-[72px] resize-y"
+            placeholder="Anything worth remembering about today — timing, weather, cues that clicked…"
+          />
+        </Section>
+      </div>
+
+      {/* Sticky save bar — always visible, enabled when valid */}
+      <div
+        className="fixed left-0 right-0 z-20 px-4 py-3 bg-[var(--color-bg-canvas)]/95 backdrop-blur-sm border-t border-[var(--color-border-default)]"
+        style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="max-w-lg mx-auto">
+          {/* Mobile: slide to confirm — lower commitment threshold for a save
+              that may trigger PR celebrations and immutable throws logs. */}
+          <div className="sm:hidden">
+            <SlideToConfirm
+              label={
+                submitting ? "Saving…" : isEditing ? "Slide to update" : "Slide to save session"
+              }
+              onConfirm={handleSubmit}
+              disabled={!canSave}
             />
           </div>
+          {/* Desktop: plain primary button */}
+          <div className="hidden sm:flex items-center justify-between gap-3">
+            <Link
+              href={sessionsPath}
+              className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            >
+              Cancel
+            </Link>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSave}
+              className="btn-primary min-w-[180px]"
+            >
+              {submitting ? "Saving…" : isEditing ? "Update session" : "Save session"}
+            </button>
+          </div>
+          {!canSave && !submitting && (
+            <p className="mt-2 text-center text-[11px] text-[var(--color-text-secondary)] sm:hidden">
+              {!event
+                ? "Pick an event to get started"
+                : !hasValidDrill
+                  ? "Add at least one drill"
+                  : ""}
+            </p>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
+/* ─── Section primitive ──────────────────────────────────────────────── */
 
-        {/* Mobile: slide to confirm */}
-        <div className="sm:hidden space-y-3">
-          <button type="button" onClick={prevStep} className="btn-secondary w-full">
-            Back
-          </button>
-          <SlideToConfirm
-            label={
-              submitting ? "Saving..." : isEditing ? "Slide to Update" : "Slide to Save Session"
-            }
-            onConfirm={handleSubmit}
-            disabled={submitting}
+function Section({
+  title,
+  optional,
+  children,
+}: {
+  title: string;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <div className="flex items-baseline gap-2 mb-3">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+          {title}
+        </h2>
+        {optional && (
+          <span className="text-[10px] text-[var(--color-text-secondary)] opacity-60">
+            optional
+          </span>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/* ─── Drill Card ─────────────────────────────────────────────────────── */
+
+function DrillCard({
+  drill,
+  index,
+  event,
+  pastDrills,
+  showAll,
+  onToggleShowAll,
+  distanceUnit,
+  onDistanceUnitChange,
+  onUpdate,
+  onRemove,
+}: {
+  drill: DrillEntry;
+  index: number;
+  event: string;
+  pastDrills: string[];
+  showAll: boolean;
+  onToggleShowAll: () => void;
+  distanceUnit: "meters" | "feet";
+  onDistanceUnitChange: (u: "meters" | "feet") => void;
+  onUpdate: (field: keyof DrillEntry, value: string) => void;
+  onRemove: () => void;
+}) {
+  const eventDrills = DRILLS_BY_EVENT[event] || [];
+  const showPastChips = pastDrills.length > 0 && !showAll;
+
+  return (
+    <div className="card p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+          Drill {index}
+        </span>
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove drill ${index}`}
+          className="p-1.5 -m-1.5 rounded-md text-[var(--color-text-secondary)] hover:text-[var(--color-status-danger-fg)] transition-colors"
+        >
+          <X size={16} strokeWidth={2} aria-hidden="true" />
+        </button>
+      </div>
+
+      {/* Drill type */}
+      <div>
+        {showPastChips ? (
+          <div className="flex flex-wrap gap-1.5">
+            {pastDrills.map((dt) => {
+              const selected = drill.drillType === dt;
+              return (
+                <button
+                  key={dt}
+                  type="button"
+                  onClick={() => onUpdate("drillType", dt)}
+                  className={
+                    "px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg transition-colors " +
+                    (selected
+                      ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
+                      : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
+                  }
+                >
+                  {dt}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={onToggleShowAll}
+              className="px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg border border-dashed border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
+            >
+              More…
+            </button>
+          </div>
+        ) : (
+          <select
+            value={drill.drillType}
+            onChange={(e) => onUpdate("drillType", e.target.value)}
+            className="input w-full"
+            aria-label="Drill type"
+          >
+            <option value="">Select a drill…</option>
+            {eventDrills.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* Throws + weight row */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <label className="label">Throws</label>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min="0"
+            value={drill.throwCount}
+            onChange={(e) => onUpdate("throwCount", e.target.value)}
+            placeholder="10"
           />
         </div>
-
-        {/* Desktop: standard buttons */}
-        <div className="hidden sm:flex gap-3">
-          <button type="button" onClick={prevStep} className="btn-secondary flex-1">
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="btn-primary flex-1"
-          >
-            {submitting ? "Saving..." : isEditing ? "Update Session" : "Save Session"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ── STEP: Done ── */
-  if (step === "done") {
-    const totalThrows = drills.reduce((sum, d) => sum + (parseInt(d.throwCount, 10) || 0), 0);
-    const bestDist = drills.map((d) => parseFloat(d.bestMark)).filter((n) => !isNaN(n) && n > 0);
-    const sessionBest = bestDist.length > 0 ? Math.max(...bestDist) : null;
-    const eventName = EVENTS.find((e) => e.value === event)?.label ?? event;
-
-    return (
-      <div className="max-w-lg mx-auto text-center space-y-6 animate-spring-up">
-        <div className="w-16 h-16 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-green-600 dark:text-green-400"
-            aria-hidden="true"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-
         <div>
-          <h2 className="font-heading font-bold text-xl text-[var(--foreground)]">
-            {isEditing ? "Session Updated!" : "Session logged"}
-          </h2>
-          <p className="text-sm text-muted mt-1">
-            {eventName} &middot; {drills.filter((d) => d.drillType).length} drill
-            {drills.filter((d) => d.drillType).length !== 1 ? "s" : ""} &middot;{" "}
-            <NumberFlow value={totalThrows} /> throws
-            {sessionBest && (
-              <>
-                {" "}
-                &middot; best: <NumberFlow value={sessionBest} decimals={2} suffix="m" />
-              </>
-            )}
-          </p>
-        </div>
-
-        {/* PR celebrations */}
-        {responsePRs.length > 0 && (
-          <div className="space-y-2 w-full max-w-sm">
-            {responsePRs.map((pr, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="text-amber-500 shrink-0"
-                >
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                <div className="text-left">
-                  <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                    New PR! <NumberFlow value={pr.distance} decimals={2} suffix="m" />
-                  </p>
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
-                    {pr.implement}
-                    {pr.previousBest != null && <> (was {pr.previousBest.toFixed(2)}m)</>}
-                  </p>
-                </div>
-              </div>
-            ))}
+          <label className="label">Weight</label>
+          <div className="flex items-stretch gap-1.5">
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              value={drill.implementWeight}
+              onChange={(e) => onUpdate("implementWeight", e.target.value)}
+              placeholder="7.26"
+              className="flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => onUpdate("implementUnit", drill.implementUnit === "kg" ? "lbs" : "kg")}
+              aria-label={`Toggle unit, currently ${drill.implementUnit}`}
+              className="shrink-0 min-w-[44px] px-2 text-xs font-bold rounded-lg border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
+            >
+              {drill.implementUnit}
+            </button>
           </div>
-        )}
-
-        {/* Bondarchuk warnings */}
-        {responseWarnings.length > 0 && (
-          <div className="space-y-2 w-full max-w-sm">
-            {responseWarnings.map((w, i) => (
-              <div
-                key={i}
-                className="flex gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="text-amber-500 shrink-0 mt-0.5"
-                >
-                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                <p className="text-xs text-amber-800 dark:text-amber-300 text-left">{w.message}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex gap-3 justify-center">
-          <button type="button" onClick={() => router.push(sessionsPath)} className="btn-secondary">
-            View Sessions
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              // Reset everything
-              setIsEditing(false);
-              setStep("event");
-              setEvent("");
-              setFocus("");
-              setDate(localToday());
-              setSleepQuality(null);
-              setSorenessLevel(null);
-              setEnergyLevel(null);
-              setDrills([]);
-              setSessionRpe(null);
-              setSessionFeeling("");
-              setTechniqueRating(null);
-              setMentalFocus(null);
-              setBestPart("");
-              setImprovementArea("");
-              setSessionNotes("");
-              setResponsePRs([]);
-              setResponseWarnings([]);
-            }}
-            className="btn-primary"
-          >
-            Log Another
-          </button>
         </div>
       </div>
-    );
-  }
 
-  return null;
+      {/* Wire length — hammer only */}
+      {event === "HAMMER" && (
+        <div>
+          <label className="label">Wire</label>
+          <div className="flex flex-wrap gap-1.5">
+            {WIRE_LENGTH_OPTIONS.map((wl) => {
+              const selected = drill.wireLength === wl.value;
+              return (
+                <button
+                  key={wl.value}
+                  type="button"
+                  onClick={() => onUpdate("wireLength", wl.value)}
+                  className={
+                    "px-2.5 py-1.5 min-h-[36px] text-[11px] font-bold rounded-lg transition-colors " +
+                    (selected
+                      ? "bg-[var(--color-brand-subtle)] text-[var(--color-brand-strong)]"
+                      : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
+                  }
+                >
+                  {wl.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Best mark + notes */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="label mb-0">Best</label>
+            <div className="flex rounded-md overflow-hidden border border-[var(--color-border-default)]">
+              {(["meters", "feet"] as const).map((unit) => {
+                const selected = distanceUnit === unit;
+                return (
+                  <button
+                    key={unit}
+                    type="button"
+                    onClick={() => onDistanceUnitChange(unit)}
+                    className={
+                      "px-2 py-1 text-[10px] font-medium tracking-wide transition-colors " +
+                      (selected
+                        ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
+                        : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
+                    }
+                  >
+                    {unit === "meters" ? "m" : "ft"}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0"
+            value={drill.bestMark}
+            onChange={(e) => onUpdate("bestMark", e.target.value)}
+            placeholder={distanceUnit === "meters" ? "18.50" : "60.70"}
+          />
+        </div>
+        <div>
+          <label className="label">Notes</label>
+          <Input
+            type="text"
+            value={drill.notes}
+            onChange={(e) => onUpdate("notes", e.target.value)}
+            placeholder="Timing felt off…"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Done Screen ────────────────────────────────────────────────────── */
+
+function DoneScreen({
+  isEditing,
+  summary,
+  prs,
+  warnings,
+  sessionsPath,
+  onLogAnother,
+}: {
+  isEditing: boolean;
+  summary: {
+    eventLabel: string;
+    drillCount: number;
+    throwCount: number;
+    sessionBest: number | null;
+  };
+  prs: PRResult[];
+  warnings: WarningResult[];
+  sessionsPath: string;
+  onLogAnother: () => void;
+}) {
+  const router = useRouter();
+  return (
+    <div className="max-w-lg mx-auto text-center space-y-6 pt-8 pb-12">
+      <div
+        className="w-14 h-14 mx-auto rounded-full flex items-center justify-center"
+        style={{ backgroundColor: "var(--color-status-success-bg)" }}
+      >
+        <CheckCircle2
+          size={28}
+          strokeWidth={1.75}
+          style={{ color: "var(--color-status-success-fg)" }}
+          aria-hidden="true"
+        />
+      </div>
+
+      <div>
+        <h2 className="font-heading text-2xl font-semibold text-[var(--color-text-primary)]">
+          {isEditing ? "Session updated." : "Session logged."}
+        </h2>
+        <p className="mt-1.5 text-sm text-[var(--color-text-secondary)]">
+          {summary.eventLabel} · {summary.drillCount}{" "}
+          {summary.drillCount === 1 ? "drill" : "drills"} ·{" "}
+          <span className="tabular-nums">
+            <NumberFlow value={summary.throwCount} />
+          </span>{" "}
+          throws
+          {summary.sessionBest != null && (
+            <>
+              {" "}
+              · best{" "}
+              <span className="tabular-nums">
+                <NumberFlow value={summary.sessionBest} decimals={2} suffix="m" />
+              </span>
+            </>
+          )}
+        </p>
+      </div>
+
+      {prs.length > 0 && (
+        <ul className="space-y-2 w-full max-w-sm mx-auto">
+          {prs.map((pr, i) => (
+            <li
+              key={i}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border text-left"
+              style={{
+                backgroundColor: "var(--color-brand-subtle)",
+                borderColor: "var(--color-brand)",
+              }}
+            >
+              <Trophy
+                size={18}
+                strokeWidth={1.75}
+                style={{ color: "var(--color-brand-strong)" }}
+                aria-hidden="true"
+              />
+              <div>
+                <p className="text-sm font-bold" style={{ color: "var(--color-brand-strong)" }}>
+                  New PR ·{" "}
+                  <span className="tabular-nums">
+                    <NumberFlow value={pr.distance} decimals={2} suffix="m" />
+                  </span>
+                </p>
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  {pr.implement}
+                  {pr.previousBest != null && <> · was {pr.previousBest.toFixed(2)}m</>}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {warnings.length > 0 && (
+        <ul className="space-y-2 w-full max-w-sm mx-auto">
+          {warnings.map((w, i) => (
+            <li
+              key={i}
+              className="flex gap-2 px-4 py-3 rounded-xl border text-left"
+              style={{
+                backgroundColor: "var(--color-status-warning-bg)",
+                borderColor: "var(--color-status-warning-fg)",
+              }}
+            >
+              <AlertTriangle
+                size={16}
+                strokeWidth={2}
+                aria-hidden="true"
+                className="mt-0.5 shrink-0"
+                style={{ color: "var(--color-status-warning-fg)" }}
+              />
+              <p
+                className="text-xs leading-snug"
+                style={{ color: "var(--color-status-warning-fg)" }}
+              >
+                {w.message}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex gap-3 justify-center pt-2">
+        <button type="button" onClick={() => router.push(sessionsPath)} className="btn-secondary">
+          View sessions
+        </button>
+        <button type="button" onClick={onLogAnother} className="btn-primary">
+          Log another
+        </button>
+      </div>
+    </div>
+  );
 }
