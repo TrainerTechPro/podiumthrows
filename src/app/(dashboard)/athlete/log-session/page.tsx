@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { LogSessionWizard } from "./_log-session-wizard";
 
 export default async function AthleteLogSessionPage() {
@@ -25,7 +24,6 @@ export default async function AthleteLogSessionPage() {
 
   return (
     <div className="py-6 px-4">
-      <ScrollProgressBar />
       <LogSessionWizard allowedEvents={athlete.events ?? []} />
     </div>
   );

@@ -639,11 +639,12 @@ Two components handle numeric animation — choose based on the use case:
 
 ### Scroll Progress
 
-- **Any page with significant scroll depth** (wizards, long forms, detail pages with 3+ sections): Add `<ScrollProgressBar />` from `src/components/ui/ScrollProgressBar.tsx` as the first child inside the page wrapper.
-- 3px amber/gold gradient bar fixed at the top of the viewport, fills left→right based on scroll position.
-- Self-hides when the page isn't scrollable. `pointer-events: none`, `z-index: 9999`.
-- Already applied to: athlete log-session, athlete onboarding, coach questionnaire builder, coach questionnaire responses, coach athlete detail, athlete throws profile.
-- **Pattern**: `<div className="..."><ScrollProgressBar />{/* page content */}</div>`.
+- **Never on wizards or multi-step forms.** If a page has its own step indicator (readiness 1-5, onboarding phases, self-program creation), `ScrollProgressBar` doubles with the real progress signal and becomes scroll theater. The step indicator IS the progress — don't narrate the scroll on top of it.
+- **Never on the athlete shell by default.** Per §Dual Product Identity, athlete mobile is thumb-first consumer software — a scroll-progress indicator is a blog pattern, not an app pattern. Use only when the screen is genuinely an editorial read (long-form coach reports, e.g.).
+- **Coach desktop editorial surfaces** (long questionnaire responses, deep athlete detail reports) may keep it as a reading-progress cue — it serves the research-software register when the content is genuinely article-length.
+- 3px amber/gold gradient bar, fixed top of viewport, self-hides when the page isn't scrollable. `pointer-events: none`, `z-index: 9999`.
+- **Currently applied to (coach-side editorial only):** coach questionnaire builder, coach questionnaire responses, coach athlete detail.
+- **Removed from (wizards with their own step indicator):** athlete log-session, athlete onboarding, athlete self-program create.
 
 ### Animation
 

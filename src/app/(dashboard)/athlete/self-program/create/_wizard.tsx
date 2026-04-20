@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { Button } from "@/components/ui/Button";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 
 import { useToast } from "@/components/ui/Toast";
 
@@ -124,12 +123,12 @@ function buildDefaultForm(
   athleteEvents: string[],
   athleteGender: string,
   draft: DraftData,
-  prefill?: PrefillData,
+  prefill?: PrefillData
 ): WizardFormState {
   if (draft) {
     return {
       programType: draft.programType || "",
-      event: draft.event || (athleteEvents[0] || ""),
+      event: draft.event || athleteEvents[0] || "",
       gender: draft.gender || athleteGender || "",
       yearsExperience: draft.yearsExperience?.toString() || "",
       competitionLevel: draft.competitionLevel || "",
@@ -139,9 +138,13 @@ function buildDefaultForm(
       selectedImplements: Array.isArray(draft.availableImplements)
         ? (draft.availableImplements as { weightKg: number }[]).map((i) => i.weightKg)
         : [],
-      adaptationSpeed: (draft.inlineTypingData as { adaptationSpeed?: number } | null)?.adaptationSpeed ?? 2,
-      transferType: (draft.inlineTypingData as { transferType?: string } | null)?.transferType ?? "BALANCED",
-      recoveryProfile: (draft.inlineTypingData as { recoveryProfile?: string } | null)?.recoveryProfile ?? "MODERATE",
+      adaptationSpeed:
+        (draft.inlineTypingData as { adaptationSpeed?: number } | null)?.adaptationSpeed ?? 2,
+      transferType:
+        (draft.inlineTypingData as { transferType?: string } | null)?.transferType ?? "BALANCED",
+      recoveryProfile:
+        (draft.inlineTypingData as { recoveryProfile?: string } | null)?.recoveryProfile ??
+        "MODERATE",
       daysPerWeek: draft.daysPerWeek || 4,
       sessionsPerDay: draft.sessionsPerDay || 1,
       preferredDays: Array.isArray(draft.preferredDays) ? draft.preferredDays : [],
@@ -151,9 +154,11 @@ function buildDefaultForm(
         : [],
       primaryGoal: draft.primaryGoal || "",
       generationMode: draft.generationMode || "",
-      preferredExercises: (draft.exercisePreferences as { preferred?: string[] } | null)?.preferred ?? [],
+      preferredExercises:
+        (draft.exercisePreferences as { preferred?: string[] } | null)?.preferred ?? [],
       avoidedExercises: (draft.exercisePreferences as { avoided?: string[] } | null)?.avoided ?? [],
-      favoriteDrills: (draft.exercisePreferences as { favoriteDrills?: string[] } | null)?.favoriteDrills ?? [],
+      favoriteDrills:
+        (draft.exercisePreferences as { favoriteDrills?: string[] } | null)?.favoriteDrills ?? [],
     };
   }
 
@@ -176,7 +181,7 @@ function buildDefaultForm(
     recoveryProfile: "MODERATE",
     daysPerWeek: pf?.daysPerWeek ?? 4,
     sessionsPerDay: pf?.sessionsPerDay ?? 1,
-    preferredDays: Array.isArray(pf?.preferredDays) ? pf.preferredDays as string[] : [],
+    preferredDays: Array.isArray(pf?.preferredDays) ? (pf.preferredDays as string[]) : [],
     startDate: new Date().toISOString().split("T")[0],
     competitions: [],
     primaryGoal: pf?.primaryGoal || "",
@@ -267,8 +272,7 @@ export function SelfProgramWizard({
         break;
 
       case "implements":
-        if (form.selectedImplements.length === 0)
-          errs.implements = "Select at least one implement";
+        if (form.selectedImplements.length === 0) errs.implements = "Select at least one implement";
         if (form.selectedImplements.length < 2)
           errs.implements = "Select at least 2 implements for optimal training";
         break;
@@ -278,7 +282,8 @@ export function SelfProgramWizard({
         break;
 
       case "schedule":
-        if (form.preferredDays.length === 0) errs.preferredDays = "Select at least one training day";
+        if (form.preferredDays.length === 0)
+          errs.preferredDays = "Select at least one training day";
         if (form.preferredDays.length < form.daysPerWeek)
           errs.preferredDays = `Select at least ${form.daysPerWeek} days`;
         if (!form.startDate) errs.startDate = "Select a start date";
@@ -337,9 +342,7 @@ export function SelfProgramWizard({
         competitionLevel: form.competitionLevel,
         currentPR: form.currentPR ? parseFloat(form.currentPR) : 0,
         goalDistance: form.goalDistance ? parseFloat(form.goalDistance) : 0,
-        currentWeeklyVolume: form.currentWeeklyVolume
-          ? parseInt(form.currentWeeklyVolume)
-          : null,
+        currentWeeklyVolume: form.currentWeeklyVolume ? parseInt(form.currentWeeklyVolume) : null,
         availableImplements: form.selectedImplements.map((w) => ({ weightKg: w })),
         daysPerWeek: form.daysPerWeek,
         sessionsPerDay: form.sessionsPerDay,
@@ -369,9 +372,7 @@ export function SelfProgramWizard({
         isDraft: true,
       };
 
-      const url = draftId
-        ? `/api/athlete/self-program/${draftId}`
-        : `/api/athlete/self-program`;
+      const url = draftId ? `/api/athlete/self-program/${draftId}` : `/api/athlete/self-program`;
 
       const res = await fetch(url, {
         method: draftId ? "PUT" : "POST",
@@ -405,9 +406,7 @@ export function SelfProgramWizard({
         competitionLevel: form.competitionLevel,
         currentPR: parseFloat(form.currentPR),
         goalDistance: parseFloat(form.goalDistance),
-        currentWeeklyVolume: form.currentWeeklyVolume
-          ? parseInt(form.currentWeeklyVolume)
-          : null,
+        currentWeeklyVolume: form.currentWeeklyVolume ? parseInt(form.currentWeeklyVolume) : null,
         availableImplements: form.selectedImplements.map((w) => ({ weightKg: w })),
         daysPerWeek: form.daysPerWeek,
         sessionsPerDay: form.sessionsPerDay,
@@ -527,8 +526,6 @@ export function SelfProgramWizard({
 
   return (
     <div className="max-w-2xl mx-auto pb-24">
-      <ScrollProgressBar />
-
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-1">
@@ -539,9 +536,7 @@ export function SelfProgramWizard({
           >
             <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
           </Link>
-          <h1 className="text-title font-heading text-[var(--foreground)]">
-            Build Your Program
-          </h1>
+          <h1 className="text-title font-heading text-[var(--foreground)]">Build Your Program</h1>
         </div>
         <p className="text-body text-surface-700 dark:text-surface-300 mt-1">
           Create a Bondarchuk-based periodized training program tailored to you
@@ -569,11 +564,7 @@ export function SelfProgramWizard({
                 }`}
                 aria-label={`Step ${i + 1}: ${s.label}`}
               >
-                {i < step ? (
-                  <Check size={16} strokeWidth={2.5} aria-hidden="true" />
-                ) : (
-                  i + 1
-                )}
+                {i < step ? <Check size={16} strokeWidth={2.5} aria-hidden="true" /> : i + 1}
               </button>
               {/* Connecting line */}
               {i < activeSteps.length - 1 && (
@@ -632,12 +623,7 @@ export function SelfProgramWizard({
             <StepGoals form={form} update={update} errors={errors} />
           )}
           {currentStepConfig?.key === "preferences" && (
-            <StepPreferences
-              form={form}
-              update={update}
-              errors={errors}
-              exercises={exercises}
-            />
+            <StepPreferences form={form} update={update} errors={errors} exercises={exercises} />
           )}
           {currentStepConfig?.key === "review" && (
             <StepReview
