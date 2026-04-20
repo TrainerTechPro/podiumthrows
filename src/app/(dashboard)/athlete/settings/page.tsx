@@ -8,6 +8,7 @@ import { Avatar } from "@/components";
 import { AthleteSettingsForm } from "./_form";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { FeedPrivacySettings } from "@/components/feedback/FeedPrivacySettings";
+import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -133,6 +134,12 @@ export default async function AthleteSettingsPage() {
           </div>
           <ChevronRight size={16} strokeWidth={1.75} className="text-muted" aria-hidden="true" />
         </Link>
+      </section>
+
+      {/* Feedback */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Feedback</h2>
+        <SendFeedbackCard />
       </section>
     </div>
   );

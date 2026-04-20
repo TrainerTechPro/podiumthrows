@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * Floating beta-feedback button + modal. Mounted once per (dashboard)
- * layout (coach + athlete separately, since they have independent
- * layouts). Opens a modal where the tester picks a type, writes a
- * message, and optionally pastes/selects a screenshot. On submit, posts
- * to /api/feedback/beta with auto-captured page context.
- */
-
 import { useEffect, useState, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
@@ -17,6 +9,7 @@ import {
   HelpCircle,
   Lightbulb,
   Heart,
+  ChevronRight,
   Image as ImageIcon,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
@@ -25,7 +18,6 @@ import {
   installConsoleErrorCollector,
   getRecentConsoleErrors,
 } from "@/lib/feedback/console-errors";
-import { isFocusMode } from "@/components/layout/DashboardLayout";
 
 type FeedbackType = "BUG" | "CONFUSION" | "FEATURE" | "PRAISE";
 
@@ -41,15 +33,10 @@ const TYPE_OPTIONS: Array<{
   { id: "PRAISE", label: "Praise", icon: Heart, description: "This works great" },
 ];
 
-export function BetaFeedbackButton() {
+export function SendFeedbackCard() {
   const pathname = usePathname();
   const toast = useToast();
 
-  // Hide on focused-task routes (log-session, onboarding, self-program create).
-  // These flows have their own sticky save chrome; a floating feedback button
-  // stacks awkwardly with it and the iOS keyboard. Feedback is still reachable
-  // from every other screen. Hooks below still run to keep order stable.
-  const hidden = isFocusMode(pathname);
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType>("BUG");
   const [body, setBody] = useState("");
@@ -58,18 +45,14 @@ export function BetaFeedbackButton() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Install the error collector once per page load so we have errors ready
-  // when a user opens the modal, not just from the moment they open it.
   useEffect(() => {
     installConsoleErrorCollector();
   }, []);
 
-  // Autofocus the textarea when the modal opens
   useEffect(() => {
     if (open) textareaRef.current?.focus();
   }, [open]);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
@@ -87,7 +70,6 @@ export function BetaFeedbackButton() {
 
   const close = useCallback(() => {
     setOpen(false);
-    // Reset *after* the close animation to avoid a flicker
     setTimeout(reset, 300);
   }, [reset]);
 
@@ -155,28 +137,28 @@ export function BetaFeedbackButton() {
     }
   }
 
-  if (hidden) return null;
-
   return (
     <>
-      {/* Floating trigger — bottom-left. Vertical offset reads from the
-          --fab-bottom-mobile / --fab-bottom-desktop CSS vars so the shell
-          can control it: the athlete shell lifts the button above the
-          BottomTabBar; the coach shell keeps the legacy offsets. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Send feedback"
-        className="fixed left-4 z-40 flex items-center gap-2 px-3 py-2 rounded-full bg-primary-500 text-black shadow-lg hover:scale-[1.03] active:scale-[0.97] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
-        style={{
-          bottom: "var(--fab-bottom, 1rem)",
-        }}
+        className="card card-interactive p-4 flex items-center gap-3 w-full text-left"
       >
-        <MessageSquare size={16} strokeWidth={2} aria-hidden="true" />
-        <span className="text-sm font-semibold hidden sm:inline">Feedback</span>
+        <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
+          <MessageSquare
+            size={20}
+            className="text-primary-500"
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-[var(--foreground)]">Send feedback</p>
+          <p className="text-xs text-muted">Report a bug, suggest an idea, or say hi</p>
+        </div>
+        <ChevronRight size={20} className="text-muted" strokeWidth={1.75} aria-hidden="true" />
       </button>
 
-      {/* Modal */}
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50"
@@ -189,7 +171,6 @@ export function BetaFeedbackButton() {
             onClick={(e) => e.stopPropagation()}
             className="w-full sm:max-w-lg bg-[var(--surface-overlay)] rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-fade-slide-in"
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--card-border)]">
               <h2 className="text-base font-semibold text-[var(--foreground)]">Send feedback</h2>
               <button
@@ -203,7 +184,6 @@ export function BetaFeedbackButton() {
             </div>
 
             <div className="p-5 space-y-4">
-              {/* Type selector */}
               <div className="grid grid-cols-4 gap-2">
                 {TYPE_OPTIONS.map((opt) => {
                   const Icon = opt.icon;
@@ -231,13 +211,12 @@ export function BetaFeedbackButton() {
                 {TYPE_OPTIONS.find((o) => o.id === type)?.description}
               </p>
 
-              {/* Textarea */}
               <div>
-                <label htmlFor="beta-feedback-body" className="sr-only">
+                <label htmlFor="send-feedback-body" className="sr-only">
                   What happened?
                 </label>
                 <textarea
-                  id="beta-feedback-body"
+                  id="send-feedback-body"
                   ref={textareaRef}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
@@ -260,7 +239,6 @@ export function BetaFeedbackButton() {
                 </p>
               </div>
 
-              {/* Screenshot */}
               {screenshot ? (
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -298,14 +276,12 @@ export function BetaFeedbackButton() {
                 </div>
               )}
 
-              {/* Disclosure — PII transparency */}
               <p className="text-[10px] text-muted leading-snug">
                 We&apos;ll also send the page URL, your role, viewport size, and any recent console
                 errors — these help us triage. Anything in the screenshot is your call.
               </p>
             </div>
 
-            {/* Footer */}
             <div className="px-5 pb-5 flex items-center gap-2">
               <button
                 type="button"

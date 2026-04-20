@@ -526,16 +526,6 @@
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
 
-  /* ── Floating-button vertical offset ─────────────────────────────────
-     BetaFeedbackButton reads `--fab-bottom`. Default = mobile coach. The
-     athlete shell lifts it above the BottomTabBar; coach desktop clears
-     the sidebar user footer. One var, two overrides. */
-  body { --fab-bottom: 1rem; }
-  @media (min-width: 768px) {
-    body { --fab-bottom: 6rem; }
-  }
-  .athlete-shell { --fab-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); }
-
   /* ── Athlete shell overrides — per CLAUDE.md §Dual Product Identity ──
      The athlete app is mobile-primary consumer software. Clip-path cut
      corners shave reliable tap area off every button and input and add

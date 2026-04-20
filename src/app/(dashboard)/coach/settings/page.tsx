@@ -8,6 +8,7 @@ import { useAccessibility } from "@/components/accessibility-provider";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
+import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 import { Bell, ChevronRight } from "lucide-react";
 
 const ProfilePictureEditor = dynamic(() => import("@/components/profile-picture-editor"), {
@@ -1418,6 +1419,14 @@ export default function CoachSettingsPage() {
             )}
           </div>
         )}
+
+        {/* Feedback — always visible */}
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
+            Feedback
+          </h2>
+          <SendFeedbackCard />
+        </div>
 
         {/* Accessibility Section — always visible */}
         <div className="card mt-6 mb-24 lg:mb-0">
