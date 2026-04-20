@@ -27,6 +27,11 @@ import {
   Clock,
   FileText,
   Sparkles,
+  BookOpen,
+  Library,
+  Wrench,
+  Video,
+  ClipboardList,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -276,6 +281,8 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/practices",
           "/coach/hub",
           "/coach/teams",
+          "/coach/event-groups",
+          "/coach/goals",
         ],
         children: [
           {
@@ -294,6 +301,18 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             href: "/coach/teams",
             icon: <UsersRound {...iconSize} />,
             matchPaths: ["/coach/teams"],
+          },
+          {
+            label: "Event Groups",
+            href: "/coach/event-groups",
+            icon: <UsersRound {...iconSize} />,
+            matchPaths: ["/coach/event-groups"],
+          },
+          {
+            label: "Goals",
+            href: "/coach/goals",
+            icon: <Target {...iconSize} />,
+            matchPaths: ["/coach/goals"],
           },
           { label: "Invitations", href: "/coach/invitations", icon: <UserPlus {...iconSize} /> },
           {
@@ -334,7 +353,13 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Training",
         href: "/coach/throws",
         icon: <Dumbbell {...iconSize} />,
-        matchPaths: ["/coach/throws", "/coach/schedule", "/coach/plans"],
+        matchPaths: [
+          "/coach/throws",
+          "/coach/schedule",
+          "/coach/plans",
+          "/coach/exercises",
+          "/coach/drill-videos",
+        ],
         children: [
           {
             label: "Throws Hub",
@@ -360,6 +385,36 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             icon: <Radio {...iconSize} />,
             matchPaths: ["/coach/throws/practice"],
           },
+          {
+            label: "Drill Library",
+            href: "/coach/throws/library",
+            icon: <Library {...iconSize} />,
+            matchPaths: ["/coach/throws/library"],
+          },
+          {
+            label: "Drills",
+            href: "/coach/throws/drills",
+            icon: <BookOpen {...iconSize} />,
+            matchPaths: ["/coach/throws/drills"],
+          },
+          {
+            label: "Drill Builder",
+            href: "/coach/throws/builder",
+            icon: <Wrench {...iconSize} />,
+            matchPaths: ["/coach/throws/builder"],
+          },
+          {
+            label: "Exercises",
+            href: "/coach/exercises",
+            icon: <Dumbbell {...iconSize} />,
+            matchPaths: ["/coach/exercises"],
+          },
+          {
+            label: "Drill Videos",
+            href: "/coach/drill-videos",
+            icon: <Video {...iconSize} />,
+            matchPaths: ["/coach/drill-videos"],
+          },
         ],
       },
 
@@ -368,13 +423,19 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         label: "Analyze",
         href: "/coach/video-analysis",
         icon: <BarChart3 {...iconSize} />,
-        matchPaths: ["/coach/video-analysis"],
+        matchPaths: ["/coach/video-analysis", "/coach/questionnaires"],
         children: [
           {
             label: "Pose Analysis",
             href: "/coach/video-analysis",
             icon: <ScanLine {...iconSize} />,
             matchPaths: ["/coach/video-analysis"],
+          },
+          {
+            label: "Questionnaires",
+            href: "/coach/questionnaires",
+            icon: <ClipboardList {...iconSize} />,
+            matchPaths: ["/coach/questionnaires"],
           },
         ],
       },
