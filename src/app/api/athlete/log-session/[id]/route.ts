@@ -88,28 +88,37 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
     }
 
-    // Replace the session's drill logs atomically. PRs are intentionally NOT
-    // recomputed on edit — the ThrowsPR table remains authoritative and is
-    // only advanced on create. This prevents edits from retroactively
-    // lowering a PR, which would surprise athletes and coaches.
+    // Merge-update: only fields present in the request body are written.
+    // Omitted fields are left alone — this prevents the revamped wizard
+    // (which no longer renders readiness/technique/mental/best-part/
+    // improvement-area) from overwriting those values with null when a
+    // pre-revamp session is edited. Explicit nulls still clear a field.
+    //
+    // PRs are intentionally NOT recomputed on edit — the ThrowsPR table
+    // remains authoritative and is only advanced on create. This prevents
+    // edits from retroactively lowering a PR.
     const updated = await prisma.$transaction(async (tx) => {
+      // Drill logs stay "replace" — they're a separate relation the client
+      // always sends in full. The merge rule is for scalar session fields.
       await tx.athleteDrillLog.deleteMany({ where: { sessionId: id } });
       return tx.athleteThrowsSession.update({
         where: { id },
         data: {
           event: p.event as EventType,
           date: p.date,
-          focus: p.focus || null,
-          notes: p.notes?.trim() || null,
-          sleepQuality: p.sleepQuality ?? null,
-          sorenessLevel: p.sorenessLevel ?? null,
-          energyLevel: p.energyLevel ?? null,
-          sessionRpe: p.sessionRpe ?? null,
-          sessionFeeling: p.sessionFeeling || null,
-          techniqueRating: p.techniqueRating ?? null,
-          mentalFocus: p.mentalFocus ?? null,
-          bestPart: p.bestPart?.trim() || null,
-          improvementArea: p.improvementArea?.trim() || null,
+          ...(p.focus !== undefined && { focus: p.focus || null }),
+          ...(p.notes !== undefined && { notes: p.notes?.trim() || null }),
+          ...(p.sleepQuality !== undefined && { sleepQuality: p.sleepQuality }),
+          ...(p.sorenessLevel !== undefined && { sorenessLevel: p.sorenessLevel }),
+          ...(p.energyLevel !== undefined && { energyLevel: p.energyLevel }),
+          ...(p.sessionRpe !== undefined && { sessionRpe: p.sessionRpe }),
+          ...(p.sessionFeeling !== undefined && { sessionFeeling: p.sessionFeeling || null }),
+          ...(p.techniqueRating !== undefined && { techniqueRating: p.techniqueRating }),
+          ...(p.mentalFocus !== undefined && { mentalFocus: p.mentalFocus }),
+          ...(p.bestPart !== undefined && { bestPart: p.bestPart?.trim() || null }),
+          ...(p.improvementArea !== undefined && {
+            improvementArea: p.improvementArea?.trim() || null,
+          }),
           drillLogs: {
             create: (p.drills || []).map((d) => ({
               drillType: d.drillType,

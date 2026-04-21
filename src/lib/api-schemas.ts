@@ -443,13 +443,15 @@ export const LogSessionSchema = z
   .object({
     event: z.string().min(1, "Event is required"),
     date: z.string().min(1, "Date is required"),
-    focus: z.string().optional(),
-    notes: z.string().optional(),
+    // focus / notes / sessionRpe / sessionFeeling are wizard-owned and always
+    // sent. Explicit null means "cleared" under the PUT handler's merge rules.
+    focus: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
     sleepQuality: z.number().min(1).max(10).nullable().optional(),
     sorenessLevel: z.number().min(1).max(10).nullable().optional(),
     energyLevel: z.number().min(1).max(10).nullable().optional(),
     sessionRpe: z.number().min(1).max(10).nullable().optional(),
-    sessionFeeling: z.string().optional(),
+    sessionFeeling: z.string().nullable().optional(),
     techniqueRating: z.number().min(1).max(10).nullable().optional(),
     mentalFocus: z.number().min(1).max(10).nullable().optional(),
     bestPart: z.string().optional(),

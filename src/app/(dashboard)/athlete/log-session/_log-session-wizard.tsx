@@ -184,28 +184,6 @@ export function LogSessionWizard({
   const [pastDrills, setPastDrills] = useState<string[]>([]);
   const [showAllDrills, setShowAllDrills] = useState<Record<string, boolean>>({});
 
-  // Fields removed from the revamped UI but preserved on edit so we don't
-  // overwrite existing readiness/technique/mental/best-part/improvement-area
-  // with null when a coach edits an older session. New sessions send undefined
-  // for these (server writes null, which is correct for a fresh row).
-  const [legacyFields, setLegacyFields] = useState<{
-    sleepQuality: number | null;
-    sorenessLevel: number | null;
-    energyLevel: number | null;
-    techniqueRating: number | null;
-    mentalFocus: number | null;
-    bestPart: string;
-    improvementArea: string;
-  }>({
-    sleepQuality: null,
-    sorenessLevel: null,
-    energyLevel: null,
-    techniqueRating: null,
-    mentalFocus: null,
-    bestPart: "",
-    improvementArea: "",
-  });
-
   const [submitting, setSubmitting] = useState(false);
   const [responsePRs, setResponsePRs] = useState<PRResult[]>([]);
   const [responseWarnings, setResponseWarnings] = useState<WarningResult[]>([]);
@@ -233,15 +211,6 @@ export function LogSessionWizard({
         setSessionNotes(s.notes || "");
         setSessionRpe(s.sessionRpe ?? null);
         setSessionFeeling(s.sessionFeeling || "");
-        setLegacyFields({
-          sleepQuality: s.sleepQuality ?? null,
-          sorenessLevel: s.sorenessLevel ?? null,
-          energyLevel: s.energyLevel ?? null,
-          techniqueRating: s.techniqueRating ?? null,
-          mentalFocus: s.mentalFocus ?? null,
-          bestPart: s.bestPart || "",
-          improvementArea: s.improvementArea || "",
-        });
         if (s.drillLogs?.length) {
           setDrills(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -346,23 +315,13 @@ export function LogSessionWizard({
         body: JSON.stringify({
           event,
           date,
-          focus: focus || undefined,
-          notes: sessionNotes.trim() || undefined,
+          // Wizard-owned fields are always sent. Null means "cleared" — under
+          // the PUT handler's merge semantics, explicit null writes null.
+          // Omitted fields are left alone; these four fields are never omitted.
+          focus: focus || null,
+          notes: sessionNotes.trim() || null,
           sessionRpe,
-          sessionFeeling: sessionFeeling || undefined,
-          // Preserve hidden fields on edit so we don't overwrite pre-revamp
-          // data. On new sessions, omit them — server will null-default.
-          ...(isEditing
-            ? {
-                sleepQuality: legacyFields.sleepQuality,
-                sorenessLevel: legacyFields.sorenessLevel,
-                energyLevel: legacyFields.energyLevel,
-                techniqueRating: legacyFields.techniqueRating,
-                mentalFocus: legacyFields.mentalFocus,
-                bestPart: legacyFields.bestPart.trim() || undefined,
-                improvementArea: legacyFields.improvementArea.trim() || undefined,
-              }
-            : {}),
+          sessionFeeling: sessionFeeling || null,
           drills: drills
             .filter((d) => d.drillType)
             .map((d) => {
