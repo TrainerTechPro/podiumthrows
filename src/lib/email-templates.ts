@@ -162,3 +162,32 @@ export function weeklyDigestBody(data: WeeklyDigestData, baseUrl: string): strin
     ${ctaButton(`${baseUrl}/coach/dashboard`, "Open Dashboard")}
   `;
 }
+
+export interface CommentAddedData {
+  authorName: string;
+  surfaceLabel: string; // e.g. "a throw", "a training session"
+  preview: string;
+  commentId: string;
+  /** True when the recipient is an athlete (affects deep link + header copy). */
+  isAthleteRecipient: boolean;
+}
+
+export function commentAddedBody(data: CommentAddedData, baseUrl: string): string {
+  const inboxUrl = data.isAthleteRecipient
+    ? `${baseUrl}/athlete/feedback`
+    : `${baseUrl}/coach/feedback-inbox`;
+  const header = data.isAthleteRecipient
+    ? `Coach ${esc(data.authorName)} left a comment`
+    : `${esc(data.authorName)} left a comment`;
+  return `
+    <h2 style="color:#f0ede6; font-size:20px; margin:0 0 4px 0;">${header}</h2>
+    <p style="color:#6b6560; font-size:14px; margin:0 0 20px 0;">on ${esc(data.surfaceLabel)}</p>
+    <blockquote style="border-left:3px solid #f59e0b; margin:0 0 24px 0; padding:4px 0 4px 16px; color:#e5e1d8; font-size:15px; line-height:1.6;">
+      ${esc(data.preview)}
+    </blockquote>
+    ${ctaButton(inboxUrl, "View & Reply")}
+    <p style="color:#6b6560; font-size:13px; margin:16px 0 0 0; line-height:1.5;">
+      You can adjust email preferences any time from your settings.
+    </p>
+  `;
+}

@@ -230,12 +230,13 @@ model User {
   /// what's-new modal. Null = never seen any release.
   lastSeenReleaseSlug String?
 
-  coachProfile        CoachProfile?
-  athleteProfile      AthleteProfile?
-  passwordResetTokens PasswordResetToken[]
-  codexEntries        CodexEntry[]
-  pushSubscriptions   PushSubscription[]
-  betaFeedback        BetaFeedback[]
+  coachProfile           CoachProfile?
+  athleteProfile         AthleteProfile?
+  passwordResetTokens    PasswordResetToken[]
+  codexEntries           CodexEntry[]
+  pushSubscriptions      PushSubscription[]
+  betaFeedback           BetaFeedback[]
+  notificationPreference NotificationPreference?
 
   @@index([email])
   @@index([role])
@@ -746,6 +747,8 @@ model ThrowComment {
   practiceAttemptId  String?
   trainingSessionId  String?
   throwsAssignmentId String?
+  athleteDrillLogId  String?
+  videoAnalysisId    String?
 
   // Content — either body (text) OR audioUrl (voice note). At least one set.
   body             String  @db.Text
@@ -758,6 +761,10 @@ model ThrowComment {
   reaction  String? // "THUMBS_UP" | "THUMBS_DOWN"
   replyText String? // one-word or very short acknowledgment
 
+  // Soft-delete: preserves audit trail. GET filters body/audioUrl when set.
+  deletedAt DateTime?
+  deletedBy String? // userId of deleter (author OR coach moderator)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -765,8 +772,36 @@ model ThrowComment {
   @@index([practiceAttemptId, createdAt])
   @@index([trainingSessionId, createdAt])
   @@index([throwsAssignmentId, createdAt])
+  @@index([athleteDrillLogId, createdAt])
+  @@index([videoAnalysisId, createdAt])
   @@index([authorId])
   @@index([authorRole, readAt])
+  @@index([deletedAt])
+}
+
+/// Per-user notification preferences across push / email / in-app channels.
+/// Auto-created on first read with sensible defaults. Quiet hours apply to push only.
+model NotificationPreference {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Per-channel master switches.
+  pushEnabled  Boolean @default(true)
+  emailEnabled Boolean @default(true)
+  inAppEnabled Boolean @default(true) // always true in practice; reserved for future
+
+  // Per-type, per-channel overrides (JSON map keyed by NotificationType).
+  // Example: { "COMMENT_ADDED": { "push": true, "email": false } }
+  typeOverrides Json @default("{}")
+
+  // Quiet hours — apply to push only. Strings in "HH:mm" 24h format.
+  quietStart String? // e.g. "22:00"
+  quietEnd   String? // e.g. "07:00"
+  timezone   String? // IANA TZ, e.g. "America/Los_Angeles"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─── BONDARCHUK ASSESSMENT ──────────────────────────────────────────────────

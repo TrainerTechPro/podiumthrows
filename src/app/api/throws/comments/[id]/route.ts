@@ -18,14 +18,13 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { commentTargetPair, verifyCommentAccess } from "@/lib/comments/access";
 
 const MAX_REPLY_LENGTH = 40;
 const ALLOWED_REACTIONS = ["THUMBS_UP", "THUMBS_DOWN"] as const;
+const SELF_DELETE_WINDOW_MS = 15 * 60 * 1000;
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session) {
@@ -44,14 +43,23 @@ export async function PATCH(
         id: true,
         authorId: true,
         authorRole: true,
+        deletedAt: true,
         throwLogId: true,
         practiceAttemptId: true,
         trainingSessionId: true,
         throwsAssignmentId: true,
+        athleteDrillLogId: true,
+        videoAnalysisId: true,
       },
     });
     if (!existing) {
       return NextResponse.json({ success: false, error: "Comment not found" }, { status: 404 });
+    }
+    if (existing.deletedAt) {
+      return NextResponse.json(
+        { success: false, error: "Cannot modify a deleted comment." },
+        { status: 410 }
+      );
     }
     if (existing.authorId === session.userId) {
       return NextResponse.json(
@@ -60,14 +68,14 @@ export async function PATCH(
       );
     }
 
-    // The recipient must be able to see the underlying target. Reuse the
-    // ownership filters from the parent route — delegate via a quick
-    // per-role lookup so we don't duplicate the full verifyAccess helper.
-    const canAck = await verifyRecipientAccess(
-      session.userId,
-      session.role,
-      existing
-    );
+    const pair = commentTargetPair(existing);
+    if (!pair) {
+      return NextResponse.json(
+        { success: false, error: "Comment has no valid target" },
+        { status: 500 }
+      );
+    }
+    const canAck = await verifyCommentAccess(session.userId, session.role, pair.field, pair.id);
     if (!canAck) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
@@ -84,10 +92,7 @@ export async function PATCH(
       } else if (typeof body.readAt === "string") {
         const parsed = new Date(body.readAt);
         if (isNaN(parsed.getTime())) {
-          return NextResponse.json(
-            { success: false, error: "Invalid readAt." },
-            { status: 400 }
-          );
+          return NextResponse.json({ success: false, error: "Invalid readAt." }, { status: 400 });
         }
         updates.readAt = parsed;
       } else if (body.readAt === null) {
@@ -99,14 +104,14 @@ export async function PATCH(
       const r = body.reaction;
       if (r === null) {
         updates.reaction = null;
-      } else if (
-        typeof r === "string" &&
-        (ALLOWED_REACTIONS as readonly string[]).includes(r)
-      ) {
+      } else if (typeof r === "string" && (ALLOWED_REACTIONS as readonly string[]).includes(r)) {
         updates.reaction = r;
       } else {
         return NextResponse.json(
-          { success: false, error: `reaction must be one of ${ALLOWED_REACTIONS.join(", ")} or null` },
+          {
+            success: false,
+            error: `reaction must be one of ${ALLOWED_REACTIONS.join(", ")} or null`,
+          },
           { status: 400 }
         );
       }
@@ -137,10 +142,7 @@ export async function PATCH(
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { success: false, error: "No fields to update." },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "No fields to update." }, { status: 400 });
     }
 
     const updated = await prisma.throwComment.update({
@@ -177,96 +179,103 @@ export async function PATCH(
   }
 }
 
-/* ─── Recipient access check ────────────────────────────────────────────── */
+/* ─── DELETE — soft-delete a comment ─────────────────────────────────────── */
 
-type CommentTargetFields = {
-  throwLogId: string | null;
-  practiceAttemptId: string | null;
-  trainingSessionId: string | null;
-  throwsAssignmentId: string | null;
-  authorRole: string;
-};
+/**
+ * Rules:
+ *   • The author may delete their own comment within the self-delete window.
+ *   • A coach may moderate-delete any comment on their athletes' data at any
+ *     time, regardless of authorship.
+ *   • Everything else: 403.
+ *
+ * Soft-delete sets `deletedAt` and `deletedBy`. The row is kept so both
+ * parties see a "[comment deleted]" placeholder and an audit trail exists.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
-async function verifyRecipientAccess(
-  userId: string,
-  role: string,
-  comment: CommentTargetFields
-): Promise<boolean> {
-  // Coaches can ack athlete-authored comments on their athletes' work.
-  if (role === "COACH") {
-    const coach = await prisma.coachProfile.findUnique({
-      where: { userId },
-      select: { id: true },
+    const { id } = await params;
+
+    const existing = await prisma.throwComment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        authorId: true,
+        authorRole: true,
+        createdAt: true,
+        deletedAt: true,
+        throwLogId: true,
+        practiceAttemptId: true,
+        trainingSessionId: true,
+        throwsAssignmentId: true,
+        athleteDrillLogId: true,
+        videoAnalysisId: true,
+      },
     });
-    if (!coach) return false;
-    if (comment.throwLogId) {
-      const tl = await prisma.throwLog.findUnique({
-        where: { id: comment.throwLogId },
-        select: { athlete: { select: { coachId: true } } },
-      });
-      return tl?.athlete.coachId === coach.id;
+    if (!existing) {
+      return NextResponse.json({ success: false, error: "Comment not found" }, { status: 404 });
     }
-    if (comment.trainingSessionId) {
-      const ts = await prisma.trainingSession.findUnique({
-        where: { id: comment.trainingSessionId },
-        select: { athlete: { select: { coachId: true } } },
-      });
-      return ts?.athlete.coachId === coach.id;
+    if (existing.deletedAt) {
+      return NextResponse.json(
+        { success: true, data: { id: existing.id, alreadyDeleted: true } },
+        { status: 200 }
+      );
     }
-    if (comment.practiceAttemptId) {
-      const pa = await prisma.practiceAttempt.findUnique({
-        where: { id: comment.practiceAttemptId },
-        select: { session: { select: { coachId: true } } },
-      });
-      return pa?.session.coachId === coach.id;
-    }
-    if (comment.throwsAssignmentId) {
-      const ta = await prisma.throwsAssignment.findUnique({
-        where: { id: comment.throwsAssignmentId },
-        select: { session: { select: { coachId: true } } },
-      });
-      return ta?.session.coachId === coach.id;
-    }
-    return false;
-  }
 
-  // Athletes can ack coach-authored comments on their own work.
-  if (role === "ATHLETE") {
-    const athlete = await prisma.athleteProfile.findUnique({
-      where: { userId },
-      select: { id: true },
+    const pair = commentTargetPair(existing);
+    if (!pair) {
+      return NextResponse.json(
+        { success: false, error: "Comment has no valid target" },
+        { status: 500 }
+      );
+    }
+
+    const isAuthor = existing.authorId === session.userId;
+    const withinWindow = Date.now() - existing.createdAt.getTime() < SELF_DELETE_WINDOW_MS;
+    const authorCanDelete = isAuthor && withinWindow;
+
+    let moderatorCanDelete = false;
+    if (!authorCanDelete && session.role === "COACH") {
+      // Coach moderation: owns the athlete whose target this lives on.
+      moderatorCanDelete = await verifyCommentAccess(
+        session.userId,
+        session.role,
+        pair.field,
+        pair.id
+      );
+    }
+
+    if (!authorCanDelete && !moderatorCanDelete) {
+      const reason = isAuthor
+        ? "The 15-minute undo window has passed."
+        : "You cannot delete this comment.";
+      return NextResponse.json({ success: false, error: reason }, { status: 403 });
+    }
+
+    await prisma.throwComment.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: session.userId,
+      },
     });
-    if (!athlete) return false;
-    if (comment.throwLogId) {
-      const tl = await prisma.throwLog.findUnique({
-        where: { id: comment.throwLogId },
-        select: { athleteId: true },
-      });
-      return tl?.athleteId === athlete.id;
-    }
-    if (comment.trainingSessionId) {
-      const ts = await prisma.trainingSession.findUnique({
-        where: { id: comment.trainingSessionId },
-        select: { athleteId: true },
-      });
-      return ts?.athleteId === athlete.id;
-    }
-    if (comment.practiceAttemptId) {
-      const pa = await prisma.practiceAttempt.findUnique({
-        where: { id: comment.practiceAttemptId },
-        select: { athleteId: true },
-      });
-      return pa?.athleteId === athlete.id;
-    }
-    if (comment.throwsAssignmentId) {
-      const ta = await prisma.throwsAssignment.findUnique({
-        where: { id: comment.throwsAssignmentId },
-        select: { athleteId: true },
-      });
-      return ta?.athleteId === athlete.id;
-    }
-    return false;
-  }
 
-  return false;
+    return NextResponse.json({
+      success: true,
+      data: { id, moderated: moderatorCanDelete },
+    });
+  } catch (err) {
+    logger.error("DELETE /api/throws/comments/[id]", {
+      context: "api",
+      error: err,
+    });
+    return NextResponse.json(
+      { success: false, error: "Failed to delete comment." },
+      { status: 500 }
+    );
+  }
 }

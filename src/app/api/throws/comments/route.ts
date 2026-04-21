@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { sendPushToUser } from "@/lib/push";
+import { sendCommentNotification } from "@/lib/notifications/comment";
+import { rateLimit } from "@/lib/rate-limit";
+import {
+  TARGET_FIELDS,
+  type TargetField,
+  isTargetField,
+  verifyCommentAccess,
+} from "@/lib/comments/access";
 
-const TARGET_FIELDS = [
-  "throwLogId",
-  "practiceAttemptId",
-  "trainingSessionId",
-  "throwsAssignmentId",
-] as const;
-
-type TargetField = (typeof TARGET_FIELDS)[number];
+export { TARGET_FIELDS };
+export type { TargetField };
 
 /* ─── GET — fetch comments for a target ──────────────────────────────────── */
 
@@ -23,18 +24,24 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
-    const targetField = url.searchParams.get("targetField") as TargetField | null;
+    const rawTargetField = url.searchParams.get("targetField");
     const targetId = url.searchParams.get("targetId");
 
-    if (!targetField || !targetId || !TARGET_FIELDS.includes(targetField)) {
+    if (!rawTargetField || !targetId || !isTargetField(rawTargetField)) {
       return NextResponse.json(
         { success: false, error: "targetField and targetId are required" },
         { status: 400 }
       );
     }
+    const targetField: TargetField = rawTargetField;
 
     // Verify the user has access to this target
-    const hasAccess = await verifyAccess(session.userId, session.role, targetField, targetId);
+    const hasAccess = await verifyCommentAccess(
+      session.userId,
+      session.role,
+      targetField,
+      targetId
+    );
     if (!hasAccess) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
@@ -60,15 +67,22 @@ export async function GET(req: NextRequest) {
     const enriched = comments.map((c) => {
       const user = userMap.get(c.authorId);
       const profile = c.authorRole === "COACH" ? user?.coachProfile : user?.athleteProfile;
+      const deleted = c.deletedAt != null;
       return {
         id: c.id,
         authorId: c.authorId,
         authorRole: c.authorRole,
-        authorName: profile ? `${profile.firstName} ${profile.lastName}` : user?.email ?? "Unknown",
+        authorName: profile
+          ? `${profile.firstName} ${profile.lastName}`
+          : (user?.email ?? "Unknown"),
         authorAvatar: profile?.avatarUrl ?? null,
-        body: c.body,
-        audioUrl: c.audioUrl,
-        audioDurationSec: c.audioDurationSec,
+        body: deleted ? "" : c.body,
+        audioUrl: deleted ? null : c.audioUrl,
+        audioDurationSec: deleted ? null : c.audioDurationSec,
+        readAt: c.readAt?.toISOString() ?? null,
+        reaction: c.reaction,
+        replyText: c.replyText,
+        deleted,
         createdAt: c.createdAt.toISOString(),
       };
     });
@@ -76,7 +90,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: enriched });
   } catch (err) {
     logger.error("GET /api/throws/comments", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch comments" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch comments" },
+      { status: 500 }
+    );
   }
 }
 
@@ -89,20 +106,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const {
-      targetField,
-      targetId,
-      text,
-      audioUrl,
-      audioDurationSec,
-    } = body as Record<string, unknown>;
+    // Spam guardrail — 30 comments per minute per user (§Spec 5.3)
+    const rl = await rateLimit(`comment-post:${session.userId}`, {
+      maxAttempts: 30,
+      windowMs: 60_000,
+    });
+    if (!rl.success) {
+      return NextResponse.json(
+        { success: false, error: "Too many comments. Take a breath." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
+      );
+    }
 
-    if (
-      typeof targetField !== "string" ||
-      !TARGET_FIELDS.includes(targetField as TargetField) ||
-      typeof targetId !== "string"
-    ) {
+    const body = await req.json().catch(() => ({}));
+    const { targetField, targetId, text, audioUrl, audioDurationSec } = body as Record<
+      string,
+      unknown
+    >;
+
+    if (!isTargetField(targetField) || typeof targetId !== "string") {
       return NextResponse.json(
         { success: false, error: "targetField and targetId are required" },
         { status: 400 }
@@ -134,10 +156,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify access
-    const hasAccess = await verifyAccess(
+    const hasAccess = await verifyCommentAccess(
       session.userId,
       session.role,
-      targetField as TargetField,
+      targetField,
       targetId
     );
     if (!hasAccess) {
@@ -155,10 +177,8 @@ export async function POST(req: NextRequest) {
         [targetField]: targetId,
         body: bodyText,
         audioUrl: hasAudio ? (audioUrl as string) : null,
-        audioDurationSec: hasAudio
-          ? Math.ceil(audioDurationSec as number)
-          : null,
-      },
+        audioDurationSec: hasAudio ? Math.ceil(audioDurationSec as number) : null,
+      } as Parameters<typeof prisma.throwComment.create>[0]["data"],
     });
 
     // Get author info for response
@@ -172,18 +192,19 @@ export async function POST(req: NextRequest) {
     });
     const profile = session.role === "COACH" ? user?.coachProfile : user?.athleteProfile;
 
-    // Create notification for the other party — use a voice-note-friendly
-    // preview when the comment has no text content.
+    // Fan out notification to the recipient per their preferences.
+    // Non-blocking — wrapped in waitUntil internally.
     const notificationPreview = hasText
       ? (text as string).trim()
       : `🎙 Voice note (${Math.ceil(audioDurationSec as number)}s)`;
-    await createCommentNotification(
-      session.userId,
-      session.role,
-      targetField as TargetField,
+    void sendCommentNotification({
+      commentId: comment.id,
+      authorUserId: session.userId,
+      authorRole: session.role,
+      targetField: targetField as TargetField,
       targetId,
-      notificationPreview
-    );
+      preview: notificationPreview,
+    });
 
     return NextResponse.json(
       {
@@ -194,11 +215,15 @@ export async function POST(req: NextRequest) {
           authorRole: comment.authorRole,
           authorName: profile
             ? `${profile.firstName} ${profile.lastName}`
-            : user?.email ?? "Unknown",
+            : (user?.email ?? "Unknown"),
           authorAvatar: profile?.avatarUrl ?? null,
           body: comment.body,
           audioUrl: comment.audioUrl,
           audioDurationSec: comment.audioDurationSec,
+          readAt: null,
+          reaction: null,
+          replyText: null,
+          deleted: false,
           createdAt: comment.createdAt.toISOString(),
         },
       },
@@ -206,232 +231,9 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     logger.error("POST /api/throws/comments", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to create comment" }, { status: 500 });
-  }
-}
-
-/* ─── Helpers ────────────────────────────────────────────────────────────── */
-
-async function verifyAccess(
-  userId: string,
-  role: string,
-  targetField: TargetField,
-  targetId: string
-): Promise<boolean> {
-  if (role === "COACH") {
-    const coach = await prisma.coachProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    if (!coach) return false;
-
-    switch (targetField) {
-      case "throwLogId": {
-        const tl = await prisma.throwLog.findUnique({
-          where: { id: targetId },
-          select: { athlete: { select: { coachId: true } } },
-        });
-        return tl?.athlete.coachId === coach.id;
-      }
-      case "practiceAttemptId": {
-        const pa = await prisma.practiceAttempt.findUnique({
-          where: { id: targetId },
-          select: { session: { select: { coachId: true } } },
-        });
-        return pa?.session.coachId === coach.id;
-      }
-      case "trainingSessionId": {
-        const ts = await prisma.trainingSession.findUnique({
-          where: { id: targetId },
-          select: { athlete: { select: { coachId: true } } },
-        });
-        return ts?.athlete.coachId === coach.id;
-      }
-      case "throwsAssignmentId": {
-        const ta = await prisma.throwsAssignment.findUnique({
-          where: { id: targetId },
-          select: { session: { select: { coachId: true } } },
-        });
-        return ta?.session.coachId === coach.id;
-      }
-    }
-  }
-
-  if (role === "ATHLETE") {
-    const athlete = await prisma.athleteProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    if (!athlete) return false;
-
-    switch (targetField) {
-      case "throwLogId": {
-        const tl = await prisma.throwLog.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true },
-        });
-        return tl?.athleteId === athlete.id;
-      }
-      case "practiceAttemptId": {
-        const pa = await prisma.practiceAttempt.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true },
-        });
-        return pa?.athleteId === athlete.id;
-      }
-      case "trainingSessionId": {
-        const ts = await prisma.trainingSession.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true },
-        });
-        return ts?.athleteId === athlete.id;
-      }
-      case "throwsAssignmentId": {
-        const ta = await prisma.throwsAssignment.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true },
-        });
-        return ta?.athleteId === athlete.id;
-      }
-    }
-  }
-
-  return false;
-}
-
-async function createCommentNotification(
-  authorUserId: string,
-  authorRole: string,
-  targetField: TargetField,
-  targetId: string,
-  commentText: string
-) {
-  try {
-    const preview = commentText.length > 80 ? commentText.slice(0, 77) + "..." : commentText;
-
-    // Enriched metadata — includes IDs the URL resolver needs for navigation
-    const metadata: Record<string, string> = { targetField, targetId, type: "throw_comment" };
-
-    if (authorRole === "ATHLETE") {
-      // Find the athlete's coach and notify them
-      const athlete = await prisma.athleteProfile.findUnique({
-        where: { userId: authorUserId },
-        select: { id: true, coachId: true, firstName: true, lastName: true },
-      });
-      if (!athlete?.coachId) return;
-
-      metadata.athleteId = athlete.id;
-
-      // For practice attempts, include parent session ID for coach navigation
-      if (targetField === "practiceAttemptId") {
-        const attempt = await prisma.practiceAttempt.findUnique({
-          where: { id: targetId },
-          select: { sessionId: true },
-        });
-        if (attempt) metadata.practiceSessionId = attempt.sessionId;
-      }
-
-      const title = `${athlete.firstName} left a comment`;
-      await prisma.notification.create({
-        data: {
-          coachId: athlete.coachId,
-          athleteProfileId: athlete.id,
-          type: "COMMENT_ADDED",
-          title,
-          body: preview,
-          metadata: JSON.stringify(metadata),
-        },
-      });
-
-      // Fire a Web Push to the coach (best-effort, non-blocking).
-      // Resolve the coach's userId from coachId so sendPushToUser can
-      // look up their subscriptions.
-      const coach = await prisma.coachProfile.findUnique({
-        where: { id: athlete.coachId },
-        select: { userId: true },
-      });
-      if (coach) {
-        void sendPushToUser(coach.userId, {
-          title,
-          body: preview,
-          url: "/coach/feedback-inbox",
-          tag: `comment-${targetField}-${targetId}`,
-          data: metadata,
-        }).catch(() => null);
-      }
-    }
-
-    if (authorRole === "COACH") {
-      // Find the athlete from the target and notify them
-      let athleteProfileId: string | null = null;
-
-      if (targetField === "throwsAssignmentId") {
-        const assignment = await prisma.throwsAssignment.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true },
-        });
-        athleteProfileId = assignment?.athleteId ?? null;
-      } else if (targetField === "throwLogId") {
-        const throwLog = await prisma.throwLog.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true },
-        });
-        athleteProfileId = throwLog?.athleteId ?? null;
-      } else if (targetField === "practiceAttemptId") {
-        const attempt = await prisma.practiceAttempt.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true, sessionId: true },
-        });
-        athleteProfileId = attempt?.athleteId ?? null;
-        if (attempt?.sessionId) metadata.practiceSessionId = attempt.sessionId;
-      } else if (targetField === "trainingSessionId") {
-        const ts = await prisma.trainingSession.findUnique({
-          where: { id: targetId },
-          select: { athleteId: true },
-        });
-        athleteProfileId = ts?.athleteId ?? null;
-      }
-
-      if (!athleteProfileId) return;
-
-      metadata.athleteId = athleteProfileId;
-
-      const coach = await prisma.coachProfile.findUnique({
-        where: { userId: authorUserId },
-        select: { firstName: true, lastName: true },
-      });
-      const coachName = coach ? `${coach.firstName} ${coach.lastName}` : "Your coach";
-      const title = `${coachName} left a comment`;
-
-      await prisma.notification.create({
-        data: {
-          athleteProfileId,
-          type: "COMMENT_ADDED",
-          title,
-          body: preview,
-          metadata: JSON.stringify(metadata),
-        },
-      });
-
-      // Fire a Web Push to the athlete (best-effort, non-blocking).
-      // Resolve the athlete's userId so sendPushToUser can look up
-      // their subscriptions.
-      const athleteRecord = await prisma.athleteProfile.findUnique({
-        where: { id: athleteProfileId },
-        select: { userId: true },
-      });
-      if (athleteRecord) {
-        void sendPushToUser(athleteRecord.userId, {
-          title,
-          body: preview,
-          url: "/athlete/feedback",
-          tag: `comment-${targetField}-${targetId}`,
-          data: metadata,
-        }).catch(() => null);
-      }
-    }
-  } catch (err) {
-    // Non-fatal
-    logger.error("Failed to create comment notification", { context: "throws/comments", error: err });
+    return NextResponse.json(
+      { success: false, error: "Failed to create comment" },
+      { status: 500 }
+    );
   }
 }

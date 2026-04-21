@@ -5,7 +5,9 @@ import {
   welcomeAthleteBody,
   athleteJoinedBody,
   weeklyDigestBody,
+  commentAddedBody,
   type WeeklyDigestData,
+  type CommentAddedData,
 } from "./email-templates";
 
 // Use Resend SMTP relay if RESEND_API_KEY is set (preferred),
@@ -142,5 +144,30 @@ export async function sendWeeklyDigestEmail(
     to: coachEmail,
     subject: `Your weekly summary — ${data.sessionsCompleted} sessions, ${data.newPRs.length} PRs`,
     html: wrapEmailHtml(weeklyDigestBody(data, baseUrl), baseUrl),
+  });
+}
+
+/**
+ * Transactional email for a new comment on any training surface.
+ * Subject prefixes the author name and preview. Body deep-links into the
+ * recipient's inbox. Includes list-unsubscribe headers per RFC 2369 so
+ * Gmail/Outlook surface the native one-click unsubscribe control.
+ */
+export async function sendCommentAddedEmail(
+  toEmail: string,
+  data: CommentAddedData
+): Promise<void> {
+  const truncated = data.preview.length > 40 ? data.preview.slice(0, 37) + "..." : data.preview;
+  const subject = `${data.authorName}: ${truncated}`;
+  const unsubUrl = `${baseUrl}/${data.isAthleteRecipient ? "athlete" : "coach"}/settings/notifications`;
+  await transporter.sendMail({
+    from: FROM_EMAIL,
+    to: toEmail,
+    subject,
+    html: wrapEmailHtml(commentAddedBody(data, baseUrl), baseUrl),
+    headers: {
+      "List-Unsubscribe": `<${unsubUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 }
