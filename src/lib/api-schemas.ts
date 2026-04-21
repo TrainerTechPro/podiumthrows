@@ -160,6 +160,10 @@ export const ThrowsAssignmentUpdateSchema = z.discriminatedUnion("action", [
     action: z.literal("update_blocks"),
     completedBlockIds: z.array(z.string()).min(0),
   }),
+  // "end" is the escape hatch for stuck IN_PROGRESS rows. The server inspects
+  // throwLogs and picks PARTIAL (logs present) or SKIPPED (no logs). See
+  // tasks/session-management-v1.md §2.1 + §6.4 for the rationale.
+  z.object({ action: z.literal("end") }),
 ]);
 
 // ── Questionnaire Submission ────────────────────────────────────────────

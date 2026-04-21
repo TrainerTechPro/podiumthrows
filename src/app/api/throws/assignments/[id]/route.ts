@@ -9,10 +9,7 @@ import { emitSessionComplete } from "@/lib/team-activity";
 import { parseBody, ThrowsAssignmentUpdateSchema } from "@/lib/api-schemas";
 
 // PUT /api/throws/assignments/[id] — update assignment status (start, complete, skip)
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -41,7 +38,10 @@ export async function PUT(
     });
 
     if (!user?.athleteProfile) {
-      return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Athlete profile not found" },
+        { status: 403 }
+      );
     }
 
     const assignment = await prisma.throwsAssignment.findUnique({
@@ -53,6 +53,16 @@ export async function PUT(
     }
 
     let updateData: Record<string, unknown> = {};
+    // Branch hint the server-side post-completion logic uses to decide if
+    // streak + notifications fire. "end" resolves to either "partial" or
+    // "skip" below based on log count; track the resolution so the
+    // post-hooks key off the right effective action.
+    let effectiveAction: "start" | "complete" | "partial" | "skip" | "update_blocks" = action as
+      | "start"
+      | "complete"
+      | "partial"
+      | "skip"
+      | "update_blocks";
 
     switch (action) {
       case "start":
@@ -89,6 +99,33 @@ export async function PUT(
         };
         break;
 
+      case "end": {
+        // Escape hatch for a stuck IN_PROGRESS row. 0 logs = SKIPPED (nothing
+        // happened), 1+ logs = PARTIAL (they did some of it, just never hit
+        // Complete). Streak + notification logic below gates on effectiveAction.
+        if (
+          assignment.status !== "IN_PROGRESS" &&
+          assignment.status !== "ASSIGNED" &&
+          assignment.status !== "NOTIFIED"
+        ) {
+          return NextResponse.json(
+            { success: false, error: "Session is already finished" },
+            { status: 409 }
+          );
+        }
+        const throwCount = await prisma.throwsBlockLog.count({
+          where: { assignmentId: id },
+        });
+        if (throwCount > 0) {
+          updateData = { status: "PARTIAL", completedAt: new Date() };
+          effectiveAction = "partial";
+        } else {
+          updateData = { status: "SKIPPED" };
+          effectiveAction = "skip";
+        }
+        break;
+      }
+
       case "update_blocks":
         // Store completed block IDs in feedbackNotes as a JSON prefix
         // This allows persistence without schema changes
@@ -121,14 +158,21 @@ export async function PUT(
           },
         },
         athlete: {
-          select: { id: true, firstName: true, lastName: true, coachId: true, currentStreak: true, longestStreak: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            coachId: true,
+            currentStreak: true,
+            longestStreak: true,
+          },
         },
         throwLogs: { orderBy: { throwNumber: "asc" } },
       },
     });
 
     // ── Post-completion: streak + notification ─────────────────────
-    if (action === "complete" || action === "partial") {
+    if (effectiveAction === "complete" || effectiveAction === "partial") {
       // Update athlete streak
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -160,13 +204,13 @@ export async function PUT(
       // Fire WORKOUT_COMPLETED notification to coach
       const coachId = updated.athlete.coachId ?? updated.session.coach?.id;
       if (coachId) {
-        const athleteName = [updated.athlete.firstName, updated.athlete.lastName]
-          .filter(Boolean)
-          .join(" ") || "Athlete";
+        const athleteName =
+          [updated.athlete.firstName, updated.athlete.lastName].filter(Boolean).join(" ") ||
+          "Athlete";
         const totalThrows = updated.throwLogs.length;
         const bestMark = updated.throwLogs.reduce(
           (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
-          0,
+          0
         );
         const sessionRpe = rpe as number | undefined;
 
@@ -192,24 +236,26 @@ export async function PUT(
       // session completion itself.
       void emitSessionComplete(updated.athleteId, {
         throwCount: updated.throwLogs.length,
-        bestDistance: updated.throwLogs.reduce(
-          (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
-          0
-        ) || null,
+        bestDistance:
+          updated.throwLogs.reduce(
+            (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
+            0
+          ) || null,
         sessionId: updated.id,
       }).catch((err) => logger.error("Team activity session emit failed", { error: err }));
     }
 
     // ── Update self-program ProgramSession if this was auto-created ───
-    if (action === "complete" || action === "partial") {
+    if (effectiveAction === "complete" || effectiveAction === "partial") {
       try {
         const tags = updated.session.tags ? JSON.parse(updated.session.tags) : [];
         const selfProgramTag = (tags as string[]).find((t: string) => t.startsWith("selfProgram:"));
         if (selfProgramTag) {
           const programSessionId = selfProgramTag.replace("selfProgram:", "");
           const bestMark = updated.throwLogs.reduce(
-            (max: number, tl: { distance: number | null }) => (tl.distance && tl.distance > max ? tl.distance : max),
-            0,
+            (max: number, tl: { distance: number | null }) =>
+              tl.distance && tl.distance > max ? tl.distance : max,
+            0
           );
           await prisma.programSession.update({
             where: { id: programSessionId },
@@ -230,12 +276,12 @@ export async function PUT(
     }
 
     // Fire WORKOUT_SKIPPED notification to coach
-    if (action === "skip") {
+    if (effectiveAction === "skip") {
       const coachId = updated.athlete?.coachId ?? updated.session.coach?.id;
       if (coachId) {
-        const athleteName = [updated.athlete?.firstName, updated.athlete?.lastName]
-          .filter(Boolean)
-          .join(" ") || "Athlete";
+        const athleteName =
+          [updated.athlete?.firstName, updated.athlete?.lastName].filter(Boolean).join(" ") ||
+          "Athlete";
         void createNotification({
           type: "WORKOUT_SKIPPED",
           coachId,
@@ -254,16 +300,16 @@ export async function PUT(
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
-    logger.error("PUT /api/throws/assignments/[id] error", { context: "throws/assignments", error: error });
+    logger.error("PUT /api/throws/assignments/[id] error", {
+      context: "throws/assignments",
+      error: error,
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
 // GET /api/throws/assignments/[id] — get a single assignment with full details
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -290,13 +336,22 @@ export async function GET(
     }
 
     // Verify the caller has access to this assignment's athlete
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", assignment.athlete.id))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        assignment.athlete.id
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json({ success: true, data: assignment });
   } catch (error) {
-    logger.error("GET /api/throws/assignments/[id] error", { context: "throws/assignments", error: error });
+    logger.error("GET /api/throws/assignments/[id] error", {
+      context: "throws/assignments",
+      error: error,
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

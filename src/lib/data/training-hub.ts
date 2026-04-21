@@ -6,11 +6,7 @@
 
 import prisma from "@/lib/prisma";
 import { getAthleteTimezone, getLocalDate } from "@/lib/dates";
-import {
-  fetchTodayWorkoutData,
-  fetchReadinessData,
-  type TodaySession,
-} from "@/lib/data/dashboard";
+import { fetchTodayWorkoutData, fetchReadinessData, type TodaySession } from "@/lib/data/dashboard";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -51,6 +47,18 @@ export type OnboardingItem = {
   completed: boolean;
 };
 
+export type StuckSession = {
+  /** Discriminator for which end-endpoint the client should hit. */
+  kind: "assignment" | "training-session" | "program-session";
+  id: string;
+  name: string;
+  date: string; // YYYY-MM-DD when the session was originally for
+  sessionType: "throws" | "lift" | "mixed";
+  href: string;
+  /** Only set when kind === "program-session" — needed to build the End URL. */
+  selfProgramConfigId?: string;
+};
+
 export type TrainingHubData = {
   state: "active" | "between" | "cold-start";
   todaySessions: TodaySession[];
@@ -63,6 +71,9 @@ export type TrainingHubData = {
   coachAvatarUrl: string | null;
   readinessCheckedInToday: boolean;
   pendingQuestionnaires: number;
+  /** IN_PROGRESS rows that need an End action. Surfaces the "4 active with no
+   *  way to finish" pattern from tester feedback 2026-04-10. */
+  stuckSessions: StuckSession[];
   recentCompletions: Array<{
     id: string;
     date: string;
@@ -98,9 +109,7 @@ const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /* ─── Main Fetcher ────────────────────────────────────────────────────────── */
 
-export async function fetchTrainingHubData(
-  athleteId: string
-): Promise<TrainingHubData> {
+export async function fetchTrainingHubData(athleteId: string): Promise<TrainingHubData> {
   const tz = await getAthleteTimezone(athleteId);
   const today = todayYMD(tz);
   const monday = getMondayOf(today);
@@ -297,7 +306,8 @@ export async function fetchTrainingHubData(
 
     const hasThrows = !!ps.throwsPrescription;
     const hasLifts = !!ps.strengthPrescription;
-    const sType: "throws" | "lift" | "mixed" = hasThrows && hasLifts ? "mixed" : hasLifts ? "lift" : "throws";
+    const sType: "throws" | "lift" | "mixed" =
+      hasThrows && hasLifts ? "mixed" : hasLifts ? "lift" : "throws";
     const selfConfigId = ps.program.selfProgramConfig?.id;
 
     allResolved.push({
@@ -316,7 +326,8 @@ export async function fetchTrainingHubData(
   }
 
   for (const ta of throwsAssignments) {
-    const sType = ta.session.sessionType?.toLowerCase() as "throws" | "lift" | "mixed" ?? "throws";
+    const sType =
+      (ta.session.sessionType?.toLowerCase() as "throws" | "lift" | "mixed") ?? "throws";
     allResolved.push({
       id: ta.id,
       date: ta.assignedDate,
@@ -373,14 +384,17 @@ export async function fetchTrainingHubData(
 
   // ── Build week strip ──────────────────────────────────────────────────
   const weekDays: WeekDay[] = weekDates.map((date, i) => {
-    const sessionsOnDay = allResolved.filter((s) => s.date === date && s.status !== "COMPLETED" && s.status !== "SKIPPED");
+    const sessionsOnDay = allResolved.filter(
+      (s) => s.date === date && s.status !== "COMPLETED" && s.status !== "SKIPPED"
+    );
     const completedOnDay = allResolved.filter((s) => s.date === date && s.status === "COMPLETED");
     const allOnDay = [...sessionsOnDay, ...completedOnDay];
 
     let sessionType: WeekDay["sessionType"] = "rest";
     if (allOnDay.length > 0) {
       const types = allOnDay.map((s) => s.sessionType);
-      if (types.includes("mixed") || (types.includes("throws") && types.includes("lift"))) sessionType = "mixed";
+      if (types.includes("mixed") || (types.includes("throws") && types.includes("lift")))
+        sessionType = "mixed";
       else if (types.includes("lift")) sessionType = "lift";
       else if (types.includes("throws")) sessionType = "throws";
     }
@@ -397,19 +411,23 @@ export async function fetchTrainingHubData(
 
   // ── Find next upcoming session ────────────────────────────────────────
   const futureUpcoming = allResolved
-    .filter((s) => s.date > today && ["SCHEDULED", "PLANNED", "ASSIGNED", "NOTIFIED"].includes(s.status))
+    .filter(
+      (s) => s.date > today && ["SCHEDULED", "PLANNED", "ASSIGNED", "NOTIFIED"].includes(s.status)
+    )
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const nextSession: NextSessionInfo | null = futureUpcoming.length > 0
-    ? {
-        date: futureUpcoming[0].date,
-        name: futureUpcoming[0].name,
-        daysUntil: Math.ceil(
-          (new Date(futureUpcoming[0].date + "T12:00:00").getTime() - new Date(today + "T12:00:00").getTime()) /
-            (1000 * 60 * 60 * 24)
-        ),
-      }
-    : null;
+  const nextSession: NextSessionInfo | null =
+    futureUpcoming.length > 0
+      ? {
+          date: futureUpcoming[0].date,
+          name: futureUpcoming[0].name,
+          daysUntil: Math.ceil(
+            (new Date(futureUpcoming[0].date + "T12:00:00").getTime() -
+              new Date(today + "T12:00:00").getTime()) /
+              (1000 * 60 * 60 * 24)
+          ),
+        }
+      : null;
 
   // ── Week recap (completed this week) ──────────────────────────────────
   const completedThisWeek = allResolved.filter(
@@ -431,8 +449,12 @@ export async function fetchTrainingHubData(
                 completedThisWeek.filter((s) => s.rpe != null).length
               : null,
           prsHit: recentCompleted.filter(
-            (s) => s.bestMark != null && s.bestMark > 0 && s.completedAt &&
-              toYMD(s.completedAt) >= weekDates[0] && toYMD(s.completedAt) <= weekDates[6]
+            (s) =>
+              s.bestMark != null &&
+              s.bestMark > 0 &&
+              s.completedAt &&
+              toYMD(s.completedAt) >= weekDates[0] &&
+              toYMD(s.completedAt) <= weekDates[6]
           ).length,
         }
       : null;
@@ -451,6 +473,68 @@ export async function fetchTrainingHubData(
       status: s.status,
       href: s.href,
     }));
+
+  // ── Stuck sessions (IN_PROGRESS, any date) ────────────────────────────
+  // Pull from the three source queries directly so we preserve the
+  // discriminator the client needs to hit the correct End endpoint.
+  const stuckSessions: StuckSession[] = [];
+
+  for (const ta of throwsAssignments) {
+    if (ta.status !== "IN_PROGRESS") continue;
+    const sType = (ta.session.sessionType?.toLowerCase() ??
+      "throws") as StuckSession["sessionType"];
+    stuckSessions.push({
+      kind: "assignment",
+      id: ta.id,
+      name: ta.session.name,
+      date: ta.assignedDate,
+      sessionType: sType === "lift" || sType === "mixed" ? sType : "throws",
+      href: `/athlete/sessions/assignment/${ta.id}`,
+    });
+  }
+
+  for (const ls of legacySessions) {
+    if (ls.status !== "IN_PROGRESS") continue;
+    stuckSessions.push({
+      kind: "training-session",
+      id: ls.id,
+      name: ls.plan?.name ?? "Training Session",
+      date: toYMD(ls.scheduledDate),
+      sessionType: "mixed",
+      href: `/athlete/sessions/${ls.id}`,
+    });
+  }
+
+  for (const ps of allProgramSessions) {
+    if (ps.status !== "IN_PROGRESS") continue;
+    const selfConfigId = ps.program.selfProgramConfig?.id;
+    if (!selfConfigId) continue; // coach-programmed ProgramSessions aren't athlete-endable
+    // Reuse the resolved-date path from above.
+    let dateStr = ps.scheduledDate;
+    if (!dateStr && ps.program.startDate) {
+      const start = new Date(ps.program.startDate);
+      start.setDate(start.getDate() + (ps.weekNumber - 1) * 7 + (ps.dayOfWeek - 1));
+      dateStr = toYMD(start);
+    }
+    if (!dateStr) continue;
+    const hasThrows = !!ps.throwsPrescription;
+    const hasLifts = !!ps.strengthPrescription;
+    const sType: "throws" | "lift" | "mixed" =
+      hasThrows && hasLifts ? "mixed" : hasLifts ? "lift" : "throws";
+    stuckSessions.push({
+      kind: "program-session",
+      id: ps.id,
+      name: ps.focusLabel || `${ps.program.event} Session`,
+      date: dateStr,
+      sessionType: sType,
+      href: `/athlete/self-program/${selfConfigId}/session/${ps.id}`,
+      selfProgramConfigId: selfConfigId,
+    });
+  }
+
+  // Sort: oldest first — the 3-day-stale session should be the first thing
+  // you see, not the one from earlier this morning.
+  stuckSessions.sort((a, b) => a.date.localeCompare(b.date));
 
   // ── Determine state ───────────────────────────────────────────────────
   const hasUpcomingWithin7Days =
@@ -482,19 +566,42 @@ export async function fetchTrainingHubData(
   const onboardingItems: OnboardingItem[] | null =
     state === "cold-start"
       ? [
-          { key: "readiness", label: "Complete your Readiness Check-in", href: "/athlete/wellness", completed: readinessExists },
-          { key: "typing", label: "Take the Bondarchuk Typing Quiz", href: "/athlete/throws/quiz", completed: typingExists },
+          {
+            key: "readiness",
+            label: "Complete your Readiness Check-in",
+            href: "/athlete/wellness",
+            completed: readinessExists,
+          },
+          {
+            key: "typing",
+            label: "Take the Bondarchuk Typing Quiz",
+            href: "/athlete/throws/quiz",
+            completed: typingExists,
+          },
           { key: "goals", label: "Set your Goals", href: "/athlete/goals", completed: goalsExist },
-          { key: "questionnaires", label: "Fill out Questionnaires", href: "/athlete/questionnaires", completed: pendingQuestionnaires === 0 && goalsExist },
-          { key: "log-session", label: "Log a Session", href: "/athlete/log-session", completed: false },
-          { key: "drill-videos", label: "Browse Drill Videos", href: "/athlete/drill-videos", completed: false },
+          {
+            key: "questionnaires",
+            label: "Fill out Questionnaires",
+            href: "/athlete/questionnaires",
+            completed: pendingQuestionnaires === 0 && goalsExist,
+          },
+          {
+            key: "log-session",
+            label: "Log a Session",
+            href: "/athlete/log-session",
+            completed: false,
+          },
+          {
+            key: "drill-videos",
+            label: "Browse Drill Videos",
+            href: "/athlete/drill-videos",
+            completed: false,
+          },
         ]
       : null;
 
   // ── Cooldown check ────────────────────────────────────────────────────
-  const lastRequestDate = lastRequest
-    ? lastRequest.createdAt.toISOString()
-    : null;
+  const lastRequestDate = lastRequest ? lastRequest.createdAt.toISOString() : null;
 
   return {
     state,
@@ -504,12 +611,11 @@ export async function fetchTrainingHubData(
     nextSession,
     lastProgrammingRequest: lastRequestDate,
     onboardingItems,
-    coachName: athlete
-      ? `${athlete.coach.firstName} ${athlete.coach.lastName}`
-      : "Your Coach",
+    coachName: athlete ? `${athlete.coach.firstName} ${athlete.coach.lastName}` : "Your Coach",
     coachAvatarUrl: athlete?.coach.avatarUrl ?? null,
     readinessCheckedInToday: readiness.checkedIn,
     pendingQuestionnaires,
+    stuckSessions,
     recentCompletions,
   };
 }

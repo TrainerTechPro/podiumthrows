@@ -17,6 +17,8 @@ import { WeekStrip } from "./_week-strip";
 import { RequestProgramming } from "./_request-programming";
 import { WeekRecapCard } from "./_week-recap";
 import { OnboardingChecklist } from "./_onboarding-checklist";
+import { StuckSessions } from "./_stuck-sessions";
+import { FreestyleCTA } from "./_freestyle-cta";
 import { cn } from "@/lib/utils";
 import type { TrainingHubData } from "@/lib/data/training-hub";
 
@@ -164,6 +166,10 @@ export function TrainingHub({ data }: { data: TrainingHubData }) {
   if (data.state === "active") {
     return (
       <div className="space-y-5">
+        {/* Stuck (IN_PROGRESS) sessions — shown first so an abandoned row
+            from three days ago stops being an invisible source of anxiety. */}
+        <StuckSessions sessions={data.stuckSessions} />
+
         {/* Today's sessions hero */}
         {data.todaySessions.length > 0 ? (
           <TodayWorkoutWidget data={data.todaySessions} />
@@ -174,6 +180,9 @@ export function TrainingHub({ data }: { data: TrainingHubData }) {
             daysUntil={data.nextSession.daysUntil}
           />
         ) : null}
+
+        {/* Freestyle peer action — always present, sits below today's hero. */}
+        <FreestyleCTA variant="compact" />
 
         {/* Week strip */}
         <WeekStrip days={data.weekDays} />
@@ -193,6 +202,8 @@ export function TrainingHub({ data }: { data: TrainingHubData }) {
   if (data.state === "between") {
     return (
       <div className="space-y-5">
+        <StuckSessions sessions={data.stuckSessions} />
+
         {/* Week recap */}
         {data.weekRecap && <WeekRecapCard recap={data.weekRecap} />}
 
@@ -210,6 +221,10 @@ export function TrainingHub({ data }: { data: TrainingHubData }) {
             variant="between"
           />
         )}
+
+        {/* Freestyle hero — no programmed session today, so surface it
+            prominently rather than as a small chip. */}
+        <FreestyleCTA variant="hero" />
 
         {/* Quick actions */}
         <QuickActions
