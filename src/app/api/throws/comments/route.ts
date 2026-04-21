@@ -4,15 +4,7 @@ import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { sendCommentNotification } from "@/lib/notifications/comment";
 import { rateLimit } from "@/lib/rate-limit";
-import {
-  TARGET_FIELDS,
-  type TargetField,
-  isTargetField,
-  verifyCommentAccess,
-} from "@/lib/comments/access";
-
-export { TARGET_FIELDS };
-export type { TargetField };
+import { type TargetField, isTargetField, verifyCommentAccess } from "@/lib/comments/access";
 
 /* ─── GET — fetch comments for a target ──────────────────────────────────── */
 
