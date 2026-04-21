@@ -49,9 +49,6 @@ export default async function ThrowsHubPage() {
   );
   const dataMap = Object.fromEntries(entries as [WidgetId, unknown][]);
 
-  const hour = new Date().getHours();
-  const isPracticeHours = hour >= 14 && hour < 20;
-
   return (
     <div className="max-w-3xl mx-auto pb-12 space-y-5">
       <ThrowsChipNav />
@@ -67,15 +64,9 @@ export default async function ThrowsHubPage() {
       {/* Quick Log CTA — mirrors the dashboard's hero button */}
       <Link
         href="/athlete/quick-log"
-        className="group relative block rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 p-6 shadow-lg transition-transform active:scale-[0.98]"
+        className="group block rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 p-6 shadow-lg transition-transform active:scale-[0.98]"
         aria-label="Quick Log — tap to log a throw in seconds"
       >
-        {isPracticeHours && (
-          <span
-            className="absolute inset-0 rounded-2xl ring-2 ring-primary-400 animate-pulse pointer-events-none"
-            aria-hidden="true"
-          />
-        )}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
             <Zap size={28} strokeWidth={2} className="text-white" aria-hidden="true" />
@@ -91,13 +82,6 @@ export default async function ThrowsHubPage() {
             aria-hidden="true"
           />
         </div>
-        {isPracticeHours && (
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-white text-xs font-semibold">
-              🎯 Practice time
-            </span>
-          </div>
-        )}
       </Link>
 
       {/* Widget stack */}
