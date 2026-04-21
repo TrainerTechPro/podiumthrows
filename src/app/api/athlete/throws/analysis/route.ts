@@ -70,67 +70,87 @@ export async function GET() {
 
     // ── Fetch all data sources in parallel ────────────────────────────────
 
-    const [practiceAttempts, throwLogs, throwsPRs, throwsBlockLogs] = await Promise.all([
-      // PracticeAttempt — coach-led practice throws
-      prisma.practiceAttempt.findMany({
-        where: { athleteId: athlete.id },
-        select: {
-          event: true,
-          implement: true,
-          distance: true,
-          isPR: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: "asc" },
-      }),
+    const [practiceAttempts, throwLogs, throwsPRs, throwsBlockLogs, athleteDrillLogs] =
+      await Promise.all([
+        // PracticeAttempt — coach-led practice throws
+        prisma.practiceAttempt.findMany({
+          where: { athleteId: athlete.id },
+          select: {
+            event: true,
+            implement: true,
+            distance: true,
+            isPR: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "asc" },
+        }),
 
-      // ThrowLog — standalone throws (has isCompetition flag)
-      prisma.throwLog.findMany({
-        where: { athleteId: athlete.id },
-        select: {
-          event: true,
-          implementWeight: true,
-          distance: true,
-          date: true,
-          isPersonalBest: true,
-          isCompetition: true,
-        },
-        orderBy: { date: "asc" },
-      }),
+        // ThrowLog — standalone throws (has isCompetition flag)
+        prisma.throwLog.findMany({
+          where: { athleteId: athlete.id },
+          select: {
+            event: true,
+            implementWeight: true,
+            distance: true,
+            date: true,
+            isPersonalBest: true,
+            isCompetition: true,
+          },
+          orderBy: { date: "asc" },
+        }),
 
-      // ThrowsPR — personal records
-      prisma.throwsPR.findMany({
-        where: { athleteId: athlete.id },
-        select: {
-          event: true,
-          implement: true,
-          distance: true,
-          achievedAt: true,
-          source: true,
-        },
-        orderBy: { achievedAt: "asc" },
-      }),
+        // ThrowsPR — personal records
+        prisma.throwsPR.findMany({
+          where: { athleteId: athlete.id },
+          select: {
+            event: true,
+            implement: true,
+            distance: true,
+            achievedAt: true,
+            source: true,
+          },
+          orderBy: { achievedAt: "asc" },
+        }),
 
-      // ThrowsBlockLog — structured session throws
-      prisma.throwsBlockLog.findMany({
-        where: {
-          assignment: { athleteId: athlete.id },
-        },
-        select: {
-          distance: true,
-          implement: true,
-          createdAt: true,
-          assignment: {
-            select: {
-              session: {
-                select: { event: true },
+        // ThrowsBlockLog — structured session throws
+        prisma.throwsBlockLog.findMany({
+          where: {
+            assignment: { athleteId: athlete.id },
+          },
+          select: {
+            distance: true,
+            implement: true,
+            createdAt: true,
+            assignment: {
+              select: {
+                session: {
+                  select: { event: true },
+                },
               },
             },
           },
-        },
-        orderBy: { createdAt: "asc" },
-      }),
-    ]);
+          orderBy: { createdAt: "asc" },
+        }),
+
+        // AthleteDrillLog — self-logged session drills via /athlete/log-session.
+        // PRs from these rows land in ThrowsPR (via recordThrow at POST time) but
+        // the drill rows themselves were previously missing from this aggregate,
+        // which is why the Trends chart clipped against the latest practice PR.
+        // bestMark is canonical meters; implementWeight is canonical kg.
+        prisma.athleteDrillLog.findMany({
+          where: {
+            session: { athleteId: athlete.id },
+            bestMark: { not: null, gt: 0 },
+            implementWeight: { not: null, gt: 0 },
+          },
+          select: {
+            bestMark: true,
+            implementWeight: true,
+            session: { select: { event: true, date: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        }),
+      ]);
 
     // ── Build distance trends ──────────────────────────────────────────────
 
@@ -180,6 +200,22 @@ export async function GET() {
           implementLabel: formatImplementKg(implementKg),
         });
       }
+    }
+
+    // From AthleteDrillLog — self-logged sessions. The `where` already filters
+    // nulls and zeros, but TS doesn't narrow Prisma conditional nullability,
+    // so guard again here for the type checker.
+    for (const dl of athleteDrillLogs) {
+      if (dl.bestMark == null || dl.bestMark <= 0) continue;
+      if (dl.implementWeight == null || dl.implementWeight <= 0) continue;
+      distanceTrends.push({
+        date: dl.session.date, // already "YYYY-MM-DD"
+        event: dl.session.event,
+        distance: dl.bestMark,
+        source: "session",
+        implementKg: dl.implementWeight,
+        implementLabel: formatImplementKg(dl.implementWeight),
+      });
     }
 
     // Sort by date
@@ -282,6 +318,15 @@ export async function GET() {
       if (bl.distance != null && bl.distance > 0) {
         addToImplMap(bl.assignment.session.event, bl.implement, bl.distance);
       }
+    }
+
+    // Include self-logged drills in the implement distribution too so the
+    // bottom "Throw count and distances by implement weight" section isn't
+    // inconsistent with the chart above.
+    for (const dl of athleteDrillLogs) {
+      if (dl.bestMark == null || dl.bestMark <= 0) continue;
+      if (dl.implementWeight == null || dl.implementWeight <= 0) continue;
+      addToImplMap(dl.session.event, `${dl.implementWeight}kg`, dl.bestMark);
     }
 
     const implementDistribution = Array.from(implMap.entries()).map(([key, bucket]) => {
