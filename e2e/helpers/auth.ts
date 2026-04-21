@@ -1,13 +1,16 @@
 import { type Page, type BrowserContext } from "@playwright/test";
 
+export const ATHLETE_1 = { email: "athlete1@example.com", password: "athlete123" } as const;
+export const COACH = { email: "coach@example.com", password: "coach123" } as const;
+
 /**
  * Log in via the UI and return the authenticated page.
  * Uses the login form so the CSRF cookie flow is exercised.
  */
 export async function login(
   page: Page,
-  email = "coach@example.com",
-  password = "coach123"
+  email: string = COACH.email,
+  password: string = COACH.password
 ): Promise<Page> {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
@@ -18,6 +21,10 @@ export async function login(
     timeout: 15000,
   });
   return page;
+}
+
+export async function loginAsAthlete(page: Page): Promise<Page> {
+  return login(page, ATHLETE_1.email, ATHLETE_1.password);
 }
 
 /**
