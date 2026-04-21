@@ -95,18 +95,131 @@ export const liftThrowAnalyzer: Analyzer<LiftThrowEvidence> = {
       }
     }
 
-    const allThrows = await prisma.throwLog.findMany({
-      where: { athleteId, distance: { not: null } },
-      select: {
-        event: true,
-        distance: true,
-        implementWeight: true,
-        date: true,
-        isFoul: true,
-        isPass: true,
-      },
-      orderBy: { date: "asc" },
-    });
+    // Unify throws from all four sources so self-logged sessions and
+    // coach-assigned/practice throws all contribute to lift↔throw
+    // correlation. Previously only ThrowLog was read, which meant any
+    // athlete whose throws lived in AthleteDrillLog / PracticeAttempt /
+    // ThrowsBlockLog got no correlation signal at all.
+    const [throwLogs, drillLogs, practiceAttempts, blockLogs] = await Promise.all([
+      prisma.throwLog.findMany({
+        where: { athleteId, distance: { not: null } },
+        select: {
+          event: true,
+          distance: true,
+          implementWeight: true,
+          date: true,
+          isFoul: true,
+          isPass: true,
+        },
+      }),
+      prisma.athleteDrillLog.findMany({
+        where: {
+          session: { athleteId },
+          bestMark: { not: null, gt: 0 },
+          implementWeight: { not: null, gt: 0 },
+        },
+        select: {
+          bestMark: true,
+          implementWeight: true,
+          session: { select: { event: true, date: true } },
+        },
+      }),
+      prisma.practiceAttempt.findMany({
+        where: { athleteId, distance: { not: null, gt: 0 } },
+        select: {
+          event: true,
+          distance: true,
+          implement: true,
+          createdAt: true,
+        },
+      }),
+      prisma.throwsBlockLog.findMany({
+        where: {
+          assignment: { athleteId },
+          distance: { not: null, gt: 0 },
+        },
+        select: {
+          distance: true,
+          implement: true,
+          createdAt: true,
+          assignment: { select: { session: { select: { event: true } } } },
+        },
+      }),
+    ]);
+
+    // Local implement-string parser mirrors the one in /api/athlete/throws/analysis.
+    // Moved inline to avoid a larger refactor; share via a util if a 3rd caller needs it.
+    const parseImplementKg = (s: string | null | undefined): number | null => {
+      if (!s) return null;
+      const m = s
+        .trim()
+        .toLowerCase()
+        .match(/^([0-9]+(?:\.[0-9]+)?)\s*(kg|g|lb|lbs)?$/);
+      if (!m) {
+        const n = parseFloat(s.replace(/[^0-9.]/g, ""));
+        return Number.isFinite(n) && n > 0 ? n : null;
+      }
+      const n = parseFloat(m[1]);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      const unit = m[2] ?? "kg";
+      if (unit === "g") return n / 1000;
+      if (unit === "lb" || unit === "lbs") return lbsToKg(n);
+      return n;
+    };
+
+    // Normalize each source into a single shape so the window-bucketing loop
+    // stays declarative.
+    type NormThrow = {
+      event: string;
+      distance: number;
+      implementKg: number;
+      date: Date;
+    };
+    const allThrows: NormThrow[] = [];
+
+    for (const t of throwLogs) {
+      if (t.isFoul || t.isPass || t.distance == null) continue;
+      allThrows.push({
+        event: t.event,
+        distance: t.distance,
+        implementKg: t.implementWeight,
+        date: t.date,
+      });
+    }
+    for (const d of drillLogs) {
+      if (d.bestMark == null || d.bestMark <= 0) continue;
+      if (d.implementWeight == null || d.implementWeight <= 0) continue;
+      allThrows.push({
+        event: d.session.event,
+        distance: d.bestMark,
+        implementKg: d.implementWeight,
+        // AthleteThrowsSession.date is "YYYY-MM-DD" — anchor at noon to avoid
+        // midnight TZ edge cases when computing the window index.
+        date: new Date(`${d.session.date}T12:00:00`),
+      });
+    }
+    for (const p of practiceAttempts) {
+      if (p.distance == null || p.distance <= 0) continue;
+      const kg = parseImplementKg(p.implement);
+      if (kg == null) continue;
+      allThrows.push({
+        event: p.event,
+        distance: p.distance,
+        implementKg: kg,
+        date: p.createdAt,
+      });
+    }
+    for (const b of blockLogs) {
+      if (b.distance == null || b.distance <= 0) continue;
+      const kg = parseImplementKg(b.implement);
+      if (kg == null) continue;
+      allThrows.push({
+        event: b.assignment.session.event,
+        distance: b.distance,
+        implementKg: kg,
+        date: b.createdAt,
+      });
+    }
 
     const throwWindows: Partial<Record<InsightEvent, Map<number, number>>> = {};
     for (const event of events) {
@@ -114,8 +227,7 @@ export const liftThrowAnalyzer: Analyzer<LiftThrowEvidence> = {
       const compWeight = COMP_WEIGHT[event]?.[gender] ?? 0;
       for (const t of allThrows) {
         if (t.event !== event) continue;
-        if (t.isFoul || t.isPass || t.distance == null) continue;
-        if (Math.abs(t.implementWeight - compWeight) >= WEIGHT_TOLERANCE_KG) continue;
+        if (Math.abs(t.implementKg - compWeight) >= WEIGHT_TOLERANCE_KG) continue;
         const idx = windowIndex(t.date, earliestLiftMs);
         const existing = throwWindows[event]!.get(idx);
         if (existing == null || t.distance > existing) {

@@ -2,15 +2,18 @@
 import { useState, useCallback, useTransition } from "react";
 import { useToast } from "@/components/toast";
 import { InsightList } from "@/components/insights/InsightList";
+import { InsightProgressCard } from "@/components/insights/InsightProgressCard";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AthleteInsightWire } from "@/lib/insights/types";
+import type { InsightProgress } from "@/lib/insights/progress";
 
 type Props = {
   athleteId: string;
   initialInsights: AthleteInsightWire[];
+  progress: InsightProgress;
 };
 
-export function AthleteInsightsClient({ athleteId, initialInsights }: Props) {
+export function AthleteInsightsClient({ athleteId, initialInsights, progress }: Props) {
   const { toast } = useToast();
   const [insights, setInsights] = useState(initialInsights);
   const [showDismissed, setShowDismissed] = useState(false);
@@ -137,7 +140,16 @@ export function AthleteInsightsClient({ athleteId, initialInsights }: Props) {
           </div>
         </header>
 
-        <InsightList insights={insights} role="ATHLETE" onMarkRead={markRead} onDismiss={dismiss} />
+        {insights.length === 0 && !showDismissed ? (
+          <InsightProgressCard progress={progress} />
+        ) : (
+          <InsightList
+            insights={insights}
+            role="ATHLETE"
+            onMarkRead={markRead}
+            onDismiss={dismiss}
+          />
+        )}
       </div>
     </div>
   );

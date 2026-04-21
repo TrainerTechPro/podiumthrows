@@ -3,12 +3,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockAthleteFindUnique = vi.fn();
 const mockLiftingLogFindMany = vi.fn();
 const mockThrowLogFindMany = vi.fn();
+const mockAthleteDrillLogFindMany = vi.fn();
+const mockPracticeAttemptFindMany = vi.fn();
+const mockThrowsBlockLogFindMany = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   default: {
     athleteProfile: { findUnique: (...a: unknown[]) => mockAthleteFindUnique(...a) },
     liftingExerciseLog: { findMany: (...a: unknown[]) => mockLiftingLogFindMany(...a) },
     throwLog: { findMany: (...a: unknown[]) => mockThrowLogFindMany(...a) },
+    athleteDrillLog: { findMany: (...a: unknown[]) => mockAthleteDrillLogFindMany(...a) },
+    practiceAttempt: { findMany: (...a: unknown[]) => mockPracticeAttemptFindMany(...a) },
+    throwsBlockLog: { findMany: (...a: unknown[]) => mockThrowsBlockLogFindMany(...a) },
   },
 }));
 
@@ -22,7 +28,16 @@ const WINDOW_START_DATES = Array.from({ length: 8 }, (_, i) => {
 });
 
 describe("liftThrowAnalyzer", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default: new throw sources are empty. Individual tests override
+    // mockThrowLogFindMany; the other three sources contribute zero
+    // rows unless a test sets them. This keeps existing test cases
+    // exercising the legacy ThrowLog path untouched.
+    mockAthleteDrillLogFindMany.mockResolvedValue([]);
+    mockPracticeAttemptFindMany.mockResolvedValue([]);
+    mockThrowsBlockLogFindMany.mockResolvedValue([]);
+  });
 
   it("returns [] with no lifts logged", async () => {
     mockAthleteFindUnique.mockResolvedValue({ gender: "MALE", events: ["HAMMER"] });
