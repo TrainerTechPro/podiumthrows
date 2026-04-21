@@ -7,6 +7,7 @@
 import prisma from "@/lib/prisma";
 import { getAthleteTimezone, getLocalDate } from "@/lib/dates";
 import { fetchTodayWorkoutData, fetchReadinessData, type TodaySession } from "@/lib/data/dashboard";
+import { extractSelfProgramSessionId } from "@/lib/data/athlete-activity";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -182,7 +183,10 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
       },
     }),
 
-    // ThrowsAssignments (for week + upcoming)
+    // ThrowsAssignments (for week + upcoming). session.tags is required for
+    // the self-program dedupe — an assignment tagged `selfProgram:{psId}` is
+    // the live copy of a ProgramSession blueprint, so the blueprint must be
+    // filtered out of the feed to prevent double-counting.
     prisma.throwsAssignment.findMany({
       where: {
         athleteId,
@@ -194,7 +198,7 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
         status: true,
         rpe: true,
         completedAt: true,
-        session: { select: { name: true, sessionType: true } },
+        session: { select: { name: true, sessionType: true, tags: true } },
       },
     }),
 
@@ -295,7 +299,14 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
 
   const allResolved: ResolvedSession[] = [];
 
+  const shadowedProgramIds = new Set<string>();
+  for (const ta of throwsAssignments) {
+    const spid = extractSelfProgramSessionId(ta.session.tags);
+    if (spid) shadowedProgramIds.add(spid);
+  }
+
   for (const ps of allProgramSessions) {
+    if (shadowedProgramIds.has(ps.id)) continue;
     let dateStr = ps.scheduledDate;
     if (!dateStr && ps.program.startDate) {
       const start = new Date(ps.program.startDate);
@@ -507,6 +518,7 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
 
   for (const ps of allProgramSessions) {
     if (ps.status !== "IN_PROGRESS") continue;
+    if (shadowedProgramIds.has(ps.id)) continue;
     const selfConfigId = ps.program.selfProgramConfig?.id;
     if (!selfConfigId) continue; // coach-programmed ProgramSessions aren't athlete-endable
     // Reuse the resolved-date path from above.
