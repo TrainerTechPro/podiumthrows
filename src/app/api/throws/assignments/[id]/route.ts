@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
-import { createNotification } from "@/lib/notifications";
-import { emitSessionComplete } from "@/lib/team-activity";
 import { parseBody, ThrowsAssignmentUpdateSchema } from "@/lib/api-schemas";
+import { onSessionComplete, type TerminalStatus } from "@/lib/sessions/on-session-complete";
+
+function resolveTerminalStatus(
+  action: "start" | "complete" | "partial" | "skip" | "update_blocks"
+): TerminalStatus | null {
+  if (action === "complete") return "completed";
+  if (action === "partial") return "partial";
+  if (action === "skip") return "skipped";
+  return null;
+}
 
 // PUT /api/throws/assignments/[id] — update assignment status (start, complete, skip)
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -159,144 +166,44 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         athlete: {
           select: {
-            id: true,
             firstName: true,
             lastName: true,
             coachId: true,
-            currentStreak: true,
-            longestStreak: true,
           },
         },
         throwLogs: { orderBy: { throwNumber: "asc" } },
       },
     });
 
-    // ── Post-completion: streak + notification ─────────────────────
-    if (effectiveAction === "complete" || effectiveAction === "partial") {
-      // Update athlete streak
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterday.setHours(0, 0, 0, 0);
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+    const terminalStatus = resolveTerminalStatus(effectiveAction);
+    if (terminalStatus) {
+      const bestMark = updated.throwLogs.reduce(
+        (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
+        0
+      );
+      const athleteName =
+        [updated.athlete.firstName, updated.athlete.lastName].filter(Boolean).join(" ") ||
+        "Athlete";
 
-      const yesterdayAssignment = await prisma.throwsAssignment.findFirst({
-        where: {
-          athleteId: updated.athleteId,
-          status: "COMPLETED",
-          completedAt: { gte: yesterday, lt: todayStart },
+      await onSessionComplete({
+        athleteId: updated.athleteId,
+        coachId: updated.athlete.coachId ?? updated.session.coach?.id ?? null,
+        source: "assigned-throws",
+        sourceId: updated.id,
+        terminalStatus,
+        completedAt: updated.completedAt ?? new Date(),
+        sessionTitle: updated.session.name,
+        athleteName,
+        sessionTags: updated.session.tags,
+        metrics: {
+          throwCount: updated.throwLogs.length,
+          bestMarkM: bestMark > 0 ? bestMark : null,
+          rpe: (rpe as number | undefined) ?? null,
+          selfFeeling: (selfFeeling as string | undefined) ?? null,
         },
-        select: { id: true },
+        skipReason: (skipReason as string | undefined) ?? null,
       });
-
-      const currentStreak = updated.athlete.currentStreak ?? 0;
-      const longestStreak = updated.athlete.longestStreak ?? 0;
-      const newStreak = yesterdayAssignment ? currentStreak + 1 : 1;
-
-      await prisma.athleteProfile.update({
-        where: { id: updated.athleteId },
-        data: {
-          currentStreak: newStreak,
-          longestStreak: Math.max(longestStreak, newStreak),
-        },
-      });
-
-      // Fire WORKOUT_COMPLETED notification to coach
-      const coachId = updated.athlete.coachId ?? updated.session.coach?.id;
-      if (coachId) {
-        const athleteName =
-          [updated.athlete.firstName, updated.athlete.lastName].filter(Boolean).join(" ") ||
-          "Athlete";
-        const totalThrows = updated.throwLogs.length;
-        const bestMark = updated.throwLogs.reduce(
-          (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
-          0
-        );
-        const sessionRpe = rpe as number | undefined;
-
-        void createNotification({
-          type: "WORKOUT_COMPLETED",
-          coachId,
-          athleteProfileId: updated.athleteId,
-          title: `${athleteName} completed ${updated.session.name}`,
-          body: `RPE: ${sessionRpe ?? "—"}/10 | Best: ${bestMark > 0 ? bestMark.toFixed(2) + "m" : "—"} | ${totalThrows} throws`,
-          metadata: {
-            assignmentId: updated.id,
-            bestMark,
-            rpe: sessionRpe,
-            selfFeeling,
-            totalThrows,
-            url: `/coach/athletes`,
-          },
-        }).catch((err) => logger.error("Workout completion notification failed", { error: err }));
-      }
-
-      // Emit team feed SESSION entry (fire-and-forget). PR events for individual
-      // throws were already emitted at log-throw time — this row covers the
-      // session completion itself.
-      void emitSessionComplete(updated.athleteId, {
-        throwCount: updated.throwLogs.length,
-        bestDistance:
-          updated.throwLogs.reduce(
-            (max, tl) => (tl.distance && tl.distance > max ? tl.distance : max),
-            0
-          ) || null,
-        sessionId: updated.id,
-      }).catch((err) => logger.error("Team activity session emit failed", { error: err }));
     }
-
-    // ── Update self-program ProgramSession if this was auto-created ───
-    if (effectiveAction === "complete" || effectiveAction === "partial") {
-      try {
-        const tags = updated.session.tags ? JSON.parse(updated.session.tags) : [];
-        const selfProgramTag = (tags as string[]).find((t: string) => t.startsWith("selfProgram:"));
-        if (selfProgramTag) {
-          const programSessionId = selfProgramTag.replace("selfProgram:", "");
-          const bestMark = updated.throwLogs.reduce(
-            (max: number, tl: { distance: number | null }) =>
-              tl.distance && tl.distance > max ? tl.distance : max,
-            0
-          );
-          await prisma.programSession.update({
-            where: { id: programSessionId },
-            data: {
-              status: "COMPLETED",
-              completedAt: new Date(),
-              actualThrows: updated.throwLogs.length,
-              bestMark: bestMark > 0 ? bestMark : undefined,
-              rpe: (rpe as number) ?? undefined,
-              selfFeeling: (selfFeeling as string) ?? undefined,
-            },
-          });
-        }
-      } catch (err) {
-        // Non-critical — don't fail the assignment completion
-        logger.error("Failed to update self-program session", { context: "api", error: err });
-      }
-    }
-
-    // Fire WORKOUT_SKIPPED notification to coach
-    if (effectiveAction === "skip") {
-      const coachId = updated.athlete?.coachId ?? updated.session.coach?.id;
-      if (coachId) {
-        const athleteName =
-          [updated.athlete?.firstName, updated.athlete?.lastName].filter(Boolean).join(" ") ||
-          "Athlete";
-        void createNotification({
-          type: "WORKOUT_SKIPPED",
-          coachId,
-          athleteProfileId: updated.athleteId,
-          title: `${athleteName} skipped ${updated.session.name}`,
-          body: skipReason ? `Reason: ${skipReason}` : "No reason provided",
-          metadata: { assignmentId: updated.id, skipReason },
-        }).catch((err) => logger.error("Workout skip notification failed", { error: err }));
-      }
-    }
-
-    // Invalidate cached data so other widgets update without a page refresh
-    revalidateTag(`athlete-${updated.athleteId}`);
-    const coachIdForTag = updated.athlete?.coachId ?? updated.session.coach?.id;
-    if (coachIdForTag) revalidateTag(`coach-${coachIdForTag}`);
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

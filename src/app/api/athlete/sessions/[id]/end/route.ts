@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody } from "@/lib/api-schemas";
+import { onSessionComplete } from "@/lib/sessions/on-session-complete";
 
 /* ─── PATCH — escape hatch for a stuck TrainingSession ────────────────────
-   "Complete" requires RPE and triggers the full post-session summary.
-   "End" is the no-ceremony version the athlete taps when they walked away
-   hours ago and just want the row off their active list. Branches on log
-   count: 0 logs → SKIPPED (nothing to record), 1+ logs → COMPLETED (they
-   did something). SessionStatus enum has 4 states total: SCHEDULED,
-   IN_PROGRESS, COMPLETED, SKIPPED — so "end with logs" pins to COMPLETED.
-   See tasks/session-management-v1.md §2.1 + §6.4.
+   Ends a session the athlete walked away from. Branches on log count: 0 logs
+   → SKIPPED, 1+ logs → COMPLETED (the DB enum has no PARTIAL value, so the
+   status field pins to COMPLETED; the unified completion handler still
+   receives terminalStatus="partial" so coach notifications, streak, and team
+   feed all reflect the honest "ended early" semantic).
+
+   Pre-unification, this endpoint was silent on streak + notifications + team
+   feed — only throws assignments fired those. See unified-session-layer.md
+   §DD-3 + §DD-5 and tasks/session-management-v1.md §2.1 + §6.4.
    ──────────────────────────────────────────────────────────────────── */
 
 const EndSessionSchema = z.object({});
@@ -31,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true, coachId: true },
+      select: { id: true, coachId: true, firstName: true, lastName: true },
     });
     if (!athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
@@ -39,7 +41,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const trainingSession = await prisma.trainingSession.findFirst({
       where: { id, athleteId: athlete.id },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        plan: { select: { name: true } },
+      },
     });
     if (!trainingSession) {
       return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
@@ -52,27 +58,50 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       );
     }
 
-    // Count logs across both tables in parallel. SessionLog covers strength
-    // entries, ThrowLog covers individual throws. Either signals "did
-    // something" and earns COMPLETED.
-    const [sessionLogCount, throwLogCount] = await Promise.all([
+    const [sessionLogCount, throwLogs] = await Promise.all([
       prisma.sessionLog.count({ where: { sessionId: id } }),
-      prisma.throwLog.count({ where: { sessionId: id } }),
+      prisma.throwLog.findMany({
+        where: { sessionId: id },
+        select: { distance: true },
+      }),
     ]);
-    const hasLogs = sessionLogCount + throwLogCount > 0;
+    const hasLogs = sessionLogCount + throwLogs.length > 0;
     const nextStatus = hasLogs ? "COMPLETED" : "SKIPPED";
+    const completedAt = new Date();
 
     const updated = await prisma.trainingSession.update({
       where: { id },
       data: {
         status: nextStatus,
-        completedDate: hasLogs ? new Date() : null,
+        completedDate: hasLogs ? completedAt : null,
       },
       select: { id: true, status: true, completedDate: true },
     });
 
-    revalidateTag(`athlete-${athlete.id}`);
-    if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
+    const bestMarkM = throwLogs.reduce(
+      (max, t) => (t.distance && t.distance > max ? t.distance : max),
+      0
+    );
+    const athleteName =
+      [athlete.firstName, athlete.lastName].filter(Boolean).join(" ") || "Athlete";
+
+    await onSessionComplete({
+      athleteId: athlete.id,
+      coachId: athlete.coachId ?? null,
+      source: "assigned-training",
+      sourceId: updated.id,
+      terminalStatus: hasLogs ? "partial" : "skipped",
+      completedAt,
+      sessionTitle: trainingSession.plan?.name ?? "Training Session",
+      athleteName,
+      metrics: {
+        throwCount: throwLogs.length,
+        bestMarkM: bestMarkM > 0 ? bestMarkM : null,
+        rpe: null,
+        selfFeeling: null,
+      },
+      skipReason: hasLogs ? null : "Ended without any logged activity",
+    });
 
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {

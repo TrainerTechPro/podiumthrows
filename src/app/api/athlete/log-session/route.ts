@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
@@ -11,6 +10,7 @@ import {
 } from "@/lib/bondarchuk";
 import { recordThrow } from "@/lib/throws/pr";
 import { EventType } from "@prisma/client";
+import { onSessionComplete } from "@/lib/sessions/on-session-complete";
 
 /* ── GET — list athlete's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true, coachId: true },
+      select: { id: true, coachId: true, firstName: true, lastName: true },
     });
     if (!athlete) {
       return NextResponse.json(
@@ -181,10 +181,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Invalidate caches for this athlete and their coach
-    revalidateTag(`athlete-${athlete.id}`);
-    if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
-
     // PR detection: check each drill with implementWeight + bestMark > 0
     type PRResult = { event: string; implement: string; distance: number; previousBest?: number };
     const prs: PRResult[] = [];
@@ -213,6 +209,31 @@ export async function POST(request: NextRequest) {
         }
       }
     }
+
+    const throwCount = created.drillLogs.reduce((sum, dl) => sum + (dl.throwCount ?? 0), 0);
+    const bestMarkM = created.drillLogs.reduce(
+      (max, dl) => (dl.bestMark != null && dl.bestMark > max ? dl.bestMark : max),
+      0
+    );
+    const athleteName =
+      [athlete.firstName, athlete.lastName].filter(Boolean).join(" ") || "Athlete";
+
+    await onSessionComplete({
+      athleteId: athlete.id,
+      coachId: athlete.coachId ?? null,
+      source: "self-logged",
+      sourceId: created.id,
+      terminalStatus: "completed",
+      completedAt: created.createdAt,
+      sessionTitle: `${event} — ${focus ?? "Practice"}`,
+      athleteName,
+      metrics: {
+        throwCount,
+        bestMarkM: bestMarkM > 0 ? bestMarkM : null,
+        rpe: sessionRpe ?? null,
+        selfFeeling: sessionFeeling ?? null,
+      },
+    });
 
     // Bondarchuk validation
     let warnings: BondarchukWarning[] = [];
