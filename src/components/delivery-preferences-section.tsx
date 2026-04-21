@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { track } from "@/lib/analytics";
 import { Bell, Mail, Smartphone, Moon } from "lucide-react";
 
 type Channels = "push" | "email" | "inApp";
@@ -88,6 +89,8 @@ export function DeliveryPreferencesSection() {
         if (!res.ok || !payload?.success) {
           setPrefs(prev);
           toast.error(payload?.error ?? "Couldn't save preference.");
+        } else {
+          track("preferences_updated", { field: key });
         }
       } catch {
         setPrefs(prev);

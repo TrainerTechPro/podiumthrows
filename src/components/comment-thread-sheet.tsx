@@ -24,6 +24,7 @@ import { VoiceRecorder, type VoiceRecorderResult } from "@/components/feedback/V
 import { CommentAudioPlayer } from "@/components/comment-audio-player";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useCommentUnread, type TargetField } from "@/lib/hooks/useCommentUnread";
+import { track } from "@/lib/analytics";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -137,13 +138,19 @@ export function CommentThreadSheet({
     if (!hasUnreadFromOther) return;
 
     const t = setTimeout(async () => {
+      const unreadCount = comments.filter(
+        (c) => c.authorId !== currentUserId && !c.readAt && !c.deleted
+      ).length;
       try {
-        await fetch("/api/throws/comments/mark-thread-read", {
+        const res = await fetch("/api/throws/comments/mark-thread-read", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ targetField, targetId }),
         });
+        if (res.ok && unreadCount > 0) {
+          track("comment_read", { targetField, count: unreadCount });
+        }
         setComments((prev) =>
           prev.map((c) =>
             c.authorId !== currentUserId && !c.readAt && !c.deleted
@@ -192,12 +199,17 @@ export function CommentThreadSheet({
           setComments((prev) => [...prev, json.data as CommentRow]);
           setText("");
           setVoiceOpen(false);
+          track("comment_sent", {
+            targetField,
+            hasAudio: !!payload.audio,
+            role: currentUserRole,
+          });
         }
       } finally {
         setSending(false);
       }
     },
-    [sending, targetField, targetId]
+    [sending, targetField, targetId, currentUserRole]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -208,20 +220,27 @@ export function CommentThreadSheet({
   };
 
   /* ─── Delete ─── */
-  const deleteComment = useCallback(async (comment: CommentRow) => {
-    const res = await fetch(`/api/throws/comments/${comment.id}`, {
-      method: "DELETE",
-      credentials: "include",
-      headers: csrfHeaders(),
-    });
-    if (res.ok) {
-      setComments((prev) =>
-        prev.map((c) =>
-          c.id === comment.id ? { ...c, deleted: true, body: "", audioUrl: null } : c
-        )
-      );
-    }
-  }, []);
+  const deleteComment = useCallback(
+    async (comment: CommentRow) => {
+      const res = await fetch(`/api/throws/comments/${comment.id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: csrfHeaders(),
+      });
+      if (res.ok) {
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === comment.id ? { ...c, deleted: true, body: "", audioUrl: null } : c
+          )
+        );
+        track("comment_deleted", {
+          targetField,
+          moderator: comment.authorId !== currentUserId,
+        });
+      }
+    },
+    [targetField, currentUserId]
+  );
 
   const canDelete = useCallback(
     (c: CommentRow) => {

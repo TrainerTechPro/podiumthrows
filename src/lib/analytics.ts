@@ -114,6 +114,47 @@ export const EVENT_SCHEMAS = {
       method: '"link_copy" | "email"',
     },
   },
+
+  /** User posted a comment on any training surface. */
+  comment_sent: {
+    description: "Comment (text or voice) posted on any training surface.",
+    surface: "athlete",
+    props: {
+      targetField:
+        '"throwLogId" | "practiceAttemptId" | "trainingSessionId" | "throwsAssignmentId" | "athleteDrillLogId" | "videoAnalysisId"',
+      hasAudio: "boolean",
+      role: '"COACH" | "ATHLETE"',
+    },
+  },
+
+  /** User marked a thread as read (debounced after the Sheet opens). */
+  comment_read: {
+    description: "Thread marked as read via the mark-thread-read endpoint.",
+    surface: "athlete",
+    props: {
+      targetField: "string — see comment_sent",
+      count: "number — comments marked in this batch",
+    },
+  },
+
+  /** User soft-deleted a comment (self-undo or moderator). */
+  comment_deleted: {
+    description: "Comment soft-deleted via author undo or coach moderation.",
+    surface: "athlete",
+    props: {
+      targetField: "string — see comment_sent",
+      moderator: "boolean — true when a coach deleted someone else's comment",
+    },
+  },
+
+  /** User changed a notification preference (channel, type override, or quiet hours). */
+  preferences_updated: {
+    description: "Notification preferences updated (channel, type override, quiet hours).",
+    surface: "athlete",
+    props: {
+      field: "string — the preference key that changed",
+    },
+  },
 } as const satisfies Record<string, EventDescriptor>;
 
 type EventDescriptor = {
@@ -157,6 +198,40 @@ export type EventPayloads = {
     weekCount: number;
   };
   invite_sent: { method: "link_copy" | "email" };
+  comment_sent: {
+    targetField:
+      | "throwLogId"
+      | "practiceAttemptId"
+      | "trainingSessionId"
+      | "throwsAssignmentId"
+      | "athleteDrillLogId"
+      | "videoAnalysisId";
+    hasAudio: boolean;
+    role: "COACH" | "ATHLETE";
+  };
+  comment_read: {
+    targetField:
+      | "throwLogId"
+      | "practiceAttemptId"
+      | "trainingSessionId"
+      | "throwsAssignmentId"
+      | "athleteDrillLogId"
+      | "videoAnalysisId";
+    count: number;
+  };
+  comment_deleted: {
+    targetField:
+      | "throwLogId"
+      | "practiceAttemptId"
+      | "trainingSessionId"
+      | "throwsAssignmentId"
+      | "athleteDrillLogId"
+      | "videoAnalysisId";
+    moderator: boolean;
+  };
+  preferences_updated: {
+    field: string;
+  };
 };
 
 /* ─── Emit ─────────────────────────────────────────────────────────────── */
