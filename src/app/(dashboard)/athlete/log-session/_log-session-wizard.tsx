@@ -125,6 +125,10 @@ interface DrillEntry {
   wireLength: string;
   throwCount: string;
   bestMark: string;
+  // Per-drill distance unit — athletes throw shot in feet and hammer in meters,
+  // so one form-wide toggle forces mental conversions. See tester feedback
+  // 2026-03-18 and the 2026-04-20 fix that moved this off form state.
+  distanceUnit: "meters" | "feet";
   notes: string;
 }
 
@@ -173,7 +177,6 @@ export function LogSessionWizard({
   const [focus, setFocus] = useState("");
   const [date, setDate] = useState(localToday());
   const [drills, setDrills] = useState<DrillEntry[]>([]);
-  const [distanceUnit, setDistanceUnit] = useState<"meters" | "feet">("meters");
   const [sessionRpe, setSessionRpe] = useState<number | null>(null);
   const [sessionFeeling, setSessionFeeling] = useState("");
   const [sessionNotes, setSessionNotes] = useState("");
@@ -242,21 +245,34 @@ export function LogSessionWizard({
         if (s.drillLogs?.length) {
           setDrills(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            s.drillLogs.map((d: any) => ({
-              id: d.id || crypto.randomUUID(),
-              drillType: d.drillType || "",
-              implementWeight:
-                d.implementWeightOriginal != null
-                  ? String(d.implementWeightOriginal)
-                  : d.implementWeight != null
-                    ? String(d.implementWeight)
-                    : "",
-              implementUnit: (d.implementWeightUnit === "lbs" ? "lbs" : "kg") as "kg" | "lbs",
-              wireLength: d.wireLength || "FULL",
-              throwCount: d.throwCount != null ? String(d.throwCount) : "",
-              bestMark: d.bestMark != null ? String(d.bestMark) : "",
-              notes: d.notes || "",
-            }))
+            s.drillLogs.map((d: any) => {
+              const unit: "meters" | "feet" = d.bestMarkUnit === "feet" ? "feet" : "meters";
+              // Prefer the value the user typed (bestMarkOriginal) in their chosen
+              // unit. Falls back to the canonical meters value for legacy rows
+              // written before bestMarkUnit existed.
+              const displayBest =
+                d.bestMarkOriginal != null
+                  ? String(d.bestMarkOriginal)
+                  : d.bestMark != null
+                    ? String(d.bestMark)
+                    : "";
+              return {
+                id: d.id || crypto.randomUUID(),
+                drillType: d.drillType || "",
+                implementWeight:
+                  d.implementWeightOriginal != null
+                    ? String(d.implementWeightOriginal)
+                    : d.implementWeight != null
+                      ? String(d.implementWeight)
+                      : "",
+                implementUnit: (d.implementWeightUnit === "lbs" ? "lbs" : "kg") as "kg" | "lbs",
+                wireLength: d.wireLength || "FULL",
+                throwCount: d.throwCount != null ? String(d.throwCount) : "",
+                bestMark: displayBest,
+                distanceUnit: unit,
+                notes: d.notes || "",
+              };
+            })
           );
         }
       })
@@ -298,12 +314,15 @@ export function LogSessionWizard({
         wireLength: "FULL",
         throwCount: "",
         bestMark: "",
+        // Inherit the previous drill's unit — athletes typically stay in one
+        // unit per session. First drill defaults to meters.
+        distanceUnit: prev[prev.length - 1]?.distanceUnit ?? "meters",
         notes: "",
       },
     ]);
   }
 
-  function updateDrill(id: string, field: keyof DrillEntry, value: string) {
+  function updateDrill<F extends keyof DrillEntry>(id: string, field: F, value: DrillEntry[F]) {
     setDrills((prev) => prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)));
   }
 
@@ -348,7 +367,11 @@ export function LogSessionWizard({
             .filter((d) => d.drillType)
             .map((d) => {
               const rawBest = parseNumericField(d.bestMark);
-              const best = rawBest != null && distanceUnit === "feet" ? rawBest * 0.3048 : rawBest;
+              // Canonical bestMark is always meters — convert at the boundary.
+              // Preserve rawBest as bestMarkOriginal so edit mode can round-trip
+              // the athlete's typed value without lossy mm→ft→mm conversion.
+              const best =
+                rawBest != null && d.distanceUnit === "feet" ? rawBest * 0.3048 : rawBest;
               const rawImpl = parseNumericField(d.implementWeight);
               const implWeight =
                 rawImpl != null && d.implementUnit === "lbs" ? rawImpl * LBS_TO_KG : rawImpl;
@@ -360,6 +383,8 @@ export function LogSessionWizard({
                 wireLength: event === "HAMMER" ? d.wireLength : undefined,
                 throwCount: parseIntField(d.throwCount) ?? 0,
                 bestMark: best,
+                bestMarkUnit: d.distanceUnit,
+                bestMarkOriginal: rawBest,
                 notes: d.notes.trim() || undefined,
               };
             }),
@@ -398,15 +423,15 @@ export function LogSessionWizard({
       // Compute the summary BEFORE showing the done screen — once shown,
       // drills/event aren't needed anymore but the summary needs them.
       const throwCount = drills.reduce((s, d) => s + (parseIntField(d.throwCount) ?? 0), 0);
-      const bestDistances = drills
-        .map((d) => parseNumericField(d.bestMark))
-        .filter((n): n is number => n != null && n > 0);
-      const sessionBest =
-        bestDistances.length > 0
-          ? distanceUnit === "feet"
-            ? Math.max(...bestDistances) * 0.3048
-            : Math.max(...bestDistances)
-          : null;
+      // Convert each drill to meters using its own unit, then take the max.
+      const bestDistancesMeters = drills
+        .map((d) => {
+          const raw = parseNumericField(d.bestMark);
+          if (raw == null || raw <= 0) return null;
+          return d.distanceUnit === "feet" ? raw * 0.3048 : raw;
+        })
+        .filter((n): n is number => n != null);
+      const sessionBest = bestDistancesMeters.length > 0 ? Math.max(...bestDistancesMeters) : null;
       setDoneSummary({
         eventLabel: EVENTS.find((e) => e.value === event)?.label ?? event,
         drillCount: drills.filter((d) => d.drillType).length,
@@ -549,8 +574,6 @@ export function LogSessionWizard({
                 onToggleShowAll={() =>
                   setShowAllDrills((prev) => ({ ...prev, [drill.id]: !prev[drill.id] }))
                 }
-                distanceUnit={distanceUnit}
-                onDistanceUnitChange={setDistanceUnit}
                 onUpdate={(field, value) => updateDrill(drill.id, field, value)}
                 onRemove={() => removeDrill(drill.id)}
               />
@@ -723,8 +746,6 @@ function DrillCard({
   pastDrills,
   showAll,
   onToggleShowAll,
-  distanceUnit,
-  onDistanceUnitChange,
   onUpdate,
   onRemove,
 }: {
@@ -734,9 +755,7 @@ function DrillCard({
   pastDrills: string[];
   showAll: boolean;
   onToggleShowAll: () => void;
-  distanceUnit: "meters" | "feet";
-  onDistanceUnitChange: (u: "meters" | "feet") => void;
-  onUpdate: (field: keyof DrillEntry, value: string) => void;
+  onUpdate: <F extends keyof DrillEntry>(field: F, value: DrillEntry[F]) => void;
   onRemove: () => void;
 }) {
   const eventDrills = DRILLS_BY_EVENT[event] || [];
@@ -875,14 +894,20 @@ function DrillCard({
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="label mb-0">Best</label>
-            <div className="flex rounded-md overflow-hidden border border-[var(--color-border-default)]">
+            <div
+              role="radiogroup"
+              aria-label="Distance unit"
+              className="flex rounded-md overflow-hidden border border-[var(--color-border-default)]"
+            >
               {(["meters", "feet"] as const).map((unit) => {
-                const selected = distanceUnit === unit;
+                const selected = drill.distanceUnit === unit;
                 return (
                   <button
                     key={unit}
                     type="button"
-                    onClick={() => onDistanceUnitChange(unit)}
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => onUpdate("distanceUnit", unit)}
                     className={
                       "px-2 py-1 text-[10px] font-medium tracking-wide transition-colors " +
                       (selected
@@ -903,7 +928,7 @@ function DrillCard({
             min="0"
             value={drill.bestMark}
             onChange={(e) => onUpdate("bestMark", e.target.value)}
-            placeholder={distanceUnit === "meters" ? "18.50" : "60.70"}
+            placeholder={drill.distanceUnit === "meters" ? "18.50" : "60.70"}
           />
         </div>
         <div>

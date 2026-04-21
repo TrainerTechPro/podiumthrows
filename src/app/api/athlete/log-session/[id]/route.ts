@@ -119,6 +119,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
               wireLength: d.wireLength ?? null,
               throwCount: d.throwCount ?? 0,
               bestMark: d.bestMark ?? null,
+              bestMarkUnit: d.bestMarkUnit ?? "meters",
+              bestMarkOriginal: d.bestMarkOriginal ?? null,
               notes: d.notes?.trim() || null,
             })),
           },

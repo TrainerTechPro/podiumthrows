@@ -5,15 +5,12 @@ import { logger } from "@/lib/logger";
 import { recalculateCoachPRs } from "@/lib/coach-throws";
 
 /* ── GET — single coach session detail ── */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -21,7 +18,10 @@ export async function GET(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const entry = await prisma.coachThrowsSession.findUnique({
@@ -30,26 +30,23 @@ export async function GET(
     });
 
     if (!entry || entry.coachId !== coach.id) {
-      return NextResponse.json({ success: false, error:"Not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data: entry });
   } catch (err) {
     logger.error("GET /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Failed to fetch session" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to fetch session" }, { status: 500 });
   }
 }
 
 /* ── PUT — update a coach self-logged session ── */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -57,7 +54,10 @@ export async function PUT(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const existing = await prisma.coachThrowsSession.findUnique({
@@ -65,14 +65,28 @@ export async function PUT(
       select: { coachId: true },
     });
     if (!existing || existing.coachId !== coach.id) {
-      return NextResponse.json({ success: false, error:"Not found or unauthorized" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Not found or unauthorized" },
+        { status: 404 }
+      );
     }
 
     const body = await request.json();
     const {
-      event, date, focus, notes, sleepQuality, sorenessLevel, energyLevel,
-      sessionRpe, sessionFeeling, techniqueRating, mentalFocus, bestPart,
-      improvementArea, drills,
+      event,
+      date,
+      focus,
+      notes,
+      sleepQuality,
+      sorenessLevel,
+      energyLevel,
+      sessionRpe,
+      sessionFeeling,
+      techniqueRating,
+      mentalFocus,
+      bestPart,
+      improvementArea,
+      drills,
     } = body;
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -106,6 +120,8 @@ export async function PUT(
                 wireLength: d.wireLength ?? null,
                 throwCount: d.throwCount ?? 0,
                 bestMark: d.bestMark ?? null,
+                bestMarkUnit: d.bestMarkUnit ?? "meters",
+                bestMarkOriginal: d.bestMarkOriginal ?? null,
                 notes: d.notes?.trim() || null,
               })),
             },
@@ -119,9 +135,7 @@ export async function PUT(
     if (updated.drillLogs.length > 0) {
       const affectedImplements = [
         ...new Set(
-          updated.drillLogs
-            .map((dl) => dl.implementWeight)
-            .filter((w): w is number => w != null)
+          updated.drillLogs.map((dl) => dl.implementWeight).filter((w): w is number => w != null)
         ),
       ];
       if (affectedImplements.length > 0) {
@@ -132,7 +146,10 @@ export async function PUT(
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PUT /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Failed to update session" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update session" },
+      { status: 500 }
+    );
   }
 }
 
@@ -145,7 +162,7 @@ export async function DELETE(
     const { id } = await params;
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -153,7 +170,10 @@ export async function DELETE(
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const entry = await prisma.coachThrowsSession.findUnique({
@@ -166,15 +186,16 @@ export async function DELETE(
     });
 
     if (!entry || entry.coachId !== coach.id) {
-      return NextResponse.json({ success: false, error:"Not found or unauthorized" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Not found or unauthorized" },
+        { status: 404 }
+      );
     }
 
     // Collect affected implements before deletion
     const affectedImplements = [
       ...new Set(
-        entry.drillLogs
-          .map((dl) => dl.implementWeight)
-          .filter((w): w is number => w != null)
+        entry.drillLogs.map((dl) => dl.implementWeight).filter((w): w is number => w != null)
       ),
     ];
 
@@ -188,6 +209,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Failed to delete" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to delete" }, { status: 500 });
   }
 }

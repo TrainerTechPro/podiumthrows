@@ -3,7 +3,11 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { checkAndSetCoachPR } from "@/lib/coach-throws";
-import { validateImplementSequence, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
+import {
+  validateImplementSequence,
+  type BondarchukWarning,
+  type BlockInput,
+} from "@/lib/bondarchuk";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
 import { EventType } from "@prisma/client";
 
@@ -12,7 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -20,7 +24,10 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -40,7 +47,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: sessions });
   } catch (err) {
     logger.error("GET /api/coach/log-session", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Failed to fetch sessions" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch sessions" },
+      { status: 500 }
+    );
   }
 }
 
@@ -49,7 +59,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -57,16 +67,28 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error:"Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const parsed = await parseBody(request, LogSessionSchema);
     if (parsed instanceof NextResponse) return parsed;
     const {
-      event, date, focus, notes,
-      sleepQuality, sorenessLevel, energyLevel,
-      sessionRpe, sessionFeeling, techniqueRating, mentalFocus,
-      bestPart, improvementArea,
+      event,
+      date,
+      focus,
+      notes,
+      sleepQuality,
+      sorenessLevel,
+      energyLevel,
+      sessionRpe,
+      sessionFeeling,
+      techniqueRating,
+      mentalFocus,
+      bestPart,
+      improvementArea,
       drills,
     } = parsed as {
       event: string;
@@ -90,16 +112,21 @@ export async function POST(request: NextRequest) {
         wireLength?: string;
         throwCount: number;
         bestMark?: number;
+        bestMarkUnit?: "meters" | "feet";
+        bestMarkOriginal?: number;
         notes?: string;
       }[];
     };
 
     if (!event || !date) {
-      return NextResponse.json({ success: false, error:"Missing required fields: event, date" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Missing required fields: event, date" },
+        { status: 400 }
+      );
     }
 
     if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
-      return NextResponse.json({ success: false, error:"Invalid event type" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
     }
 
     const created = await prisma.coachThrowsSession.create({
@@ -128,6 +155,8 @@ export async function POST(request: NextRequest) {
               wireLength?: string;
               throwCount: number;
               bestMark?: number;
+              bestMarkUnit?: "meters" | "feet";
+              bestMarkOriginal?: number;
               notes?: string;
             }) => ({
               drillType: d.drillType,
@@ -137,6 +166,8 @@ export async function POST(request: NextRequest) {
               wireLength: d.wireLength ?? null,
               throwCount: d.throwCount || 0,
               bestMark: d.bestMark ?? null,
+              bestMarkUnit: d.bestMarkUnit ?? "meters",
+              bestMarkOriginal: d.bestMarkOriginal ?? null,
               notes: d.notes?.trim() || null,
             })
           ),
@@ -161,7 +192,7 @@ export async function POST(request: NextRequest) {
           new Date(date),
           created.id,
           dl.drillType,
-          implementLabel,
+          implementLabel
         );
         if (result.isPersonalBest) {
           prs.push({
@@ -204,6 +235,6 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     logger.error("POST /api/coach/log-session", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ success: false, error:`Failed: ${message}` }, { status: 500 });
+    return NextResponse.json({ success: false, error: `Failed: ${message}` }, { status: 500 });
   }
 }

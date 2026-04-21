@@ -428,6 +428,8 @@ const LogSessionDrillSchema = z.object({
   wireLength: z.string().nullable().optional(),
   throwCount: z.number().int().min(0).nullable().optional(),
   bestMark: z.number().nullable().optional(),
+  bestMarkUnit: z.enum(["meters", "feet"]).nullable().optional(),
+  bestMarkOriginal: z.number().nullable().optional(),
   averageMark: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
   marks: z.array(z.number()).optional(),

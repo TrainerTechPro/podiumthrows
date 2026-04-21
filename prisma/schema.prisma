@@ -1818,7 +1818,9 @@ model AthleteDrillLog {
   implementWeightOriginal Float? // original value the user typed
   wireLength              String? // FULL | THREE_QUARTER | HALF — hammer only
   throwCount              Int                  @default(0)
-  bestMark                Float? // meters
+  bestMark                Float? // meters (canonical, always stored in meters for calcs)
+  bestMarkUnit            String               @default("meters") // "meters" | "feet" — display unit the user chose
+  bestMarkOriginal        Float? // original value the user typed (in bestMarkUnit)
   notes                   String?
   createdAt               DateTime             @default(now())
 
@@ -1866,7 +1868,9 @@ model CoachDrillLog {
   implementWeightOriginal Float? // original value the user typed
   wireLength              String? // FULL | THREE_QUARTER | HALF — hammer only
   throwCount              Int                @default(0)
-  bestMark                Float?
+  bestMark                Float? // meters (canonical)
+  bestMarkUnit            String             @default("meters") // "meters" | "feet"
+  bestMarkOriginal        Float? // original value the user typed (in bestMarkUnit)
   notes                   String?
   createdAt               DateTime           @default(now())
 
