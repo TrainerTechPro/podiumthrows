@@ -7,6 +7,7 @@ import type { UpcomingSessionItem } from "@/lib/data/dashboard";
 import type { WidgetId } from "../dashboard/_widget-registry";
 import { FETCHERS as DASHBOARD_FETCHERS, WidgetRenderer } from "../_shared/widget-renderer";
 import { fetchUpcomingThrowsAssignments } from "@/lib/data/throws-hub";
+import { ThrowsChipNav } from "./_chip-nav";
 
 export const metadata = {
   title: "Throws",
@@ -53,6 +54,8 @@ export default async function ThrowsHubPage() {
 
   return (
     <div className="max-w-3xl mx-auto pb-12 space-y-5">
+      <ThrowsChipNav />
+
       {/* Header */}
       <div>
         <h1 className="text-display font-heading text-[var(--foreground)]">Throws</h1>

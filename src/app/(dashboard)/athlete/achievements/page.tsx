@@ -2,6 +2,7 @@ import { requireAthleteSession, getAthleteAchievements } from "@/lib/data/athlet
 import { redirect } from "next/navigation";
 import { ALL_BADGE_DEFINITIONS } from "@/lib/achievements";
 import { Badge } from "@/components";
+import { ThrowsChipNav } from "../throws/_chip-nav";
 
 export const metadata = { title: "Achievements — Podium Throws" };
 
@@ -42,7 +43,8 @@ export default async function AthleteAchievementsPage() {
   const earnedCount = earned.filter((a) => a.badgeKey !== null).length;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <ThrowsChipNav />
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -105,9 +107,11 @@ export default async function AthleteAchievementsPage() {
                     </div>
 
                     {/* Title */}
-                    <p className={`text-xs font-semibold leading-snug ${
-                      isEarned ? "text-[var(--foreground)]" : "text-muted"
-                    }`}>
+                    <p
+                      className={`text-xs font-semibold leading-snug ${
+                        isEarned ? "text-[var(--foreground)]" : "text-muted"
+                      }`}
+                    >
                       {badge.title.replace(/[\uD800-\uDFFF\u2600-\u27BF]/g, "").trim()}
                     </p>
 
@@ -144,7 +148,9 @@ export default async function AthleteAchievementsPage() {
       {earned.length === 0 && (
         <div className="card p-6 text-center">
           <p className="text-2xl mb-2">🎯</p>
-          <p className="text-sm font-medium text-[var(--foreground)]">Start training to earn your first badge</p>
+          <p className="text-sm font-medium text-[var(--foreground)]">
+            Start training to earn your first badge
+          </p>
           <p className="text-xs text-muted mt-1">
             Log throws, complete check-ins, and build streaks to unlock achievements.
           </p>

@@ -11,6 +11,7 @@ import {
   type DateRangeKey,
 } from "@/lib/hooks/useEventChartSettings";
 import { formatImplementDisplay } from "@/lib/throws/display";
+import { ThrowsChipNav } from "../_chip-nav";
 
 const DistanceTrendChart = dynamic(
   () => import("./_distance-chart").then((m) => m.DistanceTrendChart),
@@ -217,6 +218,7 @@ export default function ThrowAnalysisPage() {
 
   return (
     <div className="animate-spring-up space-y-6 max-w-3xl mx-auto pb-8">
+      <ThrowsChipNav />
       <Header />
 
       {/* ── Per-event chart cards ──────────────────────────────────── */}

@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { CompetitionListCard } from "@/components/competitions/CompetitionListCard";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { AthleteAddMeetButton } from "./_add-meet-button";
+import { ThrowsChipNav } from "../throws/_chip-nav";
 
 export const metadata = { title: "Competitions — Podium Throws" };
 
@@ -46,8 +47,9 @@ export default async function AthleteCompetitionsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <div className="mx-auto max-w-4xl p-4 space-y-4">
+      <ThrowsChipNav />
+      <div className="flex items-center justify-between gap-3">
         <h1 className="font-heading text-2xl">Competitions</h1>
         <AthleteAddMeetButton athleteId={athlete.id} athleteEvents={athleteEvents} />
       </div>

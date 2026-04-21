@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Calendar, PlusCircle, BarChart3, UserCircle } from "lucide-react";
+import { LayoutDashboard, Calendar, PlusCircle, Activity, UserCircle } from "lucide-react";
 
 /* ─── Bottom Tab Bar ─────────────────────────────────────────────────────────
    The athlete app is mobile-primary. This is its navigation — five
@@ -16,9 +16,10 @@ import { LayoutDashboard, Calendar, PlusCircle, BarChart3, UserCircle } from "lu
    else ladders up to that moment.
 
    Everything not in these five tabs lives inside the tabs: roster and
-   team hub under Training, competitions and readiness under Trends,
-   notifications/settings/wellness/availability under Me. If a surface
-   can't be reached from these five, it shouldn't be a standalone page.
+   self-program under Training; history, trends, PRs, competitions, and
+   readiness under Throws; notifications/settings/wellness/availability
+   under Me. If a surface can't be reached from these five, it shouldn't
+   be a standalone page.
    ─────────────────────────────────────────────────────────────────────── */
 
 interface Tab {
@@ -36,7 +37,7 @@ const TABS: Tab[] = [
     href: "/athlete/dashboard",
     label: "Home",
     icon: LayoutDashboard,
-    matchPaths: ["/athlete/dashboard", "/athlete/hub"],
+    matchPaths: ["/athlete/dashboard"],
   },
   {
     href: "/athlete/sessions",
@@ -49,16 +50,23 @@ const TABS: Tab[] = [
     label: "Log",
     icon: PlusCircle,
     primary: true,
-    matchPaths: ["/athlete/log-session", "/athlete/throws/log", "/athlete/quick-start"],
+    // /athlete/throws/log stays reachable as a back-compat route, but the
+    // active-tab indicator there belongs to Throws (its parent subtree) —
+    // see tasks/nav-ia-v2.md §3.
+    matchPaths: ["/athlete/log-session", "/athlete/quick-start"],
   },
   {
-    href: "/athlete/throws/trends",
-    label: "Trends",
-    icon: BarChart3,
+    href: "/athlete/throws",
+    label: "Throws",
+    icon: Activity,
     matchPaths: [
       "/athlete/throws",
       "/athlete/throws/trends",
       "/athlete/throws/history",
+      "/athlete/throws/readiness",
+      "/athlete/throws/quiz",
+      "/athlete/throws/session",
+      "/athlete/throws/live",
       "/athlete/achievements",
       "/athlete/competitions",
     ],

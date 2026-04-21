@@ -23,7 +23,6 @@ import {
   ChevronRight,
   ScanLine,
   Trophy,
-  PlusCircle,
   Clock,
   FileText,
   Sparkles,
@@ -479,19 +478,21 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
           "/athlete/throws/session",
           "/athlete/throws/trends",
           "/athlete/throws/readiness",
+          "/athlete/achievements",
+          "/athlete/competitions",
         ],
         children: [
           {
-            label: "Today",
+            label: "Hub",
             href: "/athlete/throws",
             icon: <Target {...iconSize} />,
             matchPaths: ["/athlete/throws"],
           },
           {
-            label: "Log a Throw",
-            href: "/athlete/throws/log",
-            icon: <PlusCircle {...iconSize} />,
-            matchPaths: ["/athlete/throws/log"],
+            label: "Trends",
+            href: "/athlete/throws/trends",
+            icon: <BarChart3 {...iconSize} />,
+            matchPaths: ["/athlete/throws/trends"],
           },
           {
             label: "History",
@@ -500,10 +501,16 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
             matchPaths: ["/athlete/throws/history", "/athlete/throws/session"],
           },
           {
-            label: "Trends & PRs",
-            href: "/athlete/throws/trends",
-            icon: <BarChart3 {...iconSize} />,
-            matchPaths: ["/athlete/throws/trends"],
+            label: "PRs",
+            href: "/athlete/achievements",
+            icon: <Trophy {...iconSize} />,
+            matchPaths: ["/athlete/achievements"],
+          },
+          {
+            label: "Competitions",
+            href: "/athlete/competitions",
+            icon: <Calendar {...iconSize} />,
+            matchPaths: ["/athlete/competitions"],
           },
           {
             label: "Readiness",
@@ -520,23 +527,12 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
         matchPaths: ["/athlete/team"],
       },
       {
-        label: "Team Hub",
-        href: "/athlete/hub",
-        icon: <LayoutDashboard {...iconSize} />,
-        matchPaths: ["/athlete/hub"],
-      },
-      {
         label: "Availability",
         href: "/athlete/availability",
         icon: <Calendar {...iconSize} />,
         matchPaths: ["/athlete/availability"],
       },
-      {
-        label: "Competitions",
-        href: "/athlete/competitions",
-        icon: <Trophy {...iconSize} />,
-        matchPaths: ["/athlete/competitions"],
-      },
+      // Competitions + PRs moved into the Throws group above.
     ],
   },
   {
