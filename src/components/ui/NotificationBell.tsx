@@ -306,14 +306,27 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
     };
   }, []);
 
-  // Close on outside click
+  // Close on outside tap/click.
+  //
+  // Uses pointerdown (unified mouse + touch + pen) and delays listener
+  // registration by one animation frame. Without the delay, iOS Safari's
+  // synthesized pointer events from the tap that OPENED the panel can
+  // fire after the useEffect registers the listener, which then sees a
+  // "rogue" pointerdown with an ambiguous target and closes the panel
+  // before the user can see it. The tell was: red dot disappears
+  // (fetchNotifications did run) but nothing visibly opens.
   useEffect(() => {
     if (!open) return;
-    function onDown(e: MouseEvent) {
+    function onDown(e: Event) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    const rafId = requestAnimationFrame(() => {
+      document.addEventListener("pointerdown", onDown);
+    });
+    return () => {
+      cancelAnimationFrame(rafId);
+      document.removeEventListener("pointerdown", onDown);
+    };
   }, [open]);
 
   // Fetch notifications when dropdown opens
