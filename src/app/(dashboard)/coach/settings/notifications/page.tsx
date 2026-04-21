@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { parseCoachPrefs } from "@/lib/notifications/coach-preferences";
 import { NotificationPreferencesClient } from "./_notifications-client";
+import { DeliveryPreferencesSection } from "@/components/delivery-preferences-section";
 
 export const metadata = { title: "Notifications — Podium Throws" };
 
@@ -35,6 +36,8 @@ export default async function CoachNotificationsSettingsPage() {
         <Bell size={24} className="text-primary-500" strokeWidth={1.75} aria-hidden="true" />
         <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Notifications</h1>
       </div>
+
+      <DeliveryPreferencesSection />
 
       <NotificationPreferencesClient initialPreferences={preferences} />
     </div>

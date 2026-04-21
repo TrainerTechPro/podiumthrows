@@ -10,14 +10,13 @@ interface Comment {
   authorName: string;
   authorAvatar: string | null;
   body: string;
+  audioUrl?: string | null;
+  audioDurationSec?: number | null;
+  deleted?: boolean;
   createdAt: string;
 }
 
-type TargetField =
-  | "throwLogId"
-  | "practiceAttemptId"
-  | "trainingSessionId"
-  | "throwsAssignmentId";
+type TargetField = "throwLogId" | "practiceAttemptId" | "trainingSessionId" | "throwsAssignmentId";
 
 interface CommentThreadProps {
   targetField: TargetField;
@@ -95,7 +94,9 @@ export function CommentThread({ targetField, targetId, compact }: CommentThreadP
         >
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
-        {comments.length > 0 ? `${comments.length} comment${comments.length !== 1 ? "s" : ""}` : "Add comment"}
+        {comments.length > 0
+          ? `${comments.length} comment${comments.length !== 1 ? "s" : ""}`
+          : "Add comment"}
       </button>
     );
   }
@@ -134,13 +135,8 @@ export function CommentThread({ targetField, targetId, compact }: CommentThreadP
       </div>
 
       {/* Messages */}
-      <div
-        ref={scrollRef}
-        className="max-h-48 overflow-y-auto px-3 py-2 space-y-2"
-      >
-        {loading && (
-          <div className="shimmer-contextual h-8 rounded" />
-        )}
+      <div ref={scrollRef} className="max-h-48 overflow-y-auto px-3 py-2 space-y-2">
+        {loading && <div className="shimmer-contextual h-8 rounded" />}
 
         {!loading && comments.length === 0 && (
           <p className="text-xs text-muted text-center py-2">
@@ -153,34 +149,28 @@ export function CommentThread({ targetField, targetId, compact }: CommentThreadP
             {/* Avatar */}
             <div
               className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white ${
-                c.authorRole === "COACH"
-                  ? "bg-primary-500"
-                  : "bg-blue-500"
+                c.authorRole === "COACH" ? "bg-primary-500" : "bg-blue-500"
               }`}
             >
               {c.authorAvatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={c.authorAvatar}
-                  alt=""
-                  className="w-6 h-6 rounded-full object-cover"
-                />
+                <img src={c.authorAvatar} alt="" className="w-6 h-6 rounded-full object-cover" />
               ) : (
                 c.authorName.charAt(0).toUpperCase()
               )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2">
-                <span className="text-xs font-medium text-[var(--foreground)]">
-                  {c.authorName}
-                </span>
-                <span className="text-[10px] text-muted">
-                  {formatRelativeTime(c.createdAt)}
-                </span>
+                <span className="text-xs font-medium text-[var(--foreground)]">{c.authorName}</span>
+                <span className="text-[10px] text-muted">{formatRelativeTime(c.createdAt)}</span>
               </div>
-              <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap break-words">
-                {c.body}
-              </p>
+              {c.deleted ? (
+                <p className="text-sm text-muted italic">[comment deleted]</p>
+              ) : (
+                <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap break-words">
+                  {c.body}
+                </p>
+              )}
             </div>
           </div>
         ))}

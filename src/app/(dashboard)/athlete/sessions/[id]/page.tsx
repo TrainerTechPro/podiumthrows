@@ -7,6 +7,7 @@ import { requireAthleteSession, getSessionWithPrescription } from "@/lib/data/at
 import prisma from "@/lib/prisma";
 import { CompleteSessionButton } from "./_complete-button";
 import { SessionLogger } from "./_session-logger";
+import { CommentThreadTrigger } from "@/components/comment-thread-sheet";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -345,7 +346,7 @@ function calculateScheduledDate(
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { athlete } = await requireAthleteSession();
+  const { session: authSession, athlete } = await requireAthleteSession();
   const session = await getSessionWithPrescription(athlete.id, id);
 
   /* ── TrainingSession found — render existing view ────────────────────── */
@@ -376,7 +377,17 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
             </h1>
             <p className="text-sm text-muted mt-0.5">{formatDate(session.scheduledDate)}</p>
           </div>
-          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+          <div className="flex items-center gap-3">
+            <CommentThreadTrigger
+              targetField="trainingSessionId"
+              targetId={session.id}
+              side="bottom"
+              context={`${session.planName ?? "Session"} · ${formatDate(session.scheduledDate)}`}
+              currentUserId={authSession.userId}
+              currentUserRole="ATHLETE"
+            />
+            <Badge variant={cfg.variant}>{cfg.label}</Badge>
+          </div>
         </div>
 
         {/* Meta row */}

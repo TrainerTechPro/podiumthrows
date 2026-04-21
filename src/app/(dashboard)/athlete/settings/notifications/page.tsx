@@ -4,6 +4,7 @@ import Link from "next/link";
 import { requireAthleteSession } from "@/lib/data/athlete";
 import { getPushPreferences } from "@/lib/push/preferences";
 import { NotificationPreferencesClient } from "./_notification-preferences-client";
+import { DeliveryPreferencesSection } from "@/components/delivery-preferences-section";
 
 export const metadata = { title: "Notifications — Podium Throws" };
 
@@ -28,16 +29,11 @@ export default async function NotificationsSettingsPage() {
         >
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
-        <Bell
-          size={24}
-          className="text-primary-500"
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
-        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-          Notifications
-        </h1>
+        <Bell size={24} className="text-primary-500" strokeWidth={1.75} aria-hidden="true" />
+        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Notifications</h1>
       </div>
+
+      <DeliveryPreferencesSection />
 
       {/* Client section */}
       <NotificationPreferencesClient initialPreferences={preferences} />
