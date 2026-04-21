@@ -1,15 +1,11 @@
 import Link from "next/link";
 import { Zap, ChevronRight } from "lucide-react";
 import { StaggeredList } from "@/components";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { requireAthleteSession } from "@/lib/data/athlete";
 import { UpcomingSessionsWidget } from "../dashboard/_widgets/upcoming-sessions";
 import type { UpcomingSessionItem } from "@/lib/data/dashboard";
 import type { WidgetId } from "../dashboard/_widget-registry";
-import {
-  FETCHERS as DASHBOARD_FETCHERS,
-  WidgetRenderer,
-} from "../_shared/widget-renderer";
+import { FETCHERS as DASHBOARD_FETCHERS, WidgetRenderer } from "../_shared/widget-renderer";
 import { fetchUpcomingThrowsAssignments } from "@/lib/data/throws-hub";
 
 export const metadata = {
@@ -48,9 +44,7 @@ export default async function ThrowsHubPage() {
 
   // Parallel fetch for all 6 widgets.
   const entries = await Promise.all(
-    THROWS_HUB_WIDGETS.map(
-      async (w) => [w, await THROWS_HUB_FETCHERS[w](athlete.id)] as const
-    )
+    THROWS_HUB_WIDGETS.map(async (w) => [w, await THROWS_HUB_FETCHERS[w](athlete.id)] as const)
   );
   const dataMap = Object.fromEntries(entries as [WidgetId, unknown][]);
 
@@ -59,8 +53,6 @@ export default async function ThrowsHubPage() {
 
   return (
     <div className="max-w-3xl mx-auto pb-12 space-y-5">
-      <ScrollProgressBar />
-
       {/* Header */}
       <div>
         <h1 className="text-display font-heading text-[var(--foreground)]">Throws</h1>
@@ -120,13 +112,7 @@ export default async function ThrowsHubPage() {
               />
             );
           }
-          return (
-            <WidgetRenderer
-              key={widgetId}
-              id={widgetId}
-              data={dataMap[widgetId]}
-            />
-          );
+          return <WidgetRenderer key={widgetId} id={widgetId} data={dataMap[widgetId]} />;
         })}
       </StaggeredList>
     </div>

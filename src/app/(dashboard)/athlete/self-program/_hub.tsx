@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { StaggeredList } from "@/components/ui/StaggeredList";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { useToast } from "@/components/ui/Toast";
@@ -157,12 +156,10 @@ function BlockedView() {
           <Lock size={24} strokeWidth={1.75} className="text-muted" aria-hidden="true" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-xl font-bold font-heading text-[var(--foreground)]">
-            Self Program
-          </h1>
+          <h1 className="text-xl font-bold font-heading text-[var(--foreground)]">Self Program</h1>
           <p className="text-sm text-muted leading-relaxed">
-            This feature requires a self-coached account. Upgrade to build your
-            own Bondarchuk training program.
+            This feature requires a self-coached account. Upgrade to build your own Bondarchuk
+            training program.
           </p>
         </div>
         <Link href="/athlete/settings">
@@ -185,21 +182,16 @@ function EmptyView() {
         className="card card-interactive max-w-lg w-full p-8 text-center space-y-5 group"
       >
         <div className="w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center mx-auto">
-          <Dumbbell
-            size={28}
-            strokeWidth={1.75}
-            className="text-primary-500"
-            aria-hidden="true"
-          />
+          <Dumbbell size={28} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
         </div>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
             Build Your Bondarchuk Program
           </h1>
           <p className="text-sm text-muted leading-relaxed max-w-sm mx-auto">
-            Create a personalized training program based on Dr. Bondarchuk&apos;s
-            Transfer of Training methodology. Answer questions about your event,
-            experience, and goals &mdash; the system generates your program.
+            Create a personalized training program based on Dr. Bondarchuk&apos;s Transfer of
+            Training methodology. Answer questions about your event, experience, and goals &mdash;
+            the system generates your program.
           </p>
         </div>
         <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary-500 group-hover:gap-3 transition-all">
@@ -326,9 +318,7 @@ function ActiveView({
   // Figure out current week
   const programStart = program ? new Date(program.startDate) : new Date();
   const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-  const weeksSinceStart = Math.floor(
-    (Date.now() - programStart.getTime()) / msPerWeek
-  );
+  const weeksSinceStart = Math.floor((Date.now() - programStart.getTime()) / msPerWeek);
   const currentWeek = Math.max(1, Math.min(weeksSinceStart + 1, totalWeeks));
 
   // Phase progress
@@ -336,10 +326,7 @@ function ActiveView({
     ? Math.max(0, currentWeek - currentPhase.startWeek + 1)
     : 0;
   const phaseTotalWeeks = currentPhase?.durationWeeks ?? 1;
-  const phaseProgress = Math.min(
-    100,
-    Math.round((phaseWeeksCurrent / phaseTotalWeeks) * 100)
-  );
+  const phaseProgress = Math.min(100, Math.round((phaseWeeksCurrent / phaseTotalWeeks) * 100));
 
   // Next upcoming session — find first incomplete session by week/day order
   // (scheduledDate may be null for self-program sessions)
@@ -355,9 +342,7 @@ function ActiveView({
   const nextSession = incompleteSessions[0] ?? null;
 
   // Stats
-  const completedSessions = sessions.filter(
-    (s) => s.status === "COMPLETED"
-  ).length;
+  const completedSessions = sessions.filter((s) => s.status === "COMPLETED").length;
   const totalThrows = completedSessions * 30; // estimate
 
   // Competition countdown
@@ -365,14 +350,13 @@ function ActiveView({
   const compDates: CompDate[] = Array.isArray(config.competitionDates)
     ? (config.competitionDates as CompDate[])
     : [];
-  const nextComp = compDates
-    .map((c) => ({ ...c, dt: new Date(c.date) }))
-    .filter((c) => c.dt.getTime() > Date.now())
-    .sort((a, b) => a.dt.getTime() - b.dt.getTime())[0] ?? null;
+  const nextComp =
+    compDates
+      .map((c) => ({ ...c, dt: new Date(c.date) }))
+      .filter((c) => c.dt.getTime() > Date.now())
+      .sort((a, b) => a.dt.getTime() - b.dt.getTime())[0] ?? null;
   const daysUntilComp = nextComp
-    ? Math.ceil(
-        (nextComp.dt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-      )
+    ? Math.ceil((nextComp.dt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
 
   const handleDeactivate = async () => {
@@ -395,22 +379,21 @@ function ActiveView({
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <ScrollProgressBar />
-
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-            Self Program
-          </h1>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Self Program</h1>
           <p className="text-sm text-muted mt-0.5">
-            {formatEventName(config.event)} &middot;{" "}
-            {formatSessionType(config.programType)}
+            {formatEventName(config.event)} &middot; {formatSessionType(config.programType)}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/athlete/self-program/create">
-            <Button variant="outline" size="sm" leftIcon={<RefreshCw size={14} strokeWidth={1.75} aria-hidden="true" />}>
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<RefreshCw size={14} strokeWidth={1.75} aria-hidden="true" />}
+            >
               Regenerate
             </Button>
           </Link>
@@ -435,13 +418,10 @@ function ActiveView({
             aria-hidden="true"
           />
           <div className="text-sm">
-            <p className="font-semibold text-warning-800 dark:text-warning-300">
-              Event Mismatch
-            </p>
+            <p className="font-semibold text-warning-800 dark:text-warning-300">Event Mismatch</p>
             <p className="text-warning-700 dark:text-warning-400 mt-0.5">
-              Your active program is for {formatEventName(config.event)}, but
-              that event is no longer in your profile. Consider regenerating your
-              program.
+              Your active program is for {formatEventName(config.event)}, but that event is no
+              longer in your profile. Consider regenerating your program.
             </p>
           </div>
         </div>
@@ -478,12 +458,7 @@ function ActiveView({
                   Program week {currentWeek} / {totalWeeks}
                 </p>
               </div>
-              <ProgressBar
-                value={phaseProgress}
-                variant="primary"
-                size="md"
-                showLabel
-              />
+              <ProgressBar value={phaseProgress} variant="primary" size="md" showLabel />
             </div>
           ) : (
             <p className="text-sm text-muted">No phases configured.</p>
@@ -506,9 +481,7 @@ function ActiveView({
               <p className="text-sm font-medium text-[var(--foreground)] truncate">
                 {nextComp.name}
               </p>
-              <p className="text-xs text-muted">
-                {formatDate(nextComp.date)}
-              </p>
+              <p className="text-xs text-muted">{formatDate(nextComp.date)}</p>
             </div>
           </div>
         )}
@@ -536,12 +509,7 @@ function ActiveView({
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary-500 flex items-center justify-center shrink-0">
-                <Calendar
-                  size={18}
-                  strokeWidth={1.75}
-                  className="text-white"
-                  aria-hidden="true"
-                />
+                <Calendar size={18} strokeWidth={1.75} className="text-white" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--foreground)] truncate">
@@ -551,8 +519,7 @@ function ActiveView({
                   {nextSession.scheduledDate
                     ? formatRelativeDate(nextSession.scheduledDate)
                     : `Week ${nextSession.weekNumber}`}
-                  {nextSession.estimatedDuration &&
-                    ` \u00B7 ~${nextSession.estimatedDuration}min`}
+                  {nextSession.estimatedDuration && ` \u00B7 ~${nextSession.estimatedDuration}min`}
                 </p>
               </div>
               <ChevronRight
@@ -562,18 +529,14 @@ function ActiveView({
                 aria-hidden="true"
               />
             </div>
-            <p className="text-xs text-muted">
-              {formatSessionType(nextSession.sessionType)}
-            </p>
+            <p className="text-xs text-muted">{formatSessionType(nextSession.sessionType)}</p>
           </Link>
         ) : (
           <div className="card p-5 space-y-3">
             <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
               Next Session
             </h2>
-            <p className="text-sm text-muted">
-              No upcoming sessions scheduled.
-            </p>
+            <p className="text-sm text-muted">No upcoming sessions scheduled.</p>
           </div>
         )}
 
@@ -634,9 +597,7 @@ function ActiveView({
                     <p
                       className={cn(
                         "text-xs mt-1 tabular-nums",
-                        isCurrent
-                          ? "text-[var(--foreground)] font-semibold"
-                          : "text-muted"
+                        isCurrent ? "text-[var(--foreground)] font-semibold" : "text-muted"
                       )}
                     >
                       {phase.durationWeeks}w
@@ -693,7 +654,11 @@ export function SelfProgramHub({
       return draft ? <DraftView draft={draft} /> : <EmptyView />;
     case "active":
       return config ? (
-        <ActiveView config={config} eventMismatch={eventMismatch} liveAssignmentId={liveAssignmentId} />
+        <ActiveView
+          config={config}
+          eventMismatch={eventMismatch}
+          liveAssignmentId={liveAssignmentId}
+        />
       ) : (
         <EmptyView />
       );

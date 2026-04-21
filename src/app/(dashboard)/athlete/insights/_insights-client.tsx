@@ -1,7 +1,6 @@
 "use client";
 import { useState, useCallback, useTransition } from "react";
 import { useToast } from "@/components/toast";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { InsightList } from "@/components/insights/InsightList";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AthleteInsightWire } from "@/lib/insights/types";
@@ -119,7 +118,6 @@ export function AthleteInsightsClient({ athleteId, initialInsights }: Props) {
 
   return (
     <div className="relative">
-      <ScrollProgressBar />
       <div className="mx-auto max-w-3xl space-y-4 p-4">
         <header className="flex items-center justify-between gap-3">
           <h1 className="font-heading text-2xl">Insights</h1>

@@ -2,7 +2,6 @@
 
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { LineChart } from "@/components/charts/LineChart";
 import {
@@ -55,9 +54,7 @@ function TrendArrow({
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-[9px] font-medium ${
-        isGood
-          ? "text-emerald-600 dark:text-emerald-400"
-          : "text-amber-600 dark:text-amber-400"
+        isGood ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
       }`}
     >
       {isPositive ? (
@@ -100,9 +97,7 @@ function HeroBanner({
   averages: Record<string, number | null>;
 }) {
   const isWhoop = device === "whoop";
-  const score = isWhoop
-    ? (today as WhoopRow).recoveryScore
-    : (today as OuraRow).readinessScore;
+  const score = isWhoop ? (today as WhoopRow).recoveryScore : (today as OuraRow).readinessScore;
 
   const avgKey = isWhoop ? "recoveryScore" : "readinessScore";
   const delta = trendDelta(score, averages[avgKey] ?? null);
@@ -127,9 +122,7 @@ function HeroBanner({
           />
           <span className={`text-lg ${scoreColor(score)}`}>%</span>
         </div>
-        <p className={`text-sm font-medium mt-0.5 ${scoreColor(score)}`}>
-          {scoreLabel(score)}
-        </p>
+        <p className={`text-sm font-medium mt-0.5 ${scoreColor(score)}`}>{scoreLabel(score)}</p>
       </div>
 
       {delta !== null && (
@@ -152,13 +145,7 @@ function HeroBanner({
 
 // ─── Two-Up Cards ─────────────────────────────────────────────────────────────
 
-function TwoUpCards({
-  device,
-  today,
-}: {
-  device: "whoop" | "oura";
-  today: WhoopRow | OuraRow;
-}) {
+function TwoUpCards({ device, today }: { device: "whoop" | "oura"; today: WhoopRow | OuraRow }) {
   if (device === "whoop") {
     const w = today as WhoopRow;
     const strainPct = w.strain !== null ? Math.min((w.strain / 21) * 100, 100) : 0;
@@ -166,9 +153,7 @@ function TwoUpCards({
       <div className="grid grid-cols-2 gap-3">
         {/* Strain */}
         <div className="card p-4 space-y-2">
-          <p className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Strain
-          </p>
+          <p className="text-sm font-semibold text-muted uppercase tracking-wider">Strain</p>
           <div className="flex items-baseline gap-1">
             <AnimatedNumber
               value={w.strain ?? 0}
@@ -178,25 +163,18 @@ function TwoUpCards({
             <span className="text-sm text-muted">/21</span>
           </div>
           <div className="h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-amber-500"
-              style={{ width: `${strainPct}%` }}
-            />
+            <div className="h-full rounded-full bg-amber-500" style={{ width: `${strainPct}%` }} />
           </div>
         </div>
 
         {/* Sleep */}
         <div className="card p-4 space-y-2">
-          <p className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Sleep
-          </p>
+          <p className="text-sm font-semibold text-muted uppercase tracking-wider">Sleep</p>
           <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums">
             {w.sleepDurationMs !== null ? formatMs(w.sleepDurationMs) : "--"}
           </p>
           <p className="text-xs text-muted">
-            {w.sleepEfficiency !== null
-              ? `${w.sleepEfficiency.toFixed(0)}% efficiency`
-              : "No data"}
+            {w.sleepEfficiency !== null ? `${w.sleepEfficiency.toFixed(0)}% efficiency` : "No data"}
           </p>
         </div>
       </div>
@@ -210,9 +188,7 @@ function TwoUpCards({
     <div className="grid grid-cols-2 gap-3">
       {/* Sleep Score */}
       <div className="card p-4 space-y-2">
-        <p className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Sleep Score
-        </p>
+        <p className="text-sm font-semibold text-muted uppercase tracking-wider">Sleep Score</p>
         <div className="flex items-baseline gap-1">
           <AnimatedNumber
             value={o.sleepScore ?? 0}
@@ -222,18 +198,13 @@ function TwoUpCards({
           <span className="text-sm text-muted">%</span>
         </div>
         <div className="h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-indigo-500"
-            style={{ width: `${sleepPct}%` }}
-          />
+          <div className="h-full rounded-full bg-indigo-500" style={{ width: `${sleepPct}%` }} />
         </div>
       </div>
 
       {/* Activity */}
       <div className="card p-4 space-y-2">
-        <p className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Activity
-        </p>
+        <p className="text-sm font-semibold text-muted uppercase tracking-wider">Activity</p>
         <div className="flex items-baseline gap-1">
           <AnimatedNumber
             value={o.activityScore ?? 0}
@@ -242,9 +213,7 @@ function TwoUpCards({
           />
         </div>
         <p className="text-xs text-muted">
-          {o.activityScore !== null && o.activityScore >= 100
-            ? "Goal Reached"
-            : "In Progress"}
+          {o.activityScore !== null && o.activityScore >= 100 ? "Goal Reached" : "In Progress"}
         </p>
       </div>
     </div>
@@ -279,8 +248,22 @@ function VitalsStrip({
     const w = today as WhoopRow;
     cells = [
       { label: "HRV", value: w.hrvMs, decimals: 0, suffix: "ms", average: averages.hrvMs ?? null },
-      { label: "RHR", value: w.restingHR, decimals: 0, suffix: "bpm", average: averages.restingHR ?? null, invertTrend: true },
-      { label: "SpO2", value: w.spo2, decimals: 1, suffix: "%", colorFn: spo2Color, average: averages.spo2 ?? null },
+      {
+        label: "RHR",
+        value: w.restingHR,
+        decimals: 0,
+        suffix: "bpm",
+        average: averages.restingHR ?? null,
+        invertTrend: true,
+      },
+      {
+        label: "SpO2",
+        value: w.spo2,
+        decimals: 1,
+        suffix: "%",
+        colorFn: spo2Color,
+        average: averages.spo2 ?? null,
+      },
       {
         label: "Skin Temp",
         value: w.skinTempC,
@@ -290,20 +273,41 @@ function VitalsStrip({
         colorFn: skinTempColor,
         average: averages.skinTempC ?? null,
       },
-      { label: "Sleep Perf", value: w.sleepPerformance, decimals: 0, suffix: "%", average: averages.sleepPerformance ?? null },
+      {
+        label: "Sleep Perf",
+        value: w.sleepPerformance,
+        decimals: 0,
+        suffix: "%",
+        average: averages.sleepPerformance ?? null,
+      },
     ];
   } else {
     const o = today as OuraRow;
     cells = [
       { label: "HRV", value: o.hrvMs, decimals: 0, suffix: "ms", average: averages.hrvMs ?? null },
-      { label: "RHR", value: o.restingHR, decimals: 0, suffix: "bpm", average: averages.restingHR ?? null, invertTrend: true },
-      { label: "SpO2", value: o.spo2, decimals: 1, suffix: "%", colorFn: spo2Color, average: averages.spo2 ?? null },
+      {
+        label: "RHR",
+        value: o.restingHR,
+        decimals: 0,
+        suffix: "bpm",
+        average: averages.restingHR ?? null,
+        invertTrend: true,
+      },
+      {
+        label: "SpO2",
+        value: o.spo2,
+        decimals: 1,
+        suffix: "%",
+        colorFn: spo2Color,
+        average: averages.spo2 ?? null,
+      },
       {
         label: "Temp Dev",
         value: o.temperatureDeviation,
         decimals: 1,
         suffix: "\u00B0C",
-        prefix: o.temperatureDeviation !== null ? (o.temperatureDeviation >= 0 ? "+" : "") : undefined,
+        prefix:
+          o.temperatureDeviation !== null ? (o.temperatureDeviation >= 0 ? "+" : "") : undefined,
         colorFn: skinTempColor,
         average: averages.temperatureDeviation ?? null,
       },
@@ -315,9 +319,7 @@ function VitalsStrip({
   return (
     <div className={`grid ${cols} gap-1 sm:gap-3`}>
       {cells.map((c) => {
-        const colorClass = c.colorFn
-          ? c.colorFn(c.value)
-          : "text-[var(--foreground)]";
+        const colorClass = c.colorFn ? c.colorFn(c.value) : "text-[var(--foreground)]";
         return (
           <div key={c.label} className="card p-2 sm:p-3 text-center space-y-0.5">
             <p className="text-[9px] uppercase tracking-wider text-muted font-semibold">
@@ -327,24 +329,14 @@ function VitalsStrip({
               {c.value !== null ? (
                 <>
                   {c.prefix && <span className="text-xs">{c.prefix}</span>}
-                  <AnimatedNumber
-                    value={c.value}
-                    decimals={c.decimals}
-                    className="text-lg"
-                  />
-                  <span className="text-[10px] text-muted ml-0.5">
-                    {c.suffix}
-                  </span>
+                  <AnimatedNumber value={c.value} decimals={c.decimals} className="text-lg" />
+                  <span className="text-[10px] text-muted ml-0.5">{c.suffix}</span>
                 </>
               ) : (
                 <span className="text-lg text-surface-400">--</span>
               )}
             </div>
-            <TrendArrow
-              current={c.value}
-              average={c.average}
-              invert={c.invertTrend}
-            />
+            <TrendArrow current={c.value} average={c.average} invert={c.invertTrend} />
           </div>
         );
       })}
@@ -354,13 +346,7 @@ function VitalsStrip({
 
 // ─── Sleep Stages ─────────────────────────────────────────────────────────────
 
-function SleepStages({
-  device,
-  today,
-}: {
-  device: "whoop" | "oura";
-  today: WhoopRow | OuraRow;
-}) {
+function SleepStages({ device, today }: { device: "whoop" | "oura"; today: WhoopRow | OuraRow }) {
   let light: number;
   let deep: number;
   let rem: number;
@@ -395,24 +381,13 @@ function SleepStages({
 
   return (
     <div className="card p-4 space-y-3">
-      <p className="text-sm font-semibold text-muted uppercase tracking-wider">
-        Sleep Stages
-      </p>
+      <p className="text-sm font-semibold text-muted uppercase tracking-wider">Sleep Stages</p>
 
       {/* Stacked bar */}
       <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5">
-        <div
-          className="bg-blue-400 rounded-full"
-          style={{ width: `${lightPct}%` }}
-        />
-        <div
-          className="bg-indigo-500 rounded-full"
-          style={{ width: `${deepPct}%` }}
-        />
-        <div
-          className="bg-purple-500 rounded-full"
-          style={{ width: `${remPct}%` }}
-        />
+        <div className="bg-blue-400 rounded-full" style={{ width: `${lightPct}%` }} />
+        <div className="bg-indigo-500 rounded-full" style={{ width: `${deepPct}%` }} />
+        <div className="bg-purple-500 rounded-full" style={{ width: `${remPct}%` }} />
       </div>
 
       {/* Legend */}
@@ -451,15 +426,13 @@ function TrendChart({
   const series1Data = last7.map((row) => ({
     label: shortDay(row.date),
     value: isWhoop
-      ? (row as WhoopRow).recoveryScore ?? 0
-      : (row as OuraRow).readinessScore ?? 0,
+      ? ((row as WhoopRow).recoveryScore ?? 0)
+      : ((row as OuraRow).readinessScore ?? 0),
   }));
 
   const series2Data = last7.map((row) => ({
     label: shortDay(row.date),
-    value: isWhoop
-      ? (row as WhoopRow).strain ?? 0
-      : (row as OuraRow).sleepScore ?? 0,
+    value: isWhoop ? ((row as WhoopRow).strain ?? 0) : ((row as OuraRow).sleepScore ?? 0),
   }));
 
   const s1Color = isWhoop ? "#34d399" : "#a78bfa";
@@ -469,9 +442,7 @@ function TrendChart({
 
   return (
     <div className="card p-4 space-y-3">
-      <p className="text-sm font-semibold text-muted uppercase tracking-wider">
-        7-Day Trend
-      </p>
+      <p className="text-sm font-semibold text-muted uppercase tracking-wider">7-Day Trend</p>
       <LineChart
         series={[
           { data: series1Data, color: s1Color, label: s1Label },
@@ -484,17 +455,11 @@ function TrendChart({
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: s1Color }}
-          />
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s1Color }} />
           {s1Label}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: s2Color }}
-          />
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s2Color }} />
           {s2Label}
         </span>
       </div>
@@ -523,7 +488,13 @@ function AveragesCard({
 
   const rows: AvgRow[] = isWhoop
     ? [
-        { label: "Recovery", value: averages.recoveryScore ?? null, suffix: "%", decimals: 0, colorFn: scoreColor },
+        {
+          label: "Recovery",
+          value: averages.recoveryScore ?? null,
+          suffix: "%",
+          decimals: 0,
+          colorFn: scoreColor,
+        },
         { label: "HRV", value: averages.hrvMs ?? null, suffix: "ms", decimals: 0 },
         { label: "RHR", value: averages.restingHR ?? null, suffix: "bpm", decimals: 0 },
         { label: "SpO2", value: averages.spo2 ?? null, suffix: "%", decimals: 1 },
@@ -533,11 +504,22 @@ function AveragesCard({
         { label: "Sleep Eff", value: averages.sleepEfficiency ?? null, suffix: "%", decimals: 0 },
       ]
     : [
-        { label: "Readiness", value: averages.readinessScore ?? null, suffix: "", decimals: 0, colorFn: scoreColor },
+        {
+          label: "Readiness",
+          value: averages.readinessScore ?? null,
+          suffix: "",
+          decimals: 0,
+          colorFn: scoreColor,
+        },
         { label: "HRV", value: averages.hrvMs ?? null, suffix: "ms", decimals: 0 },
         { label: "RHR", value: averages.restingHR ?? null, suffix: "bpm", decimals: 0 },
         { label: "SpO2", value: averages.spo2 ?? null, suffix: "%", decimals: 1 },
-        { label: "Temp Dev", value: averages.temperatureDeviation ?? null, suffix: "\u00B0C", decimals: 1 },
+        {
+          label: "Temp Dev",
+          value: averages.temperatureDeviation ?? null,
+          suffix: "\u00B0C",
+          decimals: 1,
+        },
         { label: "Sleep Score", value: averages.sleepScore ?? null, suffix: "", decimals: 0 },
         { label: "Sleep Dur", value: averages.sleepDurationSec ?? null, suffix: "", decimals: 0 },
         { label: "Activity", value: averages.activityScore ?? null, suffix: "", decimals: 0 },
@@ -558,16 +540,11 @@ function AveragesCard({
       </p>
       <div className="divide-y divide-[var(--card-border)]">
         {rows.map((row) => (
-          <div
-            key={row.label}
-            className="flex justify-between py-2 px-4"
-          >
+          <div key={row.label} className="flex justify-between py-2 px-4">
             <span className="text-sm text-muted">{row.label}</span>
             <span
               className={`text-sm font-bold tabular-nums ${
-                row.colorFn
-                  ? row.colorFn(row.value)
-                  : "text-[var(--foreground)]"
+                row.colorFn ? row.colorFn(row.value) : "text-[var(--foreground)]"
               }`}
             >
               {formatAvgValue(row)}
@@ -593,7 +570,17 @@ function HistoryTable({
 
   const headers = isWhoop
     ? ["Date", "Recovery", "HRV", "RHR", "SpO2", "Skin Temp", "Sleep", "Efficiency", "Strain"]
-    : ["Date", "Readiness", "HRV", "RHR", "SpO2", "Temp Dev", "Sleep Score", "Sleep Dur", "Activity"];
+    : [
+        "Date",
+        "Readiness",
+        "HRV",
+        "RHR",
+        "SpO2",
+        "Temp Dev",
+        "Sleep Score",
+        "Sleep Dur",
+        "Activity",
+      ];
 
   const thClass =
     "px-4 py-2.5 text-left text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap";
@@ -632,17 +619,29 @@ function HistoryTable({
                           <td className={`${tdClass} font-semibold ${scoreColor(w.recoveryScore)}`}>
                             {w.recoveryScore !== null ? `${w.recoveryScore}%` : "--"}
                           </td>
-                          <td className={tdClass}>{w.hrvMs !== null ? `${w.hrvMs.toFixed(0)} ms` : "--"}</td>
-                          <td className={tdClass}>{w.restingHR !== null ? `${w.restingHR.toFixed(0)} bpm` : "--"}</td>
-                          <td className={tdClass}>{w.spo2 !== null ? `${w.spo2.toFixed(1)}%` : "--"}</td>
+                          <td className={tdClass}>
+                            {w.hrvMs !== null ? `${w.hrvMs.toFixed(0)} ms` : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {w.restingHR !== null ? `${w.restingHR.toFixed(0)} bpm` : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {w.spo2 !== null ? `${w.spo2.toFixed(1)}%` : "--"}
+                          </td>
                           <td className={tdClass}>
                             {w.skinTempC !== null
                               ? `${w.skinTempC >= 0 ? "+" : ""}${w.skinTempC.toFixed(1)}\u00B0C`
                               : "--"}
                           </td>
-                          <td className={tdClass}>{w.sleepDurationMs !== null ? formatMs(w.sleepDurationMs) : "--"}</td>
-                          <td className={tdClass}>{w.sleepEfficiency !== null ? `${w.sleepEfficiency.toFixed(0)}%` : "--"}</td>
-                          <td className={tdClass}>{w.strain !== null ? w.strain.toFixed(1) : "--"}</td>
+                          <td className={tdClass}>
+                            {w.sleepDurationMs !== null ? formatMs(w.sleepDurationMs) : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {w.sleepEfficiency !== null ? `${w.sleepEfficiency.toFixed(0)}%` : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {w.strain !== null ? w.strain.toFixed(1) : "--"}
+                          </td>
                         </>
                       );
                     })()
@@ -651,20 +650,34 @@ function HistoryTable({
                       return (
                         <>
                           <td className={tdClass}>{formatDate(o.date)}</td>
-                          <td className={`${tdClass} font-semibold ${scoreColor(o.readinessScore)}`}>
+                          <td
+                            className={`${tdClass} font-semibold ${scoreColor(o.readinessScore)}`}
+                          >
                             {o.readinessScore !== null ? `${o.readinessScore}` : "--"}
                           </td>
-                          <td className={tdClass}>{o.hrvMs !== null ? `${o.hrvMs.toFixed(0)} ms` : "--"}</td>
-                          <td className={tdClass}>{o.restingHR !== null ? `${o.restingHR.toFixed(0)} bpm` : "--"}</td>
-                          <td className={tdClass}>{o.spo2 !== null ? `${o.spo2.toFixed(1)}%` : "--"}</td>
+                          <td className={tdClass}>
+                            {o.hrvMs !== null ? `${o.hrvMs.toFixed(0)} ms` : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {o.restingHR !== null ? `${o.restingHR.toFixed(0)} bpm` : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {o.spo2 !== null ? `${o.spo2.toFixed(1)}%` : "--"}
+                          </td>
                           <td className={tdClass}>
                             {o.temperatureDeviation !== null
                               ? `${o.temperatureDeviation >= 0 ? "+" : ""}${o.temperatureDeviation.toFixed(1)}\u00B0C`
                               : "--"}
                           </td>
-                          <td className={tdClass}>{o.sleepScore !== null ? `${o.sleepScore}` : "--"}</td>
-                          <td className={tdClass}>{o.sleepDurationSec !== null ? formatSec(o.sleepDurationSec) : "--"}</td>
-                          <td className={tdClass}>{o.activityScore !== null ? `${o.activityScore}` : "--"}</td>
+                          <td className={tdClass}>
+                            {o.sleepScore !== null ? `${o.sleepScore}` : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {o.sleepDurationSec !== null ? formatSec(o.sleepDurationSec) : "--"}
+                          </td>
+                          <td className={tdClass}>
+                            {o.activityScore !== null ? `${o.activityScore}` : "--"}
+                          </td>
                         </>
                       );
                     })()}
@@ -686,7 +699,9 @@ function HistoryTable({
                   <span className="text-sm font-semibold text-[var(--foreground)]">
                     {formatDate(w.date)}
                   </span>
-                  <span className={`text-sm font-semibold tabular-nums ${scoreColor(w.recoveryScore)}`}>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${scoreColor(w.recoveryScore)}`}
+                  >
                     {w.recoveryScore !== null ? `${w.recoveryScore}%` : "--"}
                   </span>
                 </div>
@@ -748,7 +763,9 @@ function HistoryTable({
                   <span className="text-sm font-semibold text-[var(--foreground)]">
                     {formatDate(o.date)}
                   </span>
-                  <span className={`text-sm font-semibold tabular-nums ${scoreColor(o.readinessScore)}`}>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${scoreColor(o.readinessScore)}`}
+                  >
                     {o.readinessScore !== null ? `${o.readinessScore}` : "--"}
                   </span>
                 </div>
@@ -822,7 +839,6 @@ export function WearableDashboard({
   if (!hasData) {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
-        <ScrollProgressBar />
         <EmptyState device={device} />
       </div>
     );
@@ -830,12 +846,8 @@ export function WearableDashboard({
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <ScrollProgressBar />
-
       {/* Hero Banner */}
-      {today && (
-        <HeroBanner device={device} today={today} averages={averages} />
-      )}
+      {today && <HeroBanner device={device} today={today} averages={averages} />}
 
       <StaggeredList staggerDelay={60} className="space-y-5">
         {/* Two-Up Cards */}
@@ -884,7 +896,13 @@ export function WearableDashboard({
       {/* Last sync timestamp */}
       {lastSyncAt && (
         <p className="text-xs text-muted text-center">
-          Last synced {lastSyncAt.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+          Last synced{" "}
+          {lastSyncAt.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          })}
         </p>
       )}
     </div>

@@ -3,26 +3,12 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Dumbbell,
-  RefreshCw,
-  Sparkles,
-  Target,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { ArrowLeft, Dumbbell, RefreshCw, Sparkles, Target, TrendingUp, Zap } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatCard } from "@/components/ui/StatCard";
 import { StaggeredList } from "@/components/ui/StaggeredList";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
-import {
-  Tabs,
-  TabList,
-  TabTrigger,
-  TabPanel,
-} from "@/components/ui/Tabs";
+import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { ProgramSettings } from "./_program-settings";
@@ -95,19 +81,16 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
   const currentPhase = phases[config.currentPhaseIndex] ?? phases[0] ?? null;
 
   // All sessions across phases
-  const allSessions = useMemo(
-    () => phases.flatMap((p) => p.sessions),
-    [phases],
-  );
+  const allSessions = useMemo(() => phases.flatMap((p) => p.sessions), [phases]);
 
   // Volume stats
   const totalThrowsTarget = useMemo(
     () => allSessions.reduce((sum, s) => sum + s.totalThrowsTarget, 0),
-    [allSessions],
+    [allSessions]
   );
   const completedSessions = useMemo(
     () => allSessions.filter((s) => s.status === "COMPLETED").length,
-    [allSessions],
+    [allSessions]
   );
   const totalSessions = allSessions.length;
   const completionPct =
@@ -122,11 +105,9 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 
     // Phase start/end dates relative to program start
     const phaseStartDate = new Date(
-      programStart.getTime() + (currentPhase.startWeek - 1) * msPerWeek,
+      programStart.getTime() + (currentPhase.startWeek - 1) * msPerWeek
     );
-    const phaseEndDate = new Date(
-      programStart.getTime() + currentPhase.endWeek * msPerWeek,
-    );
+    const phaseEndDate = new Date(programStart.getTime() + currentPhase.endWeek * msPerWeek);
 
     const now = Date.now();
     const phaseDuration = phaseEndDate.getTime() - phaseStartDate.getTime();
@@ -140,16 +121,16 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 
   const handleRegenerate = async () => {
     const confirmed = window.confirm(
-      "This will replace your current program with a fresh one. Completed sessions are preserved in your history. Continue?",
+      "This will replace your current program with a fresh one. Completed sessions are preserved in your history. Continue?"
     );
     if (!confirmed) return;
 
     setRegenerating(true);
     try {
-      const res = await fetch(
-        `/api/athlete/self-program/${config.id}/generate`,
-        { method: "POST", headers: csrfHeaders() },
-      );
+      const res = await fetch(`/api/athlete/self-program/${config.id}/generate`, {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         const msg = data.error || "Failed to regenerate program";
@@ -161,7 +142,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
     } catch (err) {
       showError(
         "Regeneration failed",
-        err instanceof Error ? err.message : "Please try again later.",
+        err instanceof Error ? err.message : "Please try again later."
       );
     } finally {
       setRegenerating(false);
@@ -171,10 +152,10 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
   const handleGenerateNext = async () => {
     setGenerating(true);
     try {
-      const res = await fetch(
-        `/api/athlete/self-program/${config.id}/generate-next`,
-        { method: "POST", headers: csrfHeaders() },
-      );
+      const res = await fetch(`/api/athlete/self-program/${config.id}/generate-next`, {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Failed to generate next phase");
@@ -184,7 +165,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
     } catch (err) {
       showError(
         "Generation failed",
-        err instanceof Error ? err.message : "Please try again later.",
+        err instanceof Error ? err.message : "Please try again later."
       );
     } finally {
       setGenerating(false);
@@ -193,8 +174,6 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
-      <ScrollProgressBar />
-
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="space-y-4">
         <Link
@@ -251,21 +230,15 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
         </h2>
         <StaggeredList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-              Event
-            </p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Event</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {formatEventName(config.event)}
             </p>
-            <p className="text-xs text-muted capitalize">
-              {config.gender.toLowerCase()}
-            </p>
+            <p className="text-xs text-muted capitalize">{config.gender.toLowerCase()}</p>
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-              Schedule
-            </p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Schedule</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {config.daysPerWeek} days/week
             </p>
@@ -275,9 +248,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-              Goal
-            </p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Goal</p>
             <p className="text-sm font-bold font-heading text-primary-500 tabular-nums">
               <AnimatedNumber value={config.goalDistance} decimals={2} />m
             </p>
@@ -293,9 +264,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-              Mode
-            </p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Mode</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {config.generationMode === "AUTOPILOT" ? "Autopilot" : "Guided"}
             </p>
@@ -315,9 +284,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
 
       {/* ── Volume Stats ───────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Volume Stats
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Volume Stats</h2>
         <StaggeredList className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             label="Total Throws Target"
@@ -345,8 +312,12 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
       {/* ── Top-level Program / Settings Tabs ─────────────────────────── */}
       <Tabs defaultTab="program">
         <TabList variant="underline">
-          <TabTrigger id="program" variant="underline">Program</TabTrigger>
-          <TabTrigger id="settings" variant="underline">Settings</TabTrigger>
+          <TabTrigger id="program" variant="underline">
+            Program
+          </TabTrigger>
+          <TabTrigger id="settings" variant="underline">
+            Settings
+          </TabTrigger>
         </TabList>
 
         {/* ── Program Tab ─────────────────────────────────────────────── */}
@@ -382,8 +353,8 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
                     Ready for the Next Phase
                   </h3>
                   <p className="text-sm text-muted max-w-md mx-auto">
-                    You&apos;re 80%+ through your current phase. Generate the next
-                    mesocycle to keep your training on track.
+                    You&apos;re 80%+ through your current phase. Generate the next mesocycle to keep
+                    your training on track.
                   </p>
                 </div>
                 <Button
@@ -392,9 +363,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
                   onClick={handleGenerateNext}
                   loading={generating}
                   leftIcon={
-                    generating ? undefined : (
-                      <Zap size={16} strokeWidth={1.75} aria-hidden="true" />
-                    )
+                    generating ? undefined : <Zap size={16} strokeWidth={1.75} aria-hidden="true" />
                   }
                 >
                   {generating ? "Generating..." : "Generate Next Phase"}

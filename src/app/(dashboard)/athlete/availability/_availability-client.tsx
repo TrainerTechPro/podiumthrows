@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StaggeredList } from "@/components/ui/StaggeredList";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { useToast } from "@/components/ui/Toast";
 import { useConfirm } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -599,7 +598,6 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <ScrollProgressBar />
       <CopyWeekConfirmDialog />
 
       {/* Header */}

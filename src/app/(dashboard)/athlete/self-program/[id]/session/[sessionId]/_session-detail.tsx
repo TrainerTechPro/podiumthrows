@@ -21,7 +21,6 @@ import {
   Pencil,
   X,
 } from "lucide-react";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -101,7 +100,16 @@ interface SessionDetailProps {
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-const DAY_NAMES = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_NAMES = [
+  "",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 const SESSION_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   THROWS_ONLY: { label: "Throws", color: "text-blue-500" },
@@ -119,11 +127,26 @@ const PHASE_COLORS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, { label: string; color: string }> = {
-  PLANNED: { label: "Planned", color: "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300" },
-  SCHEDULED: { label: "Scheduled", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" },
-  IN_PROGRESS: { label: "In Progress", color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" },
-  COMPLETED: { label: "Completed", color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" },
-  SKIPPED: { label: "Skipped", color: "bg-surface-200 dark:bg-surface-700 text-surface-500 line-through" },
+  PLANNED: {
+    label: "Planned",
+    color: "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300",
+  },
+  SCHEDULED: {
+    label: "Scheduled",
+    color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+  },
+  IN_PROGRESS: {
+    label: "In Progress",
+    color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+  },
+  COMPLETED: {
+    label: "Completed",
+    color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
+  },
+  SKIPPED: {
+    label: "Skipped",
+    color: "bg-surface-200 dark:bg-surface-700 text-surface-500 line-through",
+  },
 };
 
 const DRILL_TYPE_LABELS: Record<string, string> = {
@@ -329,8 +352,6 @@ export function SessionDetail({
 
   return (
     <div className="max-w-2xl mx-auto pb-24">
-      <ScrollProgressBar />
-
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-1">
@@ -353,7 +374,12 @@ export function SessionDetail({
                 <ChevronLeft size={18} strokeWidth={1.75} aria-hidden="true" />
               </Link>
             ) : (
-              <button disabled className="p-2 opacity-30 cursor-default" aria-label="No previous session" aria-disabled="true">
+              <button
+                disabled
+                className="p-2 opacity-30 cursor-default"
+                aria-label="No previous session"
+                aria-disabled="true"
+              >
                 <ChevronLeft size={18} strokeWidth={1.75} aria-hidden="true" />
               </button>
             )}
@@ -366,7 +392,12 @@ export function SessionDetail({
                 <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </Link>
             ) : (
-              <button disabled className="p-2 opacity-30 cursor-default" aria-label="No next session" aria-disabled="true">
+              <button
+                disabled
+                className="p-2 opacity-30 cursor-default"
+                aria-label="No next session"
+                aria-disabled="true"
+              >
                 <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
               </button>
             )}
@@ -413,7 +444,9 @@ export function SessionDetail({
               className="w-full"
               onClick={handleStartWorkout}
               loading={starting}
-              leftIcon={!starting ? <Play size={18} strokeWidth={1.75} aria-hidden="true" /> : undefined}
+              leftIcon={
+                !starting ? <Play size={18} strokeWidth={1.75} aria-hidden="true" /> : undefined
+              }
             >
               {starting ? "Starting..." : "Start Workout"}
             </Button>
@@ -435,7 +468,9 @@ export function SessionDetail({
         <div className="mb-6 card p-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-center space-y-3">
           <div className="flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">Workout In Progress</p>
+            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+              Workout In Progress
+            </p>
           </div>
           <Button
             variant="primary"
@@ -443,7 +478,9 @@ export function SessionDetail({
             className="w-full"
             onClick={handleStartWorkout}
             loading={starting}
-            leftIcon={!starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined}
+            leftIcon={
+              !starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined
+            }
           >
             {starting ? "Resuming..." : "Resume Workout"}
           </Button>
@@ -462,23 +499,42 @@ export function SessionDetail({
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="card p-3 text-center">
-          <Target size={16} strokeWidth={1.75} className="mx-auto text-primary-500 mb-1" aria-hidden="true" />
+          <Target
+            size={16}
+            strokeWidth={1.75}
+            className="mx-auto text-primary-500 mb-1"
+            aria-hidden="true"
+          />
           <div className="text-lg font-semibold tabular-nums">
             <AnimatedNumber value={totalThrows} />
           </div>
           <div className="text-xs text-muted">throws</div>
         </div>
         <div className="card p-3 text-center">
-          <Dumbbell size={16} strokeWidth={1.75} className="mx-auto text-emerald-500 mb-1" aria-hidden="true" />
+          <Dumbbell
+            size={16}
+            strokeWidth={1.75}
+            className="mx-auto text-emerald-500 mb-1"
+            aria-hidden="true"
+          />
           <div className="text-lg font-semibold tabular-nums">
             <AnimatedNumber value={strength.length} />
           </div>
           <div className="text-xs text-muted">exercises</div>
         </div>
         <div className="card p-3 text-center">
-          <Clock size={16} strokeWidth={1.75} className="mx-auto text-blue-500 mb-1" aria-hidden="true" />
+          <Clock
+            size={16}
+            strokeWidth={1.75}
+            className="mx-auto text-blue-500 mb-1"
+            aria-hidden="true"
+          />
           <div className="text-lg font-semibold tabular-nums">
-            {session.estimatedDuration ? <AnimatedNumber value={session.estimatedDuration} /> : "\u2014"}
+            {session.estimatedDuration ? (
+              <AnimatedNumber value={session.estimatedDuration} />
+            ) : (
+              "\u2014"
+            )}
           </div>
           <div className="text-xs text-muted">min</div>
         </div>
@@ -528,10 +584,10 @@ export function SessionDetail({
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-medium text-sm">
-                          {t.implement}
-                        </span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}>
+                        <span className="font-medium text-sm">{t.implement}</span>
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
+                        >
                           {classInfo.label}
                         </span>
                       </div>
@@ -581,7 +637,9 @@ export function SessionDetail({
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-sm font-medium">{s.exerciseName}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}>
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
+                        >
                           {classInfo.label}
                         </span>
                       </div>
@@ -594,7 +652,9 @@ export function SessionDetail({
                         <span className="text-muted ml-1.5 tabular-nums">@ {s.loadKg}kg</span>
                       )}
                       {s.intensityPercent != null && !s.loadKg && (
-                        <span className="text-muted ml-1.5 tabular-nums">@ {s.intensityPercent}%</span>
+                        <span className="text-muted ml-1.5 tabular-nums">
+                          @ {s.intensityPercent}%
+                        </span>
                       )}
                     </div>
                   </div>
@@ -625,7 +685,9 @@ export function SessionDetail({
       {/* Actions */}
       {canAct && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-2">Actions</h2>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-2">
+            Actions
+          </h2>
 
           {/* Resume Workout (when IN_PROGRESS — navigate to live view via start-live which is idempotent) */}
           {status === "IN_PROGRESS" && (
@@ -635,7 +697,9 @@ export function SessionDetail({
               className="w-full"
               onClick={handleStartWorkout}
               loading={starting}
-              leftIcon={!starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined}
+              leftIcon={
+                !starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined
+              }
             >
               {starting ? "Resuming..." : "Resume Workout"}
             </Button>
@@ -652,7 +716,9 @@ export function SessionDetail({
               <Undo2 size={18} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
               <div>
                 <div className="text-sm font-medium">Reset Workout</div>
-                <div className="text-xs text-muted">Clear progress and start over — accidentally started</div>
+                <div className="text-xs text-muted">
+                  Clear progress and start over — accidentally started
+                </div>
               </div>
             </button>
           )}
@@ -669,7 +735,9 @@ export function SessionDetail({
             <Pencil size={18} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
             <div>
               <div className="text-sm font-medium">Modify Session</div>
-              <div className="text-xs text-muted">Adjust exercises or add notes before starting</div>
+              <div className="text-xs text-muted">
+                Adjust exercises or add notes before starting
+              </div>
             </div>
           </button>
 
@@ -693,7 +761,12 @@ export function SessionDetail({
             onClick={() => setShowSkipConfirm(true)}
             className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
           >
-            <SkipForward size={18} strokeWidth={1.75} className="text-amber-500" aria-hidden="true" />
+            <SkipForward
+              size={18}
+              strokeWidth={1.75}
+              className="text-amber-500"
+              aria-hidden="true"
+            />
             <div>
               <div className="text-sm font-medium">Skip Session</div>
               <div className="text-xs text-muted">Mark as skipped and move on</div>
@@ -705,8 +778,15 @@ export function SessionDetail({
       {/* Completed state */}
       {status === "COMPLETED" && (
         <div className="card p-4 bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-center">
-          <CheckCircle2 size={24} strokeWidth={1.75} className="text-emerald-500 mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Session Completed</p>
+          <CheckCircle2
+            size={24}
+            strokeWidth={1.75}
+            className="text-emerald-500 mx-auto mb-2"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+            Session Completed
+          </p>
           {session.completedAt && (
             <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-0.5">
               {formatDate(session.completedAt)}
@@ -718,7 +798,12 @@ export function SessionDetail({
       {/* Skipped state */}
       {status === "SKIPPED" && (
         <div className="card p-4 bg-surface-100 dark:bg-surface-800 text-center">
-          <SkipForward size={24} strokeWidth={1.75} className="text-muted mx-auto mb-2" aria-hidden="true" />
+          <SkipForward
+            size={24}
+            strokeWidth={1.75}
+            className="text-muted mx-auto mb-2"
+            aria-hidden="true"
+          />
           <p className="text-sm font-medium text-muted">Session Skipped</p>
         </div>
       )}
@@ -764,7 +849,10 @@ export function SessionDetail({
             </div>
 
             <div>
-              <label htmlFor="reschedule-date" className="text-sm font-medium text-[var(--foreground)] block mb-1.5">
+              <label
+                htmlFor="reschedule-date"
+                className="text-sm font-medium text-[var(--foreground)] block mb-1.5"
+              >
                 New Date
               </label>
               <input
@@ -819,15 +907,20 @@ export function SessionDetail({
             </div>
 
             <p className="text-sm text-muted">
-              Add notes about planned adjustments. The live workout prescription stays the same — these notes are for your reference and coach visibility.
+              Add notes about planned adjustments. The live workout prescription stays the same —
+              these notes are for your reference and coach visibility.
             </p>
 
             {/* Current prescription summary */}
             <div className="rounded-xl bg-surface-50 dark:bg-surface-800/50 p-3 space-y-1.5">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wider">Prescribed</p>
+              <p className="text-xs font-semibold text-muted uppercase tracking-wider">
+                Prescribed
+              </p>
               {throws.length > 0 && (
                 <p className="text-xs text-[var(--foreground)]">
-                  {throws.map((t) => `${t.implement}: ${t.sets}\u00D7${t.repsPerSet}`).join(" \u2192 ")}
+                  {throws
+                    .map((t) => `${t.implement}: ${t.sets}\u00D7${t.repsPerSet}`)
+                    .join(" \u2192 ")}
                 </p>
               )}
               {strength.length > 0 && (
@@ -838,7 +931,10 @@ export function SessionDetail({
             </div>
 
             <div>
-              <label htmlFor="mod-notes" className="text-sm font-medium text-[var(--foreground)] block mb-1.5">
+              <label
+                htmlFor="mod-notes"
+                className="text-sm font-medium text-[var(--foreground)] block mb-1.5"
+              >
                 Modification Notes
               </label>
               <textarea
