@@ -73,7 +73,7 @@ function toYMD(d: Date): string {
 // Self-program linkage: ThrowsSession.tags is a JSON array of strings; when an
 // athlete starts a self-program session we tag the executed ThrowsSession with
 // "selfProgram:{programSessionId}" so the blueprint can be filtered out.
-function extractSelfProgramSessionId(tagsJson: string | null | undefined): string | null {
+export function extractSelfProgramSessionId(tagsJson: string | null | undefined): string | null {
   if (!tagsJson) return null;
   try {
     const tags = JSON.parse(tagsJson) as unknown;

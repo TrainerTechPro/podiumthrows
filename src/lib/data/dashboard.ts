@@ -6,6 +6,7 @@
 import prisma from "@/lib/prisma";
 import { getAthleteTimezone, getLocalDate, startOfToday as startOfTodayTz } from "@/lib/dates";
 import { getAthletePRs } from "@/lib/data/personal-records";
+import { extractSelfProgramSessionId } from "@/lib/data/athlete-activity";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  TYPES                                                                     */
@@ -185,7 +186,9 @@ function parseProgramSessionItems(ps: {
           position: pos++,
         });
       }
-    } catch { /* ignore parse errors */ }
+    } catch {
+      /* ignore parse errors */
+    }
   }
 
   // Throws
@@ -199,19 +202,20 @@ function parseProgramSessionItems(ps: {
       notes?: string;
     }>;
     for (const t of throws) {
-      const totalThrows =
-        t.sets && t.repsPerSet ? t.sets * t.repsPerSet : undefined;
+      const totalThrows = t.sets && t.repsPerSet ? t.sets * t.repsPerSet : undefined;
       items.push({
         id: `throw-${pos}`,
         name: t.drillType
           ? `${t.drillType}${t.implement ? ` (${t.implement})` : ""}`
-          : t.implement ?? "Throws",
+          : (t.implement ?? "Throws"),
         type: "throw",
         detail: totalThrows ? `${totalThrows} throws` : (t.notes ?? ""),
         position: pos++,
       });
     }
-  } catch { /* ignore parse errors */ }
+  } catch {
+    /* ignore parse errors */
+  }
 
   // Strength
   if (ps.strengthPrescription) {
@@ -227,14 +231,13 @@ function parseProgramSessionItems(ps: {
           id: `lift-${pos}`,
           name: l.exerciseName ?? "Lift",
           type: "lift",
-          detail:
-            l.sets && l.reps
-              ? `${l.sets} x ${l.reps}`
-              : (l.notes ?? ""),
+          detail: l.sets && l.reps ? `${l.sets} x ${l.reps}` : (l.notes ?? ""),
           position: pos++,
         });
       }
-    } catch { /* ignore parse errors */ }
+    } catch {
+      /* ignore parse errors */
+    }
   }
 
   return items;
@@ -249,9 +252,7 @@ function inferSessionType(items: TimelineItem[]): "throws" | "lift" | "mixed" {
   return "throws";
 }
 
-export async function fetchTodayWorkoutData(
-  athleteId: string
-): Promise<TodaySession[]> {
+export async function fetchTodayWorkoutData(athleteId: string): Promise<TodaySession[]> {
   const tz = await getAthleteTimezone(athleteId);
   const today = todayYMD(tz);
   const dayStart = startOfTodayInTz(tz);
@@ -263,31 +264,52 @@ export async function fetchTodayWorkoutData(
   // scheduledDate is nullable — many sessions derive their date from
   // program.startDate + weekNumber + dayOfWeek. We must fetch all
   // non-skipped sessions for this athlete and compute the actual date.
-  const allProgramSessions = await prisma.programSession.findMany({
-    where: {
-      program: { athleteId },
-      status: { not: "SKIPPED" },
-    },
-    include: {
-      program: {
-        select: {
-          event: true,
-          startDate: true,
-          selfProgramConfig: { select: { id: true } },
+  const [allProgramSessions, shadowingAssignments] = await Promise.all([
+    prisma.programSession.findMany({
+      where: {
+        program: { athleteId },
+        status: { not: "SKIPPED" },
+      },
+      include: {
+        program: {
+          select: {
+            event: true,
+            startDate: true,
+            selfProgramConfig: { select: { id: true } },
+          },
         },
       },
-    },
-    orderBy: { createdAt: "asc" },
-  });
+      orderBy: { createdAt: "asc" },
+    }),
+    // Self-program assignments tag their ThrowsSession with
+    // `selfProgram:{programSessionId}` — those program sessions are
+    // shadowed (the assignment is the live copy) and must be dropped
+    // from the today feed to prevent duplication.
+    prisma.throwsAssignment.findMany({
+      where: { athleteId, assignedDate: today, status: { notIn: ["SKIPPED"] } },
+      select: { session: { select: { tags: true } } },
+    }),
+  ]);
 
-  // Filter to today: either scheduledDate matches, or computed date matches
+  const shadowedProgramIds = new Set<string>();
+  for (const a of shadowingAssignments) {
+    const spid = extractSelfProgramSessionId(a.session.tags);
+    if (spid) shadowedProgramIds.add(spid);
+  }
+
+  // Filter to today: either scheduledDate matches, or computed date matches.
+  // Drop anything shadowed by a same-day ThrowsAssignment.
   const programSessions = allProgramSessions.filter((ps) => {
+    if (shadowedProgramIds.has(ps.id)) return false;
     if (ps.scheduledDate === today) return true;
     if (!ps.scheduledDate && ps.program.startDate) {
       const start = new Date(ps.program.startDate);
       start.setDate(start.getDate() + (ps.weekNumber - 1) * 7 + (ps.dayOfWeek - 1));
-      const computed = start.getFullYear() + "-" +
-        String(start.getMonth() + 1).padStart(2, "0") + "-" +
+      const computed =
+        start.getFullYear() +
+        "-" +
+        String(start.getMonth() + 1).padStart(2, "0") +
+        "-" +
         String(start.getDate()).padStart(2, "0");
       return computed === today;
     }
@@ -372,7 +394,9 @@ export async function fetchTodayWorkoutData(
         } else {
           detail = (cfg.name as string) ?? (cfg.notes as string) ?? "";
         }
-      } catch { /* config parse error */ }
+      } catch {
+        /* config parse error */
+      }
 
       items.push({
         id: block.id,
@@ -467,9 +491,7 @@ export async function fetchTodayWorkoutData(
         id: log.id,
         name: log.exerciseName,
         type: isThrow ? ("throw" as const) : ("lift" as const),
-        detail: isThrow
-          ? `${log.sets} throws`
-          : `${log.sets} x ${log.reps ?? "?"}`,
+        detail: isThrow ? `${log.sets} throws` : `${log.sets} x ${log.reps ?? "?"}`,
         position: idx,
       };
     });
@@ -502,56 +524,57 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
   const firstYMD = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, "0")}-01`;
   const lastYMD = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
 
-  const [allProgramSessions, trainingSessions, throwsAssignments, selfSessions, standaloneThrows] = await Promise.all([
-    // ProgramSession — scheduledDate is nullable String; must also compute from startDate
-    prisma.programSession.findMany({
-      where: { program: { athleteId } },
-      select: {
-        scheduledDate: true,
-        status: true,
-        weekNumber: true,
-        dayOfWeek: true,
-        program: { select: { startDate: true } },
-      },
-    }),
+  const [allProgramSessions, trainingSessions, throwsAssignments, selfSessions, standaloneThrows] =
+    await Promise.all([
+      // ProgramSession — scheduledDate is nullable String; must also compute from startDate
+      prisma.programSession.findMany({
+        where: { program: { athleteId } },
+        select: {
+          scheduledDate: true,
+          status: true,
+          weekNumber: true,
+          dayOfWeek: true,
+          program: { select: { startDate: true } },
+        },
+      }),
 
-    // TrainingSession — scheduledDate is DateTime
-    prisma.trainingSession.findMany({
-      where: {
-        athleteId,
-        scheduledDate: { gte: firstDay, lte: lastDay },
-      },
-      select: { scheduledDate: true, status: true },
-    }),
+      // TrainingSession — scheduledDate is DateTime
+      prisma.trainingSession.findMany({
+        where: {
+          athleteId,
+          scheduledDate: { gte: firstDay, lte: lastDay },
+        },
+        select: { scheduledDate: true, status: true },
+      }),
 
-    // ThrowsAssignment — assignedDate is String (YYYY-MM-DD)
-    prisma.throwsAssignment.findMany({
-      where: {
-        athleteId,
-        assignedDate: { gte: firstYMD, lte: lastYMD },
-      },
-      select: { assignedDate: true, status: true },
-    }),
+      // ThrowsAssignment — assignedDate is String (YYYY-MM-DD)
+      prisma.throwsAssignment.findMany({
+        where: {
+          athleteId,
+          assignedDate: { gte: firstYMD, lte: lastYMD },
+        },
+        select: { assignedDate: true, status: true },
+      }),
 
-    // AthleteThrowsSession (self-logged) — date is String (YYYY-MM-DD)
-    prisma.athleteThrowsSession.findMany({
-      where: {
-        athleteId,
-        date: { gte: firstYMD, lte: lastYMD },
-      },
-      select: { date: true, sessionRpe: true },
-    }),
+      // AthleteThrowsSession (self-logged) — date is String (YYYY-MM-DD)
+      prisma.athleteThrowsSession.findMany({
+        where: {
+          athleteId,
+          date: { gte: firstYMD, lte: lastYMD },
+        },
+        select: { date: true, sessionRpe: true },
+      }),
 
-    // Standalone ThrowLog entries (Quick Log + coach-logged, no parent session)
-    prisma.throwLog.findMany({
-      where: {
-        athleteId,
-        sessionId: null,
-        date: { gte: firstDay, lte: lastDay },
-      },
-      select: { date: true },
-    }),
-  ]);
+      // Standalone ThrowLog entries (Quick Log + coach-logged, no parent session)
+      prisma.throwLog.findMany({
+        where: {
+          athleteId,
+          sessionId: null,
+          date: { gte: firstDay, lte: lastDay },
+        },
+        select: { date: true },
+      }),
+    ]);
 
   // Build map: date -> { hasCompleted, hasScheduled }
   const dayMap = new Map<string, { hasCompleted: boolean; hasScheduled: boolean }>();
@@ -567,8 +590,11 @@ export async function fetchCalendarData(athleteId: string): Promise<CalendarDay[
     if (!dateStr && ps.program.startDate) {
       const start = new Date(ps.program.startDate);
       start.setDate(start.getDate() + (ps.weekNumber - 1) * 7 + (ps.dayOfWeek - 1));
-      dateStr = start.getFullYear() + "-" +
-        String(start.getMonth() + 1).padStart(2, "0") + "-" +
+      dateStr =
+        start.getFullYear() +
+        "-" +
+        String(start.getMonth() + 1).padStart(2, "0") +
+        "-" +
         String(start.getDate()).padStart(2, "0");
     }
     if (!dateStr) continue;
@@ -652,14 +678,27 @@ export async function fetchQuickStatsData(athleteId: string): Promise<QuickStats
   const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   startOfWeek.setDate(now.getDate() + daysToMonday);
   startOfWeek.setHours(0, 0, 0, 0);
-  const weekYMD = startOfWeek.getFullYear() + "-" +
-    String(startOfWeek.getMonth() + 1).padStart(2, "0") + "-" +
+  const weekYMD =
+    startOfWeek.getFullYear() +
+    "-" +
+    String(startOfWeek.getMonth() + 1).padStart(2, "0") +
+    "-" +
     String(startOfWeek.getDate()).padStart(2, "0");
 
   // Count across ALL session types — not just TrainingSession.
   // Also count distinct dates with standalone ThrowLog entries (Quick Log +
   // coach-logged throws that don't belong to a formal session).
-  const [athlete, legacyTotal, legacyWeek, programTotal, programWeek, selfLoggedTotal, selfLoggedWeek, standaloneThrowDates, standaloneThrowDatesWeek] = await Promise.all([
+  const [
+    athlete,
+    legacyTotal,
+    legacyWeek,
+    programTotal,
+    programWeek,
+    selfLoggedTotal,
+    selfLoggedWeek,
+    standaloneThrowDates,
+    standaloneThrowDatesWeek,
+  ] = await Promise.all([
     prisma.athleteProfile.findUnique({
       where: { id: athleteId },
       select: { currentStreak: true },
@@ -754,9 +793,7 @@ export async function fetchGoalsData(athleteId: string): Promise<GoalItem[]> {
 /*  7. VOLUME (stub — VolumeWidget fetches client-side)                       */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export async function fetchVolumeData(
-  athleteId: string
-): Promise<{ athleteId: string }> {
+export async function fetchVolumeData(athleteId: string): Promise<{ athleteId: string }> {
   return { athleteId };
 }
 
@@ -764,9 +801,7 @@ export async function fetchVolumeData(
 /*  8. UPCOMING SESSIONS                                                      */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export async function fetchUpcomingSessionsData(
-  athleteId: string
-): Promise<UpcomingSessionItem[]> {
+export async function fetchUpcomingSessionsData(athleteId: string): Promise<UpcomingSessionItem[]> {
   const now = new Date();
   const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
@@ -857,9 +892,7 @@ export async function fetchVideosData(athleteId: string): Promise<VideoItem[]> {
 /*  10. QUESTIONNAIRES                                                        */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-export async function fetchQuestionnairesData(
-  athleteId: string
-): Promise<QuestionnairesData> {
+export async function fetchQuestionnairesData(athleteId: string): Promise<QuestionnairesData> {
   const pending = await prisma.questionnaireAssignment.findMany({
     where: { athleteId, completedAt: null },
     include: {

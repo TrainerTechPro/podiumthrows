@@ -1,13 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock Prisma BEFORE importing the fetcher.
-const mockFindMany = vi.fn();
-vi.mock("@/lib/prisma", () => ({
-  default: {
-    throwsAssignment: {
-      findMany: (...args: unknown[]) => mockFindMany(...args),
-    },
-  },
+const mockGetUpcomingActivity = vi.fn();
+
+vi.mock("@/lib/data/athlete-activity", () => ({
+  getUpcomingActivity: (...a: unknown[]) => mockGetUpcomingActivity(...a),
 }));
 
 import { fetchUpcomingThrowsAssignments } from "../throws-hub";
@@ -17,19 +13,35 @@ describe("fetchUpcomingThrowsAssignments", () => {
     vi.clearAllMocks();
   });
 
-  it("returns the right shape (array of UpcomingSessionItem)", async () => {
-    mockFindMany.mockResolvedValue([
+  it("maps ActivityItem → UpcomingSessionItem shape", async () => {
+    mockGetUpcomingActivity.mockResolvedValue([
       {
         id: "asgn-1",
-        assignedDate: "2026-04-15",
-        status: "ASSIGNED",
-        session: { event: "SHOT_PUT", name: "Heavy Day" },
+        source: "assigned-throws",
+        kind: "throws",
+        event: "SHOT_PUT",
+        status: "planned",
+        scheduledAt: new Date("2026-04-25T12:00:00.000Z"),
+        completedAt: null,
+        assignedBy: "coach",
+        metrics: {},
+        title: "Heavy Day",
+        href: "/athlete/sessions/assignment/asgn-1",
+        coachFeedback: null,
       },
       {
         id: "asgn-2",
-        assignedDate: "2026-04-16",
-        status: "NOTIFIED",
-        session: { event: "DISCUS", name: "Comp Sim" },
+        source: "assigned-throws",
+        kind: "throws",
+        event: "DISCUS",
+        status: "active",
+        scheduledAt: new Date("2026-04-26T12:00:00.000Z"),
+        completedAt: null,
+        assignedBy: "coach",
+        metrics: {},
+        title: "Comp Sim",
+        href: "/athlete/throws/live/asgn-2",
+        coachFeedback: null,
       },
     ]);
 
@@ -38,32 +50,107 @@ describe("fetchUpcomingThrowsAssignments", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       id: "asgn-1",
-      scheduledDate: "2026-04-15",
+      scheduledDate: "2026-04-25T12:00:00.000Z",
       status: "ASSIGNED",
       planName: "Heavy Day",
       coachNotes: null,
     });
-    expect(result[1].planName).toBe("Comp Sim");
+    expect(result[1]).toEqual({
+      id: "asgn-2",
+      scheduledDate: "2026-04-26T12:00:00.000Z",
+      status: "IN_PROGRESS",
+      planName: "Comp Sim",
+      coachNotes: null,
+    });
   });
 
-  it("filters to ASSIGNED / NOTIFIED / IN_PROGRESS only — excludes COMPLETED, SKIPPED, PARTIAL", async () => {
-    mockFindMany.mockResolvedValue([]);
+  it("filters out non-throws items — strength-only training sessions don't pollute the throws widget", async () => {
+    mockGetUpcomingActivity.mockResolvedValue([
+      {
+        id: "a1",
+        source: "assigned-throws",
+        kind: "throws",
+        event: "SHOT_PUT",
+        status: "planned",
+        scheduledAt: new Date("2026-04-25T12:00:00.000Z"),
+        completedAt: null,
+        assignedBy: "coach",
+        metrics: {},
+        title: "Throws",
+        href: "/x",
+        coachFeedback: null,
+      },
+      {
+        id: "t1",
+        source: "assigned-training",
+        kind: "strength",
+        event: null,
+        status: "planned",
+        scheduledAt: new Date("2026-04-26T12:00:00.000Z"),
+        completedAt: null,
+        assignedBy: "coach",
+        metrics: {},
+        title: "Lift Day",
+        href: "/y",
+        coachFeedback: null,
+      },
+    ]);
 
-    await fetchUpcomingThrowsAssignments("athlete-1");
+    const result = await fetchUpcomingThrowsAssignments("athlete-1");
 
-    expect(mockFindMany).toHaveBeenCalledTimes(1);
-    const call = mockFindMany.mock.calls[0][0];
-    expect(call.where.status.in).toEqual(["ASSIGNED", "NOTIFIED", "IN_PROGRESS"]);
-    expect(call.where.athleteId).toBe("athlete-1");
-    expect(call.orderBy).toEqual({ assignedDate: "asc" });
-    expect(call.take).toBe(3);
+    expect(result.map((r) => r.id)).toEqual(["a1"]);
   });
 
-  it("returns empty array for athletes with no upcoming assignments", async () => {
-    mockFindMany.mockResolvedValue([]);
+  it("caps at 3 items", async () => {
+    mockGetUpcomingActivity.mockResolvedValue(
+      Array.from({ length: 10 }, (_, i) => ({
+        id: `a${i}`,
+        source: "assigned-throws",
+        kind: "throws",
+        event: "SHOT_PUT",
+        status: "planned",
+        scheduledAt: new Date(`2026-04-${20 + i}T12:00:00.000Z`),
+        completedAt: null,
+        assignedBy: "coach",
+        metrics: {},
+        title: "x",
+        href: "/x",
+        coachFeedback: null,
+      }))
+    );
+
+    const result = await fetchUpcomingThrowsAssignments("athlete-1");
+
+    expect(result).toHaveLength(3);
+  });
+
+  it("returns empty for athletes with no upcoming throws", async () => {
+    mockGetUpcomingActivity.mockResolvedValue([]);
 
     const result = await fetchUpcomingThrowsAssignments("athlete-1");
 
     expect(result).toEqual([]);
+  });
+
+  it("maps partial + skipped status correctly", async () => {
+    mockGetUpcomingActivity.mockResolvedValue([
+      {
+        id: "a-partial",
+        source: "assigned-throws",
+        kind: "throws",
+        event: "HAMMER",
+        status: "partial",
+        scheduledAt: new Date("2026-04-20T12:00:00.000Z"),
+        completedAt: null,
+        assignedBy: "coach",
+        metrics: {},
+        title: "x",
+        href: "/x",
+        coachFeedback: null,
+      },
+    ]);
+
+    const result = await fetchUpcomingThrowsAssignments("athlete-1");
+    expect(result[0].status).toBe("PARTIAL");
   });
 });
