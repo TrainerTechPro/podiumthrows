@@ -12,7 +12,7 @@ const TOKEN_URL = "https://api.ouraring.com/oauth/token";
  * OAuth2 callback — Oura redirects here after the user authorizes.
  */
 export async function GET(request: NextRequest) {
-  const settingsUrl = new URL("/athlete/settings", request.url);
+  const settingsUrl = new URL("/athlete/integrations", request.url);
 
   try {
     const { searchParams } = request.nextUrl;
@@ -61,7 +61,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange authorization code for tokens
-    const redirectUri = process.env.OURA_REDIRECT_URI || "https://podiumthrows.com/api/oura/callback";
+    const redirectUri =
+      process.env.OURA_REDIRECT_URI || "https://podiumthrows.com/api/oura/callback";
 
     const tokenRes = await fetch(TOKEN_URL, {
       method: "POST",
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
 
     // Clear the state cookie and redirect to settings
     const response = NextResponse.redirect(
-      new URL("/athlete/settings?oura=connected", request.url)
+      new URL("/athlete/integrations?oura=connected", request.url)
     );
 
     response.cookies.set("oura-oauth-state", "", {
