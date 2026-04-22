@@ -14,7 +14,7 @@ const TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token";
  * and reads the auth-token cookie to identify the user.
  */
 export async function GET(request: NextRequest) {
-  const settingsUrl = new URL("/athlete/settings", request.url);
+  const settingsUrl = new URL("/athlete/integrations", request.url);
 
   try {
     const { searchParams } = request.nextUrl;
@@ -65,7 +65,8 @@ export async function GET(request: NextRequest) {
 
     // Exchange authorization code for tokens
     // Must exactly match the redirect URL registered in the WHOOP developer portal
-    const redirectUri = process.env.WHOOP_REDIRECT_URI || "https://podiumthrows.com/api/whoop/callback";
+    const redirectUri =
+      process.env.WHOOP_REDIRECT_URI || "https://podiumthrows.com/api/whoop/callback";
 
     const tokenRes = await fetch(TOKEN_URL, {
       method: "POST",
@@ -91,11 +92,18 @@ export async function GET(request: NextRequest) {
     }
 
     const tokenData = await tokenRes.json();
-    logger.info("WHOOP token response keys", { context: "api", metadata: { keys: Object.keys(tokenData) } });
+    logger.info("WHOOP token response keys", {
+      context: "api",
+      metadata: { keys: Object.keys(tokenData) },
+    });
 
     // WHOOP returns keys with spaces ("access token") not underscores ("access_token")
-    const access_token = (tokenData.access_token ?? tokenData["access token"]) as string | undefined;
-    const refresh_token = (tokenData.refresh_token ?? tokenData["refresh token"]) as string | undefined;
+    const access_token = (tokenData.access_token ?? tokenData["access token"]) as
+      | string
+      | undefined;
+    const refresh_token = (tokenData.refresh_token ?? tokenData["refresh token"]) as
+      | string
+      | undefined;
     const expires_in = (tokenData.expires_in ?? tokenData["expires in"] ?? 3600) as number;
     const scope = (tokenData.scope ?? "") as string;
 
@@ -154,7 +162,7 @@ export async function GET(request: NextRequest) {
 
     // Clear the state cookie and redirect to settings
     const response = NextResponse.redirect(
-      new URL("/athlete/settings?whoop=connected", request.url)
+      new URL("/athlete/integrations?whoop=connected", request.url)
     );
 
     response.cookies.set("whoop-oauth-state", "", {
