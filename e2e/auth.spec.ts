@@ -5,8 +5,8 @@ test.describe("Authentication", () => {
   test("login with valid credentials redirects to coach dashboard", async ({ page }) => {
     await login(page);
     await expect(page).toHaveURL(/\/coach\/dashboard/);
-    // Dashboard should show a greeting
-    await expect(page.locator("body")).toContainText("Good");
+    // Dashboard editorial headline (no greeting — see Dual Product Identity).
+    await expect(page.getByRole("heading", { name: "Your program, today." })).toBeVisible();
   });
 
   test("login with wrong password shows error", async ({ page }) => {
@@ -21,8 +21,9 @@ test.describe("Authentication", () => {
   test("register new coach lands on onboarding", async ({ page }) => {
     const uniqueEmail = `e2e-coach-${Date.now()}@test.com`;
     await page.goto("/register");
-    // Step 1: select Coach role
-    await page.getByRole("button", { name: /Coach/i }).click();
+    // Step 1: select Coach role — match the full "I'm a Coach" label
+    // because the disabled Athlete button's description also contains "coach".
+    await page.getByRole("button", { name: /I'm a Coach/i }).click();
     // Step 2: fill registration form
     await page.getByLabel("First Name").fill("E2E");
     await page.getByLabel("Last Name").fill("Coach");

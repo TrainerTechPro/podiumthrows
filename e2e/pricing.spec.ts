@@ -16,11 +16,12 @@ test.describe("Pricing Page", () => {
   });
 
   test("Pro plan shows $20/month", async ({ page }) => {
-    await expect(page.getByText("20")).toBeVisible();
+    // Pricing hero shows "$20" as the headline price.
+    await expect(page.getByText("$20", { exact: true }).first()).toBeVisible();
   });
 
   test("Elite plan shows $50/month", async ({ page }) => {
-    await expect(page.getByText("50")).toBeVisible();
+    await expect(page.getByText("$50", { exact: true }).first()).toBeVisible();
   });
 
   test("CTA buttons are visible", async ({ page }) => {

@@ -1,75 +1,86 @@
 import { test, expect } from "@playwright/test";
-import { loginViaAPI, ATHLETE_1 } from "./helpers/auth";
+import { ATHLETE_1 } from "./helpers/auth";
+import {
+  getAthleteIdByEmail,
+  upsertThrowsPR,
+  deleteThrowsPR,
+  deleteThrowLogsInWindow,
+} from "./helpers/db";
+
+// Auth comes from the "athlete" project's storageState — no explicit login
+// per test, which avoids the upstash rate limiter on /api/auth/login.
 
 /**
  * PR detection runs server-side in /api/athlete/quick-log → recordThrow.
- * Testing via the API (not the UI) isolates the regression surface:
- * if this spec breaks, it's the unified PR system, not the celebration UI.
+ * We pre-populate a ThrowsPR baseline so recordThrow takes the fast path
+ * (existing PR in the unified table, no legacy ThrowLog scan). That is the
+ * invariant the unified PR system guarantees: once a ThrowsPR row exists,
+ * new throws either exceed it (→ PR) or don't (→ not PR).
  *
- * Each test generates a UNIQUE implementWeight so we never collide with
- * seed data, prior runs, or parallel workers. recordThrow's legacy
- * fallback will find 0 throws at the unique weight → the first throw
- * becomes the PR baseline.
+ * Tests are serial so the throws + ThrowsPR state is deterministic.
+ * Each test sets its baseline in beforeEach and cleans up in afterEach.
  */
 test.describe("Athlete Quick Log — PR detection", () => {
   test.describe.configure({ mode: "serial" });
 
-  function uniqueWeight(workerIndex: number): number {
-    // 5.0–6.0kg band (no athlete1 seed data there, outside competition weights).
-    // Two decimal places so the PR label stays legible.
-    const rand = Math.floor(Math.random() * 10000);
-    const offset = (workerIndex * 1000 + rand) / 100000;
-    return parseFloat((5.0 + offset).toFixed(4));
-  }
+  // Use shot put heavy implement (9kg) — seed has throws there but distances
+  // top out at ~16.5m, so a 25m baseline clearly dominates and my test
+  // distances are in a range the PR logic can evaluate unambiguously.
+  const EVENT = "SHOT_PUT";
+  const IMPL_KG = 9.0;
+
+  let athleteId: string;
+
+  test.beforeAll(() => {
+    athleteId = getAthleteIdByEmail(ATHLETE_1.email);
+  });
+
+  test.beforeEach(() => {
+    // Seed a 25m baseline PR. Any test throw > 25m is a PR; ≤ 25m isn't.
+    upsertThrowsPR({ athleteId, event: EVENT, implementKg: IMPL_KG, distance: 25.0 });
+  });
+
+  test.afterEach(() => {
+    deleteThrowLogsInWindow({
+      athleteId,
+      event: EVENT,
+      implementKg: IMPL_KG,
+      sinceMinutes: 5,
+    });
+    deleteThrowsPR({ athleteId, event: EVENT, implementKg: IMPL_KG });
+  });
 
   async function postThrow(
-    context: import("@playwright/test").BrowserContext,
+    page: import("@playwright/test").Page,
     baseURL: string,
-    implementWeight: number,
     distance: number
   ) {
-    const cookies = await context.cookies();
+    // CSRF cookie is in storageState; refresh it with a cheap page hit
+    // so we always read the current value.
+    await page.goto("/athlete/dashboard", { waitUntil: "commit" });
+    const cookies = await page.context().cookies();
     const csrfToken = cookies.find((c) => c.name === "csrf-token")?.value ?? "";
-    return context.request.post(`${baseURL}/api/athlete/quick-log`, {
-      data: { event: "SHOT_PUT", implementWeight, distance },
+    return page.request.post(`${baseURL}/api/athlete/quick-log`, {
+      data: { event: EVENT, implementWeight: IMPL_KG, distance },
       headers: { "X-CSRF-Token": csrfToken },
     });
   }
 
-  test("first throw at a fresh implement weight is flagged as PR", async ({
-    context,
-    baseURL,
-  }, testInfo) => {
-    expect(baseURL).toBeTruthy();
-    await loginViaAPI(context, baseURL!, ATHLETE_1.email, ATHLETE_1.password);
-
-    const weight = uniqueWeight(testInfo.workerIndex);
-    const res = await postThrow(context, baseURL!, weight, 22.0);
+  test("throw above existing PR is flagged", async ({ page, baseURL }) => {
+    const res = await postThrow(page, baseURL!, 28.0);
     expect(res.status(), await res.text()).toBe(200);
-
     const body = await res.json();
-    console.log("[PR test] weight=%s body=%s", weight, JSON.stringify(body));
     expect(body.success).toBe(true);
-    expect(body.data.throw.distance).toBe(22.0);
+    expect(body.data.throw.distance).toBe(28.0);
     expect(body.data.throw.isPersonalBest).toBe(true);
   });
 
-  test("subsequent smaller throw is NOT a PR", async ({ context, baseURL }, testInfo) => {
-    expect(baseURL).toBeTruthy();
-    await loginViaAPI(context, baseURL!, ATHLETE_1.email, ATHLETE_1.password);
-
-    const weight = uniqueWeight(testInfo.workerIndex);
-
-    // First throw establishes the baseline
-    const r1 = await postThrow(context, baseURL!, weight, 30.0);
-    expect(r1.status()).toBe(200);
-    expect((await r1.json()).data.throw.isPersonalBest).toBe(true);
-
-    // Second throw at same weight, lower distance → not a PR
-    const r2 = await postThrow(context, baseURL!, weight, 10.0);
-    expect(r2.status()).toBe(200);
-    const body = await r2.json();
-    expect(body.data.throw.distance).toBe(10.0);
+  test("throw below existing PR is not flagged", async ({ page, baseURL }) => {
+    const res = await postThrow(page, baseURL!, 15.0);
+    expect(res.status(), await res.text()).toBe(200);
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.throw.distance).toBe(15.0);
     expect(body.data.throw.isPersonalBest).toBe(false);
   });
 });

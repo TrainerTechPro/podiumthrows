@@ -1,11 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { loginAsAthlete } from "./helpers/auth";
+
+// Auth comes from the "athlete" project's saved storageState. See
+// playwright.config.ts + e2e/auth.setup.ts.
 
 test.describe("Athlete Log Session", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAthlete(page);
-  });
-
   test("log-session page renders with event picker", async ({ page }) => {
     await page.goto("/athlete/log-session");
     await expect(page.getByRole("heading", { name: "Log session" })).toBeVisible();
