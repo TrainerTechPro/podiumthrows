@@ -30,7 +30,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
 
         // Navigate to the full-screen recap — it will read the final state
         // from the database, so we don't need to thread the summary through.
-        router.push(`/athlete/sessions/${sessionId}/recap`);
+        router.push(`/athlete/session/${sessionId}?view=recap`);
       } catch (err) {
         console.error("complete session failed", err);
         setError("Failed to complete session. Please try again.");

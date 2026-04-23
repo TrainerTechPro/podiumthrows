@@ -24,7 +24,7 @@ function formatScheduledDate(iso: string): string {
 
 export function UpcomingSessionsWidget({
   sessions,
-  linkHrefBuilder = (session) => `/athlete/sessions/${session.id}`,
+  linkHrefBuilder = (session) => `/athlete/session/${session.id}`,
 }: {
   sessions: UpcomingSessionItem[];
   linkHrefBuilder?: (session: UpcomingSessionItem) => string;
@@ -36,10 +36,7 @@ export function UpcomingSessionsWidget({
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
           Upcoming Sessions
         </h3>
-        <Link
-          href="/athlete/sessions"
-          className="text-xs text-primary-500 hover:underline"
-        >
+        <Link href="/athlete/sessions" className="text-xs text-primary-500 hover:underline">
           View all &gt;
         </Link>
       </div>
@@ -55,20 +52,16 @@ export function UpcomingSessionsWidget({
             />
           </div>
           <div className="max-w-[220px]">
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              No upcoming sessions
-            </p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">No upcoming sessions</p>
             <p className="text-xs text-muted mt-1">
-              Your coach hasn&apos;t scheduled any sessions yet. Check back
-              soon!
+              Your coach hasn&apos;t scheduled any sessions yet. Check back soon!
             </p>
           </div>
         </div>
       ) : (
         <div className="space-y-0.5">
           {sessions.map((session) => {
-            const isToday =
-              formatScheduledDate(session.scheduledDate) === "Today";
+            const isToday = formatScheduledDate(session.scheduledDate) === "Today";
             return (
               <Link
                 key={session.id}
@@ -94,9 +87,7 @@ export function UpcomingSessionsWidget({
                     {session.coachNotes && ` · ${session.coachNotes}`}
                   </p>
                 </div>
-                {session.status === "IN_PROGRESS" && (
-                  <Badge variant="warning">In Progress</Badge>
-                )}
+                {session.status === "IN_PROGRESS" && <Badge variant="warning">In Progress</Badge>}
                 <ChevronRight
                   size={14}
                   strokeWidth={1.75}

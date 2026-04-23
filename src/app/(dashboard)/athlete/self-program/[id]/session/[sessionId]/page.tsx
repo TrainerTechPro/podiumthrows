@@ -62,7 +62,7 @@ export default async function ProgramSessionPage({
     if (assignment) {
       if (assignment.status === "IN_PROGRESS" || assignment.status === "ASSIGNED") {
         // Active workout — redirect to live view
-        redirect(`/athlete/throws/live/${assignment.id}`);
+        redirect(`/athlete/throws/${assignment.id}?view=live`);
       } else {
         // Assignment is COMPLETED/PARTIAL/SKIPPED but ProgramSession wasn't updated — auto-fix
         await prisma.programSession.update({

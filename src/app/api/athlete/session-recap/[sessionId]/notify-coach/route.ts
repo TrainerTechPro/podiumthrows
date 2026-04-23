@@ -14,10 +14,7 @@ import { createNotification } from "@/lib/notifications";
 import { formatEventType } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
-export async function POST(
-  _req: Request,
-  { params }: { params: Promise<{ sessionId: string }> }
-) {
+export async function POST(_req: Request, { params }: { params: Promise<{ sessionId: string }> }) {
   try {
     const { sessionId } = await params;
     const session = await getSession();
@@ -74,7 +71,7 @@ export async function POST(
     }
 
     // Compute summary fields for the notification body
-    type ThrowRow = typeof trainingSession.throwLogs[number];
+    type ThrowRow = (typeof trainingSession.throwLogs)[number];
     const totalThrows = trainingSession.throwLogs.length;
     const bestThrow = trainingSession.throwLogs.reduce<ThrowRow | null>((best, t) => {
       if (t.distance == null) return best;
@@ -87,9 +84,7 @@ export async function POST(
 
     const bodyParts: string[] = [`${totalThrows} throw${totalThrows === 1 ? "" : "s"}`];
     if (bestThrow && bestThrow.distance != null) {
-      bodyParts.push(
-        `best ${bestThrow.distance.toFixed(2)}m ${formatEventType(bestThrow.event)}`
-      );
+      bodyParts.push(`best ${bestThrow.distance.toFixed(2)}m ${formatEventType(bestThrow.event)}`);
     }
     if (prCount > 0) {
       bodyParts.push(`${prCount} PR${prCount === 1 ? "" : "s"}`);
@@ -108,7 +103,7 @@ export async function POST(
         bestEvent: (bestThrow?.event as string | undefined) ?? null,
         prCount,
         athleteName,
-        link: `/coach/athletes/${athlete.id}/sessions/${sessionId}`,
+        link: `/coach/throws/${sessionId}?athlete=${athlete.id}`,
       },
     });
 

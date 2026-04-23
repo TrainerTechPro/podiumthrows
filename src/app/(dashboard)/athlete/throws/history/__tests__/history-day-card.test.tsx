@@ -60,7 +60,7 @@ describe("HistoryDayCard", () => {
     fireEvent.click(screen.getByRole("button", { name: /Tue.*Apr 8/i }));
     expect(screen.getByRole("link", { name: /View full session/i })).toHaveAttribute(
       "href",
-      "/athlete/throws/session/asgn1"
+      "/athlete/throws/asgn1"
     );
   });
 

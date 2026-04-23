@@ -42,9 +42,7 @@ export function HistoryDayCard({ day }: Props) {
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="text-xs text-muted uppercase tracking-wider">
-              {day.weekdayShort}
-            </span>
+            <span className="text-xs text-muted uppercase tracking-wider">{day.weekdayShort}</span>
           </div>
           <div className="text-base font-heading font-semibold text-[var(--foreground)] mt-0.5">
             {day.dateLabel}
@@ -91,9 +89,7 @@ export function HistoryDayCard({ day }: Props) {
         <ChevronRight
           size={18}
           strokeWidth={1.75}
-          className={`text-muted mt-1 transition-transform ${
-            expanded ? "rotate-90" : ""
-          }`}
+          className={`text-muted mt-1 transition-transform ${expanded ? "rotate-90" : ""}`}
           aria-hidden="true"
         />
       </button>
@@ -113,7 +109,7 @@ export function HistoryDayCard({ day }: Props) {
           )}
           {!day.selfLoggedSessionId && day.assignmentId && (
             <Link
-              href={`/athlete/throws/session/${day.assignmentId}`}
+              href={`/athlete/throws/${day.assignmentId}`}
               className="mt-2 block text-center py-2 px-3 rounded-lg bg-primary-500/10 text-primary-500 text-sm font-semibold hover:bg-primary-500/20 transition-colors"
             >
               View full session →

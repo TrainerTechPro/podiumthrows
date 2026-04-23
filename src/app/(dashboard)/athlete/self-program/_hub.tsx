@@ -491,7 +491,7 @@ function ActiveView({
           <Link
             href={
               nextSession.status === "IN_PROGRESS" && liveAssignmentId
-                ? `/athlete/throws/live/${liveAssignmentId}`
+                ? `/athlete/throws/${liveAssignmentId}?view=live`
                 : `/athlete/self-program/${config.id}/session/${nextSession.id}`
             }
             className="card card-interactive p-5 space-y-3 block"

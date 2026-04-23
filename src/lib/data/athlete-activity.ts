@@ -174,11 +174,11 @@ export function normalizeThrowsAssignment(row: ThrowsAssignmentRow): ActivityIte
     .filter((d): d is number => d != null && d > 0);
 
   const hrefByStatus: Record<ActivityStatus, string> = {
-    planned: `/athlete/sessions/assignment/${row.id}`,
-    active: `/athlete/throws/live/${row.id}`,
-    completed: `/athlete/throws/session/${row.id}`,
-    partial: `/athlete/throws/session/${row.id}`,
-    skipped: `/athlete/throws/session/${row.id}`,
+    planned: `/athlete/throws/${row.id}`,
+    active: `/athlete/throws/${row.id}?view=live`,
+    completed: `/athlete/throws/${row.id}`,
+    partial: `/athlete/throws/${row.id}`,
+    skipped: `/athlete/throws/${row.id}`,
   };
 
   return {
@@ -235,7 +235,7 @@ export function normalizeTrainingSession(row: TrainingSessionRow): ActivityItem 
       rpe: row.rpe ?? undefined,
     },
     title: row.plan?.name ?? "Training Session",
-    href: `/athlete/sessions/${row.id}`,
+    href: `/athlete/session/${row.id}`,
     coachFeedback: row.coachNotes ? { summary: row.coachNotes, hasUnread: false } : null,
   };
 }
@@ -296,7 +296,7 @@ export function normalizeProgramSession(row: ProgramSessionRow): ActivityItem {
   const configId = row.program.selfProgramConfig?.id;
   const href = configId
     ? `/athlete/self-program/${configId}/session/${row.id}`
-    : `/athlete/sessions/${row.id}`;
+    : `/athlete/session/${row.id}`;
 
   return {
     id: row.id,

@@ -91,7 +91,7 @@ describe("normalizeThrowsAssignment", () => {
   it("maps ASSIGNED → planned with assignment detail href", () => {
     const out = normalizeThrowsAssignment(baseAssignmentRow);
     expect(out.status).toBe("planned");
-    expect(out.href).toBe("/athlete/sessions/assignment/asgn-1");
+    expect(out.href).toBe("/athlete/throws/asgn-1");
     expect(out.source).toBe("assigned-throws");
     expect(out.assignedBy).toBe("coach");
     expect(out.kind).toBe("throws");
@@ -101,19 +101,19 @@ describe("normalizeThrowsAssignment", () => {
   it("maps NOTIFIED → planned (same href as ASSIGNED)", () => {
     const out = normalizeThrowsAssignment({ ...baseAssignmentRow, status: "NOTIFIED" });
     expect(out.status).toBe("planned");
-    expect(out.href).toBe("/athlete/sessions/assignment/asgn-1");
+    expect(out.href).toBe("/athlete/throws/asgn-1");
   });
 
   it("maps IN_PROGRESS → active with live href", () => {
     const out = normalizeThrowsAssignment({ ...baseAssignmentRow, status: "IN_PROGRESS" });
     expect(out.status).toBe("active");
-    expect(out.href).toBe("/athlete/throws/live/asgn-1");
+    expect(out.href).toBe("/athlete/throws/asgn-1?view=live");
   });
 
   it("maps COMPLETED / PARTIAL / SKIPPED → read-only href", () => {
     for (const raw of ["COMPLETED", "PARTIAL", "SKIPPED"] as const) {
       const out = normalizeThrowsAssignment({ ...baseAssignmentRow, status: raw });
-      expect(out.href).toBe("/athlete/throws/session/asgn-1");
+      expect(out.href).toBe("/athlete/throws/asgn-1");
     }
   });
 
@@ -145,7 +145,7 @@ describe("normalizeTrainingSession", () => {
   it("maps SCHEDULED → planned with generic detail href", () => {
     const out = normalizeTrainingSession(baseTrainingRow);
     expect(out.status).toBe("planned");
-    expect(out.href).toBe("/athlete/sessions/train-1");
+    expect(out.href).toBe("/athlete/session/train-1");
     expect(out.source).toBe("assigned-training");
   });
 
@@ -265,12 +265,12 @@ describe("normalizeProgramSession", () => {
     expect(out.href).toBe("/athlete/self-program/cfg-1/session/prog-1");
   });
 
-  it("falls back to /athlete/sessions/{id} when no self-program config", () => {
+  it("falls back to /athlete/session/{id} when no self-program config", () => {
     const out = normalizeProgramSession({
       ...baseProgramRow,
       program: { ...baseProgramRow.program, selfProgramConfig: null },
     });
-    expect(out.href).toBe("/athlete/sessions/prog-1");
+    expect(out.href).toBe("/athlete/session/prog-1");
   });
 
   it("maps sessionType to kind (THROWS_ONLY=throws, LIFT_ONLY=strength, THROWS_LIFT=mixed)", () => {

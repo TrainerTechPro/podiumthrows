@@ -11,11 +11,7 @@ import prisma from "@/lib/prisma";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
-export type FeedbackTargetKind =
-  | "throw"
-  | "session"
-  | "practice_attempt"
-  | "assignment";
+export type FeedbackTargetKind = "throw" | "session" | "practice_attempt" | "assignment";
 
 export type FeedbackTargetPreview = {
   kind: FeedbackTargetKind;
@@ -141,9 +137,7 @@ export async function fetchAthleteFeedback(
     coachUsers.map((u) => [
       u.id,
       {
-        name: u.coachProfile
-          ? `${u.coachProfile.firstName} ${u.coachProfile.lastName}`
-          : u.email,
+        name: u.coachProfile ? `${u.coachProfile.firstName} ${u.coachProfile.lastName}` : u.email,
         avatar: u.coachProfile?.avatarUrl ?? null,
       },
     ])
@@ -167,7 +161,7 @@ export async function fetchAthleteFeedback(
         kind: "session",
         id: c.trainingSessionId,
         label: s ? formatSessionLabel(s.scheduledDate) : "Session",
-        href: `/athlete/sessions/${c.trainingSessionId}`,
+        href: `/athlete/session/${c.trainingSessionId}`,
       };
     }
     if (c.practiceAttemptId) {
@@ -176,9 +170,7 @@ export async function fetchAthleteFeedback(
         kind: "practice_attempt",
         id: c.practiceAttemptId,
         label: "Practice attempt",
-        href: a?.sessionId
-          ? `/athlete/sessions/${a.sessionId}`
-          : "/athlete/sessions",
+        href: a?.sessionId ? `/athlete/session/${a.sessionId}` : "/athlete/sessions",
       };
     }
     if (c.throwsAssignmentId) {
@@ -186,7 +178,7 @@ export async function fetchAthleteFeedback(
         kind: "assignment",
         id: c.throwsAssignmentId,
         label: "Throws assignment",
-        href: `/athlete/sessions/assignment/${c.throwsAssignmentId}`,
+        href: `/athlete/throws/${c.throwsAssignmentId}`,
       };
     }
     return {

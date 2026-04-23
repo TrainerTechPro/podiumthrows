@@ -226,7 +226,7 @@ function resolveCommentUrl(
     switch (targetField) {
       case "throwsAssignmentId":
         return athleteId && targetId
-          ? `/coach/athletes/${athleteId}/sessions/${targetId}`
+          ? `/coach/throws/${targetId}?athlete=${athleteId}`
           : "/coach/athletes";
       case "practiceAttemptId": {
         const sessionId = meta?.practiceSessionId as string | undefined;
@@ -244,7 +244,7 @@ function resolveCommentUrl(
   // Athlete
   switch (targetField) {
     case "trainingSessionId":
-      return targetId ? `/athlete/sessions/${targetId}` : "/athlete/sessions";
+      return targetId ? `/athlete/session/${targetId}` : "/athlete/sessions";
     default:
       return "/athlete/throws";
   }

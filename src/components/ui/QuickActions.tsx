@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
@@ -49,25 +49,97 @@ interface QuickActionsPrefs {
 /* ─── Action Definitions ─────────────────────────────────────────────────── */
 
 const ATHLETE_ACTIONS: QuickActionDef[] = [
-  { id: "start-session", label: "Start Session", icon: Play, href: "/athlete/quick-start", color: "text-emerald-500" },
-  { id: "wellness", label: "Health Check-in", icon: Heart, href: "/athlete/wellness", color: "text-rose-500" },
-  { id: "log-throw", label: "Log Throw", icon: Target, href: "/athlete/throws/log", color: "text-primary-500" },
+  {
+    id: "start-session",
+    label: "Start Session",
+    icon: Play,
+    href: "/athlete/quick-start",
+    color: "text-emerald-500",
+  },
+  {
+    id: "wellness",
+    label: "Health Check-in",
+    icon: Heart,
+    href: "/athlete/wellness",
+    color: "text-rose-500",
+  },
+  {
+    id: "log-throw",
+    label: "Log Throw",
+    icon: Target,
+    href: "/athlete/throws/log",
+    color: "text-primary-500",
+  },
   { id: "tools", label: "Tools", icon: Wrench, href: "/athlete/tools", color: "text-blue-500" },
-  { id: "codex", label: "Throws Codex", icon: BookOpen, href: "/athlete/codex", color: "text-purple-500" },
+  {
+    id: "codex",
+    label: "Throws Codex",
+    icon: BookOpen,
+    href: "/athlete/codex",
+    color: "text-purple-500",
+  },
   { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-amber-500" },
-  { id: "videos", label: "My Videos", icon: Video, href: "/athlete/videos", color: "text-cyan-500" },
-  { id: "profile", label: "Profile", icon: User, href: "/athlete/profile", color: "text-indigo-500" },
+  {
+    id: "videos",
+    label: "My Videos",
+    icon: Video,
+    href: "/athlete/videos",
+    color: "text-cyan-500",
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    icon: User,
+    href: "/athlete/profile",
+    color: "text-indigo-500",
+  },
 ];
 
 const COACH_ACTIONS: QuickActionDef[] = [
-  { id: "practice", label: "Live Practice", icon: Radio, href: "/coach/throws/practice", color: "text-emerald-500" },
-  { id: "log-session", label: "Log Session", icon: ClipboardList, href: "/coach/log-session", color: "text-primary-500" },
-  { id: "builder", label: "Session Builder", icon: Layers, href: "/coach/throws/builder", color: "text-blue-500" },
-  { id: "video-analysis", label: "Pose Analysis", icon: ScanLine, href: "/coach/video-analysis", color: "text-purple-500" },
+  {
+    id: "practice",
+    label: "Live Practice",
+    icon: Radio,
+    href: "/coach/throws/practice",
+    color: "text-emerald-500",
+  },
+  {
+    id: "log-session",
+    label: "Log Session",
+    icon: ClipboardList,
+    href: "/coach/log-session",
+    color: "text-primary-500",
+  },
+  {
+    id: "builder",
+    label: "Session Builder",
+    icon: Layers,
+    href: "/coach/throws/builder",
+    color: "text-blue-500",
+  },
+  {
+    id: "video-analysis",
+    label: "Pose Analysis",
+    icon: ScanLine,
+    href: "/coach/video-analysis",
+    color: "text-purple-500",
+  },
   { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-500" },
-  { id: "programs", label: "Programs", icon: FileText, href: "/coach/plans", color: "text-amber-500" },
+  {
+    id: "programs",
+    label: "Programs",
+    icon: FileText,
+    href: "/coach/plans",
+    color: "text-amber-500",
+  },
   { id: "tools", label: "Tools", icon: Wrench, href: "/coach/tools", color: "text-indigo-500" },
-  { id: "wellness", label: "Team Wellness", icon: Activity, href: "/coach/wellness", color: "text-rose-500" },
+  {
+    id: "wellness",
+    label: "Team Wellness",
+    icon: Activity,
+    href: "/coach/wellness",
+    color: "text-rose-500",
+  },
 ];
 
 const ATHLETE_DEFAULTS = ["start-session", "wellness", "log-throw", "tools"];
@@ -75,10 +147,8 @@ const COACH_DEFAULTS = ["practice", "log-session", "builder", "video-analysis"];
 const STORAGE_KEY = "podium-quick-actions";
 const MAX_ITEMS = 6;
 
-const EXCLUDED_PATHS = [
-  "/athlete/throws/live/",
-  "/coach/throws/practice/live",
-];
+const LIVE_THROWS_PATH_RE = /^\/athlete\/throws\/[^/]+$/;
+const EXCLUDED_PATH_PREFIXES = ["/coach/throws/practice/live"];
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -116,10 +186,7 @@ function loadPrefs(role: string): QuickActionsPrefs {
 
 function savePrefs(role: string, prefs: QuickActionsPrefs) {
   try {
-    localStorage.setItem(
-      `${STORAGE_KEY}-${role.toLowerCase()}`,
-      JSON.stringify(prefs),
-    );
+    localStorage.setItem(`${STORAGE_KEY}-${role.toLowerCase()}`, JSON.stringify(prefs));
     window.dispatchEvent(new CustomEvent("quick-actions-prefs-change"));
   } catch {
     /* quota / private */
@@ -156,18 +223,12 @@ function CustomizerPanel({
       initial={reduced ? false : { opacity: 0, scale: 0.9, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 30 }}
-      transition={
-        reduced
-          ? { duration: 0.15 }
-          : { type: "spring", stiffness: 400, damping: 28 }
-      }
+      transition={reduced ? { duration: 0.15 } : { type: "spring", stiffness: 400, damping: 28 }}
       className="w-72 max-h-[70vh] overflow-y-auto custom-scrollbar card p-5 space-y-5 shadow-2xl"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold font-heading text-[var(--foreground)]">
-          Quick Actions
-        </h3>
+        <h3 className="text-sm font-bold font-heading text-[var(--foreground)]">Quick Actions</h3>
         <button
           onClick={onClose}
           className="p-1 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
@@ -178,9 +239,7 @@ function CustomizerPanel({
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-          Position
-        </p>
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Position</p>
         <div className="flex gap-1">
           {(["left", "right"] as const).map((side) => (
             <button
@@ -190,7 +249,7 @@ function CustomizerPanel({
                 "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
                 prefs.position === side
                   ? "bg-primary-500 text-white"
-                  : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]",
+                  : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
               )}
             >
               {side === "left" && <ChevronLeft size={12} strokeWidth={2} aria-hidden="true" />}
@@ -221,7 +280,7 @@ function CustomizerPanel({
                     ? "bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/30"
                     : isDisabled
                       ? "opacity-40 cursor-not-allowed"
-                      : "hover:bg-surface-50 dark:hover:bg-surface-800/50 border border-transparent",
+                      : "hover:bg-surface-50 dark:hover:bg-surface-800/50 border border-transparent"
                 )}
               >
                 <Icon
@@ -230,7 +289,12 @@ function CustomizerPanel({
                   className={cn(isSelected ? action.color : "text-muted")}
                   aria-hidden="true"
                 />
-                <span className={cn("text-xs font-medium flex-1", isSelected ? "text-[var(--foreground)]" : "text-muted")}>
+                <span
+                  className={cn(
+                    "text-xs font-medium flex-1",
+                    isSelected ? "text-[var(--foreground)]" : "text-muted"
+                  )}
+                >
                   {action.label}
                 </span>
                 {isSelected && (
@@ -258,6 +322,7 @@ function CustomizerPanel({
 
 export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const prefersReduced = useReducedMotion() ?? false;
   const [open, setOpen] = useState(false);
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -270,7 +335,9 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
   }, [role]);
 
   useEffect(() => {
-    function h() { setPrefs(loadPrefs(role)); }
+    function h() {
+      setPrefs(loadPrefs(role));
+    }
     window.addEventListener("quick-actions-prefs-change", h);
     return () => window.removeEventListener("quick-actions-prefs-change", h);
   }, [role]);
@@ -300,11 +367,13 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
         return next;
       });
     },
-    [role],
+    [role]
   );
 
   if (!mounted) return null;
-  if (EXCLUDED_PATHS.some((p) => pathname.startsWith(p))) return null;
+  const isLiveThrows = LIVE_THROWS_PATH_RE.test(pathname) && searchParams.get("view") === "live";
+  if (isLiveThrows) return null;
+  if (EXCLUDED_PATH_PREFIXES.some((p) => pathname.startsWith(p))) return null;
   if (!prefs.enabled) return null;
 
   const allActions = role === "COACH" ? COACH_ACTIONS : ATHLETE_ACTIONS;
@@ -347,12 +416,11 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
               "bg-white dark:bg-surface-900",
               "border border-surface-200 dark:border-surface-700/60",
               "shadow-2xl shadow-black/20 dark:shadow-black/50",
-              position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
+              position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6"
             )}
             style={{
               bottom: "calc(5.5rem + env(safe-area-inset-bottom, 0px))",
-              transformOrigin:
-                position === "right" ? "bottom right" : "bottom left",
+              transformOrigin: position === "right" ? "bottom right" : "bottom left",
             }}
             initial={{ opacity: 0, scale: 0.4 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -452,7 +520,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
           "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
           "focus:ring-offset-2 focus:ring-offset-[var(--background)]",
           "transition-all duration-150",
-          position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6",
+          position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6"
         )}
         style={{
           bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))",
@@ -464,9 +532,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
         <motion.div
           animate={{ rotate: open ? 45 : 0 }}
           transition={
-            prefersReduced
-              ? { duration: 0.05 }
-              : { type: "spring", stiffness: 400, damping: 22 }
+            prefersReduced ? { duration: 0.05 } : { type: "spring", stiffness: 400, damping: 22 }
           }
         >
           <Plus size={24} strokeWidth={2.5} aria-hidden="true" />

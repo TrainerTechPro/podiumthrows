@@ -36,8 +36,8 @@ const THROWS_HUB_FETCHERS = {
 // assignment status. IN_PROGRESS → live player. Everything else → read-only view.
 function throwsLinkHrefBuilder(session: UpcomingSessionItem): string {
   return session.status === "IN_PROGRESS"
-    ? `/athlete/throws/live/${session.id}`
-    : `/athlete/throws/session/${session.id}`;
+    ? `/athlete/throws/${session.id}?view=live`
+    : `/athlete/throws/${session.id}`;
 }
 
 export default async function ThrowsHubPage() {

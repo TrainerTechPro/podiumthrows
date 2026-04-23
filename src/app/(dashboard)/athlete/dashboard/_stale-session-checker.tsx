@@ -50,7 +50,7 @@ export function StaleSessionChecker() {
         });
         if (cancelled || !completeRes?.ok) return;
 
-        router.push(`/athlete/sessions/${data.staleSession.id}/recap`);
+        router.push(`/athlete/session/${data.staleSession.id}?view=recap`);
       } catch (err) {
         // Non-fatal — feature is optional, but still log for diagnostics.
         console.warn("stale session check failed", err);

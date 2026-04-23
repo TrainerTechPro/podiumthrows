@@ -40,7 +40,7 @@ export function AssignmentActions({
 
       if (action === "start") {
         toast("Workout started!", "success");
-        router.push(`/athlete/throws/live/${assignmentId}`);
+        router.push(`/athlete/throws/${assignmentId}?view=live`);
       } else {
         toast("Session skipped", "info");
         router.push("/athlete/dashboard");

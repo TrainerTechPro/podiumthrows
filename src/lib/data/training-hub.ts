@@ -331,7 +331,7 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
       throwCount: ps.totalThrowsTarget,
       href: selfConfigId
         ? `/athlete/self-program/${selfConfigId}/session/${ps.id}`
-        : `/athlete/sessions/${ps.id}`,
+        : `/athlete/session/${ps.id}`,
       completedAt: ps.completedAt,
     });
   }
@@ -347,7 +347,7 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
       status: ta.status,
       rpe: ta.rpe as number | null,
       throwCount: null,
-      href: `/athlete/sessions/assignment/${ta.id}`,
+      href: `/athlete/throws/${ta.id}`,
       completedAt: ta.completedAt,
     });
   }
@@ -361,7 +361,7 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
       status: ls.status as string,
       rpe: ls.rpe as number | null,
       throwCount: null,
-      href: `/athlete/sessions/${ls.id}`,
+      href: `/athlete/session/${ls.id}`,
       completedAt: null,
     });
   }
@@ -500,7 +500,7 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
       name: ta.session.name,
       date: ta.assignedDate,
       sessionType: sType === "lift" || sType === "mixed" ? sType : "throws",
-      href: `/athlete/sessions/assignment/${ta.id}`,
+      href: `/athlete/throws/${ta.id}`,
     });
   }
 
@@ -512,7 +512,7 @@ export async function fetchTrainingHubData(athleteId: string): Promise<TrainingH
       name: ls.plan?.name ?? "Training Session",
       date: toYMD(ls.scheduledDate),
       sessionType: "mixed",
-      href: `/athlete/sessions/${ls.id}`,
+      href: `/athlete/session/${ls.id}`,
     });
   }
 

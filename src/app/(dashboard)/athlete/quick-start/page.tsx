@@ -29,7 +29,7 @@ export default async function QuickStartPage() {
     select: { id: true },
   });
   if (inProgress) {
-    redirect(`/athlete/throws/live/${inProgress.id}`);
+    redirect(`/athlete/throws/${inProgress.id}?view=live`);
   }
 
   /* ── 2. Next self-program session ──────────────────────────────────── */
@@ -54,9 +54,7 @@ export default async function QuickStartPage() {
         select: { id: true },
       });
       if (nextSession) {
-        redirect(
-          `/athlete/self-program/${config.trainingProgramId}/session/${nextSession.id}`,
-        );
+        redirect(`/athlete/self-program/${config.trainingProgramId}/session/${nextSession.id}`);
       }
     }
   }
@@ -72,7 +70,7 @@ export default async function QuickStartPage() {
     select: { id: true },
   });
   if (pending) {
-    redirect(`/athlete/throws/live/${pending.id}`);
+    redirect(`/athlete/throws/${pending.id}?view=live`);
   }
 
   /* ── 4. Fallback — custom session ──────────────────────────────────── */

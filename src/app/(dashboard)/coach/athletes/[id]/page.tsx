@@ -691,7 +691,7 @@ function TrainingTab({
               return (
                 <Link
                   key={a.id}
-                  href={`/coach/athletes/${athleteId}/sessions/${a.id}`}
+                  href={`/coach/throws/${a.id}?athlete=${athleteId}`}
                   className="card card-interactive px-5 py-4 block"
                 >
                   <div className="flex items-start justify-between gap-3">

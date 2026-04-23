@@ -26,7 +26,7 @@ describe("fetchUpcomingThrowsAssignments", () => {
         assignedBy: "coach",
         metrics: {},
         title: "Heavy Day",
-        href: "/athlete/sessions/assignment/asgn-1",
+        href: "/athlete/throws/asgn-1",
         coachFeedback: null,
       },
       {
@@ -40,7 +40,7 @@ describe("fetchUpcomingThrowsAssignments", () => {
         assignedBy: "coach",
         metrics: {},
         title: "Comp Sim",
-        href: "/athlete/throws/live/asgn-2",
+        href: "/athlete/throws/asgn-2?view=live",
         coachFeedback: null,
       },
     ]);

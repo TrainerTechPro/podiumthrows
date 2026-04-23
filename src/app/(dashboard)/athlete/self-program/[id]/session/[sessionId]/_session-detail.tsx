@@ -250,7 +250,7 @@ export function SessionDetail({
 
       if (res.ok && data.assignmentId) {
         success("Workout started", "Launching live view...");
-        router.push(`/athlete/throws/live/${data.assignmentId}`);
+        router.push(`/athlete/throws/${data.assignmentId}?view=live`);
       } else if (res.status === 409) {
         toastError("Already done", data.error || "Session already completed");
       } else {

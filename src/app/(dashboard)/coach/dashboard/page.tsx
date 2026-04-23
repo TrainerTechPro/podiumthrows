@@ -251,7 +251,7 @@ function ActivityFeed({ items }: { items: ActivityItem[] }) {
     <ul className="divide-y divide-[var(--color-border-default)]">
       {items.map((item) => {
         const href = item.assignmentId
-          ? `/coach/athletes/${item.athleteId}/sessions/${item.assignmentId}`
+          ? `/coach/throws/${item.assignmentId}?athlete=${item.athleteId}`
           : `/coach/athletes/${item.athleteId}`;
         return (
           <li key={item.id}>

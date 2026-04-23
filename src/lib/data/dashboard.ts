@@ -325,7 +325,7 @@ export async function fetchTodayWorkoutData(athleteId: string): Promise<TodaySes
     const selfConfigId = ps.program.selfProgramConfig?.id;
     const href = selfConfigId
       ? `/athlete/self-program/${selfConfigId}/session/${ps.id}`
-      : `/athlete/sessions/${ps.id}`;
+      : `/athlete/session/${ps.id}`;
 
     sessions.push({
       id: ps.id,
@@ -415,7 +415,7 @@ export async function fetchTodayWorkoutData(athleteId: string): Promise<TodaySes
       status: ta.status,
       items: items.slice(0, MAX_PREVIEW_ITEMS),
       totalItemCount: items.length,
-      href: `/athlete/sessions/assignment/${ta.id}`,
+      href: `/athlete/throws/${ta.id}`,
     });
   }
 
@@ -504,7 +504,7 @@ export async function fetchTodayWorkoutData(athleteId: string): Promise<TodaySes
       status: ls.status as string,
       items,
       totalItemCount: items.length,
-      href: `/athlete/sessions/${ls.id}`,
+      href: `/athlete/session/${ls.id}`,
     });
   }
 

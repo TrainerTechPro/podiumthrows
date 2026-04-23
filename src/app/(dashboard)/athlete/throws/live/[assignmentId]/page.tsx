@@ -35,7 +35,7 @@ export default async function LiveWorkoutPage({
   // can review their results. Skipped assignments have no session data to
   // review — send those back to the program hub.
   if (assignment.status === "COMPLETED") {
-    redirect(`/athlete/throws/session/${assignment.id}`);
+    redirect(`/athlete/throws/${assignment.id}`);
   }
   if (assignment.status === "SKIPPED") {
     redirect("/athlete/self-program");
