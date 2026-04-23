@@ -322,9 +322,10 @@ function LogAttemptPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50">
-      <div className="w-full sm:max-w-lg bg-[var(--card-bg)] rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-[var(--card-bg)] px-5 pt-5 pb-3 border-b border-[var(--card-border)] flex items-center justify-between">
+      {/* Floating modal content panel — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
+      <div className="w-full sm:max-w-lg bg-[var(--surface-overlay)] rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header — matches panel surface so sticky header stays opaque during scroll. */}
+        <div className="sticky top-0 bg-[var(--surface-overlay)] px-5 pt-5 pb-3 border-b border-[var(--card-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <UserAvatar
               src={athlete.avatarUrl}

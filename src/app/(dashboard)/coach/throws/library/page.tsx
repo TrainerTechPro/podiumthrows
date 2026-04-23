@@ -339,8 +339,9 @@ export default function ThrowsLibraryPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={() => setAssignSessionId(null)}
         >
+          {/* Floating modal content panel — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
           <div
-            className="bg-[var(--card-bg)] rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden"
+            className="bg-[var(--surface-overlay)] rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5 border-b border-[var(--card-border)]">

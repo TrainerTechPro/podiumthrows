@@ -247,7 +247,9 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [open]);
 
   /* ── Reset active index when results change ─────────────────────────── */
@@ -284,7 +286,9 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
         break;
       case "ArrowUp":
         e.preventDefault();
-        setActiveIndex((i) => (i - 1 + Math.max(flatResults.length, 1)) % Math.max(flatResults.length, 1));
+        setActiveIndex(
+          (i) => (i - 1 + Math.max(flatResults.length, 1)) % Math.max(flatResults.length, 1)
+        );
         break;
       case "Enter":
         e.preventDefault();
@@ -318,14 +322,14 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
       aria-label="Search"
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 animate-fade-in"
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/70 animate-fade-in" aria-hidden="true" />
 
-      {/* Panel */}
+      {/* Panel — overlay content MUST use --surface-overlay per CLAUDE.md
+          §Overlay Surfaces. --card-bg is for inline cards in a known-opaque
+          parent; floating/portaled content needs the dedicated raised token
+          so it stays readable regardless of what a future token change does. */}
       <div
-        className="relative w-full max-w-lg bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl shadow-2xl animate-spring-up overflow-hidden"
+        className="relative w-full max-w-lg bg-[var(--surface-overlay)] border border-[var(--card-border)] rounded-2xl shadow-2xl animate-spring-up overflow-hidden"
         onKeyDown={handleKeyDown}
       >
         {/* Search input */}
@@ -382,7 +386,12 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                   onClick={() => setQuery(term)}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 text-left transition-colors"
                 >
-                  <Search size={15} strokeWidth={1.75} className="text-surface-400 shrink-0" aria-hidden="true" />
+                  <Search
+                    size={15}
+                    strokeWidth={1.75}
+                    className="text-surface-400 shrink-0"
+                    aria-hidden="true"
+                  />
                   <span className="truncate">{term}</span>
                 </button>
               ))}
@@ -446,15 +455,21 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
         {/* Footer hint */}
         <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--card-border)] text-[10px] text-surface-400">
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">&uarr;&darr;</kbd>
+            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+              &uarr;&darr;
+            </kbd>
             navigate
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">&crarr;</kbd>
+            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+              &crarr;
+            </kbd>
             open
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">esc</kbd>
+            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+              esc
+            </kbd>
             close
           </span>
         </div>
@@ -463,4 +478,3 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     document.body
   );
 }
-

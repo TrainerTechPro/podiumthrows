@@ -28,8 +28,7 @@ function getRuleStatus(
 ): { status: RuleStatus; ruleIssues: ValidationIssue[] } {
   const ruleIssues = issues.filter((i) => i.rule === ruleNum);
   if (ruleIssues.length === 0) return { status: "OK", ruleIssues: [] };
-  if (ruleIssues.some((i) => i.severity === "CRITICAL"))
-    return { status: "XX", ruleIssues };
+  if (ruleIssues.some((i) => i.severity === "CRITICAL")) return { status: "XX", ruleIssues };
   return { status: "WN", ruleIssues };
 }
 
@@ -71,12 +70,7 @@ function PanelContent({
     <>
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--card-border)]">
-        <Shield
-          size={16}
-          strokeWidth={1.75}
-          className="text-primary-500"
-          aria-hidden="true"
-        />
+        <Shield size={16} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
         <span className="text-xs font-semibold text-muted uppercase tracking-wider flex-1">
           Session Validation
         </span>
@@ -99,10 +93,7 @@ function PanelContent({
             <div key={rule.ruleNum}>
               <button
                 type="button"
-                onClick={() =>
-                  hasDetails &&
-                  setExpandedRule(isExpanded ? null : rule.ruleNum)
-                }
+                onClick={() => hasDetails && setExpandedRule(isExpanded ? null : rule.ruleNum)}
                 className={`w-full flex items-center gap-2 px-4 py-2.5 text-left transition-colors ${
                   hasDetails
                     ? "hover:bg-surface-50 dark:hover:bg-surface-800/50 cursor-pointer"
@@ -126,9 +117,7 @@ function PanelContent({
                   <ChevronDown
                     size={14}
                     strokeWidth={1.75}
-                    className={`text-muted transition-transform ${
-                      isExpanded ? "rotate-180" : ""
-                    }`}
+                    className={`text-muted transition-transform ${isExpanded ? "rotate-180" : ""}`}
                     aria-hidden="true"
                   />
                 )}
@@ -139,14 +128,10 @@ function PanelContent({
                 <div className="px-4 pb-3 pl-12 space-y-2">
                   {rule.ruleIssues.map((issue, i) => (
                     <div key={i}>
-                      <p className="text-xs text-muted leading-relaxed">
-                        {issue.message}
-                      </p>
+                      <p className="text-xs text-muted leading-relaxed">{issue.message}</p>
                       {issue.blockIndices && issue.blockIndices.length > 0 && (
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className="text-[10px] text-muted">
-                            Blocks:
-                          </span>
+                          <span className="text-[10px] text-muted">Blocks:</span>
                           {issue.blockIndices.map((idx) => (
                             <button
                               key={idx}
@@ -203,19 +188,12 @@ export function ValidationPanel({
     return (
       <div className="card p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Shield
-            size={16}
-            strokeWidth={1.75}
-            className="text-muted"
-            aria-hidden="true"
-          />
+          <Shield size={16} strokeWidth={1.75} className="text-muted" aria-hidden="true" />
           <span className="text-xs font-semibold text-muted uppercase tracking-wider">
             Session Validation
           </span>
         </div>
-        <p className="text-sm text-muted text-center py-4">
-          Add blocks to see validation results
-        </p>
+        <p className="text-sm text-muted text-center py-4">Add blocks to see validation results</p>
       </div>
     );
   }
@@ -244,9 +222,7 @@ export function ValidationBadge({
 
   const rulesWithIssues = new Set(validation.issues.map((i) => i.rule));
   const criticalCount = new Set(
-    validation.issues
-      .filter((i) => i.severity === "CRITICAL")
-      .map((i) => i.rule)
+    validation.issues.filter((i) => i.severity === "CRITICAL").map((i) => i.rule)
   ).size;
   const warningCount = rulesWithIssues.size - criticalCount;
   const okCount = 7 - rulesWithIssues.size;
@@ -257,7 +233,7 @@ export function ValidationBadge({
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
-        className="fixed right-4 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] shadow-lg"
+        className="fixed right-4 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[var(--surface-overlay)] border border-[var(--card-border)] shadow-lg"
         style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {okCount > 0 && (
@@ -284,12 +260,10 @@ export function ValidationBadge({
       {sheetOpen && (
         <div className="fixed inset-0 z-50">
           {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setSheetOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSheetOpen(false)} />
           {/* Sheet */}
-          <div className="absolute bottom-0 left-0 right-0 bg-[var(--card-bg)] rounded-t-2xl border-t border-[var(--card-border)] max-h-[70vh] overflow-y-auto animate-fade-slide-in">
+          {/* Sheet content panel — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
+          <div className="absolute bottom-0 left-0 right-0 bg-[var(--surface-overlay)] rounded-t-2xl border-t border-[var(--card-border)] max-h-[70vh] overflow-y-auto animate-fade-slide-in">
             <div className="pt-3 pb-4">
               <div className="w-10 h-1 rounded-full bg-surface-300 dark:bg-surface-600 mx-auto mb-2" />
               <PanelContent

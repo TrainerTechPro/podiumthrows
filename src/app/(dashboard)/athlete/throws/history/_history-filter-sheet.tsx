@@ -38,9 +38,9 @@ export function HistoryFilterSheet({ open, variant, onClose, children }: Props) 
       const panel = panelRef.current;
       if (!panel) return;
 
-      const focusables = Array.from(
-        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
-      ).filter((el) => el.offsetParent !== null); // visible only
+      const focusables = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+        (el) => el.offsetParent !== null
+      ); // visible only
 
       if (focusables.length === 0) return;
 
@@ -80,8 +80,7 @@ export function HistoryFilterSheet({ open, variant, onClose, children }: Props) 
 
   // Use animate-spring-up (exists in tailwind config) instead of animate-slide-up-sheet (does not exist).
   const prefersReducedMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   return (
     <div
@@ -91,15 +90,13 @@ export function HistoryFilterSheet({ open, variant, onClose, children }: Props) 
       aria-label={`Filter: ${variant}`}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      {/* Sheet */}
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      {/* Sheet — --surface-overlay per CLAUDE.md §Overlay Surfaces (portaled
+          content can't rely on parent opacity; dedicated raised token keeps
+          it readable in dark mode). */}
       <div
         ref={panelRef}
-        className={`relative w-full bg-[var(--card-bg)] border-t border-[var(--card-border)] rounded-t-2xl p-5 pb-8 max-h-[75vh] overflow-y-auto ${
+        className={`relative w-full bg-[var(--surface-overlay)] border-t border-[var(--card-border)] rounded-t-2xl p-5 pb-8 max-h-[75vh] overflow-y-auto ${
           prefersReducedMotion ? "" : "animate-spring-up"
         }`}
       >

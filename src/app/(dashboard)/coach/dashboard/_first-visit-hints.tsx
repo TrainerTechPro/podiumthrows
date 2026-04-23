@@ -62,7 +62,9 @@ export function FirstVisitHints() {
 
   function handleDismiss() {
     setVisible(false);
-    try { localStorage.setItem(HINTS_KEY, "true"); } catch {}
+    try {
+      localStorage.setItem(HINTS_KEY, "true");
+    } catch {}
   }
 
   if (!visible || currentIdx < 0) return null;
@@ -79,12 +81,23 @@ export function FirstVisitHints() {
 
       {/* Floating hint card — safe-area-aware for mobile browser chrome */}
       <div className="absolute bottom-0 sm:bottom-6 left-0 sm:left-1/2 sm:-translate-x-1/2 pointer-events-auto w-full sm:max-w-md sm:px-4 pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="bg-[var(--card-bg)] border-t sm:border border-[var(--card-border)] sm:rounded-2xl shadow-xl p-5 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        {/* Floating hint card — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
+        <div className="bg-[var(--surface-overlay)] border-t sm:border border-[var(--card-border)] sm:rounded-2xl shadow-xl p-5 space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
           {/* Step indicator */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center shrink-0">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="16" x2="12" y2="12" />
                   <line x1="12" y1="8" x2="12.01" y2="8" />
@@ -107,9 +120,7 @@ export function FirstVisitHints() {
             <h3 className="text-sm font-bold font-heading text-[var(--foreground)]">
               {hint.title}
             </h3>
-            <p className="text-sm text-muted mt-1 leading-relaxed">
-              {hint.description}
-            </p>
+            <p className="text-sm text-muted mt-1 leading-relaxed">{hint.description}</p>
           </div>
 
           {/* Navigation */}
@@ -123,8 +134,8 @@ export function FirstVisitHints() {
                     i === currentIdx
                       ? "bg-primary-500"
                       : i < currentIdx
-                      ? "bg-primary-300 dark:bg-primary-600"
-                      : "bg-surface-200 dark:bg-surface-700"
+                        ? "bg-primary-300 dark:bg-primary-600"
+                        : "bg-surface-200 dark:bg-surface-700"
                   )}
                 />
               ))}

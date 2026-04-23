@@ -833,7 +833,8 @@ export function SessionDetail({
       {/* ── Reschedule Dialog ────────────────────────────────────────── */}
       {showReschedule && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
-          <div className="card w-full max-w-sm mx-4 mb-4 sm:mb-0 p-6 space-y-4 animate-fade-slide-in">
+          {/* Dialog content panel — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
+          <div className="bg-[var(--surface-overlay)] rounded-2xl w-full max-w-sm mx-4 mb-4 sm:mb-0 p-6 space-y-4 animate-fade-slide-in">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
                 Reschedule Session
@@ -891,7 +892,8 @@ export function SessionDetail({
       {/* ── Modify Dialog ────────────────────────────────────────────── */}
       {showModify && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
-          <div className="card w-full max-w-md mx-4 mb-4 sm:mb-0 p-6 space-y-4 animate-fade-slide-in">
+          {/* Dialog content panel — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
+          <div className="bg-[var(--surface-overlay)] rounded-2xl w-full max-w-md mx-4 mb-4 sm:mb-0 p-6 space-y-4 animate-fade-slide-in">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
                 Modify Session

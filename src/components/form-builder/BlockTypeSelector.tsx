@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import type { BlockType } from "@/lib/forms/types";
-import {
-  BLOCK_REGISTRY,
-  CATEGORY_LABELS,
-  CATEGORY_ORDER,
-} from "@/lib/forms/block-registry";
+import { BLOCK_REGISTRY, CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/forms/block-registry";
 
 interface BlockTypeSelectorProps {
   open: boolean;
@@ -14,11 +10,7 @@ interface BlockTypeSelectorProps {
   onSelect: (type: BlockType) => void;
 }
 
-export function BlockTypeSelector({
-  open,
-  onClose,
-  onSelect,
-}: BlockTypeSelectorProps) {
+export function BlockTypeSelector({ open, onClose, onSelect }: BlockTypeSelectorProps) {
   const [search, setSearch] = useState("");
 
   if (!open) return null;
@@ -29,8 +21,7 @@ export function BlockTypeSelector({
     const blocks = Object.values(BLOCK_REGISTRY).filter(
       (b) =>
         b.category === cat &&
-        (b.label.toLowerCase().includes(query) ||
-          b.description.toLowerCase().includes(query))
+        (b.label.toLowerCase().includes(query) || b.description.toLowerCase().includes(query))
     );
     return { category: cat, label: CATEGORY_LABELS[cat], blocks };
   }).filter((g) => g.blocks.length > 0);
@@ -42,12 +33,12 @@ export function BlockTypeSelector({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg max-h-[80vh] bg-[var(--card-bg)] border border-[var(--card-border)] rounded-2xl shadow-xl overflow-hidden animate-fade-in">
+      {/* Floating content panel — uses --surface-overlay per CLAUDE.md §Overlay
+          Surfaces. --card-bg is for inline cards in a known-opaque parent. */}
+      <div className="w-full max-w-lg max-h-[80vh] bg-[var(--surface-overlay)] border border-[var(--card-border)] rounded-2xl shadow-xl overflow-hidden animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--card-border)]">
-          <h3 className="text-base font-bold font-heading text-[var(--foreground)]">
-            Add Block
-          </h3>
+          <h3 className="text-base font-bold font-heading text-[var(--foreground)]">Add Block</h3>
           <button
             onClick={onClose}
             className="p-1 text-muted hover:text-[var(--foreground)] transition-colors"
@@ -117,9 +108,7 @@ export function BlockTypeSelector({
                       <p className="text-sm font-medium text-[var(--foreground)] truncate">
                         {meta.label}
                       </p>
-                      <p className="text-[10px] text-muted leading-snug">
-                        {meta.description}
-                      </p>
+                      <p className="text-[10px] text-muted leading-snug">{meta.description}</p>
                     </div>
                   </button>
                 ))}

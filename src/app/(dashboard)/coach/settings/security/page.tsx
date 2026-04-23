@@ -5,13 +5,7 @@ import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/toast";
 
-type Phase =
-  | "loading"
-  | "disabled"
-  | "setup-qr"
-  | "setup-verify"
-  | "backup-codes"
-  | "enabled";
+type Phase = "loading" | "disabled" | "setup-qr" | "setup-verify" | "backup-codes" | "enabled";
 
 export default function SecuritySettingsPage() {
   const { toast } = useToast();
@@ -159,10 +153,7 @@ export default function SecuritySettingsPage() {
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link
-          href="/coach/settings"
-          className="text-muted hover:text-foreground"
-        >
+        <Link href="/coach/settings" className="text-muted hover:text-foreground">
           <svg
             className="w-5 h-5"
             fill="none"
@@ -170,11 +161,7 @@ export default function SecuritySettingsPage() {
             stroke="currentColor"
             strokeWidth={2}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </Link>
         <h1 className="text-display-sm">Security</h1>
@@ -184,9 +171,7 @@ export default function SecuritySettingsPage() {
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold font-display">
-              Two-Factor Authentication
-            </h2>
+            <h2 className="text-lg font-semibold font-display">Two-Factor Authentication</h2>
             <p className="text-sm text-muted mt-1">
               Add an extra layer of security with an authenticator app
             </p>
@@ -210,11 +195,7 @@ export default function SecuritySettingsPage() {
 
         {/* Phase: Disabled */}
         {phase === "disabled" && (
-          <button
-            onClick={startSetup}
-            disabled={loading}
-            className="btn-primary"
-          >
+          <button onClick={startSetup} disabled={loading} className="btn-primary">
             {loading ? "Setting up..." : "Enable Two-Factor Authentication"}
           </button>
         )}
@@ -223,8 +204,8 @@ export default function SecuritySettingsPage() {
         {phase === "setup-qr" && (
           <div className="space-y-4">
             <p className="text-sm text-muted">
-              Scan this QR code with your authenticator app (Google
-              Authenticator, Authy, 1Password, etc.)
+              Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password,
+              etc.)
             </p>
             <div className="flex justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -259,8 +240,7 @@ export default function SecuritySettingsPage() {
         {phase === "setup-verify" && (
           <div className="space-y-4">
             <p className="text-sm text-muted">
-              Enter the 6-digit code from your authenticator app to confirm
-              setup
+              Enter the 6-digit code from your authenticator app to confirm setup
             </p>
             <div className="flex gap-2">
               <input
@@ -304,8 +284,8 @@ export default function SecuritySettingsPage() {
           <div className="space-y-4">
             <div className="p-4 rounded-xl bg-warning-50 dark:bg-warning-500/10 border border-warning-500/20">
               <p className="text-sm font-medium text-warning-700 dark:text-warning-400">
-                Save these backup codes in a safe place. Each code can only be
-                used once. You won&apos;t be able to see them again.
+                Save these backup codes in a safe place. Each code can only be used once. You
+                won&apos;t be able to see them again.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2 p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
@@ -319,10 +299,7 @@ export default function SecuritySettingsPage() {
               <button onClick={copyBackupCodes} className="btn-secondary flex-1">
                 Copy codes
               </button>
-              <button
-                onClick={() => setPhase("enabled")}
-                className="btn-primary flex-1"
-              >
+              <button onClick={() => setPhase("enabled")} className="btn-primary flex-1">
                 I&apos;ve saved my codes
               </button>
             </div>
@@ -333,8 +310,8 @@ export default function SecuritySettingsPage() {
         {phase === "enabled" && (
           <div className="space-y-4">
             <p className="text-sm text-muted">
-              Your account is protected with two-factor authentication.
-              You&apos;ll need your authenticator app each time you sign in.
+              Your account is protected with two-factor authentication. You&apos;ll need your
+              authenticator app each time you sign in.
             </p>
             <button
               onClick={() => {
@@ -352,13 +329,13 @@ export default function SecuritySettingsPage() {
       {/* Disable Modal */}
       {showDisableModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="card p-6 w-full max-w-md mx-4 space-y-4">
+          {/* Modal content panel — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
+          <div className="bg-[var(--surface-overlay)] rounded-2xl p-6 w-full max-w-md mx-4 space-y-4">
             <h3 className="text-lg font-semibold font-display">
               Disable Two-Factor Authentication
             </h3>
             <p className="text-sm text-muted">
-              Enter your password and a code from your authenticator app to
-              disable MFA.
+              Enter your password and a code from your authenticator app to disable MFA.
             </p>
 
             {error && (
@@ -385,11 +362,7 @@ export default function SecuritySettingsPage() {
                 inputMode="numeric"
                 maxLength={6}
                 value={disableCode}
-                onChange={(e) =>
-                  setDisableCode(
-                    e.target.value.replace(/\D/g, "").slice(0, 6)
-                  )
-                }
+                onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 className="input font-mono text-center tracking-widest"
                 placeholder="000000"
               />
@@ -408,9 +381,7 @@ export default function SecuritySettingsPage() {
               </button>
               <button
                 onClick={disableMfa}
-                disabled={
-                  loading || !disablePassword || disableCode.length !== 6
-                }
+                disabled={loading || !disablePassword || disableCode.length !== 6}
                 className="btn-primary flex-1 !bg-danger-600 hover:!bg-danger-700"
               >
                 {loading ? "Disabling..." : "Disable MFA"}
