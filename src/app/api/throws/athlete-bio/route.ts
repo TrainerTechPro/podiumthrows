@@ -17,17 +17,28 @@ export async function PATCH(request: NextRequest) {
     if (parsed instanceof NextResponse) return parsed;
     const { athleteId, gender, sport, height, weight, dateOfBirth } = parsed;
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const athlete = await prisma.athleteProfile.update({
       where: { id: athleteId },
       data: {
-        ...(gender !== undefined && { gender }),
-        ...(sport !== undefined && { sport }),
-        ...(height !== undefined && { height: height !== "" && height !== null ? parseFloat(String(height)) : null }),
-        ...(weight !== undefined && { weight: weight !== "" && weight !== null ? parseFloat(String(weight)) : null }),
+        // gender column is non-nullable; treat null (cleared field) as "don't update".
+        ...(gender != null && { gender }),
+        ...(sport != null && { sport }),
+        ...(height !== undefined && {
+          height: height !== "" && height !== null ? parseFloat(String(height)) : null,
+        }),
+        ...(weight !== undefined && {
+          weight: weight !== "" && weight !== null ? parseFloat(String(weight)) : null,
+        }),
         ...(dateOfBirth !== undefined && { dateOfBirth }),
       },
     });
@@ -35,6 +46,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, data: athlete });
   } catch (error) {
     logger.error("Athlete bio update error", { context: "throws/athlete-bio", error: error });
-    return NextResponse.json({ success: false, error: "Failed to update athlete bio" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update athlete bio" },
+      { status: 500 }
+    );
   }
 }

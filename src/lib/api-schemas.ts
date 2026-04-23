@@ -40,10 +40,13 @@ export const RegisterSchema = z.object({
   role: z.enum(["COACH", "ATHLETE"], {
     message: "Role must be COACH or ATHLETE",
   }),
-  inviteToken: z.string().optional(),
-  leadId: z.string().optional(),
-  plan: z.string().optional(),
-  interval: z.string().optional(),
+  // URL-param fields (invite/lead/plan/interval). Client coerces `|| undefined`,
+  // but per CLAUDE.md §4 any field that originates in a React client context
+  // should tolerate null so a future client change can't silently 400.
+  inviteToken: z.string().nullable().optional(),
+  leadId: z.string().nullable().optional(),
+  plan: z.string().nullable().optional(),
+  interval: z.string().nullable().optional(),
 });
 
 export const ForgotPasswordSchema = z.object({
@@ -503,8 +506,12 @@ export const ComplexCreateSchema = z.object({
 
 export const AthleteBioUpdateSchema = z.object({
   athleteId: z.string().min(1, "Athlete ID is required"),
-  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
-  sport: z.string().optional(),
+  // gender/sport arrive from the coach profile form as `field || null` when
+  // cleared. Per CLAUDE.md §4, form-origin fields must be `.nullable().optional()`.
+  // Note: the DB column `gender` is non-nullable (Gender enum), so the handler
+  // treats null as "don't update" via `!= null` — see handler below.
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
+  sport: z.string().nullable().optional(),
   height: z.union([z.number(), z.string()]).nullable().optional(),
   weight: z.union([z.number(), z.string()]).nullable().optional(),
   dateOfBirth: z.string().nullable().optional(),
