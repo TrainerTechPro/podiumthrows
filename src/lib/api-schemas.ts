@@ -94,10 +94,14 @@ export const PasswordChangeSchema = z.object({
 });
 
 export const CoachProfileUpdateSchema = z.object({
+  // firstName/lastName stay `.optional()` (no nullable): the settings form
+  // uses `useState<string>` and the DB columns are non-nullable. bio and
+  // organization submit as `field || null` from the form and map to String?
+  // columns, so they need `.nullable().optional()` per CLAUDE.md §4.
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  bio: z.string().optional(),
-  organization: z.string().optional(),
+  bio: z.string().nullable().optional(),
+  organization: z.string().nullable().optional(),
 });
 
 // ── Lead Capture ────────────────────────────────────────────────────────

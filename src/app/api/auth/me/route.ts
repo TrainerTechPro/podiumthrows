@@ -63,7 +63,10 @@ export async function GET() {
     return NextResponse.json({ success: true, data: { user } });
   } catch (err) {
     logger.error("GET /api/auth/me", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }
 
@@ -172,7 +175,7 @@ export async function PATCH(request: NextRequest) {
         );
       }
       const profileData = result.data;
-      const updateData: Record<string, string> = {};
+      const updateData: Record<string, string | null> = {};
       if (profileData.firstName !== undefined) updateData.firstName = profileData.firstName;
       if (profileData.lastName !== undefined) updateData.lastName = profileData.lastName;
       if (profileData.bio !== undefined) updateData.bio = profileData.bio;
