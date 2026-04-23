@@ -53,13 +53,18 @@ export default defineConfig({
       name: "coach",
       use: { ...devices["Desktop Chrome"], storageState: COACH_STORAGE },
       dependencies: ["setup"],
-      testMatch: /(coach-dashboard|coach-roster-detail)\.spec\.ts/,
+      // Anchored with (^|/) so "session-redirects" in the athlete spec doesn't
+      // trigger this project via substring match.
+      testMatch: /(^|\/)(coach-dashboard|coach-roster-detail|coach-session-redirects)\.spec\.ts$/,
     },
     {
       name: "athlete",
       use: { ...devices["Desktop Chrome"], storageState: ATHLETE_STORAGE },
       dependencies: ["setup"],
-      testMatch: /(athlete-log-session|athlete-quick-log-pr|athlete-training-hub)\.spec\.ts/,
+      // Anchored so "coach-session-redirects.spec.ts" doesn't get pulled in
+      // via the "session-redirects" alternative.
+      testMatch:
+        /(^|\/)(athlete-log-session|athlete-quick-log-pr|athlete-training-hub|session-redirects)\.spec\.ts$/,
     },
   ],
   webServer: {

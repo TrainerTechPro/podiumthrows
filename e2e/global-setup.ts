@@ -1,4 +1,5 @@
 import { execFileSync } from "child_process";
+import { ensureThrowsAssignmentForAthlete1 } from "./helpers/seed-e2e";
 
 /**
  * Pre-flight sanity check before any e2e test runs.
@@ -9,6 +10,9 @@ import { execFileSync } from "child_process";
  * The config-level env override is the primary defense; this is the
  * second layer: refuse to proceed unless the DB Playwright is about to
  * use is local AND has the seeded test accounts.
+ *
+ * Also ensures e2e-only fixtures that aren't part of the main db:seed
+ * (e.g. a ThrowsAssignment for the redirect-coverage specs) exist.
  */
 export default async function globalSetup() {
   const url =
@@ -48,6 +52,10 @@ export default async function globalSetup() {
         `Run: npm run db:seed`
     );
   }
+
+  // Idempotent — only writes if the fixture IDs aren't already present.
+  // Guarded by the same LOCAL-only check that lives in the helper module.
+  ensureThrowsAssignmentForAthlete1();
 }
 
 function maskUrl(url: string): string {
