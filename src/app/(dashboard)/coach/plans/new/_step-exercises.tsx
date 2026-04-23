@@ -8,6 +8,7 @@ import type { BlockData, BlockExerciseData } from "./_step-blocks";
 import type { ExerciseItem } from "@/lib/data/coach";
 import { formatImplementWeight } from "@/lib/throws";
 import { RecommenderRail } from "./_recommender-rail";
+import { parseIntegerInput, parseNumericInput } from "@/lib/forms/parse-numeric";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -403,7 +404,7 @@ export function StepExercises({
                       type="number"
                       value={ex.sets ? ex.sets.toString() : ""}
                       onChange={(e) =>
-                        updateExercise(exIdx, { sets: parseInt(e.target.value, 10) || 0 })
+                        updateExercise(exIdx, { sets: parseIntegerInput(e.target.value) ?? 0 })
                       }
                       min={1}
                     />
@@ -419,7 +420,9 @@ export function StepExercises({
                         type="number"
                         value={ex.implementKg ? ex.implementKg.toString() : ""}
                         onChange={(e) =>
-                          updateExercise(exIdx, { implementKg: parseFloat(e.target.value) || 0 })
+                          updateExercise(exIdx, {
+                            implementKg: parseNumericInput(e.target.value) ?? 0,
+                          })
                         }
                         min={0}
                         step={0.01}
@@ -437,7 +440,9 @@ export function StepExercises({
                       type="number"
                       value={ex.restSeconds ? ex.restSeconds.toString() : ""}
                       onChange={(e) =>
-                        updateExercise(exIdx, { restSeconds: parseInt(e.target.value, 10) || 0 })
+                        updateExercise(exIdx, {
+                          restSeconds: parseIntegerInput(e.target.value) ?? 0,
+                        })
                       }
                       min={0}
                     />

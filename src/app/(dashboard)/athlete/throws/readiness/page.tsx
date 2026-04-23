@@ -12,6 +12,7 @@ import {
   SORENESS_ZONES,
 } from "@/lib/throws/profile-constants";
 import { calcReadiness, todayISO } from "@/lib/throws/profile-utils";
+import { parseNumericInput } from "@/lib/forms/parse-numeric";
 import {
   DEFICIT_TYPE_LABELS,
   DEFICIT_LEVEL_COLORS,
@@ -661,7 +662,7 @@ export default function AthleteProfilePage() {
                     onChange={(e) =>
                       setCheckInData({
                         ...checkInData,
-                        sleepHours: parseFloat(e.target.value) || 0,
+                        sleepHours: parseNumericInput(e.target.value) ?? 0,
                       })
                     }
                     className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)]"

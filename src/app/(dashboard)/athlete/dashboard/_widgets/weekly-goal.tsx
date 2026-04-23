@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { parseIntegerInput } from "@/lib/forms/parse-numeric";
 import { useRouter } from "next/navigation";
 import { Target, Plus, Check } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -148,7 +149,7 @@ function SetGoalDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [value, setValue] = useState<number>(initialValue);
+  const [value, setValue] = useState<number | null>(initialValue);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -164,7 +165,7 @@ function SetGoalDialog({
 
   function handleSave() {
     setError(null);
-    if (!Number.isFinite(value) || value <= 0) {
+    if (value == null || !Number.isFinite(value) || value <= 0) {
       setError("Target must be a positive number.");
       return;
     }
@@ -220,8 +221,8 @@ function SetGoalDialog({
         <Input
           type="number"
           min={1}
-          value={value}
-          onChange={(e) => setValue(parseInt(e.target.value, 10) || 0)}
+          value={value ?? ""}
+          onChange={(e) => setValue(parseIntegerInput(e.target.value))}
           className="w-full tabular-nums"
         />
       </div>

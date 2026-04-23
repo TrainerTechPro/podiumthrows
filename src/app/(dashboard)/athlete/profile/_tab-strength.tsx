@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Input } from "@/components/ui/Input";
+import { parseNumericInput } from "@/lib/forms/parse-numeric";
 import type { ProfileData, LiftEntry } from "./_types";
 import { LIFTS } from "./_types";
 
@@ -49,9 +50,19 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
 
   /* ── Athletic tests state ──────────────────────────────────────────── */
 
-  const [tests, setTests] = useState(
-    () => profile.strengthNumbers?.tests ?? { standingLJ: 0, tripleJump: 0 }
-  );
+  const [tests, setTests] = useState<{
+    standingLJ: number | null;
+    tripleJump: number | null;
+  }>(() => {
+    const existing = (profile.strengthNumbers?.tests ?? {}) as {
+      standingLJ?: number | null;
+      tripleJump?: number | null;
+    };
+    return {
+      standingLJ: existing.standingLJ ?? null,
+      tripleJump: existing.tripleJump ?? null,
+    };
+  });
 
   /* ── Computed ratios ───────────────────────────────────────────────── */
 
@@ -144,90 +155,95 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
       <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-5 sm:p-6 space-y-5">
         <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">Lift Maxes</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {LIFTS.map((lift) => {
+        <div className="divide-y divide-[var(--card-border)]/40 sm:divide-y-0 sm:grid sm:grid-cols-2 sm:gap-5">
+          {LIFTS.map((lift, i) => {
             const entry = lifts[lift.key] ?? { ...defaultLift };
             return (
-              <div key={lift.key} className="card p-4 space-y-3">
+              <div
+                key={lift.key}
+                className={cn(
+                  "space-y-3 py-4 first:pt-0 last:pb-0",
+                  "sm:py-0 sm:border-t sm:border-[var(--card-border)]/40 sm:pt-5",
+                  i < 2 && "sm:border-t-0 sm:pt-0"
+                )}
+              >
                 <h3 className="text-sm font-semibold text-[var(--foreground)]">{lift.label}</h3>
 
-                {/* Current Max */}
-                <div>
-                  <label
-                    htmlFor={`lift-${lift.key}-current`}
-                    className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                  >
-                    Current Max (kg)
-                  </label>
-                  <Input
-                    id={`lift-${lift.key}-current`}
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    className="w-full"
-                    value={entry.current || ""}
-                    onChange={(e) => updateLift(lift.key, "current", e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor={`lift-${lift.key}-current`}
+                      className="block text-xs font-medium text-muted mb-1"
+                    >
+                      Current (kg)
+                    </label>
+                    <Input
+                      id={`lift-${lift.key}-current`}
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      className="w-full"
+                      value={entry.current || ""}
+                      onChange={(e) => updateLift(lift.key, "current", e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
 
-                {/* Date Tested */}
-                <div>
-                  <label
-                    htmlFor={`lift-${lift.key}-date`}
-                    className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                  >
-                    Date Tested
-                  </label>
-                  <input
-                    id={`lift-${lift.key}-date`}
-                    type="date"
-                    className="input w-full"
-                    value={entry.date}
-                    onChange={(e) => updateLift(lift.key, "date", e.target.value)}
-                  />
-                </div>
+                  <div>
+                    <label
+                      htmlFor={`lift-${lift.key}-goal`}
+                      className="block text-xs font-medium text-muted mb-1"
+                    >
+                      Goal (kg)
+                    </label>
+                    <Input
+                      id={`lift-${lift.key}-goal`}
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      className="w-full"
+                      value={entry.goal || ""}
+                      onChange={(e) => updateLift(lift.key, "goal", e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
 
-                {/* Goal */}
-                <div>
-                  <label
-                    htmlFor={`lift-${lift.key}-goal`}
-                    className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                  >
-                    Goal (kg)
-                  </label>
-                  <Input
-                    id={`lift-${lift.key}-goal`}
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    className="w-full"
-                    value={entry.goal || ""}
-                    onChange={(e) => updateLift(lift.key, "goal", e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
+                  <div>
+                    <label
+                      htmlFor={`lift-${lift.key}-date`}
+                      className="block text-xs font-medium text-muted mb-1"
+                    >
+                      Date Tested
+                    </label>
+                    <input
+                      id={`lift-${lift.key}-date`}
+                      type="date"
+                      className="input w-full"
+                      value={entry.date}
+                      onChange={(e) => updateLift(lift.key, "date", e.target.value)}
+                    />
+                  </div>
 
-                {/* Correlation */}
-                <div>
-                  <label
-                    htmlFor={`lift-${lift.key}-corr`}
-                    className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                  >
-                    Correlation
-                  </label>
-                  <select
-                    id={`lift-${lift.key}-corr`}
-                    className="input w-full"
-                    value={entry.correlation}
-                    onChange={(e) => updateLift(lift.key, "correlation", e.target.value)}
-                  >
-                    {CORRELATIONS.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <label
+                      htmlFor={`lift-${lift.key}-corr`}
+                      className="block text-xs font-medium text-muted mb-1"
+                    >
+                      Correlation
+                    </label>
+                    <select
+                      id={`lift-${lift.key}-corr`}
+                      className="input w-full"
+                      value={entry.correlation}
+                      onChange={(e) => updateLift(lift.key, "correlation", e.target.value)}
+                    >
+                      {CORRELATIONS.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             );
@@ -255,11 +271,11 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
               step="1"
               min="0"
               className="w-full"
-              value={tests.standingLJ || ""}
+              value={tests.standingLJ ?? ""}
               onChange={(e) =>
                 setTests((prev) => ({
                   ...prev,
-                  standingLJ: parseFloat(e.target.value) || 0,
+                  standingLJ: parseNumericInput(e.target.value),
                 }))
               }
               placeholder="0"
@@ -278,11 +294,11 @@ export function TabStrength({ profile }: { profile: ProfileData }) {
               step="0.01"
               min="0"
               className="w-full"
-              value={tests.tripleJump || ""}
+              value={tests.tripleJump ?? ""}
               onChange={(e) =>
                 setTests((prev) => ({
                   ...prev,
-                  tripleJump: parseFloat(e.target.value) || 0,
+                  tripleJump: parseNumericInput(e.target.value),
                 }))
               }
               placeholder="0.00"

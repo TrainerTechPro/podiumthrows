@@ -1,11 +1,8 @@
 "use client";
 
-import type {
-  FormBlock,
-  FormBuilderAction,
-  ChoiceOption,
-} from "@/lib/forms/types";
+import type { FormBlock, FormBuilderAction, ChoiceOption } from "@/lib/forms/types";
 import { BLOCK_REGISTRY, generateOptionId } from "@/lib/forms/block-registry";
+import { parseIntegerInput, parseNumericInput } from "@/lib/forms/parse-numeric";
 import { Input } from "@/components/ui/Input";
 
 interface BlockSettingsProps {
@@ -43,9 +40,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
 
   function removeOption(index: number) {
     if (!("options" in block)) return;
-    const options = (block.options as ChoiceOption[]).filter(
-      (_, i) => i !== index
-    );
+    const options = (block.options as ChoiceOption[]).filter((_, i) => i !== index);
     update({ options } as Partial<FormBlock>);
   }
 
@@ -66,9 +61,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
         >
           <path d={meta?.icon ?? ""} />
         </svg>
-        <span className="text-sm font-semibold text-[var(--foreground)]">
-          {meta?.label}
-        </span>
+        <span className="text-sm font-semibold text-[var(--foreground)]">{meta?.label}</span>
       </div>
 
       {/* Common fields */}
@@ -131,7 +124,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
             type="number"
             value={String(block.rows ?? 3)}
             onChange={(e) =>
-              update({ rows: parseInt(e.target.value) || 3 } as Partial<FormBlock>)
+              update({ rows: parseIntegerInput(e.target.value) ?? 3 } as Partial<FormBlock>)
             }
           />
         </>
@@ -175,7 +168,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
             type="number"
             value={String(block.min)}
             onChange={(e) =>
-              update({ min: parseFloat(e.target.value) || 0 } as Partial<FormBlock>)
+              update({ min: parseNumericInput(e.target.value) ?? 0 } as Partial<FormBlock>)
             }
           />
           <Input
@@ -183,7 +176,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
             type="number"
             value={String(block.max)}
             onChange={(e) =>
-              update({ max: parseFloat(e.target.value) || 100 } as Partial<FormBlock>)
+              update({ max: parseNumericInput(e.target.value) ?? 100 } as Partial<FormBlock>)
             }
           />
           <Input
@@ -191,7 +184,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
             type="number"
             value={String(block.step)}
             onChange={(e) =>
-              update({ step: parseFloat(e.target.value) || 1 } as Partial<FormBlock>)
+              update({ step: parseNumericInput(e.target.value) ?? 1 } as Partial<FormBlock>)
             }
           />
         </div>
@@ -258,7 +251,12 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
             <div key={opt.id} className="flex gap-2 items-center">
               <Input
                 value={opt.label}
-                onChange={(e) => updateOption(i, { label: e.target.value, value: e.target.value.toLowerCase().replace(/\s+/g, "_") })}
+                onChange={(e) =>
+                  updateOption(i, {
+                    label: e.target.value,
+                    value: e.target.value.toLowerCase().replace(/\s+/g, "_"),
+                  })
+                }
                 placeholder={`Option ${i + 1}`}
               />
               {(block.options as ChoiceOption[]).length > 2 && (
@@ -295,9 +293,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
               <input
                 type="checkbox"
                 checked={block.allowOther ?? false}
-                onChange={(e) =>
-                  update({ allowOther: e.target.checked } as Partial<FormBlock>)
-                }
+                onChange={(e) => update({ allowOther: e.target.checked } as Partial<FormBlock>)}
                 className="w-4 h-4 rounded border-[var(--card-border)] text-primary-500 focus:ring-primary-500/30"
               />
               Allow &quot;Other&quot; option
@@ -312,9 +308,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
             <input
               type="checkbox"
               checked={block.allowMultiple}
-              onChange={(e) =>
-                update({ allowMultiple: e.target.checked } as Partial<FormBlock>)
-              }
+              onChange={(e) => update({ allowMultiple: e.target.checked } as Partial<FormBlock>)}
               className="w-4 h-4 rounded border-[var(--card-border)] text-primary-500 focus:ring-primary-500/30"
             />
             Allow multiple regions
@@ -323,9 +317,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
             <input
               type="checkbox"
               checked={block.severityScale ?? false}
-              onChange={(e) =>
-                update({ severityScale: e.target.checked } as Partial<FormBlock>)
-              }
+              onChange={(e) => update({ severityScale: e.target.checked } as Partial<FormBlock>)}
               className="w-4 h-4 rounded border-[var(--card-border)] text-primary-500 focus:ring-primary-500/30"
             />
             Include severity rating (1-5)
@@ -382,23 +374,15 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
           />
           <Input
             label="Subtitle"
-            value={
-              "subtitle" in block
-                ? ((block as { subtitle?: string }).subtitle ?? "")
-                : ""
-            }
+            value={"subtitle" in block ? ((block as { subtitle?: string }).subtitle ?? "") : ""}
             onChange={(e) => update({ subtitle: e.target.value } as Partial<FormBlock>)}
           />
           <Input
             label="Button Text"
             value={
-              "buttonText" in block
-                ? ((block as { buttonText?: string }).buttonText ?? "")
-                : ""
+              "buttonText" in block ? ((block as { buttonText?: string }).buttonText ?? "") : ""
             }
-            onChange={(e) =>
-              update({ buttonText: e.target.value } as Partial<FormBlock>)
-            }
+            onChange={(e) => update({ buttonText: e.target.value } as Partial<FormBlock>)}
           />
         </>
       )}
@@ -412,11 +396,7 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
           />
           <Input
             label="Subtitle"
-            value={
-              "subtitle" in block
-                ? ((block as { subtitle?: string }).subtitle ?? "")
-                : ""
-            }
+            value={"subtitle" in block ? ((block as { subtitle?: string }).subtitle ?? "") : ""}
             onChange={(e) => update({ subtitle: e.target.value } as Partial<FormBlock>)}
           />
         </>

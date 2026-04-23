@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { validateBlockStructure } from "@/lib/bondarchuk";
+import { parseIntegerInput } from "@/lib/forms/parse-numeric";
 
 export type BlockExerciseData = {
   exerciseId: string;
@@ -201,7 +202,7 @@ export function StepBlocks({
                 placeholder="120"
                 value={block.restSeconds ? block.restSeconds.toString() : ""}
                 onChange={(e) =>
-                  updateBlock(idx, { restSeconds: parseInt(e.target.value, 10) || 0 })
+                  updateBlock(idx, { restSeconds: parseIntegerInput(e.target.value) ?? 0 })
                 }
                 min={0}
               />
