@@ -95,9 +95,7 @@ export function VideoEditor({ video, athletes }: Props) {
       const res = await fetch("/api/coach/videos");
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
-      setCompareVideos(
-        (data.videos as CompareVideo[]).filter((v) => v.id !== video.id)
-      );
+      setCompareVideos((data.videos as CompareVideo[]).filter((v) => v.id !== video.id));
     } catch {
       toastError("Error", "Could not load video library.");
     } finally {
@@ -265,16 +263,11 @@ export function VideoEditor({ video, athletes }: Props) {
             {video.title ?? "Untitled Video"}
           </h1>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            {video.athleteName && (
-              <span className="text-xs text-muted">{video.athleteName}</span>
-            )}
-            {video.event && (
-              <Badge variant="primary">{formatEventType(video.event)}</Badge>
-            )}
+            {video.athleteName && <span className="text-xs text-muted">{video.athleteName}</span>}
+            {video.event && <Badge variant="primary">{formatEventType(video.event)}</Badge>}
             {video.category && (
               <Badge variant="neutral">
-                {video.category.charAt(0).toUpperCase() +
-                  video.category.slice(1)}
+                {video.category.charAt(0).toUpperCase() + video.category.slice(1)}
               </Badge>
             )}
           </div>
@@ -364,9 +357,7 @@ export function VideoEditor({ video, athletes }: Props) {
       {/* ── Main layout ─────────────────────────────────────────────── */}
       <div
         className={`grid gap-4 ${
-          analysisMode === "single"
-            ? "grid-cols-1 lg:grid-cols-[1fr_280px]"
-            : "grid-cols-1"
+          analysisMode === "single" ? "grid-cols-1 lg:grid-cols-[1fr_280px]" : "grid-cols-1"
         }`}
       >
         {/* Left/Main: Video area */}
@@ -378,6 +369,9 @@ export function VideoEditor({ video, athletes }: Props) {
               {analysisMode === "ghost" ? (
                 <div className="aspect-video bg-black rounded-xl overflow-hidden relative">
                   <div className="absolute inset-0 flex items-start justify-center pt-8">
+                    {/* HUD picker over opaque black video canvas — `surface-900/95`
+                        reads as a dark-HUD card, not a portaled content panel. Parent
+                        is known-opaque so translucency cascade is safe. */}
                     <div className="bg-surface-900/95 rounded-xl p-4 w-72 shadow-2xl">
                       <p className="text-sm font-medium text-white mb-3 text-center">
                         Select ghost video
@@ -488,9 +482,7 @@ export function VideoEditor({ video, athletes }: Props) {
               </h3>
               <div className="space-y-1.5 text-xs">
                 {video.description && (
-                  <p className="text-surface-600 dark:text-surface-400">
-                    {video.description}
-                  </p>
+                  <p className="text-surface-600 dark:text-surface-400">{video.description}</p>
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted">Uploaded</span>
@@ -549,31 +541,21 @@ export function VideoEditor({ video, athletes }: Props) {
         size="sm"
         footer={
           <div className="flex items-center gap-2 justify-end">
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="btn-ghost text-sm"
-            >
+            <button onClick={() => setShowShareModal(false)} className="btn-ghost text-sm">
               Cancel
             </button>
-            <button
-              onClick={handleShare}
-              disabled={isSharing}
-              className="btn-primary text-sm"
-            >
+            <button onClick={handleShare} disabled={isSharing} className="btn-primary text-sm">
               {isSharing ? "Sharing…" : "Share"}
             </button>
           </div>
         }
       >
         <p className="text-sm text-muted mb-3">
-          Select athletes to share this video with. They&apos;ll be able to view
-          annotations.
+          Select athletes to share this video with. They&apos;ll be able to view annotations.
         </p>
         <div className="space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
           {athletes.length === 0 ? (
-            <p className="text-xs text-muted text-center py-4">
-              No athletes on your roster yet.
-            </p>
+            <p className="text-xs text-muted text-center py-4">No athletes on your roster yet.</p>
           ) : (
             athletes.map((a) => (
               <label
@@ -591,9 +573,7 @@ export function VideoEditor({ video, athletes }: Props) {
                   }}
                   className="rounded border-surface-300 text-primary-500 focus:ring-primary-500"
                 />
-                <span className="text-sm text-[var(--foreground)]">
-                  {a.name}
-                </span>
+                <span className="text-sm text-[var(--foreground)]">{a.name}</span>
               </label>
             ))
           )}
@@ -609,8 +589,8 @@ export function VideoEditor({ video, athletes }: Props) {
         description={
           <>
             Are you sure you want to delete &ldquo;
-            {video.title ?? "this video"}&rdquo;? This will permanently remove
-            the video and all annotations. This action cannot be undone.
+            {video.title ?? "this video"}&rdquo;? This will permanently remove the video and all
+            annotations. This action cannot be undone.
           </>
         }
         confirmLabel="Delete"
@@ -648,18 +628,11 @@ type CompareVideoPickerProps = {
   dark?: boolean;
 };
 
-function CompareVideoPicker({
-  videos,
-  loading,
-  onSelect,
-  dark = false,
-}: CompareVideoPickerProps) {
+function CompareVideoPicker({ videos, loading, onSelect, dark = false }: CompareVideoPickerProps) {
   const [search, setSearch] = useState("");
 
   const filtered = videos
-    ? videos.filter((v) =>
-        (v.title ?? "").toLowerCase().includes(search.toLowerCase())
-      )
+    ? videos.filter((v) => (v.title ?? "").toLowerCase().includes(search.toLowerCase()))
     : null;
 
   const base = dark
@@ -685,12 +658,12 @@ function CompareVideoPicker({
         ) : filtered === null ? (
           <p className="text-surface-400 text-xs text-center">Loading…</p>
         ) : filtered.length === 0 && !search ? (
-          <p className="text-surface-400 text-xs text-center">
-            No other videos in your library.
-          </p>
+          <p className="text-surface-400 text-xs text-center">No other videos in your library.</p>
         ) : (
           <div className={`flex flex-col ${dark ? "p-3" : "w-full max-w-xs"} gap-2`}>
-            <p className={`text-xs font-medium ${dark ? "text-surface-300" : "text-surface-500 dark:text-surface-400"} text-center`}>
+            <p
+              className={`text-xs font-medium ${dark ? "text-surface-300" : "text-surface-500 dark:text-surface-400"} text-center`}
+            >
               Select video to compare
             </p>
             <input
@@ -701,7 +674,7 @@ function CompareVideoPicker({
               className={`input text-xs py-1.5 ${dark ? "bg-surface-800 border-surface-700 text-white placeholder-surface-500" : ""}`}
             />
             <div className="max-h-40 overflow-y-auto custom-scrollbar space-y-0.5">
-              {(filtered.length > 0 ? filtered : videos ?? []).map((v) => (
+              {(filtered.length > 0 ? filtered : (videos ?? [])).map((v) => (
                 <button
                   key={v.id}
                   onClick={() => onSelect(v)}
@@ -714,14 +687,17 @@ function CompareVideoPicker({
                   <div className="w-10 h-7 rounded overflow-hidden bg-surface-800 shrink-0">
                     {v.thumbnailUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={v.thumbnailUrl}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={v.thumbnailUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-surface-600">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
                           <polygon points="23 7 16 12 23 17 23 7" />
                           <rect x="1" y="5" width="15" height="14" rx="2" />
                         </svg>
@@ -729,9 +705,7 @@ function CompareVideoPicker({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">
-                      {v.title ?? "Untitled"}
-                    </p>
+                    <p className="text-xs font-medium truncate">{v.title ?? "Untitled"}</p>
                     {v.durationSec && (
                       <p className="text-[10px] text-surface-500 tabular-nums font-mono">
                         {formatTimestamp(v.durationSec)}
@@ -741,9 +715,7 @@ function CompareVideoPicker({
                 </button>
               ))}
               {search && filtered?.length === 0 && (
-                <p className="text-[10px] text-surface-500 text-center py-2">
-                  No results
-                </p>
+                <p className="text-[10px] text-surface-500 text-center py-2">No results</p>
               )}
             </div>
           </div>
@@ -827,4 +799,3 @@ function GhostIcon() {
 }
 
 /* Master control icons removed — now in VideoAnalysisWorkspace */
-

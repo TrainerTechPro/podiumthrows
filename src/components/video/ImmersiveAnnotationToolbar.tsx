@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  type AnnotationTool,
-  ANNOTATION_COLORS,
-  STROKE_WIDTHS,
-} from "./types";
+import { type AnnotationTool, ANNOTATION_COLORS, STROKE_WIDTHS } from "./types";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -56,6 +52,9 @@ export function ImmersiveAnnotationToolbar({
   const [showWidths, setShowWidths] = useState(false);
 
   return (
+    // Floating annotation toolbar inside the opaque video canvas — `bg-black/70`
+    // is the HUD-style translucent toolbar. Not an overlay content panel per
+    // CLAUDE.md §Overlay Surfaces: parent is opaque video, not page content.
     <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1 bg-black/70 rounded-2xl p-1.5">
       {/* ── Drawing Tools ─────────────────────────────────────────── */}
       {TOOLS.map(({ tool, label, icon }) => (
@@ -102,9 +101,7 @@ export function ImmersiveAnnotationToolbar({
                   setShowColors(false);
                 }}
                 className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${
-                  activeColor === color
-                    ? "border-white scale-110"
-                    : "border-transparent"
+                  activeColor === color ? "border-white scale-110" : "border-transparent"
                 }`}
                 style={{ backgroundColor: color }}
               />

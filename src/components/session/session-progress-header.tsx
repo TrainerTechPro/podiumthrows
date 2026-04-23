@@ -125,6 +125,9 @@ function IntraEvalBanner({
   // Evaluating — spinner
   if (intraEval.status === "evaluating") {
     return (
+      // Inline banner in page flow (not a portaled overlay). Page canvas is
+      // fully opaque so the /50 tint cascades onto a known surface. Don't
+      // "fix" to --surface-overlay — this is a flow element, not a modal.
       <div className="px-4 py-2.5 border-b border-gray-200/60 dark:border-gray-800/60 bg-surface-50 dark:bg-surface-900/50">
         <div className="flex items-center gap-2">
           <svg

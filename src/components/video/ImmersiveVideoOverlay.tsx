@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { AnnotationCanvas } from "./AnnotationCanvas";
 import { ImmersiveAnnotationToolbar } from "./ImmersiveAnnotationToolbar";
@@ -143,11 +138,7 @@ export function ImmersiveVideoOverlay({
   useEffect(() => {
     if (!open) return;
     function handleKey(e: KeyboardEvent) {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      )
-        return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
       switch (e.key) {
         case "Escape":
@@ -361,9 +352,7 @@ export function ImmersiveVideoOverlay({
 
         {/* Title */}
         {title && (
-          <span className="text-sm font-medium text-white/80 truncate flex-1 min-w-0">
-            {title}
-          </span>
+          <span className="text-sm font-medium text-white/80 truncate flex-1 min-w-0">{title}</span>
         )}
         {!title && <div className="flex-1" />}
 
@@ -413,7 +402,16 @@ export function ImmersiveVideoOverlay({
         >
           {poseDetection.loading ? (
             <svg width="18" height="18" viewBox="0 0 24 24" className="animate-spin">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="32" strokeLinecap="round" />
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="32"
+                strokeLinecap="round"
+              />
             </svg>
           ) : (
             <svg
@@ -482,11 +480,7 @@ export function ImmersiveVideoOverlay({
       {/* ═══════ Video Area ═══════ */}
       <div className="flex-1 relative overflow-hidden">
         {/* Zoomable container wraps video + annotation canvas */}
-        <ZoomableVideoContainer
-          zoomPan={zoomPan}
-          showIndicator={true}
-          className="w-full h-full"
-        >
+        <ZoomableVideoContainer zoomPan={zoomPan} showIndicator={true} className="w-full h-full">
           <video
             ref={videoRef}
             src={videoSrc}
@@ -554,13 +548,7 @@ export function ImmersiveVideoOverlay({
             className="absolute inset-0 z-30 flex items-center justify-center bg-black/10 transition-colors hover:bg-black/20"
           >
             <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="white"
-                className="ml-1"
-              >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white" className="ml-1">
                 <polygon points="5 3 19 12 5 21" />
               </svg>
             </div>
@@ -570,7 +558,15 @@ export function ImmersiveVideoOverlay({
         {/* Narration recording indicator */}
         {narrationBlob && (
           <div className="absolute top-3 left-3 z-40 flex items-center gap-2 bg-black/70 rounded-lg px-3 py-1.5">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-success-500" strokeWidth="2">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="text-success-500"
+              strokeWidth="2"
+            >
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
             </svg>
             <span className="text-[10px] text-green-400 font-medium">Narration recorded</span>
@@ -632,7 +628,13 @@ export function ImmersiveVideoOverlay({
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" className="ml-0.5">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="ml-0.5"
+              >
                 <polygon points="5 3 19 12 5 21" />
               </svg>
             )}
@@ -672,6 +674,9 @@ export function ImmersiveVideoOverlay({
               {speed}x
             </button>
             {showSpeedMenu && (
+              // HUD popover over opaque video canvas — `bg-black/90` is intentional (HUD feel).
+              // Not an overlay content panel per CLAUDE.md §Overlay Surfaces: parent is the
+              // opaque video surface, not a portaled overlay on page content.
               <div className="absolute bottom-full right-0 mb-2 bg-black/90 border border-white/10 rounded-xl py-1 shadow-2xl z-10">
                 {PLAYBACK_SPEEDS.map((s) => (
                   <button

@@ -51,7 +51,13 @@ function CheckIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
       <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.25" />
-      <path d="M5 8.5l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M5 8.5l2 2 4-4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -67,7 +73,13 @@ function DashIcon() {
 function ArrowRightIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4" aria-hidden="true">
-      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M3 8h10M9 4l4 4-4 4"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -200,8 +212,7 @@ export function PricingCards({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
       {PLANS.map((plan) => {
-        const price =
-          billing === "annual" ? plan.annualPrice : plan.monthlyPrice;
+        const price = billing === "annual" ? plan.annualPrice : plan.monthlyPrice;
         const isFree = price === 0;
         const isCurrentPlan = isCoach && currentPlan?.toUpperCase() === plan.id.toUpperCase();
         const isPaid = plan.id !== "free";
@@ -320,16 +331,25 @@ export function PricingCards({
                 onClick={() => handleCheckout(plan.id)}
                 disabled={checkoutLoading === plan.id}
                 className={`text-center py-3 rounded-xl text-sm font-semibold font-heading transition-colors flex items-center justify-center gap-2 ${
-                  plan.highlight
-                    ? "bg-white text-primary-600 hover:bg-primary-50"
-                    : "btn-primary"
+                  plan.highlight ? "bg-white text-primary-600 hover:bg-primary-50" : "btn-primary"
                 }`}
               >
                 {checkoutLoading === plan.id ? (
                   <span className="flex items-center gap-2">
                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
                     </svg>
                     Redirecting…
                   </span>
@@ -344,9 +364,7 @@ export function PricingCards({
               <Link
                 href={ctaHref}
                 className={`text-center py-3 rounded-xl text-sm font-semibold font-heading transition-colors flex items-center justify-center gap-2 ${
-                  plan.highlight
-                    ? "bg-white text-primary-600 hover:bg-primary-50"
-                    : "btn-primary"
+                  plan.highlight ? "bg-white text-primary-600 hover:bg-primary-50" : "btn-primary"
                 }`}
               >
                 {ctaLabel}
@@ -365,15 +383,11 @@ export function PricingCards({
                         ? "text-primary-50"
                         : "text-surface-700 dark:text-surface-300"
                       : plan.highlight
-                      ? "text-primary-300/50"
-                      : "text-surface-400 dark:text-surface-600"
+                        ? "text-primary-300/50"
+                        : "text-surface-400 dark:text-surface-600"
                   }`}
                 >
-                  {f.included ? (
-                    <CheckIcon />
-                  ) : (
-                    <DashIcon />
-                  )}
+                  {f.included ? <CheckIcon /> : <DashIcon />}
                   <span className={f.included ? "" : "line-through"}>{f.label}</span>
                 </li>
               ))}
@@ -388,36 +402,51 @@ export function PricingCards({
 // ─── Feature matrix ───────────────────────────────────────────────────────────
 
 const MATRIX_ROWS = [
-  { category: "Athletes", rows: [
-    { feature: "Active athletes", free: "3", pro: "25", elite: "Unlimited" },
-    { feature: "Event support", free: "All 4", pro: "All 4", elite: "All 4" },
-  ]},
-  { category: "Training", rows: [
-    { feature: "Throw logging", free: true, pro: true, elite: true },
-    { feature: "Session builder", free: true, pro: true, elite: true },
-    { feature: "Bondarchuk sequence validation", free: false, pro: true, elite: true },
-    { feature: "Implement weight rules", free: false, pro: true, elite: true },
-    { feature: "Training block templates", free: false, pro: true, elite: true },
-    { feature: "Questionnaires & surveys", free: false, pro: true, elite: true },
-  ]},
-  { category: "Athlete Monitoring", rows: [
-    { feature: "Wellness check-ins", free: true, pro: true, elite: true },
-    { feature: "Readiness scoring", free: "Basic", pro: "Full", elite: "Full" },
-    { feature: "Advanced analytics", free: false, pro: true, elite: true },
-    { feature: "Implement comparison charts", free: false, pro: true, elite: true },
-  ]},
-  { category: "Video", rows: [
-    { feature: "Video upload & playback", free: true, pro: true, elite: true },
-    { feature: "Video annotation tools", free: false, pro: true, elite: true },
-    { feature: "Drill video library", free: false, pro: true, elite: true },
-    { feature: "Storage", free: "1 GB", pro: "50 GB", elite: "500 GB" },
-  ]},
-  { category: "Support & Access", rows: [
-    { feature: "Email support", free: true, pro: true, elite: true },
-    { feature: "Priority support", free: false, pro: true, elite: true },
-    { feature: "Dedicated success manager", free: false, pro: false, elite: true },
-    { feature: "API access", free: false, pro: false, elite: true },
-  ]},
+  {
+    category: "Athletes",
+    rows: [
+      { feature: "Active athletes", free: "3", pro: "25", elite: "Unlimited" },
+      { feature: "Event support", free: "All 4", pro: "All 4", elite: "All 4" },
+    ],
+  },
+  {
+    category: "Training",
+    rows: [
+      { feature: "Throw logging", free: true, pro: true, elite: true },
+      { feature: "Session builder", free: true, pro: true, elite: true },
+      { feature: "Bondarchuk sequence validation", free: false, pro: true, elite: true },
+      { feature: "Implement weight rules", free: false, pro: true, elite: true },
+      { feature: "Training block templates", free: false, pro: true, elite: true },
+      { feature: "Questionnaires & surveys", free: false, pro: true, elite: true },
+    ],
+  },
+  {
+    category: "Athlete Monitoring",
+    rows: [
+      { feature: "Wellness check-ins", free: true, pro: true, elite: true },
+      { feature: "Readiness scoring", free: "Basic", pro: "Full", elite: "Full" },
+      { feature: "Advanced analytics", free: false, pro: true, elite: true },
+      { feature: "Implement comparison charts", free: false, pro: true, elite: true },
+    ],
+  },
+  {
+    category: "Video",
+    rows: [
+      { feature: "Video upload & playback", free: true, pro: true, elite: true },
+      { feature: "Video annotation tools", free: false, pro: true, elite: true },
+      { feature: "Drill video library", free: false, pro: true, elite: true },
+      { feature: "Storage", free: "1 GB", pro: "50 GB", elite: "500 GB" },
+    ],
+  },
+  {
+    category: "Support & Access",
+    rows: [
+      { feature: "Email support", free: true, pro: true, elite: true },
+      { feature: "Priority support", free: false, pro: true, elite: true },
+      { feature: "Dedicated success manager", free: false, pro: false, elite: true },
+      { feature: "API access", free: false, pro: false, elite: true },
+    ],
+  },
 ];
 
 function MatrixCell({ val }: { val: boolean | string }) {
@@ -426,7 +455,14 @@ function MatrixCell({ val }: { val: boolean | string }) {
       <td className="py-3 px-4 text-center">
         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-500/15 text-primary-500">
           <svg viewBox="0 0 12 12" fill="currentColor" className="w-3 h-3" aria-label="Included">
-            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path
+              d="M2 6l3 3 5-5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
           </svg>
         </span>
       </td>
@@ -448,25 +484,36 @@ function MobileMatrixValue({ val }: { val: boolean | string }) {
     return val ? (
       <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-500/15 text-primary-500">
         <svg viewBox="0 0 12 12" fill="currentColor" className="w-3 h-3" aria-label="Included">
-          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+          <path
+            d="M2 6l3 3 5-5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
         </svg>
       </span>
     ) : (
       <span className="text-surface-400 dark:text-surface-600 text-lg leading-none">—</span>
     );
   }
-  return (
-    <span className="text-sm font-medium text-surface-700 dark:text-surface-300">{val}</span>
-  );
+  return <span className="text-sm font-medium text-surface-700 dark:text-surface-300">{val}</span>;
 }
 
 export function FeatureMatrix() {
   return (
     <>
       {/* Mobile: stacked card layout */}
+      {/* Translucent section headers inside opaque container — the outer card
+          (bg-white dark:bg-surface-950) below is fully opaque, so the /80 /40
+          tints here cascade onto a known surface. Not an overlay content panel. */}
       <div className="sm:hidden space-y-4">
         {MATRIX_ROWS.map((group) => (
-          <div key={group.category} className="rounded-xl border border-surface-200 dark:border-surface-800 overflow-hidden">
+          <div
+            key={group.category}
+            className="rounded-xl border border-surface-200 dark:border-surface-800 overflow-hidden"
+          >
             <div className="bg-surface-50/80 dark:bg-surface-900/40 py-2.5 px-4">
               <span className="text-xs font-heading font-bold text-surface-500 uppercase tracking-widest">
                 {group.category}
@@ -483,9 +530,13 @@ export function FeatureMatrix() {
                       const val = plan === "Free" ? row.free : plan === "Pro" ? row.pro : row.elite;
                       return (
                         <div key={plan} className="flex flex-col items-center gap-1">
-                          <span className={`text-[10px] font-heading font-bold uppercase tracking-wide ${
-                            plan === "Pro" ? "text-primary-500" : "text-surface-500 dark:text-surface-400"
-                          }`}>
+                          <span
+                            className={`text-[10px] font-heading font-bold uppercase tracking-wide ${
+                              plan === "Pro"
+                                ? "text-primary-500"
+                                : "text-surface-500 dark:text-surface-400"
+                            }`}
+                          >
                             {plan}
                           </span>
                           <MobileMatrixValue val={val} />
@@ -531,7 +582,10 @@ export function FeatureMatrix() {
                 </td>
               </tr>,
               ...group.rows.map((row) => (
-                <tr key={`${group.category}-${row.feature}`} className="hover:bg-surface-50/50 dark:hover:bg-surface-900/20 transition-colors">
+                <tr
+                  key={`${group.category}-${row.feature}`}
+                  className="hover:bg-surface-50/50 dark:hover:bg-surface-900/20 transition-colors"
+                >
                   <td className="py-3 px-5 text-sm text-surface-700 dark:text-surface-300">
                     {row.feature}
                   </td>
@@ -609,13 +663,21 @@ export function FAQAccordion() {
                 }`}
               >
                 <svg viewBox="0 0 12 12" className="w-3 h-3" fill="currentColor" aria-hidden="true">
-                  <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  <path
+                    d="M6 2v8M2 6h8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
                 </svg>
               </span>
             </button>
             {isOpen && (
               <div className="px-6 pb-5">
-                <p className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">{faq.a}</p>
+                <p className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
+                  {faq.a}
+                </p>
               </div>
             )}
           </div>

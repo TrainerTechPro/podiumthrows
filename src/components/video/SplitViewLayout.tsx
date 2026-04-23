@@ -50,7 +50,10 @@ export function SplitViewLayout({ videoA, videoB, children, childrenB }: Props) 
   if (mode === "single") {
     /* ── SINGLE MODE ── */
     return (
-      <ZoomableVideoContainer zoomPan={zoomPanA} className="aspect-video bg-black rounded-xl overflow-hidden">
+      <ZoomableVideoContainer
+        zoomPan={zoomPanA}
+        className="aspect-video bg-black rounded-xl overflow-hidden"
+      >
         <div className="relative w-full h-full">
           {/* Video element — hidden during frame-perfect mode */}
           <video
@@ -89,10 +92,7 @@ export function SplitViewLayout({ videoA, videoB, children, childrenB }: Props) 
 
           {/* Extraction error overlay */}
           {framePerfectMode && frameExtractor.error && (
-            <ExtractionErrorOverlay
-              error={frameExtractor.error}
-              onDismiss={toggleFramePerfect}
-            />
+            <ExtractionErrorOverlay error={frameExtractor.error} onDismiss={toggleFramePerfect} />
           )}
 
           {/* Overlay content (annotation canvas) */}
@@ -131,7 +131,10 @@ export function SplitViewLayout({ videoA, videoB, children, childrenB }: Props) 
               <span className="text-[9px] text-primary-400 font-medium ml-auto">Active</span>
             )}
           </div>
-          <ZoomableVideoContainer zoomPan={zoomPanA} className="aspect-video bg-black rounded-xl overflow-hidden">
+          <ZoomableVideoContainer
+            zoomPan={zoomPanA}
+            className="aspect-video bg-black rounded-xl overflow-hidden"
+          >
             <div className="relative w-full h-full">
               <video
                 ref={videoARef as RefObject<HTMLVideoElement>}
@@ -170,9 +173,7 @@ export function SplitViewLayout({ videoA, videoB, children, childrenB }: Props) 
             </span>
             <span
               className={`text-xs font-medium truncate transition-colors ${
-                !linked && activePanel === "B"
-                  ? "text-[var(--foreground)]"
-                  : "text-surface-500"
+                !linked && activePanel === "B" ? "text-[var(--foreground)]" : "text-surface-500"
               }`}
             >
               {videoB?.title ?? "Comparison"}
@@ -181,7 +182,10 @@ export function SplitViewLayout({ videoA, videoB, children, childrenB }: Props) 
               <span className="text-[9px] text-primary-400 font-medium ml-auto">Active</span>
             )}
           </div>
-          <ZoomableVideoContainer zoomPan={zoomPanB} className="aspect-video bg-black rounded-xl overflow-hidden">
+          <ZoomableVideoContainer
+            zoomPan={zoomPanB}
+            className="aspect-video bg-black rounded-xl overflow-hidden"
+          >
             <div className="relative w-full h-full">
               {videoB ? (
                 <video
@@ -211,7 +215,10 @@ export function SplitViewLayout({ videoA, videoB, children, childrenB }: Props) 
 
   /* ── GHOST MODE ── */
   return (
-    <ZoomableVideoContainer zoomPan={zoomPanA} className="aspect-video bg-black rounded-xl overflow-hidden">
+    <ZoomableVideoContainer
+      zoomPan={zoomPanA}
+      className="aspect-video bg-black rounded-xl overflow-hidden"
+    >
       <div className="relative w-full h-full">
         {/* Primary video */}
         <video
@@ -274,6 +281,8 @@ function ExtractionProgressOverlay({
   onCancel: () => void;
 }) {
   return (
+    // Full-dim overlay inside the opaque video canvas — `bg-black/80` darkens
+    // the paused frame while extracting/errors, it's NOT a portaled modal.
     <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 z-10">
       <div className="text-xs font-medium text-primary-400 uppercase tracking-wider">
         Extracting Frames…
@@ -284,9 +293,7 @@ function ExtractionProgressOverlay({
           style={{ width: `${progress}%` }}
         />
       </div>
-      <span className="text-[10px] text-surface-400 font-mono">
-        {progress}%
-      </span>
+      <span className="text-[10px] text-surface-400 font-mono">{progress}%</span>
       <button
         onClick={onCancel}
         className="mt-1 text-[10px] text-surface-500 hover:text-white transition-colors underline"
@@ -297,18 +304,10 @@ function ExtractionProgressOverlay({
   );
 }
 
-function ExtractionErrorOverlay({
-  error,
-  onDismiss,
-}: {
-  error: string;
-  onDismiss: () => void;
-}) {
+function ExtractionErrorOverlay({ error, onDismiss }: { error: string; onDismiss: () => void }) {
   return (
     <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-2 z-10">
-      <span className="text-xs text-red-400">
-        Frame extraction failed: {error}
-      </span>
+      <span className="text-xs text-red-400">Frame extraction failed: {error}</span>
       <button
         onClick={onDismiss}
         className="text-[10px] text-surface-400 hover:text-white transition-colors underline"
