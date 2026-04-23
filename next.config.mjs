@@ -111,6 +111,40 @@ const nextConfig = {
         destination: '/coach/plans/generate',
         permanent: true,
       },
+
+      // Canonical session + throws URLs per role. Each legacy URL maps to
+      // exactly one model (TrainingSession or ThrowsAssignment) with
+      // unambiguous view dispatch via `?view=live|recap`.
+      {
+        source: '/athlete/sessions/:id',
+        destination: '/athlete/session/:id',
+        permanent: true,
+      },
+      {
+        source: '/athlete/sessions/:id/recap',
+        destination: '/athlete/session/:id?view=recap',
+        permanent: true,
+      },
+      {
+        source: '/athlete/sessions/assignment/:id',
+        destination: '/athlete/throws/:id',
+        permanent: true,
+      },
+      {
+        source: '/athlete/throws/session/:id',
+        destination: '/athlete/throws/:id',
+        permanent: true,
+      },
+      {
+        source: '/athlete/throws/live/:id',
+        destination: '/athlete/throws/:id?view=live',
+        permanent: true,
+      },
+      {
+        source: '/coach/athletes/:athleteId/sessions/:id',
+        destination: '/coach/throws/:id?athlete=:athleteId',
+        permanent: true,
+      },
     ];
   },
   async headers() {
