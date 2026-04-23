@@ -12,7 +12,12 @@
 
 import type { JWTPayload } from "./auth";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET must be set in production (edge runtime)");
+}
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "edge-dev-d13e7ea13db9146cc49bdd71035f5947284b5df9576bc49a3b978bc53ac696bf";
 
 /**
  * Base64url decode to Uint8Array.
