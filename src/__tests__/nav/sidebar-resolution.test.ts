@@ -32,7 +32,10 @@ function flattenNav(sections: NavSection[]): NavItem[] {
  * extended to glob-match the segment.
  */
 function routeToPagePath(href: string): string {
-  const clean = href.startsWith("/") ? href.slice(1) : href;
+  // Strip query string (?tab=…) and hash (#anchor) — both map to the same
+  // page.tsx as the bare path, but fs.existsSync wouldn't find them.
+  const pathOnly = href.split(/[?#]/)[0];
+  const clean = pathOnly.startsWith("/") ? pathOnly.slice(1) : pathOnly;
   return path.join(APP_ROOT, clean, "page.tsx");
 }
 
@@ -52,9 +55,7 @@ function checkSidebar(name: string, sections: NavSection[]) {
   }
 
   if (missing.length > 0) {
-    throw new Error(
-      `${name} has ${missing.length} broken href(s):\n  ${missing.join("\n  ")}`
-    );
+    throw new Error(`${name} has ${missing.length} broken href(s):\n  ${missing.join("\n  ")}`);
   }
 }
 
