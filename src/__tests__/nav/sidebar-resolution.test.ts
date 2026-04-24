@@ -9,6 +9,22 @@ import {
 } from "@/components/ui/Sidebar";
 
 const APP_ROOT = path.join(process.cwd(), "src", "app", "(dashboard)");
+const NEXT_CONFIG_PATH = path.join(process.cwd(), "next.config.mjs");
+
+/**
+ * Parse every `source: '...'` string from next.config.mjs redirects. Sidebar
+ * hrefs that point at a config-redirected URL (e.g. /coach/invitations →
+ * /coach/athletes/invitations) are valid navigation targets even without a
+ * page.tsx at the source path.
+ */
+function getRedirectSources(): Set<string> {
+  const src = fs.readFileSync(NEXT_CONFIG_PATH, "utf8");
+  const out = new Set<string>();
+  for (const match of src.matchAll(/source:\s*['"]([^'"]+)['"]/g)) {
+    out.add(match[1]);
+  }
+  return out;
+}
 
 /** Walk a nav-section array (including nested children) into a flat list of items. */
 function flattenNav(sections: NavSection[]): NavItem[] {
@@ -42,16 +58,24 @@ function routeToPagePath(href: string): string {
 function checkSidebar(name: string, sections: NavSection[]) {
   const items = flattenNav(sections);
   const missing: string[] = [];
+  const redirectSources = getRedirectSources();
 
   for (const item of items) {
     if (!item.href) continue;
     // Skip external and protocol-prefixed links.
     if (item.href.startsWith("http") || item.href.startsWith("mailto:")) continue;
 
+    const pathOnly = item.href.split(/[?#]/)[0];
+
+    // Valid if (a) page.tsx exists, OR (b) the path is a redirect source
+    // in next.config.mjs. Both resolve for the end user.
     const target = routeToPagePath(item.href);
-    if (!fs.existsSync(target)) {
-      missing.push(`${item.label} → ${item.href} (expected at ${target})`);
-    }
+    if (fs.existsSync(target)) continue;
+    if (redirectSources.has(pathOnly)) continue;
+
+    missing.push(
+      `${item.label} → ${item.href} (expected at ${target} or as a next.config redirect source)`
+    );
   }
 
   if (missing.length > 0) {
