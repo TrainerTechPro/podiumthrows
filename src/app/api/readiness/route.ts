@@ -87,12 +87,16 @@ export async function POST(req: NextRequest) {
       select: { id: true, overallScore: true, date: true },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json(
       { id: checkIn.id, overallScore: checkIn.overallScore, date: checkIn.date.toISOString() },
       { status: 201 }
     );
   } catch (err) {
     logger.error("POST /api/readiness", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to save check-in." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to save check-in." },
+      { status: 500 }
+    );
   }
 }

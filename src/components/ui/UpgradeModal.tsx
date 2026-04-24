@@ -60,9 +60,7 @@ function PlanCard({
       )}
 
       <div>
-        <p className="text-xs font-semibold text-muted uppercase tracking-wider">
-          {plan.name}
-        </p>
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider">{plan.name}</p>
         <div className="flex items-baseline gap-1 mt-1">
           <span className="text-2xl font-bold font-heading text-[var(--foreground)]">
             ${plan.monthlyPrice}
@@ -75,7 +73,12 @@ function PlanCard({
       <ul className="space-y-1.5 flex-1">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2 text-sm text-[var(--foreground)]">
-            <Check size={14} strokeWidth={2.5} className="mt-0.5 shrink-0 text-emerald-500" aria-hidden="true" />
+            <Check
+              size={14}
+              strokeWidth={2.5}
+              className="mt-0.5 shrink-0 text-emerald-500"
+              aria-hidden="true"
+            />
             {f}
           </li>
         ))}
@@ -105,12 +108,7 @@ export interface UpgradeModalProps {
   currentPlan?: PlanName;
 }
 
-export function UpgradeModal({
-  open,
-  onClose,
-  reason,
-  currentPlan = "FREE",
-}: UpgradeModalProps) {
+export function UpgradeModal({ open, onClose, reason, currentPlan = "FREE" }: UpgradeModalProps) {
   const [loadingPlan, setLoadingPlan] = useState<"PRO" | "ELITE" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,9 +121,11 @@ export function UpgradeModal({
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ plan: planKey }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not start checkout.");
-      window.location.href = data.url;
+      const payload = await res.json();
+      if (!res.ok || !payload.success) {
+        throw new Error(payload.error ?? "Could not start checkout.");
+      }
+      window.location.href = payload.data.url;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setLoadingPlan(null);
@@ -164,9 +164,7 @@ export function UpgradeModal({
           )}
         </div>
 
-        {error && (
-          <p className="text-sm text-red-500 text-center">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
         <p className="text-xs text-center text-muted">
           Secure checkout via Stripe. Cancel anytime.
@@ -175,4 +173,3 @@ export function UpgradeModal({
     </Modal>
   );
 }
-

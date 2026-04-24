@@ -23,6 +23,7 @@ export async function GET() {
     }
 
     const goals = await getTeamGoals(coach.id);
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ goals });
   } catch (err) {
     logger.error("GET /api/coach/goals", { context: "api", error: err });
@@ -52,7 +53,10 @@ export async function POST(req: NextRequest) {
       body as Record<string, unknown>;
 
     if (typeof athleteId !== "string" || athleteId.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Athlete ID is required." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Athlete ID is required." },
+        { status: 400 }
+      );
     }
 
     // Verify coach owns this athlete
@@ -83,7 +87,10 @@ export async function POST(req: NextRequest) {
     const deadlineDate =
       typeof deadline === "string" && deadline.length > 0 ? new Date(deadline) : null;
     if (deadlineDate && isNaN(deadlineDate.getTime())) {
-      return NextResponse.json({ success: false, error: "Invalid deadline date." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Invalid deadline date." },
+        { status: 400 }
+      );
     }
 
     const starting = typeof startingValue === "number" ? startingValue : null;
@@ -116,6 +123,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json(
       {
         goal: {

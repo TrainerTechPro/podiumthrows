@@ -20,10 +20,7 @@ import { logger } from "@/lib/logger";
  *   }
  * ─────────────────────────────────────────────────────────────────────────────── */
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -46,15 +43,14 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { transcodedKey, transcodedUrl, fps, gopInterval, success, error } =
-      body as {
-        transcodedKey?: string;
-        transcodedUrl?: string;
-        fps?: number;
-        gopInterval?: number;
-        success?: boolean;
-        error?: string;
-      };
+    const { transcodedKey, transcodedUrl, fps, gopInterval, success, error } = body as {
+      transcodedKey?: string;
+      transcodedUrl?: string;
+      fps?: number;
+      gopInterval?: number;
+      success?: boolean;
+      error?: string;
+    };
 
     if (!success) {
       // Transcode failed — reset status
@@ -65,6 +61,7 @@ export async function POST(
         },
       });
 
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json(
         {
           videoId: id,
@@ -94,6 +91,7 @@ export async function POST(
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       videoId: id,
       transcodeStatus: "ready",

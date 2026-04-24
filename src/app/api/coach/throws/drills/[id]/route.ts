@@ -7,10 +7,7 @@ const VALID_CATEGORIES = ["CE", "SDE", "SPE", "GPE"];
 const VALID_DIFFICULTIES = ["beginner", "intermediate", "advanced"];
 const VALID_ATHLETE_TYPES = ["EXPLOSIVE", "SPEED_STRENGTH", "STRENGTH_SPEED", "STRENGTH"];
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
     const { id } = await params;
@@ -25,11 +22,24 @@ export async function PUT(
       return NextResponse.json({ success: false, error: "Drill not found" }, { status: 404 });
     }
     if (existing.isGlobal || existing.coachId !== coach.id) {
-      return NextResponse.json({ success: false, error: "Cannot edit this drill" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Cannot edit this drill" },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();
-    const { name, description, videoUrl, event, category, implementKg, difficulty, cues, athleteTypes } = body;
+    const {
+      name,
+      description,
+      videoUrl,
+      event,
+      category,
+      implementKg,
+      difficulty,
+      cues,
+      athleteTypes,
+    } = body;
 
     // Validation
     if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
@@ -41,13 +51,20 @@ export async function PUT(
     if (event !== undefined && event !== null && !VALID_EVENTS.includes(event)) {
       return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
     }
-    if (difficulty !== undefined && difficulty !== null && !VALID_DIFFICULTIES.includes(difficulty)) {
+    if (
+      difficulty !== undefined &&
+      difficulty !== null &&
+      !VALID_DIFFICULTIES.includes(difficulty)
+    ) {
       return NextResponse.json({ success: false, error: "Invalid difficulty" }, { status: 400 });
     }
     if (athleteTypes !== undefined && Array.isArray(athleteTypes)) {
       for (const at of athleteTypes) {
         if (!VALID_ATHLETE_TYPES.includes(at)) {
-          return NextResponse.json({ success: false, error: `Invalid athlete type: ${at}` }, { status: 400 });
+          return NextResponse.json(
+            { success: false, error: `Invalid athlete type: ${at}` },
+            { status: 400 }
+          );
         }
       }
     }
@@ -58,26 +75,27 @@ export async function PUT(
     if (videoUrl !== undefined) updateData.videoUrl = videoUrl?.trim() || null;
     if (event !== undefined) updateData.event = event || null;
     if (category !== undefined) updateData.category = category;
-    if (implementKg !== undefined) updateData.implementKg = implementKg != null ? parseFloat(implementKg) : null;
+    if (implementKg !== undefined)
+      updateData.implementKg = implementKg != null ? parseFloat(implementKg) : null;
     if (difficulty !== undefined) updateData.difficulty = difficulty || null;
-    if (cues !== undefined) updateData.cues = Array.isArray(cues) ? cues.filter((c: string) => c.trim()) : [];
-    if (athleteTypes !== undefined) updateData.athleteTypes = Array.isArray(athleteTypes) ? athleteTypes : [];
+    if (cues !== undefined)
+      updateData.cues = Array.isArray(cues) ? cues.filter((c: string) => c.trim()) : [];
+    if (athleteTypes !== undefined)
+      updateData.athleteTypes = Array.isArray(athleteTypes) ? athleteTypes : [];
 
     const drill = await prisma.drill.update({
       where: { id: id },
       data: updateData as never,
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ drill });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
     const { id } = await params;
@@ -92,7 +110,10 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Drill not found" }, { status: 404 });
     }
     if (existing.isGlobal || existing.coachId !== coach.id) {
-      return NextResponse.json({ success: false, error: "Cannot delete this drill" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Cannot delete this drill" },
+        { status: 403 }
+      );
     }
 
     await prisma.drill.delete({ where: { id: id } });

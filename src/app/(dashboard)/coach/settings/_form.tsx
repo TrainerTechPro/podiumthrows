@@ -14,14 +14,14 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ initial }: ProfileFormProps) {
-  const [firstName,    setFirstName]    = useState(initial.firstName);
-  const [lastName,     setLastName]     = useState(initial.lastName);
-  const [bio,          setBio]          = useState(initial.bio ?? "");
+  const [firstName, setFirstName] = useState(initial.firstName);
+  const [lastName, setLastName] = useState(initial.lastName);
+  const [bio, setBio] = useState(initial.bio ?? "");
   const [organization, setOrganization] = useState(initial.organization ?? "");
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -33,7 +33,12 @@ export function ProfileForm({ initial }: ProfileFormProps) {
       const res = await fetch("/api/coach/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ firstName, lastName, bio: bio || null, organization: organization || null }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          bio: bio || null,
+          organization: organization || null,
+        }),
       });
 
       if (!res.ok) {
@@ -90,11 +95,7 @@ export function ProfileForm({ initial }: ProfileFormProps) {
       </div>
 
       <div className="flex items-center gap-4 pt-1">
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn btn-primary"
-        >
+        <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? "Saving…" : "Save Changes"}
         </button>
 
@@ -103,9 +104,7 @@ export function ProfileForm({ initial }: ProfileFormProps) {
             ✓ Saved
           </span>
         )}
-        {error && (
-          <span className="text-sm text-red-500">{error}</span>
-        )}
+        {error && <span className="text-sm text-red-500">{error}</span>}
       </div>
     </form>
   );
@@ -115,7 +114,7 @@ export function ProfileForm({ initial }: ProfileFormProps) {
 
 export function UpgradeButton({ plan }: { plan: "PRO" | "ELITE" }) {
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleClick() {
     setLoading(true);
@@ -126,9 +125,11 @@ export function UpgradeButton({ plan }: { plan: "PRO" | "ELITE" }) {
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ plan }),
       });
-      if (!res.ok) throw new Error("Could not start checkout.");
-      const { url } = await res.json();
-      window.location.href = url;
+      const payload = await res.json();
+      if (!res.ok || !payload.success) {
+        throw new Error(payload.error || "Could not start checkout.");
+      }
+      window.location.href = payload.data.url;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setLoading(false);
@@ -149,16 +150,18 @@ export function UpgradeButton({ plan }: { plan: "PRO" | "ELITE" }) {
 
 export function PortalButton({ hasStripe }: { hasStripe: boolean }) {
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleClick() {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST", headers: csrfHeaders() });
-      if (!res.ok) throw new Error("Could not open billing portal.");
-      const { url } = await res.json();
-      window.location.href = url;
+      const payload = await res.json();
+      if (!res.ok || !payload.success) {
+        throw new Error(payload.error || "Could not open billing portal.");
+      }
+      window.location.href = payload.data.url;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setLoading(false);
@@ -175,11 +178,7 @@ export function PortalButton({ hasStripe }: { hasStripe: boolean }) {
 
   return (
     <div className="space-y-2">
-      <button
-        onClick={handleClick}
-        disabled={loading}
-        className="btn btn-secondary"
-      >
+      <button onClick={handleClick} disabled={loading} className="btn btn-secondary">
         {loading ? "Opening…" : "Manage Billing →"}
       </button>
       {error && <p className="text-sm text-red-500">{error}</p>}

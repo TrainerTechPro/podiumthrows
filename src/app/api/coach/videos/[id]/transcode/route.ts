@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
-import {
-  isR2Configured,
-  getPresignedUploadUrl,
-  getPresignedDownloadUrl,
-} from "@/lib/r2";
+import { isR2Configured, getPresignedUploadUrl, getPresignedDownloadUrl } from "@/lib/r2";
 import { logger } from "@/lib/logger";
 
 /* ─── FFmpeg Transcode Spec ───────────────────────────────────────────────────
@@ -42,10 +38,7 @@ import { logger } from "@/lib/logger";
  * function, or queue). When complete, POST to /transcode/complete with the result.
  * ─────────────────────────────────────────────────────────────────────────────── */
 
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -107,19 +100,30 @@ export async function POST(
     // FFmpeg command spec
     const ffmpegCommand = [
       "ffmpeg",
-      "-i", "input.mov",
-      "-c:v", "libx264",
-      "-profile:v", "baseline",
-      "-level", "3.1",
-      "-g", "15",
-      "-keyint_min", "15",
-      "-c:a", "aac",
-      "-b:a", "128k",
-      "-movflags", "+faststart",
-      "-pix_fmt", "yuv420p",
+      "-i",
+      "input.mov",
+      "-c:v",
+      "libx264",
+      "-profile:v",
+      "baseline",
+      "-level",
+      "3.1",
+      "-g",
+      "15",
+      "-keyint_min",
+      "15",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
+      "-movflags",
+      "+faststart",
+      "-pix_fmt",
+      "yuv420p",
       "output.mp4",
     ];
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       videoId: id,
       sourceDownloadUrl,
@@ -143,10 +147,7 @@ export async function POST(
 
 /* ─── GET — Check transcode status ─────────────────────────────────────────── */
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -166,6 +167,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       videoId: video.id,
       transcodeStatus: video.transcodeStatus,

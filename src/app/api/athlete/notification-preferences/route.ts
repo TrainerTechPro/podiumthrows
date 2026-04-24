@@ -98,6 +98,7 @@ export async function GET() {
     }
 
     const prefs = parsePrefs(athlete.notificationPreferences);
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ preferences: prefs });
   } catch (err) {
     logger.error("GET /api/athlete/notification-preferences", {
@@ -167,16 +168,8 @@ export async function POST(req: NextRequest) {
       },
       feedPrivacy: {
         sharePRs: pickBool(incomingFeed, "sharePRs", current.feedPrivacy.sharePRs),
-        shareSessions: pickBool(
-          incomingFeed,
-          "shareSessions",
-          current.feedPrivacy.shareSessions
-        ),
-        shareStreaks: pickBool(
-          incomingFeed,
-          "shareStreaks",
-          current.feedPrivacy.shareStreaks
-        ),
+        shareSessions: pickBool(incomingFeed, "shareSessions", current.feedPrivacy.shareSessions),
+        shareStreaks: pickBool(incomingFeed, "shareStreaks", current.feedPrivacy.shareStreaks),
         shareGoals: pickBool(incomingFeed, "shareGoals", current.feedPrivacy.shareGoals),
       },
     };
@@ -188,6 +181,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ preferences: merged });
   } catch (err) {
     logger.error("POST /api/athlete/notification-preferences", {

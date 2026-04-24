@@ -40,11 +40,11 @@ export function CheckoutTrigger() {
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ plan, interval }),
         });
-        const data = await res.json();
-        if (data.url) {
-          router.push(data.url);
+        const payload = await res.json();
+        if (res.ok && payload.success && payload.data?.url) {
+          router.push(payload.data.url);
         } else {
-          console.error("[CheckoutTrigger] Checkout error:", data.error);
+          console.error("[CheckoutTrigger] Checkout error:", payload.error);
         }
       } catch (err) {
         console.error("[CheckoutTrigger] Network error:", err);

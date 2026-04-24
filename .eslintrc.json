@@ -20,7 +20,32 @@
       {
         "selector": "CatchClause > BlockStatement[body.length=1] > ExpressionStatement > CallExpression[callee.object.name='console'][callee.property.name='log']",
         "message": "no-silent-catch: catch body contains only console.log. Use logger.warn/error (or toast on client) so errors surface in production — console.log is dropped above info level in Vercel prod."
+      },
+      // no-bare-nextresponse-json — enforces CLAUDE.md §2 envelope contract. Implemented as
+      // a no-restricted-syntax selector (not a standalone plugin) to avoid a local file: npm
+      // dep; webhook + middleware exemptions live in the `overrides` block below.
+      {
+        "selector": "CallExpression[callee.object.name=/^(NextResponse|Response)$/][callee.property.name='json'][arguments.0.type='ObjectExpression']:not(:has(Property[key.name='success']))",
+        "message": "no-bare-nextresponse-json: API responses must use the canonical envelope per CLAUDE.md §2 — `{ success: true, data: T }` on success, `{ success: false, error: string }` on failure. Bare shapes have caused 3+ 'save doesn't work' bugs. If the object is built dynamically, assign it to a typed variable and pass that instead of an inline literal."
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/app/api/webhooks/**/*.ts", "src/middleware.ts"],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CatchClause[body.body.length=0]",
+            "message": "no-silent-catch: catch body is empty. Per CLAUDE.md §1, every catch must re-throw, surface to the user (toast on client), or log via logger/Sentry breadcrumb on server. If intentional (best-effort localStorage etc.), add a one-line // ok: reason comment and a minimal logger.debug/warn."
+          },
+          {
+            "selector": "CatchClause > BlockStatement[body.length=1] > ExpressionStatement > CallExpression[callee.object.name='console'][callee.property.name='log']",
+            "message": "no-silent-catch: catch body contains only console.log. Use logger.warn/error (or toast on client) so errors surface in production — console.log is dropped above info level in Vercel prod."
+          }
+        ]
+      }
+    }
+  ]
 }

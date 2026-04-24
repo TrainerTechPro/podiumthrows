@@ -10,10 +10,7 @@ import { logger } from "@/lib/logger";
  * "uploading"/"processing" to "ready" or "failed".
  * ─────────────────────────────────────────────────────────────────────────── */
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -63,10 +60,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   failed: ["uploading"],
 };
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -100,6 +94,7 @@ export async function PATCH(
       data: { status },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ videoId: id, status });
   } catch (err) {
     if (err instanceof AuthError) {

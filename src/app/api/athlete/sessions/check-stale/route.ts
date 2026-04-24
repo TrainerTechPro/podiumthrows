@@ -72,6 +72,7 @@ export async function POST() {
       .map(([id, last]) => ({ id, lastThrowAt: last }));
 
     if (staleCandidates.length === 0) {
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({ staleSession: null });
     }
 
@@ -86,6 +87,7 @@ export async function POST() {
     });
 
     if (openSessions.length === 0) {
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({ staleSession: null });
     }
 
@@ -97,9 +99,11 @@ export async function POST() {
       .sort((a, b) => b.lastThrowAt.getTime() - a.lastThrowAt.getTime())[0];
 
     if (!chosen) {
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({ staleSession: null });
     }
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       staleSession: {
         id: chosen.id,

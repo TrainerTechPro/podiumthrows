@@ -364,11 +364,11 @@ export default function CoachSettingsPage() {
     setPortalLoading(true);
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST", headers: csrfHeaders() });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      const payload = await res.json();
+      if (res.ok && payload.success && payload.data?.url) {
+        window.location.href = payload.data.url;
       } else {
-        toast(data.error || "Could not open billing portal", "error");
+        toast(payload.error || "Could not open billing portal", "error");
       }
     } catch {
       toast("Network error. Please try again.", "error");

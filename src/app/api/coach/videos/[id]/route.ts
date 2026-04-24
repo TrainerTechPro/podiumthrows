@@ -7,10 +7,7 @@ import { logger } from "@/lib/logger";
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -20,6 +17,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ video });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -31,10 +29,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -78,10 +73,7 @@ export async function PUT(
     }
     if (category !== undefined) {
       if (category && !VALID_CATEGORIES.includes(category)) {
-        return NextResponse.json(
-          { success: false, error: "Invalid category" },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: "Invalid category" }, { status: 400 });
       }
       data.category = category || null;
     }
@@ -103,10 +95,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;

@@ -36,9 +36,11 @@ export async function POST(req: NextRequest) {
 
     if (isR2Configured()) {
       const { uploadUrl, publicUrl } = await getPresignedUploadUrl(key, contentType);
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({ mode: "r2", uploadUrl, key, publicUrl });
     } else {
       const publicUrl = getPublicUrl(key);
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({
         mode: "local",
         uploadUrl: "/api/coach/videos/upload-thumbnail-local",

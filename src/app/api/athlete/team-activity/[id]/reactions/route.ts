@@ -24,16 +24,10 @@ const ALLOWED_EMOJIS = ["fire", "lift", "hundred"] as const;
 type Emoji = (typeof ALLOWED_EMOJIS)[number];
 
 function isValidEmoji(value: unknown): value is Emoji {
-  return (
-    typeof value === "string" && (ALLOWED_EMOJIS as readonly string[]).includes(value)
-  );
+  return typeof value === "string" && (ALLOWED_EMOJIS as readonly string[]).includes(value);
 }
 
-async function canReact(
-  userId: string,
-  role: string,
-  activityId: string
-): Promise<boolean> {
+async function canReact(userId: string, role: string, activityId: string): Promise<boolean> {
   const activity = await prisma.teamActivity.findUnique({
     where: { id: activityId },
     select: { coachId: true },
@@ -59,10 +53,7 @@ async function canReact(
   return false;
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -98,6 +89,7 @@ export async function POST(
       await prisma.teamActivityReaction.delete({
         where: { id: existing.id },
       });
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({ state: "removed", emoji: body.emoji });
     }
 
@@ -108,6 +100,7 @@ export async function POST(
         emoji: body.emoji,
       },
     });
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ state: "added", emoji: body.emoji });
   } catch (err) {
     logger.error("POST /api/athlete/team-activity/[id]/reactions", {
@@ -121,10 +114,7 @@ export async function POST(
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -152,6 +142,7 @@ export async function DELETE(
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ state: "removed", emoji: body.emoji });
   } catch (err) {
     logger.error("DELETE /api/athlete/team-activity/[id]/reactions", {

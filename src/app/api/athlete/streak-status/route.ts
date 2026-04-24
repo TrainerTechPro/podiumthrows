@@ -11,7 +11,11 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { getAthleteTimezone, startOfYesterday as startOfYesterdayTz, getLocalHour } from "@/lib/dates";
+import {
+  getAthleteTimezone,
+  startOfYesterday as startOfYesterdayTz,
+  getLocalHour,
+} from "@/lib/dates";
 
 const QUIET_HOURS_START = 10; // local hour, inclusive
 const QUIET_HOURS_END = 20; // local hour, exclusive
@@ -53,26 +57,20 @@ export async function GET() {
     const startOfYesterdayUtc = startOfYesterdayTz(tz);
 
     const isStreakActive =
-      athlete.currentStreak > 0 &&
-      lastThrowAt != null &&
-      lastThrowAt >= startOfYesterdayUtc;
+      athlete.currentStreak > 0 && lastThrowAt != null && lastThrowAt >= startOfYesterdayUtc;
 
     // Hours since last throw (for the 23h reminder gate)
     const hoursSinceLastThrow =
-      lastThrowAt != null
-        ? (now.getTime() - lastThrowAt.getTime()) / (1000 * 60 * 60)
-        : Infinity;
+      lastThrowAt != null ? (now.getTime() - lastThrowAt.getTime()) / (1000 * 60 * 60) : Infinity;
 
     // Eligibility for firing a reminder right now (athlete's local hour)
     const currentHour = getLocalHour(tz);
-    const withinQuietHours =
-      currentHour >= QUIET_HOURS_START && currentHour < QUIET_HOURS_END;
+    const withinQuietHours = currentHour >= QUIET_HOURS_START && currentHour < QUIET_HOURS_END;
 
     const shouldRemindNow =
-      isStreakActive &&
-      hoursSinceLastThrow >= MIN_HOURS_SINCE_LAST_THROW &&
-      withinQuietHours;
+      isStreakActive && hoursSinceLastThrow >= MIN_HOURS_SINCE_LAST_THROW && withinQuietHours;
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       currentStreak: athlete.currentStreak,
       longestStreak: athlete.longestStreak,

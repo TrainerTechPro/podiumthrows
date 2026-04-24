@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
       where: { coachId: coach.id, read: false },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       notifications: notifications.map((n) => ({
         ...n,
@@ -58,7 +59,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     logger.error("GET /api/coach/notifications", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch notifications." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch notifications." },
+      { status: 500 }
+    );
   }
 }
 
@@ -112,6 +116,9 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("PATCH /api/coach/notifications", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update notifications." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update notifications." },
+      { status: 500 }
+    );
   }
 }

@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
     };
 
     const videos = await getCoachVideos(coach.id, filters);
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ videos });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -68,10 +69,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "url is required" }, { status: 400 });
     }
     if (!title || title.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: "title is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "title is required" }, { status: 400 });
     }
 
     // Validate status if provided (defaults to "ready" for backward compat)
@@ -94,7 +92,10 @@ export async function POST(req: NextRequest) {
     // Validate category if provided
     if (category && !VALID_CATEGORIES.includes(category)) {
       return NextResponse.json(
-        { success: false, error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}` },
+        {
+          success: false,
+          error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}`,
+        },
         { status: 400 }
       );
     }
@@ -106,10 +107,7 @@ export async function POST(req: NextRequest) {
         select: { id: true },
       });
       if (!athlete) {
-        return NextResponse.json(
-          { success: false, error: "Athlete not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
       }
     }
 
@@ -131,6 +129,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ video: { id: video.id } }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {

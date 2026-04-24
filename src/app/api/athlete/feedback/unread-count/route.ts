@@ -59,6 +59,7 @@ export async function GET() {
 
     const unread = Number(rows[0]?.count ?? 0);
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ unread });
   } catch (err) {
     logger.error("GET /api/athlete/feedback/unread-count", {

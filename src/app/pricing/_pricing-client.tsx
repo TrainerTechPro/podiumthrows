@@ -197,11 +197,11 @@ export function PricingCards({
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ plan: planId, interval: billing }),
       });
-      const data = await res.json();
-      if (data.url) {
-        router.push(data.url);
+      const payload = await res.json();
+      if (res.ok && payload.success && payload.data?.url) {
+        router.push(payload.data.url);
       } else {
-        console.error("Checkout error:", data.error);
+        console.error("Checkout error:", payload.error);
         setCheckoutLoading(null);
       }
     } catch {

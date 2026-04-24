@@ -38,9 +38,12 @@ export async function POST() {
       return_url: returnUrl,
     });
 
-    return NextResponse.json({ url: portalSession.url });
+    return NextResponse.json({ success: true, data: { url: portalSession.url } });
   } catch (err) {
     logger.error("POST /api/stripe/portal", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Could not create billing portal session." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Could not create billing portal session." },
+      { status: 500 }
+    );
   }
 }

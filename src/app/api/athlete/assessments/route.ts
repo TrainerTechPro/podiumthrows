@@ -54,6 +54,7 @@ export async function GET() {
       }),
     ]);
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       testingRecords: testingRecords.map((r) => ({
         id: r.id,

@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
     if (search) filters.search = search;
 
     const drills = await getDrillLibrary(coach.id, filters);
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ drills });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -47,14 +48,27 @@ export async function POST(req: NextRequest) {
     const { coach } = await requireCoachSession();
     const body = await req.json();
 
-    const { name, description, videoUrl, event, category, implementKg, difficulty, cues, athleteTypes } = body;
+    const {
+      name,
+      description,
+      videoUrl,
+      event,
+      category,
+      implementKg,
+      difficulty,
+      cues,
+      athleteTypes,
+    } = body;
 
     // Validation
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json({ success: false, error: "Name is required" }, { status: 400 });
     }
     if (!category || !VALID_CATEGORIES.includes(category)) {
-      return NextResponse.json({ success: false, error: "Valid category is required (CE, SDE, SPE, GPE)" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Valid category is required (CE, SDE, SPE, GPE)" },
+        { status: 400 }
+      );
     }
     if (event && !VALID_EVENTS.includes(event)) {
       return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
@@ -65,7 +79,10 @@ export async function POST(req: NextRequest) {
     if (athleteTypes && Array.isArray(athleteTypes)) {
       for (const at of athleteTypes) {
         if (!VALID_ATHLETE_TYPES.includes(at)) {
-          return NextResponse.json({ success: false, error: `Invalid athlete type: ${at}` }, { status: 400 });
+          return NextResponse.json(
+            { success: false, error: `Invalid athlete type: ${at}` },
+            { status: 400 }
+          );
         }
       }
     }
@@ -86,6 +103,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ drill }, { status: 201 });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

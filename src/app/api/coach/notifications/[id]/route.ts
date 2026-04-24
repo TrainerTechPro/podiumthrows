@@ -29,7 +29,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       select: { id: true, read: true },
     });
     if (!existing) {
-      return NextResponse.json({ success: false, error: "Notification not found." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Notification not found." },
+        { status: 404 }
+      );
     }
 
     const body = await req.json().catch(() => ({}));
@@ -52,6 +55,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       notification: {
         ...updated,
@@ -61,6 +65,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     });
   } catch (err) {
     logger.error("PATCH /api/coach/notifications/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update notification." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update notification." },
+      { status: 500 }
+    );
   }
 }

@@ -19,7 +19,10 @@ export async function POST(req: NextRequest) {
     const key = formData.get("key") as string | null;
 
     if (!file || !key) {
-      return NextResponse.json({ success: false, error: "file and key are required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "file and key are required" },
+        { status: 400 }
+      );
     }
 
     const sizeMb = file.size / (1024 * 1024);
@@ -32,6 +35,7 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const publicUrl = await saveFileLocally(key, buffer);
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ publicUrl });
   } catch (err) {
     if (err instanceof AuthError) {

@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAthleteSession,
-  getAthleteVideoById,
-} from "@/lib/data/athlete";
+import { requireAthleteSession, getAthleteVideoById } from "@/lib/data/athlete";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { athlete } = await requireAthleteSession();
     const { id } = await params;
@@ -17,6 +11,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ video });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

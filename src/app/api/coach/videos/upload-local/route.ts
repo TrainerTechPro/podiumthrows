@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
-import {
-  isR2Configured,
-  saveFileLocally,
-  MAX_VIDEO_SIZE_MB,
-} from "@/lib/storage";
+import { isR2Configured, saveFileLocally, MAX_VIDEO_SIZE_MB } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
@@ -41,6 +37,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const publicUrl = await saveFileLocally(key, buffer);
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ publicUrl });
   } catch (err) {
     if (err instanceof AuthError) {

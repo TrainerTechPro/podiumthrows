@@ -36,8 +36,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { currentValue, status, title, targetValue, deadline, description } =
-      body as Record<string, unknown>;
+    const { currentValue, status, title, targetValue, deadline, description } = body as Record<
+      string,
+      unknown
+    >;
 
     const data: Record<string, unknown> = {};
 
@@ -53,16 +55,17 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (typeof deadline === "string") {
       const d = deadline.length > 0 ? new Date(deadline) : null;
       if (d && isNaN(d.getTime())) {
-        return NextResponse.json({ success: false, error: "Invalid deadline date." }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: "Invalid deadline date." },
+          { status: 400 }
+        );
       }
       data.deadline = d;
     }
 
     // Determine the effective target for auto-complete check
     const effectiveTarget =
-      typeof targetValue === "number" && targetValue > 0
-        ? targetValue
-        : existing.targetValue;
+      typeof targetValue === "number" && targetValue > 0 ? targetValue : existing.targetValue;
 
     if (typeof currentValue === "number") {
       data.currentValue = currentValue;
@@ -77,7 +80,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     if (Object.keys(data).length === 0) {
-      return NextResponse.json({ success: false, error: "No valid fields to update." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "No valid fields to update." },
+        { status: 400 }
+      );
     }
 
     const updated = await prisma.goal.update({
@@ -97,6 +103,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       goal: {
         ...updated,

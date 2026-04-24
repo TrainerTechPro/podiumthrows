@@ -21,7 +21,7 @@ export async function POST() {
     if (!canAccess) {
       return NextResponse.json(
         { success: false, error: "Self-programming not enabled for this account" },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -66,12 +66,13 @@ export async function POST() {
       select: { id: true },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ id: config.id }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/athlete/self-program", { context: "api", error: err });
     return NextResponse.json(
       { success: false, error: "Failed to create self-program config." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

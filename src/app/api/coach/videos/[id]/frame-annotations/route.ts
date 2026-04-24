@@ -5,10 +5,7 @@ import { logger } from "@/lib/logger";
 
 /* ─── GET — Retrieve frame annotations for a video ───────────────────────── */
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -43,6 +40,7 @@ export async function GET(
       orderBy: { timestamp: "asc" },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ frameAnnotations });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -56,10 +54,7 @@ export async function GET(
 
 /* ─── POST — Save a frame annotation (upsert by videoId + timestamp + source) ── */
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -117,6 +112,7 @@ export async function POST(
       },
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ frameAnnotation }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -130,10 +126,7 @@ export async function POST(
 
 /* ─── PUT — Batch save multiple frame annotations ────────────────────────── */
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;

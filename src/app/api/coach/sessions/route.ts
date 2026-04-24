@@ -28,10 +28,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Plan ID is required." }, { status: 400 });
     }
     if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
-      return NextResponse.json({ success: false, error: "Select at least one athlete." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Select at least one athlete." },
+        { status: 400 }
+      );
     }
     if (typeof scheduledDate !== "string") {
-      return NextResponse.json({ success: false, error: "Scheduled date is required." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Scheduled date is required." },
+        { status: 400 }
+      );
     }
 
     // Verify plan belongs to this coach
@@ -51,7 +57,10 @@ export async function POST(req: NextRequest) {
     const validIds = new Set(validAthletes.map((a) => a.id));
     const invalidIds = (athleteIds as string[]).filter((id) => !validIds.has(id));
     if (invalidIds.length > 0) {
-      return NextResponse.json({ success: false, error: "Some athletes are not on your roster." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Some athletes are not on your roster." },
+        { status: 400 }
+      );
     }
 
     // Create training sessions for each athlete
@@ -70,12 +79,16 @@ export async function POST(req: NextRequest) {
       })),
     });
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json(
       { created: sessions.count, scheduledDate: parsedDate.toISOString() },
       { status: 201 }
     );
   } catch (err) {
     logger.error("POST /api/coach/sessions", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to assign sessions." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to assign sessions." },
+      { status: 500 }
+    );
   }
 }

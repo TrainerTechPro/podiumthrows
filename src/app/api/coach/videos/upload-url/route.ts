@@ -50,11 +50,9 @@ export async function POST(req: NextRequest) {
 
     if (isR2Configured()) {
       // R2 mode: return presigned URL for direct upload
-      const { uploadUrl, publicUrl } = await getPresignedUploadUrl(
-        key,
-        contentType
-      );
+      const { uploadUrl, publicUrl } = await getPresignedUploadUrl(key, contentType);
 
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({
         mode: "r2",
         uploadUrl,
@@ -65,6 +63,7 @@ export async function POST(req: NextRequest) {
       // Local mode: client will POST multipart to upload-local
       const publicUrl = getPublicUrl(key);
 
+      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({
         mode: "local",
         uploadUrl: "/api/coach/videos/upload-local",

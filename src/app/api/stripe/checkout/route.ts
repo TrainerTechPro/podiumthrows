@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       allow_promotion_codes: true,
     });
 
-    return NextResponse.json({ url: checkoutSession.url });
+    return NextResponse.json({ success: true, data: { url: checkoutSession.url } });
   } catch (err) {
     logger.error("POST /api/stripe/checkout", { context: "api", error: err });
     return NextResponse.json(

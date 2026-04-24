@@ -19,10 +19,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/push";
-import {
-  getPushPreferencesByUserId,
-  type PushPreferenceKey,
-} from "@/lib/push/preferences";
+import { getPushPreferencesByUserId, type PushPreferenceKey } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
@@ -30,8 +27,7 @@ export async function POST(req: NextRequest) {
     // Auth — accept either CRON_SECRET header or internal server call
     const authHeader = req.headers.get("authorization");
     const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-    const isInternal =
-      req.headers.get("x-internal-call") === process.env.INTERNAL_API_SECRET;
+    const isInternal = req.headers.get("x-internal-call") === process.env.INTERNAL_API_SECRET;
 
     if (!isCron && !isInternal) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -112,6 +108,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({ sent, skipped, failed });
   } catch (err) {
     logger.error("/api/push/send error", { context: "push", error: err });

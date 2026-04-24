@@ -70,6 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       });
     }
 
+    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
       shared: validIds.length,
       total: existingSet.size,
