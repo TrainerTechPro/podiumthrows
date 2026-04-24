@@ -31,6 +31,7 @@ import {
   Wrench,
   Video,
   ClipboardList,
+  PenLine,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -281,6 +282,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/teams",
           "/coach/event-groups",
           "/coach/goals",
+          "/coach/athlete-logs",
         ],
         children: [
           {
@@ -293,6 +295,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             label: "Throws",
             href: "/coach/athletes?tab=throws",
             icon: <Zap {...iconSize} />,
+          },
+          {
+            label: "Self-Logged Sessions",
+            href: "/coach/athlete-logs",
+            icon: <PenLine {...iconSize} />,
+            matchPaths: ["/coach/athlete-logs"],
           },
           {
             label: "Groups",
