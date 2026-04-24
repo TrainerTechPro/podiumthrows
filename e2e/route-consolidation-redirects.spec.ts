@@ -32,11 +32,10 @@ const REDIRECTS: RedirectCase[] = [
   { source: "/coach/drill-videos", destination: "/coach/throws/drills" },
   { source: "/coach/invitations", destination: "/coach/athletes/invitations" },
 
-  // /athlete/throws/log is NOT redirected — the page has a distinct ?edit=
-  // flow not yet wired into /athlete/log-session. See survivors doc.
-
-  // Staged ahead of Commit 5 validation.
-  { source: "/athlete/quick-start", destination: "/athlete/log-session" },
+  // Two pages initially planned for redirect, both confirmed live on validation:
+  //   /athlete/throws/log — distinct ?edit= flow for self-logged sessions.
+  //   /athlete/quick-start — smart-routing "Start Session" surface.
+  // See tasks/route-consolidation-survivors.md.
 
   // Exercise recommender subsumed by /coach/plans/generate.
   { source: "/coach/throws/programming", destination: "/coach/plans/generate" },

@@ -82,9 +82,10 @@ const nextConfig = {
       // that /athlete/log-session doesn't wire yet. Feature migration, not
       // route cleanup. Tracked in tasks/route-consolidation-survivors.md.
 
-      // Staged ahead of Commit 5 validation; pulled in a follow-up commit
-      // if that page turns out to have programmatic entry points.
-      { source: '/athlete/quick-start', destination: '/athlete/log-session',        permanent: false },
+      // /athlete/quick-start also removed — the page is a smart-routing
+      // "Start Session" surface (in-progress → self-program → coach-assigned
+      // → ad-hoc) used by the QuickActions button. Flattening it to
+      // /athlete/log-session would bypass the resume-workout flow.
 
       // Exercise recommender subsumed by /coach/plans/generate.
       { source: '/coach/throws/programming', destination: '/coach/plans/generate',  permanent: false },
