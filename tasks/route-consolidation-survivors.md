@@ -125,6 +125,12 @@ Routes reachable only via a Sidebar entry or QuickActions — no actual Link in 
 | `/athlete/wellness`                           | BottomTabBar matchPaths                                                                                    | WEAK — tab-match-only |
 | `/athlete/whoop`                              | `api/whoop/callback/route.ts:17`                                                                           | strong |
 
+### Athlete — feature-overlap survivors (not route cleanup — feature migration)
+
+| Route                                         | Evidence + reason not deleted                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `/athlete/throws/log`                         | 904-line throws-specific logger with a distinct `?edit=<id>` flow. Inbound: `_history-empty-state.tsx:15`, `_history-day-card.tsx:104`, `__tests__/history-day-card.test.tsx:73`, `Sidebar.tsx:476` matchPaths, `QuickActions.tsx:71`, `training-hub.ts:391`. The canonical `/athlete/log-session` uses `LogSessionWizard` (1047 lines, supports `editSessionId` as a prop but the page.tsx doesn't wire `?edit=` → wizard yet). **Follow-up work:** (1) wire `?edit=` through `/athlete/log-session/page.tsx` to `LogSessionWizard`, (2) verify feature parity (throw-count, best-mark, wire-length, drill-type), (3) rewrite all six inbound references, (4) delete `/athlete/throws/log`. Do not attempt this in a route-consolidation PR — it's a feature merge. |
+
 ### Athlete — WEAK-inbound shortlist for next pass
 
 Athlete routes reachable only via BottomTabBar matchPaths (cosmetic, not an active link):
