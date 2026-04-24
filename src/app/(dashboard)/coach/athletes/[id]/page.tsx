@@ -771,7 +771,11 @@ function TrainingTab({
                 variant: "neutral" as const,
               };
               return (
-                <div key={s.id} className="px-5 py-4">
+                <Link
+                  key={s.id}
+                  href={`/coach/session/${s.id}`}
+                  className="block px-5 py-4 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -796,7 +800,7 @@ function TrainingTab({
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
