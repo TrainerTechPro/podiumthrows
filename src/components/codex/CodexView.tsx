@@ -108,7 +108,10 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           xhr.upload.onprogress = (ev) => {
             if (ev.lengthComputable) setProgress(Math.round((ev.loaded / ev.total) * 100));
           };
-          xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed (${xhr.status})`)));
+          xhr.onload = () =>
+            xhr.status >= 200 && xhr.status < 300
+              ? resolve()
+              : reject(new Error(`Upload failed (${xhr.status})`));
           xhr.onerror = () => reject(new Error("Network error — check your connection"));
           xhr.send(file);
         });
@@ -174,33 +177,74 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="card p-5 space-y-4">
-      <h2 className="font-heading font-semibold text-base text-[var(--foreground)]">
-        Log a Throw
-      </h2>
+      <h2 className="font-heading font-semibold text-base text-[var(--foreground)]">Log a Throw</h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div>
-          <label htmlFor="codex-event" className="label">Event</label>
-          <select id="codex-event" value={event} onChange={(e) => setEvent(e.target.value)} className="input">
-            {EVENTS.map((ev) => <option key={ev.value} value={ev.value}>{ev.label}</option>)}
+          <label htmlFor="codex-event" className="label">
+            Event
+          </label>
+          <select
+            id="codex-event"
+            value={event}
+            onChange={(e) => setEvent(e.target.value)}
+            className="input"
+          >
+            {EVENTS.map((ev) => (
+              <option key={ev.value} value={ev.value}>
+                {ev.label}
+              </option>
+            ))}
           </select>
         </div>
         <div>
-          <label htmlFor="codex-implement" className="label">Implement</label>
-          <input id="codex-implement" type="text" value={implement} onChange={(e) => setImplement(e.target.value)} className="input" placeholder="7.26kg" required />
+          <label htmlFor="codex-implement" className="label">
+            Implement
+          </label>
+          <input
+            id="codex-implement"
+            type="text"
+            value={implement}
+            onChange={(e) => setImplement(e.target.value)}
+            className="input"
+            placeholder="7.26kg"
+            required
+          />
         </div>
         <div>
-          <label htmlFor="codex-distance" className="label">Distance (m)</label>
-          <input id="codex-distance" type="number" step="0.01" min="0" value={distance} onChange={(e) => setDistance(e.target.value)} className="input" placeholder="18.50" required />
+          <label htmlFor="codex-distance" className="label">
+            Distance (m)
+          </label>
+          <input
+            id="codex-distance"
+            type="number"
+            step="0.01"
+            min="0"
+            value={distance}
+            onChange={(e) => setDistance(e.target.value)}
+            className="input"
+            placeholder="18.50"
+            required
+          />
         </div>
         <div>
-          <label htmlFor="codex-date" className="label">Date</label>
-          <input id="codex-date" type="date" value={thrownAt} onChange={(e) => setThrownAt(e.target.value)} className="input" />
+          <label htmlFor="codex-date" className="label">
+            Date
+          </label>
+          <input
+            id="codex-date"
+            type="date"
+            value={thrownAt}
+            onChange={(e) => setThrownAt(e.target.value)}
+            className="input"
+          />
         </div>
       </div>
 
       <div>
-        <label htmlFor="codex-video" className="label">Video</label>
+        <label htmlFor="codex-video" className="label">
+          Video
+        </label>
         <input
           ref={fileRef}
           id="codex-video"
@@ -213,8 +257,17 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <div>
-        <label htmlFor="codex-notes" className="label">Notes (optional)</label>
-        <input id="codex-notes" type="text" value={notes} onChange={(e) => setNotes(e.target.value)} className="input" placeholder="Felt smooth, good hip rotation..." />
+        <label htmlFor="codex-notes" className="label">
+          Notes (optional)
+        </label>
+        <input
+          id="codex-notes"
+          type="text"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="input"
+          placeholder="Felt smooth, good hip rotation..."
+        />
       </div>
 
       {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
@@ -222,13 +275,20 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
       {uploading && (
         <div className="space-y-1">
           <div className="h-1.5 rounded-full bg-surface-200 dark:bg-surface-800 overflow-hidden">
-            <div className="h-full bg-primary-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+            <div
+              className="h-full bg-primary-500 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
           </div>
           <p className="text-xs text-muted text-right">{progress}%</p>
         </div>
       )}
 
-      <button type="submit" disabled={uploading || !file || !implement || !distance} className="btn-primary w-full sm:w-auto">
+      <button
+        type="submit"
+        disabled={uploading || !file || !implement || !distance}
+        className="btn-primary w-full sm:w-auto"
+      >
         {uploading ? "Uploading..." : "Upload Throw"}
       </button>
     </form>
@@ -244,7 +304,10 @@ function VideoPlayer({ entry, onDelete }: { entry: CodexEntry; onDelete: () => v
     if (!confirm("Delete this throw? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/codex/${entry.id}`, { method: "DELETE", headers: csrfHeaders() });
+      const res = await fetch(`/api/codex/${entry.id}`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
       if (res.ok) onDelete();
     } catch {
       alert("Failed to delete");
@@ -264,9 +327,7 @@ function VideoPlayer({ entry, onDelete }: { entry: CodexEntry; onDelete: () => v
           playsInline
         />
       </div>
-      {entry.notes && (
-        <p className="text-sm text-muted leading-relaxed max-w-2xl">{entry.notes}</p>
-      )}
+      {entry.notes && <p className="text-sm text-muted leading-relaxed max-w-2xl">{entry.notes}</p>}
       <button
         onClick={handleDelete}
         disabled={deleting}
@@ -294,9 +355,15 @@ function CodexList({
       {/* Desktop header */}
       <div className="hidden sm:grid sm:grid-cols-[1fr_100px_90px_100px] gap-4 px-4 py-2.5 bg-surface-50 dark:bg-surface-900/50">
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted">Event</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">Distance</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">Weight</span>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">Date</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">
+          Distance
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">
+          Weight
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted text-right">
+          Date
+        </span>
       </div>
 
       {entries.map((entry) => {
@@ -316,8 +383,12 @@ function CodexList({
               {/* Desktop row */}
               <div className="hidden sm:grid sm:grid-cols-[1fr_100px_90px_100px] gap-4 px-4 py-3 items-center">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[entry.event] ?? "bg-surface-400"}`} />
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${EVENT_COLORS[entry.event] ?? ""}`}>
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[entry.event] ?? "bg-surface-400"}`}
+                  />
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shrink-0 ${EVENT_COLORS[entry.event] ?? ""}`}
+                  >
                     {eventLabel(entry.event)}
                   </span>
                   {entry.notes && (
@@ -333,8 +404,14 @@ function CodexList({
                 <div className="flex items-center justify-end gap-2">
                   <span className="text-xs text-muted">{formatDate(entry.thrownAt)}</span>
                   <svg
-                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
                     aria-hidden="true"
                   >
@@ -345,27 +422,41 @@ function CodexList({
 
               {/* Mobile row */}
               <div className="sm:hidden px-4 py-3 flex items-center gap-3">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[entry.event] ?? "bg-surface-400"}`} />
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[entry.event] ?? "bg-surface-400"}`}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
                     <span className="font-heading font-bold text-sm text-[var(--foreground)] tabular-nums">
                       {entry.distance.toFixed(2)}m
                     </span>
-                    <span className="text-xs text-muted font-medium tabular-nums">{entry.implement}</span>
-                    <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${EVENT_COLORS[entry.event] ?? ""}`}>
+                    <span className="text-xs text-muted font-medium tabular-nums">
+                      {entry.implement}
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${EVENT_COLORS[entry.event] ?? ""}`}
+                    >
                       {eventLabel(entry.event)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-muted">{formatDateShort(entry.thrownAt)}</span>
+                    <span className="text-[11px] text-muted">
+                      {formatDateShort(entry.thrownAt)}
+                    </span>
                     {entry.notes && (
                       <span className="text-[11px] text-muted truncate">{entry.notes}</span>
                     )}
                   </div>
                 </div>
                 <svg
-                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
                   aria-hidden="true"
                 >
@@ -375,12 +466,7 @@ function CodexList({
             </button>
 
             {/* Expanded video player */}
-            {isExpanded && (
-              <VideoPlayer
-                entry={entry}
-                onDelete={() => onDelete(entry.id)}
-              />
-            )}
+            {isExpanded && <VideoPlayer entry={entry} onDelete={() => onDelete(entry.id)} />}
           </div>
         );
       })}
@@ -433,20 +519,19 @@ export function CodexView() {
   const filtered = useMemo(() => {
     if (!search.trim()) return entries;
     const q = search.toLowerCase();
-    return entries.filter((e) =>
-      e.implement.toLowerCase().includes(q) ||
-      e.distance.toFixed(2).includes(q) ||
-      (e.notes && e.notes.toLowerCase().includes(q)) ||
-      eventLabel(e.event).toLowerCase().includes(q)
+    return entries.filter(
+      (e) =>
+        e.implement.toLowerCase().includes(q) ||
+        e.distance.toFixed(2).includes(q) ||
+        (e.notes && e.notes.toLowerCase().includes(q)) ||
+        eventLabel(e.event).toLowerCase().includes(q)
     );
   }, [entries, search]);
 
   // Stats
   const uniqueImplements = useMemo(
     () =>
-      [...new Set(entries.map((e) => e.implement))].sort(
-        (a, b) => parseFloat(b) - parseFloat(a)
-      ),
+      [...new Set(entries.map((e) => e.implement))].sort((a, b) => parseFloat(b) - parseFloat(a)),
     [entries]
   );
   const bestThrow = entries.length > 0 ? Math.max(...entries.map((e) => e.distance)) : 0;
@@ -456,19 +541,14 @@ export function CodexView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
-            Throws Codex
-          </h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Throws Codex</h1>
           <p className="text-sm text-muted mt-0.5">
             {entries.length} throw{entries.length !== 1 ? "s" : ""} logged
             {bestThrow > 0 && <> &middot; best: {bestThrow.toFixed(2)}m</>}
             {uniqueImplements.length > 0 && <> &middot; {uniqueImplements.join(", ")}</>}
           </p>
         </div>
-        <button
-          onClick={() => setShowUpload((v) => !v)}
-          className="btn-primary whitespace-nowrap"
-        >
+        <button onClick={() => setShowUpload((v) => !v)} className="btn-primary whitespace-nowrap">
           {showUpload ? "Hide Form" : "+ Log Throw"}
         </button>
       </div>
@@ -489,8 +569,14 @@ export function CodexView() {
           {/* Search */}
           <div className="relative w-full sm:w-56">
             <svg
-              width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
               aria-hidden="true"
             >
@@ -537,11 +623,13 @@ export function CodexView() {
           {/* Sort controls */}
           <div className="flex items-center gap-1 sm:ml-auto">
             <span className="text-xs text-muted mr-0.5">Sort:</span>
-            {([
-              ["thrownAt", "Date"],
-              ["implement", "Weight"],
-              ["distance", "Distance"],
-            ] as [SortField, string][]).map(([field, label]) => (
+            {(
+              [
+                ["thrownAt", "Date"],
+                ["implement", "Weight"],
+                ["distance", "Distance"],
+              ] as [SortField, string][]
+            ).map(([field, label]) => (
               <button
                 key={field}
                 onClick={() => toggleSort(field)}
@@ -554,8 +642,14 @@ export function CodexView() {
                 {label}
                 {sortField === field && (
                   <svg
-                    width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className={sortOrder === "asc" ? "rotate-180" : ""}
                     aria-hidden="true"
                   >
@@ -583,7 +677,18 @@ export function CodexView() {
       ) : entries.length === 0 ? (
         <EmptyState
           icon={
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted" aria-hidden="true">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-muted"
+              aria-hidden="true"
+            >
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
@@ -599,7 +704,10 @@ export function CodexView() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-sm text-muted">No throws match &ldquo;{search}&rdquo;</p>
-          <button onClick={() => setSearch("")} className="text-xs text-primary-600 dark:text-primary-400 mt-2 hover:underline">
+          <button
+            onClick={() => setSearch("")}
+            className="text-xs text-primary-600 dark:text-primary-400 mt-2 hover:underline"
+          >
             Clear search
           </button>
         </div>
