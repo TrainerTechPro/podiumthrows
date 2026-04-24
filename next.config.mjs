@@ -90,6 +90,10 @@ const nextConfig = {
       // Exercise recommender subsumed by /coach/plans/generate.
       { source: '/coach/throws/programming', destination: '/coach/plans/generate',  permanent: false },
 
+      // Coach codex page deleted — CodexView extracted to src/components/codex/
+      // for shared use by /athlete/codex. Coach bookmarks land on dashboard.
+      { source: '/coach/codex',        destination: '/coach/dashboard',             permanent: false },
+
       // ── 308s below: prior IA migrations, do not downgrade. ─────────────
       {
         source: '/athlete/throws/analysis',

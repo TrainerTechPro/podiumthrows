@@ -39,6 +39,9 @@ const REDIRECTS: RedirectCase[] = [
 
   // Exercise recommender subsumed by /coach/plans/generate.
   { source: "/coach/throws/programming", destination: "/coach/plans/generate" },
+
+  // Coach codex deleted — CodexView extracted to src/components/codex/.
+  { source: "/coach/codex", destination: "/coach/dashboard" },
 ];
 
 test.describe("PR 1 route-consolidation 307 redirects", () => {
