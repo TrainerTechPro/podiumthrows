@@ -7,6 +7,7 @@ import { AlertTriangle, Check } from "lucide-react";
 import { GeneratingOverlay } from "@/components/throws/GeneratingOverlay";
 import { CLASSIFICATION_COLOR_PARTS } from "@/lib/throws/constants";
 import { validateImplementSequence } from "@/lib/bondarchuk/sequencing";
+import { logger } from "@/lib/logger";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -332,8 +333,12 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
           }));
         }
       }
-    } catch {
+    } catch (err) {
       // Silently fail — coach fills manually
+      logger.debug("Silently fail — coach fills manually", {
+        context: "src/app/(dashboard)/coach/plans/generate/_program-builder-wizard.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     } finally {
       setLoading(false);
     }

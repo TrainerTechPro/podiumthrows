@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export function FeedbackInboxBadge() {
   const [unread, setUnread] = useState<number>(0);
@@ -24,8 +25,12 @@ export function FeedbackInboxBadge() {
       if (!res.ok) return;
       const data = (await res.json()) as { unread: number };
       setUnread(data.unread ?? 0);
-    } catch {
+    } catch (err) {
       // Silent — feature is non-critical
+      logger.debug("Silent — feature is non-critical", {
+        context: "src/components/feedback/FeedbackInboxBadge.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, []);
 
@@ -41,11 +46,7 @@ export function FeedbackInboxBadge() {
   return (
     <Link
       href="/athlete/feedback"
-      aria-label={
-        unread > 0
-          ? `Coach feedback — ${unread} unread`
-          : "Coach feedback"
-      }
+      aria-label={unread > 0 ? `Coach feedback — ${unread} unread` : "Coach feedback"}
       className="relative inline-flex items-center justify-center h-9 w-9 rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
     >
       <MessageSquare className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />

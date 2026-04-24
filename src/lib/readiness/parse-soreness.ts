@@ -1,4 +1,5 @@
 import type { SoreArea } from "@/components/ui/InteractiveBodyMap";
+import { logger } from "@/lib/logger";
 
 export function parseSorenessArea(raw: string | null): {
   isStructured: boolean;
@@ -11,8 +12,12 @@ export function parseSorenessArea(raw: string | null): {
     if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].slug) {
       return { isStructured: true, areas: parsed, legacyText: null };
     }
-  } catch {
+  } catch (err) {
     // Not JSON — legacy format
+    logger.debug("Not JSON — legacy format", {
+      context: "src/lib/readiness/parse-soreness.ts",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
   return { isStructured: false, areas: [], legacyText: raw };
 }

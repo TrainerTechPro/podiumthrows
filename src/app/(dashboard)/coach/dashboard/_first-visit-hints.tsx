@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 const HINTS_KEY = "podium-coach-hints-seen";
 
@@ -64,7 +65,13 @@ export function FirstVisitHints() {
     setVisible(false);
     try {
       localStorage.setItem(HINTS_KEY, "true");
-    } catch {}
+    } catch (err) {
+      // localStorage unavailable (private mode / quota) — non-fatal.
+      logger.debug("Failed to persist first-visit hint dismissal", {
+        context: "coach/dashboard/_first-visit-hints",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
+    }
   }
 
   if (!visible || currentIdx < 0) return null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { logger } from "@/lib/logger";
 
 type FontSize = "default" | "large" | "xl";
 
@@ -59,8 +60,12 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         if (prefs.reducedMotion !== undefined) setReducedMotionState(prefs.reducedMotion);
         applyClasses(prefs);
       }
-    } catch {
+    } catch (err) {
       // Ignore parse errors
+      logger.debug("Ignore parse errors", {
+        context: "src/components/accessibility-provider.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setMounted(true);
   }, []);
@@ -72,8 +77,12 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     applyClasses(prefs);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-    } catch {
+    } catch (err) {
       // Ignore storage errors
+      logger.debug("Ignore storage errors", {
+        context: "src/components/accessibility-provider.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, [fontSize, reducedMotion, mounted]);
 
@@ -86,7 +95,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   }, []);
 
   return (
-    <AccessibilityContext.Provider value={{ fontSize, setFontSize, reducedMotion, setReducedMotion }}>
+    <AccessibilityContext.Provider
+      value={{ fontSize, setFontSize, reducedMotion, setReducedMotion }}
+    >
       {children}
     </AccessibilityContext.Provider>
   );

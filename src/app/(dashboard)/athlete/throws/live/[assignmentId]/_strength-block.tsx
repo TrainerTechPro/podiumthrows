@@ -6,12 +6,8 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { useToast } from "@/components/toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { BlockData, BlockState, LoggedSet } from "./_types";
-import {
-  parseConfig,
-  getRestSeconds,
-  getBlockAccent,
-  CHAMFER_LG,
-} from "./_utils";
+import { parseConfig, getRestSeconds, getBlockAccent, CHAMFER_LG } from "./_utils";
+import { logger } from "@/lib/logger";
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 /*  STRENGTH BLOCK VIEW                                                   */
@@ -50,7 +46,7 @@ export function StrengthBlockView({
 
     setLogging(true);
     const setNumber = state.sets.length + 1;
-    const exerciseName = exercises[0]?.exerciseName as string || "Strength";
+    const exerciseName = (exercises[0]?.exerciseName as string) || "Strength";
 
     try {
       // Persist to DB via log-throw — repurpose fields for strength:
@@ -66,8 +62,12 @@ export function StrengthBlockView({
           notes: JSON.stringify({ reps: r, rpe, type: "strength" }),
         }),
       });
-    } catch {
+    } catch (err) {
       // Best-effort — still advance locally
+      logger.debug("Best-effort — still advance locally", {
+        context: "src/app/(dashboard)/athlete/throws/live/[assignmentId]/_strength-block.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     } finally {
       setLogging(false);
     }
@@ -137,16 +137,10 @@ export function StrengthBlockView({
           </p>
           {exercises.map((ex, i) => (
             <div key={i} className="flex items-center justify-between">
-              <span
-                className="text-lg font-heading font-bold"
-                style={{ color: accent }}
-              >
+              <span className="text-lg font-heading font-bold" style={{ color: accent }}>
                 {(ex.name as string) || "Exercise"}
               </span>
-              <span
-                className="text-sm tabular-nums font-medium"
-                style={{ color: `${accent}99` }}
-              >
+              <span className="text-sm tabular-nums font-medium" style={{ color: `${accent}99` }}>
                 {ex.sets && ex.reps ? `${ex.sets} × ${ex.reps}` : "—"}
                 {ex.percentage ? ` @ ${ex.percentage}%` : ""}
               </span>
@@ -227,10 +221,7 @@ export function StrengthBlockView({
             className="text-[9px] uppercase font-semibold mb-2 block"
             style={{ letterSpacing: "2px", color: `${accent}66` }}
           >
-            RPE{" "}
-            {rpe !== null && (
-              <span style={{ color: accent }}>— {rpe}</span>
-            )}
+            RPE {rpe !== null && <span style={{ color: accent }}>— {rpe}</span>}
           </label>
           <div className="flex gap-1">
             {[6, 7, 7.5, 8, 8.5, 9, 9.5, 10].map((v) => (
@@ -311,17 +302,11 @@ export function StrengthBlockView({
               >
                 Set {s.setNumber}
               </span>
-              <span
-                className="text-sm font-bold tabular-nums"
-                style={{ color: `${accent}cc` }}
-              >
+              <span className="text-sm font-bold tabular-nums" style={{ color: `${accent}cc` }}>
                 {s.weight > 0 ? `${s.weight}kg × ` : ""}
                 {s.reps} reps
                 {s.rpe != null && (
-                  <span
-                    className="ml-2 text-xs font-semibold"
-                    style={{ color: accent }}
-                  >
+                  <span className="ml-2 text-xs font-semibold" style={{ color: accent }}>
                     RPE {s.rpe}
                   </span>
                 )}

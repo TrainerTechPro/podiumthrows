@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AssignModal } from "../_assign-modal";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 type Props = {
   questionnaireId: string;
@@ -44,8 +45,12 @@ export function QuestionnaireActions({
         router.push("/coach/questionnaires");
         router.refresh();
       }
-    } catch {
+    } catch (err) {
       // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/questionnaires/[id]/_questionnaire-actions.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     } finally {
       setDeleting(false);
     }
@@ -54,17 +59,21 @@ export function QuestionnaireActions({
   async function handleClone() {
     setCloning(true);
     try {
-      const res = await fetch(
-        `/api/coach/questionnaires/${questionnaireId}/clone`,
-        { method: "POST", headers: csrfHeaders() }
-      );
+      const res = await fetch(`/api/coach/questionnaires/${questionnaireId}/clone`, {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         router.push(`/coach/questionnaires/${data.data.questionnaire.id}`);
         router.refresh();
       }
-    } catch {
+    } catch (err) {
       // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/questionnaires/[id]/_questionnaire-actions.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     } finally {
       setCloning(false);
     }
@@ -82,8 +91,12 @@ export function QuestionnaireActions({
         router.refresh();
         setShowArchive(false);
       }
-    } catch {
+    } catch (err) {
       // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/questionnaires/[id]/_questionnaire-actions.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     } finally {
       setArchiving(false);
     }
@@ -97,8 +110,12 @@ export function QuestionnaireActions({
         body: JSON.stringify({ status: "draft" }),
       });
       if (res.ok) router.refresh();
-    } catch {
+    } catch (err) {
       // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/questionnaires/[id]/_questionnaire-actions.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -116,47 +133,26 @@ export function QuestionnaireActions({
         )}
 
         {status === "published" && (
-          <Button
-            variant="secondary"
-            className="text-sm"
-            onClick={() => setShowAssign(true)}
-          >
+          <Button variant="secondary" className="text-sm" onClick={() => setShowAssign(true)}>
             Assign
           </Button>
         )}
 
-        <Button
-          variant="ghost"
-          className="text-sm"
-          onClick={handleClone}
-          disabled={cloning}
-        >
+        <Button variant="ghost" className="text-sm" onClick={handleClone} disabled={cloning}>
           {cloning ? "Cloning..." : "Duplicate"}
         </Button>
 
         {isArchived ? (
-          <Button
-            variant="outline"
-            className="text-sm"
-            onClick={handleUnarchive}
-          >
+          <Button variant="outline" className="text-sm" onClick={handleUnarchive}>
             Unarchive
           </Button>
         ) : (
-          <Button
-            variant="ghost"
-            className="text-sm"
-            onClick={() => setShowArchive(true)}
-          >
+          <Button variant="ghost" className="text-sm" onClick={() => setShowArchive(true)}>
             Archive
           </Button>
         )}
 
-        <Button
-          variant="danger"
-          className="text-sm"
-          onClick={() => setShowDelete(true)}
-        >
+        <Button variant="danger" className="text-sm" onClick={() => setShowDelete(true)}>
           Delete
         </Button>
       </div>

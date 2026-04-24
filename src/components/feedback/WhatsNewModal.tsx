@@ -13,6 +13,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Sparkles, X } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 type Release = {
   slug: string;
@@ -54,8 +55,12 @@ export function WhatsNewModal() {
         method: "POST",
         headers: csrfHeaders(),
       });
-    } catch {
+    } catch (err) {
       // Ignore — worst case the modal shows again next session
+      logger.debug("Ignore — worst case the modal shows again next session", {
+        context: "src/components/feedback/WhatsNewModal.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setRelease(null);
   }, [release, dismissing]);

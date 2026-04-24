@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { requireCoachSession, getAssignmentDetailForCoach } from "@/lib/data/coach";
 import { CommentThread } from "@/components/comment-thread";
+import { logger } from "@/lib/logger";
 
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
 
@@ -63,20 +64,68 @@ const STATUS_CONFIG: Record<
 };
 
 const FEELING_CONFIG: Record<string, { label: string; colorClass: string }> = {
-  GREAT: { label: "Great", colorClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  GOOD: { label: "Good", colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  AVERAGE: { label: "Average", colorClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  POOR: { label: "Poor", colorClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
-  VERY_POOR: { label: "Very Poor", colorClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  GREAT: {
+    label: "Great",
+    colorClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  },
+  GOOD: {
+    label: "Good",
+    colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  },
+  AVERAGE: {
+    label: "Average",
+    colorClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  },
+  POOR: {
+    label: "Poor",
+    colorClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  },
+  VERY_POOR: {
+    label: "Very Poor",
+    colorClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  },
 };
 
-const BLOCK_ICON_MAP: Record<string, { icon: typeof Target; color: string; label: string; borderColor: string }> = {
-  WARMUP: { icon: Flame, color: "text-amber-500", label: "Warm-Up", borderColor: "var(--amber-500, #f59e0b)" },
-  THROWING: { icon: Target, color: "text-orange-500", label: "Throwing", borderColor: "var(--orange-500, #f97316)" },
-  STRENGTH: { icon: Dumbbell, color: "text-blue-500", label: "Strength", borderColor: "var(--blue-500, #3b82f6)" },
-  PLYOMETRIC: { icon: Flame, color: "text-purple-500", label: "Plyometric", borderColor: "var(--purple-500, #a855f7)" },
-  COOLDOWN: { icon: Snowflake, color: "text-cyan-500", label: "Cool-Down", borderColor: "var(--cyan-500, #06b6d4)" },
-  NOTES: { icon: StickyNote, color: "text-surface-400", label: "Notes", borderColor: "var(--surface-400, #9ca3af)" },
+const BLOCK_ICON_MAP: Record<
+  string,
+  { icon: typeof Target; color: string; label: string; borderColor: string }
+> = {
+  WARMUP: {
+    icon: Flame,
+    color: "text-amber-500",
+    label: "Warm-Up",
+    borderColor: "var(--amber-500, #f59e0b)",
+  },
+  THROWING: {
+    icon: Target,
+    color: "text-orange-500",
+    label: "Throwing",
+    borderColor: "var(--orange-500, #f97316)",
+  },
+  STRENGTH: {
+    icon: Dumbbell,
+    color: "text-blue-500",
+    label: "Strength",
+    borderColor: "var(--blue-500, #3b82f6)",
+  },
+  PLYOMETRIC: {
+    icon: Flame,
+    color: "text-purple-500",
+    label: "Plyometric",
+    borderColor: "var(--purple-500, #a855f7)",
+  },
+  COOLDOWN: {
+    icon: Snowflake,
+    color: "text-cyan-500",
+    label: "Cool-Down",
+    borderColor: "var(--cyan-500, #06b6d4)",
+  },
+  NOTES: {
+    icon: StickyNote,
+    color: "text-surface-400",
+    label: "Notes",
+    borderColor: "var(--surface-400, #9ca3af)",
+  },
 };
 
 /* ─── Block Renderers ───────────────────────────────────────────────────── */
@@ -87,7 +136,12 @@ function ThrowingBlockResults({
   prescribedCount,
 }: {
   config: Record<string, unknown>;
-  throwLogs: Array<{ throwNumber: number; distance: number | null; implement: string; notes: string | null }>;
+  throwLogs: Array<{
+    throwNumber: number;
+    distance: number | null;
+    implement: string;
+    notes: string | null;
+  }>;
   prescribedCount: number;
 }) {
   const weight = config.implementWeight || config.implement || "";
@@ -97,14 +151,16 @@ function ThrowingBlockResults({
 
   const distances = throwLogs.map((l) => l.distance).filter((d): d is number => d != null);
   const bestMark = distances.length > 0 ? Math.max(...distances) : null;
-  const avgDistance = distances.length > 0 ? distances.reduce((a, b) => a + b, 0) / distances.length : null;
+  const avgDistance =
+    distances.length > 0 ? distances.reduce((a, b) => a + b, 0) / distances.length : null;
   const actualCount = throwLogs.length;
 
-  const completionColor = prescribedCount > 0
-    ? actualCount >= prescribedCount
-      ? "text-emerald-600 dark:text-emerald-400"
-      : "text-amber-600 dark:text-amber-400"
-    : "";
+  const completionColor =
+    prescribedCount > 0
+      ? actualCount >= prescribedCount
+        ? "text-emerald-600 dark:text-emerald-400"
+        : "text-amber-600 dark:text-amber-400"
+      : "";
 
   return (
     <div className="space-y-3">
@@ -140,10 +196,18 @@ function ThrowingBlockResults({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--card-border)]">
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">#</th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">Distance</th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">Implement</th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2">Notes</th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                  #
+                </th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                  Distance
+                </th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                  Implement
+                </th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2">
+                  Notes
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -155,12 +219,18 @@ function ThrowingBlockResults({
                     className="border-b border-[var(--card-border)] last:border-0"
                   >
                     <td className="py-2 pr-4 tabular-nums text-muted">{log.throwNumber}</td>
-                    <td className={cn(
-                      "py-2 pr-4 tabular-nums font-semibold",
-                      isBest ? "text-emerald-600 dark:text-emerald-400" : "text-[var(--foreground)]"
-                    )}>
+                    <td
+                      className={cn(
+                        "py-2 pr-4 tabular-nums font-semibold",
+                        isBest
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-[var(--foreground)]"
+                      )}
+                    >
                       {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
-                      {isBest && <span className="ml-1.5 text-[10px] font-bold uppercase">Best</span>}
+                      {isBest && (
+                        <span className="ml-1.5 text-[10px] font-bold uppercase">Best</span>
+                      )}
                     </td>
                     <td className="py-2 pr-4 text-muted">{log.implement}</td>
                     <td className="py-2 text-muted text-xs">{log.notes ?? ""}</td>
@@ -178,10 +248,16 @@ function ThrowingBlockResults({
       {distances.length > 0 && (
         <div className="flex gap-6 text-xs text-muted pt-1">
           <span>
-            Best: <strong className="text-emerald-600 dark:text-emerald-400 tabular-nums">{bestMark!.toFixed(2)}m</strong>
+            Best:{" "}
+            <strong className="text-emerald-600 dark:text-emerald-400 tabular-nums">
+              {bestMark!.toFixed(2)}m
+            </strong>
           </span>
           <span>
-            Avg: <strong className="text-[var(--foreground)] tabular-nums">{avgDistance!.toFixed(2)}m</strong>
+            Avg:{" "}
+            <strong className="text-[var(--foreground)] tabular-nums">
+              {avgDistance!.toFixed(2)}m
+            </strong>
           </span>
           <span>
             Throws: <strong className="tabular-nums">{actualCount}</strong>
@@ -240,9 +316,7 @@ function WarmupCooldownDetail({ config }: { config: Record<string, unknown> }) {
           ))}
         </ul>
       )}
-      {!duration && drills.length === 0 && (
-        <p className="text-sm text-muted">As needed</p>
-      )}
+      {!duration && drills.length === 0 && <p className="text-sm text-muted">As needed</p>}
     </div>
   );
 }
@@ -307,7 +381,11 @@ export default async function CoachSessionDetailPage({
       <div className="card p-6 space-y-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <Avatar name={`${athlete.firstName} ${athlete.lastName}`} src={athlete.avatarUrl} size="md" />
+            <Avatar
+              name={`${athlete.firstName} ${athlete.lastName}`}
+              src={athlete.avatarUrl}
+              size="md"
+            />
             <div className="space-y-1">
               <h1 className="text-xl font-heading font-bold text-[var(--foreground)]">
                 {session.name}
@@ -353,7 +431,9 @@ export default async function CoachSessionDetailPage({
           </h2>
           <div className="flex items-center gap-4 flex-wrap">
             {feeling && (
-              <span className={cn("text-sm font-semibold px-3 py-1 rounded-lg", feeling.colorClass)}>
+              <span
+                className={cn("text-sm font-semibold px-3 py-1 rounded-lg", feeling.colorClass)}
+              >
                 {feeling.label}
               </span>
             )}
@@ -378,20 +458,29 @@ export default async function CoachSessionDetailPage({
       {/* Session timeline */}
       {(assignment.startedAt || assignment.completedAt) && (
         <div className="card p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Timeline
-          </h2>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Timeline</h2>
           <div className="flex items-center gap-3 text-sm">
-            <Timer size={14} strokeWidth={1.75} className="text-muted shrink-0" aria-hidden="true" />
+            <Timer
+              size={14}
+              strokeWidth={1.75}
+              className="text-muted shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex items-center gap-4 flex-wrap text-muted tabular-nums">
               {assignment.startedAt && (
                 <span>
-                  Started: <strong className="text-[var(--foreground)]">{formatTime(assignment.startedAt)}</strong>
+                  Started:{" "}
+                  <strong className="text-[var(--foreground)]">
+                    {formatTime(assignment.startedAt)}
+                  </strong>
                 </span>
               )}
               {assignment.completedAt && (
                 <span>
-                  Completed: <strong className="text-[var(--foreground)]">{formatTime(assignment.completedAt)}</strong>
+                  Completed:{" "}
+                  <strong className="text-[var(--foreground)]">
+                    {formatTime(assignment.completedAt)}
+                  </strong>
                 </span>
               )}
               {duration && (
@@ -417,12 +506,17 @@ export default async function CoachSessionDetailPage({
             let config: Record<string, unknown> = {};
             try {
               config = JSON.parse(block.config) as Record<string, unknown>;
-            } catch { /* ignore */ }
+            } catch (err) {
+              // Malformed block.config JSON — render row without extras.
+              logger.debug("Malformed block.config JSON", {
+                context: "coach/athletes/[id]/sessions/[assignmentId]",
+                metadata: { reason: err instanceof Error ? err.message : "unknown" },
+              });
+            }
 
             const blockThrows = throwLogsByBlock.get(block.id) ?? [];
-            const prescribedCount = block.blockType === "THROWING"
-              ? (config.throwCount as number) ?? 0
-              : 0;
+            const prescribedCount =
+              block.blockType === "THROWING" ? ((config.throwCount as number) ?? 0) : 0;
 
             return (
               <div
@@ -440,9 +534,7 @@ export default async function CoachSessionDetailPage({
                   <h3 className="text-sm font-semibold text-[var(--foreground)]">
                     {blockMeta.label}
                   </h3>
-                  <span className="text-xs text-muted ml-auto tabular-nums">
-                    Block {idx + 1}
-                  </span>
+                  <span className="text-xs text-muted ml-auto tabular-nums">Block {idx + 1}</span>
                 </div>
 
                 {block.blockType === "THROWING" && (
@@ -452,15 +544,11 @@ export default async function CoachSessionDetailPage({
                     prescribedCount={prescribedCount}
                   />
                 )}
-                {block.blockType === "STRENGTH" && (
-                  <StrengthBlockPrescription config={config} />
-                )}
+                {block.blockType === "STRENGTH" && <StrengthBlockPrescription config={config} />}
                 {(block.blockType === "WARMUP" || block.blockType === "COOLDOWN") && (
                   <WarmupCooldownDetail config={config} />
                 )}
-                {block.blockType === "NOTES" && (
-                  <NotesBlockDetail config={config} />
-                )}
+                {block.blockType === "NOTES" && <NotesBlockDetail config={config} />}
               </div>
             );
           })}
@@ -478,9 +566,7 @@ export default async function CoachSessionDetailPage({
 
       {/* Coach comments */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Comments
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Comments</h2>
         <CommentThread targetField="throwsAssignmentId" targetId={assignmentId} />
       </div>
     </div>

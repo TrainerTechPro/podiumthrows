@@ -21,6 +21,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Bell, X, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 const LOCAL_LAST_FIRED_KEY = "streak-reminder-last-fired";
 const MIN_MS_BETWEEN_FIRINGS = 18 * 60 * 60 * 1000; // 18h
@@ -68,23 +69,24 @@ export function StreakReminder({
 
   /* ─── Persist preference to the server ──────────────────────────────── */
 
-  const savePrefs = useCallback(
-    async (patch: { enabled?: boolean; promptDismissed?: boolean }) => {
-      setSaving(true);
-      try {
-        await fetch("/api/athlete/notification-preferences", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ streakReminder: patch }),
-        });
-      } catch {
-        // Silent — prefs are not load-bearing
-      } finally {
-        setSaving(false);
-      }
-    },
-    []
-  );
+  const savePrefs = useCallback(async (patch: { enabled?: boolean; promptDismissed?: boolean }) => {
+    setSaving(true);
+    try {
+      await fetch("/api/athlete/notification-preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ streakReminder: patch }),
+      });
+    } catch (err) {
+      // Silent — prefs are not load-bearing
+      logger.debug("Silent — prefs are not load-bearing", {
+        context: "src/components/notifications/StreakReminder.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, []);
 
   /* ─── Reminder scheduler ────────────────────────────────────────────── */
 
@@ -121,12 +123,13 @@ export function StreakReminder({
         body: `Log at least one throw today to keep your ${status.currentStreak}-day streak going.`,
         tag: "podium-throws-streak",
       });
-      window.localStorage.setItem(
-        LOCAL_LAST_FIRED_KEY,
-        new Date().toISOString()
-      );
-    } catch {
+      window.localStorage.setItem(LOCAL_LAST_FIRED_KEY, new Date().toISOString());
+    } catch (err) {
       // Notification construction can throw in some browsers — silent
+      logger.debug("Notification construction can throw in some browsers — silent", {
+        context: "src/components/notifications/StreakReminder.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, []);
 
@@ -199,11 +202,7 @@ export function StreakReminder({
   return (
     <div className="card px-4 py-3 flex items-center gap-3 border border-primary-500/20 bg-primary-500/5">
       <div className="h-9 w-9 rounded-full bg-primary-500/15 flex items-center justify-center shrink-0">
-        <Bell
-          className="h-4 w-4 text-primary-500"
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
+        <Bell className="h-4 w-4 text-primary-500" strokeWidth={1.75} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[var(--foreground)]">

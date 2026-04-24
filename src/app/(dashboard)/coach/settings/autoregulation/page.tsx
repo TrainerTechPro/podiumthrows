@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,7 +42,11 @@ const MODE_OPTIONS: { value: AutoregMode; label: string; description: string }[]
   { value: "OFF", label: "Off", description: "No suggestions generated" },
   { value: "NOTIFY", label: "Notify", description: "Flag suggestions, you decide" },
   { value: "AUTO", label: "Auto", description: "Apply silently and notify" },
-  { value: "APPROVAL_REQUIRED", label: "Approval", description: "Nothing applies without your explicit action" },
+  {
+    value: "APPROVAL_REQUIRED",
+    label: "Approval",
+    description: "Nothing applies without your explicit action",
+  },
 ];
 
 const TIMESCALE_LABELS: { key: keyof TimescaleConfig; label: string }[] = [
@@ -106,18 +111,16 @@ export default function AutoregulationSettingsPage() {
         setCoachSelf(cs);
         setCoachSelfInitial(structuredClone(cs));
 
-        const aths: AthleteSettings[] = (data.athletes ?? []).map(
-          (a: Record<string, unknown>) => ({
-            athleteId: a.athleteId as string,
-            firstName: a.firstName as string,
-            lastName: a.lastName as string,
-            mode: (a.mode as AutoregMode | null) ?? null,
-            timescales: {
-              ...DEFAULT_TIMESCALES,
-              ...((a.timescales as Partial<TimescaleConfig>) ?? {}),
-            },
-          }),
-        );
+        const aths: AthleteSettings[] = (data.athletes ?? []).map((a: Record<string, unknown>) => ({
+          athleteId: a.athleteId as string,
+          firstName: a.firstName as string,
+          lastName: a.lastName as string,
+          mode: (a.mode as AutoregMode | null) ?? null,
+          timescales: {
+            ...DEFAULT_TIMESCALES,
+            ...((a.timescales as Partial<TimescaleConfig>) ?? {}),
+          },
+        }));
         setAthletes(aths);
         setAthletesInitial(structuredClone(aths));
       })
@@ -201,18 +204,22 @@ export default function AutoregulationSettingsPage() {
         prev.map((a) =>
           a.athleteId === athleteId
             ? { ...a, mode: null, timescales: { ...DEFAULT_TIMESCALES } }
-            : a,
-        ),
+            : a
+        )
       );
       setAthletesInitial((prev) =>
         prev.map((a) =>
           a.athleteId === athleteId
             ? { ...a, mode: null, timescales: { ...DEFAULT_TIMESCALES } }
-            : a,
-        ),
+            : a
+        )
       );
-    } catch {
+    } catch (err) {
       // Silently fail — user can retry
+      logger.debug("Silently fail — user can retry", {
+        context: "src/app/(dashboard)/coach/settings/autoregulation/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -264,10 +271,7 @@ export default function AutoregulationSettingsPage() {
           <p className="text-sm text-red-500 dark:text-red-400">
             Failed to load autoregulation settings.
           </p>
-          <button
-            onClick={() => fetchSettings()}
-            className="btn-secondary text-xs px-4 py-1.5"
-          >
+          <button onClick={() => fetchSettings()} className="btn-secondary text-xs px-4 py-1.5">
             Try Again
           </button>
         </div>
@@ -285,8 +289,19 @@ export default function AutoregulationSettingsPage() {
           href="/coach/settings"
           className="inline-flex items-center gap-1 text-xs text-muted hover:text-[var(--foreground)] transition-colors mb-4"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Settings
         </Link>
@@ -347,9 +362,7 @@ export default function AutoregulationSettingsPage() {
           </div>
 
           {athletes.length === 0 ? (
-            <p className="text-sm text-muted py-2">
-              No athletes on active programs.
-            </p>
+            <p className="text-sm text-muted py-2">No athletes on active programs.</p>
           ) : (
             <div className="space-y-4">
               {athletes.map((athlete) => {
@@ -384,9 +397,7 @@ export default function AutoregulationSettingsPage() {
                       value={athlete.mode ?? coachSelf.mode}
                       onChange={(mode) => {
                         setAthletes((prev) =>
-                          prev.map((a) =>
-                            a.athleteId === athlete.athleteId ? { ...a, mode } : a,
-                          ),
+                          prev.map((a) => (a.athleteId === athlete.athleteId ? { ...a, mode } : a))
                         );
                       }}
                       compact
@@ -412,7 +423,12 @@ export default function AutoregulationSettingsPage() {
                         stroke="currentColor"
                         aria-hidden="true"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                       {isExpanded ? "Hide timescales" : "Show timescales"}
                     </button>
@@ -423,8 +439,8 @@ export default function AutoregulationSettingsPage() {
                         onChange={(timescales) => {
                           setAthletes((prev) =>
                             prev.map((a) =>
-                              a.athleteId === athlete.athleteId ? { ...a, timescales } : a,
-                            ),
+                              a.athleteId === athlete.athleteId ? { ...a, timescales } : a
+                            )
                           );
                         }}
                       />
@@ -511,9 +527,7 @@ function TimescaleToggles({
             aria-checked={values[key]}
             onClick={() => onChange({ ...values, [key]: !values[key] })}
             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors ${
-              values[key]
-                ? "bg-amber-500"
-                : "bg-surface-300 dark:bg-surface-600"
+              values[key] ? "bg-amber-500" : "bg-surface-300 dark:bg-surface-600"
             }`}
           >
             <span
@@ -557,15 +571,11 @@ function SaveRow({
       )}
 
       {status === "saved" && (
-        <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-          Saved
-        </span>
+        <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Saved</span>
       )}
 
       {status === "error" && (
-        <span className="text-sm text-red-500 dark:text-red-400">
-          Save failed — try again
-        </span>
+        <span className="text-sm text-red-500 dark:text-red-400">Save failed — try again</span>
       )}
     </div>
   );

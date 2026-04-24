@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/Input";
 import type { TeamGoalItem, AthletePickerItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -163,12 +164,7 @@ function GoalForm({
           onChange={set("startingValue")}
           helper="Used to calculate progress %"
         />
-        <Input
-          label="Target Date"
-          type="date"
-          value={form.deadline}
-          onChange={set("deadline")}
-        />
+        <Input label="Target Date" type="date" value={form.deadline} onChange={set("deadline")} />
       </div>
 
       {/* Event select */}
@@ -295,10 +291,7 @@ function GoalCard({ goal, onUpdateProgress, onAbandon }: GoalCardProps) {
     <div className={`card p-4 space-y-3 ${isCompleted ? "opacity-80" : ""}`}>
       {/* Athlete label */}
       <div className="flex items-center gap-2">
-        <Avatar
-          name={`${goal.athleteFirstName} ${goal.athleteLastName}`}
-          size="xs"
-        />
+        <Avatar name={`${goal.athleteFirstName} ${goal.athleteLastName}`} size="xs" />
         <span className="text-xs font-medium text-muted">
           {goal.athleteFirstName} {goal.athleteLastName}
         </span>
@@ -487,15 +480,19 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
 
   const counts = useMemo(
     () => ({
-      all: goals.filter((g) => (athleteFilter ? g.athleteId === athleteFilter : true))
-        .filter((g) => (eventFilter ? g.event === eventFilter : true)).length,
-      active: goals.filter((g) => g.status === "ACTIVE")
+      all: goals
         .filter((g) => (athleteFilter ? g.athleteId === athleteFilter : true))
         .filter((g) => (eventFilter ? g.event === eventFilter : true)).length,
-      completed: goals.filter((g) => g.status === "COMPLETED")
+      active: goals
+        .filter((g) => g.status === "ACTIVE")
         .filter((g) => (athleteFilter ? g.athleteId === athleteFilter : true))
         .filter((g) => (eventFilter ? g.event === eventFilter : true)).length,
-      abandoned: goals.filter((g) => g.status === "ABANDONED")
+      completed: goals
+        .filter((g) => g.status === "COMPLETED")
+        .filter((g) => (athleteFilter ? g.athleteId === athleteFilter : true))
+        .filter((g) => (eventFilter ? g.event === eventFilter : true)).length,
+      abandoned: goals
+        .filter((g) => g.status === "ABANDONED")
         .filter((g) => (athleteFilter ? g.athleteId === athleteFilter : true))
         .filter((g) => (eventFilter ? g.event === eventFilter : true)).length,
     }),
@@ -503,42 +500,39 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
   );
 
   /* ── Create goal ── */
-  const handleCreate = useCallback(
-    async (form: GoalFormData) => {
-      setAddError(null);
-      startAddTransition(async () => {
-        try {
-          const res = await fetch("/api/coach/goals", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
-            body: JSON.stringify({
-              athleteId: form.athleteId,
-              title: form.title,
-              targetValue: parseFloat(form.targetValue),
-              unit: form.unit,
-              startingValue: form.startingValue ? parseFloat(form.startingValue) : null,
-              deadline: form.deadline || null,
-              event: form.event || null,
-              description: form.description || null,
-            }),
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            setAddError(data.error ?? "Failed to create goal.");
-            return;
-          }
-          // Refresh full list
-          const listRes = await fetch("/api/coach/goals");
-          const listData = await listRes.json();
-          if (listRes.ok) setGoals(listData.goals ?? []);
-          setShowAddModal(false);
-        } catch {
-          setAddError("Something went wrong.");
+  const handleCreate = useCallback(async (form: GoalFormData) => {
+    setAddError(null);
+    startAddTransition(async () => {
+      try {
+        const res = await fetch("/api/coach/goals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({
+            athleteId: form.athleteId,
+            title: form.title,
+            targetValue: parseFloat(form.targetValue),
+            unit: form.unit,
+            startingValue: form.startingValue ? parseFloat(form.startingValue) : null,
+            deadline: form.deadline || null,
+            event: form.event || null,
+            description: form.description || null,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setAddError(data.error ?? "Failed to create goal.");
+          return;
         }
-      });
-    },
-    []
-  );
+        // Refresh full list
+        const listRes = await fetch("/api/coach/goals");
+        const listData = await listRes.json();
+        if (listRes.ok) setGoals(listData.goals ?? []);
+        setShowAddModal(false);
+      } catch {
+        setAddError("Something went wrong.");
+      }
+    });
+  }, []);
 
   /* ── Update progress ── */
   const handleUpdateProgress = useCallback(async (id: string, currentValue: number) => {
@@ -573,8 +567,12 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
           )
         );
       }
-    } catch {
+    } catch (err) {
       // Silent fail — will refresh on next nav
+      logger.debug("Silent fail — will refresh on next nav", {
+        context: "src/app/(dashboard)/coach/goals/_goals-client.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, []);
 
@@ -587,12 +585,14 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
         body: JSON.stringify({ status: "ABANDONED" }),
       });
       if (res.ok) {
-        setGoals((prev) =>
-          prev.map((g) => (g.id === id ? { ...g, status: "ABANDONED" } : g))
-        );
+        setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, status: "ABANDONED" } : g)));
       }
-    } catch {
+    } catch (err) {
       // Silent fail
+      logger.debug("Silent fail", {
+        context: "src/app/(dashboard)/coach/goals/_goals-client.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, []);
 
@@ -613,9 +613,12 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
   };
 
   /* ── Group filtered goals by status ── */
-  const activeGoals = statusFilter === "ALL" ? filtered.filter((g) => g.status === "ACTIVE") : filtered;
-  const completedGoals = statusFilter === "ALL" ? filtered.filter((g) => g.status === "COMPLETED") : [];
-  const abandonedGoals = statusFilter === "ALL" ? filtered.filter((g) => g.status === "ABANDONED") : [];
+  const activeGoals =
+    statusFilter === "ALL" ? filtered.filter((g) => g.status === "ACTIVE") : filtered;
+  const completedGoals =
+    statusFilter === "ALL" ? filtered.filter((g) => g.status === "COMPLETED") : [];
+  const abandonedGoals =
+    statusFilter === "ALL" ? filtered.filter((g) => g.status === "ABANDONED") : [];
 
   return (
     <div className="space-y-6">
@@ -747,9 +750,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
       {/* Abandoned Goals */}
       {abandonedGoals.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-            Abandoned
-          </h2>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Abandoned</h2>
           <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {abandonedGoals.map((goal) => (
               <GoalCard

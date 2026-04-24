@@ -4,14 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
-import {
-  UsersRound,
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  Check,
-} from "lucide-react";
+import { UsersRound, Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -76,9 +70,7 @@ function EventPill({ event, count }: { event: string; count?: number }) {
       style={{ backgroundColor: bg }}
     >
       {label}
-      {count !== undefined && count > 0 && (
-        <span className="opacity-80">{count}</span>
-      )}
+      {count !== undefined && count > 0 && <span className="opacity-80">{count}</span>}
     </span>
   );
 }
@@ -131,9 +123,7 @@ export function TeamsClient() {
 
   // Member panel state
   const [managingTeam, setManagingTeam] = useState<TeamItem | null>(null);
-  const [selectedAthleteIds, setSelectedAthleteIds] = useState<Set<string>>(
-    new Set()
-  );
+  const [selectedAthleteIds, setSelectedAthleteIds] = useState<Set<string>>(new Set());
   const [addingMembers, setAddingMembers] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -149,9 +139,7 @@ export function TeamsClient() {
       }
       setTeams(payload.data);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Network error loading groups"
-      );
+      toast.error(err instanceof Error ? err.message : "Network error loading groups");
     }
   }, [toast]);
 
@@ -181,9 +169,7 @@ export function TeamsClient() {
         )
       );
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Network error loading roster"
-      );
+      toast.error(err instanceof Error ? err.message : "Network error loading roster");
     }
   }, [toast]);
 
@@ -231,9 +217,7 @@ export function TeamsClient() {
     setSaving(true);
     try {
       const isEdit = editingTeam !== null;
-      const url = isEdit
-        ? `/api/coach/teams/${editingTeam.id}`
-        : "/api/coach/teams";
+      const url = isEdit ? `/api/coach/teams/${editingTeam.id}` : "/api/coach/teams";
       const method = isEdit ? "PATCH" : "POST";
 
       const res = await fetch(url, {
@@ -252,9 +236,7 @@ export function TeamsClient() {
       closeForm();
       await fetchTeams();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Network error — please try again"
-      );
+      toast.error(err instanceof Error ? err.message : "Network error — please try again");
     } finally {
       setSaving(false);
     }
@@ -289,9 +271,7 @@ export function TeamsClient() {
 
       await fetchTeams();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Network error — please try again"
-      );
+      toast.error(err instanceof Error ? err.message : "Network error — please try again");
     }
   }
 
@@ -325,9 +305,7 @@ export function TeamsClient() {
     async function loadMembers() {
       setLoadingMembers(true);
       try {
-        const res = await fetch(
-          `/api/coach/athletes?teamId=${managingTeam!.id}`
-        );
+        const res = await fetch(`/api/coach/athletes?teamId=${managingTeam!.id}`);
         const payload = await res.json();
         if (res.ok && payload.success) {
           setTeamMembers(
@@ -348,8 +326,12 @@ export function TeamsClient() {
             )
           );
         }
-      } catch {
+      } catch (err) {
         // Silently fail — panel will show empty
+        logger.debug("Silently fail — panel will show empty", {
+          context: "src/app/(dashboard)/coach/teams/_teams-client.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       } finally {
         setLoadingMembers(false);
       }
@@ -377,14 +359,11 @@ export function TeamsClient() {
 
     setAddingMembers(true);
     try {
-      const res = await fetch(
-        `/api/coach/teams/${managingTeam.id}/members`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ athleteIds: Array.from(selectedAthleteIds) }),
-        }
-      );
+      const res = await fetch(`/api/coach/teams/${managingTeam.id}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ athleteIds: Array.from(selectedAthleteIds) }),
+      });
       const payload = await res.json();
 
       if (!res.ok || !payload.success) {
@@ -423,9 +402,7 @@ export function TeamsClient() {
         );
       }
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Network error — please try again"
-      );
+      toast.error(err instanceof Error ? err.message : "Network error — please try again");
     } finally {
       setAddingMembers(false);
     }
@@ -436,13 +413,10 @@ export function TeamsClient() {
 
     setRemovingId(athleteId);
     try {
-      const res = await fetch(
-        `/api/coach/teams/${managingTeam.id}/members/${athleteId}`,
-        {
-          method: "DELETE",
-          headers: { ...csrfHeaders() },
-        }
-      );
+      const res = await fetch(`/api/coach/teams/${managingTeam.id}/members/${athleteId}`, {
+        method: "DELETE",
+        headers: { ...csrfHeaders() },
+      });
       const payload = await res.json();
 
       if (!res.ok || !payload.success) {
@@ -454,9 +428,7 @@ export function TeamsClient() {
       setTeamMembers((prev) => prev.filter((m) => m.id !== athleteId));
       await fetchTeams();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Network error — please try again"
-      );
+      toast.error(err instanceof Error ? err.message : "Network error — please try again");
     } finally {
       setRemovingId(null);
     }
@@ -486,9 +458,7 @@ export function TeamsClient() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-            Groups
-          </h1>
+          <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Groups</h1>
         </div>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center mb-4">
@@ -503,8 +473,8 @@ export function TeamsClient() {
             No groups yet
           </h2>
           <p className="text-sm text-muted max-w-sm mb-6">
-            Create your first group to organize your athletes by school,
-            training group, or any way you like.
+            Create your first group to organize your athletes by school, training group, or any way
+            you like.
           </p>
           <button className="btn-primary" onClick={openCreateForm}>
             <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
@@ -519,9 +489,7 @@ export function TeamsClient() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-          Groups
-        </h1>
+        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Groups</h1>
         <button className="btn-primary" onClick={openCreateForm}>
           <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
           Create Group
@@ -570,11 +538,7 @@ export function TeamsClient() {
             </div>
           </div>
           <div className="flex items-center gap-2 pt-1">
-            <button
-              className="btn-secondary"
-              onClick={closeForm}
-              disabled={saving}
-            >
+            <button className="btn-secondary" onClick={closeForm} disabled={saving}>
               Cancel
             </button>
             <button
@@ -612,10 +576,7 @@ export function TeamsClient() {
             {loadingMembers ? (
               <div className="space-y-2">
                 {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-10 rounded-lg bg-surface-700/20 shimmer"
-                  />
+                  <div key={i} className="h-10 rounded-lg bg-surface-700/20 shimmer" />
                 ))}
               </div>
             ) : teamMembers.length === 0 ? (
@@ -659,9 +620,7 @@ export function TeamsClient() {
               Add Athletes
             </h3>
             {nonMembers.length === 0 ? (
-              <p className="text-sm text-muted">
-                All athletes are already in this group.
-              </p>
+              <p className="text-sm text-muted">All athletes are already in this group.</p>
             ) : (
               <>
                 <div className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
@@ -698,9 +657,7 @@ export function TeamsClient() {
                     disabled={selectedAthleteIds.size === 0 || addingMembers}
                   >
                     <Check size={16} strokeWidth={1.75} aria-hidden="true" />
-                    {addingMembers
-                      ? "Adding..."
-                      : `Add Selected (${selectedAthleteIds.size})`}
+                    {addingMembers ? "Adding..." : `Add Selected (${selectedAthleteIds.size})`}
                   </button>
                 </div>
               </>
@@ -714,9 +671,7 @@ export function TeamsClient() {
         {teams.map((team) => (
           <div key={team.id} className="card p-5 space-y-3">
             {/* Name */}
-            <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
-              {team.name}
-            </h3>
+            <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">{team.name}</h3>
 
             {/* Description */}
             {team.description ? (
@@ -741,10 +696,7 @@ export function TeamsClient() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 pt-2">
-              <button
-                className="btn-secondary text-sm"
-                onClick={() => openMemberPanel(team)}
-              >
+              <button className="btn-secondary text-sm" onClick={() => openMemberPanel(team)}>
                 Members
               </button>
               <button

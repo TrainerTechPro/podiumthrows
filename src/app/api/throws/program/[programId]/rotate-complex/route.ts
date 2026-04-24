@@ -62,8 +62,12 @@ export async function POST(req: NextRequest, { params }: Params) {
     try {
       const parsed = JSON.parse(activePhase.exerciseComplex || "[]");
       currentComplex = Array.isArray(parsed) ? parsed : [];
-    } catch {
-      /* empty */
+    } catch (err) {
+      // empty
+      logger.debug("empty", {
+        context: "src/app/api/throws/program/[programId]/rotate-complex/route.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
 
     // Gather previous complexes from all phases
@@ -83,8 +87,12 @@ export async function POST(req: NextRequest, { params }: Params) {
     let generationConfig: Record<string, unknown> = {};
     try {
       generationConfig = JSON.parse(program.generationConfig || "{}");
-    } catch {
-      /* empty */
+    } catch (err) {
+      // empty
+      logger.debug("empty", {
+        context: "src/app/api/throws/program/[programId]/rotate-complex/route.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
 
     // Build a minimal ProgramConfig from generation config + program data

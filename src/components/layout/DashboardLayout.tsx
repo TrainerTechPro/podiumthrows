@@ -17,6 +17,7 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 import { QuickActions } from "@/components/ui/QuickActions";
 import { useDetectTimezone } from "@/hooks/useDetectTimezone";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -125,8 +126,12 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
   async function handleLogout() {
     try {
       await fetch("/api/auth/logout", { method: "POST", headers: csrfHeaders() });
-    } catch {
-      /* proceed anyway */
+    } catch (err) {
+      // proceed anyway
+      logger.debug("proceed anyway", {
+        context: "src/components/layout/DashboardLayout.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     router.push("/login");
   }

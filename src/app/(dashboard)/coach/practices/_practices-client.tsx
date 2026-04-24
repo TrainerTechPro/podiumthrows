@@ -25,6 +25,7 @@ import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { PracticeListItem, ConflictAthlete } from "@/lib/data/practices";
+import { logger } from "@/lib/logger";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -102,8 +103,7 @@ function PracticeCard({ practice }: { practice: PracticeListItem }) {
   const dayAbbr = DAY_ABBR[d.getDay()];
   const dayNum = d.getDate();
 
-  const isToday =
-    practice.date === new Date().toISOString().split("T")[0];
+  const isToday = practice.date === new Date().toISOString().split("T")[0];
 
   return (
     <Link
@@ -141,9 +141,7 @@ function PracticeCard({ practice }: { practice: PracticeListItem }) {
           <h3 className="font-heading text-base font-semibold text-[var(--foreground)] leading-tight">
             {practice.title}
           </h3>
-          {practice.status === "CANCELLED" && (
-            <Badge variant="danger">Cancelled</Badge>
-          )}
+          {practice.status === "CANCELLED" && <Badge variant="danger">Cancelled</Badge>}
         </div>
 
         {/* Time */}
@@ -232,10 +230,7 @@ function ConflictSidebar({
                   </p>
                   <ul className="space-y-1">
                     {entry.conflicts.map((c) => (
-                      <li
-                        key={c.athleteId}
-                        className="flex items-start gap-1.5 text-xs text-muted"
-                      >
+                      <li key={c.athleteId} className="flex items-start gap-1.5 text-xs text-muted">
                         <AlertTriangle
                           size={11}
                           strokeWidth={2}
@@ -269,7 +264,12 @@ function ConflictSidebar({
           className="w-full flex items-center justify-between px-4 py-3 card text-sm font-medium text-[var(--foreground)]"
         >
           <span className="flex items-center gap-2">
-            <AlertTriangle size={15} strokeWidth={1.75} aria-hidden="true" className="text-warning-500" />
+            <AlertTriangle
+              size={15}
+              strokeWidth={1.75}
+              aria-hidden="true"
+              className="text-warning-500"
+            />
             Conflict Summary
             {hasAny && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-warning-500/15 text-warning-600 dark:text-warning-400">
@@ -284,17 +284,13 @@ function ConflictSidebar({
             className={`transition-transform duration-200 ${mobileOpen ? "rotate-90" : ""}`}
           />
         </button>
-        {mobileOpen && (
-          <div className="card mt-1 px-4 py-4">{content}</div>
-        )}
+        {mobileOpen && <div className="card mt-1 px-4 py-4">{content}</div>}
       </div>
     );
   }
 
   return (
-    <aside className="hidden lg:block card px-5 py-5 self-start sticky top-6">
-      {content}
-    </aside>
+    <aside className="hidden lg:block card px-5 py-5 self-start sticky top-6">{content}</aside>
   );
 }
 
@@ -305,13 +301,7 @@ interface EventGroup {
   name: string;
 }
 
-function NewPracticeModal({
-  onClose,
-  onCreated,
-}: {
-  onClose: () => void;
-  onCreated: () => void;
-}) {
+function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { success, error: showError } = useToast();
 
   const [title, setTitle] = useState("");
@@ -333,26 +323,32 @@ function NewPracticeModal({
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
 
   // Fetch event groups when "specific group" is selected
-  const handleTargetSwitch = useCallback(async (all: boolean) => {
-    setTargetAll(all);
-    if (!all && groups.length === 0) {
-      setGroupsLoading(true);
-      try {
-        const res = await fetch("/api/coach/event-groups");
-        if (res.ok) {
-          const data = await res.json();
-          setGroups(Array.isArray(data.data) ? data.data : []);
+  const handleTargetSwitch = useCallback(
+    async (all: boolean) => {
+      setTargetAll(all);
+      if (!all && groups.length === 0) {
+        setGroupsLoading(true);
+        try {
+          const res = await fetch("/api/coach/event-groups");
+          if (res.ok) {
+            const data = await res.json();
+            setGroups(Array.isArray(data.data) ? data.data : []);
+          }
+        } catch (err) {
+          // ignore
+          logger.debug("ignore", {
+            context: "src/app/(dashboard)/coach/practices/_practices-client.tsx",
+            metadata: { reason: err instanceof Error ? err.message : "unknown" },
+          });
+        } finally {
+          setGroupsLoading(false);
         }
-      } catch {
-        // ignore
-      } finally {
-        setGroupsLoading(false);
       }
-    }
-  }, [groups.length]);
+    },
+    [groups.length]
+  );
 
-  const instanceCount =
-    recurringEnabled && untilDate ? countWeeklyInstances(date, untilDate) : 0;
+  const instanceCount = recurringEnabled && untilDate ? countWeeklyInstances(date, untilDate) : 0;
 
   async function handleSave() {
     if (!title.trim() || !date || !startTime || !endTime) return;
@@ -455,12 +451,7 @@ function NewPracticeModal({
         />
 
         {/* Date */}
-        <Input
-          label="Date"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
 
         {/* Time row */}
         <div className="grid grid-cols-2 gap-3">
@@ -604,11 +595,14 @@ function NewPracticeModal({
               />
               {instanceCount > 0 && (
                 <p className="text-xs text-muted flex items-center gap-1.5">
-                  <RotateCcw size={11} strokeWidth={2} aria-hidden="true" className="text-primary-500" />
+                  <RotateCcw
+                    size={11}
+                    strokeWidth={2}
+                    aria-hidden="true"
+                    className="text-primary-500"
+                  />
                   Will create{" "}
-                  <span className="font-mono font-semibold text-primary-500">
-                    {instanceCount}
-                  </span>{" "}
+                  <span className="font-mono font-semibold text-primary-500">{instanceCount}</span>{" "}
                   weekly instances until{" "}
                   {parseDateLocal(untilDate).toLocaleDateString("en-US", {
                     month: "short",
@@ -623,7 +617,12 @@ function NewPracticeModal({
         {/* Conflict warning (inline) */}
         {conflictWarning && (
           <div className="flex items-start gap-2 p-3 rounded-xl bg-warning-500/10 border border-warning-500/20 text-sm text-warning-700 dark:text-warning-400">
-            <AlertTriangle size={15} strokeWidth={1.75} aria-hidden="true" className="shrink-0 mt-0.5" />
+            <AlertTriangle
+              size={15}
+              strokeWidth={1.75}
+              aria-hidden="true"
+              className="shrink-0 mt-0.5"
+            />
             <span>{conflictWarning}</span>
           </div>
         )}
@@ -653,9 +652,7 @@ export function PracticesClient({
   const fetchPractices = useCallback(async (start: string, end: string) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/coach/practices?startDate=${start}&endDate=${end}`
-      );
+      const res = await fetch(`/api/coach/practices?startDate=${start}&endDate=${end}`);
       if (res.ok) {
         const json = await res.json();
         setPractices(json.data ?? []);
@@ -712,12 +709,8 @@ export function PracticesClient({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-[var(--foreground)]">
-            Practices
-          </h1>
-          <p className="text-sm text-muted mt-1">
-            Schedule and manage team practice sessions
-          </p>
+          <h1 className="font-heading text-2xl font-bold text-[var(--foreground)]">Practices</h1>
+          <p className="text-sm text-muted mt-1">Schedule and manage team practice sessions</p>
         </div>
         <Button onClick={() => setShowNewModal(true)} className="sm:shrink-0">
           <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
@@ -751,7 +744,12 @@ export function PracticesClient({
         <span className="flex-1 text-sm font-semibold text-[var(--foreground)] text-center sm:text-left">
           {formatWeekRange(startDate, endDate)}
           {loading && (
-            <Loader2 size={13} strokeWidth={2} className="inline-block ml-2 animate-spin text-muted" aria-hidden="true" />
+            <Loader2
+              size={13}
+              strokeWidth={2}
+              className="inline-block ml-2 animate-spin text-muted"
+              aria-hidden="true"
+            />
           )}
         </span>
 
@@ -800,9 +798,7 @@ export function PracticesClient({
           {/* Weekly summary */}
           {practices.length > 0 && (
             <div className="hidden lg:block card px-5 py-4 mt-3 space-y-2">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wider">
-                This Week
-              </p>
+              <p className="text-xs font-semibold text-muted uppercase tracking-wider">This Week</p>
               <div className="flex items-center gap-4 text-sm">
                 <div className="text-center">
                   <p className="font-mono text-xl font-bold text-[var(--foreground)] tabular-nums">

@@ -149,8 +149,12 @@ export async function DELETE(
           data: { preferences: JSON.stringify(prefs) },
         });
       }
-    } catch {
+    } catch (err) {
       // Non-critical — preference cleanup is best-effort
+      logger.debug("Non-critical — preference cleanup is best-effort", {
+        context: "src/app/api/coach/teams/[teamId]/route.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
 
     return NextResponse.json({ success: true, data: null });

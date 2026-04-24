@@ -21,6 +21,7 @@ import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { BestWindow, AthleteAvailabilitySummary } from "@/lib/data/availability";
 import type { AthletePickerItem } from "@/lib/data/coach";
+import { logger } from "@/lib/logger";
 
 const EXCLUDE_INJURED_KEY = "availability:excludeInjured";
 
@@ -98,17 +99,13 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
         <div className="flex items-start gap-3">
           {/* Rank badge */}
           <div className="flex-shrink-0 w-7 h-7 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center mt-0.5">
-            <span className="text-xs font-mono font-semibold text-muted tabular-nums">
-              {rank}
-            </span>
+            <span className="text-xs font-mono font-semibold text-muted tabular-nums">{rank}</span>
           </div>
 
           <div className="flex-1 min-w-0 space-y-2">
             {/* Day + time */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-sm font-semibold text-[var(--foreground)]">
-                {win.dayLabel}
-              </span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">{win.dayLabel}</span>
               <span className="font-mono tabular-nums text-sm text-muted">
                 {formatTime(win.startTime)} – {formatTime(win.endTime)}
               </span>
@@ -136,7 +133,11 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
                 {expanded ? (
                   <ChevronUp className="w-4 h-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-muted" strokeWidth={1.75} aria-hidden="true" />
+                  <ChevronDown
+                    className="w-4 h-4 text-muted"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
                 )}
               </div>
             </div>
@@ -151,7 +152,11 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
           {availableAthletes.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-success-500 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                <CheckCircle2
+                  className="w-3.5 h-3.5 text-success-500 shrink-0"
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                />
                 <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                   Available ({availableAthletes.length})
                 </span>
@@ -159,16 +164,17 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
               <div className="space-y-1">
                 {availableAthletes.map((a) => {
                   const info = athleteMap.get(a.athleteId);
-                  const name = info
-                    ? `${info.firstName} ${info.lastName}`
-                    : a.athleteName;
+                  const name = info ? `${info.firstName} ${info.lastName}` : a.athleteName;
                   return (
                     <Link
                       key={a.athleteId}
                       href={`/coach/athletes/${a.athleteId}`}
                       className="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors group"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-success-500 shrink-0" aria-hidden="true" />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-success-500 shrink-0"
+                        aria-hidden="true"
+                      />
                       <span className="text-sm text-[var(--foreground)] group-hover:text-primary-500 transition-colors">
                         {name}
                       </span>
@@ -183,7 +189,11 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
           {conflictWithData.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <XCircle className="w-3.5 h-3.5 text-danger-500 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                <XCircle
+                  className="w-3.5 h-3.5 text-danger-500 shrink-0"
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                />
                 <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                   Conflicts ({conflictWithData.length})
                 </span>
@@ -202,14 +212,15 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
                       href={`/coach/athletes/${c.id}`}
                       className="flex items-start gap-2 py-1 px-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors group"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-danger-500 shrink-0 mt-1.5" aria-hidden="true" />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-danger-500 shrink-0 mt-1.5"
+                        aria-hidden="true"
+                      />
                       <div className="min-w-0">
                         <span className="text-sm text-[var(--foreground)] group-hover:text-primary-500 transition-colors">
                           {c.name}
                         </span>
-                        {reason && (
-                          <span className="text-xs text-muted ml-2">— {reason}</span>
-                        )}
+                        {reason && <span className="text-xs text-muted ml-2">— {reason}</span>}
                       </div>
                     </Link>
                   );
@@ -222,7 +233,11 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
           {noDataAthletes.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <HelpCircle className="w-3.5 h-3.5 text-muted shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                <HelpCircle
+                  className="w-3.5 h-3.5 text-muted shrink-0"
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                />
                 <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                   No Data ({noDataAthletes.length})
                 </span>
@@ -230,16 +245,17 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
               <div className="space-y-1">
                 {noDataAthletes.map((a) => {
                   const info = athleteMap.get(a.athleteId);
-                  const name = info
-                    ? `${info.firstName} ${info.lastName}`
-                    : a.athleteName;
+                  const name = info ? `${info.firstName} ${info.lastName}` : a.athleteName;
                   return (
                     <Link
                       key={a.athleteId}
                       href={`/coach/athletes/${a.athleteId}`}
                       className="flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors group"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-surface-400 shrink-0" aria-hidden="true" />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-surface-400 shrink-0"
+                        aria-hidden="true"
+                      />
                       <span className="text-sm text-muted group-hover:text-primary-500 transition-colors">
                         {name}
                       </span>
@@ -275,9 +291,7 @@ export function AvailabilityDashboard({
   });
 
   // Build an id → AthletePickerItem map for fast name lookups
-  const athleteMap = new Map<string, AthletePickerItem>(
-    athletes.map((a) => [a.id, a])
-  );
+  const athleteMap = new Map<string, AthletePickerItem>(athletes.map((a) => [a.id, a]));
 
   const athletesWithAvailability = data.athletes.filter((a) => a.blocks.length > 0).length;
   const athletesWithout = data.totalAthletes - athletesWithAvailability;
@@ -311,8 +325,12 @@ export function AvailabilityDashboard({
     setExcludeInjured(next);
     try {
       localStorage.setItem(EXCLUDE_INJURED_KEY, String(next));
-    } catch {
+    } catch (err) {
       // localStorage blocked (private browsing etc.) — silently ignore
+      logger.debug("localStorage blocked (private browsing etc.) — silently ignore", {
+        context: "src/app/(dashboard)/coach/availability/_availability-dashboard.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     await fetchData(selectedGroupId, next);
   }
@@ -348,9 +366,7 @@ export function AvailabilityDashboard({
                 "relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
                 "disabled:opacity-50",
-                excludeInjured
-                  ? "bg-primary-500"
-                  : "bg-surface-300 dark:bg-surface-600",
+                excludeInjured ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600",
               ].join(" ")}
             >
               <span
@@ -360,18 +376,13 @@ export function AvailabilityDashboard({
                 ].join(" ")}
               />
             </button>
-            <span className="text-sm text-muted whitespace-nowrap">
-              Exclude injured
-            </span>
+            <span className="text-sm text-muted whitespace-nowrap">Exclude injured</span>
           </label>
 
           {/* Event group filter */}
           {eventGroups.length > 0 && (
             <div className="flex items-center gap-2">
-              <label
-                htmlFor="group-filter"
-                className="text-sm text-muted whitespace-nowrap"
-              >
+              <label htmlFor="group-filter" className="text-sm text-muted whitespace-nowrap">
                 Group
               </label>
               <select
@@ -403,15 +414,17 @@ export function AvailabilityDashboard({
           <div className="text-2xl font-bold font-mono tabular-nums text-[var(--foreground)]">
             <AnimatedNumber value={data.totalAthletes} />
           </div>
-          <p className="text-xs text-muted uppercase tracking-wider font-semibold mt-1">
-            Total
-          </p>
+          <p className="text-xs text-muted uppercase tracking-wider font-semibold mt-1">Total</p>
         </div>
 
         {/* Submitted */}
         <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <ClipboardList className="w-4 h-4 text-success-500" strokeWidth={1.75} aria-hidden="true" />
+            <ClipboardList
+              className="w-4 h-4 text-success-500"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
           </div>
           <div className="text-2xl font-bold font-mono tabular-nums text-success-500">
             <AnimatedNumber value={athletesWithAvailability} />
@@ -430,12 +443,12 @@ export function AvailabilityDashboard({
               aria-hidden="true"
             />
           </div>
-          <div className={`text-2xl font-bold font-mono tabular-nums ${athletesWithout > 0 ? "text-warning-500" : "text-muted"}`}>
+          <div
+            className={`text-2xl font-bold font-mono tabular-nums ${athletesWithout > 0 ? "text-warning-500" : "text-muted"}`}
+          >
             <AnimatedNumber value={athletesWithout} />
           </div>
-          <p className="text-xs text-muted uppercase tracking-wider font-semibold mt-1">
-            Missing
-          </p>
+          <p className="text-xs text-muted uppercase tracking-wider font-semibold mt-1">Missing</p>
         </div>
       </div>
 
@@ -443,18 +456,21 @@ export function AvailabilityDashboard({
       {missingAthletes.length > 0 && (
         <div className="rounded-xl border border-warning-500/30 bg-warning-500/8 px-4 py-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-4 h-4 text-warning-500 shrink-0 mt-0.5" strokeWidth={1.75} aria-hidden="true" />
+            <AlertCircle
+              className="w-4 h-4 text-warning-500 shrink-0 mt-0.5"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-warning-700 dark:text-warning-400">
                 {missingAthletes.length}{" "}
-                {missingAthletes.length === 1 ? "athlete hasn't" : "athletes haven't"} submitted their availability yet
+                {missingAthletes.length === 1 ? "athlete hasn't" : "athletes haven't"} submitted
+                their availability yet
               </p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                 {missingAthletes.map((a) => {
                   const info = athleteMap.get(a.athleteId);
-                  const name = info
-                    ? `${info.firstName} ${info.lastName}`
-                    : a.athleteName;
+                  const name = info ? `${info.firstName} ${info.lastName}` : a.athleteName;
                   return (
                     <Link
                       key={a.athleteId}

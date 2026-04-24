@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -174,8 +175,12 @@ function loadPrefs(role: string): QuickActionsPrefs {
             : ATHLETE_DEFAULTS,
       };
     }
-  } catch {
-    /* corrupted */
+  } catch (err) {
+    // corrupted
+    logger.debug("corrupted", {
+      context: "src/components/ui/QuickActions.tsx",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
   return {
     enabled: true,
@@ -188,8 +193,12 @@ function savePrefs(role: string, prefs: QuickActionsPrefs) {
   try {
     localStorage.setItem(`${STORAGE_KEY}-${role.toLowerCase()}`, JSON.stringify(prefs));
     window.dispatchEvent(new CustomEvent("quick-actions-prefs-change"));
-  } catch {
-    /* quota / private */
+  } catch (err) {
+    // quota / private
+    logger.debug("quota / private", {
+      context: "src/components/ui/QuickActions.tsx",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
 }
 

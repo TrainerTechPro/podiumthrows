@@ -64,8 +64,12 @@ export default async function AthletesPage({
       } else if (prefs.lastTeamId === "unassigned") {
         resolvedTeamId = "unassigned";
       }
-    } catch {
-      /* ignore parse error */
+    } catch (err) {
+      // ignore parse error
+      logger.debug("ignore parse error", {
+        context: "src/app/(dashboard)/coach/athletes/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
   // Validate that selected team still exists (might have been deleted)

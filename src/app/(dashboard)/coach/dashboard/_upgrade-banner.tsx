@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, UpgradeModal, useModal } from "@/components";
 import type { PlanName } from "@/lib/stripe";
+import { logger } from "@/lib/logger";
 
 interface UpgradeBannerProps {
   athleteCount: number;
@@ -22,7 +23,16 @@ export function UpgradeBanner({ athleteCount, planLimit }: UpgradeBannerProps) {
 
   function handleDismiss() {
     setDismissed(true);
-    try { sessionStorage.setItem("podium-upgrade-banner-dismissed", "true"); } catch {}
+    try {
+      sessionStorage.setItem("podium-upgrade-banner-dismissed", "true");
+    } catch (err) {
+      // sessionStorage unavailable (private mode / quota) — non-fatal,
+      // banner will just reappear on next session.
+      logger.debug("Failed to persist upgrade-banner dismissal", {
+        context: "coach/dashboard/_upgrade-banner",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
+    }
   }
 
   return (
@@ -30,7 +40,18 @@ export function UpgradeBanner({ athleteCount, planLimit }: UpgradeBannerProps) {
       <div className="relative rounded-xl border border-primary-200 dark:border-primary-500/20 bg-primary-50/50 dark:bg-primary-500/5 px-4 sm:px-5 py-4">
         <div className="flex items-start gap-3 sm:gap-4">
           <div className="w-9 h-9 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0 mt-0.5">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500" aria-hidden="true">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-primary-500"
+              aria-hidden="true"
+            >
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
           </div>
@@ -64,9 +85,7 @@ export function UpgradeBanner({ athleteCount, planLimit }: UpgradeBannerProps) {
         open={modal.open}
         onClose={modal.onClose}
         reason={
-          atLimit
-            ? `You've reached your ${planLimit}-athlete limit on the Free plan.`
-            : undefined
+          atLimit ? `You've reached your ${planLimit}-athlete limit on the Free plan.` : undefined
         }
         currentPlan={"FREE" as PlanName}
       />

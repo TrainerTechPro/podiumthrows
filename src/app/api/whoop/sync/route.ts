@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     });
 
     if (!athlete) {
-      return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Athlete profile not found" },
+        { status: 404 }
+      );
     }
 
     const connection = await prisma.whoopConnection.findUnique({
@@ -34,15 +37,22 @@ export async function POST(request: Request) {
     });
 
     if (!connection) {
-      return NextResponse.json({ success: false, error: "No WHOOP connection found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "No WHOOP connection found" },
+        { status: 404 }
+      );
     }
 
     // Check if this is a sync-mode update (no data sync needed)
     let body: Record<string, unknown> = {};
     try {
       body = await request.json();
-    } catch {
+    } catch (err) {
       // Empty body is fine — means a normal sync request
+      logger.debug("Empty body is fine — means a normal sync request", {
+        context: "src/app/api/whoop/sync/route.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
 
     if (body.updateSyncMode) {
@@ -66,14 +76,18 @@ export async function POST(request: Request) {
 
     if (isReauthError(message)) {
       return NextResponse.json(
-        { success: false, error: "reauth_required", detail: "Your WHOOP authorization has expired. Please reconnect your WHOOP." },
-        { status: 401 },
+        {
+          success: false,
+          error: "reauth_required",
+          detail: "Your WHOOP authorization has expired. Please reconnect your WHOOP.",
+        },
+        { status: 401 }
       );
     }
 
     return NextResponse.json(
       { success: false, error: "WHOOP sync failed", detail: message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

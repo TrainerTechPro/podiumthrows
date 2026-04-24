@@ -38,6 +38,7 @@ import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { PRCelebration } from "@/components/ui/PRCelebration";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { SessionRecap, WellnessValue } from "@/lib/data/session-recap";
+import { logger } from "@/lib/logger";
 
 /* ─── Types & constants ──────────────────────────────────────────────────── */
 
@@ -100,7 +101,8 @@ export function RecapClient({
   // Show the PR splash once on mount if any PRs exist (and at least one is
   // not a first-time-at-this-weight — a "first attempt PR" isn't worth a splash).
   const celebratedPR = useMemo(
-    () => recap.personalRecords.find((pr) => !pr.isFirstAttempt) ?? recap.personalRecords[0] ?? null,
+    () =>
+      recap.personalRecords.find((pr) => !pr.isFirstAttempt) ?? recap.personalRecords[0] ?? null,
     [recap.personalRecords]
   );
   const [showSplash, setShowSplash] = useState(() => celebratedPR != null);
@@ -144,18 +146,15 @@ export function RecapClient({
     setWellnessSaving(true);
     setWellnessError(null);
     try {
-      const res = await fetch(
-        `/api/athlete/session-recap/${recap.session.id}/wellness`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({
-            legs: wellness.legs,
-            energy: wellness.energy,
-            focus: wellness.focus,
-          }),
-        }
-      );
+      const res = await fetch(`/api/athlete/session-recap/${recap.session.id}/wellness`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({
+          legs: wellness.legs,
+          energy: wellness.energy,
+          focus: wellness.focus,
+        }),
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setWellnessError(data.error ?? "Could not save check-in.");
@@ -174,13 +173,10 @@ export function RecapClient({
     setNotifying(true);
     setNotifyError(null);
     try {
-      const res = await fetch(
-        `/api/athlete/session-recap/${recap.session.id}/notify-coach`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        }
-      );
+      const res = await fetch(`/api/athlete/session-recap/${recap.session.id}/notify-coach`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setNotifyError(data.error ?? "Could not send.");
@@ -202,15 +198,23 @@ export function RecapClient({
         await navigator.share({ text, title: "My top throw" });
         return;
       }
-    } catch {
+    } catch (err) {
       // Fall through to clipboard
+      logger.debug("Fall through to clipboard", {
+        context: "src/app/(dashboard)/athlete/sessions/[id]/recap/_recap-client.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     try {
       await navigator.clipboard.writeText(text);
       setShareCopied(true);
       setTimeout(() => setShareCopied(false), 2000);
-    } catch {
+    } catch (err) {
       // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/athlete/sessions/[id]/recap/_recap-client.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -260,10 +264,7 @@ export function RecapClient({
         className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-24 space-y-6"
       >
         {/* Header row */}
-        <motion.div
-          variants={sectionVariants}
-          className="flex items-start justify-between gap-4"
-        >
+        <motion.div variants={sectionVariants} className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
@@ -288,11 +289,7 @@ export function RecapClient({
         {/* Hero stats */}
         <motion.div variants={sectionVariants} className="card p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <HeroStat
-              label="Throws"
-              value={recap.summary.totalThrows}
-              decimals={0}
-            />
+            <HeroStat label="Throws" value={recap.summary.totalThrows} decimals={0} />
             <HeroStat
               label="Best"
               value={recap.summary.bestThrow?.distance ?? 0}
@@ -307,11 +304,7 @@ export function RecapClient({
               suffix="m"
               muted={recap.summary.averageDistance == null}
             />
-            <HeroStat
-              label="Implements"
-              value={recap.summary.implementsUsed.length}
-              decimals={0}
-            />
+            <HeroStat label="Implements" value={recap.summary.implementsUsed.length} decimals={0} />
           </div>
           {recap.summary.implementsUsed.length > 0 && (
             <div className="mt-4 pt-4 border-t border-[var(--card-border)] flex flex-wrap gap-2">
@@ -370,10 +363,7 @@ export function RecapClient({
 
         {/* Streak */}
         {recap.streak.current > 0 && (
-          <motion.div
-            variants={sectionVariants}
-            className="card p-5 flex items-center gap-4"
-          >
+          <motion.div variants={sectionVariants} className="card p-5 flex items-center gap-4">
             <div
               className="h-12 w-12 rounded-full flex items-center justify-center bg-amber-500/10"
               aria-hidden="true"
@@ -423,9 +413,7 @@ export function RecapClient({
             </div>
             <p className="mt-1 text-sm text-muted">
               {formatEventLabel(recap.topThrow.event)} ·{" "}
-              <span className="font-mono tabular-nums">
-                {recap.topThrow.implementWeight}kg
-              </span>
+              <span className="font-mono tabular-nums">{recap.topThrow.implementWeight}kg</span>
             </p>
             <button
               type="button"
@@ -465,10 +453,7 @@ export function RecapClient({
 
           <div className="space-y-3">
             {WELLNESS_QUESTIONS.map((q) => (
-              <div
-                key={q.key}
-                className="flex items-center justify-between gap-3"
-              >
+              <div key={q.key} className="flex items-center justify-between gap-3">
                 <span className="text-sm font-medium text-[var(--foreground)] w-16 shrink-0">
                   {q.prompt}
                 </span>
@@ -479,9 +464,7 @@ export function RecapClient({
                       <button
                         key={opt.value}
                         type="button"
-                        onClick={() =>
-                          setWellness((prev) => ({ ...prev, [q.key]: opt.value }))
-                        }
+                        onClick={() => setWellness((prev) => ({ ...prev, [q.key]: opt.value }))}
                         disabled={wellnessSaved && !wellnessSaving}
                         aria-label={`${q.prompt}: ${opt.label}`}
                         aria-pressed={active}
@@ -494,9 +477,7 @@ export function RecapClient({
                         <span aria-hidden="true" className="text-lg leading-none">
                           {opt.emoji}
                         </span>
-                        <span className="hidden sm:inline text-xs font-medium">
-                          {opt.label}
-                        </span>
+                        <span className="hidden sm:inline text-xs font-medium">{opt.label}</span>
                       </button>
                     );
                   })}
@@ -505,9 +486,7 @@ export function RecapClient({
             ))}
           </div>
 
-          {wellnessError && (
-            <p className="mt-3 text-xs text-red-500">{wellnessError}</p>
-          )}
+          {wellnessError && <p className="mt-3 text-xs text-red-500">{wellnessError}</p>}
 
           {!wellnessSaved && (
             <button
@@ -580,11 +559,7 @@ function HeroStat({
       </p>
       <p
         className={`mt-1 text-2xl sm:text-3xl font-bold font-mono tabular-nums ${
-          emphasized
-            ? "text-amber-500"
-            : muted
-              ? "text-muted"
-              : "text-[var(--foreground)]"
+          emphasized ? "text-amber-500" : muted ? "text-muted" : "text-[var(--foreground)]"
         }`}
       >
         {muted && value === 0 ? (
@@ -600,11 +575,7 @@ function HeroStat({
   );
 }
 
-function PRCard({
-  pr,
-}: {
-  pr: SessionRecap["personalRecords"][number];
-}) {
+function PRCard({ pr }: { pr: SessionRecap["personalRecords"][number] }) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -622,11 +593,7 @@ function PRCard({
         />
         <div className="relative">
           <div className="flex items-center gap-2">
-            <Trophy
-              className="h-4 w-4 text-amber-500"
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
+            <Trophy className="h-4 w-4 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-500">
               New Personal Best
             </p>
@@ -639,15 +606,11 @@ function PRCard({
 
           <p className="mt-1 text-sm text-[var(--foreground)]">
             {formatEventLabel(pr.event)} ·{" "}
-            <span className="font-mono tabular-nums text-muted">
-              {pr.implementWeight}kg
-            </span>
+            <span className="font-mono tabular-nums text-muted">{pr.implementWeight}kg</span>
           </p>
 
           {pr.isFirstAttempt ? (
-            <p className="mt-3 text-xs font-medium text-muted">
-              First attempt at this weight
-            </p>
+            <p className="mt-3 text-xs font-medium text-muted">First attempt at this weight</p>
           ) : pr.previousDistance != null && pr.delta != null ? (
             <div className="mt-3 flex items-baseline gap-2 flex-wrap">
               <span className="text-xs text-muted">Previous:</span>
@@ -681,11 +644,7 @@ function ComparisonStat({
   const isNeutral = delta == null || delta === 0;
 
   const Icon = isPositive ? TrendingUp : isNegative ? TrendingDown : Minus;
-  const colorClass = isPositive
-    ? "text-emerald-500"
-    : isNegative
-      ? "text-red-500"
-      : "text-muted";
+  const colorClass = isPositive ? "text-emerald-500" : isNegative ? "text-red-500" : "text-muted";
 
   return (
     <div>
@@ -704,9 +663,7 @@ function ComparisonStat({
           </>
         )}
       </p>
-      {isNeutral && delta === 0 && (
-        <p className="text-xs text-muted mt-0.5">No change</p>
-      )}
+      {isNeutral && delta === 0 && <p className="text-xs text-muted mt-0.5">No change</p>}
     </div>
   );
 }

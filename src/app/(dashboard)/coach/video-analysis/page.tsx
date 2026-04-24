@@ -8,6 +8,7 @@ import { VideoAnalysisCard } from "@/components/video-analysis/VideoAnalysisCard
 import { AnalysisSummary, type LatestInsight } from "@/components/video-analysis/AnalysisSummary";
 import { getAnglesWithStatus, type ThrowAngles } from "@/lib/pose-angles";
 import { AthleteFilter } from "./_athlete-filter";
+import { logger } from "@/lib/logger";
 
 export const metadata = { title: "Pose Analysis — Podium Throws" };
 
@@ -25,11 +26,7 @@ const SUMMARY_LABELS: Record<string, string> = {
   blockLegKnee: "Block Knee",
 };
 
-export default async function VideoAnalysisPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function VideoAnalysisPage({ searchParams }: { searchParams: SearchParams }) {
   let coach;
   try {
     const session = await requireCoachSession();
@@ -79,9 +76,7 @@ export default async function VideoAnalysisPage({
 
   // Latest completed analysis with key angle data
   let latestInsight: LatestInsight | null = null;
-  const latestCompleted = analyses.find(
-    (a) => a.status === "COMPLETED" && a.keyPositions,
-  );
+  const latestCompleted = analyses.find((a) => a.status === "COMPLETED" && a.keyPositions);
 
   if (latestCompleted) {
     type KPJson = { positions?: Array<{ label: string; angles?: Record<string, number> }> };
@@ -101,8 +96,12 @@ export default async function VideoAnalysisPage({
             degrees: a.degrees,
             status: a.status,
           }));
-      } catch {
+      } catch (err) {
         // Malformed angle data in JSON — skip silently
+        logger.debug("Malformed angle data in JSON — skip silently", {
+          context: "src/app/(dashboard)/coach/video-analysis/page.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       }
     }
 
@@ -138,7 +137,10 @@ export default async function VideoAnalysisPage({
             <Radio size={16} strokeWidth={2} aria-hidden="true" />
             Go Live
           </Link>
-          <Link href="/coach/video-analysis/upload" className="btn-primary flex items-center gap-1.5">
+          <Link
+            href="/coach/video-analysis/upload"
+            className="btn-primary flex items-center gap-1.5"
+          >
             <Upload size={16} strokeWidth={2} aria-hidden="true" />
             Upload Video
           </Link>

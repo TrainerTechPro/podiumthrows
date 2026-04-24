@@ -2,6 +2,7 @@
 // Queued items are automatically replayed when connectivity resumes.
 
 import { openDB, idbGetAll, idbPut, idbDelete } from "./idb";
+import { logger } from "@/lib/logger";
 
 const STORE = "sync-queue";
 
@@ -55,10 +56,18 @@ export async function queueAttempt(
   try {
     const registration = await navigator.serviceWorker?.ready;
     if (registration && "sync" in registration) {
-      await (registration as ServiceWorkerRegistration & { sync: { register(tag: string): Promise<void> } }).sync.register("sync-attempts");
+      await (
+        registration as ServiceWorkerRegistration & {
+          sync: { register(tag: string): Promise<void> };
+        }
+      ).sync.register("sync-attempts");
     }
-  } catch {
+  } catch (err) {
     // Background Sync not supported (iOS Safari) — fallback handled by useSyncQueue
+    logger.debug("Background Sync not supported (iOS Safari) — fallback handled by useSyncQueue", {
+      context: "src/lib/pwa/sync-queue.ts",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
 
   return item;
@@ -67,15 +76,12 @@ export async function queueAttempt(
 /**
  * Get all pending (unsynced) attempts, optionally filtered by sessionId.
  */
-export async function getPendingAttempts(
-  sessionId?: string
-): Promise<QueuedAttempt[]> {
+export async function getPendingAttempts(sessionId?: string): Promise<QueuedAttempt[]> {
   const db = await openDB();
   const all = await idbGetAll<QueuedAttempt>(db, STORE);
   db.close();
   return all.filter(
-    (item) =>
-      item.status === "pending" && (!sessionId || item.sessionId === sessionId)
+    (item) => item.status === "pending" && (!sessionId || item.sessionId === sessionId)
   );
 }
 
@@ -92,10 +98,7 @@ export async function getPendingCount(): Promise<number> {
 /**
  * Mark an item as synced.
  */
-export async function markSynced(
-  id: string,
-  serverData: unknown
-): Promise<void> {
+export async function markSynced(id: string, serverData: unknown): Promise<void> {
   const db = await openDB();
   const all = await idbGetAll<QueuedAttempt>(db, STORE);
   const item = all.find((a) => a.id === id);
@@ -126,14 +129,11 @@ export async function replayQueue(): Promise<SyncResult[]> {
 
   for (const item of pending) {
     try {
-      const response = await fetch(
-        `/api/throws/practice/${item.sessionId}/attempts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item.payload),
-        }
-      );
+      const response = await fetch(`/api/throws/practice/${item.sessionId}/attempts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item.payload),
+      });
 
       if (response.ok) {
         const data = await response.json();

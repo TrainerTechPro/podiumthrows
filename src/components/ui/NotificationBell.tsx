@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { NotificationItem } from "@/lib/notifications";
+import { logger } from "@/lib/logger";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
@@ -295,8 +296,12 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
           const data = await res.json();
           setCount(data.data?.count ?? 0);
         }
-      } catch {
+      } catch (err) {
         // Silent
+        logger.debug("Silent", {
+          context: "src/components/ui/NotificationBell.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       }
     }
     const id = setInterval(poll, POLL_INTERVAL);
@@ -339,8 +344,12 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
         setNotifications(data.notifications ?? []);
         setCount(data.unreadCount ?? 0);
       }
-    } catch {
+    } catch (err) {
       // Silent
+      logger.debug("Silent", {
+        context: "src/components/ui/NotificationBell.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     } finally {
       setLoading(false);
     }
@@ -361,8 +370,12 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
       });
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
       setCount((c) => Math.max(0, c - 1));
-    } catch {
+    } catch (err) {
       // Silent
+      logger.debug("Silent", {
+        context: "src/components/ui/NotificationBell.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -374,8 +387,12 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
       });
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setCount(0);
-    } catch {
+    } catch (err) {
       // Silent
+      logger.debug("Silent", {
+        context: "src/components/ui/NotificationBell.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 

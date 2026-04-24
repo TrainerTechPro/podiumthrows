@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Search, User, Calendar, ListChecks, Trophy, Clock, X } from "lucide-react";
 import type { NavSection } from "./Sidebar";
 import type { SearchResultItem } from "@/app/api/search/route";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -96,8 +97,12 @@ function addRecentSearch(query: string) {
     const recent = getRecentSearches().filter((r) => r !== query);
     recent.unshift(query);
     localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
-  } catch {
+  } catch (err) {
     // localStorage unavailable
+    logger.debug("localStorage unavailable", {
+      context: "src/components/ui/CommandPalette.tsx",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
 }
 

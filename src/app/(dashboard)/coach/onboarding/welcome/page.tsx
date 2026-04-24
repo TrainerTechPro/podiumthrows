@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { stripe, PLANS } from "@/lib/stripe";
 import type { PlanName } from "@/lib/stripe";
 import { WelcomeClient } from "./_welcome-client";
+import { logger } from "@/lib/logger";
 
 export const metadata = {
   title: "Welcome — Podium Throws",
@@ -36,15 +37,17 @@ export default async function WelcomePage({
 
   if (searchParams.session_id) {
     try {
-      const checkoutSession = await stripe.checkout.sessions.retrieve(
-        searchParams.session_id
-      );
+      const checkoutSession = await stripe.checkout.sessions.retrieve(searchParams.session_id);
       const stripePlan = checkoutSession.metadata?.plan as PlanName | undefined;
       if (stripePlan && stripePlan in PLANS) {
         resolvedPlan = stripePlan;
       }
-    } catch {
+    } catch (err) {
       // Invalid/expired session_id — fall through to DB plan
+      logger.debug("Invalid/expired session_id — fall through to DB plan", {
+        context: "src/app/(dashboard)/coach/onboarding/welcome/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -86,10 +89,6 @@ export default async function WelcomePage({
   }
 
   return (
-    <WelcomeClient
-      firstName={coach.firstName}
-      planName={planInfo.name}
-      deficitData={deficitData}
-    />
+    <WelcomeClient firstName={coach.firstName} planName={planInfo.name} deficitData={deficitData} />
   );
 }

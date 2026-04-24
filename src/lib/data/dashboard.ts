@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 import { getAthleteTimezone, getLocalDate, startOfToday as startOfTodayTz } from "@/lib/dates";
 import { getAthletePRs } from "@/lib/data/personal-records";
 import { extractSelfProgramSessionId } from "@/lib/data/athlete-activity";
+import { logger } from "@/lib/logger";
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  TYPES                                                                     */
@@ -186,8 +187,12 @@ function parseProgramSessionItems(ps: {
           position: pos++,
         });
       }
-    } catch {
-      /* ignore parse errors */
+    } catch (err) {
+      // ignore parse errors
+      logger.debug("ignore parse errors", {
+        context: "src/lib/data/dashboard.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -213,8 +218,12 @@ function parseProgramSessionItems(ps: {
         position: pos++,
       });
     }
-  } catch {
-    /* ignore parse errors */
+  } catch (err) {
+    // ignore parse errors
+    logger.debug("ignore parse errors", {
+      context: "src/lib/data/dashboard.ts",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
 
   // Strength
@@ -235,8 +244,12 @@ function parseProgramSessionItems(ps: {
           position: pos++,
         });
       }
-    } catch {
-      /* ignore parse errors */
+    } catch (err) {
+      // ignore parse errors
+      logger.debug("ignore parse errors", {
+        context: "src/lib/data/dashboard.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -394,8 +407,12 @@ export async function fetchTodayWorkoutData(athleteId: string): Promise<TodaySes
         } else {
           detail = (cfg.name as string) ?? (cfg.notes as string) ?? "";
         }
-      } catch {
-        /* config parse error */
+      } catch (err) {
+        // config parse error
+        logger.debug("config parse error", {
+          context: "src/lib/data/dashboard.ts",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       }
 
       items.push({

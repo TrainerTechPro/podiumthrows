@@ -23,7 +23,10 @@ export async function POST(request: Request) {
     });
 
     if (!athlete) {
-      return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Athlete profile not found" },
+        { status: 404 }
+      );
     }
 
     const connection = await prisma.ouraConnection.findUnique({
@@ -32,15 +35,22 @@ export async function POST(request: Request) {
     });
 
     if (!connection) {
-      return NextResponse.json({ success: false, error: "No Oura Ring connection found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "No Oura Ring connection found" },
+        { status: 404 }
+      );
     }
 
     // Check if this is a sync-mode update
     let body: Record<string, unknown> = {};
     try {
       body = await request.json();
-    } catch {
+    } catch (err) {
       // Empty body is fine — means a normal sync request
+      logger.debug("Empty body is fine — means a normal sync request", {
+        context: "src/app/api/oura/sync/route.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
 
     if (body.updateSyncMode) {
@@ -64,14 +74,18 @@ export async function POST(request: Request) {
 
     if (isReauthError(message)) {
       return NextResponse.json(
-        { success: false, error: "reauth_required", detail: "Your Oura Ring authorization has expired. Please reconnect your Oura Ring." },
-        { status: 401 },
+        {
+          success: false,
+          error: "reauth_required",
+          detail: "Your Oura Ring authorization has expired. Please reconnect your Oura Ring.",
+        },
+        { status: 401 }
       );
     }
 
     return NextResponse.json(
       { success: false, error: "Oura sync failed", detail: message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

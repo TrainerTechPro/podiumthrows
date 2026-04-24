@@ -10,14 +10,12 @@ import {
   type QueuedAttempt,
   type SyncResult,
 } from "@/lib/pwa/sync-queue";
+import { logger } from "@/lib/logger";
 
 interface UseSyncQueueReturn {
   pendingCount: number;
   isSyncing: boolean;
-  queueAttempt: (
-    sessionId: string,
-    payload: AttemptPayload
-  ) => Promise<QueuedAttempt>;
+  queueAttempt: (sessionId: string, payload: AttemptPayload) => Promise<QueuedAttempt>;
   triggerSync: () => Promise<SyncResult[]>;
 }
 
@@ -25,9 +23,7 @@ interface UseSyncQueueReturn {
  * React hook for offline throw attempt sync queue.
  * Auto-replays pending items when connectivity resumes.
  */
-export function useSyncQueue(
-  onSyncComplete?: (results: SyncResult[]) => void
-): UseSyncQueueReturn {
+export function useSyncQueue(onSyncComplete?: (results: SyncResult[]) => void): UseSyncQueueReturn {
   const { isOnline } = useOnlineStatus();
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -40,17 +36,18 @@ export function useSyncQueue(
     try {
       const count = await getPendingCount();
       setPendingCount(count);
-    } catch {
+    } catch (err) {
       // IDB might not be available
+      logger.debug("IDB might not be available", {
+        context: "src/hooks/useSyncQueue.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, []);
 
   // Queue a new attempt
   const queueAttempt = useCallback(
-    async (
-      sessionId: string,
-      payload: AttemptPayload
-    ): Promise<QueuedAttempt> => {
+    async (sessionId: string, payload: AttemptPayload): Promise<QueuedAttempt> => {
       const item = await queueAttemptIDB(sessionId, payload);
       setPendingCount((c) => c + 1);
       return item;

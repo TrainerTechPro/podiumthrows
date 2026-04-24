@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { requireCoachSession, getAssignmentDetailForCoach } from "@/lib/data/coach";
 import { CommentThread } from "@/components/comment-thread";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -486,8 +487,12 @@ export default async function CoachThrowsAssignmentPage({
             let config: Record<string, unknown> = {};
             try {
               config = JSON.parse(block.config) as Record<string, unknown>;
-            } catch {
-              /* ignore */
+            } catch (err) {
+              // ignore
+              logger.debug("ignore", {
+                context: "src/app/(dashboard)/coach/throws/[id]/page.tsx",
+                metadata: { reason: err instanceof Error ? err.message : "unknown" },
+              });
             }
 
             const blockThrows = throwLogsByBlock.get(block.id) ?? [];

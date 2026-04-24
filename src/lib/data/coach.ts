@@ -12,6 +12,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import type { AthleteProfile, SubscriptionPlan } from "@prisma/client";
 import { getAthletePRs, type AthletePREvent } from "@/lib/data/personal-records";
+import { logger } from "@/lib/logger";
 
 /**
  * Per-request cached coachProfile lookup by userId.
@@ -875,8 +876,12 @@ export async function getAthleteThrowsAssignments(
         try {
           const cfg = JSON.parse(block.config) as Record<string, unknown>;
           prescribedThrows += (cfg.throwCount as number) ?? 0;
-        } catch {
-          /* ignore */
+        } catch (err) {
+          // ignore
+          logger.debug("ignore", {
+            context: "src/lib/data/coach.ts",
+            metadata: { reason: err instanceof Error ? err.message : "unknown" },
+          });
         }
       }
     }

@@ -19,6 +19,7 @@ import { StepCompetitions } from "./_steps/step-competitions";
 import { StepGoals } from "./_steps/step-goals";
 import { StepPreferences } from "./_steps/step-preferences";
 import { StepReview } from "./_steps/step-review";
+import { logger } from "@/lib/logger";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -384,8 +385,12 @@ export function SelfProgramWizard({
         const data = await res.json();
         if (data.id && !draftId) setDraftId(data.id);
       }
-    } catch {
+    } catch (err) {
       // Draft save failures are non-critical — silently continue
+      logger.debug("Draft save failures are non-critical — silently continue", {
+        context: "src/app/(dashboard)/athlete/self-program/create/_wizard.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 

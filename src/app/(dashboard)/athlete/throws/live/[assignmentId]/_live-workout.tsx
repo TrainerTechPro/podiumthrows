@@ -21,6 +21,7 @@ import { StrengthBlockView } from "./_strength-block";
 import { WarmupCooldownView } from "./_warmup-block";
 import { CompletionScreen } from "./_completion-view";
 import { TimelineProgressDots } from "./_timeline-progress-dots";
+import { logger } from "@/lib/logger";
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 /*  TIMELINE NODE WRAPPER                                                  */
@@ -232,8 +233,12 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         let parsed: Record<string, unknown> | null = null;
         try {
           parsed = tl.notes ? JSON.parse(tl.notes) : null;
-        } catch {
-          /* not JSON */
+        } catch (err) {
+          // not JSON
+          logger.debug("not JSON", {
+            context: "src/app/(dashboard)/athlete/throws/live/[assignmentId]/_live-workout.tsx",
+            metadata: { reason: err instanceof Error ? err.message : "unknown" },
+          });
         }
 
         if (parsed?.type === "warmup_drill") {

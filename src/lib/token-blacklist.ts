@@ -19,8 +19,12 @@ function extractExpiry(token: string): Date {
     if (typeof payload.exp === "number") {
       return new Date(payload.exp * 1000);
     }
-  } catch {
+  } catch (err) {
     // fall through
+    logger.debug("fall through", {
+      context: "src/lib/token-blacklist.ts",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
   return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 }
@@ -35,7 +39,10 @@ export async function blacklistToken(token: string): Promise<void> {
       data: { tokenHash, expiresAt },
     });
   } catch (err) {
-    logger.error("Failed to blacklist token — logout may not fully invalidate session", { context: "auth", error: err });
+    logger.error("Failed to blacklist token — logout may not fully invalidate session", {
+      context: "auth",
+      error: err,
+    });
     throw err;
   }
 }

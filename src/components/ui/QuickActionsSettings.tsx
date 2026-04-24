@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { CircleDot, ToggleLeft, ToggleRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 const STORAGE_KEY = "podium-quick-actions";
 
@@ -23,8 +24,12 @@ export function QuickActionsSettings({ role }: { role: "COACH" | "ATHLETE" }) {
         const parsed = JSON.parse(raw);
         setEnabled(parsed.enabled ?? true);
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/components/ui/QuickActionsSettings.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, [role]);
 
@@ -36,11 +41,15 @@ export function QuickActionsSettings({ role }: { role: "COACH" | "ATHLETE" }) {
       const existing = raw ? JSON.parse(raw) : {};
       localStorage.setItem(
         `${STORAGE_KEY}-${role.toLowerCase()}`,
-        JSON.stringify({ ...existing, enabled: next }),
+        JSON.stringify({ ...existing, enabled: next })
       );
       window.dispatchEvent(new CustomEvent("quick-actions-prefs-change"));
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/components/ui/QuickActionsSettings.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 
@@ -48,9 +57,7 @@ export function QuickActionsSettings({ role }: { role: "COACH" | "ATHLETE" }) {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-        Quick Actions
-      </h2>
+      <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Quick Actions</h2>
       <div className="card p-4 flex items-center gap-3">
         <CircleDot
           size={20}
@@ -59,9 +66,7 @@ export function QuickActionsSettings({ role }: { role: "COACH" | "ATHLETE" }) {
           aria-hidden="true"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-[var(--foreground)]">
-            Quick Actions Button
-          </p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">Quick Actions Button</p>
           <p className="text-xs text-muted">
             Floating shortcut button for common actions.
             {enabled
@@ -73,11 +78,9 @@ export function QuickActionsSettings({ role }: { role: "COACH" | "ATHLETE" }) {
           onClick={toggle}
           className={cn(
             "p-1 rounded-lg transition-colors",
-            enabled ? "text-primary-500" : "text-muted",
+            enabled ? "text-primary-500" : "text-muted"
           )}
-          aria-label={
-            enabled ? "Disable quick actions" : "Enable quick actions"
-          }
+          aria-label={enabled ? "Disable quick actions" : "Enable quick actions"}
         >
           {enabled ? (
             <ToggleRight size={28} strokeWidth={1.75} aria-hidden="true" />

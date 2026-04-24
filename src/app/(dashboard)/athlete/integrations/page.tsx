@@ -6,6 +6,7 @@ import { needsReauth } from "@/lib/wearable-auth";
 import { StaggeredList } from "@/components";
 import { WhoopCard } from "../settings/_whoop-card";
 import { OuraCard } from "../settings/_oura-card";
+import { logger } from "@/lib/logger";
 
 export default async function AthleteIntegrationsPage() {
   const session = await getSession();
@@ -17,14 +18,23 @@ export default async function AthleteIntegrationsPage() {
   });
   if (!athlete) redirect("/login");
 
-  let whoopConnection: { syncMode: string; lastSyncAt: Date | null; refreshToken: string; scopes: string } | null = null;
+  let whoopConnection: {
+    syncMode: string;
+    lastSyncAt: Date | null;
+    refreshToken: string;
+    scopes: string;
+  } | null = null;
   try {
     whoopConnection = await prisma.whoopConnection.findUnique({
       where: { athleteId: athlete.id },
       select: { syncMode: true, lastSyncAt: true, refreshToken: true, scopes: true },
     });
-  } catch {
+  } catch (err) {
     // Table may not exist yet
+    logger.debug("Table may not exist yet", {
+      context: "src/app/(dashboard)/athlete/integrations/page.tsx",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
 
   // Detect unhealthy connections using shared utility
@@ -32,14 +42,23 @@ export default async function AthleteIntegrationsPage() {
     ? needsReauth(whoopConnection.refreshToken, whoopConnection.scopes, "offline")
     : false;
 
-  let ouraConnection: { syncMode: string; lastSyncAt: Date | null; refreshToken: string; scopes: string } | null = null;
+  let ouraConnection: {
+    syncMode: string;
+    lastSyncAt: Date | null;
+    refreshToken: string;
+    scopes: string;
+  } | null = null;
   try {
     ouraConnection = await prisma.ouraConnection.findUnique({
       where: { athleteId: athlete.id },
       select: { syncMode: true, lastSyncAt: true, refreshToken: true, scopes: true },
     });
-  } catch {
+  } catch (err) {
     // Table may not exist yet
+    logger.debug("Table may not exist yet", {
+      context: "src/app/(dashboard)/athlete/integrations/page.tsx",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
   }
 
   // Oura doesn't use a separate "offline" scope — refresh tokens are always granted.
@@ -58,9 +77,7 @@ export default async function AthleteIntegrationsPage() {
         <p className="text-sm text-muted mt-0.5">
           Connect your wearables to sync recovery, sleep, and readiness data.
           {connectedCount > 0 && (
-            <span className="ml-1 text-primary-500 font-medium">
-              {connectedCount} connected
-            </span>
+            <span className="ml-1 text-primary-500 font-medium">{connectedCount} connected</span>
           )}
         </p>
       </div>
@@ -96,13 +113,15 @@ export default async function AthleteIntegrationsPage() {
             { name: "Garmin", icon: Activity, desc: "Running & GPS data" },
             { name: "Apple Health", icon: Heart, desc: "Unified health metrics" },
           ].map((device) => (
-            <div
-              key={device.name}
-              className="card p-4 opacity-50 cursor-default select-none"
-            >
+            <div key={device.name} className="card p-4 opacity-50 cursor-default select-none">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center">
-                  <device.icon size={18} strokeWidth={1.75} className="text-muted" aria-hidden="true" />
+                  <device.icon
+                    size={18}
+                    strokeWidth={1.75}
+                    className="text-muted"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{device.name}</p>

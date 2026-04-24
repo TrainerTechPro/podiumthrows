@@ -19,6 +19,7 @@
  */
 
 import { track as vercelTrack } from "@vercel/analytics";
+import { logger } from "@/lib/logger";
 
 /* ─── Event catalog ───────────────────────────────────────────────────── */
 
@@ -251,8 +252,14 @@ export function track<N extends EventName>(name: N, payload: EventPayloads[N]): 
 
   try {
     vercelTrack(name, payload as Record<string, string | number | boolean | null>);
-  } catch {
-    // Analytics must never break the app. Swallow — the dev console log
-    // above is enough signal during development.
+  } catch (err) {
+    // Analytics must never break the app. Swallow — the dev console log — above is enough signal during development.
+    logger.debug(
+      "Analytics must never break the app. Swallow — the dev console log — above is enough signal during development.",
+      {
+        context: "src/lib/analytics.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      }
+    );
   }
 }

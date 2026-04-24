@@ -27,6 +27,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, Square, Play, Pause, Trash2, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 export type VoiceRecorderResult = {
   publicUrl: string;
@@ -101,8 +102,12 @@ export function VoiceRecorder({
     if (audioContextRef.current) {
       try {
         void audioContextRef.current.close();
-      } catch {
+      } catch (err) {
         // ignore
+        logger.debug("ignore", {
+          context: "src/components/feedback/VoiceRecorder.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       }
       audioContextRef.current = null;
       analyserRef.current = null;
@@ -137,8 +142,7 @@ export function VoiceRecorder({
       // Level meter via Web Audio API
       const AudioCtx =
         window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext;
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ctx = new AudioCtx();
       audioContextRef.current = ctx;
       const source = ctx.createMediaStreamSource(stream);
@@ -166,9 +170,7 @@ export function VoiceRecorder({
       // MediaRecorder
       const mimeType = pickSupportedMime();
       recordedMimeRef.current = mimeType || "audio/webm";
-      const mr = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
+      const mr = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
 
@@ -200,10 +202,7 @@ export function VoiceRecorder({
         }
       }, 250);
     } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Microphone access was denied.";
+      const msg = err instanceof Error ? err.message : "Microphone access was denied.";
       setError(msg);
       setPhase("idle");
       cleanupStreamAndAnalyser();
@@ -324,10 +323,7 @@ export function VoiceRecorder({
   const remaining = Math.max(0, maxDurationSec - elapsedSec);
 
   return (
-    <div
-      className={`card p-4 space-y-3 ${className ?? ""}`.trim()}
-      aria-label="Voice recorder"
-    >
+    <div className={`card p-4 space-y-3 ${className ?? ""}`.trim()} aria-label="Voice recorder">
       {/* Hidden audio element for playback */}
       {recordedUrl && (
         <audio
@@ -341,20 +337,12 @@ export function VoiceRecorder({
       {phase === "idle" && (
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              Voice note
-            </p>
-            <p className="text-xs text-muted">
-              Up to {maxDurationSec} seconds.
-            </p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">Voice note</p>
+            <p className="text-xs text-muted">Up to {maxDurationSec} seconds.</p>
           </div>
           <div className="flex gap-2">
             {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="btn btn-secondary text-xs"
-              >
+              <button type="button" onClick={onCancel} className="btn btn-secondary text-xs">
                 Cancel
               </button>
             )}
@@ -431,12 +419,8 @@ export function VoiceRecorder({
               )}
             </button>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                Preview
-              </p>
-              <p className="text-xs text-muted font-mono tabular-nums">
-                {elapsedSec}s
-              </p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">Preview</p>
+              <p className="text-xs text-muted font-mono tabular-nums">{elapsedSec}s</p>
             </div>
           </div>
           <div className="flex gap-2">

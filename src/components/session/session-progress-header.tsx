@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, type Dispatch } from "react";
 import Link from "next/link";
 import type { SessionState, SessionAction } from "./use-session-reducer";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 interface SessionProgressHeaderProps {
   state: SessionState;
@@ -209,8 +210,12 @@ function IntraEvalBanner({
             },
           });
         }
-      } catch {
+      } catch (err) {
         // Non-blocking — session continues
+        logger.debug("Non-blocking — session continues", {
+          context: "src/components/session/session-progress-header.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       } finally {
         setApplying(false);
       }

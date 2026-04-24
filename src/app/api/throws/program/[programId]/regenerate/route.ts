@@ -4,11 +4,7 @@ import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { canAccessProgram } from "@/lib/authorize";
 import { generateWeek } from "@/lib/throws/engine";
-import type {
-  ProgramConfig,
-  ExerciseComplexEntry,
-  WeekGenConfig,
-} from "@/lib/throws/engine";
+import type { ProgramConfig, ExerciseComplexEntry, WeekGenConfig } from "@/lib/throws/engine";
 
 interface Params {
   params: Promise<{ programId: string }>;
@@ -21,10 +17,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { programId } = await params;
@@ -40,27 +33,22 @@ export async function POST(req: NextRequest, { params }: Params) {
     });
 
     if (!program) {
-      return NextResponse.json(
-        { success: false, error: "Program not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ success: false, error: "Program not found" }, { status: 404 });
     }
 
     // Verify ownership (supports both athletes and their coaches)
-    const allowed = await canAccessProgram(user.userId, user.role as "COACH" | "ATHLETE", programId);
+    const allowed = await canAccessProgram(
+      user.userId,
+      user.role as "COACH" | "ATHLETE",
+      programId
+    );
     if (!allowed) {
-      return NextResponse.json(
-        { success: false, error: "Not authorized" },
-        { status: 403 },
-      );
+      return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
     }
 
     const activePhase = program.phases[0];
     if (!activePhase) {
-      return NextResponse.json(
-        { success: false, error: "No active phase found" },
-        { status: 400 },
-      );
+      return NextResponse.json({ success: false, error: "No active phase found" }, { status: 400 });
     }
 
     // Parse exercise complex
@@ -68,16 +56,24 @@ export async function POST(req: NextRequest, { params }: Params) {
     try {
       const parsed = JSON.parse(activePhase.exerciseComplex || "[]");
       exerciseComplex = Array.isArray(parsed) ? parsed : [];
-    } catch {
-      /* empty */
+    } catch (err) {
+      // empty
+      logger.debug("empty", {
+        context: "src/app/api/throws/program/[programId]/regenerate/route.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
 
     // Parse generation config
     let generationConfig: Record<string, unknown> = {};
     try {
       generationConfig = JSON.parse(program.generationConfig || "{}");
-    } catch {
-      /* empty */
+    } catch (err) {
+      // empty
+      logger.debug("empty", {
+        context: "src/app/api/throws/program/[programId]/regenerate/route.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
 
     const programConfig: ProgramConfig = {
@@ -98,7 +94,8 @@ export async function POST(req: NextRequest, { params }: Params) {
       sessionsToForm: program.sessionsToForm ?? 30,
       recommendedMethod: program.recommendedMethod ?? "COMPLEX",
       transferType: (generationConfig.transferType as string) ?? undefined,
-      availableImplements: (generationConfig.availableImplements as ProgramConfig["availableImplements"]) ?? [],
+      availableImplements:
+        (generationConfig.availableImplements as ProgramConfig["availableImplements"]) ?? [],
       facilities: (generationConfig.facilities as ProgramConfig["facilities"]) ?? {
         hasCage: true,
         hasRing: true,
@@ -118,7 +115,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       liftingPrs: (generationConfig.liftingPrs as ProgramConfig["liftingPrs"]) ?? {
         bodyWeightKg: 90,
       },
-      yearsThrowing: (generationConfig.yearsThrowing as number) ?? (generationConfig.yearsThowing as number) ?? 3,
+      yearsThrowing:
+        (generationConfig.yearsThrowing as number) ??
+        (generationConfig.yearsThowing as number) ??
+        3,
       deficitPrimary: (generationConfig.deficitPrimary as string) ?? undefined,
       deficitSecondary: (generationConfig.deficitSecondary as string) ?? undefined,
     };
@@ -154,11 +154,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       status: string;
     }[] = [];
 
-    for (
-      let week = program.currentWeekNumber;
-      week <= activePhase.endWeek;
-      week++
-    ) {
+    for (let week = program.currentWeekNumber; week <= activePhase.endWeek; week++) {
       const weekConfig: WeekGenConfig = {
         weekNumber: week,
         phase: activePhase.phase as WeekGenConfig["phase"],
@@ -175,15 +171,11 @@ export async function POST(req: NextRequest, { params }: Params) {
 
       // Calculate scheduled dates
       const weekStartDate = new Date(programStartDate);
-      weekStartDate.setDate(
-        weekStartDate.getDate() + (week - 1) * 7,
-      );
+      weekStartDate.setDate(weekStartDate.getDate() + (week - 1) * 7);
 
       for (const session of generatedWeek.sessions) {
         const scheduledDate = new Date(weekStartDate);
-        scheduledDate.setDate(
-          scheduledDate.getDate() + (session.dayOfWeek - 1),
-        );
+        scheduledDate.setDate(scheduledDate.getDate() + (session.dayOfWeek - 1));
 
         sessionsToCreate.push({
           programId,
@@ -223,7 +215,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     });
     return NextResponse.json(
       { success: false, error: "Failed to regenerate sessions" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

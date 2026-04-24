@@ -38,6 +38,7 @@ import {
   generateTaperPlan,
   todayISO,
 } from "@/lib/throws/profile-utils";
+import { logger } from "@/lib/logger";
 
 // ── Score Arc SVG Component ─────────────────────────────────────────
 
@@ -205,8 +206,12 @@ function CheckInForm({ athleteId, onSaved }: { athleteId: string; onSaved: () =>
       });
       const data = await res.json();
       if (data.success) onSaved();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -505,8 +510,12 @@ export default function AthleteProfilePage() {
         setQuizAssigned(true);
         loadProfile(selectedAthleteId);
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setAssigningQuiz(false);
   }
@@ -1737,8 +1746,12 @@ function DrillPRPanel({
         setImplement("");
         onSaved();
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -2120,8 +2133,12 @@ function TestingMetricsPanel({
         setEditing(false);
         onSaved();
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -2278,8 +2295,12 @@ function RecordPRForm({ athleteId, onSaved }: { athleteId: string; onSaved: () =
       });
       const data = await res.json();
       if (data.success) onSaved();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -2405,8 +2426,12 @@ function ManageComplexForm({
         setExpanded(false);
         onSaved();
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -2566,8 +2591,12 @@ function AddCompetitionForm({ athleteId, onSaved }: { athleteId: string; onSaved
         body: JSON.stringify({ athleteId, name, date, event, priority }),
       });
       onSaved();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -2669,8 +2698,12 @@ function AthleteBioEditForm({
       });
       const data = await res.json();
       if (data.success) onSaved();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -2789,8 +2822,12 @@ function CompetitionsPanel({
         setEditingId(null);
         onSaved();
       }
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }
@@ -3036,8 +3073,12 @@ function TypingOverrideForm({
       });
       const data = await res.json();
       if (data.success) onSaved();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      // ignore
+      logger.debug("ignore", {
+        context: "src/app/(dashboard)/coach/throws/profile/page.tsx",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setSaving(false);
   }

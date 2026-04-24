@@ -25,6 +25,7 @@ import { CommentAudioPlayer } from "@/components/comment-audio-player";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useCommentUnread, type TargetField } from "@/lib/hooks/useCommentUnread";
 import { track } from "@/lib/analytics";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
 
@@ -159,8 +160,12 @@ export function CommentThreadSheet({
           )
         );
         unread.clear(targetField, targetId);
-      } catch {
+      } catch (err) {
         // non-fatal
+        logger.debug("non-fatal", {
+          context: "src/components/comment-thread-sheet.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       }
     }, MARK_READ_DEBOUNCE_MS);
     return () => clearTimeout(t);

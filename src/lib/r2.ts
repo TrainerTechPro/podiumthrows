@@ -12,6 +12,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
+import { logger } from "@/lib/logger";
 
 /* ─── Environment ──────────────────────────────────────────────────────────── */
 
@@ -79,9 +80,9 @@ export const ALLOWED_VIDEO_TYPES = [
   "video/mp4",
   "video/quicktime", // .mov
   "video/webm",
-  "video/hevc",      // iPhone HEVC recordings
-  "video/x-m4v",     // .m4v
-  "video/3gpp",      // .3gp (mobile recordings)
+  "video/hevc", // iPhone HEVC recordings
+  "video/x-m4v", // .m4v
+  "video/3gpp", // .3gp (mobile recordings)
 ];
 
 export const ALLOWED_VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm", ".m4v", ".3gp"];
@@ -95,13 +96,21 @@ export const ALLOWED_IMAGE_TYPES = [
   "image/heif",
 ];
 
-export const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic", ".heif"];
+export const ALLOWED_IMAGE_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".gif",
+  ".heic",
+  ".heif",
+];
 
 export const ALLOWED_AUDIO_TYPES = [
   "audio/webm",
   "audio/ogg",
   "audio/mp4",
-  "audio/mpeg",       // .mp3
+  "audio/mpeg", // .mp3
   "audio/x-m4a",
   "audio/aac",
 ];
@@ -191,10 +200,7 @@ export async function getPresignedUploadUrl(
 
 /* ─── Local file save (dev fallback) ───────────────────────────────────────── */
 
-export async function saveFileLocally(
-  key: string,
-  buffer: Buffer
-): Promise<string> {
+export async function saveFileLocally(key: string, buffer: Buffer): Promise<string> {
   // Strip common prefixes for local storage
   const localPath = key.replace(/^(videos|images|audio|uploads)\//, "");
   const fullPath = path.join(process.cwd(), "public", "uploads", localPath);
@@ -240,18 +246,19 @@ export async function deleteFile(key: string): Promise<void> {
     const fullPath = path.join(process.cwd(), "public", "uploads", localPath);
     try {
       await unlink(fullPath);
-    } catch {
+    } catch (err) {
       // File might not exist — ignore
+      logger.debug("File might not exist — ignore", {
+        context: "src/lib/r2.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }
 }
 
 /* ─── Multipart Upload ─────────────────────────────────────────────────────── */
 
-export async function createMultipartUpload(
-  key: string,
-  contentType: string
-): Promise<string> {
+export async function createMultipartUpload(key: string, contentType: string): Promise<string> {
   const result = await getClient().send(
     new CreateMultipartUploadCommand({
       Bucket: getBucket(),
@@ -301,10 +308,7 @@ export async function completeMultipartUpload(
   );
 }
 
-export async function abortMultipartUpload(
-  key: string,
-  uploadId: string
-): Promise<void> {
+export async function abortMultipartUpload(key: string, uploadId: string): Promise<void> {
   await getClient().send(
     new AbortMultipartUploadCommand({
       Bucket: getBucket(),
@@ -340,18 +344,8 @@ export async function configureR2Cors(): Promise<void> {
           {
             AllowedOrigins: ["*"],
             AllowedMethods: ["GET", "HEAD", "PUT", "OPTIONS"],
-            AllowedHeaders: [
-              "Range",
-              "Authorization",
-              "Content-Type",
-              "x-amz-*",
-            ],
-            ExposeHeaders: [
-              "Content-Length",
-              "Content-Range",
-              "Accept-Ranges",
-              "ETag",
-            ],
+            AllowedHeaders: ["Range", "Authorization", "Content-Type", "x-amz-*"],
+            ExposeHeaders: ["Content-Length", "Content-Range", "Accept-Ranges", "ETag"],
             MaxAgeSeconds: 86400,
           },
         ],

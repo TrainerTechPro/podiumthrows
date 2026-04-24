@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 /**
  * On mount, detect the user's browser timezone and PATCH it to the server if
@@ -27,16 +28,24 @@ export function useDetectTimezone() {
           if (res.ok) {
             try {
               localStorage.setItem("podium-tz-sent", detected);
-            } catch {
+            } catch (err) {
               // ignore storage failures
+              logger.debug("ignore storage failures", {
+                context: "src/hooks/useDetectTimezone.ts",
+                metadata: { reason: err instanceof Error ? err.message : "unknown" },
+              });
             }
           }
         })
         .catch(() => {
           // silent — will retry on next page load
         });
-    } catch {
+    } catch (err) {
       // Intl unsupported — skip
+      logger.debug("Intl unsupported — skip", {
+        context: "src/hooks/useDetectTimezone.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
   }, []);
 }

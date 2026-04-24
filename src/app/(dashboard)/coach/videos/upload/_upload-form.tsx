@@ -6,6 +6,7 @@ import { Select, type SelectOption } from "@/components/ui/Select";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { formatEventType } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -15,8 +16,8 @@ type Props = {
 
 type UploadPhase =
   | "idle"
-  | "trimming"   // user selects trim window + thumbnail
-  | "selected"   // trim confirmed, showing metadata form
+  | "trimming" // user selects trim window + thumbnail
+  | "selected" // trim confirmed, showing metadata form
   | "uploading"
   | "creating"
   | "done"
@@ -147,53 +148,60 @@ export function UploadForm({ athleteOptions }: Props) {
 
   /* ── File selection ──────────────────────────────────────────────────── */
 
-  const handleFileSelect = useCallback((selectedFile: File) => {
-    const ext = selectedFile.name.split(".").pop()?.toLowerCase() ?? "";
-    if (selectedFile.type && !ALLOWED_TYPES.includes(selectedFile.type) && !ALLOWED_EXTS.includes(ext)) {
-      setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
-      return;
-    }
-    if (!selectedFile.type && !ALLOWED_EXTS.includes(ext)) {
-      setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
-      return;
-    }
-    if (selectedFile.size / (1024 * 1024) > MAX_SIZE_MB) {
-      setErrorMsg(`File too large. Maximum is ${MAX_SIZE_MB}MB.`);
-      return;
-    }
+  const handleFileSelect = useCallback(
+    (selectedFile: File) => {
+      const ext = selectedFile.name.split(".").pop()?.toLowerCase() ?? "";
+      if (
+        selectedFile.type &&
+        !ALLOWED_TYPES.includes(selectedFile.type) &&
+        !ALLOWED_EXTS.includes(ext)
+      ) {
+        setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
+        return;
+      }
+      if (!selectedFile.type && !ALLOWED_EXTS.includes(ext)) {
+        setErrorMsg("Invalid file type. Please use MP4, MOV, or WebM.");
+        return;
+      }
+      if (selectedFile.size / (1024 * 1024) > MAX_SIZE_MB) {
+        setErrorMsg(`File too large. Maximum is ${MAX_SIZE_MB}MB.`);
+        return;
+      }
 
-    // Check MediaRecorder + captureStream support (captureStream not available on iOS Safari)
-    const supported =
-      typeof MediaRecorder !== "undefined" &&
-      "captureStream" in document.createElement("video") &&
-      (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus") ||
-        MediaRecorder.isTypeSupported("video/webm") ||
-        MediaRecorder.isTypeSupported("video/mp4"));
-    setMediaRecorderSupported(supported);
+      // Check MediaRecorder + captureStream support (captureStream not available on iOS Safari)
+      const supported =
+        typeof MediaRecorder !== "undefined" &&
+        "captureStream" in document.createElement("video") &&
+        (MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus") ||
+          MediaRecorder.isTypeSupported("video/webm") ||
+          MediaRecorder.isTypeSupported("video/mp4"));
+      setMediaRecorderSupported(supported);
 
-    // Revoke previous object URL
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-    const url = URL.createObjectURL(selectedFile);
+      // Revoke previous object URL
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      const url = URL.createObjectURL(selectedFile);
 
-    setFile(selectedFile);
-    setObjectUrl(url);
-    setErrorMsg("");
-    setTrimStart(0);
-    setTrimEnd(0);
-    setTrimmedBlob(null);
-    setThumbnailBlob(null);
-    if (thumbnailPreviewUrl) {
-      URL.revokeObjectURL(thumbnailPreviewUrl);
-      setThumbnailPreviewUrl("");
-    }
-    setPhase("trimming");
+      setFile(selectedFile);
+      setObjectUrl(url);
+      setErrorMsg("");
+      setTrimStart(0);
+      setTrimEnd(0);
+      setTrimmedBlob(null);
+      setThumbnailBlob(null);
+      if (thumbnailPreviewUrl) {
+        URL.revokeObjectURL(thumbnailPreviewUrl);
+        setThumbnailPreviewUrl("");
+      }
+      setPhase("trimming");
 
-    if (!title) {
-      const name = selectedFile.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
-      setTitle(name);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, objectUrl, thumbnailPreviewUrl]);
+      if (!title) {
+        const name = selectedFile.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
+        setTitle(name);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [title, objectUrl, thumbnailPreviewUrl]
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -228,13 +236,16 @@ export function UploadForm({ athleteOptions }: Props) {
 
   /* ── Trim start change ───────────────────────────────────────────────── */
 
-  const handleTrimStartChange = useCallback((val: number) => {
-    const start = Math.max(0, Math.min(val, videoDuration - MAX_CLIP_SEC));
-    const end = Math.min(start + MAX_CLIP_SEC, videoDuration);
-    setTrimStart(start);
-    setTrimEnd(end);
-    if (videoRef.current) videoRef.current.currentTime = start;
-  }, [videoDuration]);
+  const handleTrimStartChange = useCallback(
+    (val: number) => {
+      const start = Math.max(0, Math.min(val, videoDuration - MAX_CLIP_SEC));
+      const end = Math.min(start + MAX_CLIP_SEC, videoDuration);
+      setTrimStart(start);
+      setTrimEnd(end);
+      if (videoRef.current) videoRef.current.currentTime = start;
+    },
+    [videoDuration]
+  );
 
   /* ── Thumbnail capture ───────────────────────────────────────────────── */
 
@@ -249,13 +260,17 @@ export function UploadForm({ athleteOptions }: Props) {
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
-      const url = URL.createObjectURL(blob);
-      setThumbnailBlob(blob);
-      setThumbnailPreviewUrl(url);
-    }, "image/jpeg", 0.85);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        if (thumbnailPreviewUrl) URL.revokeObjectURL(thumbnailPreviewUrl);
+        const url = URL.createObjectURL(blob);
+        setThumbnailBlob(blob);
+        setThumbnailPreviewUrl(url);
+      },
+      "image/jpeg",
+      0.85
+    );
   }, [thumbnailPreviewUrl]);
 
   /* ── Trim confirm ────────────────────────────────────────────────────── */
@@ -335,13 +350,22 @@ export function UploadForm({ athleteOptions }: Props) {
       if (thumbRes?.ok && thumbnailBlob) {
         try {
           const thumbData = await thumbRes.json();
-          const { uploadUrl: thumbUrl, key: thumbKey, publicUrl: thumbPublicUrl, mode: thumbMode } = thumbData;
+          const {
+            uploadUrl: thumbUrl,
+            key: thumbKey,
+            publicUrl: thumbPublicUrl,
+            mode: thumbMode,
+          } = thumbData;
 
           if (thumbMode === "local") {
             const fd = new FormData();
             fd.append("file", thumbnailBlob, "thumbnail.jpg");
             fd.append("key", thumbKey);
-            await fetch("/api/coach/videos/upload-thumbnail-local", { method: "POST", headers: csrfHeaders(), body: fd });
+            await fetch("/api/coach/videos/upload-thumbnail-local", {
+              method: "POST",
+              headers: csrfHeaders(),
+              body: fd,
+            });
             thumbnailPublicUrl = thumbPublicUrl;
           } else {
             const thumbXhrOk = await new Promise<boolean>((resolve) => {
@@ -408,7 +432,16 @@ export function UploadForm({ athleteOptions }: Props) {
             if (xhr.status >= 200 && xhr.status < 300) resolve();
             else {
               let msg = `Upload failed (${xhr.status})`;
-              try { msg = JSON.parse(xhr.responseText)?.error ?? msg; } catch { /* ignore */ }
+              try {
+                msg = JSON.parse(xhr.responseText)?.error ?? msg;
+              } catch (err) {
+                // Server returned non-JSON (e.g. HTML error page) — fall back
+                // to the generic status-code message already in `msg`.
+                logger.debug("Upload error response was not JSON", {
+                  context: "coach/videos/upload",
+                  metadata: { reason: err instanceof Error ? err.message : "unknown" },
+                });
+              }
               reject(new Error(msg));
             }
           };
@@ -455,7 +488,9 @@ export function UploadForm({ athleteOptions }: Props) {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ status: "failed" }),
-        }).catch(() => {/* best-effort */});
+        }).catch(() => {
+          /* best-effort */
+        });
       }
       setErrorMsg(err instanceof Error ? err.message : "Upload failed");
       setPhase("error");
@@ -501,7 +536,17 @@ export function UploadForm({ athleteOptions }: Props) {
         <div className="flex flex-col items-center py-10 px-6">
           {file ? (
             <>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500 mb-3">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-primary-500 mb-3"
+              >
                 <polygon points="23 7 16 12 23 17 23 7" />
                 <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
               </svg>
@@ -509,7 +554,10 @@ export function UploadForm({ athleteOptions }: Props) {
               <p className="text-xs text-muted mt-1">{(file.size / (1024 * 1024)).toFixed(1)} MB</p>
               {!isUploading && phase !== "trimming" && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleCancel(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancel();
+                  }}
                   className="mt-2 text-xs text-red-500 hover:text-red-600"
                 >
                   Remove
@@ -518,7 +566,17 @@ export function UploadForm({ athleteOptions }: Props) {
             </>
           ) : (
             <>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-400 dark:text-surface-500 mb-3">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-surface-400 dark:text-surface-500 mb-3"
+              >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="17 8 12 3 7 8" />
                 <line x1="12" y1="3" x2="12" y2="15" />
@@ -546,9 +604,7 @@ export function UploadForm({ athleteOptions }: Props) {
       {phase === "trimming" && objectUrl && (
         <div className="card p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[var(--foreground)]">
-              Clip &amp; Thumbnail
-            </h2>
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">Clip &amp; Thumbnail</h2>
             {videoDuration > 0 && (
               <span className="text-xs text-muted tabular-nums">
                 {videoDuration.toFixed(1)}s total
@@ -613,7 +669,17 @@ export function UploadForm({ athleteOptions }: Props) {
           {/* MediaRecorder not supported warning */}
           {needsTrim && !mediaRecorderSupported && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -656,8 +722,17 @@ export function UploadForm({ athleteOptions }: Props) {
                     className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center"
                     aria-label="Remove thumbnail"
                   >
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    <svg
+                      width="8"
+                      height="8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
@@ -668,18 +743,10 @@ export function UploadForm({ athleteOptions }: Props) {
           {/* Actions */}
           {!isTrimming && (
             <div className="flex items-center gap-3 pt-2 border-t border-surface-100 dark:border-surface-800">
-              <button
-                type="button"
-                onClick={handleTrimConfirm}
-                className="btn-primary"
-              >
+              <button type="button" onClick={handleTrimConfirm} className="btn-primary">
                 {needsTrim ? "Trim & Continue" : "Continue"}
               </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="btn-ghost text-sm"
-              >
+              <button type="button" onClick={handleCancel} className="btn-ghost text-sm">
                 Cancel
               </button>
               {!needsTrim && (
@@ -715,7 +782,17 @@ export function UploadForm({ athleteOptions }: Props) {
       {/* ── Error ─────────────────────────────────────────────────────── */}
       {errorMsg && (
         <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-500 shrink-0 mt-0.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="text-red-500 shrink-0 mt-0.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -724,7 +801,10 @@ export function UploadForm({ athleteOptions }: Props) {
             <p className="text-sm text-red-700 dark:text-red-300">{errorMsg}</p>
             {phase === "error" && (
               <button
-                onClick={() => { setPhase("selected"); setErrorMsg(""); }}
+                onClick={() => {
+                  setPhase("selected");
+                  setErrorMsg("");
+                }}
                 className="text-xs text-red-500 hover:underline mt-1"
               >
                 Try again
@@ -847,14 +927,13 @@ function trimVideo(
     const srcUrl = URL.createObjectURL(file);
 
     // Pick best supported MIME type
-    const mimeType =
-      MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
-        ? "video/webm;codecs=vp8,opus"
-        : MediaRecorder.isTypeSupported("video/webm")
+    const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+      ? "video/webm;codecs=vp8,opus"
+      : MediaRecorder.isTypeSupported("video/webm")
         ? "video/webm"
         : MediaRecorder.isTypeSupported("video/mp4")
-        ? "video/mp4"
-        : "";
+          ? "video/mp4"
+          : "";
 
     if (!mimeType) {
       URL.revokeObjectURL(srcUrl);
@@ -875,7 +954,8 @@ function trimVideo(
       if (recorder) return; // Already started — ignore duplicate seeks
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const stream: MediaStream = (video as any).captureStream?.() ?? (video as any).mozCaptureStream?.();
+        const stream: MediaStream =
+          (video as any).captureStream?.() ?? (video as any).mozCaptureStream?.();
         if (!stream) {
           URL.revokeObjectURL(srcUrl);
           reject(new Error("captureStream() not supported in this browser"));
@@ -913,12 +993,15 @@ function trimVideo(
         });
 
         // Stop recording after clipDuration + small buffer
-        stopTimeout = setTimeout(() => {
-          if (recorder.state !== "inactive") {
-            video.pause();
-            recorder.stop();
-          }
-        }, clipDuration * 1000 + 200);
+        stopTimeout = setTimeout(
+          () => {
+            if (recorder.state !== "inactive") {
+              video.pause();
+              recorder.stop();
+            }
+          },
+          clipDuration * 1000 + 200
+        );
       } catch (err) {
         URL.revokeObjectURL(srcUrl);
         reject(err);

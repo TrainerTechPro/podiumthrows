@@ -9,6 +9,7 @@
 
 import { openDB, idbGetAll, idbPut, idbDelete, idbCount } from "./idb";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { logger } from "@/lib/logger";
 
 const STORE = "quick-log-queue";
 
@@ -50,8 +51,15 @@ export async function queueQuickLogThrow(payload: QueuedThrow): Promise<void> {
         }
       ).sync.register("sync-quick-log");
     }
-  } catch {
+  } catch (err) {
     // Background Sync not supported (iOS Safari) — syncQuickLogQueue() handles it on reconnect
+    logger.debug(
+      "Background Sync not supported (iOS Safari) — syncQuickLogQueue() handles it on reconnect",
+      {
+        context: "src/lib/pwa/quick-log-queue.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      }
+    );
   }
 }
 

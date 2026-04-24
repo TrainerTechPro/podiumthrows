@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { logger } from "@/lib/logger";
 
 export type DateRangeKey = "30d" | "3mo" | "6mo" | "1y" | "all";
 
@@ -24,7 +25,7 @@ export interface EventChartSettings {
 export function useEventChartSettings(
   athleteId: string | null,
   event: string,
-  defaultCompLabel: string | null,
+  defaultCompLabel: string | null
 ) {
   // Lazy initializer so the initial state is computed once per mount, not on every render
   const [settings, setSettings] = useState<EventChartSettings>(() => ({
@@ -54,8 +55,12 @@ export function useEventChartSettings(
         // No stored settings — ensure state matches computed defaults (not stale first-render value)
         setSettings({ dateRange: defaultDateRange, visibleWeights: defaultWeights });
       }
-    } catch {
+    } catch (err) {
       // Malformed JSON or disabled storage — fall through to defaults
+      logger.debug("Malformed JSON or disabled storage — fall through to defaults", {
+        context: "src/lib/hooks/useEventChartSettings.ts",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
     }
     setHydrated(true);
   }, [athleteId, event, defaultCompLabel]);
@@ -66,8 +71,15 @@ export function useEventChartSettings(
     const key = `podiumThrows:analysisSettings:${athleteId}:${event}`;
     try {
       window.localStorage.setItem(key, JSON.stringify(settings));
-    } catch {
+    } catch (err) {
       // Quota exceeded or disabled — ignore silently; settings still work for the session
+      logger.debug(
+        "Quota exceeded or disabled — ignore silently; settings still work for the session",
+        {
+          context: "src/lib/hooks/useEventChartSettings.ts",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        }
+      );
     }
   }, [settings, hydrated, athleteId, event]);
 
@@ -104,8 +116,7 @@ export function useEventChartSettings(
 export function rangeStartDate(range: DateRangeKey): string | null {
   if (range === "all") return null;
   const now = new Date();
-  const days =
-    range === "30d" ? 30 : range === "3mo" ? 90 : range === "6mo" ? 180 : 365;
+  const days = range === "30d" ? 30 : range === "3mo" ? 90 : range === "6mo" ? 180 : 365;
   const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
   return start.toISOString().split("T")[0];
 }
@@ -115,5 +126,5 @@ export const DATE_RANGE_LABELS: Record<DateRangeKey, string> = {
   "3mo": "3 months",
   "6mo": "6 months",
   "1y": "1 year",
-  "all": "All time",
+  all: "All time",
 };
