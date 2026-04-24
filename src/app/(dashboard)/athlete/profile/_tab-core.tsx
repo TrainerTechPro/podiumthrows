@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/Input";
 import type { ProfileData } from "./_types";
 import { CLASS_STANDINGS, EVENTS_LIST, GENDERS_LIST } from "./_types";
 
+import { logger } from "@/lib/logger";
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
 export function TabCore({ profile }: { profile: ProfileData }) {
@@ -77,7 +78,10 @@ export function TabCore({ profile }: { profile: ProfileData }) {
         success("Profile Updated", "Your core info has been saved.");
         router.refresh();
       } catch (err) {
-        console.error("core profile save failed", err);
+        logger.error("core profile save failed", {
+          context: "athlete/profile/tab-core",
+          error: err,
+        });
         toastError("Network Error", "Could not reach the server.");
       }
     });

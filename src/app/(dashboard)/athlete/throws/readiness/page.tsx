@@ -23,6 +23,7 @@ import {
 } from "@/lib/throws/podium-profile";
 import { ThrowsChipNav } from "../_chip-nav";
 
+import { logger } from "@/lib/logger";
 // ── Constants ──────────────────────────────────────────────────────
 
 const EVENT_LABELS: Record<string, string> = {
@@ -199,7 +200,10 @@ export default function AthleteProfilePage() {
       setShowCheckIn(false);
       loadProfile(athleteId);
     } catch (err) {
-      console.error("throws check-in save failed", err);
+      logger.error("throws check-in save failed", {
+        context: "athlete/throws/readiness",
+        error: err,
+      });
       setSaveError(
         err instanceof Error ? err.message : "Failed to save check-in. Please try again."
       );
@@ -230,7 +234,7 @@ export default function AthleteProfilePage() {
       setPrForm({ event: "SHOT_PUT", implement: "", distance: "" });
       if (athleteId) loadProfile(athleteId);
     } catch (err) {
-      console.error("PR save failed", err);
+      logger.error("PR save failed", { context: "athlete/throws/readiness", error: err });
       setPrError(err instanceof Error ? err.message : "Failed to save PR. Please try again.");
     }
     setSavingPR(false);

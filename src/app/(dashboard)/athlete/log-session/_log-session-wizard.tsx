@@ -13,6 +13,7 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { track } from "@/lib/analytics";
 import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle } from "lucide-react";
 
+import { logger } from "@/lib/logger";
 /* ─── Log Session — single-screen form (no wizard) ───────────────────────────
    Consumer-app pattern: one scrollable form with a sticky thumb-zone Save.
    Athletes log multiple sessions a week; wizards are friction on high-frequency
@@ -246,7 +247,10 @@ export function LogSessionWizard({
         }
       })
       .catch((err) => {
-        console.error("log-session edit load failed", err);
+        logger.error("log-session edit load failed", {
+          context: "athlete/log-session/log-session-wizard",
+          error: err,
+        });
         toast.error(
           err instanceof Error ? err.message : "Couldn't load session — refresh and try again"
         );
@@ -267,7 +271,10 @@ export function LogSessionWizard({
       })
       .catch((err) => {
         // Non-fatal — past-drill suggestions are a nice-to-have.
-        console.error("past-drills fetch failed", err);
+        logger.error("past-drills fetch failed", {
+          context: "athlete/log-session/log-session-wizard",
+          error: err,
+        });
       });
   }, [event]);
 

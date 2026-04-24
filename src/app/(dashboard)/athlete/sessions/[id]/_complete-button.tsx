@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -32,7 +33,10 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
         // from the database, so we don't need to thread the summary through.
         router.push(`/athlete/session/${sessionId}?view=recap`);
       } catch (err) {
-        console.error("complete session failed", err);
+        logger.error("complete session failed", {
+          context: "athlete/sessions/[id]/complete-button",
+          error: err,
+        });
         setError("Failed to complete session. Please try again.");
       }
     });

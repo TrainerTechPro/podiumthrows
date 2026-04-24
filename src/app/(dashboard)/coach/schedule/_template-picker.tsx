@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
 interface ThrowsSessionTemplate {
@@ -49,7 +50,10 @@ export function TemplatePicker({ value, onChange, className }: TemplatePickerPro
           setTemplates(json.data ?? []);
         }
       } catch (err) {
-        console.error("[TemplatePicker] fetch error:", err);
+        logger.error("[TemplatePicker] fetch error:", {
+          context: "coach/schedule/template-picker",
+          error: err,
+        });
       } finally {
         if (!cancelled) setLoading(false);
       }

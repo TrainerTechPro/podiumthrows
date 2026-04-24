@@ -23,6 +23,7 @@ import { VideoAnalysisWorkspace } from "@/components/video/VideoAnalysisWorkspac
 import { formatEventType } from "@/lib/utils";
 import { formatTimestamp } from "@/components/video/types";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
 type Props = {
@@ -177,7 +178,7 @@ export function VideoEditor({ video, athletes }: Props) {
       setRedoStack([]);
       toastSuccess("Annotations saved");
     } catch (err) {
-      console.error("Save failed:", err);
+      logger.error("Save failed:", { context: "coach/videos/[id]/video-editor", error: err });
       toastError("Save failed", "Could not save annotations. Please try again.");
     } finally {
       setIsSaving(false);
@@ -201,7 +202,7 @@ export function VideoEditor({ video, athletes }: Props) {
         `Shared with ${selectedAthleteIds.size} athlete${selectedAthleteIds.size !== 1 ? "s" : ""}.`
       );
     } catch (err) {
-      console.error("Share failed:", err);
+      logger.error("Share failed:", { context: "coach/videos/[id]/video-editor", error: err });
       toastError("Share failed", "Could not update sharing settings.");
     } finally {
       setIsSharing(false);
@@ -219,7 +220,7 @@ export function VideoEditor({ video, athletes }: Props) {
       if (!res.ok) throw new Error("Failed to delete");
       router.push("/coach/videos");
     } catch (err) {
-      console.error("Delete failed:", err);
+      logger.error("Delete failed:", { context: "coach/videos/[id]/video-editor", error: err });
       toastError("Delete failed", "Could not delete the video.");
     }
   }

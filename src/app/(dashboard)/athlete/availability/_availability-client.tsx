@@ -23,6 +23,7 @@ import { useConfirm } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AvailabilityBlock, AvailabilityOverrideItem } from "@/lib/data/availability";
 
+import { logger } from "@/lib/logger";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -278,7 +279,10 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
       setBlocks(json.data.blocks);
       setOverrides(json.data.overrides);
     } catch (err) {
-      console.error("availability refresh failed", err);
+      logger.error("availability refresh failed", {
+        context: "athlete/availability/availability-client",
+        error: err,
+      });
       error(
         "Couldn't refresh availability",
         err instanceof Error ? err.message : "Check your connection and try again."

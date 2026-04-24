@@ -10,6 +10,7 @@ import {
 } from "@/lib/throws/profile-constants";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 const QUIZ_ORDER: TypingQuizId[] = [
   "adaptationSpeed",
   "transferType",
@@ -99,7 +100,7 @@ export default function AthleteTypingQuizPage() {
         }
         setDone(true);
       } catch (err) {
-        console.error("quiz submit failed", err);
+        logger.error("quiz submit failed", { context: "athlete/throws/quiz", error: err });
         setSubmitError(
           err instanceof Error ? err.message : "Failed to save quiz results. Please try again."
         );

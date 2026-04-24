@@ -10,6 +10,7 @@ import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { FeedPrivacySettings } from "@/components/feedback/FeedPrivacySettings";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 
+import { logger } from "@/lib/logger";
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 function formatEventName(event: string): string {
@@ -50,7 +51,7 @@ export default async function AthleteSettingsPage() {
   } catch (err) {
     // Wearable tables can be missing in older dev DBs. Log so real DB
     // errors aren't silently hidden; the badge falls back to 0.
-    console.warn("wearable connection count failed", err);
+    logger.warn("wearable connection count failed", { context: "athlete/settings", error: err });
   }
 
   return (

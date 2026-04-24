@@ -7,6 +7,7 @@ import { Play, SkipForward } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 interface AssignmentActionsProps {
   assignmentId: string;
   canStart: boolean;
@@ -46,7 +47,10 @@ export function AssignmentActions({
         router.push("/athlete/dashboard");
       }
     } catch (err) {
-      console.error("assignment action failed", err);
+      logger.error("assignment action failed", {
+        context: "athlete/sessions/assignment/[id]/assignment-actions",
+        error: err,
+      });
       toast(err instanceof Error ? err.message : "Network error", "error");
     } finally {
       setLoading(null);

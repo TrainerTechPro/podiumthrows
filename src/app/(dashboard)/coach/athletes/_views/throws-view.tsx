@@ -17,6 +17,7 @@ import {
 import { EVENT_LABELS, EVENT_COLORS, TestingBadge, type ThrowsProfileRow } from "./throws-shared";
 import { useThrowsEnrollmentData } from "./useThrowsEnrollmentData";
 
+import { logger } from "@/lib/logger";
 const EVENT_CODES: EventCode[] = ["SP", "DT", "HT", "JT"];
 const EVENT_TYPE_TO_CODE: Record<string, EventCode> = {
   SHOT_PUT: "SP",
@@ -173,7 +174,10 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
       setInviteCopied(athleteId);
       setTimeout(() => setInviteCopied(null), 3000);
     } catch (err) {
-      console.error("Failed to create invite:", err);
+      logger.error("Failed to create invite:", {
+        context: "coach/athletes/_views/throws-view",
+        error: err,
+      });
     }
   }
 

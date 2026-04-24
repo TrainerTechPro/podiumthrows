@@ -6,6 +6,7 @@ import { cn, localToday } from "@/lib/utils";
 import type { AthleteProfileFull } from "@/lib/data/athlete";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 const EVENTS = [
   { value: "SHOT_PUT", label: "Shot Put" },
   { value: "DISCUS", label: "Discus" },
@@ -76,7 +77,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       } catch (err) {
-        console.error("settings save failed", err);
+        logger.error("settings save failed", { context: "athlete/settings/form", error: err });
         setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
       }
     });

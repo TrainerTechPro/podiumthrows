@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 /**
  * Reads `?checkout=pro` or `?checkout=elite` from the URL and
  * auto-initiates a Stripe Checkout session.
@@ -44,10 +45,16 @@ export function CheckoutTrigger() {
         if (res.ok && payload.success && payload.data?.url) {
           router.push(payload.data.url);
         } else {
-          console.error("[CheckoutTrigger] Checkout error:", payload.error);
+          logger.error("[CheckoutTrigger] Checkout error:", {
+            context: "coach/dashboard/checkout-trigger",
+            error: payload.error,
+          });
         }
       } catch (err) {
-        console.error("[CheckoutTrigger] Network error:", err);
+        logger.error("[CheckoutTrigger] Network error:", {
+          context: "coach/dashboard/checkout-trigger",
+          error: err,
+        });
       }
     })();
   }, [searchParams, router]);

@@ -13,6 +13,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import type { AthleteFeedbackItem } from "@/lib/data/athlete-feedback";
 
+import { logger } from "@/lib/logger";
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 function formatRelative(iso: string): string {
@@ -59,7 +60,10 @@ export function FeedbackList({ initialItems }: { initialItems: AthleteFeedbackIt
         } catch (err) {
           // Don't interrupt the reading flow — log so we can diagnose.
           // The server will catch up on the next ack action.
-          console.warn("auto-mark-read failed", err);
+          logger.warn("auto-mark-read failed", {
+            context: "athlete/feedback/feedback-list",
+            error: err,
+          });
         }
       })
     ).then(() => {
@@ -128,7 +132,10 @@ function FeedbackRow({
         throw new Error(`Reaction save failed (${res.status})`);
       }
     } catch (err) {
-      console.error("reaction save failed", err);
+      logger.error("reaction save failed", {
+        context: "athlete/feedback/feedback-list",
+        error: err,
+      });
       // Rollback on failure and tell the user so the revert isn't silent.
       onUpdate({ reaction: item.reaction });
       toast.error("Couldn't save reaction — try again");
@@ -159,7 +166,7 @@ function FeedbackRow({
       setShowReply(trimmed.length > 0);
       toast.success(trimmed.length > 0 ? "Reply sent" : "Reply cleared");
     } catch (err) {
-      console.error("reply save failed", err);
+      logger.error("reply save failed", { context: "athlete/feedback/feedback-list", error: err });
       toast.error(err instanceof Error ? err.message : "Couldn't save reply — try again");
     } finally {
       setReplyPending(false);

@@ -17,6 +17,7 @@ import type { GoalItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
 const EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
@@ -486,7 +487,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
           setShowAddModal(false);
           toast.success("Goal created");
         } catch (err) {
-          console.error("goal create failed", err);
+          logger.error("goal create failed", { context: "athlete/goals/goals-client", error: err });
           setAddError(err instanceof Error ? err.message : "Something went wrong.");
         }
       });
@@ -532,7 +533,10 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         );
         toast.success("Progress updated");
       } catch (err) {
-        console.error("goal progress update failed", err);
+        logger.error("goal progress update failed", {
+          context: "athlete/goals/goals-client",
+          error: err,
+        });
         toast.error(err instanceof Error ? err.message : "Couldn't save progress.");
       }
     },
@@ -557,7 +561,10 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         );
         toast.success("Deadline updated");
       } catch (err) {
-        console.error("goal deadline update failed", err);
+        logger.error("goal deadline update failed", {
+          context: "athlete/goals/goals-client",
+          error: err,
+        });
         toast.error(err instanceof Error ? err.message : "Couldn't save deadline.");
       }
     },
@@ -580,7 +587,7 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, status: "ABANDONED" } : g)));
         toast.success("Goal abandoned");
       } catch (err) {
-        console.error("goal abandon failed", err);
+        logger.error("goal abandon failed", { context: "athlete/goals/goals-client", error: err });
         toast.error(err instanceof Error ? err.message : "Couldn't abandon goal.");
       }
     },

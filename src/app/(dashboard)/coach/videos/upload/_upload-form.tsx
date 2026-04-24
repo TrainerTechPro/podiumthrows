@@ -378,7 +378,9 @@ export function UploadForm({ athleteOptions }: Props) {
             if (thumbXhrOk) thumbnailPublicUrl = thumbPublicUrl;
           }
         } catch {
-          console.warn("[Upload] Thumbnail upload failed — continuing without thumbnail");
+          logger.warn("[Upload] Thumbnail upload failed — continuing without thumbnail", {
+            context: "coach/videos/upload/upload-form",
+          });
         }
       }
 
@@ -461,7 +463,10 @@ export function UploadForm({ athleteOptions }: Props) {
             else reject(new Error(`Upload failed (${xhr.status})`));
           };
           xhr.onerror = () => {
-            console.error("[Upload] XHR onerror — uploadUrl:", uploadUrl);
+            logger.error("[Upload] XHR onerror — uploadUrl:", {
+              context: "coach/videos/upload/upload-form",
+              error: uploadUrl,
+            });
             reject(new Error("Upload failed — CORS or network error. Check browser console."));
           };
           xhr.open("PUT", uploadUrl);

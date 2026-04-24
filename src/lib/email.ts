@@ -10,6 +10,7 @@ import {
   type CommentAddedData,
 } from "./email-templates";
 
+import { logger } from "@/lib/logger";
 // Use Resend SMTP relay if RESEND_API_KEY is set (preferred),
 // otherwise fall back to custom SMTP credentials.
 const hasResend = Boolean(process.env.RESEND_API_KEY);
@@ -39,8 +40,9 @@ const transporter = nodemailer.createTransport(
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
 if (!APP_URL && process.env.NODE_ENV === "production") {
   // Use logger if available, but email.ts is imported early so logger may not be ready
-  console.error(
-    "[email] CRITICAL: NEXT_PUBLIC_APP_URL is not set — password reset and invite links will point to localhost"
+  logger.error(
+    "[email] CRITICAL: NEXT_PUBLIC_APP_URL is not set — password reset and invite links will point to localhost",
+    { context: "email" }
   );
 }
 const baseUrl = APP_URL || "http://localhost:3000";

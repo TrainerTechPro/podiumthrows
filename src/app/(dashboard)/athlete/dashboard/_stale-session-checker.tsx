@@ -14,6 +14,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 export function StaleSessionChecker() {
   const router = useRouter();
   const firedRef = useRef(false);
@@ -45,7 +46,10 @@ export function StaleSessionChecker() {
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({}),
         }).catch((err) => {
-          console.warn("stale session complete failed", err);
+          logger.warn("stale session complete failed", {
+            context: "athlete/dashboard/stale-session-checker",
+            error: err,
+          });
           return null;
         });
         if (cancelled || !completeRes?.ok) return;
@@ -53,7 +57,10 @@ export function StaleSessionChecker() {
         router.push(`/athlete/session/${data.staleSession.id}?view=recap`);
       } catch (err) {
         // Non-fatal — feature is optional, but still log for diagnostics.
-        console.warn("stale session check failed", err);
+        logger.warn("stale session check failed", {
+          context: "athlete/dashboard/stale-session-checker",
+          error: err,
+        });
       }
     })();
 

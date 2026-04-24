@@ -3,6 +3,7 @@ import type { HistoryDay, HistoryDrill } from "./history-types";
 import { formatImplementDisplay } from "@/lib/throws/display";
 import { getLocalDate } from "@/lib/dates";
 
+import { logger } from "@/lib/logger";
 // Narrow shapes — only the fields we read. Keeps tests lightweight.
 export type ThrowLogInput = {
   id: string;
@@ -44,7 +45,20 @@ export type SelfLoggedSessionInput = {
 };
 
 const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const;
-const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] as const;
+const MONTH_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
 
 function isoDay(d: Date | string, timezone?: string | null): string {
   if (typeof d === "string") return d.slice(0, 10); // ISO date already
@@ -68,7 +82,10 @@ function parseImplementKg(label: string): number {
   return Number.isFinite(n) ? n : Number.NaN;
 }
 
-function parseDrillTypeFromBlockConfig(configJson: string): { drillType: string | null; label: string | null } {
+function parseDrillTypeFromBlockConfig(configJson: string): {
+  drillType: string | null;
+  label: string | null;
+} {
   try {
     const parsed = JSON.parse(configJson) as { drillType?: string };
     const drillType = parsed.drillType ?? null;
@@ -127,7 +144,9 @@ export function aggregateHistoryDays(input: {
         source: "free",
         event: log.event,
         implementKg: log.implementWeight,
-        implementLabel: formatImplementDisplay(log.implementWeight, log.event, input.gender, { compact: true }),
+        implementLabel: formatImplementDisplay(log.implementWeight, log.event, input.gender, {
+          compact: true,
+        }),
         drillType: null,
         drillTypeLabel: null,
         throwCount: 1,
@@ -154,7 +173,10 @@ export function aggregateHistoryDays(input: {
   // Bucket block logs by assignment.assignedDate
   // Group by (assignmentId, blockId) → one drill row per block.
   type BlockKey = string; // `${assignmentId}|${drillType}|${implement}`
-  const blockGroups = new Map<BlockKey, { drill: HistoryDrill; date: string; assignmentId: string }>();
+  const blockGroups = new Map<
+    BlockKey,
+    { drill: HistoryDrill; date: string; assignmentId: string }
+  >();
 
   for (const bl of input.blockLogs) {
     const date = bl.assignment.assignedDate;
@@ -165,11 +187,10 @@ export function aggregateHistoryDays(input: {
     // Skip malformed implement strings — log so we can chase the data quality issue
     // upstream rather than silently rendering "0kg" or NaN drills in the UI.
     if (Number.isNaN(implementKg)) {
-      if (typeof console !== "undefined") {
-        console.warn(
-          `[history] Skipping ThrowsBlockLog ${bl.id}: unparseable implement "${bl.implement}"`
-        );
-      }
+      logger.warn(
+        `[history] Skipping ThrowsBlockLog ${bl.id}: unparseable implement "${bl.implement}"`,
+        { context: "throws/history" }
+      );
       continue;
     }
 
@@ -178,7 +199,10 @@ export function aggregateHistoryDays(input: {
     const existing = blockGroups.get(key);
     if (existing) {
       existing.drill.throwCount += 1;
-      if (bl.distance != null && (existing.drill.bestMark == null || bl.distance > existing.drill.bestMark)) {
+      if (
+        bl.distance != null &&
+        (existing.drill.bestMark == null || bl.distance > existing.drill.bestMark)
+      ) {
         existing.drill.bestMark = bl.distance;
       }
     } else {
@@ -187,7 +211,9 @@ export function aggregateHistoryDays(input: {
           source: "assigned",
           event,
           implementKg,
-          implementLabel: formatImplementDisplay(implementKg, event, input.gender, { compact: true }),
+          implementLabel: formatImplementDisplay(implementKg, event, input.gender, {
+            compact: true,
+          }),
           drillType: drillInfo.drillType,
           drillTypeLabel: drillInfo.label,
           throwCount: 1,
@@ -247,7 +273,8 @@ export function aggregateHistoryDays(input: {
     for (const dl of session.drillLogs) {
       const implKg = dl.implementWeight ?? 0;
       const pr = input.prContext?.[session.event];
-      const isPR = dl.bestMark != null &&
+      const isPR =
+        dl.bestMark != null &&
         pr != null &&
         Math.abs(implKg - pr.weightKg) < WEIGHT_TOLERANCE &&
         dl.bestMark >= pr.distance;
@@ -255,7 +282,10 @@ export function aggregateHistoryDays(input: {
         source: "free",
         event: session.event as EventType,
         implementKg: implKg,
-        implementLabel: implKg > 0 ? formatImplementDisplay(implKg, session.event, input.gender, { compact: true }) : "BW",
+        implementLabel:
+          implKg > 0
+            ? formatImplementDisplay(implKg, session.event, input.gender, { compact: true })
+            : "BW",
         drillType: dl.drillType,
         drillTypeLabel: dl.drillType
           .toLowerCase()

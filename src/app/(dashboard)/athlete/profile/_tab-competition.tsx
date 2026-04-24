@@ -16,6 +16,7 @@ import type {
   CompetitionMark,
 } from "./_types";
 
+import { logger } from "@/lib/logger";
 /* ─── Helpers ───────────────────────────────────────────────────────────── */
 
 function formatEventName(event: string): string {
@@ -170,7 +171,10 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
         setTimeout(() => setJustSaved(false), 2500);
         router.refresh();
       } catch (err) {
-        console.error("competition profile save failed", err);
+        logger.error("competition profile save failed", {
+          context: "athlete/profile/tab-competition",
+          error: err,
+        });
         toastError("Save failed", "Network error. Please try again.");
       }
     });

@@ -87,41 +87,46 @@ function reportToErrorTracking(
     });
 }
 
+// All levels accept an optional `error` — pino/winston idiom. Non-error levels
+// attach it to the output but do NOT report to Sentry (only `error` captures).
+interface LogOptions {
+  context?: string;
+  userId?: string;
+  metadata?: Record<string, unknown>;
+  error?: unknown;
+}
+
+function errorSuffix(options?: LogOptions): string {
+  if (options?.error instanceof Error) {
+    return ` — ${options.error.name}: ${options.error.message}`;
+  }
+  return "";
+}
+
 export const logger = {
-  debug(
-    message: string,
-    options?: { context?: string; userId?: string; metadata?: Record<string, unknown> }
-  ) {
+  debug(message: string, options?: LogOptions) {
     if (process.env.NODE_ENV === "production") return;
     const entry = createEntry("debug", message, options);
-    console.debug(formatEntry(entry), options?.metadata || "");
+    console.debug(formatEntry(entry) + errorSuffix(options), options?.metadata || "");
   },
 
-  info(
-    message: string,
-    options?: { context?: string; userId?: string; metadata?: Record<string, unknown> }
-  ) {
+  info(message: string, options?: LogOptions) {
     const entry = createEntry("info", message, options);
-    console.log(formatEntry(entry), options?.metadata ? JSON.stringify(options.metadata) : "");
+    console.log(
+      formatEntry(entry) + errorSuffix(options),
+      options?.metadata ? JSON.stringify(options.metadata) : ""
+    );
   },
 
-  warn(
-    message: string,
-    options?: { context?: string; userId?: string; metadata?: Record<string, unknown> }
-  ) {
+  warn(message: string, options?: LogOptions) {
     const entry = createEntry("warn", message, options);
-    console.warn(formatEntry(entry), options?.metadata ? JSON.stringify(options.metadata) : "");
+    console.warn(
+      formatEntry(entry) + errorSuffix(options),
+      options?.metadata ? JSON.stringify(options.metadata) : ""
+    );
   },
 
-  error(
-    message: string,
-    options?: {
-      context?: string;
-      userId?: string;
-      metadata?: Record<string, unknown>;
-      error?: unknown;
-    }
-  ) {
+  error(message: string, options?: LogOptions) {
     const entry = createEntry("error", message, options);
     console.error(formatEntry(entry));
 

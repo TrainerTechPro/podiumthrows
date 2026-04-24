@@ -1,5 +1,6 @@
 import { createClient, type EdgeConfigClient } from "@vercel/edge-config";
 
+import { logger } from "@/lib/logger";
 // ---------------------------------------------------------------------------
 // Feature flag definitions
 // ---------------------------------------------------------------------------
@@ -70,7 +71,10 @@ export async function getFlags(): Promise<FlagMap> {
     return { ...DEFAULT_FLAGS, ...flags };
   } catch (err) {
     // Edge Config unavailable — fall back to defaults (log for visibility)
-    console.warn("[flags] Edge Config error — serving default flags", err);
+    logger.warn("[flags] Edge Config error — serving default flags", {
+      context: "flags",
+      error: err,
+    });
     return DEFAULT_FLAGS;
   }
 }
@@ -82,7 +86,7 @@ export async function getFlags(): Promise<FlagMap> {
  */
 export async function isFeatureEnabled(
   key: FlagKey,
-  tier: "free" | "pro" | "elite",
+  tier: "free" | "pro" | "elite"
 ): Promise<boolean> {
   const flags = await getFlags();
   const flag = flags[key];

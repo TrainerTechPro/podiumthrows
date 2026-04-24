@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 
+import { logger } from "@/lib/logger";
 /* ─── Landmark Types ──────────────────────────────────────────────────────── */
 
 export type PoseLandmark = {
@@ -154,8 +155,7 @@ export function calculateAngle(
   b: PoseLandmark, // vertex
   c: PoseLandmark
 ): number {
-  const radians =
-    Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+  const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
   let degrees = Math.abs((radians * 180) / Math.PI);
   if (degrees > 180) degrees = 360 - degrees;
   return degrees;
@@ -224,30 +224,26 @@ export function usePoseDetection(): UsePoseDetectionReturn {
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm"
       );
 
-      landmarkerRef.current = await PoseLandmarkerClass.createFromOptions(
-        fileset,
-        {
-          baseOptions: {
-            modelAssetPath:
-              "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task",
-            delegate: "GPU",
-          },
-          runningMode: "VIDEO",
-          numPoses: 1,
-          minPoseDetectionConfidence: 0.5,
-          minPosePresenceConfidence: 0.5,
-          minTrackingConfidence: 0.5,
-        }
-      );
+      landmarkerRef.current = await PoseLandmarkerClass.createFromOptions(fileset, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task",
+          delegate: "GPU",
+        },
+        runningMode: "VIDEO",
+        numPoses: 1,
+        minPoseDetectionConfidence: 0.5,
+        minPosePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+      });
 
       initializedRef.current = true;
     } catch (err) {
-      console.error("Failed to initialize MediaPipe Pose:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load pose detection model"
-      );
+      logger.error("Failed to initialize MediaPipe Pose:", {
+        context: "video/usePoseDetection",
+        error: err,
+      });
+      setError(err instanceof Error ? err.message : "Failed to load pose detection model");
     } finally {
       loadingRef.current = false;
       setLoading(false);
@@ -269,14 +265,12 @@ export function usePoseDetection(): UsePoseDetectionReturn {
         const result = landmarkerRef.current.detectForVideo(video, performance.now());
 
         if (result.landmarks && result.landmarks.length > 0) {
-          const landmarks: PoseLandmark[] = result.landmarks[0].map(
-            (lm) => ({
-              x: lm.x,
-              y: lm.y,
-              z: lm.z ?? 0,
-              visibility: lm.visibility ?? 1,
-            })
-          );
+          const landmarks: PoseLandmark[] = result.landmarks[0].map((lm) => ({
+            x: lm.x,
+            y: lm.y,
+            z: lm.z ?? 0,
+            visibility: lm.visibility ?? 1,
+          }));
 
           const poseResult: PoseResult = {
             landmarks,
@@ -290,7 +284,7 @@ export function usePoseDetection(): UsePoseDetectionReturn {
         setPose(null);
         return null;
       } catch (err) {
-        console.error("Pose detection failed:", err);
+        logger.error("Pose detection failed:", { context: "video/usePoseDetection", error: err });
         return null;
       }
     },

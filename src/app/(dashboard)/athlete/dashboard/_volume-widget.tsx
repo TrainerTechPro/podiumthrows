@@ -5,6 +5,7 @@ import { AlertCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton, AnimatedNumber } from "@/components";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
 interface WeeklyVolume {
@@ -44,7 +45,10 @@ export function VolumeWidget() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("training-volume fetch failed", err);
+        logger.error("training-volume fetch failed", {
+          context: "athlete/dashboard/volume-widget",
+          error: err,
+        });
         setError(true);
         setLoading(false);
       });

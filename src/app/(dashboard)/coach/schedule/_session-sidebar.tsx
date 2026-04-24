@@ -12,6 +12,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { cn } from "@/lib/utils";
 import { X, Users, User } from "lucide-react";
 
+import { logger } from "@/lib/logger";
 /* ─── Tier badge colors ────────────────────────────────────────────────── */
 
 const TIER_BADGE_VARIANT: Record<SessionTier, "info" | "primary" | "success"> = {
@@ -107,7 +108,10 @@ export function SessionSidebar({
         }))
       );
     } catch (err) {
-      console.error("[SessionSidebar] fetch athletes error:", err);
+      logger.error("[SessionSidebar] fetch athletes error:", {
+        context: "coach/schedule/session-sidebar",
+        error: err,
+      });
     } finally {
       setAthletesLoading(false);
     }

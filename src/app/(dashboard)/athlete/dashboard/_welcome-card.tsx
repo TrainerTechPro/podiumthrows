@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ProgressBar, Button } from "@/components";
 import type { OnboardingGuide } from "@/lib/data/athlete";
 
+import { logger } from "@/lib/logger";
 /* ─── Props ──────────────────────────────────────────────────────────────── */
 
 interface WelcomeCardProps {
@@ -82,7 +83,10 @@ export function WelcomeCard({ firstName, guide }: WelcomeCardProps) {
     } catch (err) {
       // Private browsing or storage quota — dismiss visually but the card
       // will reappear on next load. Not worth interrupting the athlete.
-      console.warn("localStorage.setItem(welcome-dismissed) failed", err);
+      logger.warn("localStorage.setItem(welcome-dismissed) failed", {
+        context: "athlete/dashboard/welcome-card",
+        error: err,
+      });
     }
   }
 

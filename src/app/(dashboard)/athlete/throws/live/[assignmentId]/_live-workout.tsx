@@ -411,7 +411,10 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
             .catch((err) => {
               // Surface failure so the athlete knows the checkmark isn't
               // persisted — coach won't see this warmup drill in history.
-              console.error("warmup drill persist failed", err);
+              logger.error("warmup drill persist failed", {
+                context: "athlete/throws/live/[id]/live-workout",
+                error: err,
+              });
               toast(
                 err instanceof Error
                   ? err.message

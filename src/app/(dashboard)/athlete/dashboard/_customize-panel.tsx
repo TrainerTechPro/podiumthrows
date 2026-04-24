@@ -35,6 +35,7 @@ import {
   type DashboardConfig,
 } from "./_widget-registry";
 
+import { logger } from "@/lib/logger";
 /* ─── Icon map ──────────────────────────────────────────────────────────── */
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -115,7 +116,10 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
           setConfig(currentConfig);
         }
       } catch (err) {
-        console.error("dashboard-config save failed", err);
+        logger.error("dashboard-config save failed", {
+          context: "athlete/dashboard/customize-panel",
+          error: err,
+        });
         setError("Network error. Check your connection and try again.");
         setConfig(currentConfig);
       } finally {

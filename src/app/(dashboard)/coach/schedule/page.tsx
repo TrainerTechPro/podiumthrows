@@ -12,6 +12,7 @@ import { SessionSidebar } from "./_session-sidebar";
 import { ChevronLeft, ChevronRight, Printer } from "lucide-react";
 import Link from "next/link";
 
+import { logger } from "@/lib/logger";
 /* ─── Helpers ─────────────────────────────────────────────────────────── */
 
 /** Get the Monday of the week containing `d`. */
@@ -76,7 +77,10 @@ export default function ProgrammingPage() {
       const json = await res.json();
       setSessions(json.data ?? []);
     } catch (err) {
-      console.error("[programming] fetch sessions error:", err);
+      logger.error("[programming] fetch sessions error:", {
+        context: "coach/schedule",
+        error: err,
+      });
       setSessions([]);
     }
   }, []);
@@ -119,7 +123,10 @@ export default function ProgrammingPage() {
       );
       setCompetitions(flat);
     } catch (err) {
-      console.error("[programming] fetch competitions error:", err);
+      logger.error("[programming] fetch competitions error:", {
+        context: "coach/schedule",
+        error: err,
+      });
       setCompetitions([]);
     }
   }, []);
@@ -131,7 +138,7 @@ export default function ProgrammingPage() {
       const json = await res.json();
       setGroups(json.data ?? []);
     } catch (err) {
-      console.error("[programming] fetch groups error:", err);
+      logger.error("[programming] fetch groups error:", { context: "coach/schedule", error: err });
     }
   }, []);
 

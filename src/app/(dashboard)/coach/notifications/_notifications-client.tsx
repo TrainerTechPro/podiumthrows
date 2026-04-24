@@ -22,6 +22,7 @@ import {
   Settings2,
 } from "lucide-react";
 
+import { logger } from "@/lib/logger";
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 function relativeTime(iso: string): string {
@@ -391,7 +392,10 @@ export function NotificationsClient({
           }
           setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read } : n)));
         } catch (err) {
-          console.error("mark notification read failed", err);
+          logger.error("mark notification read failed", {
+            context: "coach/notifications/notifications-client",
+            error: err,
+          });
           toast.error("Couldn't update — try again");
         }
       });
@@ -412,7 +416,10 @@ export function NotificationsClient({
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
         toast.success("All notifications marked read");
       } catch (err) {
-        console.error("mark all read failed", err);
+        logger.error("mark all read failed", {
+          context: "coach/notifications/notifications-client",
+          error: err,
+        });
         toast.error("Couldn't mark all — try again");
       }
     });

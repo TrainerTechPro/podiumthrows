@@ -10,6 +10,7 @@ import { EnablePushNotifications } from "@/components/notifications/EnablePushNo
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 
+import { logger } from "@/lib/logger";
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
 type WizardStep = "welcome" | "events" | "pbs" | "physical" | "notifications" | "done";
@@ -267,7 +268,10 @@ export function OnboardingWizard({
         // Go to the notifications step before the final done state
         setStep("notifications");
       } catch (err) {
-        console.error("onboarding submit failed", err);
+        logger.error("onboarding submit failed", {
+          context: "athlete/onboarding/wizard",
+          error: err,
+        });
         const msg =
           err instanceof Error ? err.message : "Failed to save profile. Please try again.";
         setError(msg);

@@ -13,6 +13,7 @@ import {
 import { formatImplementDisplay } from "@/lib/throws/display";
 import { ThrowsChipNav } from "../_chip-nav";
 
+import { logger } from "@/lib/logger";
 const DistanceTrendChart = dynamic(
   () => import("./_distance-chart").then((m) => m.DistanceTrendChart),
   { ssr: false, loading: () => <div className="shimmer h-64 rounded-xl" /> }
@@ -128,7 +129,10 @@ export default function ThrowAnalysisPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("throws analysis fetch failed", err);
+        logger.error("throws analysis fetch failed", {
+          context: "athlete/throws/trends",
+          error: err,
+        });
         setError(true);
         setLoading(false);
       });

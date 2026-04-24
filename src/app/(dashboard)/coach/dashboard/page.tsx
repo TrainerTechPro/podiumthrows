@@ -51,6 +51,7 @@ import { AdaptationProgress } from "./_adaptation-progress";
 import type { AdaptationRow } from "./_adaptation-progress";
 import { AnalyticsSection } from "./_analytics-section";
 
+import { logger } from "@/lib/logger";
 /* ─── Coach Dashboard — editorial, scientific, back-office ────────────────────
    Per Dual Product Identity: the coach desktop is the tool that sells the
    subscription. It should feel like research software, not a gamified app.
@@ -761,7 +762,10 @@ export default async function CoachDashboardPage() {
         });
       }
     } catch (err) {
-      console.error("[dashboard] Adaptation checkpoint query failed:", err);
+      logger.error("[dashboard] Adaptation checkpoint query failed:", {
+        context: "coach/dashboard",
+        error: err,
+      });
     }
   }
 

@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/Toast";
 import { FormRendererShell } from "@/components/form-renderer/FormRendererShell";
 import type { FormBlock, FormDisplayMode, ConditionalRule } from "@/lib/forms/types";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
 type Question = {
@@ -141,7 +142,10 @@ function LegacyQuestionForm({ questionnaire }: Props) {
       setSubmitted(true);
       toast.success("Questionnaire submitted");
     } catch (err) {
-      console.error("questionnaire submit failed", err);
+      logger.error("questionnaire submit failed", {
+        context: "athlete/questionnaires/[id]/questionnaire-form",
+        error: err,
+      });
       const msg = err instanceof Error ? err.message : "Something went wrong";
       setError(msg);
       toast.error(msg);

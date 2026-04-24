@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 // ─── Billing toggle ───────────────────────────────────────────────────────────
 
 export type Billing = "monthly" | "annual";
@@ -201,7 +202,10 @@ export function PricingCards({
       if (res.ok && payload.success && payload.data?.url) {
         router.push(payload.data.url);
       } else {
-        console.error("Checkout error:", payload.error);
+        logger.error("Checkout error:", {
+          context: "pricing/pricing-client",
+          error: payload.error,
+        });
         setCheckoutLoading(null);
       }
     } catch {

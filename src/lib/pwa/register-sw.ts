@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 // Service Worker registration utility
 
 export interface SWRegistrationResult {
@@ -30,10 +31,7 @@ export async function registerServiceWorker(): Promise<SWRegistrationResult> {
       if (!newWorker) return;
 
       newWorker.addEventListener("statechange", () => {
-        if (
-          newWorker.state === "installed" &&
-          navigator.serviceWorker.controller
-        ) {
+        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
           // New SW installed but waiting — an update is available
           updateAvailable = true;
         }
@@ -42,7 +40,7 @@ export async function registerServiceWorker(): Promise<SWRegistrationResult> {
 
     return { registration, updateAvailable };
   } catch (error) {
-    console.error("SW registration failed:", error);
+    logger.error("SW registration failed:", { context: "pwa/register-sw", error: error });
     return { registration: null, updateAvailable: false };
   }
 }

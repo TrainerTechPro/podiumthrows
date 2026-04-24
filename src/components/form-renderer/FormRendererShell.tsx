@@ -23,6 +23,7 @@ import { SectionedRenderer } from "./SectionedRenderer";
 import { SaveResumeBar } from "./SaveResumeBar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
+import { logger } from "@/lib/logger";
 interface FormRendererShellProps {
   questionnaireId: string;
   title: string;
@@ -160,7 +161,10 @@ export function FormRendererShell({
       toast.success("Questionnaire submitted");
       onComplete?.();
     } catch (err) {
-      console.error("questionnaire submit failed", err);
+      logger.error("questionnaire submit failed", {
+        context: "form-renderer/FormRendererShell",
+        error: err,
+      });
       const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       setSubmitError(msg);
       toast.error(msg);

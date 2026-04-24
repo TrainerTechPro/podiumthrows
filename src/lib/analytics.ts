@@ -246,8 +246,10 @@ export function track<N extends EventName>(name: N, payload: EventPayloads[N]): 
 
   if (process.env.NODE_ENV !== "production") {
     // Fail-loud in dev so missing wires are visible in the console.
-    // eslint-disable-next-line no-console
-    console.info(`[analytics] ${name}`, payload);
+    logger.info(`[analytics] ${name}`, {
+      context: "analytics",
+      metadata: { name, payload: payload as Record<string, unknown> },
+    });
   }
 
   try {

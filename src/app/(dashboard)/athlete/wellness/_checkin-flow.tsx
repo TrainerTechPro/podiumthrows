@@ -15,6 +15,7 @@ import { QuickChecksStep } from "./_steps/quick-checks-step";
 import { NotesStep } from "./_steps/notes-step";
 import { SummaryStep } from "./_steps/summary-step";
 
+import { logger } from "@/lib/logger";
 /* ─── Phase Types ────────────────────────────────────────────────────────── */
 
 type Phase =
@@ -149,7 +150,10 @@ export function CheckinFlow({ whoopData, ouraData, previousScore }: CheckinFlowP
       setStreak(payload.data.streak ?? 0);
       setPhase("summary");
     } catch (err) {
-      console.error("wellness check-in submit failed", err);
+      logger.error("wellness check-in submit failed", {
+        context: "athlete/wellness/checkin-flow",
+        error: err,
+      });
       setErrorMsg(
         err instanceof Error && err.message
           ? err.message

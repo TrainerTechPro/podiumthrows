@@ -18,6 +18,7 @@ import {
   CHAMFER_LG,
 } from "./_utils";
 
+import { logger } from "@/lib/logger";
 /* ═══════════════════════════════════════════════════════════════════════ */
 /*  THROWING BLOCK VIEW                                                   */
 /* ═══════════════════════════════════════════════════════════════════════ */
@@ -160,7 +161,10 @@ export function ThrowingBlockView({
       // Advance locally either way — blocking mid-session on a transient
       // network error is worse UX than a warning toast. But make the failure
       // visible so athlete + coach know the skip isn't persisted.
-      console.error("skipThrow persist failed", err);
+      logger.error("skipThrow persist failed", {
+        context: "athlete/throws/live/[id]/throwing-block",
+        error: err,
+      });
       toast(err instanceof Error ? err.message : "Skip not saved — connection issue", "warning");
     }
     onThrowLogged({ throwNumber: current + 1, distance: null });

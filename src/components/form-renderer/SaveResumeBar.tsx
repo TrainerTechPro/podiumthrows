@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 interface SaveResumeBarProps {
   questionnaireId: string;
   answers: Record<string, unknown>;
@@ -43,7 +44,7 @@ export function SaveResumeBar({ questionnaireId, answers, enabled }: SaveResumeB
         setStatus("error");
       }
     } catch (err) {
-      console.error("draft save failed", err);
+      logger.error("draft save failed", { context: "form-renderer/SaveResumeBar", error: err });
       setStatus("error");
     }
   }, [questionnaireId]);

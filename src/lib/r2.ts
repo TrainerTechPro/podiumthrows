@@ -371,8 +371,8 @@ export async function getPresignedDownloadUrl(
 /* ─── Dev warning ──────────────────────────────────────────────────────────── */
 
 if (typeof process !== "undefined" && !isR2Configured()) {
-  console.warn(
-    "⚠ R2 not configured — uploads will use local filesystem (public/uploads/). " +
-      "Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, and R2_PUBLIC_URL for production."
+  logger.warn(
+    "R2 not configured — uploads will use local filesystem (public/uploads/). Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, and R2_PUBLIC_URL for production.",
+    { context: "r2" }
   );
 }

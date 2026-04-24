@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 
+import { logger } from "@/lib/logger";
 export type ActivityAction =
   | "SIGN_IN"
   | "CREATE_ATHLETE"
@@ -36,7 +37,7 @@ export async function logActivity(params: {
       },
     });
   } catch (error) {
-    console.error("Failed to log activity:", error);
+    logger.error("Failed to log activity:", { context: "activity-log", error: error });
   }
 }
 

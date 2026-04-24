@@ -8,6 +8,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import { WIRE_LENGTH_OPTIONS, LBS_TO_KG } from "@/lib/throws";
 
+import { logger } from "@/lib/logger";
 // ── Constants ──────────────────────────────────────────────────────────
 
 const THROW_EVENTS = [
@@ -333,7 +334,7 @@ export default function ThrowsLogPage() {
         }
       })
       .catch((err) => {
-        console.error("auth/me fetch failed", err);
+        logger.error("auth/me fetch failed", { context: "athlete/throws/log", error: err });
         toast.error(
           err instanceof Error ? err.message : "Couldn't load profile — refresh to try again"
         );

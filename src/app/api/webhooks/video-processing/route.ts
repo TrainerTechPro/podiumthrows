@@ -28,7 +28,10 @@ const WEBHOOK_SECRET = process.env.VIDEO_PROCESSING_WEBHOOK_SECRET;
 
 function verifyWebhookAuth(req: NextRequest): boolean {
   if (!WEBHOOK_SECRET) {
-    console.warn("[video-processing webhook] VIDEO_PROCESSING_WEBHOOK_SECRET not set — rejecting all requests");
+    logger.warn(
+      "[video-processing webhook] VIDEO_PROCESSING_WEBHOOK_SECRET not set — rejecting all requests",
+      { context: "api/webhooks/video-processing" }
+    );
     return false;
   }
 
@@ -67,7 +70,17 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = (await req.json()) as WebhookPayload;
-    const { videoId, status, thumbnailUrl, transcodedUrl, transcodedKey, fps, gopInterval, durationSec, error } = body;
+    const {
+      videoId,
+      status,
+      thumbnailUrl,
+      transcodedUrl,
+      transcodedKey,
+      fps,
+      gopInterval,
+      durationSec,
+      error,
+    } = body;
 
     if (!videoId) {
       return NextResponse.json({ success: false, error: "videoId is required" }, { status: 400 });

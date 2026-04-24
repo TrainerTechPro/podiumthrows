@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { ANALYSIS_FPS } from "./types";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
 type Resolution = "full" | "half" | "quarter";
@@ -107,21 +108,23 @@ async function ensureCors(): Promise<void> {
     const res = await fetch("/api/admin/ensure-cors", { method: "POST", headers: csrfHeaders() });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      console.warn("[useFrameExtractor] CORS setup returned", res.status, data);
+      logger.warn("[useFrameExtractor] CORS setup returned non-ok", {
+        context: "video/useFrameExtractor",
+        metadata: { status: res.status, data },
+      });
     }
   } catch (err) {
-    console.warn("[useFrameExtractor] CORS setup request failed:", err);
+    logger.warn("[useFrameExtractor] CORS setup request failed:", {
+      context: "video/useFrameExtractor",
+      error: err,
+    });
   }
 }
 
 /* ─── Hook ────────────────────────────────────────────────────────────────── */
 
 export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
-  const {
-    maxDuration = 10,
-    resolution = "half",
-    fps = ANALYSIS_FPS,
-  } = options;
+  const { maxDuration = 10, resolution = "half", fps = ANALYSIS_FPS } = options;
 
   const [isExtracting, setIsExtracting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -246,7 +249,12 @@ export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
 
             // Seek to exact time with timeout (5s per frame seek)
             video.currentTime = targetTime;
-            await waitForEvent(video, "seeked", 5000, `Seek stalled at frame ${i}/${numFrames} (t=${targetTime.toFixed(3)}s)`);
+            await waitForEvent(
+              video,
+              "seeked",
+              5000,
+              `Seek stalled at frame ${i}/${numFrames} (t=${targetTime.toFixed(3)}s)`
+            );
 
             // Draw to temp canvas at extraction resolution
             tempCtx.drawImage(video, 0, 0, cW, cH);
@@ -268,8 +276,7 @@ export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
           setIsExtracting(false);
           forceUpdate((n) => n + 1);
         } catch (err) {
-          let msg =
-            err instanceof Error ? err.message : "Frame extraction failed";
+          let msg = err instanceof Error ? err.message : "Frame extraction failed";
 
           // Provide helpful CORS error message
           if (

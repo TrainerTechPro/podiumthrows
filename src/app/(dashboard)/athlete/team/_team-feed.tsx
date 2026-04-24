@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, MessageSquare, Target, Trophy, Dumbbell, Calendar } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
 type ReactionCounts = Record<string, number>;
@@ -107,7 +108,7 @@ export function TeamFeed() {
       setNextCursor(data.nextCursor);
       setHasMore(data.hasMore);
     } catch (err) {
-      console.error("team feed load failed", err);
+      logger.error("team feed load failed", { context: "athlete/team/team-feed", error: err });
       setError("Couldn't load the feed.");
     } finally {
       setLoading(false);
@@ -133,7 +134,7 @@ export function TeamFeed() {
       setNextCursor(data.nextCursor);
       setHasMore(data.hasMore);
     } catch (err) {
-      console.error("team feed loadMore failed", err);
+      logger.error("team feed loadMore failed", { context: "athlete/team/team-feed", error: err });
       setError("Couldn't load more — try scrolling again.");
     } finally {
       setLoadingMore(false);
@@ -177,7 +178,10 @@ export function TeamFeed() {
         throw new Error(`Reaction save failed (${res.status})`);
       }
     } catch (err) {
-      console.error("team reaction toggle failed", err);
+      logger.error("team reaction toggle failed", {
+        context: "athlete/team/team-feed",
+        error: err,
+      });
       // Roll back the optimistic update for this one item rather than
       // triggering a full feed reload (previously could loop on a 403).
       setItems((prev) =>

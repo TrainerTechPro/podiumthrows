@@ -14,6 +14,7 @@ import type {
   PrescribedExercise,
 } from "@/lib/data/athlete";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
 type LoggedThrow = {
@@ -400,7 +401,10 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
 
         router.refresh();
       } catch (err) {
-        console.error("session log failed", err);
+        logger.error("session log failed", {
+          context: "athlete/sessions/[id]/session-logger",
+          error: err,
+        });
         const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
         setError(msg);
         toastError("Log failed", msg);

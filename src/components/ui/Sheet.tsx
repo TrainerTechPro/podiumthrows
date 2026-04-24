@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { logger } from "@/lib/logger";
 export type SheetSide = "bottom" | "right";
 export type SheetSize = "sm" | "md" | "lg" | "full";
 
@@ -87,7 +88,9 @@ export function Sheet({
     !title &&
     !ariaLabel
   ) {
-    console.warn("[Sheet] Provide `title` or `ariaLabel` for accessibility.");
+    logger.warn("[Sheet] Provide `title` or `ariaLabel` for accessibility.", {
+      context: "ui/Sheet",
+    });
   }
 
   useEffect(() => {

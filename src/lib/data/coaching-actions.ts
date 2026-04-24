@@ -14,6 +14,7 @@
 import { cache } from "react";
 import prisma from "@/lib/prisma";
 
+import { logger } from "@/lib/logger";
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 
 export type CoachingActionType =
@@ -70,7 +71,9 @@ async function getInjuryActions(coachId: string): Promise<CoachingAction[]> {
         recovered: false,
         athlete: { coachId },
       },
-      include: { athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+      include: {
+        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+      },
       orderBy: { injuryDate: "desc" },
     }),
     prisma.injury.findMany({
@@ -78,7 +81,9 @@ async function getInjuryActions(coachId: string): Promise<CoachingAction[]> {
         recovered: false,
         athlete: { coachId },
       },
-      include: { athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+      include: {
+        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+      },
       orderBy: { injuryDate: "desc" },
     }),
     prisma.readinessCheckIn.findMany({
@@ -87,7 +92,9 @@ async function getInjuryActions(coachId: string): Promise<CoachingAction[]> {
         date: { gte: daysAgo(7) },
         athlete: { coachId },
       },
-      include: { athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+      include: {
+        athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+      },
       orderBy: { date: "desc" },
     }),
   ]);
@@ -173,12 +180,14 @@ async function getAcwrActions(coachId: string): Promise<CoachingAction[]> {
       acwr: { gt: 1.3 },
       athlete: { coachId },
     },
-    include: { athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+    include: {
+      athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+    },
     orderBy: { assessmentDate: "desc" },
   });
 
   // Keep only latest per athlete
-  const latestByAthlete = new Map<string, typeof assessments[number]>();
+  const latestByAthlete = new Map<string, (typeof assessments)[number]>();
   for (const a of assessments) {
     if (!latestByAthlete.has(a.athleteId)) {
       latestByAthlete.set(a.athleteId, a);
@@ -268,7 +277,9 @@ async function getSportsFormActions(coachId: string): Promise<CoachingAction[]> 
       updatedAt: { gte: daysAgo(7) },
       athlete: { coachId },
     },
-    include: { athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+    include: {
+      athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+    },
     orderBy: { updatedAt: "desc" },
   });
 
@@ -313,10 +324,7 @@ async function getReadinessActions(coachId: string): Promise<CoachingAction[]> {
     });
 
     // Need exactly 3 check-ins and all below 5.0
-    if (
-      recentCheckins.length === 3 &&
-      recentCheckins.every((c) => c.overallScore < 5.0)
-    ) {
+    if (recentCheckins.length === 3 && recentCheckins.every((c) => c.overallScore < 5.0)) {
       const avgScore = recentCheckins.reduce((s, c) => s + c.overallScore, 0) / 3;
       const name = athleteName(athlete);
       actions.push({
@@ -462,7 +470,9 @@ async function getGoalAtRiskActions(coachId: string): Promise<CoachingAction[]> 
       deadline: { lte: twentyOneDaysFromNow, gte: new Date() },
       athlete: { coachId },
     },
-    include: { athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+    include: {
+      athlete: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+    },
     orderBy: { deadline: "asc" },
   });
 
@@ -490,7 +500,13 @@ async function getGoalAtRiskActions(coachId: string): Promise<CoachingAction[]> 
         description: `"${g.title}" — ${progress}% complete${daysLeft !== null ? `, ${daysLeft} days left` : ""}.`,
         timestamp: g.updatedAt.toISOString(),
         href: `/coach/athletes/${g.athleteId}#goals`,
-        meta: { goalTitle: g.title, progress, targetValue: g.targetValue, currentValue: g.currentValue, daysLeft },
+        meta: {
+          goalTitle: g.title,
+          progress,
+          targetValue: g.targetValue,
+          currentValue: g.currentValue,
+          daysLeft,
+        },
       };
     });
 }
@@ -541,9 +557,8 @@ async function getNoCheckinActions(coachId: string): Promise<CoachingAction[]> {
         athleteName: name,
         athleteAvatar: a.avatarUrl,
         title: `${name} — No Recent Check-in`,
-        description: daysSince !== null
-          ? `Last check-in ${daysSince} days ago.`
-          : "No check-ins recorded.",
+        description:
+          daysSince !== null ? `Last check-in ${daysSince} days ago.` : "No check-ins recorded.",
         timestamp: lastDate?.toISOString() ?? new Date().toISOString(),
         href: `/coach/athletes/${a.id}#readiness`,
         meta: { daysSince },
@@ -576,7 +591,10 @@ export const getCoachingActions = cache(async (coachId: string): Promise<Coachin
     if (result.status === "fulfilled") {
       allActions.push(...result.value);
     } else {
-      console.error("[coaching-actions] Query failed:", result.reason);
+      logger.error("[coaching-actions] Query failed:", {
+        context: "data/coaching-actions",
+        error: result.reason,
+      });
     }
   }
 

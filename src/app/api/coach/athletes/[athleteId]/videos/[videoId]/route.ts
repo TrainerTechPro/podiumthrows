@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireCoachAthlete } from "@/lib/data/coach";
 import { deleteFile } from "@/lib/r2";
 
+import { logger } from "@/lib/logger";
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ athleteId: string; videoId: string }> }
@@ -21,10 +22,7 @@ export async function DELETE(
     where: { id: videoId, athleteProfileId: athleteId },
   });
   if (!video) {
-    return NextResponse.json(
-      { success: false, error: "Video not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
   }
 
   // Only allow delete if coach uploaded it or profile is unclaimed
@@ -41,7 +39,9 @@ export async function DELETE(
     await deleteFile(video.r2Key);
   } catch {
     // Log but don't fail — DB record should still be cleaned up
-    console.error(`Failed to delete R2 object: ${video.r2Key}`);
+    logger.error(`Failed to delete R2 object: ${video.r2Key}`, {
+      context: "api/coach/athletes/[id]/videos/[id]",
+    });
   }
 
   await prisma.athleteVideo.delete({ where: { id: videoId } });
