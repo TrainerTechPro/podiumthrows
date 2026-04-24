@@ -9,7 +9,7 @@ import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
-import { Bell, ChevronRight } from "lucide-react";
+import { Bell, ChevronRight, ShieldCheck } from "lucide-react";
 
 const ProfilePictureEditor = dynamic(() => import("@/components/profile-picture-editor"), {
   ssr: false,
@@ -435,6 +435,27 @@ export default function CoachSettingsPage() {
             Manage your profile, billing, and preferences
           </p>
         </div>
+
+        {/* Security — top-level entry above tabs/preferences because account
+            protection ranks higher than day-to-day preferences. */}
+        <Link
+          href="/coach/settings/security"
+          className="card card-interactive p-4 mb-6 flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
+            <ShieldCheck
+              size={20}
+              className="text-primary-500"
+              strokeWidth={1.75}
+              aria-hidden="true"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[var(--foreground)]">Security</p>
+            <p className="text-xs text-muted">Two-factor authentication and account protection</p>
+          </div>
+          <ChevronRight size={20} className="text-muted" strokeWidth={1.75} aria-hidden="true" />
+        </Link>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-[var(--muted-bg)] rounded-lg p-1 overflow-x-auto">
