@@ -61,6 +61,33 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // ── PR 1: route-consolidation 307s ─────────────────────────────────
+      // Non-permanent on purpose. These are cleanup of in-tree page-level
+      // `redirect()` stubs and near-dead surfaces — unlike the 308s below
+      // (which represent real IA migrations), these might still shift in a
+      // follow-up consolidation pass. 307 preserves method and leaves room
+      // to revisit without browsers caching the decision forever.
+      // See tasks/todo.md + tasks/route-consolidation-manifest.md.
+
+      // Page-level redirect stubs promoted to config.
+      { source: '/athlete/hub',        destination: '/athlete/dashboard',           permanent: false },
+      { source: '/coach/my-program',   destination: '/athlete/dashboard',           permanent: false },
+      { source: '/coach/my-training',  destination: '/athlete/dashboard',           permanent: false },
+      { source: '/coach/my-lifting',   destination: '/athlete/dashboard',           permanent: false },
+      { source: '/coach/drill-videos', destination: '/coach/throws/drills',         permanent: false },
+      { source: '/coach/invitations',  destination: '/coach/athletes/invitations',  permanent: false },
+
+      // Near-dead consumer-log URL folded into the canonical log surface.
+      { source: '/athlete/throws/log', destination: '/athlete/log-session',         permanent: false },
+
+      // Staged ahead of Commit 5 validation; pulled in a follow-up commit
+      // if that page turns out to have programmatic entry points.
+      { source: '/athlete/quick-start', destination: '/athlete/log-session',        permanent: false },
+
+      // Exercise recommender subsumed by /coach/plans/generate.
+      { source: '/coach/throws/programming', destination: '/coach/plans/generate',  permanent: false },
+
+      // ── 308s below: prior IA migrations, do not downgrade. ─────────────
       {
         source: '/athlete/throws/analysis',
         destination: '/athlete/throws/trends',
