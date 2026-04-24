@@ -67,6 +67,18 @@ export default defineConfig({
       testMatch:
         /(^|\/)(athlete-log-session|athlete-quick-log-pr|athlete-training-hub|session-redirects)\.spec\.ts$/,
     },
+    {
+      // Canonical-surface screenshot harness. Runs serially because 40
+      // concurrent dev-server page renders overwhelms the local DB pool.
+      // Each test spawns its own context with the appropriate storageState
+      // and viewport, so project-level use/storageState don't matter here.
+      name: "canonical-screenshots",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+      fullyParallel: false,
+      workers: 1,
+      testMatch: /canonical-screenshots\.spec\.ts$/,
+    },
   ],
   webServer: {
     command: "npm run dev",
