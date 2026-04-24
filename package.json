@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "screenshots:canonical": "tsx scripts/screenshot-canonical-surfaces.ts",
     "analyze": "ANALYZE=true next build",
     "build:check": "npm run typecheck && npm run lint && npm run test",
     "db:generate": "prisma generate",
