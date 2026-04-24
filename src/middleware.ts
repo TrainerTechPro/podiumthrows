@@ -155,7 +155,12 @@ export async function middleware(request: NextRequest) {
     const csrfToken = generateCsrfToken();
     response.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
       httpOnly: false,
-      sameSite: "strict",
+      // Lax matches the auth-token cookie in src/lib/auth.ts and the
+      // helper in src/lib/csrf.ts (csrfCookieString). Strict here caused
+      // the CSRF cookie to appear stale during top-level nav from
+      // cross-site referrers while the auth-token was already present,
+      // producing spurious 403s on the first mutation after sign-in.
+      sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 7 * 24 * 60 * 60,

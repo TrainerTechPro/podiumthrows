@@ -1,11 +1,7 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import {
-  generateSecret as otpGenerateSecret,
-  generateURI,
-  verifySync,
-} from "otplib";
+import { generateSecret as otpGenerateSecret, generateURI, verifySync } from "otplib";
 import QRCode from "qrcode";
 
 // ---------------------------------------------------------------------------
@@ -37,10 +33,7 @@ export function encrypt(plaintext: string): string {
   const key = getEncryptionKey();
   const iv = crypto.randomBytes(12); // 96-bit IV for GCM
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-  const encrypted = Buffer.concat([
-    cipher.update(plaintext, "utf8"),
-    cipher.final(),
-  ]);
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
   const authTag = cipher.getAuthTag();
   // Format: iv:authTag:ciphertext (all hex-encoded)
   return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted.toString("hex")}`;
@@ -52,11 +45,7 @@ export function decrypt(ciphertext: string): string {
   if (!ivHex || !authTagHex || !encryptedHex) {
     throw new Error("Invalid encrypted format");
   }
-  const decipher = crypto.createDecipheriv(
-    "aes-256-gcm",
-    key,
-    Buffer.from(ivHex, "hex")
-  );
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, Buffer.from(ivHex, "hex"));
   decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
   const decrypted = Buffer.concat([
     decipher.update(Buffer.from(encryptedHex, "hex")),
@@ -90,13 +79,16 @@ export async function generateMfaSecret(email: string): Promise<{
 // TOTP Verification
 // ---------------------------------------------------------------------------
 
-export function verifyTotpToken(
-  encryptedSecret: string,
-  token: string
-): boolean {
+export function verifyTotpToken(encryptedSecret: string, token: string): boolean {
   const secret = decrypt(encryptedSecret);
-  // verifySync returns { valid, delta, epoch, timeStep }
-  const result = verifySync({ secret, token });
+  // epochTolerance=30s (±1 TOTP step) — accepts one-step clock drift
+  // between the user's device and our server. Matches RFC 6238 §5.2
+  // guidance to "allow a small number of steps" as a usability concession;
+  // keeps the brute-force surface narrow (a few codes per window), and auth
+  // routes are rate-limited in middleware, so even ±1 step is well below any
+  // meaningful guessing budget. otplib defaults tolerance to 0 (exact step
+  // only) — made explicit here so the threat-model choice is visible.
+  const result = verifySync({ secret, token, epochTolerance: 30 });
   return result.valid;
 }
 
@@ -125,10 +117,7 @@ export async function hashBackupCode(code: string): Promise<string> {
   return bcrypt.hash(code.toUpperCase().replace(/\s/g, ""), 10);
 }
 
-export async function verifyBackupCode(
-  code: string,
-  hash: string
-): Promise<boolean> {
+export async function verifyBackupCode(code: string, hash: string): Promise<boolean> {
   return bcrypt.compare(code.toUpperCase().replace(/\s/g, ""), hash);
 }
 
@@ -142,11 +131,9 @@ interface MfaSessionPayload {
 }
 
 export function signMfaSessionToken(userId: string): string {
-  return jwt.sign(
-    { userId, purpose: "mfa" } as MfaSessionPayload,
-    JWT_SECRET,
-    { expiresIn: MFA_TOKEN_EXPIRY }
-  );
+  return jwt.sign({ userId, purpose: "mfa" } as MfaSessionPayload, JWT_SECRET, {
+    expiresIn: MFA_TOKEN_EXPIRY,
+  });
 }
 
 export function verifyMfaSessionToken(token: string): { userId: string } {
