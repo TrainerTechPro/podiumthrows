@@ -1,0 +1,31 @@
+{
+  "_note": "Example shape only. Do NOT use these numbers as a real baseline. Generate your own via scripts/capture-latency-baseline.sh https://podiumthrows.com and paste the result into the PR1_LATENCY_BASELINE_JSON repo secret.",
+  "baseline_date": "2026-04-24T18:05:00Z",
+  "prod_url": "https://podiumthrows.com",
+  "routes": {
+    "/coach/dashboard": {
+      "samples": [0.188, 0.201, 0.125]
+    },
+    "/coach/plans": {
+      "samples": [0.169, 0.225, 0.148]
+    },
+    "/coach/schedule": {
+      "samples": [0.141, 0.219, 0.158]
+    },
+    "/coach/athletes": {
+      "samples": [0.213, 0.131, 0.130]
+    },
+    "/athlete/dashboard": {
+      "samples": [0.204, 0.132, 0.138]
+    },
+    "/athlete/throws": {
+      "samples": [0.247, 0.141, 0.132]
+    },
+    "/athlete/log-session": {
+      "samples": [0.197, 0.126, 0.124]
+    },
+    "/athlete/self-program": {
+      "samples": [0.221, 0.136, 0.113]
+    }
+  }
+}

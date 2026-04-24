@@ -1,0 +1,315 @@
+# PR 1 Route-Consolidation Soak Summary
+#
+# One-shot scheduled job: fires 2026-04-25 18:05 UTC (= 11:05 PT during PDT)
+# to collect the 24h post-deploy signals for PR 1. Also available via
+# workflow_dispatch so the user can run it manually any time.
+#
+# Does NOT deploy, mutate, or auto-start PR 2. Its output is input to the
+# user — the user still decides whether PR 2 MODE: PLAN can begin.
+#
+# Required repo secrets (add before first scheduled fire):
+#   SENTRY_AUTH_TOKEN         Sentry org/project access for GET /api/0/organizations/{org}/events/
+#   SENTRY_ORG_SLUG           Sentry org slug (e.g. "trainertechpro")
+#   SENTRY_PROJECT_SLUG       Sentry project slug (e.g. "podium-throws")
+#   VERCEL_API_TOKEN          Vercel account token (reserved for future edge-metric API use)
+#   VERCEL_PROJECT_ID         The Podium Throws project ID (prj_...)  [reserved]
+#   PR1_LATENCY_BASELINE_JSON JSON produced by scripts/capture-latency-baseline.sh
+#                             (see tasks/soak-baseline-example.json for shape)
+#
+# Optional:
+#   NOTIFY_WEBHOOK_URL        POST target for the summary (Slack/Discord/email-bridge)
+#
+# Cron caveat:
+#   GitHub Actions schedule triggers run ONLY from the default branch.
+#   This workflow must land on `main` before 2026-04-25 18:05 UTC for the
+#   scheduled fire to work. If merged later, use workflow_dispatch.
+#
+# Injection safety:
+#   Every `${{ ... }}` reference inside a run: block is bound to env first.
+#   User-controlled inputs (workflow_dispatch input.prod_url, secrets) are
+#   never interpolated directly into shell commands.
+
+name: PR 1 soak summary
+
+on:
+  workflow_dispatch:
+    inputs:
+      prod_url:
+        description: "Override prod URL (defaults to https://podiumthrows.com)"
+        required: false
+        default: ""
+  schedule:
+    # 2026-04-25 18:05 UTC (one-shot; year-day combination recurs once/year)
+    - cron: "5 18 25 4 *"
+
+permissions:
+  contents: read
+  pull-requests: write # post comment on PR #23
+
+env:
+  # Eight new 307 sources added in PR 1 (Commit 1). /athlete/throws/log and
+  # /athlete/quick-start were pulled during validation.
+  REDIRECT_SOURCES: |
+    /athlete/hub|/athlete/dashboard
+    /coach/my-program|/athlete/dashboard
+    /coach/my-training|/athlete/dashboard
+    /coach/my-lifting|/athlete/dashboard
+    /coach/drill-videos|/coach/throws/drills
+    /coach/invitations|/coach/athletes/invitations
+    /coach/throws/programming|/coach/plans/generate
+    /coach/codex|/coach/dashboard
+
+  # Eight routes that redirect targets sit on — used for latency-diff.
+  REDIRECT_TARGETS: |
+    /coach/dashboard
+    /coach/plans
+    /coach/schedule
+    /coach/athletes
+    /athlete/dashboard
+    /athlete/throws
+    /athlete/log-session
+    /athlete/self-program
+
+  # Deleted routes (pages that no longer exist). Not in config-redirect list.
+  # Expected: middleware bounces unauthed to /login (307), or 404 for authed.
+  # Any 200 → a Link we missed; failure.
+  DELETED_ROUTES: |
+    /coach/codex
+    /coach/throws/programming
+
+  PR_NUMBER: "23"
+  BASELINE_TIMESTAMP: "2026-04-24T18:05:00Z"
+
+jobs:
+  soak-summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve prod URL
+        id: prod
+        env:
+          # Bind user input to env to avoid shell injection via ${{ ... }}.
+          PROD_URL_INPUT: ${{ github.event.inputs.prod_url }}
+        run: |
+          # Prefer manual input; fall back to stable production alias.
+          URL="$PROD_URL_INPUT"
+          if [ -z "$URL" ]; then
+            URL="https://podiumthrows.com"
+          fi
+          # Light validation — only allow https URLs. Refuse anything else
+          # so workflow_dispatch can't drive curl at an internal target.
+          case "$URL" in
+            https://*) : ;;
+            *) echo "::error::Invalid prod_url: must start with https://"; exit 1 ;;
+          esac
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Resolved prod URL: $URL"
+        shell: bash
+
+      - name: Step A — verify 307 on redirect sources
+        id: redirects
+        env:
+          PROD_URL: ${{ steps.prod.outputs.url }}
+        run: |
+          FAILED=0
+          {
+            echo "## Redirect source verification"
+            echo ""
+            echo "| Source | Expected | Got status | Got location |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while IFS='|' read -r src dest; do
+            [ -z "$src" ] && continue
+            status=$(curl -sI -o /dev/null -w "%{http_code}" "$PROD_URL$src")
+            location=$(curl -sI "$PROD_URL$src" | awk -F': ' 'tolower($1)=="location"{sub(/\r$/,"",$2); print $2}')
+            ok="✓"
+            if [ "$status" != "307" ] && [ "$status" != "308" ]; then
+              ok="✗"
+              FAILED=$((FAILED + 1))
+            fi
+            # Match destination as suffix (Location may be absolute or relative).
+            case "$location" in
+              *"$dest"*) : ;;
+              *) ok="✗"; FAILED=$((FAILED + 1)) ;;
+            esac
+            echo "| \`$src\` | \`$dest\` | $status | \`${location:-<missing>}\` $ok |" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$REDIRECT_SOURCES"
+
+          echo ""
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::$FAILED redirect source(s) regressed"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Step B — verify deleted routes are not serving content
+        id: deleted
+        env:
+          PROD_URL: ${{ steps.prod.outputs.url }}
+        run: |
+          FAILED=0
+          {
+            echo ""
+            echo "## Deleted-route sanity"
+            echo ""
+            echo "| Path | Status | Verdict |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while IFS= read -r path; do
+            [ -z "$path" ] && continue
+            status=$(curl -sI -o /dev/null -w "%{http_code}" "$PROD_URL$path")
+            verdict="ok"
+            # 200 means the route came back as a real page — regression.
+            # 307/308 (middleware redirect) and 404 are both acceptable.
+            if [ "$status" = "200" ]; then
+              verdict="REGRESSED"
+              FAILED=$((FAILED + 1))
+            fi
+            echo "| \`$path\` | $status | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$DELETED_ROUTES"
+
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::$FAILED deleted route(s) still serving 200"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Step C — Sentry 24h breadcrumb count on redirect paths
+        id: sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG_SLUG: ${{ secrets.SENTRY_ORG_SLUG }}
+          SENTRY_PROJECT_SLUG: ${{ secrets.SENTRY_PROJECT_SLUG }}
+        run: |
+          {
+            echo ""
+            echo "## Sentry breadcrumb count (last 24h)"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "$SENTRY_AUTH_TOKEN" ] || [ -z "$SENTRY_ORG_SLUG" ] || [ -z "$SENTRY_PROJECT_SLUG" ]; then
+            echo "_Skipped — Sentry secrets not configured._" >> "$GITHUB_STEP_SUMMARY"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "| Source path | Events (last 24h) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+
+          TOTAL=0
+          while IFS='|' read -r src dest; do
+            [ -z "$src" ] && continue
+            # Sentry Discover query — breadcrumb-embedded URL match.
+            # Breadcrumbs.data.url is the canonical field.
+            resp=$(curl -sG "https://sentry.io/api/0/organizations/$SENTRY_ORG_SLUG/events/" \
+              -H "Authorization: Bearer $SENTRY_AUTH_TOKEN" \
+              --data-urlencode "project=$SENTRY_PROJECT_SLUG" \
+              --data-urlencode "statsPeriod=24h" \
+              --data-urlencode "query=breadcrumbs.data.url:*${src}*")
+            count=$(echo "$resp" | jq '.data | length // 0')
+            echo "| \`$src\` | $count |" >> "$GITHUB_STEP_SUMMARY"
+            TOTAL=$((TOTAL + count))
+          done <<< "$REDIRECT_SOURCES"
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Total: $TOTAL events across the 8 redirect sources** — nonzero is expected (bookmarks resolving correctly); flat zero means no one tried to hit these paths in 24h." >> "$GITHUB_STEP_SUMMARY"
+          echo "status=ok" >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Step D — latency diff vs baseline
+        id: latency
+        env:
+          PROD_URL: ${{ steps.prod.outputs.url }}
+          BASELINE_JSON: ${{ secrets.PR1_LATENCY_BASELINE_JSON }}
+        run: |
+          {
+            echo ""
+            echo "## Edge latency vs baseline"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "$BASELINE_JSON" ]; then
+            echo "_Skipped — PR1_LATENCY_BASELINE_JSON secret not configured. Run \`scripts/capture-latency-baseline.sh\` and add the output as a repo secret._" >> "$GITHUB_STEP_SUMMARY"
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          printf '%s' "$BASELINE_JSON" > /tmp/baseline.json
+
+          echo "| Route | Baseline (median, s) | Post-deploy (median, s) | Δ (s) | Verdict |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+
+          FAILED=0
+          while IFS= read -r path; do
+            [ -z "$path" ] && continue
+            base_median=$(jq -r --arg p "$path" '.routes[$p].samples | sort | .[length/2|floor] // empty' /tmp/baseline.json)
+            if [ -z "$base_median" ]; then
+              echo "| \`$path\` | — | — | — | no baseline |" >> "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+            s1=$(curl -s -o /dev/null -w "%{time_total}" "$PROD_URL$path")
+            s2=$(curl -s -o /dev/null -w "%{time_total}" "$PROD_URL$path")
+            s3=$(curl -s -o /dev/null -w "%{time_total}" "$PROD_URL$path")
+            post_median=$(printf "%s\n%s\n%s\n" "$s1" "$s2" "$s3" | sort -n | sed -n '2p')
+            delta=$(awk -v b="$base_median" -v p="$post_median" 'BEGIN { printf "%.3f", p - b }')
+            verdict="ok"
+            # >50ms drift either direction → flag.
+            if awk -v d="$delta" 'BEGIN { exit (d > 0.050 || d < -0.050) ? 0 : 1 }'; then
+              verdict="DRIFT (>50ms)"
+              FAILED=$((FAILED + 1))
+            fi
+            echo "| \`$path\` | $base_median | $post_median | $delta | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$REDIRECT_TARGETS"
+
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::warning::$FAILED route(s) drifted >50ms — investigate cold-start or bundle-size delta"
+          fi
+        shell: bash
+
+      - name: Step E — post summary as comment on PR #23
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # Pull the step summary markdown and post it as a PR comment.
+          # `always()` ensures we post even if earlier steps failed — the
+          # summary is the whole point of the job.
+          BODY=$(cat "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "_(no summary captured)_")
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%MZ)
+          {
+            printf '## PR 1 24h soak summary — %s\n\n' "$TIMESTAMP"
+            printf '%s\n\n' "$BODY"
+            printf -- '---\n\n'
+            printf '_Generated by `.github/workflows/pr1-soak-summary.yml` — does NOT auto-start PR 2 MODE: PLAN. Run: %s_\n' "$RUN_URL"
+          } > /tmp/comment.md
+          gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md
+        shell: bash
+
+      - name: Step F — optional webhook notify
+        if: always()
+        env:
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$NOTIFY_WEBHOOK_URL" ]; then
+            echo "No NOTIFY_WEBHOOK_URL — skipping."
+            exit 0
+          fi
+          # jq -n with --arg is safer than inline JSON interpolation.
+          payload=$(jq -nc --arg pr "$PR_NUMBER" --arg url "$RUN_URL" \
+            '{text: "PR 1 soak summary complete. See PR #\($pr) comment and run: \($url)"}')
+          curl -sS -X POST "$NOTIFY_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data-raw "$payload"
+        shell: bash
