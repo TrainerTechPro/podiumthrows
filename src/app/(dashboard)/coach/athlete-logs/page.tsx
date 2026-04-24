@@ -27,10 +27,10 @@ export default async function CoachAthleteLogsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-          Athlete Session Logs
+          Self-Logged Sessions
         </h1>
         <p className="text-sm text-muted mt-0.5">
-          Self-logged practice sessions from your athletes
+          Practice sessions your athletes logged themselves, newest first
         </p>
       </div>
 
