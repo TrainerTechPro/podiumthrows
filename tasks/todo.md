@@ -375,3 +375,13 @@ If a fire hits production and we can't cleanly revert:
 - Reviewed and approved this plan.
 - Answered questions 1–7 (or deferred the validation-gated ones to Commit 7 per §1).
 - Confirmed the branch name and the commit-grouping strategy.
+
+---
+
+## 8. PR 1 follow-ups (tracked, not scheduled)
+
+Work deferred during PR 1 that surfaced during validation. Not gating PR 2. Each entry names a concrete next action so it can be pulled into a future batch without re-research.
+
+- **Mount FeedbackInboxBadge on coach sidebar** — surfaces unread tester feedback count from Notion User Feedback DB (`d92a0779-d139-427c-be30-24cded5707c2`). The `FeedbackInboxBadge` component already exists at `src/components/feedback/FeedbackInboxBadge.tsx` but is not rendered anywhere. `/coach/feedback-inbox` is only reachable via email template (`src/lib/email-templates.ts:178`) today. Mount adjacent to the notification bell in `CoachTopBar` (`src/components/layout/DashboardLayout.tsx`). Deferred from PR 1 commit `34e75f1`.
+- **`/athlete/throws/log` feature migration** — wire `?edit=<id>` through `/athlete/log-session/page.tsx` to `LogSessionWizard` (the wizard already accepts `editSessionId` as a prop). Verify feature parity (throw count, best mark, wire length, drill type). Rewrite six inbound references, update `__tests__/history-day-card.test.tsx`, delete the 904-line throws-specific logger. Tracked in `tasks/route-consolidation-survivors.md`.
+- **Weak-inbound Sidebar/QuickActions cleanup** — `/coach/event-groups`, `/coach/goals`, `/coach/team`, `/coach/teams`, `/coach/exercises`, `/coach/tools`, `/coach/wellness` are reachable only via Sidebar matchPaths or the QuickActions FAB — no rendered page links to them. Each needs a "does this surface still pay rent?" review per §Dual Product Identity. Kill or promote; don't leave in the weak-inbound middle ground.
