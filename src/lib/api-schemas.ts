@@ -341,13 +341,38 @@ const DrillLogSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
-export const AthleteThrowsSessionCreateSchema = z.object({
-  athleteId: z.string().min(1, "Athlete ID is required"),
-  event: z.string().min(1, "Event is required"),
-  date: z.string().min(1, "Date is required"),
-  notes: z.string().nullable().optional(),
-  drillLogs: z.array(DrillLogSchema).optional(),
-});
+export const AthleteThrowsSessionCreateSchema = z
+  .object({
+    athleteId: z.string().min(1, "Athlete ID is required"),
+    event: z.string().min(1, "Event is required"),
+    date: z.string().min(1, "Date is required"),
+    notes: z.string().nullable().optional(),
+    drillLogs: z.array(DrillLogSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Bondarchuk Rule 1 (Vol IV, p.114-117): implement weights within a
+    // throwing session must be non-increasing. Ascending order causes a
+    // 2-4m performance decrease in natural athletes. BLOCK at the schema
+    // layer so every mutation endpoint using this schema inherits the
+    // invariant — no route can bypass by forgetting to call the validator.
+    const drills = data.drillLogs ?? [];
+    if (drills.length < 2) return;
+    const result = validateImplementSequence(
+      drills.map((d, i) => ({
+        implementWeightKg: d.implementWeight ?? null,
+        orderIndex: i,
+      }))
+    );
+    if (!result.ok) {
+      const drill = drills[result.offendingIndex];
+      const name = drill?.drillType ? ` (${drill.drillType})` : "";
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["drillLogs", result.offendingIndex, "implementWeight"],
+        message: `Bondarchuk sequencing violation${name}: ${result.violation}`,
+      });
+    }
+  });
 
 // ── Throws Check-In ─────────────────────────────────────────────────────
 

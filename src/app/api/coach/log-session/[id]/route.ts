@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { recalculateCoachPRs } from "@/lib/coach-throws";
+import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
+import { EventType } from "@prisma/client";
 
 /* ── GET — single coach session detail ── */
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -71,61 +74,55 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const body = await request.json();
-    const {
-      event,
-      date,
-      focus,
-      notes,
-      sleepQuality,
-      sorenessLevel,
-      energyLevel,
-      sessionRpe,
-      sessionFeeling,
-      techniqueRating,
-      mentalFocus,
-      bestPart,
-      improvementArea,
-      drills,
-    } = body;
+    const parsed = await parseBody(request, LogSessionSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const p = parsed as z.infer<typeof LogSessionSchema>;
 
+    if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(p.event)) {
+      return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
+    }
+
+    // Merge-update: only fields present in the request are written. Omitted
+    // fields are left alone; explicit null clears a field. Drill logs always
+    // replace — they're a separate relation the client sends in full.
+    //
+    // The LogSessionSchema .superRefine enforces Bondarchuk descending-weight
+    // sequencing at this boundary. Any ascending sequence is rejected with a
+    // 400 before reaching Prisma — route cannot bypass the invariant.
     const updated = await prisma.$transaction(async (tx) => {
-      // Delete existing drill logs and recreate
       await tx.coachDrillLog.deleteMany({ where: { sessionId: id } });
-
       return tx.coachThrowsSession.update({
         where: { id: id },
         data: {
-          ...(event !== undefined && { event }),
-          ...(date !== undefined && { date }),
-          ...(focus !== undefined && { focus }),
-          ...(notes !== undefined && { notes }),
-          ...(sleepQuality !== undefined && { sleepQuality }),
-          ...(sorenessLevel !== undefined && { sorenessLevel }),
-          ...(energyLevel !== undefined && { energyLevel }),
-          ...(sessionRpe !== undefined && { sessionRpe }),
-          ...(sessionFeeling !== undefined && { sessionFeeling }),
-          ...(techniqueRating !== undefined && { techniqueRating }),
-          ...(mentalFocus !== undefined && { mentalFocus }),
-          ...(bestPart !== undefined && { bestPart }),
-          ...(improvementArea !== undefined && { improvementArea }),
-          ...(drills && {
-            drillLogs: {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              create: drills.map((d: any) => ({
-                drillType: d.drillType,
-                implementWeight: d.implementWeight ?? null,
-                implementWeightUnit: d.implementWeightUnit ?? "kg",
-                implementWeightOriginal: d.implementWeightOriginal ?? null,
-                wireLength: d.wireLength ?? null,
-                throwCount: d.throwCount ?? 0,
-                bestMark: d.bestMark ?? null,
-                bestMarkUnit: d.bestMarkUnit ?? "meters",
-                bestMarkOriginal: d.bestMarkOriginal ?? null,
-                notes: d.notes?.trim() || null,
-              })),
-            },
+          event: p.event as EventType,
+          date: p.date,
+          ...(p.focus !== undefined && { focus: p.focus || null }),
+          ...(p.notes !== undefined && { notes: p.notes?.trim() || null }),
+          ...(p.sleepQuality !== undefined && { sleepQuality: p.sleepQuality }),
+          ...(p.sorenessLevel !== undefined && { sorenessLevel: p.sorenessLevel }),
+          ...(p.energyLevel !== undefined && { energyLevel: p.energyLevel }),
+          ...(p.sessionRpe !== undefined && { sessionRpe: p.sessionRpe }),
+          ...(p.sessionFeeling !== undefined && { sessionFeeling: p.sessionFeeling || null }),
+          ...(p.techniqueRating !== undefined && { techniqueRating: p.techniqueRating }),
+          ...(p.mentalFocus !== undefined && { mentalFocus: p.mentalFocus }),
+          ...(p.bestPart !== undefined && { bestPart: p.bestPart?.trim() || null }),
+          ...(p.improvementArea !== undefined && {
+            improvementArea: p.improvementArea?.trim() || null,
           }),
+          drillLogs: {
+            create: (p.drills || []).map((d) => ({
+              drillType: d.drillType,
+              implementWeight: d.implementWeight ?? null,
+              implementWeightUnit: d.implementWeightUnit ?? "kg",
+              implementWeightOriginal: d.implementWeightOriginal ?? null,
+              wireLength: d.wireLength ?? null,
+              throwCount: d.throwCount ?? 0,
+              bestMark: d.bestMark ?? null,
+              bestMarkUnit: d.bestMarkUnit ?? "meters",
+              bestMarkOriginal: d.bestMarkOriginal ?? null,
+              notes: d.notes?.trim() || null,
+            })),
+          },
         },
         include: { drillLogs: { orderBy: { createdAt: "asc" } } },
       });
