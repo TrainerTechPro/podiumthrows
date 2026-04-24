@@ -6,19 +6,18 @@ import { verifyMfaSessionToken, verifyTotpToken } from "@/lib/mfa";
 import { parseBody, MfaVerifySchema } from "@/lib/api-schemas";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
 import { logger } from "@/lib/logger";
+import { blacklistToken, isBlacklisted } from "@/lib/token-blacklist";
 
 export async function POST(request: NextRequest) {
   try {
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      "unknown";
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const rl = await rateLimit(`mfa-verify:${ip}`, {
       maxAttempts: 5,
       windowMs: 60_000,
     });
     if (!rl.success) {
       return NextResponse.json(
-        { success: false, error:"Too many requests. Please try again later." },
+        { success: false, error: "Too many requests. Please try again later." },
         {
           status: 429,
           headers: {
@@ -38,7 +37,22 @@ export async function POST(request: NextRequest) {
       mfaSession = verifyMfaSessionToken(mfaSessionToken);
     } catch {
       return NextResponse.json(
-        { success: false, error:"MFA session expired. Please log in again." },
+        { success: false, error: "MFA session expired. Please log in again." },
+        { status: 401 }
+      );
+    }
+
+    // Reject tokens already consumed by a prior successful verify — prevents replay
+    // inside the JWT's 5-min natural expiry window.
+    if (await isBlacklisted(mfaSessionToken)) {
+      void logAudit({
+        userId: mfaSession.userId,
+        action: "MFA_VERIFY_FAILED",
+        metadata: { reason: "replayed_session_token" },
+        ...auditRequestInfo(request),
+      });
+      return NextResponse.json(
+        { success: false, error: "MFA session expired. Please log in again." },
         { status: 401 }
       );
     }
@@ -55,15 +69,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (
-      !user ||
-      !user.coachProfile?.mfaEnabled ||
-      !user.coachProfile.mfaSecret
-    ) {
-      return NextResponse.json(
-        { success: false, error:"MFA not configured" },
-        { status: 400 }
-      );
+    if (!user || !user.coachProfile?.mfaEnabled || !user.coachProfile.mfaSecret) {
+      return NextResponse.json({ success: false, error: "MFA not configured" }, { status: 400 });
     }
 
     // Verify the TOTP token
@@ -76,8 +83,24 @@ export async function POST(request: NextRequest) {
         ...auditRequestInfo(request),
       });
       return NextResponse.json(
-        { success: false, error:"Invalid code. Please try again." },
+        { success: false, error: "Invalid code. Please try again." },
         { status: 400 }
+      );
+    }
+
+    // Consume the MFA session token before issuing the final auth cookie. If the
+    // blacklist write fails we refuse to continue — better to force the user back
+    // through login than to hand out an auth cookie against a still-replayable token.
+    try {
+      await blacklistToken(mfaSessionToken);
+    } catch (err) {
+      logger.error("Failed to consume MFA session token — aborting verify", {
+        context: "auth",
+        error: err,
+      });
+      return NextResponse.json(
+        { success: false, error: "An unexpected error occurred" },
+        { status: 500 }
       );
     }
 
@@ -110,7 +133,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     logger.error("MFA verify error", { context: "api", error: e });
     return NextResponse.json(
-      { success: false, error:"An unexpected error occurred" },
+      { success: false, error: "An unexpected error occurred" },
       { status: 500 }
     );
   }
