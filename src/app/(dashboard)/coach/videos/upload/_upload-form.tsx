@@ -953,9 +953,13 @@ function trimVideo(
     video.onseeked = () => {
       if (recorder) return; // Already started — ignore duplicate seeks
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // `captureStream` / `mozCaptureStream` aren't in lib.dom types — the
+        // `any` cast is the documented way to reach them. Block-disable to
+        // survive prettier's line-wrapping of this expression.
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         const stream: MediaStream =
           (video as any).captureStream?.() ?? (video as any).mozCaptureStream?.();
+        /* eslint-enable @typescript-eslint/no-explicit-any */
         if (!stream) {
           URL.revokeObjectURL(srcUrl);
           reject(new Error("captureStream() not supported in this browser"));
