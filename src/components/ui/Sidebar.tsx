@@ -278,7 +278,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/availability",
           "/coach/team",
           "/coach/practices",
-          "/coach/hub",
           "/coach/teams",
           "/coach/event-groups",
           "/coach/goals",
