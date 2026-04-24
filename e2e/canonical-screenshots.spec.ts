@@ -63,7 +63,7 @@ test.describe("Canonical-surface screenshots", () => {
           });
 
           try {
-            await context.addCookies([{ name: "theme", value: theme, url: BASE_URL, path: "/" }]);
+            await context.addCookies([{ name: "theme", value: theme, url: BASE_URL }]);
 
             const page = await context.newPage();
             const response = await page.goto(surface.path, {
