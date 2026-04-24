@@ -26,7 +26,10 @@ export interface ThrowsSessionSummary {
   event: string;
   sessionType: string;
   targetPhase: string | null;
-  createdAt: string;
+  // Prisma DateTime. The view never renders this field directly, but typing it
+  // as Date keeps the Server→Client prop contract honest (previously a double
+  // `as unknown as` cast hid the string↔Date mismatch).
+  createdAt: Date;
   blocks: { id: string; blockType: string; config: string }[];
   assignments: {
     id: string;
@@ -63,7 +66,9 @@ export interface PulseRow {
   latestCheckIn: {
     date: string;
     selfFeeling: number;
-    energy: number;
+    // Prisma ThrowsCheckIn.energy is Int? — can be null when the athlete
+    // skipped the energy question. Render-guard it like sorenessGeneral.
+    energy: number | null;
     sorenessGeneral: number | null;
   } | null;
   recentBestMark: { distance: number; date: string } | null;
@@ -690,7 +695,9 @@ export function ThrowsView({
                               label="Self Feeling"
                               value={row.latestCheckIn.selfFeeling}
                             />
-                            <WellnessBar label="Energy" value={row.latestCheckIn.energy} />
+                            {row.latestCheckIn.energy != null && (
+                              <WellnessBar label="Energy" value={row.latestCheckIn.energy} />
+                            )}
                             {row.latestCheckIn.sorenessGeneral != null && (
                               <WellnessBar
                                 label="Soreness"
@@ -981,10 +988,12 @@ export function ThrowsView({
                                         label="Self Feeling"
                                         value={row.latestCheckIn.selfFeeling}
                                       />
-                                      <WellnessBar
-                                        label="Energy"
-                                        value={row.latestCheckIn.energy}
-                                      />
+                                      {row.latestCheckIn.energy != null && (
+                                        <WellnessBar
+                                          label="Energy"
+                                          value={row.latestCheckIn.energy}
+                                        />
+                                      )}
                                       {row.latestCheckIn.sorenessGeneral != null && (
                                         <WellnessBar
                                           label="Soreness"

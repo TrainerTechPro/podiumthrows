@@ -8,6 +8,17 @@ import { GeneratingOverlay } from "@/components/throws/GeneratingOverlay";
 import { CLASSIFICATION_COLOR_PARTS } from "@/lib/throws/constants";
 import { validateImplementSequence } from "@/lib/bondarchuk/sequencing";
 import { logger } from "@/lib/logger";
+import type {
+  GeneratedProgram,
+  GeneratedPhase,
+  GeneratedSession,
+  ThrowPrescription,
+  StrengthPrescription,
+  WarmupPrescription,
+  ExerciseComplexEntry,
+  ProgramSummary as EngineProgramSummary,
+} from "@/lib/throws/engine";
+import { GeneratedProgramSchema } from "@/lib/throws/engine/schemas";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -29,28 +40,15 @@ interface ImplementOption {
   label: string;
 }
 
-interface ProgramSummary {
-  totalPhases: number;
-  totalSessions: number;
-  estimatedTotalThrows: number;
-  phaseBreakdown: Array<{
-    phase: string;
-    weeks: number;
-    throwsPerWeek: number;
-  }>;
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-interface SandboxGenerated {
-  phases: any[];
-  totalWeeks: number;
-  summary: ProgramSummary;
-}
-/* eslint-enable @typescript-eslint/no-explicit-any */
+// Re-exported alias so the rest of the module doesn't have to know the engine
+// lives in a different package. The wizard used to redeclare this interface
+// with a widened `phase: string`, which silently hid type drift when the
+// engine added/renamed phases.
+type ProgramSummary = EngineProgramSummary;
 
 type GeneratedResult =
   | { mode: "real"; programId: string; totalWeeks: number; summary: ProgramSummary }
-  | { mode: "sandbox"; generated: SandboxGenerated };
+  | { mode: "sandbox"; generated: GeneratedProgram };
 
 // ── Constants ───────────────────────────────────────────────────────────
 
@@ -475,7 +473,20 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
         }
 
         const { data } = await res.json();
-        setGeneratedResult({ mode: "sandbox", generated: data.generated });
+        // Validate at the client/server boundary. If the engine shape drifts
+        // in production, the user sees a friendly error instead of a screen
+        // full of `undefined`s once `phases[i].weeks[j].sessions[k]` is read.
+        const parsed = GeneratedProgramSchema.safeParse(data?.generated);
+        if (!parsed.success) {
+          logger.error("Preview response failed schema validation", {
+            context: "coach/plans/generate",
+            metadata: { issues: parsed.error.issues.slice(0, 5) },
+          });
+          setErrors({ generate: "Preview response was malformed — please try again." });
+          setGenerating(false);
+          return;
+        }
+        setGeneratedResult({ mode: "sandbox", generated: parsed.data });
       } else {
         // Real mode: generate and save to DB
         const res = await fetch("/api/throws/program/generate-for-athlete", {
@@ -1707,7 +1718,7 @@ function SandboxPreviewCard({
   onReset,
   onBuildForReal,
 }: {
-  generated: SandboxGenerated;
+  generated: GeneratedProgram;
   profileName: string;
   form: FormState;
   implementOptions: ImplementOption[];
@@ -1726,16 +1737,12 @@ function SandboxPreviewCard({
   // Vol IV p.114-117: ascending implement order causes 2-4m decrease in natural athletes.
   const sequencingViolation = useMemo(() => {
     for (let pi = 0; pi < generated.phases.length; pi++) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const phase = generated.phases[pi] as any;
+      const phase = generated.phases[pi];
       const weeks = phase?.weeks ?? [];
       for (let wi = 0; wi < weeks.length; wi++) {
         const wkSessions = weeks[wi]?.sessions ?? [];
         for (let si = 0; si < wkSessions.length; si++) {
-          const throws = (wkSessions[si]?.throws ?? []) as Array<{
-            implementKg: number;
-            implement: string;
-          }>;
+          const throws = wkSessions[si]?.throws ?? [];
           if (throws.length < 2) continue;
           const result = validateImplementSequence(
             throws.map((t, i) => ({ implementWeightKg: t.implementKg, orderIndex: i }))
@@ -1842,8 +1849,7 @@ function SandboxPreviewCard({
       <div>
         <p className="label mb-2">Phase Breakdown</p>
         <div className="space-y-2">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {generated.phases.map((phase: any, pi: number) => {
+          {generated.phases.map((phase: GeneratedPhase, pi: number) => {
             const isExpanded = expandedPhase === pi;
             const color = PHASE_COLORS[phase.phase] || "#888";
             return (
@@ -1967,8 +1973,7 @@ function SandboxPreviewCard({
                           Exercise Complex
                         </p>
                         <div className="space-y-1">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {phase.exerciseComplex.map((ex: any, ei: number) => {
+                          {phase.exerciseComplex.map((ex: ExerciseComplexEntry, ei: number) => {
                             const cls = CLASSIFICATION_COLOR_PARTS[ex.classification] || {
                               bg: "bg-gray-100 dark:bg-gray-800",
                               text: "text-gray-700 dark:text-gray-300",
@@ -2013,8 +2018,7 @@ function SandboxPreviewCard({
         <div>
           <p className="label mb-2">Week 1 Sessions</p>
           <div className="space-y-2">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {sessions.map((session: any, si: number) => {
+            {sessions.map((session: GeneratedSession, si: number) => {
               const isExpanded = expandedSession === si;
               return (
                 <div
@@ -2067,8 +2071,7 @@ function SandboxPreviewCard({
                             Throws
                           </p>
                           <div className="space-y-1">
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {session.throws.map((t: any, ti: number) => {
+                            {session.throws.map((t: ThrowPrescription, ti: number) => {
                               const cls = CLASSIFICATION_COLOR_PARTS[t.category] || {
                                 bg: "bg-gray-100 dark:bg-gray-800",
                                 text: "text-gray-700 dark:text-gray-300",
@@ -2111,8 +2114,7 @@ function SandboxPreviewCard({
                             Strength
                           </p>
                           <div className="space-y-1">
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {session.strength.map((s: any, si2: number) => {
+                            {session.strength.map((s: StrengthPrescription, si2: number) => {
                               const cls = CLASSIFICATION_COLOR_PARTS[s.classification] || {
                                 bg: "bg-gray-100 dark:bg-gray-800",
                                 text: "text-gray-700 dark:text-gray-300",
@@ -2157,8 +2159,7 @@ function SandboxPreviewCard({
                             Warmup
                           </p>
                           <div className="flex flex-wrap gap-1.5">
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {session.warmup.map((w: any, wi: number) => (
+                            {session.warmup.map((w: WarmupPrescription, wi: number) => (
                               <span
                                 key={wi}
                                 className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
