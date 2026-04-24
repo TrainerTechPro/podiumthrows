@@ -35,9 +35,11 @@ import {
   type StrengthBlockConfig,
   type WarmupCooldownConfig,
   type NotesBlockConfig,
+  type ValidationIssue,
 } from "@/lib/throws/validation";
 import { ValidationPanel, ValidationBadge } from "./_validation-panel";
 import { parseIntegerInput } from "@/lib/forms/parse-numeric";
+import { AlertTriangle } from "lucide-react";
 
 // ── Local block state type ──────────────────────────────────────────
 
@@ -99,6 +101,24 @@ export default function ThrowsSessionBuilder() {
 
   // Validation
   const validationResult = validateSession(blocks as SessionBlock[]);
+
+  // Index CRITICAL issues by block so each card can render its own blocking
+  // error inline. The right-side ValidationPanel still shows the aggregate,
+  // but inline is what makes "which block is wrong" instantly obvious — a
+  // disabled Save button without an adjacent reason is the exact UX the
+  // audit flagged.
+  const criticalByBlock = useMemo(() => {
+    const map = new Map<number, ValidationIssue[]>();
+    for (const err of validationResult.errors) {
+      if (!err.blockIndices) continue;
+      for (const idx of err.blockIndices) {
+        const list = map.get(idx);
+        if (list) list.push(err);
+        else map.set(idx, [err]);
+      }
+    }
+    return map;
+  }, [validationResult]);
 
   // Correlation-ranked exercises for current event/gender/phase
   const rankedExercises = useMemo(() => {
@@ -607,6 +627,7 @@ export default function ThrowsSessionBuilder() {
                     event={event}
                     gender={gender}
                     implements_={implements_}
+                    blockErrors={criticalByBlock.get(index) ?? []}
                     onRemove={() => removeBlock(index)}
                     onUpdateConfig={(update) => updateBlockConfig(index, update)}
                   />
@@ -663,6 +684,7 @@ function BlockCard({
   event,
   gender: _gender,
   implements_,
+  blockErrors,
   onRemove,
   onUpdateConfig,
 }: {
@@ -671,13 +693,19 @@ function BlockCard({
   event: ThrowEvent;
   gender: Gender;
   implements_: { weight: string; weightKg: number; isCompetition: boolean; label: string }[];
+  blockErrors: ValidationIssue[];
   onRemove: () => void;
   onUpdateConfig: (update: Partial<BuilderBlock["config"]>) => void;
 }) {
   const blockMeta = BLOCK_TYPES.find((bt) => bt.value === block.blockType);
+  const hasCritical = blockErrors.length > 0;
 
   return (
-    <div className={`card !p-0 border-l-4 ${BLOCK_BORDER_COLORS[block.blockType]} overflow-hidden`}>
+    <div
+      className={`card !p-0 border-l-4 ${BLOCK_BORDER_COLORS[block.blockType]} overflow-hidden ${
+        hasCritical ? "ring-1 ring-red-500/40" : ""
+      }`}
+    >
       {/* Block header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-[var(--muted-bg)]/50 border-b border-[var(--card-border)]">
         <div className="cursor-grab active:cursor-grabbing text-muted hover:text-surface-700 dark:hover:text-surface-300 ">
@@ -748,6 +776,31 @@ function BlockCard({
           />
         )}
       </div>
+
+      {hasCritical && (
+        <div
+          role="alert"
+          data-testid={`block-critical-error-${index}`}
+          className="border-t border-red-500/30 bg-red-500/10 px-4 py-3 space-y-2"
+        >
+          {blockErrors.map((err, i) => (
+            <div
+              key={`${err.rule}-${i}`}
+              className="flex items-start gap-2 text-xs text-red-700 dark:text-red-300"
+            >
+              <AlertTriangle
+                className="w-4 h-4 shrink-0 mt-0.5"
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <p className="font-semibold leading-tight">{err.title}</p>
+                <p className="mt-0.5 leading-relaxed">{err.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

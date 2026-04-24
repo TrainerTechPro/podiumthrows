@@ -55,7 +55,8 @@ export default defineConfig({
       dependencies: ["setup"],
       // Anchored with (^|/) so "session-redirects" in the athlete spec doesn't
       // trigger this project via substring match.
-      testMatch: /(^|\/)(coach-dashboard|coach-roster-detail|coach-session-redirects)\.spec\.ts$/,
+      testMatch:
+        /(^|\/)(coach-dashboard|coach-roster-detail|coach-session-redirects|coach-throws-builder)\.spec\.ts$/,
     },
     {
       name: "athlete",
