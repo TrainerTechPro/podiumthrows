@@ -32,8 +32,8 @@ const REDIRECTS: RedirectCase[] = [
   { source: "/coach/drill-videos", destination: "/coach/throws/drills" },
   { source: "/coach/invitations", destination: "/coach/athletes/invitations" },
 
-  // Near-dead consumer-log URL.
-  { source: "/athlete/throws/log", destination: "/athlete/log-session" },
+  // /athlete/throws/log is NOT redirected — the page has a distinct ?edit=
+  // flow not yet wired into /athlete/log-session. See survivors doc.
 
   // Staged ahead of Commit 5 validation.
   { source: "/athlete/quick-start", destination: "/athlete/log-session" },

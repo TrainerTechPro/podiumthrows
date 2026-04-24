@@ -77,8 +77,10 @@ const nextConfig = {
       { source: '/coach/drill-videos', destination: '/coach/throws/drills',         permanent: false },
       { source: '/coach/invitations',  destination: '/coach/athletes/invitations',  permanent: false },
 
-      // Near-dead consumer-log URL folded into the canonical log surface.
-      { source: '/athlete/throws/log', destination: '/athlete/log-session',         permanent: false },
+      // /athlete/throws/log removed from the consolidation list — the page
+      // has a distinct ?edit=<id> flow for editing self-logged sessions
+      // that /athlete/log-session doesn't wire yet. Feature migration, not
+      // route cleanup. Tracked in tasks/route-consolidation-survivors.md.
 
       // Staged ahead of Commit 5 validation; pulled in a follow-up commit
       // if that page turns out to have programmatic entry points.
