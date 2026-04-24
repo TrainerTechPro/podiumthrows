@@ -18,7 +18,7 @@ const config: Config = {
           200: "#fff2a8",
           300: "#ffe866",
           400: "#ffd700",
-          500: "#FFC800",  // Main gold
+          500: "#FFC800", // Main gold
           600: "#e6b400",
           700: "#cc9f00",
           800: "#997700",
@@ -75,13 +75,13 @@ const config: Config = {
       },
       fontSize: {
         // Strict type scale (per design system)
-        "display": ["2rem", { lineHeight: "1.2", fontWeight: "800", letterSpacing: "-0.02em" }],
-        "title": ["1.5rem", { lineHeight: "1.25", fontWeight: "700", letterSpacing: "-0.015em" }],
-        "section": ["1.25rem", { lineHeight: "1.3", fontWeight: "600", letterSpacing: "-0.01em" }],
+        display: ["2rem", { lineHeight: "1.2", fontWeight: "800", letterSpacing: "-0.02em" }],
+        title: ["1.5rem", { lineHeight: "1.25", fontWeight: "700", letterSpacing: "-0.015em" }],
+        section: ["1.25rem", { lineHeight: "1.3", fontWeight: "600", letterSpacing: "-0.01em" }],
         "body-lg": ["1.0625rem", { lineHeight: "1.5", fontWeight: "400" }],
-        "body": ["0.9375rem", { lineHeight: "1.5", fontWeight: "400" }],
-        "caption": ["0.8125rem", { lineHeight: "1.4", fontWeight: "400" }],
-        "micro": ["0.6875rem", { lineHeight: "1.3", fontWeight: "500", letterSpacing: "0.05em" }],
+        body: ["0.9375rem", { lineHeight: "1.5", fontWeight: "400" }],
+        caption: ["0.8125rem", { lineHeight: "1.4", fontWeight: "400" }],
+        micro: ["0.6875rem", { lineHeight: "1.3", fontWeight: "500", letterSpacing: "0.05em" }],
         // Legacy display scale (keep for backward compatibility)
         "display-xl": ["3.5rem", { lineHeight: "1.1", fontWeight: "700" }],
         "display-lg": ["2.5rem", { lineHeight: "1.15", fontWeight: "700" }],
@@ -93,9 +93,9 @@ const config: Config = {
         "3xl": "1.25rem",
       },
       boxShadow: {
-        "card": "0 1px 3px 0 rgb(0 0 0 / 0.3), 0 0 1px 0 rgb(255 200 0 / 0.05)",
+        card: "0 1px 3px 0 rgb(0 0 0 / 0.3), 0 0 1px 0 rgb(255 200 0 / 0.05)",
         "card-hover": "0 4px 20px 0 rgb(0 0 0 / 0.4), 0 0 15px rgb(255 200 0 / 0.1)",
-        "glow": "0 0 20px rgb(255 200 0 / 0.2)",
+        glow: "0 0 20px rgb(255 200 0 / 0.2)",
         "glow-lg": "0 0 40px rgb(255 200 0 / 0.3)",
         "glow-green": "0 0 20px rgb(0 255 136 / 0.2)",
         "glow-red": "0 0 20px rgb(255 34 34 / 0.2)",
@@ -197,10 +197,14 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateX(-24px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
+        "glow-pulse": {
+          "0%": { opacity: "0.8", transform: "scale(1)" },
+          "100%": { opacity: "0", transform: "scale(1.35)" },
+        },
       },
       animation: {
         // Existing
-        "shimmer": "shimmer 2s infinite",
+        shimmer: "shimmer 2s infinite",
         "fade-in": "fadeIn 0.3s ease-out",
         "slide-up": "slideUp 0.3s ease-out",
         "slide-down": "slideDown 0.3s ease-out",
@@ -222,9 +226,10 @@ const config: Config = {
         "fade-slide-in": "fade-slide-in 0.4s ease-out both",
         "slide-in-right": "step-slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
         "slide-in-left": "step-slide-in-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
+        "glow-pulse": "glow-pulse 0.4s ease-out forwards",
       },
       transitionTimingFunction: {
-        "spring": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
         "smooth-out": "cubic-bezier(0.22, 1, 0.36, 1)",
       },
     },

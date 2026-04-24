@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { ChevronLeft, Loader2, X } from "lucide-react";
 import { useOnlineStatus } from "@/lib/pwa/online-status";
 import {
@@ -13,6 +12,7 @@ import {
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -57,6 +57,9 @@ const FEELING_LABELS: Record<FeelingOption, string> = {
 };
 
 const IMPLEMENT_KEY = "podium-quick-log-implement";
+const SWIPE_THRESHOLD = 50;
+const SWIPE_OPACITY_RANGE = 80; // px of drag to fade to min opacity (matches prior useTransform range)
+const DRAG_ELASTICITY = 0.15; // matches prior framer-motion dragElastic
 
 /* ─── Haptic helper ──────────────────────────────────────────────────────── */
 
@@ -156,17 +159,20 @@ function ThrowChip({ throw_, index, onTap }: ThrowChipProps) {
     : `#${index + 1}${feelingEmoji ? ` ${feelingEmoji}` : ""}`;
 
   return (
-    <motion.button
-      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-      animate={{ opacity: throw_.isOptimistic ? 0.6 : 1, y: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      whileTap={{ scale: 0.93 }}
+    <button
       onClick={() => onTap(throw_)}
-      className="shrink-0 px-3 py-2 rounded-xl bg-surface-700/80 border border-surface-600/60 text-xs font-mono tabular-nums text-[var(--foreground)] hover:bg-surface-600/80 transition-colors active:scale-95 cursor-pointer min-w-[64px] text-center"
+      className={cn(
+        "shrink-0 px-3 py-2 rounded-xl bg-surface-700/80 border border-surface-600/60",
+        "text-xs font-mono tabular-nums text-[var(--foreground)]",
+        "hover:bg-surface-600/80 transition-colors",
+        "active:scale-[0.93] motion-safe:animate-chip-in",
+        "cursor-pointer min-w-[64px] text-center",
+        throw_.isOptimistic && "opacity-60"
+      )}
       aria-label={`Edit throw: ${label}`}
     >
       {label}
-    </motion.button>
+    </button>
   );
 }
 
@@ -181,17 +187,22 @@ function DotIndicator({ count, current }: DotIndicatorProps) {
   if (count <= 1) return null;
   return (
     <div className="flex items-center justify-center gap-2" aria-hidden="true">
-      {Array.from({ length: count }).map((_, i) => (
-        <motion.span
-          key={i}
-          animate={{ scale: i === current ? 1 : 0.65, opacity: i === current ? 1 : 0.4 }}
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className={cn(
-            "rounded-full",
-            i === current ? "w-2.5 h-2.5 bg-primary-500" : "w-2 h-2 bg-surface-400"
-          )}
-        />
-      ))}
+      {Array.from({ length: count }).map((_, i) => {
+        const isActive = i === current;
+        return (
+          <span
+            key={i}
+            className={cn(
+              "rounded-full transition-all duration-200 ease-out",
+              // Reserve the active footprint so inactive dots don't shift layout.
+              "w-2.5 h-2.5 flex items-center justify-center",
+              isActive
+                ? "bg-primary-500 scale-100 opacity-100"
+                : "bg-surface-400 scale-[0.65] opacity-40"
+            )}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -233,131 +244,136 @@ function QuickEntrySheet({ isOpen, editingThrow, onClose, onSave }: QuickEntrySh
     });
   }, [distance, feeling, notes, onSave]);
 
+  // Always-mounted + CSS transform toggle. When closed we:
+  //   - translate the panel off-screen (translate-y-full)
+  //   - fade the backdrop and disable its pointer events
+  //   - set inert/aria-hidden so focus and screen readers ignore closed content
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="sheet-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/60 z-40"
-            onClick={onClose}
-            aria-hidden="true"
-          />
+    <>
+      {/* Backdrop */}
+      <div
+        className={cn(
+          "fixed inset-0 bg-black/60 z-40 transition-opacity duration-200 ease-out",
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-          {/* Sheet */}
-          <motion.div
-            key="sheet-panel"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 350, damping: 35 }}
-            className="fixed inset-x-0 bottom-0 z-50 bg-surface-800 rounded-t-3xl border-t border-surface-600/60 px-5 pb-safe-bottom pt-5"
-            style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
-            role="dialog"
-            aria-label={editingThrow ? "Edit throw details" : "Add throw details"}
-          >
-            {/* Handle */}
-            <div className="w-10 h-1 rounded-full bg-surface-500 mx-auto mb-5" aria-hidden="true" />
+      {/* Sheet */}
+      <div
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 bg-surface-800 rounded-t-3xl border-t border-surface-600/60 px-5 pt-5",
+          "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+          isOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
+        )}
+        style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+        role="dialog"
+        aria-modal={isOpen ? true : undefined}
+        aria-hidden={isOpen ? undefined : true}
+        aria-label={editingThrow ? "Edit throw details" : "Add throw details"}
+      >
+        {/* Handle */}
+        <div className="w-10 h-1 rounded-full bg-surface-500 mx-auto mb-5" aria-hidden="true" />
 
-            <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-5">
-              {editingThrow ? "Edit Throw" : "Add Details"}
-            </p>
+        <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-5">
+          {editingThrow ? "Edit Throw" : "Add Details"}
+        </p>
 
-            {/* Distance */}
-            <div className="mb-5">
-              <label className="block text-xs text-[var(--muted)] mb-1.5" htmlFor="ql-distance">
-                Distance (meters)
-              </label>
-              <div className="relative">
-                <input
-                  id="ql-distance"
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={distance}
-                  onChange={(e) => setDistance(e.target.value)}
-                  placeholder="—"
-                  className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-lg font-mono text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60 pr-10"
-                />
-                {distance && (
-                  <button
-                    onClick={() => setDistance("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-[var(--foreground)] p-1"
-                    aria-label="Clear distance"
-                  >
-                    <X size={14} strokeWidth={1.75} />
-                  </button>
+        {/* Distance */}
+        <div className="mb-5">
+          <label className="block text-xs text-[var(--muted)] mb-1.5" htmlFor="ql-distance">
+            Distance (meters)
+          </label>
+          <div className="relative">
+            <input
+              id="ql-distance"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              max="100"
+              value={distance}
+              onChange={(e) => setDistance(e.target.value)}
+              placeholder="—"
+              tabIndex={isOpen ? 0 : -1}
+              className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-lg font-mono text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60 pr-10"
+            />
+            {distance && (
+              <button
+                onClick={() => setDistance("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-[var(--foreground)] p-1"
+                aria-label="Clear distance"
+                tabIndex={isOpen ? 0 : -1}
+              >
+                <X size={14} strokeWidth={1.75} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Feeling */}
+        <div className="mb-5">
+          <p className="text-xs text-[var(--muted)] mb-2.5">How did it feel?</p>
+          <div className="flex gap-3">
+            {(["bad", "ok", "great"] as FeelingOption[]).map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setFeeling(feeling === opt ? null : opt)}
+                className={cn(
+                  "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all",
+                  feeling === opt
+                    ? "bg-primary-500/20 border-primary-500/60 text-primary-400"
+                    : "bg-surface-700 border-surface-600/40 text-[var(--muted)] hover:border-surface-500"
                 )}
-              </div>
-            </div>
-
-            {/* Feeling */}
-            <div className="mb-5">
-              <p className="text-xs text-[var(--muted)] mb-2.5">How did it feel?</p>
-              <div className="flex gap-3">
-                {(["bad", "ok", "great"] as FeelingOption[]).map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => setFeeling(feeling === opt ? null : opt)}
-                    className={cn(
-                      "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all",
-                      feeling === opt
-                        ? "bg-primary-500/20 border-primary-500/60 text-primary-400"
-                        : "bg-surface-700 border-surface-600/40 text-[var(--muted)] hover:border-surface-500"
-                    )}
-                    aria-pressed={feeling === opt}
-                    aria-label={FEELING_LABELS[opt]}
-                  >
-                    <span className="text-2xl leading-none">{FEELING_EMOJI[opt]}</span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider">
-                      {FEELING_LABELS[opt]}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Note */}
-            <div className="mb-6">
-              <label className="block text-xs text-[var(--muted)] mb-1.5" htmlFor="ql-notes">
-                Note
-              </label>
-              <input
-                id="ql-notes"
-                type="text"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional note..."
-                className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={handleSave}
-                className="w-full py-4 rounded-2xl bg-primary-500 text-surface-950 font-heading font-bold text-base hover:bg-primary-400 active:scale-[0.98] transition-all"
+                aria-pressed={feeling === opt}
+                aria-label={FEELING_LABELS[opt]}
+                tabIndex={isOpen ? 0 : -1}
               >
-                Save
+                <span className="text-2xl leading-none">{FEELING_EMOJI[opt]}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider">
+                  {FEELING_LABELS[opt]}
+                </span>
               </button>
-              <button
-                onClick={onClose}
-                className="w-full py-3 rounded-2xl text-[var(--muted)] text-sm hover:text-[var(--foreground)] transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            ))}
+          </div>
+        </div>
+
+        {/* Note */}
+        <div className="mb-6">
+          <label className="block text-xs text-[var(--muted)] mb-1.5" htmlFor="ql-notes">
+            Note
+          </label>
+          <input
+            id="ql-notes"
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Optional note..."
+            tabIndex={isOpen ? 0 : -1}
+            className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleSave}
+            tabIndex={isOpen ? 0 : -1}
+            className="w-full py-4 rounded-2xl bg-primary-500 text-surface-950 font-heading font-bold text-base hover:bg-primary-400 active:scale-[0.98] transition-all"
+          >
+            Save
+          </button>
+          <button
+            onClick={onClose}
+            tabIndex={isOpen ? 0 : -1}
+            className="w-full py-3 rounded-2xl text-[var(--muted)] text-sm hover:text-[var(--foreground)] transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -393,8 +409,8 @@ export function QuickLogClient() {
   const { success: toastSuccess, error: toastError } = useToast();
 
   // Long-press state. We use `onClick` for the actual tap (most reliable
-  // cross-browser, especially on iOS where pointerup races with framer-motion's
-  // own gesture detection), and pointer events ONLY to time the long-press.
+  // cross-browser, especially on iOS where pointerup races with gesture
+  // detection), and pointer events ONLY to time the long-press.
   // `longPressTriggered` is used to suppress the trailing click after a
   // long-press has already opened the sheet.
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -680,9 +696,6 @@ export function QuickLogClient() {
 
   /* ── Tap + long-press handlers ───────────────────────────────────────── */
 
-  // Start the long-press timer on pointerdown. The actual tap is handled by
-  // `handleClick` below — that gives us a reliable, browser-synthesized
-  // tap event that fires on every platform without racing framer-motion.
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     // Keyboard activation (pointerType === "") must not trigger the long-press sheet
     if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
@@ -698,8 +711,6 @@ export function QuickLogClient() {
     }, 500);
   }, []);
 
-  // pointerup / pointercancel / pointerleave: just stop the long-press timer.
-  // We deliberately do NOT call logThrow here — the click event handles taps.
   const cancelLongPress = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
@@ -707,10 +718,6 @@ export function QuickLogClient() {
     }
   }, []);
 
-  // The actual tap. Click fires after pointerup on the same element (mouse,
-  // touch, or keyboard activation), so this is the universal "tap completed"
-  // event. If the long-press already fired and opened the sheet, we suppress
-  // the trailing click and reset the flag.
   const handleClick = useCallback(() => {
     if (longPressTriggered.current) {
       longPressTriggered.current = false;
@@ -719,23 +726,66 @@ export function QuickLogClient() {
     logThrow();
   }, [logThrow]);
 
-  /* ── Swipe gesture (framer-motion drag) ──────────────────────────────── */
+  /* ── Swipe gesture (pointer events + CSS transform) ──────────────────── */
 
-  const dragX = useMotionValue(0);
-  const dragOpacity = useTransform(dragX, [-80, 0, 80], [0.7, 1, 0.7]);
+  // Dragging with rubber-band elasticity matches the prior framer dragElastic.
+  // While dragging we write the offset straight to state; on release we snap
+  // back to 0 with a CSS transition (driven by `isDraggingRef`).
+  const [dragOffset, setDragOffset] = useState(0);
+  const dragStartX = useRef(0);
+  const isDraggingRef = useRef(false);
+  const dragPointerId = useRef<number | null>(null);
 
-  const handleDragEnd = useCallback(
-    (_: unknown, info: { offset: { x: number } }) => {
-      const threshold = 50;
-      if (info.offset.x < -threshold) {
-        switchImplement("next");
-      } else if (info.offset.x > threshold) {
-        switchImplement("prev");
+  const onDragPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
+    isDraggingRef.current = true;
+    dragStartX.current = e.clientX;
+    dragPointerId.current = e.pointerId;
+    // ok: setPointerCapture throws InvalidStateError if the pointer is already
+    // captured elsewhere (e.g. concurrent scroll gesture). Swipe still works via
+    // normal event propagation; drop a breadcrumb and continue.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (err) {
+      logger.debug("quick-log: setPointerCapture failed", {
+        context: "ui",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
+    }
+  }, []);
+
+  const onDragPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || dragPointerId.current !== e.pointerId) return;
+    const delta = e.clientX - dragStartX.current;
+    setDragOffset(delta * DRAG_ELASTICITY);
+  }, []);
+
+  const endDrag = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDraggingRef.current || dragPointerId.current !== e.pointerId) return;
+      isDraggingRef.current = false;
+      dragPointerId.current = null;
+      const rawDelta = e.clientX - dragStartX.current;
+      // ok: releasePointerCapture throws if capture was already lost (pointercancel
+      // from the browser, element unmount, etc.). Drop a breadcrumb and continue.
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (err) {
+        logger.debug("quick-log: releasePointerCapture failed", {
+          context: "ui",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
       }
-      dragX.set(0);
+      if (rawDelta < -SWIPE_THRESHOLD) switchImplement("next");
+      else if (rawDelta > SWIPE_THRESHOLD) switchImplement("prev");
+      setDragOffset(0);
     },
-    [switchImplement, dragX]
+    [switchImplement]
   );
+
+  // Match the previous useTransform: opacity fades from 1 at offset=0 to 0.7 at |offset|≥80.
+  const dragOpacity =
+    1 - (Math.min(Math.abs(dragOffset), SWIPE_OPACITY_RANGE) / SWIPE_OPACITY_RANGE) * 0.3;
 
   /* ── Sheet save ──────────────────────────────────────────────────────── */
 
@@ -806,17 +856,13 @@ export function QuickLogClient() {
     );
   }, []);
 
-  /* ── Slide variants for implement label ──────────────────────────────── */
-
-  const slideVariants = {
-    enterFromLeft: { x: -40, opacity: 0 },
-    enterFromRight: { x: 40, opacity: 0 },
-    center: { x: 0, opacity: 1 },
-    exitToLeft: { x: -40, opacity: 0 },
-    exitToRight: { x: 40, opacity: 0 },
-  };
-
   /* ── Render ──────────────────────────────────────────────────────────── */
+
+  const labelSlideClass = prefersReducedMotion
+    ? ""
+    : implementSlideDir === "left"
+      ? "animate-slide-in-right"
+      : "animate-slide-in-left";
 
   return (
     <>
@@ -855,98 +901,96 @@ export function QuickLogClient() {
         </div>
 
         {/* Implement display (draggable) */}
-        <motion.div
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.15}
-          onDragEnd={handleDragEnd}
-          style={{ x: dragX, opacity: dragOpacity }}
-          className="text-center px-4 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+        <div
+          onPointerDown={onDragPointerDown}
+          onPointerMove={onDragPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          style={{
+            transform: `translateX(${dragOffset}px)`,
+            opacity: dragOpacity,
+            // Snap-back transition runs only while NOT actively dragging.
+            transition: isDraggingRef.current
+              ? "none"
+              : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), opacity 200ms ease-out",
+          }}
+          className="text-center px-4 shrink-0 cursor-grab active:cursor-grabbing touch-pan-y"
         >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={implementAnimKey}
-              variants={prefersReducedMotion ? {} : slideVariants}
-              initial={implementSlideDir === "left" ? "enterFromRight" : "enterFromLeft"}
-              animate="center"
-              exit={implementSlideDir === "left" ? "exitToLeft" : "exitToRight"}
-              transition={{ type: "spring", stiffness: 400, damping: 35 }}
-            >
-              {isLoading ? (
-                <div className="h-7 w-48 mx-auto rounded-lg bg-surface-700 animate-pulse" />
-              ) : (
-                <div className="flex flex-col items-center gap-1">
-                  <div className="flex items-center justify-center gap-2 flex-wrap">
-                    <span className="font-heading text-xl font-bold text-[var(--foreground)]">
-                      {currentImplement?.event ?? "—"}
-                      {" · "}
-                      <button
-                        type="button"
-                        onClick={() => setWeightPickerOpen((v) => !v)}
-                        className="font-mono inline-flex items-center gap-1 text-primary-400 underline underline-offset-4 decoration-primary-400/30"
-                      >
-                        {currentImplement?.implementWeight ?? "—"}kg
-                        <span className="text-[10px] no-underline">▾</span>
-                      </button>
-                    </span>
-                  </div>
-                  {/* Weight picker pills */}
-                  {weightPickerOpen && currentImplement && (
-                    <div className="flex flex-wrap justify-center gap-1.5 mt-2 px-2">
-                      {(weightPresets[currentImplement.event] ?? []).map((w) => {
-                        const isActive = Math.abs(w - currentImplement.implementWeight) < 0.01;
-                        const isComp =
-                          Math.abs(w - (compWeights[currentImplement.event] ?? 0)) < 0.01;
-                        return (
-                          <button
-                            key={w}
-                            type="button"
-                            onClick={() => changeWeight(w)}
-                            className={cn(
-                              "min-h-[44px] px-3 py-2 rounded-lg text-sm font-mono font-semibold transition-colors",
-                              isActive
-                                ? "bg-primary-500 text-surface-950"
-                                : "bg-surface-800 text-surface-300 active:bg-surface-700"
-                            )}
-                          >
-                            {w}kg
-                            {isComp && !isActive && (
-                              <span className="ml-1 text-[9px] text-primary-400 font-sans">
-                                comp
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+          {/* Key-based remount triggers the slide-in CSS animation on each switch */}
+          <div key={implementAnimKey} className={labelSlideClass}>
+            {isLoading ? (
+              <div className="h-7 w-48 mx-auto rounded-lg bg-surface-700 animate-pulse" />
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <span className="font-heading text-xl font-bold text-[var(--foreground)]">
+                    {currentImplement?.event ?? "—"}
+                    {" · "}
+                    <button
+                      type="button"
+                      onClick={() => setWeightPickerOpen((v) => !v)}
+                      className="font-mono inline-flex items-center gap-1 text-primary-400 underline underline-offset-4 decoration-primary-400/30"
+                    >
+                      {currentImplement?.implementWeight ?? "—"}kg
+                      <span className="text-[10px] no-underline">▾</span>
+                    </button>
+                  </span>
                 </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                {/* Weight picker pills */}
+                {weightPickerOpen && currentImplement && (
+                  <div className="flex flex-wrap justify-center gap-1.5 mt-2 px-2">
+                    {(weightPresets[currentImplement.event] ?? []).map((w) => {
+                      const isActive = Math.abs(w - currentImplement.implementWeight) < 0.01;
+                      const isComp =
+                        Math.abs(w - (compWeights[currentImplement.event] ?? 0)) < 0.01;
+                      return (
+                        <button
+                          key={w}
+                          type="button"
+                          onClick={() => changeWeight(w)}
+                          className={cn(
+                            "min-h-[44px] px-3 py-2 rounded-lg text-sm font-mono font-semibold transition-colors",
+                            isActive
+                              ? "bg-primary-500 text-surface-950"
+                              : "bg-surface-800 text-surface-300 active:bg-surface-700"
+                          )}
+                        >
+                          {w}kg
+                          {isComp && !isActive && (
+                            <span className="ml-1 text-[9px] text-primary-400 font-sans">comp</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           {implements_.length > 1 && (
             <p className="text-[10px] text-[var(--muted)] mt-1 tracking-wider">
               ← swipe to switch →
             </p>
           )}
-        </motion.div>
+        </div>
 
         {/* Throw counter */}
         <div className="flex flex-col items-center justify-center flex-1 min-h-0 pb-2">
           {isLoading ? (
             <div className="h-32 w-36 rounded-2xl bg-surface-700 animate-pulse mx-auto" />
           ) : (
-            <motion.div
+            <div
               key={throwCount}
-              initial={prefersReducedMotion ? {} : { scale: 0.85, opacity: 0.6 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className="font-mono text-[clamp(80px,20vw,140px)] leading-none font-bold text-[var(--foreground)] tabular-nums text-center"
+              className={cn(
+                "font-mono text-[clamp(80px,20vw,140px)] leading-none font-bold",
+                "text-[var(--foreground)] tabular-nums text-center",
+                !prefersReducedMotion && "animate-count-up-spring"
+              )}
               aria-live="polite"
               aria-label={`${throwCount} throws`}
             >
               {throwCount}
-            </motion.div>
+            </div>
           )}
           <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mt-1">
             Throw Count
@@ -955,11 +999,9 @@ export function QuickLogClient() {
 
         {/* Big log button */}
         <div className="flex flex-col items-center gap-5 shrink-0 pb-2">
-          <motion.button
+          <button
             type="button"
             aria-label="Log throw"
-            // `manipulation` keeps clicks reliable while still disabling
-            // double-tap zoom and pan-to-scroll on the button itself.
             style={{ touchAction: "manipulation" }}
             onClick={handleClick}
             onPointerDown={handlePointerDown}
@@ -972,38 +1014,23 @@ export function QuickLogClient() {
                 logThrow();
               }
             }}
-            whileTap={
-              prefersReducedMotion
-                ? {}
-                : { scale: 0.95, transition: { type: "spring", stiffness: 400, damping: 25 } }
-            }
-            animate={
-              prefersReducedMotion
-                ? {}
-                : { scale: 1, transition: { type: "spring", stiffness: 400, damping: 25 } }
-            }
             className={cn(
               "relative rounded-full flex flex-col items-center justify-center",
               "w-[clamp(200px,55vw,260px)] h-[clamp(200px,55vw,260px)]",
               "bg-gradient-to-br from-primary-400 to-primary-600",
               "shadow-glow-lg active:shadow-glow focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60",
-              "cursor-pointer select-none transition-shadow"
+              "cursor-pointer select-none transition-[transform,box-shadow] duration-200 ease-out",
+              !prefersReducedMotion && "active:scale-95"
             )}
           >
             {/* Glow pulse ring after each throw */}
-            <AnimatePresence>
-              {glowActive && !prefersReducedMotion && (
-                <motion.span
-                  key="glow-ring"
-                  initial={{ opacity: 0.8, scale: 1 }}
-                  animate={{ opacity: 0, scale: 1.35 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="absolute inset-0 rounded-full bg-primary-400/30 pointer-events-none"
-                  aria-hidden="true"
-                />
-              )}
-            </AnimatePresence>
+            {glowActive && !prefersReducedMotion && (
+              <span
+                key={`glow-${Date.now()}`}
+                className="absolute inset-0 rounded-full bg-primary-400/30 pointer-events-none animate-glow-pulse"
+                aria-hidden="true"
+              />
+            )}
 
             <span className="font-heading font-bold text-xl text-surface-950 tracking-wide select-none pointer-events-none">
               LOG THROW
@@ -1011,7 +1038,7 @@ export function QuickLogClient() {
             <span className="text-[10px] font-semibold text-surface-800/70 uppercase tracking-widest mt-1 select-none pointer-events-none">
               Hold for details
             </span>
-          </motion.button>
+          </button>
 
           {/* Dot indicator */}
           <DotIndicator count={implements_.length} current={implementIndex} />
