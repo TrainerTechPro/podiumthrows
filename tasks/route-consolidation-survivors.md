@@ -151,3 +151,89 @@ For each WEAK survivor:
 4. **If no, 307 + delete** — treat it like the redirect stubs in PR 1 Commit 3.
 
 The goal of tracking survivors here (rather than deleting them) is that we want evidence, not gut calls. Every weak survivor needs a "would a staff engineer approve deletion of this?" test first.
+
+---
+
+## Soak monitoring (PR 1, 24h window after deploy)
+
+Three signals we're watching for 24h before PR 2 can start. Queries are defined here so they're reproducible; the saved-search / log-filter URLs are filled in as the user (or a follow-up) creates them in Sentry / Vercel UI.
+
+### 1. Sentry — redirect-path breadcrumb spike (success signal)
+
+A 308/307 spike on the nine redirect source paths is the **success signal** — it confirms bookmarked URLs are landing cleanly on the canonical target. This is NOT a regression indicator; a flat-zero reading would mean either (a) no one has stale bookmarks (OK), or (b) the edge is serving 404s instead of redirects (bad — fall back to the Vercel 404 filter below).
+
+Query for Sentry breadcrumb search (Issues → Add filter → Breadcrumb data):
+
+```
+breadcrumb.data.url:*athlete/hub*
+OR breadcrumb.data.url:*coach/my-program*
+OR breadcrumb.data.url:*coach/my-training*
+OR breadcrumb.data.url:*coach/my-lifting*
+OR breadcrumb.data.url:*coach/drill-videos*
+OR breadcrumb.data.url:*coach/invitations*
+OR breadcrumb.data.url:*coach/throws/programming*
+OR breadcrumb.data.url:*coach/codex*
+```
+
+(The 9th redirect `/athlete/throws/log` was pulled from the consolidation; `/athlete/quick-start` too. Eight redirects total in the deployed set.)
+
+**Saved-search URL:** _(fill after creating in Sentry UI — Issues → Save Search → "PR 1 route redirects — success signal")_
+
+### 2. Vercel runtime logs — 404 on deleted routes (regression signal)
+
+A 404 on any deleted route means a Link survived the audit and needs a hotfix redirect. This IS a regression indicator.
+
+Filter query (Vercel dashboard → project → Logs → Filters):
+
+```
+status:404 AND (
+  path:/coach/codex*
+  OR path:/coach/throws/programming*
+  OR path:/coach/my-program*
+  OR path:/coach/my-training*
+  OR path:/coach/my-lifting*
+  OR path:/coach/drill-videos*
+  OR path:/coach/invitations*
+  OR path:/athlete/hub*
+)
+```
+
+**Target: 0 hits** across the 24h window. Any hit → identify the source Link → add a hotfix redirect OR rewrite the Link.
+
+**Filter URL:** _(fill after creating in Vercel UI — Logs → Save View)_
+
+### 3. Edge-function latency — no regression on redirect targets
+
+Adding 9 config-level redirects shouldn't move latency. Baseline captured below from pre-merge prod (`podium-throws-h05br50s8-tonys-projects-9cce8202.vercel.app`) via `curl -o /dev/null -w "%{time_total}"`, three samples each, seconds. Re-measure at the 24h mark from the post-merge deploy and record the delta.
+
+**Caveat:** these are single-client samples from one geographic location, not Vercel-reported p50/p95. They're useful as point-in-time comparisons, not production-wide statistics. For a real p50/p95 view, check Vercel Analytics (Observability → Web Analytics → Routes).
+
+| Route                     | Sample 1 | Sample 2 | Sample 3 | Notes                                     |
+| ------------------------- | -------- | -------- | -------- | ----------------------------------------- |
+| `/coach/dashboard`        | 0.188s   | 0.201s   | 0.125s   | Middleware redirect to `/login` (no auth) |
+| `/coach/plans`            | 0.169s   | 0.225s   | 0.148s   | Same                                      |
+| `/coach/schedule`         | 0.141s   | 0.219s   | 0.158s   | Same                                      |
+| `/coach/athletes`         | 0.213s   | 0.131s   | 0.130s   | Same                                      |
+| `/athlete/dashboard`      | 0.204s   | 0.132s   | 0.138s   | Same                                      |
+| `/athlete/throws`         | 0.247s   | 0.141s   | 0.132s   | Same                                      |
+| `/athlete/log-session`    | 0.197s   | 0.126s   | 0.124s   | Same                                      |
+| `/athlete/self-program`   | 0.221s   | 0.136s   | 0.113s   | Same                                      |
+
+**Baseline captured:** 2026-04-24 11:05 PT. **Re-measurement due:** 2026-04-25 11:05 PT. Post-deploy snapshot goes in the row below each above as `post` samples. Acceptable drift: ±50ms on any sample. Larger drift → investigate middleware cold-start or first-load-JS bloat.
+
+### 4. Tester feedback watch
+
+User-reported issues from the Notion User Feedback DB (`d92a0779-d139-427c-be30-24cded5707c2`) filed during the soak window. Query: created_at within the 24h window, plus any historical entries that reference routes touched in PR 1 (e.g., coach's session-detail view, athlete's throws log, settings/security).
+
+**Target:** 0 new reports tied to PR 1 surfaces. Any new report → triage immediately — may warrant a hotfix.
+
+### 5. Checkpoint reporting
+
+At the 24h mark (2026-04-25 ~11:05 PT):
+
+- Sentry breadcrumb count on the 8 redirect paths (§1) — report by path, flag the top hitter
+- Vercel 404 count on deleted routes (§2) — must be 0
+- Latency delta table (§3) — three post-deploy samples per route, diff vs baseline
+- Tester feedback scan (§4) — summary of any new entries in the window
+
+If all four are clean, request approval to start PR 2 MODE: PLAN. If any is dirty, propose hotfix scope before touching PR 2.
