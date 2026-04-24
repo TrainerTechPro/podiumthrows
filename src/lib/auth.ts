@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import * as Sentry from "@sentry/nextjs";
 import { generateCsrfToken, csrfCookieString, clearCsrfCookieString } from "@/lib/csrf";
 import prisma from "@/lib/prisma";
 
@@ -33,7 +34,16 @@ export function signToken(payload: JWTPayload): string {
 export function verifyToken(token: string): JWTPayload | null {
   try {
     return jwt.verify(token, JWT_SECRET) as JWTPayload;
-  } catch {
+  } catch (err) {
+    // `null` is the documented safe outcome for expired/tampered/malformed
+    // tokens — don't re-throw. But leave a diagnostic breadcrumb so auth
+    // failures aren't invisible when investigating a Sentry trace.
+    Sentry.addBreadcrumb({
+      category: "auth",
+      level: "warning",
+      message: "verifyToken failed",
+      data: { reason: err instanceof Error ? err.message : "unknown" },
+    });
     return null;
   }
 }

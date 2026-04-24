@@ -10,6 +10,7 @@
  * context). Middleware uses this to make trustworthy routing/role decisions.
  */
 
+import * as Sentry from "@sentry/nextjs";
 import type { JWTPayload } from "./auth";
 
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
@@ -88,7 +89,16 @@ export async function verifyTokenEdge(token: string): Promise<JWTPayload | null>
       role: payload.role,
       ...(payload.isAdmin ? { isAdmin: true } : {}),
     } as JWTPayload;
-  } catch {
+  } catch (err) {
+    // `null` is the documented safe outcome — don't re-throw. Leave a
+    // breadcrumb so Edge-runtime auth failures surface in Sentry traces.
+    // @sentry/nextjs supports Edge via sentry.edge.config.ts.
+    Sentry.addBreadcrumb({
+      category: "auth",
+      level: "warning",
+      message: "verifyTokenEdge failed",
+      data: { reason: err instanceof Error ? err.message : "unknown" },
+    });
     return null;
   }
 }

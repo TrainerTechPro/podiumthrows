@@ -10,6 +10,17 @@
         "destructuredArrayIgnorePattern": "^_",
         "ignoreRestSiblings": true
       }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CatchClause[body.body.length=0]",
+        "message": "no-silent-catch: catch body is empty. Per CLAUDE.md §1, every catch must re-throw, surface to the user (toast on client), or log via logger/Sentry breadcrumb on server. If intentional (best-effort localStorage etc.), add a one-line // ok: reason comment and a minimal logger.debug/warn."
+      },
+      {
+        "selector": "CatchClause > BlockStatement[body.length=1] > ExpressionStatement > CallExpression[callee.object.name='console'][callee.property.name='log']",
+        "message": "no-silent-catch: catch body contains only console.log. Use logger.warn/error (or toast on client) so errors surface in production — console.log is dropped above info level in Vercel prod."
+      }
     ]
   }
 }
