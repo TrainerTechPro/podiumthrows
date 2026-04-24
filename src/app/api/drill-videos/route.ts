@@ -22,9 +22,21 @@ const ALLOWED_TYPES = [
   "video/hevc",
 ];
 
+const DEFAULT_PAGE_LIMIT = 30;
+const MAX_PAGE_LIMIT = 100;
+
 /**
  * GET /api/drill-videos
  * Lists drill videos for the current user (or for a specific athlete if coach provides athleteId).
+ *
+ * Pagination: cursor-based. Pass `?cursor=<last-id>&limit=<1-100>`. Response returns
+ * `nextCursor` when more rows exist; `null` when the current page is the last one.
+ * Default limit is 30 to keep the payload (and any video-URL lookups downstream) bounded.
+ *
+ * Access model: the query is relation-filtered through `athlete.userId` / `coach.userId`,
+ * so we no longer preload AthleteProfile/CoachProfile in a separate round trip. A user who
+ * somehow has the role without a profile simply sees an empty list — same UX as before,
+ * one fewer query.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -35,74 +47,80 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const athleteId = searchParams.get("athleteId");
+    const cursor = searchParams.get("cursor") || undefined;
 
-    let videos;
+    const rawLimit = parseInt(searchParams.get("limit") ?? "", 10);
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(rawLimit, MAX_PAGE_LIMIT)
+        : DEFAULT_PAGE_LIMIT;
 
+    // Build the scope filter based on role. We only BUILD the where — the actual
+    // findMany runs once below, so coach/athlete/athleteId paths collapse into a
+    // single round trip regardless of which branch we're in.
+    type DrillVideoWhere = Parameters<typeof prisma.drillVideo.findMany>[0] extends
+      | { where?: infer W }
+      | undefined
+      ? W
+      : never;
+
+    let where: DrillVideoWhere;
     if (await canActAsAthlete(currentUser)) {
-      const profile = await prisma.athleteProfile.findUnique({
-        where: { userId: currentUser.userId },
-        select: { id: true },
-      });
-      if (!profile) {
-        return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 404 });
-      }
-      videos = await prisma.drillVideo.findMany({
-        where: { athleteId: profile.id },
-        orderBy: { createdAt: "desc" },
-      });
+      where = { athlete: { userId: currentUser.userId } };
     } else if (currentUser.role === "COACH") {
-      const coachProfile = await prisma.coachProfile.findUnique({
-        where: { userId: currentUser.userId },
-        select: { id: true },
-      });
-      if (!coachProfile) {
-        return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
-      }
-
       if (athleteId) {
-        if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
+        if (
+          !(await canAccessAthlete(
+            currentUser.userId,
+            currentUser.role as "COACH" | "ATHLETE",
+            athleteId
+          ))
+        ) {
           return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
         }
-        videos = await prisma.drillVideo.findMany({
-          where: { athleteId },
-          orderBy: { createdAt: "desc" },
-        });
+        where = { athleteId };
       } else {
-        // Return all drill videos uploaded by this coach or for their athletes
-        videos = await prisma.drillVideo.findMany({
-          where: {
-            OR: [
-              { coachId: coachProfile.id },
-              { athlete: { coachId: coachProfile.id } },
-            ],
-          },
-          include: {
-            athlete: {
-              include: { user: { select: { id: true, email: true } } },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-        });
+        where = {
+          OR: [
+            { coach: { userId: currentUser.userId } },
+            { athlete: { coach: { userId: currentUser.userId } } },
+          ],
+        };
       }
     } else {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    // Add serve URL for local videos
-    const videosWithUrls = (videos as typeof videos).map((v) => {
-      const filePath = (v as { filePath: string }).filePath;
-      const id = (v as { id: string }).id;
-      const isLocal = !filePath.startsWith("http");
-      return {
-        ...v,
-        videoUrl: isLocal ? `/api/drill-videos/serve?id=${id}` : filePath,
-      };
+    // `take: limit + 1` lets us detect "is there another page?" without a second
+    // query. (createdAt, id) gives a stable order even when two rows share a ms.
+    const rows = await prisma.drillVideo.findMany({
+      where,
+      include: {
+        athlete: {
+          include: { user: { select: { id: true, email: true } } },
+        },
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
 
-    return NextResponse.json({ success: true, data: videosWithUrls });
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
+
+    const videos = pageRows.map((v) => ({
+      ...v,
+      videoUrl: v.filePath.startsWith("http") ? v.filePath : `/api/drill-videos/serve?id=${v.id}`,
+    }));
+
+    return NextResponse.json({ success: true, data: { videos, nextCursor } });
   } catch (error) {
     logger.error("List drill videos error", { context: "drill-videos", error: error });
-    return NextResponse.json({ success: false, error: "Failed to list drill videos" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to list drill videos" },
+      { status: 500 }
+    );
   }
 }
 
@@ -136,13 +154,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (videoBlob.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ success: false, error: "File too large (max 200MB)" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "File too large (max 200MB)" },
+        { status: 400 }
+      );
     }
 
     const ext = videoBlob.name?.split(".").pop()?.toLowerCase() || "mp4";
     const mimeType = videoBlob.type || "video/mp4";
-    if (!ALLOWED_TYPES.includes(mimeType) && !["mp4", "mov", "webm", "avi", "mkv", "m4v", "3gp"].includes(ext)) {
-      return NextResponse.json({ success: false, error: "Unsupported video format" }, { status: 400 });
+    if (
+      !ALLOWED_TYPES.includes(mimeType) &&
+      !["mp4", "mov", "webm", "avi", "mkv", "m4v", "3gp"].includes(ext)
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Unsupported video format" },
+        { status: 400 }
+      );
     }
 
     if (duration > MAX_DURATION) {
@@ -163,7 +190,10 @@ export async function POST(request: NextRequest) {
         select: { id: true },
       });
       if (!profile) {
-        return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 404 });
+        return NextResponse.json(
+          { success: false, error: "Athlete profile not found" },
+          { status: 404 }
+        );
       }
       resolvedAthleteId = profile.id;
       uploadedBy = "ATHLETE";
@@ -173,13 +203,22 @@ export async function POST(request: NextRequest) {
         select: { id: true },
       });
       if (!coachProfile) {
-        return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+        return NextResponse.json(
+          { success: false, error: "Coach profile not found" },
+          { status: 404 }
+        );
       }
       resolvedCoachId = coachProfile.id;
       uploadedBy = "COACH";
 
       if (athleteIdParam) {
-        if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteIdParam))) {
+        if (
+          !(await canAccessAthlete(
+            currentUser.userId,
+            currentUser.role as "COACH" | "ATHLETE",
+            athleteIdParam
+          ))
+        ) {
           return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
         }
         resolvedAthleteId = athleteIdParam;
@@ -222,7 +261,9 @@ export async function POST(request: NextRequest) {
     // Also create a VideoUpload record so drill videos appear in the main video library
     try {
       const validEvents = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
-      const videoUrl = filePath.startsWith("http") ? filePath : `/api/drill-videos/serve?id=${drillVideo.id}`;
+      const videoUrl = filePath.startsWith("http")
+        ? filePath
+        : `/api/drill-videos/serve?id=${drillVideo.id}`;
       await prisma.videoUpload.create({
         data: {
           coachId: resolvedCoachId,
@@ -239,12 +280,18 @@ export async function POST(request: NextRequest) {
       });
     } catch (err) {
       // Non-fatal — drill video is saved, just not indexed in main library
-      logger.error("Failed to create VideoUpload record for drill video", { context: "drill-videos", error: err });
+      logger.error("Failed to create VideoUpload record for drill video", {
+        context: "drill-videos",
+        error: err,
+      });
     }
 
     return NextResponse.json({ success: true, data: drillVideo }, { status: 201 });
   } catch (error) {
     logger.error("Upload drill video error", { context: "drill-videos", error: error });
-    return NextResponse.json({ success: false, error: "Failed to upload drill video" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to upload drill video" },
+      { status: 500 }
+    );
   }
 }

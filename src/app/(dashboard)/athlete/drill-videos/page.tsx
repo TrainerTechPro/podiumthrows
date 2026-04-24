@@ -56,7 +56,9 @@ function formatDate(dateStr: string): string {
 export default function AthleteDrillVideosPage() {
   const { toast } = useToast();
   const [videos, setVideos] = useState<DrillVideo[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -64,15 +66,26 @@ export default function AthleteDrillVideosPage() {
   const [filterDrill, setFilterDrill] = useState("");
   const _videoRef = useRef<HTMLVideoElement>(null);
 
-  async function loadVideos() {
+  async function loadVideos(cursor?: string) {
+    const isInitial = !cursor;
+    if (!isInitial) setLoadingMore(true);
     try {
-      const res = await fetch("/api/drill-videos");
+      const url = cursor
+        ? `/api/drill-videos?cursor=${encodeURIComponent(cursor)}`
+        : "/api/drill-videos";
+      const res = await fetch(url);
       const data = await res.json();
-      if (data.success) setVideos(data.data);
+      if (data.success) {
+        // Response is `{ success, data: { videos, nextCursor } }`. Append on
+        // load-more; replace on initial load.
+        setVideos((prev) => (isInitial ? data.data.videos : [...prev, ...data.data.videos]));
+        setNextCursor(data.data.nextCursor ?? null);
+      }
     } catch {
       toast("Failed to load drill videos", "error");
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
+      else setLoadingMore(false);
     }
   }
 
@@ -330,6 +343,23 @@ export default function AthleteDrillVideosPage() {
             </div>
           ))}
         </StaggeredList>
+      )}
+
+      {/* Load more — only shown when the API reports another page, and when no
+          event/drill filter is active (filters run over already-loaded rows, so
+          "Load more" under a filter could imply those filters will re-apply to
+          new rows, which is true but reads confusingly). */}
+      {nextCursor && !filterEvent && !filterDrill && (
+        <div className="flex justify-center mt-6">
+          <button
+            type="button"
+            onClick={() => loadVideos(nextCursor)}
+            disabled={loadingMore}
+            className="btn-secondary px-6 py-2 disabled:opacity-60"
+          >
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
+        </div>
       )}
 
       {/* Upload Modal */}
