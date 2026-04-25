@@ -26,6 +26,15 @@ const BASE_URL = "http://localhost:3000";
 
 type Surface = { role: "coach" | "athlete"; path: string; slug: string };
 
+// PR 6 (coach-IA consolidation, 2026-04-25) replaced three coach canonical
+// surfaces with the new top-level destinations:
+//   /coach/plans     → /coach/library    (Plans is now Library?view=plans)
+//   /coach/schedule  → /coach/calendar   (Calendar absorbed Schedule)
+//   /coach/hub       → killed entirely   (content distributed to Dashboard
+//                                          + Roster header rollup)
+// Canonical baselines for the new surfaces (calendar, library, builder)
+// regenerate on the next `npm run screenshots:canonical` run; the smoke
+// assertion below only checks that each URL renders 200 for the role.
 const SURFACES: Surface[] = [
   { role: "athlete", path: "/athlete/dashboard", slug: "athlete-dashboard" },
   { role: "athlete", path: "/athlete/log-session", slug: "athlete-log-session" },
@@ -33,10 +42,10 @@ const SURFACES: Surface[] = [
   { role: "athlete", path: "/athlete/throws", slug: "athlete-throws" },
   { role: "athlete", path: "/athlete/profile", slug: "athlete-profile" },
   { role: "coach", path: "/coach/dashboard", slug: "coach-dashboard" },
-  { role: "coach", path: "/coach/plans", slug: "coach-plans" },
-  { role: "coach", path: "/coach/schedule", slug: "coach-schedule" },
+  { role: "coach", path: "/coach/calendar", slug: "coach-calendar" },
+  { role: "coach", path: "/coach/library", slug: "coach-library" },
+  { role: "coach", path: "/coach/builder", slug: "coach-builder" },
   { role: "coach", path: "/coach/athletes", slug: "coach-athletes" },
-  { role: "coach", path: "/coach/hub", slug: "coach-hub" },
 ];
 
 const VIEWPORTS = [
