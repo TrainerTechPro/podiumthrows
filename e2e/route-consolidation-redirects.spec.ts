@@ -29,7 +29,9 @@ const REDIRECTS: RedirectCase[] = [
   { source: "/coach/my-program", destination: "/athlete/dashboard" },
   { source: "/coach/my-training", destination: "/athlete/dashboard" },
   { source: "/coach/my-lifting", destination: "/athlete/dashboard" },
-  { source: "/coach/drill-videos", destination: "/coach/throws/drills" },
+  // Updated for PR 6: /coach/throws/drills now redirects to Library, so
+  // /coach/drill-videos points there directly (skip the 2-hop chain).
+  { source: "/coach/drill-videos", destination: "/coach/library?view=drills" },
   { source: "/coach/invitations", destination: "/coach/athletes/invitations" },
 
   // Two pages initially planned for redirect, both confirmed live on validation:
@@ -37,8 +39,9 @@ const REDIRECTS: RedirectCase[] = [
   //   /athlete/quick-start — smart-routing "Start Session" surface.
   // See tasks/route-consolidation-survivors.md.
 
-  // Exercise recommender subsumed by /coach/plans/generate.
-  { source: "/coach/throws/programming", destination: "/coach/plans/generate" },
+  // Exercise recommender — was /coach/plans/generate (PR 1), now lives as the
+  // Generate sub-mode of the Builder Plan tab (PR 6).
+  { source: "/coach/throws/programming", destination: "/coach/builder?type=plan&mode=generate" },
 
   // Coach codex deleted — CodexView extracted to src/components/codex/.
   { source: "/coach/codex", destination: "/coach/dashboard" },

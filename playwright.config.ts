@@ -47,7 +47,8 @@ export default defineConfig({
       // Serial because the app's login endpoint is rate-limited via upstash —
       // parallel login storms trigger 429s. Tests here are fast anyway.
       fullyParallel: false,
-      testMatch: /(auth|athlete-auth|landing|pricing|route-consolidation-redirects)\.spec\.ts/,
+      testMatch:
+        /(auth|athlete-auth|landing|pricing|route-consolidation-redirects|coach-ia-redirects)\.spec\.ts/,
     },
     {
       name: "coach",
