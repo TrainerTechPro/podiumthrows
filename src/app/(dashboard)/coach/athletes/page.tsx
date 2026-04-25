@@ -18,8 +18,9 @@ import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import type { PlanName } from "@/lib/stripe";
 import { InvitationsClient } from "../invitations/_invitations-client";
+import { AthleteLogsList } from "../athlete-logs/_athlete-logs-client";
 
-type Tab = "roster" | "invitations" | "throws";
+type Tab = "roster" | "invitations" | "throws" | "self-logs";
 
 export default async function AthletesPage({
   searchParams,
@@ -32,7 +33,9 @@ export default async function AthletesPage({
       ? "invitations"
       : searchParams.tab === "throws"
         ? "throws"
-        : "roster";
+        : searchParams.tab === "self-logs"
+          ? "self-logs"
+          : "roster";
 
   // Fetch teams for the filter dropdown
   const teams = await prisma.team.findMany({
@@ -139,6 +142,22 @@ export default async function AthletesPage({
       ? await prisma.invitation.count({ where: { coachId: coach.id, status: "PENDING" } })
       : invitations.filter((i) => i.status === "PENDING").length;
 
+  // Self-logged athlete sessions — only fetched when the tab needs them.
+  // Mirrors the legacy /coach/athlete-logs page query; commit 5 redirects
+  // /coach/athlete-logs → /coach/athletes?tab=self-logs.
+  const selfLoggedSessions =
+    tab === "self-logs"
+      ? await prisma.athleteThrowsSession.findMany({
+          where: { athlete: { coachId: coach.id } },
+          orderBy: { date: "desc" },
+          take: 100,
+          include: {
+            drillLogs: { orderBy: { createdAt: "asc" } },
+            athlete: { select: { firstName: true, lastName: true, id: true } },
+          },
+        })
+      : [];
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -172,44 +191,70 @@ export default async function AthletesPage({
         </div>
       </div>
 
-      {/* Tab bar */}
+      {/* Tier-1 tab bar — Roster / Self-Logs / Competitions.
+          Roster + Self-Logs are URL-state on this page; Competitions is a
+          sibling route at /coach/athletes/competitions and links there.
+          Throws + Invitations remain accessible via legacy ?tab= URLs and
+          via sidebar children — they're Tier 2, not in this header. */}
       <div className="flex gap-1 bg-surface-100 dark:bg-surface-800 rounded-xl p-1">
-        {[
-          { id: "roster" as const, label: "Roster", badge: undefined as number | undefined },
-          { id: "throws" as const, label: "Throws", badge: undefined },
-          {
-            id: "invitations" as const,
-            label: "Invitations",
-            badge: pendingCount > 0 ? pendingCount : undefined,
-          },
-        ].map((t) => {
+        {(
+          [
+            { id: "roster", label: "Roster", kind: "url-state" },
+            { id: "self-logs", label: "Self-Logs", kind: "url-state" },
+            { id: "competitions", label: "Competitions", kind: "sibling-route" },
+          ] as const
+        ).map((t) => {
           const params = new URLSearchParams();
-          if (t.id !== "roster") params.set("tab", t.id);
+          if (t.kind === "url-state" && t.id !== "roster") params.set("tab", t.id);
           if (resolvedTeamId) params.set("teamId", resolvedTeamId);
           const qs = params.toString();
+          const href =
+            t.kind === "sibling-route"
+              ? "/coach/athletes/competitions"
+              : qs
+                ? `/coach/athletes?${qs}`
+                : "/coach/athletes";
+          // Competitions pill is "active" only when the user is on the sibling
+          // page — but this server component doesn't know the current pathname,
+          // so the pill stays passive on /coach/athletes. Coaches who land on
+          // /coach/athletes/competitions see its own page chrome.
+          const isActive = t.kind === "url-state" && tab === t.id;
           return (
             <Link
               key={t.id}
-              href={qs ? `/coach/athletes?${qs}` : "/coach/athletes"}
-              replace
+              href={href}
+              replace={t.kind === "url-state"}
               className={`flex-1 text-center py-2 px-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
-                tab === t.id
+                isActive
                   ? "bg-white dark:bg-surface-700 text-[var(--foreground)] shadow-sm"
                   : "text-muted hover:text-[var(--foreground)]"
               }`}
             >
               {t.label}
-              {t.badge != null && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary-500 text-white">
-                  {t.badge}
-                </span>
-              )}
             </Link>
           );
         })}
       </div>
 
       {tab === "throws" && searchParams.moved === "1" && <MovedBanner />}
+
+      {/* Pending-invitation hint — used to live in the Invitations tab pill
+          badge; without that pill, surface the count inline so coaches still
+          see it from the Roster view. */}
+      {tab === "roster" && pendingCount > 0 && (
+        <div className="flex items-center justify-between rounded-xl border border-[var(--card-border)] px-4 py-2.5 text-sm">
+          <span className="text-muted">
+            <strong className="text-[var(--foreground)] tabular-nums">{pendingCount}</strong>{" "}
+            pending invitation{pendingCount === 1 ? "" : "s"}
+          </span>
+          <Link
+            href="/coach/athletes/invitations"
+            className="text-primary-500 hover:underline font-medium"
+          >
+            Review →
+          </Link>
+        </div>
+      )}
 
       {/* Roster tab */}
       {tab === "roster" && (
@@ -278,11 +323,19 @@ export default async function AthletesPage({
         </>
       )}
 
-      {/* Throws tab */}
+      {/* Throws tab — legacy URL-state branch. Sidebar now points at
+          /coach/athletes/throws (sibling); this branch keeps bookmarked
+          ?tab=throws URLs working until commit 5 redirects. */}
       {tab === "throws" && (
         <ThrowsView
           teamId={resolvedTeamId && resolvedTeamId !== "unassigned" ? resolvedTeamId : null}
         />
+      )}
+
+      {/* Self-Logs tab — Tier 1, URL-state. Lifted from /coach/athlete-logs
+          (legacy still serves; commit 5 redirects). */}
+      {tab === "self-logs" && (
+        <AthleteLogsList sessions={JSON.parse(JSON.stringify(selfLoggedSessions))} />
       )}
     </div>
   );
