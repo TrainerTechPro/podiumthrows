@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { StaleSessionChecker } from "./_stale-session-checker";
 import { StreakReminder } from "@/components/notifications/StreakReminder";
+import { PwaVisitTracker } from "@/components/pwa/PwaVisitTracker";
 
 /* ─── Athlete Home — canonical consumer-app shell ────────────────────────────
    ONE hero anchor in the thumb zone, state-aware:
@@ -160,6 +161,7 @@ export default async function AthleteDashboardPage() {
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <StaleSessionChecker />
+      <PwaVisitTracker />
       <StreakReminder
         currentStreak={stats.currentStreak}
         initialEnabled={streakReminderPrefs.enabled}

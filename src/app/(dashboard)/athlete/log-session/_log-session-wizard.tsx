@@ -17,6 +17,7 @@ import { useDraftPersistence } from "@/lib/draft-persistence";
 import { enqueueMutation, useOutboxStatus } from "@/lib/outbox";
 import { haptic } from "@/lib/haptic";
 import { track } from "@/lib/analytics";
+import { bumpLogsSubmitted } from "@/lib/pwa/install-counters";
 import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle, WifiOff } from "lucide-react";
 
 import { logger } from "@/lib/logger";
@@ -558,6 +559,9 @@ export function LogSessionWizard({
         isEdit: isEditing,
         throwCount: drills.reduce((sum, d) => sum + (parseIntField(d.throwCount) ?? 0), 0),
       });
+
+      // PWA install-prompt engagement signal — only on new sessions.
+      if (!isEditing) bumpLogsSubmitted();
 
       if (data.prs?.length) {
         const prs = data.prs as PRResult[];

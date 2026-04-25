@@ -35,6 +35,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0c" },
+  ],
 };
 
 export const metadata: Metadata = {
@@ -52,6 +56,13 @@ export const metadata: Metadata = {
     "training management",
   ],
   metadataBase: new URL(APP_URL),
+  manifest: "/manifest.webmanifest",
+  applicationName: "Podium Throws",
+  appleWebApp: {
+    capable: true,
+    title: "Podium",
+    statusBarStyle: "black-translucent",
+  },
   openGraph: {
     title: "Podium Throws — Elite Throws Coaching Platform",
     description: "The coaching platform built for Olympic-level track & field throws coaches.",
@@ -65,6 +76,13 @@ export const metadata: Metadata = {
     title: "Podium Throws — Elite Throws Coaching Platform",
     description: "The coaching platform built for Olympic-level track & field throws coaches.",
     images: [`${APP_URL}/api/og`],
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
 };
 
@@ -90,12 +108,6 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafa" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0c" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         {!hasExplicitTheme && (
           <Script id="theme-init" strategy="beforeInteractive">
             {`(function(){try{if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark');}}catch(e){}})();`}
