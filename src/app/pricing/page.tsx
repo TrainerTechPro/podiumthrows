@@ -35,9 +35,20 @@ export const metadata: Metadata = {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-primary-500 flex-shrink-0" aria-hidden="true">
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      className="w-5 h-5 text-primary-500 flex-shrink-0"
+      aria-hidden="true"
+    >
       <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M6.5 10.5l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M6.5 10.5l2.5 2.5 4.5-5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -45,7 +56,13 @@ function CheckIcon() {
 function ArrowRightIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4" aria-hidden="true">
-      <path d="M4 10h12M12 5l5 5-5 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M4 10h12M12 5l5 5-5 5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -65,7 +82,7 @@ export default async function PricingPage() {
     currentPlan = coach?.plan ?? null;
   }
   return (
-    <div className="min-h-screen font-body bg-[var(--background)] text-[var(--foreground)]">
+    <div className="dark min-h-screen font-body bg-[var(--background)] text-[var(--foreground)]">
       <MarketingNav />
 
       {/* ── HEADER ── */}
@@ -75,11 +92,11 @@ export default async function PricingPage() {
             Simple, Transparent Pricing
           </div>
           <h1 className="font-heading font-bold text-display-lg text-surface-900 dark:text-white mb-4">
-            Start free.{" "}
-            <span className="text-primary-500">Scale as you grow.</span>
+            Start free. <span className="text-primary-500">Scale as you grow.</span>
           </h1>
           <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed max-w-xl mx-auto">
-            No setup fees. No hidden costs. Cancel anytime. Every plan includes the core tools throws coaches need.
+            No setup fees. No hidden costs. Cancel anytime. Every plan includes the core tools
+            throws coaches need.
           </p>
         </div>
       </section>
@@ -144,8 +161,9 @@ export default async function PricingPage() {
             <span className="text-primary-500"> correct implement sequencing</span>
           </h2>
           <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed max-w-2xl mx-auto mb-8">
-            Dr. Bondarchuk&rsquo;s research proves ascending implement sequences (light → heavy) cost athletes 2–4 meters.
-            Podium validates every session you create and flags sequencing errors before they reach your athletes.
+            Dr. Bondarchuk&rsquo;s research proves ascending implement sequences (light → heavy)
+            cost athletes 2–4 meters. Podium validates every session you create and flags sequencing
+            errors before they reach your athletes.
           </p>
           <Link
             href="/#methodology"
@@ -158,7 +176,10 @@ export default async function PricingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-24 bg-white dark:bg-surface-950" aria-label="Frequently asked questions">
+      <section
+        className="py-24 bg-white dark:bg-surface-950"
+        aria-label="Frequently asked questions"
+      >
         <div className="max-w-3xl mx-auto px-5 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="font-heading font-bold text-display-md text-surface-900 dark:text-white mb-3">
@@ -205,7 +226,8 @@ export default async function PricingPage() {
             Start for free today
           </h2>
           <p className="text-primary-100 text-lg leading-relaxed mb-9">
-            Sign up in seconds. Manage your first 3 athletes completely free — no credit card, no commitment.
+            Sign up in seconds. Manage your first 3 athletes completely free — no credit card, no
+            commitment.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link

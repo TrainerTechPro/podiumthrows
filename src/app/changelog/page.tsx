@@ -28,7 +28,7 @@ export default function ChangelogPage() {
   const months = releasesByMonth();
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 py-12 sm:py-16 px-4">
+    <div className="dark min-h-screen bg-surface-50 dark:bg-surface-950 py-12 sm:py-16 px-4">
       <ScrollDepthTracker />
       <main className="max-w-2xl mx-auto">
         <header className="space-y-3 mb-10 sm:mb-14">

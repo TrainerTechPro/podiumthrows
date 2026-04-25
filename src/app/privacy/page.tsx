@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 py-16 px-4">
+    <div className="dark min-h-screen bg-surface-50 dark:bg-surface-950 py-16 px-4">
       <ScrollDepthTracker />
       <article className="max-w-2xl mx-auto space-y-8">
         <header className="space-y-2">

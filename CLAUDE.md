@@ -443,6 +443,47 @@ Both must pass. They are not the same test.
 
 ---
 
+## Marketing Routes — Always-Dark Policy
+
+The marketing surface is the third product. It does **not** honor the user's theme preference — it is **always rendered in dark mode**, on every device, regardless of the `theme` cookie or `prefers-color-scheme`.
+
+### Routes covered
+
+`/`, `/pricing`, `/changelog`, `/privacy`, `/terms`. Any new public-facing acquisition page (about, methodology deep-dives, case studies, blog) joins this list.
+
+### Why always-dark
+
+- **Editorial coherence.** The landing page was designed in the dark, gold-on-near-black register. Drilling into pricing, legal, or changelog and watching the chrome flip to white breaks the spell. Marketing is one room; you don't repaint mid-tour.
+- **Stated intent in the token system.** `globals.css` defines `--landing-*` tokens explicitly outside the theme cascade — those tokens have no light variant by design. The shared marketing chrome (`MarketingNav`, `MarketingFooter`) consumes them and is dark-only.
+- **The pricing leak.** Before this rule, `/pricing` rendered a theme-aware body inside the always-dark Nav and Footer. Light-mode users saw a dark chrome around a white page — a split-personality result that nobody designed.
+- **Eliminates a class of contrast bugs.** The changelog tag badges (`text-green-400`, `text-blue-400`, etc.) were tuned for dark surfaces. Forcing dark scope means we never have to second-guess whether marketing-only color choices clear AA on a white background.
+- **Distinct from the apps.** `AthleteShell` and `CoachShell` honor the user's theme cookie because the apps are tools used over hours. Marketing is consumed in seconds — visual identity beats personalization.
+
+### How it's enforced
+
+Each marketing-route page wraps its top-level container in `dark`:
+
+```tsx
+// src/app/pricing/page.tsx, src/app/changelog/page.tsx, etc.
+<div className="dark min-h-screen ...">{/* page content */}</div>
+```
+
+Tailwind's `darkMode: "class"` resolves `dark:` variants when any ancestor has `.dark`. CSS custom properties defined under the `.dark { ... }` selector cascade by specificity, so `var(--background)` and `var(--foreground)` resolve to dark values inside the wrapper even when `<html>` has no `dark` class.
+
+### Authoring rules for marketing pages
+
+- Top-level wrapper MUST include the `dark` class. No exceptions.
+- Use the existing `--landing-*` tokens for surfaces that match the landing identity. Use `dark:` Tailwind variants and `--background`/`--foreground` semantic tokens elsewhere — both resolve correctly inside the forced-dark scope.
+- Do **not** add light-mode variants for marketing-only components (`bg-white dark:bg-...` is fine since the white branch is never reached, but writing the dark branch alone is cleaner).
+- If you find yourself wanting a light surface on a marketing page, you're either (a) building something that belongs in the app, not in marketing, or (b) about to break the editorial register. Push back.
+- Do **not** import marketing components (`MarketingNav`, `MarketingFooter`, anything in `src/components/marketing/*`) from inside the dashboard or auth shells. They assume always-dark.
+
+### What to do when a coach lands on `/pricing` from inside the app
+
+Auth-aware CTAs on `/pricing` are fine (and present today — see `PricingPageClient`). The visual register stays dark. If a coach evaluates pricing mid-session in light mode and feels the jolt, that's the correct signal that they crossed from the app into the marketing surface. Don't soften it.
+
+---
+
 ## Design System Rules (ALWAYS Follow)
 
 ### Cards

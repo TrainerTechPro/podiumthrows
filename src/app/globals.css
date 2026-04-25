@@ -38,6 +38,11 @@
  *
  *  Landing-page tokens (--landing-*) are intentionally NOT part of the
  *  theming system — the marketing site is always dark. Keep them separate.
+ *  This applies to every marketing-surface route: /, /pricing, /changelog,
+ *  /privacy, /terms. Each enforces the always-dark policy by wrapping its
+ *  page content in a `<div className="dark">` scope so the .dark cascade
+ *  resolves regardless of the user's theme cookie. See CLAUDE.md
+ *  §"Marketing Routes — Always-Dark Policy" for the rationale.
  * ─────────────────────────────────────────────────────────────────────────
  */
 
