@@ -49,9 +49,11 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Back link */}
+      {/* Back link — points at the new IA Library destination directly so
+          the back-button doesn't depend on commit 5's redirect to translate
+          /coach/plans → /coach/library?view=plans. */}
       <Link
-        href="/coach/plans"
+        href="/coach/library?view=plans"
         className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
       >
         <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />
