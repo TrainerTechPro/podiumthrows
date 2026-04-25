@@ -10,26 +10,19 @@ import {
   UsersRound,
   Calendar,
   Target,
-  Zap,
-  Dumbbell,
   Heart,
   Settings,
   Bell,
-  Radio,
   CalendarRange,
   UserCircle,
   BarChart3,
   UserPlus,
   ChevronRight,
-  ScanLine,
   Trophy,
   Clock,
-  FileText,
   Sparkles,
-  BookOpen,
   Library,
   Wrench,
-  Video,
   ClipboardList,
   PenLine,
 } from "lucide-react";
@@ -264,10 +257,21 @@ const iconSize = { size: 20, strokeWidth: 1.75, "aria-hidden": true as const };
 export const COACH_NAV_SECTIONS: NavSection[] = [
   {
     items: [
-      // ── Dashboard (standalone) ──
-      { label: "Dashboard", href: "/coach/dashboard", icon: <LayoutDashboard {...iconSize} /> },
+      // ── Dashboard ──
+      // Wellness lives here as a tab (?tab=readiness) per IA decision —
+      // glance-surface, not a separate destination. /coach/wellness still
+      // serves until the readiness tab lands.
+      {
+        label: "Dashboard",
+        href: "/coach/dashboard",
+        icon: <LayoutDashboard {...iconSize} />,
+        matchPaths: ["/coach/dashboard", "/coach/wellness"],
+      },
 
       // ── Athletes ──
+      // Practices + Availability moved out (now Calendar tabs). Throws (?tab=throws)
+      // dropped from children; the Throws sub-tab remains accessible from the
+      // Roster page itself. Athletes-tab IA pass before commit 6 may regroup these.
       {
         label: "Athletes",
         href: "/coach/athletes",
@@ -276,13 +280,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/athletes",
           "/coach/invitations",
           "/coach/competitions",
-          "/coach/availability",
           "/coach/team",
-          "/coach/practices",
           "/coach/teams",
           "/coach/event-groups",
           "/coach/goals",
           "/coach/athlete-logs",
+          "/coach/hub",
         ],
         children: [
           {
@@ -290,11 +293,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             href: "/coach/athletes",
             icon: <Users {...iconSize} />,
             matchPaths: ["/coach/athletes"],
-          },
-          {
-            label: "Throws",
-            href: "/coach/athletes?tab=throws",
-            icon: <Zap {...iconSize} />,
           },
           {
             label: "Self-Logged Sessions",
@@ -328,18 +326,6 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             matchPaths: ["/coach/competitions"],
           },
           {
-            label: "Availability",
-            href: "/coach/availability",
-            icon: <Calendar {...iconSize} />,
-            matchPaths: ["/coach/availability"],
-          },
-          {
-            label: "Practices",
-            href: "/coach/practices",
-            icon: <Calendar {...iconSize} />,
-            matchPaths: ["/coach/practices"],
-          },
-          {
             label: "Team Feed",
             href: "/coach/team",
             icon: <Users {...iconSize} />,
@@ -354,107 +340,81 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         ],
       },
 
-      // ── Training ──
+      // ── Calendar ──
+      // Absorbs /coach/schedule, /coach/practices, /coach/availability,
+      // /coach/throws/practice. Tabs live in URL (?view=).
       {
-        label: "Training",
-        href: "/coach/throws",
-        icon: <Dumbbell {...iconSize} />,
+        label: "Calendar",
+        href: "/coach/calendar",
+        icon: <CalendarRange {...iconSize} />,
         matchPaths: [
-          "/coach/throws",
+          "/coach/calendar",
           "/coach/schedule",
-          "/coach/plans",
-          "/coach/exercises",
-          "/coach/drill-videos",
-        ],
-        children: [
-          {
-            label: "Throws Hub",
-            href: "/coach/throws",
-            icon: <Target {...iconSize} />,
-            matchPaths: ["/coach/throws"],
-          },
-          {
-            label: "Schedule",
-            href: "/coach/schedule",
-            icon: <CalendarRange {...iconSize} />,
-            matchPaths: ["/coach/schedule"],
-          },
-          {
-            label: "Plans",
-            href: "/coach/plans",
-            icon: <FileText {...iconSize} />,
-            matchPaths: ["/coach/plans"],
-          },
-          {
-            label: "Live Practice",
-            href: "/coach/throws/practice",
-            icon: <Radio {...iconSize} />,
-            matchPaths: ["/coach/throws/practice"],
-          },
-          {
-            label: "Drill Library",
-            href: "/coach/throws/library",
-            icon: <Library {...iconSize} />,
-            matchPaths: ["/coach/throws/library"],
-          },
-          {
-            label: "Drills",
-            href: "/coach/throws/drills",
-            icon: <BookOpen {...iconSize} />,
-            matchPaths: ["/coach/throws/drills"],
-          },
-          {
-            label: "Drill Builder",
-            href: "/coach/throws/builder",
-            icon: <Wrench {...iconSize} />,
-            matchPaths: ["/coach/throws/builder"],
-          },
-          {
-            label: "Exercises",
-            href: "/coach/exercises",
-            icon: <Dumbbell {...iconSize} />,
-            matchPaths: ["/coach/exercises"],
-          },
-          {
-            label: "Drill Videos",
-            href: "/coach/drill-videos",
-            icon: <Video {...iconSize} />,
-            matchPaths: ["/coach/drill-videos"],
-          },
+          "/coach/practices",
+          "/coach/availability",
+          "/coach/throws/practice",
         ],
       },
 
-      // ── Analyze ──
+      // ── Library ──
+      // Absorbs /coach/exercises, /coach/throws/library, /coach/throws/drills,
+      // /coach/plans, /coach/videos/drills. Tabs live in URL (?view=).
       {
-        label: "Analyze",
+        label: "Library",
+        href: "/coach/library",
+        icon: <Library {...iconSize} />,
+        matchPaths: [
+          "/coach/library",
+          "/coach/exercises",
+          "/coach/plans",
+          "/coach/throws/library",
+          "/coach/throws/drills",
+          "/coach/videos/drills",
+        ],
+      },
+
+      // ── Builder ──
+      // Absorbs /coach/throws/builder, /coach/plans/new, /coach/plans/generate.
+      // Tabs live in URL (?type=session|plan|drill).
+      {
+        label: "Builder",
+        href: "/coach/builder",
+        icon: <Wrench {...iconSize} />,
+        matchPaths: [
+          "/coach/builder",
+          "/coach/throws/builder",
+          "/coach/plans/new",
+          "/coach/plans/generate",
+        ],
+      },
+
+      // ── Questionnaires ──
+      {
+        label: "Questionnaires",
+        href: "/coach/questionnaires",
+        icon: <ClipboardList {...iconSize} />,
+        matchPaths: ["/coach/questionnaires"],
+      },
+
+      // ── Video Analysis ──
+      // Absorbs /coach/videos and /coach/throws/analyze (per Q5 decision).
+      {
+        label: "Video Analysis",
         href: "/coach/video-analysis",
         icon: <BarChart3 {...iconSize} />,
-        matchPaths: ["/coach/video-analysis", "/coach/questionnaires"],
-        children: [
-          {
-            label: "Pose Analysis",
-            href: "/coach/video-analysis",
-            icon: <ScanLine {...iconSize} />,
-            matchPaths: ["/coach/video-analysis"],
-          },
-          {
-            label: "Questionnaires",
-            href: "/coach/questionnaires",
-            icon: <ClipboardList {...iconSize} />,
-            matchPaths: ["/coach/questionnaires"],
-          },
-        ],
+        matchPaths: ["/coach/video-analysis", "/coach/videos", "/coach/throws/analyze"],
       },
     ],
   },
   {
     items: [
-      { label: "Notifications", href: "/coach/notifications", icon: <Bell {...iconSize} /> },
+      // Notifications and Feedback Inbox both live in the top-bar (bell + inbox icon).
+      // Settings absorbs Tools (calculators) and Integrations as tabs.
       {
         label: "Settings",
         href: "/coach/settings",
         icon: <Settings {...iconSize} />,
-        matchPaths: ["/coach/settings"],
+        matchPaths: ["/coach/settings", "/coach/integrations", "/coach/tools"],
       },
     ],
   },

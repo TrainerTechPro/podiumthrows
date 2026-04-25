@@ -16,6 +16,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { QuickActions } from "@/components/ui/QuickActions";
+import { CoachFeedbackInboxIcon } from "@/components/feedback/CoachFeedbackInboxIcon";
 import { useDetectTimezone } from "@/hooks/useDetectTimezone";
 import Link from "next/link";
 import { logger } from "@/lib/logger";
@@ -293,6 +294,8 @@ function CoachTopBar({
       )}
 
       <NotificationBell initialCount={notificationCount ?? 0} role={user.role} />
+
+      <CoachFeedbackInboxIcon />
 
       <UserMenu user={user} settingsHref="/coach/settings" />
     </header>
