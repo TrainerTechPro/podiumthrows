@@ -24,7 +24,7 @@ import {
   Library,
   Wrench,
   ClipboardList,
-  PenLine,
+  Megaphone,
 } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -269,9 +269,14 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
       },
 
       // ── Athletes ──
-      // Practices + Availability moved out (now Calendar tabs). Throws (?tab=throws)
-      // dropped from children; the Throws sub-tab remains accessible from the
-      // Roster page itself. Athletes-tab IA pass before commit 6 may regroup these.
+      // Tier-1 (Roster, Self-Logs, Competitions) lives in /coach/athletes
+      // page header pills, not as sidebar children. Tier-2 surfaces (Throws,
+      // Invitations, Groups, Event Groups, Goals, Announcements) are sibling
+      // routes under /coach/athletes/* and get sidebar children. Self-Logs
+      // and Competitions are reachable in 1-2 clicks via the Roster header.
+      // Hub is killed (per IA Q5 sign-off — content redistributes to
+      // Dashboard widgets and Roster header). Team Feed is renamed to
+      // Announcements and lifted to /coach/athletes/announcements.
       {
         label: "Athletes",
         href: "/coach/athletes",
@@ -286,6 +291,9 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/goals",
           "/coach/athlete-logs",
           "/coach/hub",
+          "/coach/throws/profile",
+          "/coach/throws/assessment",
+          "/coach/throws/invite",
         ],
         children: [
           {
@@ -295,47 +303,40 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
             matchPaths: ["/coach/athletes"],
           },
           {
-            label: "Self-Logged Sessions",
-            href: "/coach/athlete-logs",
-            icon: <PenLine {...iconSize} />,
-            matchPaths: ["/coach/athlete-logs"],
+            label: "Throws",
+            href: "/coach/athletes/throws",
+            icon: <Target {...iconSize} />,
+            matchPaths: ["/coach/athletes/throws"],
+          },
+          {
+            label: "Invitations",
+            href: "/coach/athletes/invitations",
+            icon: <UserPlus {...iconSize} />,
+            matchPaths: ["/coach/athletes/invitations", "/coach/invitations"],
           },
           {
             label: "Groups",
-            href: "/coach/teams",
+            href: "/coach/athletes/groups",
             icon: <UsersRound {...iconSize} />,
-            matchPaths: ["/coach/teams"],
+            matchPaths: ["/coach/athletes/groups", "/coach/teams"],
           },
           {
             label: "Event Groups",
-            href: "/coach/event-groups",
+            href: "/coach/athletes/event-groups",
             icon: <UsersRound {...iconSize} />,
-            matchPaths: ["/coach/event-groups"],
+            matchPaths: ["/coach/athletes/event-groups", "/coach/event-groups"],
           },
           {
             label: "Goals",
-            href: "/coach/goals",
+            href: "/coach/athletes/goals",
             icon: <Target {...iconSize} />,
-            matchPaths: ["/coach/goals"],
-          },
-          { label: "Invitations", href: "/coach/invitations", icon: <UserPlus {...iconSize} /> },
-          {
-            label: "Competitions",
-            href: "/coach/competitions",
-            icon: <Trophy {...iconSize} />,
-            matchPaths: ["/coach/competitions"],
+            matchPaths: ["/coach/athletes/goals", "/coach/goals"],
           },
           {
-            label: "Team Feed",
-            href: "/coach/team",
-            icon: <Users {...iconSize} />,
-            matchPaths: ["/coach/team"],
-          },
-          {
-            label: "Team Hub",
-            href: "/coach/hub",
-            icon: <LayoutDashboard {...iconSize} />,
-            matchPaths: ["/coach/hub"],
+            label: "Announcements",
+            href: "/coach/athletes/announcements",
+            icon: <Megaphone {...iconSize} />,
+            matchPaths: ["/coach/athletes/announcements", "/coach/team"],
           },
         ],
       },
