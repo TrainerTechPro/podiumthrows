@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Flame, Sparkles, Trophy } from "lucide-react";
 import { requireAthleteSession, getAthleteStats } from "@/lib/data/athlete";
+import { fetchUpcomingThrowsAssignments } from "@/lib/data/throws-hub";
 import prisma from "@/lib/prisma";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { StaleSessionChecker } from "./_stale-session-checker";
@@ -75,7 +76,7 @@ export default async function AthleteDashboardPage() {
   const startOfStrip = new Date(startOfToday);
   startOfStrip.setDate(startOfToday.getDate() - 6);
 
-  const [stats, todayThrows, streakWindow, notifPrefs] = await Promise.all([
+  const [stats, todayThrows, streakWindow, notifPrefs, upcomingAssignments] = await Promise.all([
     getAthleteStats(athlete.id),
     prisma.throwLog.findMany({
       where: { athleteId: athlete.id, date: { gte: startOfToday } },
@@ -95,7 +96,18 @@ export default async function AthleteDashboardPage() {
       where: { id: athlete.id },
       select: { notificationPreferences: true },
     }),
+    fetchUpcomingThrowsAssignments(athlete.id),
   ]);
+
+  // Today's coach-assigned throws session, if any. Only treat ASSIGNED or
+  // IN_PROGRESS as actionable — completed sessions take the threwToday path.
+  const todayYMD = startOfToday.toISOString().slice(0, 10);
+  const todayAssignment =
+    upcomingAssignments.find(
+      (a) =>
+        a.scheduledDate.slice(0, 10) === todayYMD &&
+        (a.status === "ASSIGNED" || a.status === "IN_PROGRESS")
+    ) ?? null;
 
   // Readiness logged today?
   const readiness = stats.latestReadiness;
@@ -177,7 +189,7 @@ export default async function AthleteDashboardPage() {
           throwCount={todayThrows.length}
         />
       ) : readinessIsToday ? (
-        <ReadyToTrainHero readinessScore={readiness.overallScore} />
+        <ReadyToTrainHero readinessScore={readiness.overallScore} assignment={todayAssignment} />
       ) : (
         <CheckInHero firstName={athlete.firstName} />
       )}
@@ -297,14 +309,45 @@ function CheckInHero({ firstName }: { firstName: string }) {
 /**
  * State B: Ready to go. Bold amber anchor — the whole page is for this.
  * No gradient, no glow. Opaque fill, confident shadow.
+ *
+ * If a coach has assigned a session for today, the hero specializes:
+ * the title becomes the plan name, the CTA routes to that assignment,
+ * and IN_PROGRESS sessions resume in the live player. Without an
+ * assignment, the hero opens the generic log wizard. Same anchor,
+ * smarter destination.
  */
-function ReadyToTrainHero({ readinessScore }: { readinessScore: number }) {
+function ReadyToTrainHero({
+  readinessScore,
+  assignment,
+}: {
+  readinessScore: number;
+  assignment: { id: string; planName: string | null; status: string } | null;
+}) {
   const label = formatReadinessLabel(readinessScore);
   const color = readinessColor(readinessScore);
 
+  const isInProgress = assignment?.status === "IN_PROGRESS";
+  const href = assignment
+    ? isInProgress
+      ? `/athlete/throws/${assignment.id}?view=live`
+      : `/athlete/throws/${assignment.id}`
+    : "/athlete/log-session";
+
+  const title =
+    assignment?.planName?.trim() || (assignment ? "Today’s session" : "Log today’s session");
+  const description = assignment
+    ? isInProgress
+      ? "You started this session — pick up where you left off."
+      : "Coach assigned this for today. Tap to begin."
+    : "Open the wizard — events, implements, throws, notes.";
+  const eyebrow = assignment
+    ? `Today’s session · readiness ${readinessScore}/10`
+    : `${label} · readiness ${readinessScore}/10`;
+  const ctaLabel = isInProgress ? "Resume" : "Start";
+
   return (
     <Link
-      href="/athlete/log-session"
+      href={href}
       className="group block rounded-2xl bg-[var(--color-brand)] text-[var(--color-text-on-brand)] p-6 shadow-[0_8px_24px_-8px_rgba(255,200,0,0.3)] transition-transform duration-150 active:scale-[0.98]"
     >
       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] opacity-80">
@@ -313,16 +356,14 @@ function ReadyToTrainHero({ readinessScore }: { readinessScore: number }) {
           style={{ backgroundColor: color }}
           aria-hidden="true"
         />
-        {label} · readiness {readinessScore}/10
+        {eyebrow}
       </div>
-      <h2 className="mt-2 font-heading text-[30px] leading-[1.05] font-bold">
-        Log today&rsquo;s session
+      <h2 className="mt-2 font-heading text-[30px] leading-[1.05] font-bold line-clamp-2">
+        {title}
       </h2>
-      <p className="mt-1.5 text-sm opacity-80">
-        Open the wizard — events, implements, throws, notes.
-      </p>
+      <p className="mt-1.5 text-sm opacity-80">{description}</p>
       <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold">
-        Start
+        {ctaLabel}
         <ArrowRight
           size={18}
           strokeWidth={2.25}
