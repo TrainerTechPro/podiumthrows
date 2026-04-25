@@ -74,7 +74,9 @@ const nextConfig = {
       { source: '/coach/my-program',   destination: '/athlete/dashboard',           permanent: false },
       { source: '/coach/my-training',  destination: '/athlete/dashboard',           permanent: false },
       { source: '/coach/my-lifting',   destination: '/athlete/dashboard',           permanent: false },
-      { source: '/coach/drill-videos', destination: '/coach/throws/drills',         permanent: false },
+      // Updated for PR 6: was /coach/throws/drills (now redirects to library).
+      // Skip the 2-hop and land directly on the canonical Library Drills view.
+      { source: '/coach/drill-videos', destination: '/coach/library?view=drills',   permanent: false },
       { source: '/coach/invitations',  destination: '/coach/athletes/invitations',  permanent: false },
 
       // /athlete/throws/log removed from the consolidation list — the page
@@ -87,8 +89,9 @@ const nextConfig = {
       // → ad-hoc) used by the QuickActions button. Flattening it to
       // /athlete/log-session would bypass the resume-workout flow.
 
-      // Exercise recommender subsumed by /coach/plans/generate.
-      { source: '/coach/throws/programming', destination: '/coach/plans/generate',  permanent: false },
+      // Exercise recommender subsumed by the Builder Plan tab in generate mode.
+      // Updated for PR 6: was /coach/plans/generate (now itself redirected).
+      { source: '/coach/throws/programming', destination: '/coach/builder?type=plan&mode=generate',  permanent: false },
 
       // Coach codex page deleted — CodexView extracted to src/components/codex/
       // for shared use by /athlete/codex. Coach bookmarks land on dashboard.
@@ -105,46 +108,269 @@ const nextConfig = {
         destination: '/athlete/throws/readiness',
         permanent: true,
       },
+      // Updated for PR 6: was /coach/athletes?tab=throws (now URL-state legacy).
+      // The Tier-2 sibling /coach/athletes/throws is the canonical IA destination.
       {
         source: '/coach/throws/roster',
-        destination: '/coach/athletes?tab=throws&moved=1',
+        destination: '/coach/athletes/throws?moved=1',
         permanent: true,
       },
 
       // H-2: Flat programming IA — Schedule + Plans as peers.
-      // /coach/programming* → /coach/schedule* (week calendar lives here now)
+      // Updated for PR 6: /coach/schedule itself now redirects to /coach/calendar
+      // (Calendar absorbs schedule + practices + availability + live-practice).
+      // Skip the 2-hop and land on Calendar directly.
       {
         source: '/coach/programming',
-        destination: '/coach/schedule',
+        destination: '/coach/calendar',
         permanent: true,
       },
       {
         source: '/coach/programming/:path*',
-        destination: '/coach/schedule/:path*',
+        destination: '/coach/calendar/:path*',
         permanent: true,
       },
-      // /coach/sessions* → /coach/plans* (plans are the template library;
-      // scheduled instances live on /coach/schedule).
+      // /coach/sessions* — was the legacy plans namespace. Updated for PR 6:
+      // plans live in /coach/library?view=plans now, plan-new lives in
+      // /coach/builder?type=plan.
       {
         source: '/coach/sessions',
-        destination: '/coach/plans',
+        destination: '/coach/library?view=plans',
         permanent: true,
       },
       {
         source: '/coach/sessions/new',
-        destination: '/coach/plans/new',
+        destination: '/coach/builder?type=plan',
         permanent: true,
       },
-      // Bondarchuk program generator — relocated from /coach/throws/* into
-      // the /coach/plans/* namespace. Distinct from /coach/plans/new (blank
-      // session template). The generator produces a multi-week periodized
-      // Program (macrocycle), the blank builder produces a single-session
-      // WorkoutPlan (template).
+      // Bondarchuk program generator — was at /coach/plans/generate; now lives
+      // as the Generate sub-mode of the Builder Plan tab.
       {
         source: '/coach/throws/program-builder',
-        destination: '/coach/plans/generate',
+        destination: '/coach/builder?type=plan&mode=generate',
         permanent: true,
       },
+
+      // ── PR 6: coach-IA consolidation 308s. ─────────────────────────────
+      // Three new top-level destinations (Calendar / Library / Builder)
+      // absorb fifteen sprawled coach surfaces, plus seven Tier-2 siblings
+      // pull roster admin under /coach/athletes/*. See tasks/nav-ia-v2.md
+      // and the commit chain b120d62 → f6dd125. All 308 — these are real
+      // IA migrations, do not downgrade.
+
+      // Calendar absorbs schedule, practices (list), availability, live-practice.
+      // Detail pages survive at their original paths (/coach/practices/[id],
+      // /coach/throws/practice/[sessionId]) — the source patterns here are
+      // exact-match for the list pages only.
+      {
+        source: '/coach/schedule',
+        destination: '/coach/calendar',
+        permanent: true,
+      },
+      {
+        source: '/coach/schedule/:path*',
+        destination: '/coach/calendar/:path*',
+        permanent: true,
+      },
+      {
+        source: '/coach/practices',
+        destination: '/coach/calendar?view=by-athlete',
+        permanent: true,
+      },
+      {
+        source: '/coach/availability',
+        destination: '/coach/calendar?view=compliance',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/practice',
+        destination: '/coach/calendar?view=live',
+        permanent: true,
+      },
+
+      // Library absorbs exercises, throws-library (sessions), throws-drills,
+      // plans (list). Drill videos collapse into Library/Drills (Q6 sign-off).
+      // Detail pages /coach/plans/[planId] survive — exact-match source.
+      {
+        source: '/coach/exercises',
+        destination: '/coach/library?view=exercises',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/library',
+        destination: '/coach/library?view=sessions',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/drills',
+        destination: '/coach/library?view=drills',
+        permanent: true,
+      },
+      {
+        source: '/coach/plans',
+        destination: '/coach/library?view=plans',
+        permanent: true,
+      },
+      {
+        source: '/coach/videos/drills',
+        destination: '/coach/library?view=drills',
+        permanent: true,
+      },
+
+      // Builder absorbs throws-builder, plan-new, plan-generate.
+      // Plan tab has a Manual / Generate sub-mode; the generate URL preserves it.
+      {
+        source: '/coach/throws/builder',
+        destination: '/coach/builder?type=session',
+        permanent: true,
+      },
+      {
+        source: '/coach/plans/new',
+        destination: '/coach/builder?type=plan',
+        permanent: true,
+      },
+      {
+        source: '/coach/plans/generate',
+        destination: '/coach/builder?type=plan&mode=generate',
+        permanent: true,
+      },
+
+      // Athletes Tier-2 sibling renames. The roster admin surfaces move under
+      // /coach/athletes/* so the URL hierarchy matches the IA hierarchy.
+      // Detail pages (/coach/competitions/[id]) survive at their original
+      // paths until commit 7's breadcrumb audit pass — the list-page redirect
+      // here only matches the exact source.
+      {
+        source: '/coach/teams',
+        destination: '/coach/athletes/groups',
+        permanent: true,
+      },
+      {
+        source: '/coach/event-groups',
+        destination: '/coach/athletes/event-groups',
+        permanent: true,
+      },
+      {
+        source: '/coach/goals',
+        destination: '/coach/athletes/goals',
+        permanent: true,
+      },
+      {
+        source: '/coach/competitions',
+        destination: '/coach/athletes/competitions',
+        permanent: true,
+      },
+      {
+        source: '/coach/team',
+        destination: '/coach/athletes/announcements',
+        permanent: true,
+      },
+
+      // Athletes Tier-1 self-logs tab.
+      {
+        source: '/coach/athlete-logs',
+        destination: '/coach/athletes?tab=self-logs',
+        permanent: true,
+      },
+
+      // Per-athlete: Bondarchuk assessment surface relocated to athlete sub-route.
+      {
+        source: '/coach/throws/assessment/:athleteId',
+        destination: '/coach/athletes/:athleteId/assessments',
+        permanent: true,
+      },
+
+      // Throws Hub retired (sign-off Q1) — content distributed to Dashboard
+      // (team pulse), Calendar (recent sessions), and Library/Builder.
+      {
+        source: '/coach/throws',
+        destination: '/coach/dashboard',
+        permanent: true,
+      },
+
+      // Coach session-logging is contextual, not destinational (sign-off Q2).
+      // Old standalone surface points at Calendar; the actual flow lands on
+      // a per-day "Log session for…" CTA in Calendar.
+      {
+        source: '/coach/log-session',
+        destination: '/coach/calendar',
+        permanent: true,
+      },
+
+      // Wellness becomes a Dashboard tab (sign-off Q3) — glance-surface.
+      {
+        source: '/coach/wellness',
+        destination: '/coach/dashboard?tab=readiness',
+        permanent: true,
+      },
+
+      // Hub killed (sign-off Q5) — team-pulse content already on Dashboard,
+      // any rollup data lands in the Roster header summary.
+      {
+        source: '/coach/hub',
+        destination: '/coach/dashboard',
+        permanent: true,
+      },
+
+      // Tools and Integrations get absorbed as Settings tabs (per mapping).
+      {
+        source: '/coach/tools',
+        destination: '/coach/settings?tab=tools',
+        permanent: true,
+      },
+      {
+        source: '/coach/integrations',
+        destination: '/coach/settings?tab=integrations',
+        permanent: true,
+      },
+
+      // Throws Analyze merges into Video Analysis (sign-off H).
+      // /coach/throws/analyze list → video-analysis filtered by event=throws.
+      {
+        source: '/coach/throws/analyze',
+        destination: '/coach/video-analysis?event=throws',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/analyze/history',
+        destination: '/coach/video-analysis?tab=history',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/analyze/:id',
+        destination: '/coach/video-analysis/:id',
+        permanent: true,
+      },
+
+      // Video library merges into Video Analysis (sign-off Q5). Drill videos
+      // (/coach/videos/drills) handled separately above as a Library redirect.
+      {
+        source: '/coach/videos',
+        destination: '/coach/video-analysis',
+        permanent: true,
+      },
+      {
+        source: '/coach/videos/upload',
+        destination: '/coach/video-analysis/upload',
+        permanent: true,
+      },
+      {
+        source: '/coach/videos/:id',
+        destination: '/coach/video-analysis/:id',
+        permanent: true,
+      },
+
+      // INTENTIONALLY NOT REDIRECTED:
+      // - /coach/throws/profile           — 3334-line client component using
+      //                                     useSearchParams; inline extraction
+      //                                     into /coach/athletes/[id]/profile
+      //                                     deferred to a follow-up commit.
+      //                                     The /coach/athletes/[id]/profile
+      //                                     redirect-shell points HERE for now.
+      // - /coach/throws/profile/typing    — small, awaits profile extraction.
+      // - /coach/throws/invite            — keeps working until the throw-profile
+      //                                     invite CTA is wired into
+      //                                     /coach/athletes/invitations.
 
       // Canonical session + throws URLs per role. Each legacy URL maps to
       // exactly one model (TrainingSession or ThrowsAssignment) with
