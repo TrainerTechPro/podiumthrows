@@ -5,27 +5,35 @@ import { getSession, canActAsAthlete } from "@/lib/auth";
 import { awardStreakAchievements, awardFirstCheckInAchievement } from "@/lib/achievements";
 import { notifyCoachLowReadiness } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
-import { parseBody, ReadinessCheckInSchema } from "@/lib/api-schemas";
+import { parseBodyText, ReadinessCheckInSchema } from "@/lib/api-schemas";
 import { updateThrowsStreak } from "@/lib/streak";
+import { withIdempotency } from "@/lib/idempotency";
 
 /* ─── POST — submit readiness check-in ───────────────────────────────────── */
 
 export async function POST(req: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+  const session = await getSession();
+  if (!session || !(await canActAsAthlete(session))) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
 
+  return withIdempotency(
+    { userId: session.userId, endpoint: "/api/athlete/readiness", req },
+    async (bodyText) => postHandler(session.userId, bodyText)
+  );
+}
+
+async function postHandler(userId: string, bodyText: string): Promise<NextResponse> {
+  try {
     const athlete = await prisma.athleteProfile.findUnique({
-      where: { userId: session.userId },
+      where: { userId },
       select: { id: true, coachId: true, firstName: true, lastName: true },
     });
     if (!athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const parsed = await parseBody(req, ReadinessCheckInSchema);
+    const parsed = parseBodyText(bodyText, ReadinessCheckInSchema);
     if (parsed instanceof NextResponse) return parsed;
     const {
       sleepQuality,

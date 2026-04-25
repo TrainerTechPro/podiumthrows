@@ -4,20 +4,28 @@
  * Creates a new draft SelfProgramConfig for the logged-in athlete.
  * Deletes any existing draft before creating the new one.
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { canAccessSelfProgram } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { withIdempotency } from "@/lib/idempotency";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session || !(await canActAsAthlete(session))) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  return withIdempotency(
+    { userId: session.userId, endpoint: "/api/athlete/self-program", req },
+    async () => postHandler(session.userId)
+  );
+}
+
+async function postHandler(userId: string): Promise<NextResponse> {
   try {
-    const session = await getSession();
-    if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const canAccess = await canAccessSelfProgram(session.userId);
+    const canAccess = await canAccessSelfProgram(userId);
     if (!canAccess) {
       return NextResponse.json(
         { success: false, error: "Self-programming not enabled for this account" },
@@ -26,7 +34,7 @@ export async function POST() {
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
-      where: { userId: session.userId },
+      where: { userId },
       select: { id: true },
     });
     if (!athlete) {

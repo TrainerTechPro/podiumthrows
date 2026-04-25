@@ -16,7 +16,13 @@ import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
 import { resolveTimezone, getLocalDate, startOfToday as startOfTodayForTz } from "@/lib/dates";
-import { parseBody, QuickLogThrowSchema, QuickLogEditSchema } from "@/lib/api-schemas";
+import {
+  parseBody,
+  parseBodyText,
+  QuickLogThrowSchema,
+  QuickLogEditSchema,
+} from "@/lib/api-schemas";
+import { withIdempotency } from "@/lib/idempotency";
 // EventType enum import removed — DB column is TEXT, not the enum type
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -71,10 +77,7 @@ function formatWeight(weightKg: number, event: string): string {
 }
 
 /** Build the available implements list for an athlete (competition weight per event). */
-function buildAvailableImplements(
-  events: string[],
-  gender: string
-): ImplementOption[] {
+function buildAvailableImplements(events: string[], gender: string): ImplementOption[] {
   const genderKey = gender === "FEMALE" ? "female" : "male";
   return events.map((event) => {
     const implementWeight = COMPETITION_WEIGHTS[event]?.[genderKey] ?? 0;
@@ -156,7 +159,14 @@ export async function GET() {
       },
       orderBy: { date: "desc" },
       take: 3,
-      select: { id: true, event: true, implementWeight: true, distance: true, notes: true, date: true },
+      select: {
+        id: true,
+        event: true,
+        implementWeight: true,
+        distance: true,
+        notes: true,
+        date: true,
+      },
     });
 
     const recentThrows = recentThrowsRaw.map((t) => {
@@ -223,14 +233,21 @@ export async function GET() {
 // ── POST — log a new throw ────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
 
+  return withIdempotency(
+    { userId: session.userId, endpoint: "/api/athlete/quick-log", req },
+    async (bodyText) => postHandler(session.userId, bodyText)
+  );
+}
+
+async function postHandler(userId: string, bodyText: string): Promise<NextResponse> {
+  try {
     const athlete = await prisma.athleteProfile.findUnique({
-      where: { userId: session.userId },
+      where: { userId },
       select: { id: true, coachId: true, gender: true, events: true, timezone: true },
     });
 
@@ -242,7 +259,7 @@ export async function POST(req: NextRequest) {
     const today = getLocalDate(tz);
     const startOfTodayUtc = startOfTodayForTz(tz);
 
-    const parsed = await parseBody(req, QuickLogThrowSchema);
+    const parsed = parseBodyText(bodyText, QuickLogThrowSchema);
     if (parsed instanceof NextResponse) return parsed;
     const { event, implementWeight, distance, feeling, notes } = parsed;
 
@@ -393,7 +410,15 @@ export async function PATCH(req: NextRequest) {
     // Find and verify ownership
     const existing = await prisma.throwLog.findUnique({
       where: { id },
-      select: { id: true, athleteId: true, event: true, implementWeight: true, distance: true, notes: true, isPersonalBest: true },
+      select: {
+        id: true,
+        athleteId: true,
+        event: true,
+        implementWeight: true,
+        distance: true,
+        notes: true,
+        isPersonalBest: true,
+      },
     });
 
     if (!existing) {
@@ -466,9 +491,6 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/quick-log", { context: "api", error: err });
-    return NextResponse.json(
-      { success: false, error: "Failed to update throw." },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to update throw." }, { status: 500 });
   }
 }

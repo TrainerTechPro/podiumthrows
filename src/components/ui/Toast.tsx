@@ -24,6 +24,12 @@ export interface Toast {
   description?: string;
   duration?: number; // ms, 0 = persist
   action?: { label: string; onClick: () => void };
+  /**
+   * Optional second button rendered next to `action`. Used by toasts that
+   * present a binary choice (e.g. DraftResumeToast: Continue / Discard).
+   * Renders with subdued styling so the primary `action` keeps its lead.
+   */
+  secondaryAction?: { label: string; onClick: () => void };
   /** Large highlight value for celebration toasts (e.g. "18.42m") */
   highlight?: string;
 }
@@ -319,13 +325,25 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
               {t.description}
             </p>
           )}
-          {t.action && (
-            <button
-              onClick={t.action.onClick}
-              className="mt-1.5 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
-            >
-              {t.action.label}
-            </button>
+          {(t.action || t.secondaryAction) && (
+            <div className="mt-1.5 flex items-center gap-3">
+              {t.action && (
+                <button
+                  onClick={t.action.onClick}
+                  className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  {t.action.label}
+                </button>
+              )}
+              {t.secondaryAction && (
+                <button
+                  onClick={t.secondaryAction.onClick}
+                  className="text-xs font-medium text-muted hover:text-[var(--foreground)] transition-colors"
+                >
+                  {t.secondaryAction.label}
+                </button>
+              )}
+            </div>
           )}
         </div>
         <button

@@ -3,7 +3,7 @@ import { requireCoachSession, getExerciseLibrary, getAthletePickerList } from "@
 import { SessionWizard } from "./_session-wizard";
 
 export default async function NewPlanPage() {
-  const { coach } = await requireCoachSession();
+  const { session, coach } = await requireCoachSession();
   const [exercises, athletes] = await Promise.all([
     getExerciseLibrary(coach.id),
     getAthletePickerList(coach.id),
@@ -46,7 +46,7 @@ export default async function NewPlanPage() {
         </div>
       </div>
 
-      <SessionWizard exercises={exercises} athletes={athletes} />
+      <SessionWizard userId={session.userId} exercises={exercises} athletes={athletes} />
     </div>
   );
 }

@@ -50,9 +50,10 @@ const TABS: Tab[] = [
     label: "Log",
     icon: PlusCircle,
     primary: true,
-    // /athlete/throws/log stays reachable as a back-compat route, but the
-    // active-tab indicator there belongs to Throws (its parent subtree) —
-    // see tasks/nav-ia-v2.md §3.
+    // /athlete/throws/log is reachable from Sidebar, QuickActions, and history
+    // edit links (it's the only edit path for self-logged sessions). The active
+    // tab there belongs to Throws (its parent subtree) — see tasks/nav-ia-v2.md
+    // §3. The bottom-tab Log button uses /athlete/log-session for new sessions.
     matchPaths: ["/athlete/log-session", "/athlete/quick-start"],
   },
   {

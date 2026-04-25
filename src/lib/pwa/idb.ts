@@ -1,12 +1,14 @@
-// Minimal IndexedDB helper — shared by video cache + sync queue + quick-log queue
-// Database: podium-pwa, version 2
+// Minimal IndexedDB helper — shared by video cache + sync queue + quick-log queue + form drafts + generic outbox
+// Database: podium-pwa, version 4
 // Stores:
-//   sync-queue       (keyPath: id)       — session throw attempts
+//   sync-queue       (keyPath: id)       — session throw attempts (legacy, coach practice)
 //   offline-videos   (keyPath: videoId)  — cached video blobs
 //   quick-log-queue  (keyPath: clientId) — Quick Log throws pending sync
+//   form-drafts      (keyPath: key)      — in-progress form data, keyed `${userId}:${formKey}:${entityId?}`
+//   outbox           (keyPath: id)       — generic mutation queue for forms b–f, envelope-shaped
 
 const DB_NAME = "podium-pwa";
-const DB_VERSION = 2;
+const DB_VERSION = 4;
 
 export function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -26,6 +28,18 @@ export function openDB(): Promise<IDBDatabase> {
         const store = db.createObjectStore("quick-log-queue", { keyPath: "clientId" });
         store.createIndex("createdAt", "createdAt", { unique: false });
       }
+      // v3: form drafts (in-progress form fields, survives crash/reload)
+      if (!db.objectStoreNames.contains("form-drafts")) {
+        const store = db.createObjectStore("form-drafts", { keyPath: "key" });
+        store.createIndex("userId", "userId", { unique: false });
+        store.createIndex("timestamp", "timestamp", { unique: false });
+      }
+      // v4: generic outbox (envelope-shaped: url, method, bodyJson, idempotencyKey, ...)
+      if (!db.objectStoreNames.contains("outbox")) {
+        const store = db.createObjectStore("outbox", { keyPath: "id" });
+        store.createIndex("nextAttemptAt", "nextAttemptAt", { unique: false });
+        store.createIndex("createdAt", "createdAt", { unique: false });
+      }
     };
 
     request.onsuccess = () => resolve(request.result);
@@ -33,11 +47,7 @@ export function openDB(): Promise<IDBDatabase> {
   });
 }
 
-export function idbGet<T>(
-  db: IDBDatabase,
-  storeName: string,
-  key: string
-): Promise<T | undefined> {
+export function idbGet<T>(db: IDBDatabase, storeName: string, key: string): Promise<T | undefined> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readonly");
     const store = tx.objectStore(storeName);
@@ -47,10 +57,7 @@ export function idbGet<T>(
   });
 }
 
-export function idbGetAll<T>(
-  db: IDBDatabase,
-  storeName: string
-): Promise<T[]> {
+export function idbGetAll<T>(db: IDBDatabase, storeName: string): Promise<T[]> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readonly");
     const store = tx.objectStore(storeName);
@@ -60,11 +67,7 @@ export function idbGetAll<T>(
   });
 }
 
-export function idbPut<T>(
-  db: IDBDatabase,
-  storeName: string,
-  value: T
-): Promise<void> {
+export function idbPut<T>(db: IDBDatabase, storeName: string, value: T): Promise<void> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readwrite");
     const store = tx.objectStore(storeName);
@@ -74,11 +77,7 @@ export function idbPut<T>(
   });
 }
 
-export function idbDelete(
-  db: IDBDatabase,
-  storeName: string,
-  key: string
-): Promise<void> {
+export function idbDelete(db: IDBDatabase, storeName: string, key: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readwrite");
     const store = tx.objectStore(storeName);
@@ -88,10 +87,7 @@ export function idbDelete(
   });
 }
 
-export function idbCount(
-  db: IDBDatabase,
-  storeName: string
-): Promise<number> {
+export function idbCount(db: IDBDatabase, storeName: string): Promise<number> {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readonly");
     const store = tx.objectStore(storeName);

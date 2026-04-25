@@ -110,7 +110,14 @@ export async function syncQuickLogQueue(): Promise<SyncResult> {
     try {
       const response = await fetch("/api/athlete/quick-log", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        headers: {
+          "Content-Type": "application/json",
+          // Same clientId as the original attempt — the server's withIdempotency
+          // wrapper returns the cached response if the original POST already
+          // committed, preventing a duplicate ThrowLog row.
+          "X-Idempotency-Key": item.clientId,
+          ...csrfHeaders(),
+        },
         body: JSON.stringify({
           event: item.event,
           implementWeight: item.implementWeight,

@@ -38,6 +38,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
   const notificationCount = await getUnreadCount(athlete.id, "ATHLETE");
 
   const user: DashboardUser = {
+    userId: session.userId,
     name: `${athlete.firstName} ${athlete.lastName}`,
     email: athlete.user.email,
     role: session.role as "COACH" | "ATHLETE",

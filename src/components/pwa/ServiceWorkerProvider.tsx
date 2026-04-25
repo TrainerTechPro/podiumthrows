@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { registerServiceWorker } from "@/lib/pwa/register-sw";
 import { useOnlineStatus } from "@/lib/pwa/online-status";
+import { clearAllStaleDrafts } from "@/lib/draft-persistence";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { InstallPrompt } from "./InstallPrompt";
 
@@ -24,8 +25,7 @@ export function useSWContext(): SWContextValue {
 
 export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
   const { isOnline } = useOnlineStatus();
-  const [swRegistration, setSwRegistration] =
-    useState<ServiceWorkerRegistration | null>(null);
+  const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   useEffect(() => {
@@ -40,6 +40,12 @@ export function ServiceWorkerProvider({ children }: { children: ReactNode }) {
         // New SW took control — page may need refresh for latest assets
       });
     }
+
+    // One-shot cleanup of form-drafts older than the staleness window. The
+    // hook is mounted under both athlete + coach layouts, so this runs once
+    // per app load — cheap, and prevents the form-drafts store from growing
+    // unbounded over months of use.
+    void clearAllStaleDrafts();
   }, []);
 
   return (

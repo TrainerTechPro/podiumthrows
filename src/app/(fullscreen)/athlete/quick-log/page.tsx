@@ -6,9 +6,11 @@ export const metadata = { title: "Quick Log — Podium Throws" };
 
 export default async function QuickLogPage() {
   try {
-    await requireAthleteSession();
+    const { session } = await requireAthleteSession();
+    // userId scopes the IndexedDB draft cache so two users on the same device
+    // never read each other's in-flight throw composition.
+    return <QuickLogClient userId={session.userId} />;
   } catch {
     redirect("/login");
   }
-  return <QuickLogClient />;
 }

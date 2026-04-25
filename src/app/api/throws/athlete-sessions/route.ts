@@ -4,7 +4,8 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
-import { parseBody, AthleteThrowsSessionCreateSchema } from "@/lib/api-schemas";
+import { parseBodyText, AthleteThrowsSessionCreateSchema } from "@/lib/api-schemas";
+import { withIdempotency } from "@/lib/idempotency";
 import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
 import { EventType } from "@prisma/client";
 
@@ -24,7 +25,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
     }
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -43,17 +50,33 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
-    }
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+  }
 
-    const parsed = await parseBody(request, AthleteThrowsSessionCreateSchema);
+  return withIdempotency(
+    { userId: currentUser.userId, endpoint: "/api/throws/athlete-sessions", req: request },
+    async (bodyText) => postHandler(currentUser, bodyText)
+  );
+}
+
+async function postHandler(
+  currentUser: { userId: string; role: string },
+  bodyText: string
+): Promise<NextResponse> {
+  try {
+    const parsed = parseBodyText(bodyText, AthleteThrowsSessionCreateSchema);
     if (parsed instanceof NextResponse) return parsed;
     const { athleteId, event, date, notes, drillLogs } = parsed;
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -65,16 +88,18 @@ export async function POST(request: NextRequest) {
         notes: notes || null,
         drillLogs: drillLogs?.length
           ? {
-              create: (drillLogs as Array<{
-                drillType: string;
-                implementWeight?: number | null;
-                implementWeightUnit?: string | null;
-                implementWeightOriginal?: number | null;
-                wireLength?: string | null;
-                throwCount?: number;
-                bestMark?: number | null;
-                notes?: string | null;
-              }>).map((d) => ({
+              create: (
+                drillLogs as Array<{
+                  drillType: string;
+                  implementWeight?: number | null;
+                  implementWeightUnit?: string | null;
+                  implementWeightOriginal?: number | null;
+                  wireLength?: string | null;
+                  throwCount?: number;
+                  bestMark?: number | null;
+                  notes?: string | null;
+                }>
+              ).map((d) => ({
                 drillType: d.drillType,
                 implementWeight: d.implementWeight ?? null,
                 implementWeightUnit: d.implementWeightUnit ?? "kg",

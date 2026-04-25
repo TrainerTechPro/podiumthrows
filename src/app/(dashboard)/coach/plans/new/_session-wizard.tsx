@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
+import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
+import { useDraftPersistence } from "@/lib/draft-persistence";
+import { useOutboxStatus } from "@/lib/outbox";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { StepBasics, type BasicsData } from "./_step-basics";
 import { StepBlocks, type BlockData } from "./_step-blocks";
@@ -22,36 +26,150 @@ const STEPS = ["Basics", "Blocks", "Exercises", "Review"] as const;
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
+/** Persisted wizard state — survives a tab kill mid-fill. */
+interface SessionWizardDraft {
+  step: number;
+  basics: BasicsData;
+  blocks: BlockData[];
+  isTemplate: boolean;
+  selectedAthletes: string[];
+  scheduledDate: string;
+  coachNotes: string;
+}
+
 export function SessionWizard({
+  userId,
   exercises,
   athletes,
 }: {
+  userId: string;
   exercises: ExerciseItem[];
   athletes: AthletePickerItem[];
 }) {
   const router = useRouter();
+  const showResumeToast = useDraftResumeToast();
+  const outboxStatus = useOutboxStatus();
+  const resumeToastFiredRef = useRef(false);
   const [isPending, startTransition] = useTransition();
-  const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const [basics, setBasics] = useState<BasicsData>({
-    name: "",
-    description: "",
-    event: "",
-  });
+  const initialDraft = useMemo<SessionWizardDraft>(
+    () => ({
+      step: 0,
+      basics: { name: "", description: "", event: "" },
+      blocks: [
+        { name: "Warmup", blockType: "warmup", restSeconds: 0, notes: "", exercises: [] },
+        {
+          name: "Throwing Block 1",
+          blockType: "throwing",
+          restSeconds: 120,
+          notes: "",
+          exercises: [],
+        },
+        {
+          name: "Strength Block",
+          blockType: "strength",
+          restSeconds: 90,
+          notes: "",
+          exercises: [],
+        },
+        { name: "Cooldown", blockType: "cooldown", restSeconds: 0, notes: "", exercises: [] },
+      ],
+      isTemplate: false,
+      selectedAthletes: [],
+      scheduledDate: "",
+      coachNotes: "",
+    }),
+    []
+  );
+  const [draft, setDraft, draftStatus] = useDraftPersistence<SessionWizardDraft>(
+    `${userId}:coach-plan-new:session`,
+    initialDraft
+  );
 
-  const [blocks, setBlocks] = useState<BlockData[]>([
-    { name: "Warmup", blockType: "warmup", restSeconds: 0, notes: "", exercises: [] },
-    { name: "Throwing Block 1", blockType: "throwing", restSeconds: 120, notes: "", exercises: [] },
-    { name: "Strength Block", blockType: "strength", restSeconds: 90, notes: "", exercises: [] },
-    { name: "Cooldown", blockType: "cooldown", restSeconds: 0, notes: "", exercises: [] },
+  // Stable per-attempt id for the plan-create POST. The assignment POST gets
+  // its own key derived from this — server treats them as independent
+  // operations (different endpoints) but we want both replays to be safe.
+  const idempotencyKeyRef = useRef<string>("");
+  if (!idempotencyKeyRef.current) {
+    idempotencyKeyRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  // Backwards-compatible named accessors so the existing JSX (~400 lines below)
+  // keeps working unchanged.
+  const { step, basics, blocks, isTemplate, selectedAthletes, scheduledDate, coachNotes } = draft;
+  const setStep = useCallback(
+    (next: number | ((prev: number) => number)) =>
+      setDraft((d) => ({ ...d, step: typeof next === "function" ? next(d.step) : next })),
+    [setDraft]
+  );
+  const setBasics = useCallback(
+    (next: BasicsData | ((prev: BasicsData) => BasicsData)) =>
+      setDraft((d) => ({ ...d, basics: typeof next === "function" ? next(d.basics) : next })),
+    [setDraft]
+  );
+  const setBlocks = useCallback(
+    (next: BlockData[] | ((prev: BlockData[]) => BlockData[])) =>
+      setDraft((d) => ({ ...d, blocks: typeof next === "function" ? next(d.blocks) : next })),
+    [setDraft]
+  );
+  const setIsTemplate = useCallback(
+    (next: boolean) => setDraft((d) => ({ ...d, isTemplate: next })),
+    [setDraft]
+  );
+  const setSelectedAthletes = useCallback(
+    (next: string[] | ((prev: string[]) => string[])) =>
+      setDraft((d) => ({
+        ...d,
+        selectedAthletes: typeof next === "function" ? next(d.selectedAthletes) : next,
+      })),
+    [setDraft]
+  );
+  const setScheduledDate = useCallback(
+    (next: string) => setDraft((d) => ({ ...d, scheduledDate: next })),
+    [setDraft]
+  );
+  const setCoachNotes = useCallback(
+    (next: string) => setDraft((d) => ({ ...d, coachNotes: next })),
+    [setDraft]
+  );
+
+  // Resume toast for a recovered draft. Coach desk-class — the threshold is
+  // relaxed (any non-default name or any added exercise counts as "started").
+  const { hasDraft, lastSavedAt, clearDraft } = draftStatus;
+  useEffect(() => {
+    if (resumeToastFiredRef.current) return;
+    if (!hasDraft || !lastSavedAt) return;
+    const startedFilling =
+      basics.name.trim() !== "" ||
+      basics.description.trim() !== "" ||
+      blocks.some((b) => b.exercises.length > 0) ||
+      selectedAthletes.length > 0;
+    if (!startedFilling) return;
+
+    resumeToastFiredRef.current = true;
+    showResumeToast({
+      lastSavedAt,
+      noun: "plan draft",
+      onDiscard: async () => {
+        await clearDraft();
+        setDraft(initialDraft);
+      },
+    });
+  }, [
+    hasDraft,
+    lastSavedAt,
+    clearDraft,
+    basics,
+    blocks,
+    selectedAthletes,
+    showResumeToast,
+    setDraft,
+    initialDraft,
   ]);
-
-  // Save + assign state
-  const [isTemplate, setIsTemplate] = useState(false);
-  const [selectedAthletes, setSelectedAthletes] = useState<string[]>([]);
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [coachNotes, setCoachNotes] = useState("");
 
   function canAdvance(): boolean {
     if (step === 0) {
@@ -72,10 +190,16 @@ export function SessionWizard({
 
     startTransition(async () => {
       try {
-        // 1. Create the plan
+        // 1. Create the plan. Idempotency key on this POST so a retry after
+        // a dropped response returns the cached plan id instead of creating
+        // a duplicate.
         const planRes = await fetch("/api/coach/plans", {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Idempotency-Key": idempotencyKeyRef.current,
+            ...csrfHeaders(),
+          },
           body: JSON.stringify({
             name: basics.name.trim(),
             description: basics.description.trim() || undefined,
@@ -108,11 +232,17 @@ export function SessionWizard({
 
         const plan = await planRes.json();
 
-        // 2. Optionally assign to athletes
+        // 2. Optionally assign to athletes. Derived idempotency key so a
+        // retry of step 2 doesn't double-assign — the assignment is keyed
+        // by the same intent as the plan creation.
         if (selectedAthletes.length > 0 && scheduledDate) {
           const assignRes = await fetch("/api/coach/sessions", {
             method: "POST",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            headers: {
+              "Content-Type": "application/json",
+              "X-Idempotency-Key": `${idempotencyKeyRef.current}:assign`,
+              ...csrfHeaders(),
+            },
             body: JSON.stringify({
               planId: plan.id,
               athleteIds: selectedAthletes,
@@ -128,6 +258,8 @@ export function SessionWizard({
           }
         }
 
+        // Plan is on the server — drop the persisted draft.
+        await draftStatus.clearDraft();
         router.push("/coach/plans");
         router.refresh();
       } catch {
@@ -138,26 +270,36 @@ export function SessionWizard({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <Link
-        href="/coach/plans"
-        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/coach/plans"
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
         >
-          <path d="M19 12H5" />
-          <path d="M12 19l-7-7 7-7" />
-        </svg>
-        Back to Plans
-      </Link>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          Back to Plans
+        </Link>
+        {(isPending || !outboxStatus.isOnline || outboxStatus.pending > 0) && (
+          <SaveStatusChip
+            isSaving={isPending}
+            pending={outboxStatus.pending}
+            isOnline={outboxStatus.isOnline}
+            authNeeded={outboxStatus.authNeeded}
+          />
+        )}
+      </div>
 
       {/* Step Indicator */}
       <div className="flex items-center gap-2">

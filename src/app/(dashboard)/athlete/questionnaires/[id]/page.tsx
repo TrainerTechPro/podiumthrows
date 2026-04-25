@@ -9,7 +9,7 @@ export default async function FillQuestionnairePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { athlete } = await requireAthleteSession();
+  const { session, athlete } = await requireAthleteSession();
   const questionnaire = await getQuestionnaireForFill(id, athlete.id);
 
   if (!questionnaire) notFound();
@@ -81,7 +81,7 @@ export default async function FillQuestionnairePage({
         </h1>
       </div>
 
-      <QuestionnaireForm questionnaire={questionnaire} />
+      <QuestionnaireForm questionnaire={questionnaire} userId={session.userId} />
     </div>
   );
 }

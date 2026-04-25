@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { localToday } from "@/lib/utils";
@@ -10,8 +10,12 @@ import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { Input } from "@/components/ui/Input";
 import { NumberFlow } from "@/components/ui/NumberFlow";
+import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
+import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
+import { useDraftPersistence } from "@/lib/draft-persistence";
+import { enqueueMutation, useOutboxStatus } from "@/lib/outbox";
 import { track } from "@/lib/analytics";
-import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle, WifiOff } from "lucide-react";
 
 import { logger } from "@/lib/logger";
 /* ─── Log Session — single-screen form (no wizard) ───────────────────────────
@@ -134,6 +138,10 @@ interface DrillEntry {
 }
 
 interface WizardProps {
+  /** From the server session — scopes the IDB draft cache. Optional so this
+   *  wizard can still be reused from the coach surface (which doesn't carry
+   *  athlete user-id context) — when omitted, draft persistence is disabled. */
+  userId?: string;
   /** API endpoint for saving (athlete or coach-on-behalf) */
   apiEndpoint?: string;
   /** Where to navigate on cancel / "view sessions" */
@@ -142,6 +150,17 @@ interface WizardProps {
   allowedEvents?: string[];
   /** If set, loads existing session data and PUTs the update */
   editSessionId?: string;
+}
+
+/** Form state shape persisted to IndexedDB across reloads / tab kills. */
+interface LogSessionDraft {
+  event: string;
+  focus: string;
+  date: string;
+  drills: DrillEntry[];
+  sessionRpe: number | null;
+  sessionFeeling: string;
+  sessionNotes: string;
 }
 
 type PRResult = {
@@ -156,6 +175,7 @@ type WarningResult = { type: string; message: string; severity: string };
 /* ─── Main ─────────────────────────────────────────────────────────────── */
 
 export function LogSessionWizard({
+  userId,
   apiEndpoint = "/api/athlete/log-session",
   sessionsPath = "/athlete/sessions",
   allowedEvents,
@@ -163,29 +183,92 @@ export function LogSessionWizard({
 }: WizardProps) {
   const router = useRouter();
   const toast = useToast();
+  const showResumeToast = useDraftResumeToast();
+  const outboxStatus = useOutboxStatus();
   const isEditing = !!editSessionId;
   const [editLoading, setEditLoading] = useState(isEditing);
+  const resumeToastFiredRef = useRef(false);
 
   const filteredEvents = useMemo(
     () => (allowedEvents?.length ? EVENTS.filter((e) => allowedEvents.includes(e.value)) : EVENTS),
     [allowedEvents]
   );
 
-  // ── Form state ─────────────────────────────────────────────────────
-  const [event, setEvent] = useState<string>(
-    filteredEvents.length === 1 ? filteredEvents[0].value : ""
+  // ── Form state — persisted to IDB so a tab kill mid-fill doesn't lose
+  //    everything. Persistence is disabled when (a) no userId (coach-on-behalf
+  //    callers) or (b) editing an existing session — there's nothing to
+  //    "resume" because the row is already on the server.
+  const draftKey = userId && !isEditing ? `${userId}:log-session:new` : null;
+  const initialDraft = useMemo<LogSessionDraft>(
+    () => ({
+      event: filteredEvents.length === 1 ? filteredEvents[0].value : "",
+      focus: "",
+      date: localToday(),
+      drills: [],
+      sessionRpe: null,
+      sessionFeeling: "",
+      sessionNotes: "",
+    }),
+    [filteredEvents]
   );
-  const [focus, setFocus] = useState("");
-  const [date, setDate] = useState(localToday());
-  const [drills, setDrills] = useState<DrillEntry[]>([]);
-  const [sessionRpe, setSessionRpe] = useState<number | null>(null);
-  const [sessionFeeling, setSessionFeeling] = useState("");
-  const [sessionNotes, setSessionNotes] = useState("");
+  const [draft, setDraft, draftStatus] = useDraftPersistence<LogSessionDraft>(
+    draftKey,
+    initialDraft
+  );
+
+  // Stable per-attempt id for server-side idempotency. One value across the
+  // direct submit and any outbox replay for the same attempt; a fresh attempt
+  // after Discard or after a successful save gets a new key.
+  const idempotencyKeyRef = useRef<string>("");
+  if (!idempotencyKeyRef.current) {
+    idempotencyKeyRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  // Backwards-compatible named accessors so the existing JSX (~600 lines
+  // below) stays untouched. Each setter wraps `setDraft` to update the
+  // corresponding field; supports both value-form and updater-form callers.
+  const { event, focus, date, drills, sessionRpe, sessionFeeling, sessionNotes } = draft;
+  const setEvent = useCallback(
+    (next: string) => setDraft((d) => ({ ...d, event: next })),
+    [setDraft]
+  );
+  const setFocus = useCallback(
+    (next: string) => setDraft((d) => ({ ...d, focus: next })),
+    [setDraft]
+  );
+  const setDate = useCallback(
+    (next: string) => setDraft((d) => ({ ...d, date: next })),
+    [setDraft]
+  );
+  const setDrills = useCallback(
+    (next: DrillEntry[] | ((prev: DrillEntry[]) => DrillEntry[])) =>
+      setDraft((d) => ({
+        ...d,
+        drills: typeof next === "function" ? next(d.drills) : next,
+      })),
+    [setDraft]
+  );
+  const setSessionRpe = useCallback(
+    (next: number | null) => setDraft((d) => ({ ...d, sessionRpe: next })),
+    [setDraft]
+  );
+  const setSessionFeeling = useCallback(
+    (next: string) => setDraft((d) => ({ ...d, sessionFeeling: next })),
+    [setDraft]
+  );
+  const setSessionNotes = useCallback(
+    (next: string) => setDraft((d) => ({ ...d, sessionNotes: next })),
+    [setDraft]
+  );
 
   const [pastDrills, setPastDrills] = useState<string[]>([]);
   const [showAllDrills, setShowAllDrills] = useState<Record<string, boolean>>({});
 
   const [submitting, setSubmitting] = useState(false);
+  const [queued, setQueued] = useState(false);
   const [responsePRs, setResponsePRs] = useState<PRResult[]>([]);
   const [responseWarnings, setResponseWarnings] = useState<WarningResult[]>([]);
   const [doneSummary, setDoneSummary] = useState<null | {
@@ -256,7 +339,18 @@ export function LogSessionWizard({
         );
       })
       .finally(() => setEditLoading(false));
-  }, [editSessionId, apiEndpoint, toast]);
+  }, [
+    editSessionId,
+    apiEndpoint,
+    toast,
+    setEvent,
+    setDate,
+    setFocus,
+    setSessionNotes,
+    setSessionRpe,
+    setSessionFeeling,
+    setDrills,
+  ]);
 
   // ── Past drill suggestions ─────────────────────────────────────────
   useEffect(() => {
@@ -310,53 +404,143 @@ export function LogSessionWizard({
   const hasValidDrill = drills.some((d) => d.drillType);
   const canSave = !!event && hasValidDrill && !submitting;
 
+  // ── Resume toast for a recovered draft ───────────────────────────────
+  // One-shot per page load. Skips edit mode (no draft persistence there) and
+  // skips drafts with no user content (e.g. just the default localToday()).
+  const { hasDraft, lastSavedAt, clearDraft } = draftStatus;
+  useEffect(() => {
+    if (resumeToastFiredRef.current) return;
+    if (!hasDraft || !lastSavedAt) return;
+    const startedFilling =
+      drills.length > 0 ||
+      sessionNotes.trim() !== "" ||
+      sessionFeeling !== "" ||
+      focus.trim() !== "" ||
+      sessionRpe !== null;
+    if (!startedFilling) return;
+
+    resumeToastFiredRef.current = true;
+    showResumeToast({
+      lastSavedAt,
+      noun: "session",
+      onDiscard: async () => {
+        await clearDraft();
+        setDraft(initialDraft);
+      },
+    });
+  }, [
+    hasDraft,
+    lastSavedAt,
+    clearDraft,
+    drills,
+    sessionNotes,
+    sessionFeeling,
+    focus,
+    sessionRpe,
+    showResumeToast,
+    setDraft,
+    initialDraft,
+  ]);
+
+  // ── Build the request body once — used by both direct submit and outbox.
+  const buildRequestBody = useCallback(
+    () => ({
+      event,
+      date,
+      // Wizard-owned fields are always sent. Null means "cleared" — under
+      // the PUT handler's merge semantics, explicit null writes null.
+      // Omitted fields are left alone; these four fields are never omitted.
+      focus: focus || null,
+      notes: sessionNotes.trim() || null,
+      sessionRpe,
+      sessionFeeling: sessionFeeling || null,
+      drills: drills
+        .filter((d) => d.drillType)
+        .map((d) => {
+          const rawBest = parseNumericField(d.bestMark);
+          // Canonical bestMark is always meters — convert at the boundary.
+          // Preserve rawBest as bestMarkOriginal so edit mode can round-trip
+          // the athlete's typed value without lossy mm→ft→mm conversion.
+          const best = rawBest != null && d.distanceUnit === "feet" ? rawBest * 0.3048 : rawBest;
+          const rawImpl = parseNumericField(d.implementWeight);
+          const implWeight =
+            rawImpl != null && d.implementUnit === "lbs" ? rawImpl * LBS_TO_KG : rawImpl;
+          return {
+            drillType: d.drillType,
+            implementWeight: implWeight,
+            implementWeightUnit: d.implementUnit,
+            implementWeightOriginal: rawImpl,
+            wireLength: event === "HAMMER" ? d.wireLength : undefined,
+            throwCount: parseIntField(d.throwCount) ?? 0,
+            bestMark: best,
+            bestMarkUnit: d.distanceUnit,
+            bestMarkOriginal: rawBest,
+            notes: d.notes.trim() || undefined,
+          };
+        }),
+    }),
+    [event, date, focus, sessionNotes, sessionRpe, sessionFeeling, drills]
+  );
+
   // ── Submit ─────────────────────────────────────────────────────────
   async function handleSubmit() {
     if (!canSave) return;
     setSubmitting(true);
-    try {
-      const url = isEditing ? `${apiEndpoint}/${editSessionId}` : apiEndpoint;
-      const res = await fetch(url, {
-        method: isEditing ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({
-          event,
-          date,
-          // Wizard-owned fields are always sent. Null means "cleared" — under
-          // the PUT handler's merge semantics, explicit null writes null.
-          // Omitted fields are left alone; these four fields are never omitted.
-          focus: focus || null,
-          notes: sessionNotes.trim() || null,
-          sessionRpe,
-          sessionFeeling: sessionFeeling || null,
-          drills: drills
-            .filter((d) => d.drillType)
-            .map((d) => {
-              const rawBest = parseNumericField(d.bestMark);
-              // Canonical bestMark is always meters — convert at the boundary.
-              // Preserve rawBest as bestMarkOriginal so edit mode can round-trip
-              // the athlete's typed value without lossy mm→ft→mm conversion.
-              const best =
-                rawBest != null && d.distanceUnit === "feet" ? rawBest * 0.3048 : rawBest;
-              const rawImpl = parseNumericField(d.implementWeight);
-              const implWeight =
-                rawImpl != null && d.implementUnit === "lbs" ? rawImpl * LBS_TO_KG : rawImpl;
-              return {
-                drillType: d.drillType,
-                implementWeight: implWeight,
-                implementWeightUnit: d.implementUnit,
-                implementWeightOriginal: rawImpl,
-                wireLength: event === "HAMMER" ? d.wireLength : undefined,
-                throwCount: parseIntField(d.throwCount) ?? 0,
-                bestMark: best,
-                bestMarkUnit: d.distanceUnit,
-                bestMarkOriginal: rawBest,
-                notes: d.notes.trim() || undefined,
-              };
-            }),
-        }),
-      });
+    const body = buildRequestBody();
+    const url = isEditing ? `${apiEndpoint}/${editSessionId}` : apiEndpoint;
+    const method = isEditing ? "PUT" : "POST";
 
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": idempotencyKeyRef.current,
+          ...csrfHeaders(),
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (networkErr) {
+      // Network failure — queue for replay. New sessions only; PUTs (edit
+      // mode) skip the outbox because the server returns the latest authority
+      // anyway, and a stale PUT replay risks overwriting newer edits.
+      if (isEditing) {
+        toast.error("Couldn't save your changes — check your connection and try again.");
+        setSubmitting(false);
+        return;
+      }
+      logger.warn("log-session: network failure, enqueuing to outbox", {
+        context: "athlete/log-session/wizard",
+        metadata: {
+          err: networkErr instanceof Error ? networkErr.message : String(networkErr),
+        },
+      });
+      try {
+        await enqueueMutation({
+          url,
+          method,
+          bodyJson: body,
+          idempotencyKey: idempotencyKeyRef.current,
+          metadata: { kind: "log-session", event },
+        });
+        toast.warning("Saved locally", "Will sync to your coach when you're back online.");
+        await clearDraft();
+        setDraft(initialDraft);
+        setQueued(true);
+      } catch (queueErr) {
+        logger.error("log-session: enqueue failed", {
+          context: "athlete/log-session/wizard",
+          error: queueErr,
+        });
+        toast.error("Couldn't save session — try again with a connection.");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    try {
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || `Failed to save session (${res.status})`);
@@ -385,6 +569,11 @@ export function LogSessionWizard({
         toast.success(isEditing ? "Session updated" : "Session saved");
       }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
+
+      // Server has the row — drop the persisted draft so a second tab or a
+      // future visit doesn't surface a "resume" toast for an already-saved
+      // session.
+      await clearDraft();
 
       // Compute the summary BEFORE showing the done screen — once shown,
       // drills/event aren't needed anymore but the summary needs them.
@@ -422,6 +611,48 @@ export function LogSessionWizard({
     );
   }
 
+  // ── Queued state (network failure, payload in outbox) ───────────────
+  if (queued) {
+    return (
+      <div className="max-w-lg mx-auto py-24 text-center space-y-5">
+        <div className="w-14 h-14 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center">
+          <WifiOff size={28} strokeWidth={1.75} className="text-amber-500" aria-hidden="true" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold font-heading text-[var(--color-text-primary)]">
+            Saved locally
+          </h3>
+          <p className="text-sm text-[var(--color-text-secondary)] max-w-xs mx-auto">
+            Your session will sync to your coach as soon as you&rsquo;re back online.
+          </p>
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <Link
+            href={sessionsPath}
+            className="text-sm font-semibold text-[var(--color-brand)] hover:opacity-80 transition-opacity"
+          >
+            View sessions
+          </Link>
+          <span className="text-[var(--color-border-strong)]">·</span>
+          <button
+            type="button"
+            onClick={() => {
+              setQueued(false);
+              // Fresh attempt = fresh idempotency key.
+              idempotencyKeyRef.current =
+                typeof crypto !== "undefined" && "randomUUID" in crypto
+                  ? crypto.randomUUID()
+                  : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            }}
+            className="text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            Log another
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Done state ─────────────────────────────────────────────────────
   if (doneSummary) {
     return (
@@ -432,13 +663,15 @@ export function LogSessionWizard({
         warnings={responseWarnings}
         sessionsPath={sessionsPath}
         onLogAnother={() => {
-          setEvent(filteredEvents.length === 1 ? filteredEvents[0].value : "");
-          setFocus("");
-          setDate(localToday());
-          setDrills([]);
-          setSessionRpe(null);
-          setSessionFeeling("");
-          setSessionNotes("");
+          // Reset to the wizard's initial draft AND clear the IDB row so
+          // the new attempt doesn't surface a "resume" toast for stale data.
+          setDraft(initialDraft);
+          void clearDraft();
+          // Fresh attempt = fresh idempotency key.
+          idempotencyKeyRef.current =
+            typeof crypto !== "undefined" && "randomUUID" in crypto
+              ? crypto.randomUUID()
+              : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
           setResponsePRs([]);
           setResponseWarnings([]);
           setDoneSummary(null);
@@ -451,7 +684,7 @@ export function LogSessionWizard({
   return (
     <div className="max-w-lg mx-auto pb-28">
       {/* Header */}
-      <header className="flex items-center justify-between gap-3 mb-6">
+      <header className="flex items-center justify-between gap-3 mb-3">
         <button
           type="button"
           onClick={() => router.push(sessionsPath)}
@@ -471,6 +704,19 @@ export function LogSessionWizard({
           aria-label="Session date"
         />
       </header>
+
+      {/* Save-status row — quiet by design; only visible when saving, offline,
+          or with outbox-pending items. Hides itself when state is "Saved". */}
+      {(submitting || !outboxStatus.isOnline || outboxStatus.pending > 0) && (
+        <div className="flex justify-end mb-3">
+          <SaveStatusChip
+            isSaving={submitting}
+            pending={outboxStatus.pending}
+            isOnline={outboxStatus.isOnline}
+            authNeeded={outboxStatus.authNeeded}
+          />
+        </div>
+      )}
 
       {/* Sections — one scrollable form, no wizard */}
       <div className="space-y-7">

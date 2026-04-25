@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { withIdempotency } from "@/lib/idempotency";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_BLOCK_TYPES = ["throwing", "strength", "warmup", "cooldown"];
@@ -9,42 +10,70 @@ const VALID_BLOCK_TYPES = ["throwing", "strength", "warmup", "cooldown"];
 /* ─── POST — create workout plan with blocks + exercises ─────────────────── */
 
 export async function POST(req: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+  const session = await getSession();
+  if (!session || session.role !== "COACH") {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
 
+  return withIdempotency(
+    { userId: session.userId, endpoint: "/api/coach/plans", req },
+    async (bodyText) => postHandler(session.userId, bodyText)
+  );
+}
+
+async function postHandler(userId: string, bodyText: string): Promise<NextResponse> {
+  try {
     const coach = await prisma.coachProfile.findUnique({
-      where: { userId: session.userId },
+      where: { userId },
       select: { id: true },
     });
     if (!coach) {
       return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { name, description, event, isTemplate, blocks } = body as Record<string, unknown>;
+    let body: Record<string, unknown>;
+    try {
+      body = bodyText ? JSON.parse(bodyText) : {};
+    } catch {
+      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { name, description, event, isTemplate, blocks } = body;
 
     // Validate required fields
     if (typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Plan name is required." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Plan name is required." },
+        { status: 400 }
+      );
     }
-    if (event !== undefined && event !== null && (typeof event !== "string" || !VALID_EVENTS.includes(event))) {
+    if (
+      event !== undefined &&
+      event !== null &&
+      (typeof event !== "string" || !VALID_EVENTS.includes(event))
+    ) {
       return NextResponse.json({ success: false, error: "Invalid event." }, { status: 400 });
     }
     if (!Array.isArray(blocks) || blocks.length === 0) {
-      return NextResponse.json({ success: false, error: "At least one block is required." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "At least one block is required." },
+        { status: 400 }
+      );
     }
 
     // Validate blocks
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i] as Record<string, unknown>;
       if (typeof block.name !== "string" || block.name.trim().length === 0) {
-        return NextResponse.json({ success: false, error: `Block ${i + 1} needs a name.` }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: `Block ${i + 1} needs a name.` },
+          { status: 400 }
+        );
       }
       if (typeof block.blockType !== "string" || !VALID_BLOCK_TYPES.includes(block.blockType)) {
-        return NextResponse.json({ success: false, error: `Block ${i + 1} has an invalid type.` }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: `Block ${i + 1} has an invalid type.` },
+          { status: 400 }
+        );
       }
     }
 
@@ -88,6 +117,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(plan, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/plans", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to create workout plan." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to create workout plan." },
+      { status: 500 }
+    );
   }
 }

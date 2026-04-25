@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { Button } from "@/components/ui/Button";
+import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
+import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
+import { useDraftPersistence } from "@/lib/draft-persistence";
+import { useOutboxStatus } from "@/lib/outbox";
 
 import { useToast } from "@/components/ui/Toast";
 
@@ -80,6 +84,8 @@ export interface PrefillData {
 }
 
 interface SelfProgramWizardProps {
+  /** Server session userId — scopes the IDB draft cache for the new-program path. */
+  userId: string;
   athleteId: string;
   athleteEvents: string[];
   athleteGender: string;
@@ -89,6 +95,14 @@ interface SelfProgramWizardProps {
   exercises: ExerciseItem[];
   draft: DraftData;
   prefill?: PrefillData;
+}
+
+/** Persisted client-side wizard state — catches the window between
+ *  server-side draft PUTs (which fire on each `nextStep`). Tab kill
+ *  mid-typing on a step doesn't lose the in-flight values. */
+interface SelfProgramClientDraft {
+  step: number;
+  form: WizardFormState;
 }
 
 // ── Step Configuration ─────────────────────────────────────────────────
@@ -196,6 +210,7 @@ function buildDefaultForm(
 // ── Main Wizard Component ──────────────────────────────────────────────
 
 export function SelfProgramWizard({
+  userId,
   athleteId,
   athleteEvents,
   athleteGender,
@@ -208,15 +223,59 @@ export function SelfProgramWizard({
 }: SelfProgramWizardProps) {
   const router = useRouter();
   const { success, error: toastError, celebration } = useToast();
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState<WizardFormState>(() =>
-    buildDefaultForm(athleteEvents, athleteGender, draft, prefill)
+  const showResumeToast = useDraftResumeToast();
+  const outboxStatus = useOutboxStatus();
+  const resumeToastFiredRef = useRef(false);
+
+  const initialForm = useMemo(
+    () => buildDefaultForm(athleteEvents, athleteGender, draft, prefill),
+    [athleteEvents, athleteGender, draft, prefill]
   );
+  const initialClientDraft = useMemo<SelfProgramClientDraft>(
+    () => ({ step: 0, form: initialForm }),
+    [initialForm]
+  );
+
+  // Persist {step, form} client-side to bridge the gap between server PUTs
+  // (which fire on each nextStep). Disabled when resuming an existing server
+  // draft via the ?draft=<id> URL — the server is the source of truth there
+  // and re-loading would conflict with the prefill the page already injected.
+  const isResumingServerDraft = !!(draft as { id?: string } | null)?.id;
+  const draftKey = isResumingServerDraft ? null : `${userId}:self-program-create:new`;
+  const [clientDraft, setClientDraft, draftStatus] = useDraftPersistence<SelfProgramClientDraft>(
+    draftKey,
+    initialClientDraft
+  );
+
+  const step = clientDraft.step;
+  const form = clientDraft.form;
+  const setStep = useCallback(
+    (next: number | ((prev: number) => number)) =>
+      setClientDraft((d) => ({ ...d, step: typeof next === "function" ? next(d.step) : next })),
+    [setClientDraft]
+  );
+  const setForm = useCallback(
+    (next: WizardFormState | ((prev: WizardFormState) => WizardFormState)) =>
+      setClientDraft((d) => ({ ...d, form: typeof next === "function" ? next(d.form) : next })),
+    [setClientDraft]
+  );
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generating, setGenerating] = useState(false);
   const [draftId, setDraftId] = useState<string | null>(
     (draft as { id?: string } | null)?.id ?? null
   );
+
+  // Stable per-attempt id for the final /generate POST. Reused across direct
+  // submit and any retry, so the server's withIdempotency wrapper returns
+  // the cached response on retry instead of generating a duplicate program.
+  const idempotencyKeyRef = useRef<string>("");
+  if (!idempotencyKeyRef.current) {
+    idempotencyKeyRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
 
   // ── Active steps (filtered by skip conditions) ───────────────────
 
@@ -229,16 +288,58 @@ export function SelfProgramWizard({
   const totalSteps = activeSteps.length;
   const isLastStep = step === totalSteps - 1;
 
+  // ── Resume toast for a recovered client draft ────────────────────────
+  // Skipped when resuming a server draft (those route through the page's
+  // ?draft=<id> prefill — no surprise to the user). For new programs, fires
+  // when the user advanced past step 0 or filled in any meaningful field.
+  const { hasDraft, lastSavedAt, clearDraft } = draftStatus;
+  useEffect(() => {
+    if (resumeToastFiredRef.current) return;
+    if (!hasDraft || !lastSavedAt) return;
+    const startedFilling =
+      step > 0 ||
+      form.programType !== "" ||
+      form.event !== "" ||
+      form.currentPR !== "" ||
+      form.goalDistance !== "";
+    if (!startedFilling) return;
+
+    resumeToastFiredRef.current = true;
+    showResumeToast({
+      lastSavedAt,
+      noun: "program draft",
+      onDiscard: async () => {
+        await clearDraft();
+        setClientDraft(initialClientDraft);
+      },
+    });
+  }, [
+    hasDraft,
+    lastSavedAt,
+    clearDraft,
+    step,
+    form.programType,
+    form.event,
+    form.currentPR,
+    form.goalDistance,
+    showResumeToast,
+    setClientDraft,
+    initialClientDraft,
+  ]);
+
   // ── Form update ──────────────────────────────────────────────────
 
-  const update = useCallback((field: string, value: unknown) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  }, []);
+  const update = useCallback(
+    (field: string, value: unknown) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    },
+    [setForm]
+  );
 
   // ── Step Validation ──────────────────────────────────────────────
 
@@ -475,7 +576,11 @@ export function SelfProgramWizard({
 
       let res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": idempotencyKeyRef.current,
+          ...csrfHeaders(),
+        },
       });
 
       // Handle 409 conflict — another active program exists
@@ -496,10 +601,15 @@ export function SelfProgramWizard({
             headers: { "Content-Type": "application/json", ...csrfHeaders() },
             body: JSON.stringify({ isActive: false }),
           });
-          // Retry generation
+          // Retry generation. Same idempotency key — the conflict was on an
+          // OLD program; the generate request itself hasn't changed.
           res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            headers: {
+              "Content-Type": "application/json",
+              "X-Idempotency-Key": idempotencyKeyRef.current,
+              ...csrfHeaders(),
+            },
           });
         }
       }
@@ -518,6 +628,8 @@ export function SelfProgramWizard({
         highlight: `${programData.totalWeeks} weeks`,
       });
       success("Program created successfully");
+      // Drop the client-side draft now that the program is live on the server.
+      await draftStatus.clearDraft();
       router.push(`/athlete/self-program/${configId}`);
     } catch {
       setErrors({ generate: "Something went wrong. Please try again." });
@@ -533,15 +645,25 @@ export function SelfProgramWizard({
     <div className="max-w-2xl mx-auto pb-24">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-1">
-          <Link
-            href="/athlete/self-program"
-            className="text-muted hover:text-[var(--foreground)] transition-colors"
-            aria-label="Back to self program"
-          >
-            <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
-          </Link>
-          <h1 className="text-title font-heading text-[var(--foreground)]">Build Your Program</h1>
+        <div className="flex items-center justify-between gap-3 mb-1">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/athlete/self-program"
+              className="text-muted hover:text-[var(--foreground)] transition-colors"
+              aria-label="Back to self program"
+            >
+              <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+            <h1 className="text-title font-heading text-[var(--foreground)]">Build Your Program</h1>
+          </div>
+          {(generating || !outboxStatus.isOnline || outboxStatus.pending > 0) && (
+            <SaveStatusChip
+              isSaving={generating}
+              pending={outboxStatus.pending}
+              isOnline={outboxStatus.isOnline}
+              authNeeded={outboxStatus.authNeeded}
+            />
+          )}
         </div>
         <p className="text-body text-surface-700 dark:text-surface-300 mt-1">
           Create a Bondarchuk-based periodized training program tailored to you

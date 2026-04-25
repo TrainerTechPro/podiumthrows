@@ -11,6 +11,8 @@ import {
 } from "@/lib/pwa/quick-log-queue";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
+import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
+import { useDraftPersistence } from "@/lib/draft-persistence";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 
@@ -209,31 +211,87 @@ function DotIndicator({ count, current }: DotIndicatorProps) {
 
 /* ─── Quick Entry Bottom Sheet ───────────────────────────────────────────── */
 
+/**
+ * Controlled value for the new-throw composition. When `controlled` is set,
+ * the sheet reads from / writes to the parent's value instead of its own
+ * local useState so the parent can persist the in-flight composition to
+ * IndexedDB and recover it after a tab kill / reload.
+ *
+ * Editing-existing-throw mode keeps local state — there's nothing to
+ * recover, the throw is already on the server.
+ */
+export interface QuickEntryDraft {
+  distance: string;
+  feeling: FeelingOption | null;
+  notes: string;
+}
+
+const EMPTY_QUICK_ENTRY_DRAFT: QuickEntryDraft = {
+  distance: "",
+  feeling: null,
+  notes: "",
+};
+
 interface QuickEntrySheetProps {
   isOpen: boolean;
   editingThrow: RecentThrow | null; // null = new throw
+  controlled?: { value: QuickEntryDraft; onChange: (next: QuickEntryDraft) => void };
   onClose: () => void;
   onSave: (data: { distance: number | null; feeling: FeelingOption | null; notes: string }) => void;
 }
 
-function QuickEntrySheet({ isOpen, editingThrow, onClose, onSave }: QuickEntrySheetProps) {
-  const [distance, setDistance] = useState<string>("");
-  const [feeling, setFeeling] = useState<FeelingOption | null>(null);
-  const [notes, setNotes] = useState<string>("");
+function QuickEntrySheet({
+  isOpen,
+  editingThrow,
+  controlled,
+  onClose,
+  onSave,
+}: QuickEntrySheetProps) {
+  const [localDistance, setLocalDistance] = useState<string>("");
+  const [localFeeling, setLocalFeeling] = useState<FeelingOption | null>(null);
+  const [localNotes, setLocalNotes] = useState<string>("");
 
-  // Prefill when editing
+  // For new throws the parent owns state; for editing-existing we keep local state.
+  const distance = controlled ? controlled.value.distance : localDistance;
+  const feeling = controlled ? controlled.value.feeling : localFeeling;
+  const notes = controlled ? controlled.value.notes : localNotes;
+
+  const setDistance = useCallback(
+    (next: string) => {
+      if (controlled) controlled.onChange({ ...controlled.value, distance: next });
+      else setLocalDistance(next);
+    },
+    [controlled]
+  );
+  const setFeeling = useCallback(
+    (next: FeelingOption | null) => {
+      if (controlled) controlled.onChange({ ...controlled.value, feeling: next });
+      else setLocalFeeling(next);
+    },
+    [controlled]
+  );
+  const setNotes = useCallback(
+    (next: string) => {
+      if (controlled) controlled.onChange({ ...controlled.value, notes: next });
+      else setLocalNotes(next);
+    },
+    [controlled]
+  );
+
+  // Editing-existing prefill / close-reset only applies to local-state mode.
+  // Controlled mode is fully driven by the parent.
   useEffect(() => {
+    if (controlled) return;
     if (isOpen) {
-      setDistance(editingThrow?.distance?.toFixed(2) ?? "");
-      setFeeling((editingThrow?.feeling as FeelingOption | null) ?? null);
-      setNotes(editingThrow?.notes ?? "");
+      setLocalDistance(editingThrow?.distance?.toFixed(2) ?? "");
+      setLocalFeeling((editingThrow?.feeling as FeelingOption | null) ?? null);
+      setLocalNotes(editingThrow?.notes ?? "");
     } else {
-      // Reset on close
-      setDistance("");
-      setFeeling(null);
-      setNotes("");
+      setLocalDistance("");
+      setLocalFeeling(null);
+      setLocalNotes("");
     }
-  }, [isOpen, editingThrow]);
+  }, [isOpen, editingThrow, controlled]);
 
   const handleSave = useCallback(() => {
     const dist = distance.trim() ? parseFloat(distance.trim()) : null;
@@ -379,7 +437,7 @@ function QuickEntrySheet({ isOpen, editingThrow, onClose, onSave }: QuickEntrySh
 
 /* ─── Main Component ─────────────────────────────────────────────────────── */
 
-export function QuickLogClient() {
+export function QuickLogClient({ userId }: { userId: string }) {
   // Data state
   const [implements_, setImplements] = useState<Implement[]>([]);
   const [implementIndex, setImplementIndex] = useState(0);
@@ -387,6 +445,17 @@ export function QuickLogClient() {
   const [recentThrows, setRecentThrows] = useState<RecentThrow[]>([]);
   const [sessionFocus, setSessionFocus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Persisted in-flight throw composition. Survives tab kill / reload —
+  // so the athlete who's typed a distance + note and then loses the
+  // browser doesn't lose the entry. Cleared on successful submit and on
+  // explicit cancel.
+  const [newThrowDraft, setNewThrowDraft, draftStatus] = useDraftPersistence<QuickEntryDraft>(
+    `${userId}:quick-log:compose`,
+    EMPTY_QUICK_ENTRY_DRAFT
+  );
+  const showResumeToast = useDraftResumeToast();
+  const resumeToastFiredRef = useRef(false);
 
   // Weight presets for the weight picker
   const [weightPresets, setWeightPresets] = useState<Record<string, number[]>>({});
@@ -615,6 +684,16 @@ export function QuickLogClient() {
         notes: opts?.notes ?? undefined,
       };
 
+      // Stable per-attempt id. Sent as X-Idempotency-Key on the direct POST,
+      // and reused as the queue keyPath if we end up queueing — so the server
+      // can dedup whichever attempt arrives first when a slow connection
+      // races a queued retry. crypto.randomUUID() is in all modern browsers
+      // and the iOS Safari we target.
+      const clientId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
       if (isOnline) {
         try {
           // AbortSignal.timeout may not exist on older iOS Safari — fallback to AbortController
@@ -624,7 +703,11 @@ export function QuickLogClient() {
           const res = await fetch("/api/athlete/quick-log", {
             method: "POST",
             signal: controller.signal,
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            headers: {
+              "Content-Type": "application/json",
+              "X-Idempotency-Key": clientId,
+              ...csrfHeaders(),
+            },
             body: JSON.stringify(payload),
           });
           clearTimeout(timeoutId);
@@ -652,8 +735,8 @@ export function QuickLogClient() {
           const isAbort = err instanceof DOMException && err.name === "AbortError";
 
           if (isTimeout || isAbort) {
-            // Treat slow connection as offline — queue for sync instead of rolling back
-            const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            // Treat slow connection as offline — queue for sync instead of rolling back.
+            // Same clientId as the direct attempt so the server dedups if both land.
             await queueQuickLogThrow({
               clientId,
               event: currentImplement.event,
@@ -678,7 +761,6 @@ export function QuickLogClient() {
         }
       } else {
         // Queue for offline sync
-        const clientId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         await queueQuickLogThrow({
           clientId,
           event: currentImplement.event,
@@ -791,11 +873,18 @@ export function QuickLogClient() {
 
   const handleSheetSave = useCallback(
     async (data: { distance: number | null; feeling: FeelingOption | null; notes: string }) => {
+      const wasNewThrow = isNewThrow;
       setSheetOpen(false);
       setIsNewThrow(false);
       setEditingThrow(null);
 
-      if (isNewThrow) {
+      if (wasNewThrow) {
+        // Drop the persisted draft now that the throw is committed (online
+        // path) or queued (offline path). logThrow handles both — neither
+        // outcome should leave a "resume your unfinished throw" toast on
+        // the next visit.
+        setNewThrowDraft(EMPTY_QUICK_ENTRY_DRAFT);
+        await draftStatus.clearDraft();
         // Log new throw with details
         await logThrow({
           distance: data.distance,
@@ -826,7 +915,7 @@ export function QuickLogClient() {
         }
       }
     },
-    [isNewThrow, editingThrow, logThrow, toastError]
+    [isNewThrow, editingThrow, logThrow, toastError, setNewThrowDraft, draftStatus]
   );
 
   /* ── Open edit sheet for a chip ─────────────────────────────────────── */
@@ -837,6 +926,54 @@ export function QuickLogClient() {
     setEditingThrow(throw_);
     setSheetOpen(true);
   }, []);
+
+  /* ── Sheet cancel (backdrop tap or Cancel button) ──────────────────── */
+
+  const handleSheetClose = useCallback(async () => {
+    const wasNewThrow = isNewThrow;
+    setSheetOpen(false);
+    setIsNewThrow(false);
+    setEditingThrow(null);
+    // Closing without saving is an explicit discard — drop the persisted
+    // draft so the next visit doesn't surface a stale resume toast.
+    if (wasNewThrow) {
+      setNewThrowDraft(EMPTY_QUICK_ENTRY_DRAFT);
+      await draftStatus.clearDraft();
+    }
+  }, [isNewThrow, setNewThrowDraft, draftStatus]);
+
+  /* ── Resume toast for a recovered draft ────────────────────────────── */
+
+  // One-shot per page load. Fires when the persisted draft has any content
+  // and was last touched more than the toast threshold ago. The toast's
+  // Continue action re-opens the sheet (already pre-populated by the hook);
+  // Discard wipes the draft + form state.
+  // Destructured here because draftStatus is a fresh object on every render
+  // (hook returns `{ ... }` literal); using the wrapper in deps would loop.
+  const { hasDraft, lastSavedAt, clearDraft } = draftStatus;
+  useEffect(() => {
+    if (resumeToastFiredRef.current) return;
+    if (!hasDraft || !lastSavedAt) return;
+    const hasContent =
+      newThrowDraft.distance.trim() !== "" ||
+      newThrowDraft.feeling !== null ||
+      newThrowDraft.notes.trim() !== "";
+    if (!hasContent) return;
+
+    resumeToastFiredRef.current = true;
+    showResumeToast({
+      lastSavedAt,
+      noun: "throw",
+      onContinue: () => {
+        setIsNewThrow(true);
+        setSheetOpen(true);
+      },
+      onDiscard: async () => {
+        setNewThrowDraft(EMPTY_QUICK_ENTRY_DRAFT);
+        await clearDraft();
+      },
+    });
+  }, [hasDraft, lastSavedAt, clearDraft, newThrowDraft, showResumeToast, setNewThrowDraft]);
 
   /* ── Formatted date ──────────────────────────────────────────────────── */
 
@@ -1083,10 +1220,9 @@ export function QuickLogClient() {
       <QuickEntrySheet
         isOpen={sheetOpen}
         editingThrow={editingThrow}
+        controlled={isNewThrow ? { value: newThrowDraft, onChange: setNewThrowDraft } : undefined}
         onClose={() => {
-          setSheetOpen(false);
-          setIsNewThrow(false);
-          setEditingThrow(null);
+          void handleSheetClose();
         }}
         onSave={handleSheetSave}
       />

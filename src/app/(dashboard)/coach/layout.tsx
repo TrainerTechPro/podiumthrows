@@ -21,6 +21,7 @@ export default async function CoachLayout({ children }: { children: React.ReactN
   });
 
   const user: DashboardUser = {
+    userId: session.userId,
     name: `${coach.firstName} ${coach.lastName}`,
     email: session.email,
     role: "COACH",

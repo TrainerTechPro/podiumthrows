@@ -1142,7 +1142,36 @@ export async function parseBody<T>(
   } catch {
     return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
   }
+  return parseBodyJson(body, schema);
+}
 
+/**
+ * Parse and validate an already-read JSON body string against a Zod schema.
+ * For use inside `withIdempotency` handlers where the body has already been
+ * read as text by the wrapper — calling `request.json()` a second time
+ * fails because the stream is consumed.
+ *
+ * Usage:
+ * ```ts
+ * return withIdempotency({ userId, endpoint, req }, async (bodyText) => {
+ *   const parsed = parseBodyText(bodyText, MySchema);
+ *   if (parsed instanceof NextResponse) return parsed;
+ *   const { foo } = parsed;
+ *   // ...
+ * });
+ * ```
+ */
+export function parseBodyText<T>(bodyText: string, schema: z.ZodType<T>): T | NextResponse {
+  let body: unknown;
+  try {
+    body = JSON.parse(bodyText);
+  } catch {
+    return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+  }
+  return parseBodyJson(body, schema);
+}
+
+function parseBodyJson<T>(body: unknown, schema: z.ZodType<T>): T | NextResponse {
   const result = schema.safeParse(body);
   if (!result.success) {
     const fieldErrors = result.error.issues.map((issue) => ({
@@ -1154,7 +1183,6 @@ export async function parseBody<T>(
       { status: 400 }
     );
   }
-
   return result.data;
 }
 

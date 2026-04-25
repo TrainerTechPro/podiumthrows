@@ -5,8 +5,10 @@ import { Prisma } from "@prisma/client";
 import { calculateFormScores } from "@/lib/forms/scoring-engine";
 import type { FormBlock, ScoringConfig } from "@/lib/forms/types";
 import { validateAllAnswers } from "@/lib/forms/validation";
-import { parseBody, QuestionnaireSubmissionSchema } from "@/lib/api-schemas";
+import { parseBodyText, QuestionnaireSubmissionSchema } from "@/lib/api-schemas";
 import { logger } from "@/lib/logger";
+import { withIdempotency } from "@/lib/idempotency";
+import { getSession } from "@/lib/auth";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,9 +31,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = await params;
+
+  return withIdempotency(
+    { userId: session.userId, endpoint: `/api/athlete/questionnaires/${id}`, req },
+    async (bodyText) => postHandler(id, bodyText)
+  );
+}
+
+async function postHandler(id: string, bodyText: string): Promise<NextResponse> {
   try {
     const { athlete } = await requireAthleteSession();
-    const { id } = await params;
 
     // Verify assignment (find the most recent uncompleted)
     const assignment = await prisma.questionnaireAssignment.findFirst({
@@ -70,7 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    const parsed = await parseBody(req, QuestionnaireSubmissionSchema);
+    const parsed = parseBodyText(bodyText, QuestionnaireSubmissionSchema);
     if (parsed instanceof NextResponse) return parsed;
     const { answers, durationSeconds } = parsed;
 

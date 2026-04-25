@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { WifiOff } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useToast } from "@/components/ui/Toast";
+import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
+import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
+import { useDraftPersistence } from "@/lib/draft-persistence";
+import { enqueueMutation, useOutboxStatus } from "@/lib/outbox";
 import { FormRendererShell } from "@/components/form-renderer/FormRendererShell";
 import type { FormBlock, FormDisplayMode, ConditionalRule } from "@/lib/forms/types";
 
@@ -37,17 +43,23 @@ type Props = {
     scoringEnabled: boolean;
     draftAnswers: Record<string, unknown> | null;
   };
+  /** Server session userId — scopes the IDB draft cache for the legacy path. */
+  userId: string;
 };
 
 type AnswerMap = Record<string, unknown>;
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
-export function QuestionnaireForm({ questionnaire }: Props) {
+export function QuestionnaireForm({ questionnaire, userId }: Props) {
   const blocks = questionnaire.blocks as FormBlock[] | null;
   const hasBlocks = blocks && blocks.length > 0;
 
-  // Use the new block-based renderer when blocks are present
+  // Use the new block-based renderer when blocks are present.
+  // The shell already has its own server-side draft via SaveResumeBar (PUTs
+  // every 30s + on visibility change), so we don't add client-side IDB draft
+  // persistence on top — that would be belt-and-suspenders for an
+  // already-mature surface.
   if (hasBlocks) {
     return (
       <FormRendererShell
@@ -64,18 +76,48 @@ export function QuestionnaireForm({ questionnaire }: Props) {
   }
 
   // Legacy question-based rendering
-  return <LegacyQuestionForm questionnaire={questionnaire} />;
+  return <LegacyQuestionForm questionnaire={questionnaire} userId={userId} />;
 }
 
 /* ─── Legacy Question Form ────────────────────────────────────────────────── */
 
-function LegacyQuestionForm({ questionnaire }: Props) {
+function LegacyQuestionForm({ questionnaire, userId }: Props) {
   const router = useRouter();
-  const [answers, setAnswers] = useState<AnswerMap>({});
+  const showResumeToast = useDraftResumeToast();
+  const outboxStatus = useOutboxStatus();
+  const resumeToastFiredRef = useRef(false);
+
+  // Persist answers to IDB so a tab kill mid-fill doesn't lose them. Scoped
+  // per questionnaire id so the same athlete filling out two different
+  // questionnaires keeps separate drafts.
+  const initialAnswers = useMemo<AnswerMap>(
+    () => (questionnaire.draftAnswers as AnswerMap) ?? {},
+    [questionnaire.draftAnswers]
+  );
+  const [answers, setAnswersDraft, draftStatus] = useDraftPersistence<AnswerMap>(
+    `${userId}:questionnaire:${questionnaire.id}`,
+    initialAnswers
+  );
+
+  // Stable per-attempt id for server-side idempotency.
+  const idempotencyKeyRef = useRef<string>("");
+  if (!idempotencyKeyRef.current) {
+    idempotencyKeyRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [queued, setQueued] = useState(false);
+
+  const setAnswers = useCallback(
+    (next: AnswerMap | ((prev: AnswerMap) => AnswerMap)) => setAnswersDraft(next),
+    [setAnswersDraft]
+  );
 
   function setAnswer(questionId: string, value: unknown) {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -117,6 +159,7 @@ function LegacyQuestionForm({ questionnaire }: Props) {
     setError(null);
     setSubmitting(true);
 
+    const url = `/api/athlete/questionnaires/${questionnaire.id}`;
     const payload = {
       answers: questionnaire.questions.map((q) => ({
         questionId: q.id,
@@ -124,13 +167,54 @@ function LegacyQuestionForm({ questionnaire }: Props) {
       })),
     };
 
+    let res: Response;
     try {
-      const res = await fetch(`/api/athlete/questionnaires/${questionnaire.id}`, {
+      res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": idempotencyKeyRef.current,
+          ...csrfHeaders(),
+        },
         body: JSON.stringify(payload),
       });
+    } catch (networkErr) {
+      // Network failure — queue for replay with the same idempotency key so
+      // the server returns the cached response if the original commit landed
+      // before the network died.
+      logger.warn("questionnaire submit: network failure, enqueuing to outbox", {
+        context: "athlete/questionnaires/[id]/questionnaire-form",
+        metadata: {
+          err: networkErr instanceof Error ? networkErr.message : String(networkErr),
+        },
+      });
+      try {
+        await enqueueMutation({
+          url,
+          method: "POST",
+          bodyJson: payload,
+          idempotencyKey: idempotencyKeyRef.current,
+          metadata: { kind: "questionnaire-response", questionnaireId: questionnaire.id },
+        });
+        toast.warning("Saved locally", "Will sync when you're back online.");
+        await draftStatus.clearDraft();
+        setQueued(true);
+      } catch (queueErr) {
+        logger.error("questionnaire submit: enqueue failed", {
+          context: "athlete/questionnaires/[id]/questionnaire-form",
+          error: queueErr,
+        });
+        const msg = "Couldn't save — try again with a connection.";
+        setError(msg);
+        toast.error(msg);
+      } finally {
+        setSubmitting(false);
+        setShowConfirm(false);
+      }
+      return;
+    }
 
+    try {
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
         const msg = data?.error || `Failed to submit (${res.status})`;
@@ -139,6 +223,8 @@ function LegacyQuestionForm({ questionnaire }: Props) {
         return;
       }
 
+      // Server has the response — drop the persisted draft.
+      await draftStatus.clearDraft();
       setSubmitted(true);
       toast.success("Questionnaire submitted");
     } catch (err) {
@@ -153,6 +239,62 @@ function LegacyQuestionForm({ questionnaire }: Props) {
       setSubmitting(false);
       setShowConfirm(false);
     }
+  }
+
+  /* ── Resume toast for a recovered draft ────────────────────────────────── */
+
+  const { hasDraft, lastSavedAt, clearDraft } = draftStatus;
+  useEffect(() => {
+    if (resumeToastFiredRef.current) return;
+    if (!hasDraft || !lastSavedAt) return;
+    // "Started filling" = at least one answer is non-empty.
+    const startedFilling = Object.values(answers).some((v) => {
+      if (v === undefined || v === null) return false;
+      if (typeof v === "string") return v !== "";
+      if (Array.isArray(v)) return v.length > 0;
+      return true;
+    });
+    if (!startedFilling) return;
+
+    resumeToastFiredRef.current = true;
+    showResumeToast({
+      lastSavedAt,
+      noun: "questionnaire",
+      onDiscard: async () => {
+        await clearDraft();
+        setAnswersDraft(initialAnswers);
+      },
+    });
+  }, [
+    hasDraft,
+    lastSavedAt,
+    clearDraft,
+    answers,
+    showResumeToast,
+    setAnswersDraft,
+    initialAnswers,
+  ]);
+
+  /* ── Queued state — submit landed in the outbox ──────────────────────── */
+
+  if (queued) {
+    return (
+      <div className="card p-8 text-center space-y-3">
+        <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
+          <WifiOff size={28} strokeWidth={1.75} className="text-amber-500" aria-hidden="true" />
+        </div>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">Saved locally</h2>
+        <p className="text-sm text-muted max-w-sm mx-auto">
+          Your responses will sync when you&rsquo;re back online.
+        </p>
+        <Link
+          href="/athlete/questionnaires"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors"
+        >
+          ← Back to Questionnaires
+        </Link>
+      </div>
+    );
   }
 
   /* ── Success state ──────────────────────────────────────────────────────── */
@@ -188,6 +330,19 @@ function LegacyQuestionForm({ questionnaire }: Props) {
     <div className="space-y-6">
       {questionnaire.description && (
         <p className="text-sm text-muted">{questionnaire.description}</p>
+      )}
+
+      {/* Save-status chip — quiet by design; only visible while saving, offline,
+          or with outbox-pending items. */}
+      {(submitting || !outboxStatus.isOnline || outboxStatus.pending > 0) && (
+        <div className="flex justify-end">
+          <SaveStatusChip
+            isSaving={submitting}
+            pending={outboxStatus.pending}
+            isOnline={outboxStatus.isOnline}
+            authNeeded={outboxStatus.authNeeded}
+          />
+        </div>
       )}
 
       {/* Progress */}

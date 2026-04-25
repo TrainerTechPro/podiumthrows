@@ -651,7 +651,7 @@ function CheckInCard({ c }: { c: CheckIn }) {
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export default async function WellnessPage() {
-  const { athlete } = await requireAthleteSession();
+  const { session, athlete } = await requireAthleteSession();
 
   const [checkInToday, history, trend, whoopSnapshot, ouraSnapshot] = await Promise.all([
     getAthleteCheckInToday(athlete.id),
@@ -697,6 +697,7 @@ export default async function WellnessPage() {
         <TodayResultCard checkIn={checkInToday} trend={trend} />
       ) : (
         <CheckinFlow
+          userId={session.userId}
           whoopData={
             whoopSnapshot
               ? {

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { clearAllUserDrafts } from "@/lib/draft-persistence";
 import { Sun, Moon, Menu, X, LogOut, Search, Settings, Megaphone, Dumbbell } from "lucide-react";
 import { Sidebar, COACH_NAV_SECTIONS, NavSection } from "@/components/ui/Sidebar";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
@@ -22,6 +23,9 @@ import { logger } from "@/lib/logger";
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
 export interface DashboardUser {
+  /** Underlying User.id from the JWT session — used to scope per-user
+   *  IndexedDB draft cleanup on logout (see clearAllUserDrafts). */
+  userId: string;
   name: string;
   email: string;
   role: "COACH" | "ATHLETE";
@@ -124,6 +128,11 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
   }
 
   async function handleLogout() {
+    // Clear this user's IndexedDB drafts BEFORE the network call so a logout
+    // that times out or 5xxs still leaves no PII on the device for the next
+    // sign-in. clearAllUserDrafts swallows IDB errors internally.
+    await clearAllUserDrafts(user.userId);
+
     try {
       await fetch("/api/auth/logout", { method: "POST", headers: csrfHeaders() });
     } catch (err) {

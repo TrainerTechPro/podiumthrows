@@ -4,8 +4,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getThrowsSessions } from "@/lib/data/throws";
 import { logger } from "@/lib/logger";
-import { parseBody, ThrowsSessionCreateSchema } from "@/lib/api-schemas";
+import { parseBodyText, ThrowsSessionCreateSchema } from "@/lib/api-schemas";
 import { validateSession, type SessionBlock } from "@/lib/throws/validation";
+import { withIdempotency } from "@/lib/idempotency";
 import { EventType } from "@prisma/client";
 
 // GET /api/throws/sessions — list all throws sessions for current coach
@@ -18,7 +19,10 @@ export async function GET() {
 
     const coach = await fetchCoachByUserId(currentUser.userId);
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const sessions = await getThrowsSessions(coach.id);
@@ -32,22 +36,33 @@ export async function GET() {
 
 // POST /api/throws/sessions — create a new throws session
 export async function POST(req: NextRequest) {
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.role !== "COACH") {
-      return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
-    }
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== "COACH") {
+    return NextResponse.json({ success: false, error: "Coach access required" }, { status: 403 });
+  }
 
+  return withIdempotency(
+    { userId: currentUser.userId, endpoint: "/api/throws/sessions", req },
+    async (bodyText) => postHandler(currentUser.userId, bodyText)
+  );
+}
+
+async function postHandler(userId: string, bodyText: string): Promise<NextResponse> {
+  try {
     const coach = await prisma.coachProfile.findUnique({
-      where: { userId: currentUser.userId },
+      where: { userId },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
-    const parsed = await parseBody(req, ThrowsSessionCreateSchema);
+    const parsed = parseBodyText(bodyText, ThrowsSessionCreateSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { name, sessionType, targetPhase, event, estimatedDuration, tags, notes, blocks } = parsed;
+    const { name, sessionType, targetPhase, event, estimatedDuration, tags, notes, blocks } =
+      parsed;
 
     // Server-side Bondarchuk methodology enforcement.
     // The builder UI validates before save, but any direct API call (mobile, scripts,

@@ -72,11 +72,7 @@ export default async function SelfProgramCreatePage({
 
   const exercises = await prisma.exercise.findMany({
     where: {
-      OR: [
-        { isGlobal: true },
-        { coachId: athlete.coachId },
-        { athleteProfileId: athlete.id },
-      ],
+      OR: [{ isGlobal: true }, { coachId: athlete.coachId }, { athleteProfileId: athlete.id }],
     },
     select: { id: true, name: true, category: true, event: true, implementWeight: true },
     orderBy: { name: "asc" },
@@ -94,9 +90,7 @@ export default async function SelfProgramCreatePage({
   const compPR = compImplementStr
     ? throwsPRs.find((pr) => pr.event === primaryEvent && pr.implement === compImplementStr)
     : null;
-  const eventPR = !compPR
-    ? throwsPRs.find((pr) => pr.event === primaryEvent)
-    : null;
+  const eventPR = !compPR ? throwsPRs.find((pr) => pr.event === primaryEvent) : null;
   const bestPR = compPR ?? eventPR ?? null;
 
   const prefill = {
@@ -115,6 +109,7 @@ export default async function SelfProgramCreatePage({
 
   return (
     <SelfProgramWizard
+      userId={session.userId}
       athleteId={athlete.id}
       athleteEvents={athlete.events}
       athleteGender={athlete.gender}

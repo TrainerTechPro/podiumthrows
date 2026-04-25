@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
+import { parseBodyText, LogSessionSchema } from "@/lib/api-schemas";
+import { withIdempotency } from "@/lib/idempotency";
 import {
   validateImplementSequence,
   type BondarchukWarning,
@@ -59,14 +60,21 @@ export async function GET(request: NextRequest) {
 
 /* ── POST — create a self-logged session ── */
 export async function POST(request: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session || !(await canActAsAthlete(session))) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+  const session = await getSession();
+  if (!session || !(await canActAsAthlete(session))) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
 
+  return withIdempotency(
+    { userId: session.userId, endpoint: "/api/athlete/log-session", req: request },
+    async (bodyText) => postHandler(session.userId, bodyText)
+  );
+}
+
+async function postHandler(userId: string, bodyText: string): Promise<NextResponse> {
+  try {
     const athlete = await prisma.athleteProfile.findUnique({
-      where: { userId: session.userId },
+      where: { userId },
       select: { id: true, coachId: true, firstName: true, lastName: true },
     });
     if (!athlete) {
@@ -76,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const parsed = await parseBody(request, LogSessionSchema);
+    const parsed = parseBodyText(bodyText, LogSessionSchema);
     if (parsed instanceof NextResponse) return parsed;
     const {
       event,

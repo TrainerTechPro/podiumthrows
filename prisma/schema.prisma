@@ -2808,6 +2808,28 @@ model TokenBlacklist {
   @@index([expiresAt])
 }
 
+/// Idempotency cache for mutation endpoints. Client sends a stable UUID via the
+/// X-Idempotency-Key header; the server caches the response and returns it on
+/// retry, preventing duplicate writes when the network drops between commit and
+/// response. Scoped per (userId, endpoint, key) so a poisoned client UUID can
+/// never read another user's cached response. requestHash guards against the
+/// client reusing a key with a different body — that returns 422 instead of
+/// silently serving the wrong cached response. Purged daily by the
+/// purge-idempotency-keys cron after 24h.
+model IdempotencyKey {
+  id             String   @id @default(cuid())
+  key            String /// client-generated UUID (header value)
+  userId         String
+  endpoint       String /// canonical pathname, e.g. "/api/athlete/quick-log"
+  requestHash    String /// SHA-256 hex of the raw request body
+  responseStatus Int
+  responseBody   Json
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, endpoint, key])
+  @@index([createdAt])
+}
+
 // ── SELF-PROGRAMMING ──────────────────────────────────────────────────────
 
 model SelfProgramConfig {
