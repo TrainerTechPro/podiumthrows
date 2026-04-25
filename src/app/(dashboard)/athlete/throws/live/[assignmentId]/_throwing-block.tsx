@@ -4,8 +4,11 @@ import { useState, useMemo, useRef } from "react";
 import { Check, Trophy, Video } from "lucide-react";
 import { AnimatedNumber, RestTimer } from "@/components";
 import { NumberFlow } from "@/components/ui/NumberFlow";
+import { PRCelebration } from "@/components/ui/PRCelebration";
 import { useToast } from "@/components/toast";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { haptic } from "@/lib/haptic";
+import { formatEventType, formatPreviousBestDate } from "@/lib/utils";
 import type { BlockData, BlockState, LoggedThrow } from "./_types";
 import {
   parseConfig,
@@ -42,6 +45,10 @@ export function ThrowingBlockView({
   const [showRest, setShowRest] = useState(false);
   const [inputExpanded, setInputExpanded] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [prCelebration, setPrCelebration] = useState<{
+    show: boolean;
+    distance?: number;
+  }>({ show: false });
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   const accent = getBlockAccent(block);
@@ -124,8 +131,19 @@ export function ThrowingBlockView({
       }
 
       if (data.data.isPersonalBest) {
-        celebration(`New PR! ${d.toFixed(2)}m`, {
-          description: implement || event,
+        haptic.pr();
+        setPrCelebration({ show: true, distance: d });
+        const eventLabel = formatEventType(event);
+        const previousBest: number | null = data.data.previousBest ?? null;
+        const previousBestDate: string | null = data.data.previousBestDate ?? null;
+        const description =
+          previousBest != null
+            ? `${implement || eventLabel} · +${(d - previousBest).toFixed(2)}m over your previous best${
+                previousBestDate ? ` from ${formatPreviousBestDate(previousBestDate)}` : ""
+              }`
+            : `${implement || eventLabel} · First-ever PR for this implement`;
+        celebration("New Personal Best!", {
+          description,
           highlight: `${d.toFixed(2)}m`,
         });
       }
@@ -472,6 +490,13 @@ export function ThrowingBlockView({
           </p>
         </div>
       )}
+
+      <PRCelebration
+        show={prCelebration.show}
+        onDismiss={() => setPrCelebration({ show: false })}
+        event={event}
+        distance={prCelebration.distance}
+      />
     </div>
   );
 }

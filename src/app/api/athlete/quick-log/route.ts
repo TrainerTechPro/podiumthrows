@@ -308,6 +308,8 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
 
     // 3. PR detection — only when distance is provided
     let isPersonalBest = false;
+    let previousBest: number | null = null;
+    let previousBestDate: string | null = null;
     if (distanceNum != null && distanceNum > 0) {
       const prResult = await recordThrow({
         athleteId: athlete.id,
@@ -316,6 +318,8 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
         distance: distanceNum,
       });
       isPersonalBest = prResult.isPersonalBest;
+      previousBest = prResult.previousDistance;
+      previousBestDate = prResult.previousAchievedAt;
 
       if (isPersonalBest) {
         await prisma.throwLog.update({
@@ -373,6 +377,8 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
         },
         throwCount,
         sessionId: throwsSession.id,
+        previousBest,
+        previousBestDate,
       },
     });
   } catch (err) {

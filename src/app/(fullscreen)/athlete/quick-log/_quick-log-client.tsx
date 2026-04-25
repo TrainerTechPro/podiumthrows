@@ -12,8 +12,10 @@ import {
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
+import { PRCelebration } from "@/components/ui/PRCelebration";
 import { useDraftPersistence } from "@/lib/draft-persistence";
-import { cn } from "@/lib/utils";
+import { cn, formatEventType, formatPreviousBestDate } from "@/lib/utils";
+import { haptic } from "@/lib/haptic";
 import { logger } from "@/lib/logger";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -62,14 +64,6 @@ const IMPLEMENT_KEY = "podium-quick-log-implement";
 const SWIPE_THRESHOLD = 50;
 const SWIPE_OPACITY_RANGE = 80; // px of drag to fade to min opacity (matches prior useTransform range)
 const DRAG_ELASTICITY = 0.15; // matches prior framer-motion dragElastic
-
-/* ─── Haptic helper ──────────────────────────────────────────────────────── */
-
-function haptic(pattern: number | number[]) {
-  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-    navigator.vibrate(pattern);
-  }
-}
 
 /* ─── Build implement list from raw data ─────────────────────────────────── */
 
@@ -475,7 +469,14 @@ export function QuickLogClient({ userId }: { userId: string }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const { success: toastSuccess, error: toastError } = useToast();
+  const { success: toastSuccess, error: toastError, celebration: toastCelebration } = useToast();
+
+  // PR celebration overlay — populated when the server reports isPersonalBest.
+  const [prCelebration, setPrCelebration] = useState<{
+    show: boolean;
+    event?: string;
+    distance?: number;
+  }>({ show: false });
 
   // Long-press state. We use `onClick` for the actual tap (most reliable
   // cross-browser, especially on iOS where pointerup races with gesture
@@ -611,7 +612,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
   const switchImplement = useCallback(
     (dir: "prev" | "next") => {
       if (implements_.length <= 1) return;
-      haptic(30);
+      haptic.light();
       setImplementSlideDir(dir === "next" ? "left" : "right");
       setImplementAnimKey((k) => k + 1);
       setImplementIndex((idx) => {
@@ -635,7 +636,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
   const changeWeight = useCallback(
     (newWeight: number) => {
       if (!currentImplement) return;
-      haptic(30);
+      haptic.light();
       // Update the current implement's weight in the list
       setImplements((prev) =>
         prev.map((impl, i) =>
@@ -655,7 +656,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
     async (opts?: { distance?: number | null; feeling?: FeelingOption | null; notes?: string }) => {
       if (!currentImplement) return;
 
-      haptic(20);
+      haptic.light();
 
       const tempId = `temp-${Date.now()}-${Math.random()}`;
       const optimistic: RecentThrow = {
@@ -722,6 +723,8 @@ export function QuickLogClient({ userId }: { userId: string }) {
           const postPayload = await res.json();
           const saved = postPayload?.data?.throw;
           const newCount = postPayload?.data?.throwCount;
+          const previousBest: number | null = postPayload?.data?.previousBest ?? null;
+          const previousBestDate: string | null = postPayload?.data?.previousBestDate ?? null;
 
           // Replace optimistic with real throw
           setRecentThrows((prev) =>
@@ -730,6 +733,30 @@ export function QuickLogClient({ userId }: { userId: string }) {
           // Use authoritative count from server (fixes potential drift)
           // -1 means server couldn't count but throw WAS saved
           if (typeof newCount === "number" && newCount >= 0) setThrowCount(newCount);
+
+          // PR celebration stack — full overlay + toast + haptic. Only fires
+          // when the server confirms this throw set a new PR (saved.distance
+          // is always truthy here since PR detection requires distance > 0
+          // server-side, but check defensively).
+          if (saved?.isPersonalBest && typeof saved.distance === "number") {
+            haptic.pr();
+            setPrCelebration({
+              show: true,
+              event: currentImplement.event,
+              distance: saved.distance,
+            });
+            const eventLabel = formatEventType(currentImplement.event);
+            const description =
+              previousBest != null
+                ? `${eventLabel} · +${(saved.distance - previousBest).toFixed(2)}m over your previous best${
+                    previousBestDate ? ` from ${formatPreviousBestDate(previousBestDate)}` : ""
+                  }`
+                : `${eventLabel} · First-ever PR for this implement`;
+            toastCelebration("New Personal Best!", {
+              highlight: `${saved.distance.toFixed(2)}m`,
+              description,
+            });
+          }
         } catch (err) {
           const isTimeout = err instanceof DOMException && err.name === "TimeoutError";
           const isAbort = err instanceof DOMException && err.name === "AbortError";
@@ -773,7 +800,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
         setPendingCount((c) => c + 1);
       }
     },
-    [currentImplement, isOnline, toastError]
+    [currentImplement, isOnline, toastError, toastCelebration]
   );
 
   /* ── Tap + long-press handlers ───────────────────────────────────────── */
@@ -786,7 +813,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
 
     longPressTimer.current = setTimeout(() => {
       longPressTriggered.current = true;
-      haptic(50);
+      haptic.medium();
       setIsNewThrow(true);
       setEditingThrow(null);
       setSheetOpen(true);
@@ -1225,6 +1252,13 @@ export function QuickLogClient({ userId }: { userId: string }) {
           void handleSheetClose();
         }}
         onSave={handleSheetSave}
+      />
+
+      <PRCelebration
+        show={prCelebration.show}
+        onDismiss={() => setPrCelebration({ show: false })}
+        event={prCelebration.event}
+        distance={prCelebration.distance}
       />
     </>
   );

@@ -84,6 +84,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // If this is a throw, also create a ThrowLog and check PR
     let throwLog = null;
+    let prevBestForResponse: number | null = null;
+    let prevBestDateForResponse: string | null = null;
     if (
       isThrow === true &&
       event != null &&
@@ -118,6 +120,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         distance,
       });
       const isPersonalBest = prResult.isPersonalBest;
+      prevBestForResponse = prResult.previousDistance;
+      prevBestDateForResponse = prResult.previousAchievedAt;
 
       if (isPersonalBest) {
         await prisma.throwLog.update({
@@ -159,6 +163,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
                 event: throwLog.event as string,
               }
             : null,
+          previousBest: prevBestForResponse,
+          previousBestDate: prevBestDateForResponse,
         },
       },
       { status: 201 }

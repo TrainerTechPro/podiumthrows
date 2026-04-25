@@ -35,6 +35,8 @@ export async function POST(
 
   // Check if this is a PR for this event + implement weight
   let isPersonalBest = false;
+  let previousBest: number | null = null;
+  let previousBestDate: string | null = null;
   if (distance != null) {
     const currentBest = await prisma.throwLog.findFirst({
       where: {
@@ -44,11 +46,13 @@ export async function POST(
         distance: { not: null },
         isPersonalBest: true,
       },
-      select: { id: true, distance: true },
+      select: { id: true, distance: true, date: true },
     });
 
     if (!currentBest || (currentBest.distance != null && distance > currentBest.distance)) {
       isPersonalBest = true;
+      previousBest = currentBest?.distance ?? null;
+      previousBestDate = currentBest?.date.toISOString().slice(0, 10) ?? null;
       // Unset previous PR if it exists
       if (currentBest) {
         await prisma.throwLog.update({
@@ -77,7 +81,10 @@ export async function POST(
     },
   });
 
-  return NextResponse.json({ success: true, data: throwLog }, { status: 201 });
+  return NextResponse.json(
+    { success: true, data: { ...throwLog, previousBest, previousBestDate } },
+    { status: 201 }
+  );
 }
 
 export async function GET(

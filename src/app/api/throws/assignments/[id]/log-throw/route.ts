@@ -117,6 +117,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // PR detection (only for throws with valid distance)
     let isPersonalBest = false;
+    let previousBest: number | null = null;
+    let previousBestDate: string | null = null;
     if (typeof distance === "number" && distance > 0) {
       const event = assignment.session.event;
       const implementKg = parseImplementKg(implement);
@@ -129,6 +131,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           distance,
         });
         isPersonalBest = prResult.isPersonalBest;
+        previousBest = prResult.previousDistance;
+        previousBestDate = prResult.previousAchievedAt;
 
         if (isPersonalBest) {
           // Fire coach notification (fire-and-forget)
@@ -170,7 +174,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({
       success: true,
-      data: { throwLog, isPersonalBest },
+      data: { throwLog, isPersonalBest, previousBest, previousBestDate },
     });
   } catch (error) {
     logger.error("POST /api/throws/assignments/[id]/log-throw error", { error });

@@ -206,6 +206,72 @@ describe("recordThrow — atomic PR write", () => {
     expect(upsertArg.where.athleteId_event_implement.implement).toBe("7.26kg");
   });
 
+  it("returns previousAchievedAt=null for first-ever PR (no existing row)", async () => {
+    mocks.throwsPRFindUnique.mockResolvedValue(null);
+    mocks.throwLogFindFirst.mockResolvedValue(null);
+    mocks.throwLogUpdateMany.mockResolvedValue({ count: 0 });
+    mocks.throwsPRUpsert.mockResolvedValue({
+      id: "pr1",
+      distance: 15.5,
+      implement: "7.26kg",
+      achievedAt: "2026-04-25",
+    });
+
+    const result = await recordThrow({
+      athleteId: "ath1",
+      event: "SHOT_PUT",
+      implementWeightKg: 7.26,
+      distance: 15.5,
+    });
+
+    expect(result.isPersonalBest).toBe(true);
+    expect(result.previousAchievedAt).toBeNull();
+  });
+
+  it("returns previousAchievedAt of the prior PR when a new PR overtakes it", async () => {
+    mocks.throwsPRFindUnique.mockResolvedValue({
+      id: "pr1",
+      distance: 14.0,
+      achievedAt: "2026-04-02",
+    });
+    mocks.throwLogUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.throwsPRUpsert.mockResolvedValue({
+      id: "pr1",
+      distance: 15.5,
+      implement: "7.26kg",
+      achievedAt: "2026-04-25",
+    });
+
+    const result = await recordThrow({
+      athleteId: "ath1",
+      event: "SHOT_PUT",
+      implementWeightKg: 7.26,
+      distance: 15.5,
+    });
+
+    expect(result.isPersonalBest).toBe(true);
+    expect(result.previousDistance).toBe(14.0);
+    expect(result.previousAchievedAt).toBe("2026-04-02");
+  });
+
+  it("returns previousAchievedAt of existing PR when candidate does not beat it", async () => {
+    mocks.throwsPRFindUnique.mockResolvedValue({
+      id: "pr1",
+      distance: 16.0,
+      achievedAt: "2026-03-10",
+    });
+
+    const result = await recordThrow({
+      athleteId: "ath1",
+      event: "SHOT_PUT",
+      implementWeightKg: 7.26,
+      distance: 15.0,
+    });
+
+    expect(result.isPersonalBest).toBe(false);
+    expect(result.previousAchievedAt).toBe("2026-03-10");
+  });
+
   it("unmarks previously-flagged ThrowLog rows before upserting", async () => {
     mocks.throwsPRFindUnique.mockResolvedValue({ id: "pr1", distance: 14.0 });
     mocks.throwLogUpdateMany.mockResolvedValue({ count: 1 });

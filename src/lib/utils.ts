@@ -129,6 +129,27 @@ export function formatEventType(event: string): string {
     .join(" ");
 }
 
+/**
+ * Render a YYYY-MM-DD string as "April 2" / "Dec 14". Used by PR celebration
+ * copy ("+0.18m over your previous best from April 2"). Returns the input
+ * unchanged when it can't be parsed — better to show an unformatted date
+ * than crash the celebration toast over a malformed input.
+ */
+export function formatPreviousBestDate(iso: string): string {
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return iso;
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const d = new Date(Date.UTC(year, month, day));
+  if (Number.isNaN(d.getTime())) return iso;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d);
+}
+
 /** "PRO" → "Pro" */
 export function capitalize(str: string): string {
   if (!str) return "";

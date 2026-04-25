@@ -38,6 +38,11 @@ export interface RecordThrowInput {
 export interface RecordThrowResult {
   isPersonalBest: boolean;
   previousDistance: number | null;
+  /** ISO date (YYYY-MM-DD) of the *old* PR before this write — null when this
+   *  is the first PR or the previous best came from legacy ThrowLog data
+   *  with no associated achievement date. Used by clients to render
+   *  "+0.18m over your previous best from April 2" copy. */
+  previousAchievedAt: string | null;
   pr: {
     id: string;
     distance: number;
@@ -131,14 +136,7 @@ export async function checkIsPersonalBest(
  * setting isPersonalBest on the NEW row if the result says so.
  */
 export async function recordThrow(input: RecordThrowInput): Promise<RecordThrowResult> {
-  const {
-    athleteId,
-    event,
-    implementWeightKg,
-    distance,
-    source = "TRAINING",
-    achievedAt,
-  } = input;
+  const { athleteId, event, implementWeightKg, distance, source = "TRAINING", achievedAt } = input;
 
   const implement = input.implementLabel ?? defaultLabel(implementWeightKg);
   const achievedAtIso = toIsoDateString(achievedAt);
@@ -149,10 +147,11 @@ export async function recordThrow(input: RecordThrowInput): Promise<RecordThrowR
       where: {
         athleteId_event_implement: { athleteId, event, implement },
       },
-      select: { id: true, distance: true },
+      select: { id: true, distance: true, achievedAt: true },
     });
 
     let previousDistance: number | null = existingPR?.distance ?? null;
+    const previousAchievedAt: string | null = existingPR?.achievedAt ?? null;
 
     // Legacy fallback only if no ThrowsPR row exists yet.
     if (previousDistance == null) {
@@ -175,12 +174,13 @@ export async function recordThrow(input: RecordThrowInput): Promise<RecordThrowR
       return {
         isPersonalBest: false,
         previousDistance,
+        previousAchievedAt,
         pr: existingPR
           ? {
               id: existingPR.id,
               distance: existingPR.distance,
               implement,
-              achievedAt: achievedAtIso,
+              achievedAt: previousAchievedAt ?? achievedAtIso,
             }
           : null,
       };
@@ -221,6 +221,7 @@ export async function recordThrow(input: RecordThrowInput): Promise<RecordThrowR
     return {
       isPersonalBest: true,
       previousDistance,
+      previousAchievedAt,
       pr,
     };
   });
@@ -334,4 +335,6 @@ export async function recalculatePRs(
 }
 
 // Re-export Prisma type for callers that need the raw row shape.
-export type ThrowsPRRow = Prisma.ThrowsPRGetPayload<{ select: { id: true; distance: true; implement: true; achievedAt: true } }>;
+export type ThrowsPRRow = Prisma.ThrowsPRGetPayload<{
+  select: { id: true; distance: true; implement: true; achievedAt: true };
+}>;

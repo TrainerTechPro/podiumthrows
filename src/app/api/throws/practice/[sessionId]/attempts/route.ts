@@ -24,7 +24,10 @@ export async function POST(
       where: { userId: currentUser.userId },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const session = await prisma.practiceSession.findUnique({
@@ -39,16 +42,26 @@ export async function POST(
 
     const parsed = await parseBody(request, PracticeAttemptCreateSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { athleteId, event, implement, distance, drillType, coachNote, videoUrl, attemptNumber } = parsed;
+    const { athleteId, event, implement, distance, drillType, coachNote, videoUrl, attemptNumber } =
+      parsed;
 
     // Verify coach owns this athlete
-    const authorized = await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId);
+    const authorized = await canAccessAthlete(
+      currentUser.userId,
+      currentUser.role as "COACH" | "ATHLETE",
+      athleteId
+    );
     if (!authorized) {
-      return NextResponse.json({ success: false, error: "Not authorized to log attempts for this athlete" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Not authorized to log attempts for this athlete" },
+        { status: 403 }
+      );
     }
 
     // Auto-detect PR: atomic write via canonical recordThrow helper.
     let isPR = false;
+    let previousBest: number | null = null;
+    let previousBestDate: string | null = null;
     if (distance !== undefined && distance !== null) {
       const implementKg = parseImplementKg(implement);
       if (implementKg != null && implementKg > 0) {
@@ -60,6 +73,8 @@ export async function POST(
           distance,
         });
         isPR = prResult.isPersonalBest;
+        previousBest = prResult.previousDistance;
+        previousBestDate = prResult.previousAchievedAt;
       }
     }
 
@@ -87,9 +102,15 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ success: true, data: attempt });
+    return NextResponse.json({
+      success: true,
+      data: { ...attempt, previousBest, previousBestDate },
+    });
   } catch (error) {
-    logger.error("POST /api/throws/practice/[sessionId]/attempts error", { context: "throws/practice/attempts", error: error });
+    logger.error("POST /api/throws/practice/[sessionId]/attempts error", {
+      context: "throws/practice/attempts",
+      error: error,
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

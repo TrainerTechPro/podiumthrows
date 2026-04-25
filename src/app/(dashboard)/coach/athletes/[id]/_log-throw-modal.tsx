@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Check } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { formatPreviousBestDate } from "@/lib/utils";
 
 interface LogThrowModalProps {
   athleteId: string;
@@ -77,7 +78,7 @@ export function LogThrowModal({
   const [saving, setSaving] = useState(false);
   const [prDetected, setPrDetected] = useState(false);
 
-  const presets = event ? IMPLEMENT_PRESETS[event] ?? [] : [];
+  const presets = event ? (IMPLEMENT_PRESETS[event] ?? []) : [];
 
   // For men's hammer, show dual label for 7.26kg
   function getPresetLabel(preset: { label: string; kg: number }) {
@@ -127,10 +128,13 @@ export function LogThrowModal({
         event,
         implementWeight,
         implementWeightUnit: "kg" as const,
-        distance: distance === "" ? null : (() => {
-          const n = parseFloat(distance);
-          return Number.isFinite(n) ? n : null;
-        })(),
+        distance:
+          distance === ""
+            ? null
+            : (() => {
+                const n = parseFloat(distance);
+                return Number.isFinite(n) ? n : null;
+              })(),
         isCompetition,
         notes: notes || null,
         videoUrl,
@@ -151,7 +155,20 @@ export function LogThrowModal({
 
       if (data.data.isPersonalBest) {
         setPrDetected(true);
-        toastSuccess(`New PR! ${distance}m logged for ${athleteName}`);
+        // Coach side stays in the editorial register — no overlay, no haptic.
+        // Per CLAUDE.md §Dual Product Identity: "Quiet toast only" for coach.
+        const previousBest: number | null = data.data.previousBest ?? null;
+        const previousBestDate: string | null = data.data.previousBestDate ?? null;
+        const distNum = parseFloat(distance);
+        const delta =
+          previousBest != null && Number.isFinite(distNum)
+            ? ` · +${(distNum - previousBest).toFixed(2)}m over previous best${
+                previousBestDate ? ` from ${formatPreviousBestDate(previousBestDate)}` : ""
+              }`
+            : previousBest == null
+              ? " · First-ever PR for this implement"
+              : "";
+        toastSuccess(`New PR for ${athleteName}`, `${distance}m${delta}`);
       } else {
         toastSuccess(`Throw logged for ${athleteName}`);
       }
@@ -218,11 +235,15 @@ export function LogThrowModal({
               {events.map((e) => (
                 <button
                   key={e}
-                  onClick={() => { setEvent(e); setImplementWeight(null); }}
+                  onClick={() => {
+                    setEvent(e);
+                    setImplementWeight(null);
+                  }}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
-                    ${event === e
-                      ? "bg-primary-500 text-black"
-                      : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
+                    ${
+                      event === e
+                        ? "bg-primary-500 text-black"
+                        : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
                     }`}
                   type="button"
                 >
@@ -245,9 +266,10 @@ export function LogThrowModal({
                   key={p.kg}
                   onClick={() => setImplementWeight(p.kg)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
-                    ${implementWeight === p.kg
-                      ? "bg-primary-500 text-black"
-                      : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
+                    ${
+                      implementWeight === p.kg
+                        ? "bg-primary-500 text-black"
+                        : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700"
                     }`}
                   type="button"
                 >
@@ -301,12 +323,17 @@ export function LogThrowModal({
 
         {/* Competition toggle */}
         <label className="flex items-center gap-3 cursor-pointer">
-          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
-            ${isCompetition
-              ? "bg-primary-500 border-primary-500"
-              : "border-[var(--card-border)] bg-transparent"
-            }`}>
-            {isCompetition && <Check size={14} className="text-black" strokeWidth={2.5} aria-hidden="true" />}
+          <div
+            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
+            ${
+              isCompetition
+                ? "bg-primary-500 border-primary-500"
+                : "border-[var(--card-border)] bg-transparent"
+            }`}
+          >
+            {isCompetition && (
+              <Check size={14} className="text-black" strokeWidth={2.5} aria-hidden="true" />
+            )}
           </div>
           <input
             type="checkbox"
@@ -323,7 +350,11 @@ export function LogThrowModal({
           className="flex items-center gap-1 text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
           type="button"
         >
-          {showNotes ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+          {showNotes ? (
+            <ChevronUp size={16} aria-hidden="true" />
+          ) : (
+            <ChevronDown size={16} aria-hidden="true" />
+          )}
           Notes / Cues
         </button>
         {showNotes && (

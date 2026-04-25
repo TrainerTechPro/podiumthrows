@@ -7,7 +7,8 @@ import { RestTimer } from "@/components";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { PRCelebration } from "@/components/ui/PRCelebration";
-import { formatEventType } from "@/lib/utils";
+import { formatEventType, formatPreviousBestDate } from "@/lib/utils";
+import { haptic } from "@/lib/haptic";
 import type {
   SessionWithPrescription,
   PrescribedBlock,
@@ -379,13 +380,25 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
 
         // Check for PR
         if (data.throwLog?.isPersonalBest) {
+          haptic.pr();
           setPrCelebration({
             show: true,
             event: data.throwLog.event ?? undefined,
             distance: data.throwLog.distance ?? undefined,
           });
+          const eventLabel = data.throwLog.event ? formatEventType(data.throwLog.event) : "";
+          const previousBest: number | null = data.previousBest ?? null;
+          const previousBestDate: string | null = data.previousBestDate ?? null;
+          const description =
+            data.throwLog.distance != null && previousBest != null
+              ? `${eventLabel} · +${(data.throwLog.distance - previousBest).toFixed(2)}m over your previous best${
+                  previousBestDate ? ` from ${formatPreviousBestDate(previousBestDate)}` : ""
+                }`
+              : eventLabel
+                ? `${eventLabel} · First-ever PR for this implement`
+                : undefined;
           celebration("New Personal Best!", {
-            description: data.throwLog.event ? formatEventType(data.throwLog.event) : undefined,
+            description,
             highlight: data.throwLog.distance ? `${data.throwLog.distance.toFixed(2)}m` : undefined,
           });
         }

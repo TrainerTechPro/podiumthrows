@@ -11,6 +11,7 @@ import { useOnlineStatus } from "@/lib/pwa/online-status";
 import { useSyncQueue } from "@/hooks/useSyncQueue";
 import { PendingSyncBadge } from "@/components/pwa/PendingSyncBadge";
 import { useToast } from "@/components/ui/Toast";
+import { formatPreviousBestDate } from "@/lib/utils";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,12 @@ interface PracticeAttempt {
   };
   /** Set when attempt is queued offline and not yet synced */
   _pendingId?: string;
+  /** Returned by the server only when isPR is true and a prior PR existed. */
+  previousBest?: number | null;
+  /** YYYY-MM-DD of the prior PR. Only present when isPR is true and a prior
+   *  PR existed. Used to render quiet "+0.18m over previous best from Apr 2"
+   *  context on the coach side without firing a celebration overlay. */
+  previousBestDate?: string | null;
 }
 
 interface PracticeSession {
@@ -869,6 +876,24 @@ export default function LiveSessionPage() {
 
   function handleAttemptSaved(attempt: PracticeAttempt) {
     setSession((prev) => (prev ? { ...prev, attempts: [...prev.attempts, attempt] } : prev));
+
+    // Coach side stays quiet — no overlay, no haptic. A success toast with
+    // previous-best framing is the appropriate "research software" register.
+    if (attempt.isPR && attempt.distance != null) {
+      const athleteName =
+        `${attempt.athlete.user.firstName ?? ""} ${attempt.athlete.user.lastName ?? ""}`.trim() ||
+        "Athlete";
+      const delta =
+        attempt.previousBest != null
+          ? ` · +${(attempt.distance - attempt.previousBest).toFixed(2)}m over previous best${
+              attempt.previousBestDate
+                ? ` from ${formatPreviousBestDate(attempt.previousBestDate)}`
+                : ""
+            }`
+          : " · First-ever PR for this implement";
+      toastSuccess(`New PR for ${athleteName}`, `${attempt.distance.toFixed(2)}m${delta}`);
+    }
+
     setSelectedAthlete(null);
   }
 

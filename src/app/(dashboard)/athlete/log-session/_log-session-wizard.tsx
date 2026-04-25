@@ -3,17 +3,19 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { localToday } from "@/lib/utils";
+import { localToday, formatEventType } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { WIRE_LENGTH_OPTIONS, DEFAULT_DRILL_BY_EVENT, LBS_TO_KG } from "@/lib/throws";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { Input } from "@/components/ui/Input";
 import { NumberFlow } from "@/components/ui/NumberFlow";
+import { PRCelebration } from "@/components/ui/PRCelebration";
 import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
 import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
 import { useDraftPersistence } from "@/lib/draft-persistence";
 import { enqueueMutation, useOutboxStatus } from "@/lib/outbox";
+import { haptic } from "@/lib/haptic";
 import { track } from "@/lib/analytics";
 import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle, WifiOff } from "lucide-react";
 
@@ -270,6 +272,11 @@ export function LogSessionWizard({
   const [submitting, setSubmitting] = useState(false);
   const [queued, setQueued] = useState(false);
   const [responsePRs, setResponsePRs] = useState<PRResult[]>([]);
+  const [prCelebration, setPrCelebration] = useState<{
+    show: boolean;
+    event?: string;
+    distance?: number;
+  }>({ show: false });
   const [responseWarnings, setResponseWarnings] = useState<WarningResult[]>([]);
   const [doneSummary, setDoneSummary] = useState<null | {
     eventLabel: string;
@@ -553,11 +560,34 @@ export function LogSessionWizard({
       });
 
       if (data.prs?.length) {
-        setResponsePRs(data.prs);
-        for (const pr of data.prs as PRResult[]) {
+        const prs = data.prs as PRResult[];
+        setResponsePRs(prs);
+
+        // Headline PR drives the full-screen overlay + haptic. The toast
+        // fan-out below still fires for each PR so the athlete sees every
+        // one — but only the biggest gets the cinematic treatment.
+        const headlinePr = prs.reduce<PRResult | null>(
+          (best, p) => (best == null || p.distance > best.distance ? p : best),
+          null
+        );
+        if (headlinePr) {
+          haptic.pr();
+          setPrCelebration({
+            show: true,
+            event: headlinePr.event,
+            distance: headlinePr.distance,
+          });
+        }
+
+        for (const pr of prs) {
+          const eventLabel = formatEventType(pr.event);
+          const description =
+            pr.previousBest != null
+              ? `${pr.implement || eventLabel} · +${(pr.distance - pr.previousBest).toFixed(2)}m over your previous best`
+              : `${pr.implement || eventLabel} · First-ever PR`;
           toast.celebration("New Personal Best!", {
             highlight: `${pr.distance.toFixed(2)}m`,
-            description: pr.implement || event.replace(/_/g, " "),
+            description,
           });
           track("pr_celebrated", {
             event: event as "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN",
@@ -656,27 +686,36 @@ export function LogSessionWizard({
   // ── Done state ─────────────────────────────────────────────────────
   if (doneSummary) {
     return (
-      <DoneScreen
-        isEditing={isEditing}
-        summary={doneSummary}
-        prs={responsePRs}
-        warnings={responseWarnings}
-        sessionsPath={sessionsPath}
-        onLogAnother={() => {
-          // Reset to the wizard's initial draft AND clear the IDB row so
-          // the new attempt doesn't surface a "resume" toast for stale data.
-          setDraft(initialDraft);
-          void clearDraft();
-          // Fresh attempt = fresh idempotency key.
-          idempotencyKeyRef.current =
-            typeof crypto !== "undefined" && "randomUUID" in crypto
-              ? crypto.randomUUID()
-              : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-          setResponsePRs([]);
-          setResponseWarnings([]);
-          setDoneSummary(null);
-        }}
-      />
+      <>
+        <DoneScreen
+          isEditing={isEditing}
+          summary={doneSummary}
+          prs={responsePRs}
+          warnings={responseWarnings}
+          sessionsPath={sessionsPath}
+          onLogAnother={() => {
+            // Reset to the wizard's initial draft AND clear the IDB row so
+            // the new attempt doesn't surface a "resume" toast for stale data.
+            setDraft(initialDraft);
+            void clearDraft();
+            // Fresh attempt = fresh idempotency key.
+            idempotencyKeyRef.current =
+              typeof crypto !== "undefined" && "randomUUID" in crypto
+                ? crypto.randomUUID()
+                : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            setResponsePRs([]);
+            setResponseWarnings([]);
+            setDoneSummary(null);
+            setPrCelebration({ show: false });
+          }}
+        />
+        <PRCelebration
+          show={prCelebration.show}
+          onDismiss={() => setPrCelebration({ show: false })}
+          event={prCelebration.event}
+          distance={prCelebration.distance}
+        />
+      </>
     );
   }
 

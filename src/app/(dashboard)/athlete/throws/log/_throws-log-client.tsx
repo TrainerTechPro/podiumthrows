@@ -6,11 +6,14 @@ import { useSearchParams } from "next/navigation";
 import { localToday } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
+import { PRCelebration } from "@/components/ui/PRCelebration";
 import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
 import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
 import { useDraftPersistence } from "@/lib/draft-persistence";
 import { enqueueMutation, useOutboxStatus } from "@/lib/outbox";
+import { haptic } from "@/lib/haptic";
 import { WIRE_LENGTH_OPTIONS, LBS_TO_KG } from "@/lib/throws";
+import { formatEventType, formatPreviousBestDate } from "@/lib/utils";
 import { WifiOff } from "lucide-react";
 
 import { logger } from "@/lib/logger";
@@ -412,6 +415,11 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [queued, setQueued] = useState(false);
+  const [prCelebration, setPrCelebration] = useState<{
+    show: boolean;
+    event?: string;
+    distance?: number;
+  }>({ show: false });
 
   // Handle ?edit=sessionId from navigation
   useEffect(() => {
@@ -664,7 +672,46 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
     try {
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(editingSessionId ? "Session updated" : "Session saved");
+        const prs: Array<{
+          event: string;
+          implement: string;
+          distance: number;
+          previousBest: number | null;
+          previousBestDate: string | null;
+        }> = Array.isArray(data.prs) ? data.prs : [];
+
+        // Surface only the *biggest* PR in this session — toast queue would
+        // get noisy with 4 simultaneous celebrations on a heavy day. The
+        // remaining PRs still write to ThrowsPR server-side; the dashboard
+        // PR widget reflects them.
+        const headlinePr = prs.reduce<(typeof prs)[number] | null>(
+          (best, p) => (best == null || p.distance > best.distance ? p : best),
+          null
+        );
+
+        if (headlinePr) {
+          haptic.pr();
+          setPrCelebration({
+            show: true,
+            event: headlinePr.event,
+            distance: headlinePr.distance,
+          });
+          const eventLabel = formatEventType(headlinePr.event);
+          const description =
+            headlinePr.previousBest != null
+              ? `${eventLabel} · +${(headlinePr.distance - headlinePr.previousBest).toFixed(2)}m over your previous best${
+                  headlinePr.previousBestDate
+                    ? ` from ${formatPreviousBestDate(headlinePr.previousBestDate)}`
+                    : ""
+                }`
+              : `${eventLabel} · First-ever PR for this implement`;
+          toast.celebration("New Personal Best!", {
+            highlight: `${headlinePr.distance.toFixed(2)}m`,
+            description,
+          });
+        } else {
+          toast.success(editingSessionId ? "Session updated" : "Session saved");
+        }
         await clearDraft();
         setSaved(true);
       } else {
@@ -1081,6 +1128,13 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
           )}
         </>
       )}
+
+      <PRCelebration
+        show={prCelebration.show}
+        onDismiss={() => setPrCelebration({ show: false })}
+        event={prCelebration.event}
+        distance={prCelebration.distance}
+      />
     </div>
   );
 }
