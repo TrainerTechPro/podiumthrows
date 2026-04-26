@@ -24,7 +24,7 @@
 
 import { useEffect, useState } from "react";
 import { PRCelebration } from "@/components/ui/PRCelebration";
-import { STREAK_MILESTONES } from "@/lib/athlete/streak-engine";
+import { STREAK_MILESTONES } from "@/lib/athlete/streak-milestones";
 import { logger } from "@/lib/logger";
 
 const CURSOR_KEY = "pt:streak:milestoneCelebrated";

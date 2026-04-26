@@ -22,18 +22,22 @@ import { logger } from "@/lib/logger";
 import { getAthleteTimezone, getLocalDate, getLocalDayOfWeek } from "@/lib/dates";
 import { awardStreakAchievements } from "@/lib/achievements";
 import { emitStreakMilestoneIfCrossed } from "@/lib/team-activity";
+import { STREAK_MILESTONES, type StreakMilestone } from "./streak-milestones";
 
 /* ─── Pure data ──────────────────────────────────────────────────────────── */
 
 /**
- * Milestone thresholds (days). Each one fires a celebration moment + unlocks
- * the matching badge in `STREAK_BADGES`. Listed ascending so `crossedMilestone`
- * returns the LARGEST crossed in the same call — a single +1 extension only
- * crosses one threshold so this is rarely ambiguous, but ascending order is
- * the safe default if it ever matters.
+ * Milestone thresholds + type re-exported from `./streak-milestones` (a pure
+ * file with no server-only imports) so client components can import the
+ * constants without bundling the web-push chain. Server-side callers keep
+ * their existing `@/lib/athlete/streak-engine` import path.
+ *
+ * Listed ascending in `streak-milestones.ts` so `crossedMilestone` returns the
+ * LARGEST crossed in the same call — a single +1 extension only crosses one
+ * threshold so this is rarely ambiguous, but ascending order is the safe
+ * default if it ever matters.
  */
-export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 365] as const;
-export type StreakMilestone = (typeof STREAK_MILESTONES)[number];
+export { STREAK_MILESTONES, type StreakMilestone };
 
 /* ─── Pure helpers (unit-testable, no DB) ────────────────────────────────── */
 
