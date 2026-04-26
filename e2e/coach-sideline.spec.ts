@@ -1,29 +1,24 @@
-import { test, expect, devices } from "@playwright/test";
-import path from "path";
-
-const COACH_STORAGE = path.resolve(__dirname, ".auth/coach.json");
-
-const PHONE = devices["iPhone 14"];
-const DESKTOP = devices["Desktop Chrome"];
+import { test, expect } from "@playwright/test";
 
 /**
  * Coach sideline mobile flow.
  *
- * The sideline redirect lives in middleware: it triggers only when a
- * phone-class User-Agent hits /coach/dashboard without the
- * `coach_mobile_view=full` cookie. We exercise both halves here:
+ * The redirect at /coach/dashboard is keyed off User-Agent only (phone-class
+ * UA + cookie != "full"). Tests run in the project's default Chromium —
+ * we toggle UA at the test level instead of switching devices, since
+ * mixing devices in a describe forces a new worker.
+ *
  *   - Phone UA → /coach/dashboard redirects to /coach/sideline.
  *   - Desktop UA → /coach/dashboard renders normally.
- *   - The "Full coach view" pill takes the coach to /coach/dashboard
- *     (sets cookie via server action) and the FAB returns them.
- *
- * Cookie writes go through the page-bound server action in
- * src/app/(dashboard)/coach/sideline/_actions.ts, so we don't need to set
- * cookies manually — the UI flow does it for us.
+ *   - "Full coach view" pill commits the cookie via server action.
+ *   - FAB returns to sideline.
  */
 
-test.describe("Coach sideline — phone viewport", () => {
-  test.use({ ...PHONE, storageState: COACH_STORAGE });
+const PHONE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+
+test.describe("Coach sideline — phone UA", () => {
+  test.use({ userAgent: PHONE_UA, viewport: { width: 390, height: 844 } });
 
   test("phone UA on /coach/dashboard redirects to /coach/sideline", async ({ page }) => {
     await page.goto("/coach/dashboard");
@@ -38,23 +33,16 @@ test.describe("Coach sideline — phone viewport", () => {
     await page.getByRole("button", { name: /Full coach view/i }).click();
     await page.getByRole("button", { name: /Show full view/i }).click();
     await page.waitForURL(/\/coach\/dashboard$/);
-    // Confirm the cookie was written by the server action.
     const cookies = await page.context().cookies();
     expect(cookies.find((c) => c.name === "coach_mobile_view")?.value).toBe("full");
   });
 
-  test("Return-to-sideline FAB appears on /coach/dashboard with cookie=full and routes back", async ({
+  test("Return-to-sideline FAB on /coach/dashboard with cookie=full and routes back", async ({
     page,
   }) => {
-    // Seed the cookie directly so we don't repeat the pill flow here.
-    await page.context().addCookies([
-      {
-        name: "coach_mobile_view",
-        value: "full",
-        domain: "localhost",
-        path: "/",
-      },
-    ]);
+    await page
+      .context()
+      .addCookies([{ name: "coach_mobile_view", value: "full", domain: "localhost", path: "/" }]);
     await page.goto("/coach/dashboard");
     await expect(page).toHaveURL(/\/coach\/dashboard$/);
 
@@ -68,27 +56,20 @@ test.describe("Coach sideline — phone viewport", () => {
   });
 });
 
-test.describe("Coach sideline — desktop viewport", () => {
-  test.use({ ...DESKTOP, storageState: COACH_STORAGE });
+test.describe("Coach sideline — desktop UA", () => {
+  // Default Chromium UA is desktop — no override needed.
 
   test("desktop UA on /coach/dashboard does NOT redirect", async ({ page }) => {
     await page.goto("/coach/dashboard");
     await expect(page).toHaveURL(/\/coach\/dashboard$/);
-    // Editorial dashboard headline — proves the full coach shell is rendered.
     await expect(page.getByRole("heading", { name: "Your program, today." })).toBeVisible();
   });
 
   test("desktop FAB is hidden even when cookie=full", async ({ page }) => {
-    await page.context().addCookies([
-      {
-        name: "coach_mobile_view",
-        value: "full",
-        domain: "localhost",
-        path: "/",
-      },
-    ]);
+    await page
+      .context()
+      .addCookies([{ name: "coach_mobile_view", value: "full", domain: "localhost", path: "/" }]);
     await page.goto("/coach/dashboard");
-    // FAB has md:hidden — should not be visible at desktop widths.
     await expect(page.getByRole("button", { name: "Return to sideline" })).toBeHidden();
   });
 });
