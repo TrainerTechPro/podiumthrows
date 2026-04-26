@@ -562,7 +562,7 @@ Auth-aware CTAs on `/pricing` are fine (and present today — see `PricingPageCl
 - Use `useSheet()` the same shape as `useModal()`.
 - Do NOT open a `<Sheet>` and `<Modal>` simultaneously — it's a design smell, not prevented programmatically.
 - For anchored dropdowns (notification bell, menu popovers), keep using the inline pattern — `<Sheet>` is for dialog-class overlays only.
-- **Three ad-hoc sheet implementations still exist** (`InsightEvidenceDrawer`, `completion-bottom-sheet`, dropped in favor of `<Sheet>` on the next migration pass). Do not pattern-match against them for new work.
+- **All dialog-class sheets now route through `<Sheet>`.** The previously-flagged ad-hoc implementations (`InsightEvidenceDrawer`, athlete `quick-log` `QuickEntrySheet`, coach `_session-sidebar`) have been migrated. New dialog-class overlays MUST use this primitive — do not roll your own fixed/translate/backdrop scaffolding.
 
 ### Confirmations
 
