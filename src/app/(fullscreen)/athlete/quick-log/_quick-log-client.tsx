@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, Loader2, X } from "lucide-react";
+import { Sheet } from "@/components/ui/Sheet";
 import { useOnlineStatus } from "@/lib/pwa/online-status";
 import {
   queueQuickLogThrow,
@@ -296,44 +297,21 @@ function QuickEntrySheet({
     });
   }, [distance, feeling, notes, onSave]);
 
-  // Always-mounted + CSS transform toggle. When closed we:
-  //   - translate the panel off-screen (translate-y-full)
-  //   - fade the backdrop and disable its pointer events
-  //   - set inert/aria-hidden so focus and screen readers ignore closed content
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className={cn(
-          "fixed inset-0 bg-black/60 z-40 transition-opacity duration-200 ease-out",
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        )}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Sheet */}
-      <div
-        className={cn(
-          "fixed inset-x-0 bottom-0 z-50 bg-surface-800 rounded-t-3xl border-t border-surface-600/60 px-5 pt-5",
-          "transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
-          isOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
-        )}
-        style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
-        role="dialog"
-        aria-modal={isOpen ? true : undefined}
-        aria-hidden={isOpen ? undefined : true}
-        aria-label={editingThrow ? "Edit throw details" : "Add throw details"}
-      >
-        {/* Handle */}
-        <div className="w-10 h-1 rounded-full bg-surface-500 mx-auto mb-5" aria-hidden="true" />
-
-        <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider mb-5">
+    <Sheet
+      open={isOpen}
+      onClose={onClose}
+      side="bottom"
+      size="lg"
+      ariaLabel={editingThrow ? "Edit throw details" : "Add throw details"}
+    >
+      <div className="space-y-5" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
           {editingThrow ? "Edit Throw" : "Add Details"}
         </p>
 
         {/* Distance */}
-        <div className="mb-5">
+        <div>
           <label className="block text-xs text-[var(--muted)] mb-1.5" htmlFor="ql-distance">
             Distance (meters)
           </label>
@@ -348,7 +326,6 @@ function QuickEntrySheet({
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
               placeholder="—"
-              tabIndex={isOpen ? 0 : -1}
               className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-lg font-mono text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60 pr-10"
             />
             {distance && (
@@ -356,7 +333,6 @@ function QuickEntrySheet({
                 onClick={() => setDistance("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-[var(--foreground)] p-1"
                 aria-label="Clear distance"
-                tabIndex={isOpen ? 0 : -1}
               >
                 <X size={14} strokeWidth={1.75} />
               </button>
@@ -365,7 +341,7 @@ function QuickEntrySheet({
         </div>
 
         {/* Feeling */}
-        <div className="mb-5">
+        <div>
           <p className="text-xs text-[var(--muted)] mb-2.5">How did it feel?</p>
           <div className="flex gap-3">
             {(["bad", "ok", "great"] as FeelingOption[]).map((opt) => (
@@ -380,7 +356,6 @@ function QuickEntrySheet({
                 )}
                 aria-pressed={feeling === opt}
                 aria-label={FEELING_LABELS[opt]}
-                tabIndex={isOpen ? 0 : -1}
               >
                 <span className="text-2xl leading-none">{FEELING_EMOJI[opt]}</span>
                 <span className="text-[10px] font-semibold uppercase tracking-wider">
@@ -392,7 +367,7 @@ function QuickEntrySheet({
         </div>
 
         {/* Note */}
-        <div className="mb-6">
+        <div>
           <label className="block text-xs text-[var(--muted)] mb-1.5" htmlFor="ql-notes">
             Note
           </label>
@@ -402,30 +377,27 @@ function QuickEntrySheet({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Optional note..."
-            tabIndex={isOpen ? 0 : -1}
             className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60"
           />
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pt-1">
           <button
             onClick={handleSave}
-            tabIndex={isOpen ? 0 : -1}
             className="w-full py-4 rounded-2xl bg-primary-500 text-surface-950 font-heading font-bold text-base hover:bg-primary-400 active:scale-[0.98] transition-all"
           >
             Save
           </button>
           <button
             onClick={onClose}
-            tabIndex={isOpen ? 0 : -1}
             className="w-full py-3 rounded-2xl text-[var(--muted)] text-sm hover:text-[var(--foreground)] transition-colors"
           >
             Cancel
           </button>
         </div>
       </div>
-    </>
+    </Sheet>
   );
 }
 
