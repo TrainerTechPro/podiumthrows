@@ -3,6 +3,13 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
+import {
+  SEARCH_CATEGORIES,
+  type SearchCategory,
+  type SearchResultItem,
+  type SearchCounts,
+  type SearchResponse,
+} from "@/lib/search/types";
 
 /* ─── /api/search ────────────────────────────────────────────────────────────
    Unified coach-side command palette backend. Returns coarse candidates
@@ -17,36 +24,6 @@ import { logger } from "@/lib/logger";
    ───────────────────────────────────────────────────────────────────────── */
 
 const MAX_PER_CATEGORY = 8;
-
-export const SEARCH_CATEGORIES = [
-  "athlete",
-  "session",
-  "program",
-  "pr",
-  "drill",
-  "exercise",
-  "video",
-  "note",
-] as const;
-
-export type SearchCategory = (typeof SEARCH_CATEGORIES)[number];
-
-export type SearchResultItem = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  href: string;
-  category: SearchCategory;
-};
-
-export type SearchCounts = Record<SearchCategory, number>;
-
-export type SearchResponse = {
-  results: SearchResultItem[];
-  counts: SearchCounts;
-  /** True when the result set is truncated for any category. */
-  hasMore: Partial<Record<SearchCategory, boolean>>;
-};
 
 const EVENT_LABELS: Record<string, string> = {
   SHOT_PUT: "Shot Put",

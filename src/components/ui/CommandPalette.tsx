@@ -18,7 +18,7 @@ import {
   StickyNote,
 } from "lucide-react";
 import type { NavSection } from "./Sidebar";
-import type { SearchResultItem, SearchResponse, SearchCategory } from "@/app/api/search/route";
+import type { SearchResultItem, SearchResponse, SearchCategory } from "@/lib/search/types";
 import { rankResults } from "@/lib/search/rank";
 import { logger } from "@/lib/logger";
 
