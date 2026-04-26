@@ -21,6 +21,7 @@ import { bumpLogsSubmitted } from "@/lib/pwa/install-counters";
 import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle, WifiOff } from "lucide-react";
 
 import { logger } from "@/lib/logger";
+import type { MilestoneCelebration } from "@/lib/goals/milestones";
 /* ─── Log Session — single-screen form (no wizard) ───────────────────────────
    Consumer-app pattern: one scrollable form with a sticky thumb-zone Save.
    Athletes log multiple sessions a week; wizards are friction on high-frequency
@@ -603,6 +604,16 @@ export function LogSessionWizard({
         toast.success(isEditing ? "Session updated" : "Session saved");
       }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
+
+      // Goal milestone celebrations — fan out a celebration toast for each
+      // crossing (25/50/75) and let the goal completion (100) be its own
+      // moment. We don't show a full overlay here because the PR overlay
+      // already owns the screen if the throw was a PR; goals will fire
+      // their full overlay on next visit to /athlete/goals.
+      if (Array.isArray(data.goalCelebrations) && data.goalCelebrations.length > 0) {
+        const { fireGoalCelebrations } = await import("@/lib/goals/celebrate-client");
+        fireGoalCelebrations(data.goalCelebrations as MilestoneCelebration[], toast);
+      }
 
       // Server has the row — drop the persisted draft so a second tab or a
       // future visit doesn't surface a "resume" toast for an already-saved

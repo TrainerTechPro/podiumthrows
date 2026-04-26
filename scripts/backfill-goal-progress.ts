@@ -33,7 +33,10 @@ async function backfillForAthlete(athleteId: string, gender: "MALE" | "FEMALE" |
 
   if (sessions.length === 0) return 0;
 
-  const byEvent = new Map<string, Array<{ implementWeight: number | null; bestMark: number | null }>>();
+  const byEvent = new Map<
+    string,
+    Array<{ implementWeight: number | null; bestMark: number | null }>
+  >();
   for (const s of sessions) {
     const bucket = byEvent.get(s.event) ?? [];
     for (const log of s.drillLogs) bucket.push(log);
@@ -42,7 +45,8 @@ async function backfillForAthlete(athleteId: string, gender: "MALE" | "FEMALE" |
 
   let total = 0;
   for (const [event, logs] of byEvent.entries()) {
-    total += await syncGoalsFromDrillLogs(athleteId, event, gender, logs);
+    const result = await syncGoalsFromDrillLogs(athleteId, event, gender, logs);
+    total += result.updatedCount;
   }
   return total;
 }
@@ -71,11 +75,15 @@ async function main() {
     const updated = await backfillForAthlete(athlete.id, athlete.gender);
     grandTotal += updated;
     if (updated > 0) {
-      console.log(`  ✓ ${athlete.firstName} ${athlete.lastName} (${athlete.id}): ${updated} goal${updated === 1 ? "" : "s"} updated`);
+      console.log(
+        `  ✓ ${athlete.firstName} ${athlete.lastName} (${athlete.id}): ${updated} goal${updated === 1 ? "" : "s"} updated`
+      );
     }
   }
 
-  console.log(`\nDone. ${grandTotal} goal${grandTotal === 1 ? "" : "s"} updated across ${athletes.length} athlete(s).\n`);
+  console.log(
+    `\nDone. ${grandTotal} goal${grandTotal === 1 ? "" : "s"} updated across ${athletes.length} athlete(s).\n`
+  );
 }
 
 main()

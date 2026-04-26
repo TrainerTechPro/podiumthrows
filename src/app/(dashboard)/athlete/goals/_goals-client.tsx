@@ -1,49 +1,32 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
-import { Pencil, Plus, Target } from "lucide-react";
-import {
-  Badge,
-  Button,
-  EmptyState,
-  Modal,
-  ProgressBar,
-  useConfirm,
-  StaggeredList,
-} from "@/components";
-import { Input } from "@/components/ui/Input";
+import { useCallback, useState, useTransition } from "react";
+import { ChevronDown, ChevronRight, Pencil, Plus, Sparkles, Target, Trophy } from "lucide-react";
+import { Badge, Button, EmptyState, ProgressBar, StaggeredList, useConfirm } from "@/components";
 import { useToast } from "@/components/ui/Toast";
-import type { GoalItem } from "@/lib/data/coach";
-import { formatEventType } from "@/lib/utils";
+import { PRCelebration } from "@/components/ui/PRCelebration";
 import { csrfHeaders } from "@/lib/csrf-client";
-
 import { logger } from "@/lib/logger";
-/* ─── Constants ──────────────────────────────────────────────────────────── */
-
-const EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
-
-const STATUS_BADGE: Record<string, "success" | "warning" | "danger" | "neutral"> = {
-  ACTIVE: "warning",
-  COMPLETED: "success",
-  ABANDONED: "neutral",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  ACTIVE: "Active",
-  COMPLETED: "Completed",
-  ABANDONED: "Abandoned",
-};
+import { formatEventType } from "@/lib/utils";
+import { fireGoalCelebrations } from "@/lib/goals/celebrate-client";
+import type { MilestoneCelebration } from "@/lib/goals/milestones";
+import type { DecoratedGoal, GoalsPageData } from "@/lib/data/goals";
+import type { SuggestedGoal } from "@/lib/goals/suggestions";
+import { GoalWizardSheet, type GoalKind } from "./_goal-wizard-sheet";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
-function formatProjectedDate(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
-function isOverdue(deadline: string | null): boolean {
-  if (!deadline) return false;
-  return new Date(deadline) < new Date();
+function formatNumber(n: number): string {
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(2).replace(/\.?0+$/, "");
 }
 
 function progressVariant(pct: number): "success" | "primary" | "warning" | "danger" {
@@ -53,158 +36,37 @@ function progressVariant(pct: number): "success" | "primary" | "warning" | "dang
   return "danger";
 }
 
-/* ─── Add / Update Goal Form ─────────────────────────────────────────────── */
-
-interface GoalFormData {
-  title: string;
-  targetValue: string;
-  unit: string;
-  startingValue: string;
-  deadline: string;
-  event: string;
-  description: string;
+function daysLabel(days: number | null, isActive: boolean): { text: string; tone: string } {
+  if (days === null) return { text: "No deadline", tone: "text-muted" };
+  if (days < 0)
+    return {
+      text: `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue`,
+      tone: isActive ? "text-danger-500 font-medium" : "text-muted",
+    };
+  if (days === 0) return { text: "Due today", tone: "text-primary-500 font-medium" };
+  return {
+    text: `${days} day${days === 1 ? "" : "s"} left`,
+    tone: days <= 7 ? "text-primary-500 font-medium" : "text-muted",
+  };
 }
 
-const EMPTY_FORM: GoalFormData = {
-  title: "",
-  targetValue: "",
-  unit: "",
-  startingValue: "",
-  deadline: "",
-  event: "",
-  description: "",
-};
+/* ─── Inline progress editor ─────────────────────────────────────────────── */
 
-interface GoalFormProps {
-  initial?: GoalFormData;
-  onSubmit: (data: GoalFormData) => Promise<void>;
-  onCancel: () => void;
-  submitLabel?: string;
-  isSubmitting?: boolean;
-  error?: string | null;
+interface InlineProgressProps {
+  goal: DecoratedGoal;
+  onSave: (id: string, value: number) => Promise<void>;
 }
 
-function GoalForm({
-  initial = EMPTY_FORM,
-  onSubmit,
-  onCancel,
-  submitLabel = "Create Goal",
-  isSubmitting,
-  error,
-}: GoalFormProps) {
-  const [form, setForm] = useState<GoalFormData>(initial);
-
-  const set =
-    (field: keyof GoalFormData) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-      setForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    void onSubmit(form);
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Goal Title"
-        placeholder="e.g. Hit 20m in Shot Put"
-        value={form.title}
-        onChange={set("title")}
-        required
-      />
-      <div className="grid grid-cols-2 gap-3">
-        <Input
-          label="Target Value"
-          type="number"
-          min="0"
-          step="any"
-          placeholder="20.00"
-          value={form.targetValue}
-          onChange={set("targetValue")}
-          required
-        />
-        <Input
-          label="Unit"
-          placeholder="meters, kg, reps..."
-          value={form.unit}
-          onChange={set("unit")}
-          required
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <Input
-          label="Starting Value"
-          type="number"
-          min="0"
-          step="any"
-          placeholder="17.50"
-          value={form.startingValue}
-          onChange={set("startingValue")}
-          helper="Used to calculate progress %"
-        />
-        <Input label="Target Date" type="date" value={form.deadline} onChange={set("deadline")} />
-      </div>
-
-      {/* Event select */}
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-[var(--foreground)]">
-          Event <span className="text-muted font-normal">(optional)</span>
-        </label>
-        <select value={form.event} onChange={set("event")} className="input w-full">
-          <option value="">No specific event</option>
-          {EVENTS.map((ev) => (
-            <option key={ev} value={ev}>
-              {formatEventType(ev)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-[var(--foreground)]">
-          Notes <span className="text-muted font-normal">(optional)</span>
-        </label>
-        <textarea
-          value={form.description}
-          onChange={set("description")}
-          rows={2}
-          placeholder="Any context about this goal..."
-          className="input w-full resize-none"
-        />
-      </div>
-
-      {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
-
-      <div className="flex justify-end gap-2 pt-1">
-        <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <Button type="submit" size="sm" loading={isSubmitting}>
-          {submitLabel}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-/* ─── Update Progress Inline Form ────────────────────────────────────────── */
-
-interface UpdateProgressProps {
-  goal: GoalItem;
-  onUpdate: (id: string, currentValue: number) => Promise<void>;
-}
-
-function UpdateProgressInline({ goal, onUpdate }: UpdateProgressProps) {
+function InlineProgressEditor({ goal, onSave }: InlineProgressProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(String(goal.currentValue));
-  const [isPending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
-  function handleSave() {
-    const num = parseFloat(value);
-    if (isNaN(num)) return;
+  function commit() {
+    const n = parseFloat(value);
+    if (!Number.isFinite(n)) return;
     startTransition(async () => {
-      await onUpdate(goal.id, num);
+      await onSave(goal.id, n);
       setEditing(false);
     });
   }
@@ -212,37 +74,41 @@ function UpdateProgressInline({ goal, onUpdate }: UpdateProgressProps) {
   if (!editing) {
     return (
       <button
-        onClick={() => setEditing(true)}
-        className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium"
+        onClick={() => {
+          setValue(String(goal.currentValue));
+          setEditing(true);
+        }}
+        className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
       >
-        Update Progress
+        <Pencil size={11} strokeWidth={1.75} aria-hidden="true" />
+        Update progress
       </button>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 mt-1">
+    <div className="flex items-center gap-2">
       <input
         type="number"
         inputMode="decimal"
         min="0"
         step="any"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="input input-sm w-24 tabular-nums text-sm"
         autoFocus
+        onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") handleSave();
+          if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
+        className="input input-sm w-24 text-sm tabular-nums"
       />
       <span className="text-xs text-muted">{goal.unit}</span>
       <button
-        onClick={handleSave}
-        disabled={isPending}
+        onClick={commit}
+        disabled={pending}
         className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline disabled:opacity-50"
       >
-        {isPending ? "Saving…" : "Save"}
+        {pending ? "Saving…" : "Save"}
       </button>
       <button
         onClick={() => setEditing(false)}
@@ -254,136 +120,43 @@ function UpdateProgressInline({ goal, onUpdate }: UpdateProgressProps) {
   );
 }
 
-/* ─── Adjust Deadline Inline ────────────────────────────────────────────── */
+/* ─── Active goal card ───────────────────────────────────────────────────── */
 
-interface AdjustDeadlineProps {
-  goal: GoalItem;
-  onUpdateDeadline: (id: string, deadline: string | null) => Promise<void>;
-}
-
-function AdjustDeadlineInline({ goal, onUpdateDeadline }: AdjustDeadlineProps) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(goal.deadline ? goal.deadline.split("T")[0] : "");
-  const [isPending, startTransition] = useTransition();
-
-  function handleSave() {
-    startTransition(async () => {
-      await onUpdateDeadline(goal.id, value || null);
-      setEditing(false);
-    });
-  }
-
-  if (!editing) {
-    return (
-      <button
-        onClick={() => setEditing(true)}
-        className="text-xs text-muted hover:text-primary-500 transition-colors"
-        title="Adjust deadline"
-      >
-        <Pencil size={12} strokeWidth={1.75} className="inline -mt-px mr-0.5" aria-hidden="true" />
-        Edit
-      </button>
-    );
-  }
-
-  // Re-project completion based on new deadline
-  const newDeadline = value ? new Date(value + "T00:00:00") : null;
-  const daysUntilDeadline = newDeadline
-    ? Math.ceil((newDeadline.getTime() - Date.now()) / 86_400_000)
-    : null;
-  const remaining = goal.targetValue - goal.currentValue;
-  const rateNeeded =
-    daysUntilDeadline && daysUntilDeadline > 0 && remaining > 0
-      ? remaining / daysUntilDeadline
-      : null;
-
-  return (
-    <div className="flex flex-col gap-1.5 mt-1">
-      <div className="flex items-center gap-2">
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="input input-sm text-sm w-36"
-          autoFocus
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSave();
-            if (e.key === "Escape") setEditing(false);
-          }}
-        />
-        <button
-          onClick={handleSave}
-          disabled={isPending}
-          className="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline disabled:opacity-50"
-        >
-          {isPending ? "Saving…" : "Save"}
-        </button>
-        <button
-          onClick={() => {
-            setEditing(false);
-            setValue(goal.deadline ? goal.deadline.split("T")[0] : "");
-          }}
-          className="text-xs text-muted hover:text-[var(--foreground)]"
-        >
-          Cancel
-        </button>
-      </div>
-      {rateNeeded !== null && daysUntilDeadline !== null && (
-        <p className="text-[10px] text-muted">
-          {daysUntilDeadline} days left — need ~{rateNeeded.toFixed(2)} {goal.unit}/day to hit
-          target
-        </p>
-      )}
-      {daysUntilDeadline !== null && daysUntilDeadline <= 0 && value && (
-        <p className="text-[10px] text-danger-500 font-medium">This date is in the past</p>
-      )}
-    </div>
-  );
-}
-
-/* ─── Goal Card ──────────────────────────────────────────────────────────── */
-
-interface GoalCardProps {
-  goal: GoalItem;
+interface ActiveGoalCardProps {
+  goal: DecoratedGoal;
   onUpdateProgress: (id: string, value: number) => Promise<void>;
-  onUpdateDeadline: (id: string, deadline: string | null) => Promise<void>;
   onAbandon: (id: string) => void;
 }
 
-function GoalCard({ goal, onUpdateProgress, onUpdateDeadline, onAbandon }: GoalCardProps) {
-  const overdue = isOverdue(goal.deadline);
-  const isActive = goal.status === "ACTIVE";
-  const isCompleted = goal.status === "COMPLETED";
+function ActiveGoalCard({ goal, onUpdateProgress, onAbandon }: ActiveGoalCardProps) {
+  const days = daysLabel(goal.daysUntilDeadline, true);
+  const remaining = Math.max(0, goal.targetValue - goal.currentValue);
 
   return (
-    <div className={`card p-4 space-y-3 ${isCompleted ? "opacity-80" : ""}`}>
-      {/* Header */}
+    <div className="card p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">
-            {isCompleted && <span className="mr-1">🏅</span>}
-            {goal.title}
-          </h3>
+          <h3 className="text-sm font-semibold text-[var(--foreground)] truncate">{goal.title}</h3>
           {goal.description && (
-            <p className="text-xs text-muted mt-0.5 line-clamp-1">{goal.description}</p>
+            <p className="text-xs text-muted mt-0.5 line-clamp-2">{goal.description}</p>
           )}
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {goal.event && <Badge variant="primary">{formatEventType(goal.event)}</Badge>}
-          <Badge variant={STATUS_BADGE[goal.status] ?? "neutral"}>
-            {STATUS_LABEL[goal.status] ?? goal.status}
+        {goal.event && (
+          <Badge variant="primary" className="shrink-0">
+            {formatEventType(goal.event)}
           </Badge>
-        </div>
+        )}
       </div>
 
-      {/* Progress */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs">
-          <span className="tabular-nums font-medium text-[var(--foreground)]">
-            {goal.currentValue} / {goal.targetValue} {goal.unit}
+          <span className="font-mono tabular-nums text-[var(--foreground)]">
+            <span className="font-semibold">{formatNumber(goal.currentValue)}</span>
+            <span className="text-muted"> / {formatNumber(goal.targetValue)}</span>{" "}
+            <span className="text-muted">{goal.unit}</span>
           </span>
           <span
-            className="font-semibold tabular-nums"
+            className="font-mono font-semibold tabular-nums"
             style={{ color: goal.progressPct >= 100 ? "#10b981" : "#f59e0b" }}
           >
             {goal.progressPct}%
@@ -395,107 +168,130 @@ function GoalCard({ goal, onUpdateProgress, onUpdateDeadline, onAbandon }: GoalC
           size="sm"
           animate
         />
+        {remaining > 0 && (
+          <p className="text-[11px] text-muted">
+            <span className="font-mono tabular-nums">{formatNumber(remaining)}</span> {goal.unit} to
+            go
+          </p>
+        )}
       </div>
 
-      {/* Meta row */}
-      <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted">
-        <div className="flex items-center gap-3">
-          {goal.deadline && (
-            <span className={overdue && isActive ? "text-danger-500 font-medium" : ""}>
-              {overdue && isActive ? "⚠️ " : ""}
-              Due {formatProjectedDate(goal.deadline)}
+      <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-[11px]">
+        <div className="flex items-center gap-2">
+          {goal.deadline ? (
+            <span className={days.tone}>
+              {days.text} · {formatDate(goal.deadline)}
+            </span>
+          ) : (
+            <span className="text-muted">No deadline</span>
+          )}
+          {goal.projectedCompletionDate && (
+            <span className="text-muted">
+              · on track for {formatDate(goal.projectedCompletionDate)}
             </span>
           )}
-          {goal.projectedCompletionDate && isActive && (
-            <span>On track for {formatProjectedDate(goal.projectedCompletionDate)}</span>
-          )}
-          {isActive && <AdjustDeadlineInline goal={goal} onUpdateDeadline={onUpdateDeadline} />}
         </div>
-
-        {isActive && (
-          <div className="flex items-center gap-3">
-            <UpdateProgressInline goal={goal} onUpdate={onUpdateProgress} />
-            <button
-              onClick={() => void onAbandon(goal.id)}
-              className="text-xs text-muted hover:text-danger-500 transition-colors"
-            >
-              Abandon
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <InlineProgressEditor goal={goal} onSave={onUpdateProgress} />
+          <button
+            onClick={() => onAbandon(goal.id)}
+            className="text-xs text-muted hover:text-danger-500 transition-colors"
+          >
+            Abandon
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── Main Client Component ──────────────────────────────────────────────── */
+/* ─── Achieved goal card (compact) ────────────────────────────────────────── */
 
-interface GoalsClientProps {
-  initialGoals: GoalItem[];
+function AchievedGoalCard({ goal }: { goal: DecoratedGoal }) {
+  return (
+    <div className="card p-3 flex items-center gap-3 opacity-90">
+      <div
+        className="w-9 h-9 rounded-xl bg-success-500/15 text-success-600 dark:text-success-400 flex items-center justify-center shrink-0"
+        aria-hidden="true"
+      >
+        <Trophy size={16} strokeWidth={1.75} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-[var(--foreground)] truncate">{goal.title}</div>
+        <div className="text-[11px] text-muted font-mono tabular-nums">
+          {formatNumber(goal.currentValue)} {goal.unit}
+          {goal.event && <span className="ml-1.5 text-muted">· {formatEventType(goal.event)}</span>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export function GoalsClient({ initialGoals }: GoalsClientProps) {
-  const [goals, setGoals] = useState<GoalItem[]>(initialGoals);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [addError, setAddError] = useState<string | null>(null);
-  const [isAdding, startAddTransition] = useTransition();
-  const toast = useToast();
+/* ─── Suggestion card ─────────────────────────────────────────────────────── */
 
-  const activeGoals = goals.filter((g) => g.status === "ACTIVE");
-  const completedGoals = goals.filter((g) => g.status === "COMPLETED");
-  const abandonedGoals = goals.filter((g) => g.status === "ABANDONED");
+interface SuggestedGoalCardProps {
+  suggestion: SuggestedGoal;
+  onAccept: (s: SuggestedGoal) => void;
+}
 
-  /* ── Create goal ── */
-  // Preserve 0 as a valid startingValue — an athlete tracking growth from
-  // a standing start (e.g. new PR from 0 attempts) should be able to
-  // enter 0. `form.startingValue ? parseFloat() : null` coerced "0" to null.
-  const parseOptionalNumeric = (raw: string): number | null => {
-    if (raw === "" || raw == null) return null;
-    const n = parseFloat(raw);
-    return Number.isFinite(n) ? n : null;
-  };
-
-  const handleCreate = useCallback(
-    async (form: GoalFormData) => {
-      setAddError(null);
-      startAddTransition(async () => {
-        try {
-          const res = await fetch("/api/athlete/goals", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
-            body: JSON.stringify({
-              title: form.title,
-              targetValue: parseFloat(form.targetValue),
-              unit: form.unit,
-              startingValue: parseOptionalNumeric(form.startingValue),
-              deadline: form.deadline || null,
-              event: form.event || null,
-              description: form.description || null,
-            }),
-          });
-          const data = await res.json().catch(() => null);
-          if (!res.ok || !data?.success) {
-            setAddError(data?.error ?? `Failed to create goal (${res.status}).`);
-            return;
-          }
-          // Fetch fresh list
-          const listRes = await fetch("/api/athlete/goals");
-          const listData = await listRes.json().catch(() => null);
-          if (listRes.ok && listData?.success && Array.isArray(listData.data)) {
-            setGoals(listData.data);
-          }
-          setShowAddModal(false);
-          toast.success("Goal created");
-        } catch (err) {
-          logger.error("goal create failed", { context: "athlete/goals/goals-client", error: err });
-          setAddError(err instanceof Error ? err.message : "Something went wrong.");
-        }
-      });
-    },
-    [toast]
+function SuggestedGoalCard({ suggestion, onAccept }: SuggestedGoalCardProps) {
+  return (
+    <div className="card p-4 flex items-start gap-3 border-primary-500/20 bg-primary-500/5">
+      <div
+        className="w-9 h-9 rounded-xl bg-primary-500/15 text-primary-500 flex items-center justify-center shrink-0"
+        aria-hidden="true"
+      >
+        <Sparkles size={16} strokeWidth={1.75} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm font-semibold text-[var(--foreground)]">{suggestion.title}</h3>
+        <p className="text-xs text-muted mt-0.5">{suggestion.description}</p>
+      </div>
+      <Button size="sm" onClick={() => onAccept(suggestion)}>
+        Accept
+      </Button>
+    </div>
   );
+}
 
-  /* ── Update progress ── */
+/* ─── Main client ─────────────────────────────────────────────────────────── */
+
+interface GoalsClientProps {
+  initialData: GoalsPageData;
+}
+
+export function GoalsClient({ initialData }: GoalsClientProps) {
+  const toast = useToast();
+  const [data, setData] = useState<GoalsPageData>(initialData);
+  const [showAchieved, setShowAchieved] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardPreset, setWizardPreset] = useState<
+    React.ComponentProps<typeof GoalWizardSheet>["preset"] | undefined
+  >(undefined);
+  const [completion, setCompletion] = useState<MilestoneCelebration | null>(null);
+
+  /* ─── Refresh ─── */
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/athlete/goals");
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.success && json.data) {
+        setData({
+          active: json.data.active,
+          achieved: json.data.achieved,
+          abandoned: json.data.abandoned,
+          suggested: json.data.suggested,
+        });
+      }
+    } catch (err) {
+      logger.warn("goals refresh failed", {
+        context: "athlete/goals",
+        metadata: { err: String(err) },
+      });
+    }
+  }, []);
+
+  /* ─── Update progress ─── */
   const handleUpdateProgress = useCallback(
     async (id: string, currentValue: number) => {
       try {
@@ -504,109 +300,72 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ currentValue }),
         });
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.success) {
-          throw new Error(data?.error || `Failed to update progress (${res.status}).`);
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.success) {
+          throw new Error(json?.error || `Failed to update progress (${res.status}).`);
         }
-        const goal = data.data;
-        setGoals((prev) =>
-          prev.map((g) =>
-            g.id === id
-              ? {
-                  ...g,
-                  currentValue: goal.currentValue,
-                  status: goal.status,
-                  progressPct: Math.min(
-                    100,
-                    Math.max(
-                      0,
-                      Math.round(
-                        ((currentValue - (g.startingValue ?? 0)) /
-                          (g.targetValue - (g.startingValue ?? 0))) *
-                          100
-                      )
-                    )
-                  ),
-                }
-              : g
-          )
-        );
-        toast.success("Progress updated");
+        if (json.celebration) {
+          fireGoalCelebrations([json.celebration as MilestoneCelebration], toast, (c) =>
+            setCompletion(c)
+          );
+        } else {
+          toast.success("Progress updated");
+        }
+        await refresh();
       } catch (err) {
-        logger.error("goal progress update failed", {
-          context: "athlete/goals/goals-client",
-          error: err,
-        });
+        logger.error("goal progress update failed", { context: "athlete/goals", error: err });
         toast.error(err instanceof Error ? err.message : "Couldn't save progress.");
       }
     },
-    [toast]
+    [toast, refresh]
   );
 
-  /* ── Update deadline ── */
-  const handleUpdateDeadline = useCallback(
-    async (id: string, deadline: string | null) => {
-      try {
-        const res = await fetch(`/api/athlete/goals/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ deadline: deadline ?? "" }),
-        });
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.success) {
-          throw new Error(data?.error || `Failed to update deadline (${res.status}).`);
-        }
-        setGoals((prev) =>
-          prev.map((g) => (g.id === id ? { ...g, deadline: data.data.deadline } : g))
-        );
-        toast.success("Deadline updated");
-      } catch (err) {
-        logger.error("goal deadline update failed", {
-          context: "athlete/goals/goals-client",
-          error: err,
-        });
-        toast.error(err instanceof Error ? err.message : "Couldn't save deadline.");
-      }
-    },
-    [toast]
-  );
-
-  /* ── Abandon goal ── */
-  const handleAbandon = useCallback(
-    async (id: string) => {
-      try {
-        const res = await fetch(`/api/athlete/goals/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ status: "ABANDONED" }),
-        });
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.success) {
-          throw new Error(data?.error || `Failed to abandon goal (${res.status}).`);
-        }
-        setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, status: "ABANDONED" } : g)));
-        toast.success("Goal abandoned");
-      } catch (err) {
-        logger.error("goal abandon failed", { context: "athlete/goals/goals-client", error: err });
-        toast.error(err instanceof Error ? err.message : "Couldn't abandon goal.");
-      }
-    },
-    [toast]
-  );
-
-  /* ── Abandon request with confirmation ── */
-  const { confirm: confirmAbandon, Dialog: AbandonConfirmDialog } = useConfirm();
-
-  const handleAbandonRequest = (id: string) => {
-    confirmAbandon({
+  /* ─── Abandon goal ─── */
+  const { confirm, Dialog } = useConfirm();
+  const handleAbandon = (id: string) => {
+    confirm({
       title: "Abandon this goal?",
-      description:
-        "This will mark the goal as abandoned. You can view it in history but it won't count toward your active goals.",
+      description: "It moves to history and stops counting toward your active goals.",
       confirmLabel: "Abandon",
       variant: "danger",
-      onConfirm: () => handleAbandon(id),
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/athlete/goals/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", ...csrfHeaders() },
+            body: JSON.stringify({ status: "ABANDONED" }),
+          });
+          const json = await res.json().catch(() => null);
+          if (!res.ok || !json?.success) {
+            throw new Error(json?.error || `Failed to abandon (${res.status}).`);
+          }
+          toast.success("Goal abandoned");
+          await refresh();
+        } catch (err) {
+          logger.error("goal abandon failed", { context: "athlete/goals", error: err });
+          toast.error(err instanceof Error ? err.message : "Couldn't abandon goal.");
+        }
+      },
     });
   };
+
+  /* ─── Suggested goal accept ─── */
+  const handleAcceptSuggestion = (s: SuggestedGoal) => {
+    setWizardPreset({
+      kind: s.kind === "STRENGTH" ? "WEIGHT" : (s.kind as GoalKind),
+      title: s.title,
+      targetValue: s.targetValue,
+      unit: s.unit,
+      event: s.event,
+      deadline: s.deadline,
+      startingValue: s.startingValue ?? null,
+      description: s.description,
+    });
+    setWizardOpen(true);
+  };
+
+  /* ─── Render ─── */
+  const showSuggested = data.active.length < 3 && data.suggested.length > 0;
 
   return (
     <div className="space-y-6">
@@ -615,111 +374,124 @@ export function GoalsClient({ initialGoals }: GoalsClientProps) {
         <div>
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">My Goals</h1>
           <p className="text-sm text-muted mt-0.5">
-            {activeGoals.length} active goal{activeGoals.length !== 1 ? "s" : ""}
+            {data.active.length} active · {data.achieved.length} achieved
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowAddModal(true)}>
+        <Button
+          size="sm"
+          onClick={() => {
+            setWizardPreset(undefined);
+            setWizardOpen(true);
+          }}
+        >
           <Plus size={14} strokeWidth={1.75} className="mr-1.5" aria-hidden="true" />
-          Add Goal
+          New goal
         </Button>
       </div>
 
       {/* Empty state */}
-      {goals.length === 0 && (
+      {data.active.length === 0 && data.achieved.length === 0 && (
         <EmptyState
           icon={<Target size={24} strokeWidth={1.75} aria-hidden="true" />}
           title="No goals yet"
-          description="Set SMART goals to track your progress toward competition distances and personal bests."
+          description="Set one. Then go earn it."
           action={
-            <Button size="sm" onClick={() => setShowAddModal(true)}>
+            <Button
+              size="sm"
+              onClick={() => {
+                setWizardPreset(undefined);
+                setWizardOpen(true);
+              }}
+            >
               Create your first goal
             </Button>
           }
         />
       )}
 
-      {/* Active Goals */}
-      {activeGoals.length > 0 && (
+      {/* Active */}
+      {data.active.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-[var(--foreground)] uppercase tracking-wider">
             Active
           </h2>
           <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {activeGoals.map((goal) => (
-              <GoalCard
+            {data.active.map((goal) => (
+              <ActiveGoalCard
                 key={goal.id}
                 goal={goal}
                 onUpdateProgress={handleUpdateProgress}
-                onUpdateDeadline={handleUpdateDeadline}
-                onAbandon={handleAbandonRequest}
+                onAbandon={handleAbandon}
               />
             ))}
           </StaggeredList>
         </section>
       )}
 
-      {/* Completed Goals */}
-      {completedGoals.length > 0 && (
+      {/* Suggested */}
+      {showSuggested && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-success-600 dark:text-success-400 uppercase tracking-wider">
-            Completed
+          <h2 className="text-sm font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles size={14} strokeWidth={1.75} aria-hidden="true" />
+            Suggested
           </h2>
           <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {completedGoals.map((goal) => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                onUpdateProgress={handleUpdateProgress}
-                onUpdateDeadline={handleUpdateDeadline}
-                onAbandon={handleAbandonRequest}
-              />
+            {data.suggested.map((s) => (
+              <SuggestedGoalCard key={s.key} suggestion={s} onAccept={handleAcceptSuggestion} />
             ))}
           </StaggeredList>
         </section>
       )}
 
-      {/* Abandoned Goals */}
-      {abandonedGoals.length > 0 && (
+      {/* Achieved (collapsed by default) */}
+      {data.achieved.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Abandoned</h2>
-          <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {abandonedGoals.map((goal) => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                onUpdateProgress={handleUpdateProgress}
-                onUpdateDeadline={handleUpdateDeadline}
-                onAbandon={handleAbandonRequest}
-              />
-            ))}
-          </StaggeredList>
+          <button
+            onClick={() => setShowAchieved((v) => !v)}
+            className="flex items-center gap-1.5 text-sm font-semibold text-success-600 dark:text-success-400 uppercase tracking-wider hover:opacity-80 transition-opacity"
+            aria-expanded={showAchieved}
+          >
+            {showAchieved ? (
+              <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
+            ) : (
+              <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
+            )}
+            Achieved ({data.achieved.length})
+          </button>
+          {showAchieved && (
+            <StaggeredList className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {data.achieved.map((g) => (
+                <AchievedGoalCard key={g.id} goal={g} />
+              ))}
+            </StaggeredList>
+          )}
         </section>
       )}
 
-      {/* Abandon Confirmation */}
-      <AbandonConfirmDialog />
-
-      {/* Add Goal Modal */}
-      <Modal
-        open={showAddModal}
+      {/* Wizard sheet */}
+      <GoalWizardSheet
+        open={wizardOpen}
         onClose={() => {
-          setShowAddModal(false);
-          setAddError(null);
+          setWizardOpen(false);
+          setWizardPreset(undefined);
         }}
-        title="Create New Goal"
-        size="md"
-      >
-        <GoalForm
-          onSubmit={handleCreate}
-          onCancel={() => {
-            setShowAddModal(false);
-            setAddError(null);
-          }}
-          submitLabel="Create Goal"
-          isSubmitting={isAdding}
-          error={addError}
-        />
-      </Modal>
+        onCreated={refresh}
+        preset={wizardPreset}
+      />
+
+      {/* Completion overlay */}
+      <PRCelebration
+        show={completion !== null}
+        onDismiss={() => {
+          setCompletion(null);
+          void refresh();
+        }}
+        title="Goal complete!"
+        subtitle={completion?.goalTitle}
+        icon="🎯"
+      />
+
+      <Dialog />
     </div>
   );
 }

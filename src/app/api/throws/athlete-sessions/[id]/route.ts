@@ -176,6 +176,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // Sync matching active goals from any competition-weight best marks.
     // Best-effort — failures here must not fail the session edit.
     let athleteCoachId: string | null = null;
+    let goalCelebrations: Awaited<ReturnType<typeof syncGoalsFromDrillLogs>>["celebrations"] = [];
     try {
       const athlete = await prisma.athleteProfile.findUnique({
         where: { id: existing.athleteId },
@@ -183,7 +184,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       });
       if (athlete) {
         athleteCoachId = athlete.coachId;
-        await syncGoalsFromDrillLogs(existing.athleteId, event, athlete.gender, updated.drillLogs);
+        const result = await syncGoalsFromDrillLogs(
+          existing.athleteId,
+          event,
+          athlete.gender,
+          updated.drillLogs
+        );
+        goalCelebrations = result.celebrations;
       }
     } catch (err) {
       logger.error("goal sync after session edit failed", {
@@ -196,7 +203,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     revalidateTag(`athlete-${existing.athleteId}`);
     if (athleteCoachId) revalidateTag(`coach-${athleteCoachId}`);
 
-    return NextResponse.json({ success: true, data: updated, prs });
+    return NextResponse.json({
+      success: true,
+      data: updated,
+      prs,
+      goalCelebrations,
+    });
   } catch (err) {
     logger.error("athlete-sessions [id] PUT error", {
       context: "throws/athlete-sessions/[id]",

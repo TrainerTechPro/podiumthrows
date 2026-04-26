@@ -54,7 +54,8 @@
         "**/*.test.tsx",
         "**/__tests__/**",
         "src/lib/logger.ts",
-        "src/lib/feedback/console-errors.ts"
+        "src/lib/feedback/console-errors.ts",
+        "scripts/**"
       ],
       "rules": {
         "no-console": "off"

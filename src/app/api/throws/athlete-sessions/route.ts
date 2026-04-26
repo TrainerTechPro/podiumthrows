@@ -181,6 +181,7 @@ async function postHandler(
     // Sync matching active goals from any competition-weight best marks in
     // this session. Best-effort — a failure here must not fail the save.
     let athleteCoachId: string | null = null;
+    let goalCelebrations: Awaited<ReturnType<typeof syncGoalsFromDrillLogs>>["celebrations"] = [];
     try {
       const athlete = await prisma.athleteProfile.findUnique({
         where: { id: athleteId },
@@ -188,7 +189,13 @@ async function postHandler(
       });
       if (athlete) {
         athleteCoachId = athlete.coachId;
-        await syncGoalsFromDrillLogs(athleteId, event, athlete.gender, session.drillLogs);
+        const result = await syncGoalsFromDrillLogs(
+          athleteId,
+          event,
+          athlete.gender,
+          session.drillLogs
+        );
+        goalCelebrations = result.celebrations;
       }
     } catch (err) {
       logger.error("goal sync after session create failed", {
@@ -201,7 +208,12 @@ async function postHandler(
     revalidateTag(`athlete-${athleteId}`);
     if (athleteCoachId) revalidateTag(`coach-${athleteCoachId}`);
 
-    return NextResponse.json({ success: true, data: session, prs });
+    return NextResponse.json({
+      success: true,
+      data: session,
+      prs,
+      goalCelebrations,
+    });
   } catch (err) {
     logger.error("athlete-sessions POST error", { context: "throws/athlete-sessions", error: err });
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });

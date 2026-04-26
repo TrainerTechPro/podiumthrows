@@ -11,13 +11,21 @@
  *     competition weight (accounts for 16lb → 7.25748kg vs 7.26kg entry drift).
  *   - currentValue is only ever increased, never decreased.
  *   - A goal auto-transitions to COMPLETED when currentValue meets or exceeds
- *     targetValue (matches the pattern in /api/athlete/goals/[id]/route.ts).
+ *     targetValue.
+ *   - On every increase, milestone crossings (25/50/75/100) are computed and
+ *     persisted to Goal.celebratedMilestones so the same toast doesn't fire
+ *     twice.
  *   - Gender "OTHER" is skipped — we don't know which competition weight applies.
+ *
+ * The function returns the milestone celebrations that fired so the caller
+ * can include them in the API response and the client can render toasts /
+ * the completion overlay.
  */
 
 import type { Prisma, PrismaClient } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { COMPETITION_WEIGHTS } from "@/lib/throws";
+import { buildCelebration, type MilestoneCelebration } from "@/lib/goals/milestones";
 
 /** Tolerance for matching implement weight to competition weight (kg). */
 const COMP_WEIGHT_EPSILON = 0.02;
@@ -31,27 +39,24 @@ export interface SyncDrillLog {
   bestMark: number | null;
 }
 
-/**
- * Update active goals for this athlete/event based on best marks in the
- * provided drill logs. Returns the number of goals that were updated.
- *
- * This is a best-effort operation — callers should catch errors to avoid
- * bubbling a goal-sync failure up into a session save failure.
- */
+export interface SyncGoalsResult {
+  updatedCount: number;
+  celebrations: MilestoneCelebration[];
+}
+
 export async function syncGoalsFromDrillLogs(
   athleteId: string,
   event: string,
   gender: "MALE" | "FEMALE" | "OTHER",
   drillLogs: SyncDrillLog[],
-  db: DbClient = prisma,
-): Promise<number> {
-  // Only MALE/FEMALE have defined competition weights in the COMPETITION_WEIGHTS
-  // table. For OTHER we don't know which class applies — skip the sync and let
-  // the athlete update their goal manually.
-  if (gender !== "MALE" && gender !== "FEMALE") return 0;
+  db: DbClient = prisma
+): Promise<SyncGoalsResult> {
+  const empty: SyncGoalsResult = { updatedCount: 0, celebrations: [] };
+
+  if (gender !== "MALE" && gender !== "FEMALE") return empty;
 
   const compWeight = COMPETITION_WEIGHTS[event]?.[gender === "MALE" ? "male" : "female"];
-  if (!compWeight) return 0;
+  if (!compWeight) return empty;
 
   // Find the best mark across all drill logs at competition weight.
   let newBest: number | null = null;
@@ -61,31 +66,46 @@ export async function syncGoalsFromDrillLogs(
     if (newBest == null || log.bestMark > newBest) newBest = log.bestMark;
   }
 
-  if (newBest == null) return 0;
+  if (newBest == null) return empty;
 
-  // Load any active goals for this athlete + event.
   const goals = await db.goal.findMany({
     where: { athleteId, event: event as never, status: "ACTIVE" },
-    select: { id: true, currentValue: true, targetValue: true, unit: true },
+    select: {
+      id: true,
+      title: true,
+      unit: true,
+      currentValue: true,
+      targetValue: true,
+      startingValue: true,
+      celebratedMilestones: true,
+    },
   });
 
   let updatedCount = 0;
+  const celebrations: MilestoneCelebration[] = [];
+
   for (const goal of goals) {
-    // Only "meters" goals can be auto-updated from throw distance. Other units
-    // (sessions, kg, etc.) are tracked manually and shouldn't be touched.
     if (goal.unit !== "meters") continue;
     if (newBest <= goal.currentValue) continue;
 
+    const celebration = buildCelebration(goal, newBest);
     const shouldComplete = newBest >= goal.targetValue;
+
+    const nextCelebrated = celebration
+      ? Array.from(new Set([...goal.celebratedMilestones, ...celebration.thresholds]))
+      : goal.celebratedMilestones;
+
     await db.goal.update({
       where: { id: goal.id },
       data: {
         currentValue: newBest,
+        celebratedMilestones: nextCelebrated,
         ...(shouldComplete ? { status: "COMPLETED" as const } : {}),
       },
     });
     updatedCount++;
+    if (celebration) celebrations.push(celebration);
   }
 
-  return updatedCount;
+  return { updatedCount, celebrations };
 }

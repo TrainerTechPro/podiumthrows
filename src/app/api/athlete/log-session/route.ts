@@ -10,8 +10,10 @@ import {
   type BlockInput,
 } from "@/lib/bondarchuk";
 import { recordThrow } from "@/lib/throws/pr";
+import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
 import { EventType } from "@prisma/client";
 import { onSessionComplete } from "@/lib/sessions/on-session-complete";
+import type { MilestoneCelebration } from "@/lib/goals/milestones";
 
 /* ── GET — list athlete's self-logged sessions ── */
 export async function GET(request: NextRequest) {
@@ -75,7 +77,7 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
   try {
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId },
-      select: { id: true, coachId: true, firstName: true, lastName: true },
+      select: { id: true, coachId: true, firstName: true, lastName: true, gender: true },
     });
     if (!athlete) {
       return NextResponse.json(
@@ -218,6 +220,26 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
       }
     }
 
+    // Sync matching active goals + collect milestone celebrations to surface
+    // to the client. Best-effort — a goal-sync failure must not fail the
+    // session save (the throw still landed; the goal state can recover on
+    // the next log).
+    let goalCelebrations: MilestoneCelebration[] = [];
+    try {
+      const result = await syncGoalsFromDrillLogs(
+        athlete.id,
+        event,
+        athlete.gender,
+        created.drillLogs
+      );
+      goalCelebrations = result.celebrations;
+    } catch (err) {
+      logger.error("goal sync after self-logged session failed", {
+        context: "athlete/log-session",
+        error: err,
+      });
+    }
+
     const throwCount = created.drillLogs.reduce((sum, dl) => sum + (dl.throwCount ?? 0), 0);
     const bestMarkM = created.drillLogs.reduce(
       (max, dl) => (dl.bestMark != null && dl.bestMark > max ? dl.bestMark : max),
@@ -260,7 +282,10 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
       warnings = result.warnings;
     }
 
-    return NextResponse.json({ success: true, data: created, prs, warnings }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: created, prs, warnings, goalCelebrations },
+      { status: 201 }
+    );
   } catch (err) {
     logger.error("POST /api/athlete/log-session", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";

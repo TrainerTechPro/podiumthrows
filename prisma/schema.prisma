@@ -1022,6 +1022,10 @@ model Goal {
   deadline      DateTime?
   status        GoalStatus     @default(ACTIVE)
 
+  /// Milestone percentages already celebrated for this goal (subset of [25,50,75,100]).
+  /// Prevents the same toast firing twice if progress oscillates around a threshold.
+  celebratedMilestones Int[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

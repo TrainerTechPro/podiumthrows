@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody, GoalUpdateSchema } from "@/lib/api-schemas";
+import { buildCelebration, type MilestoneCelebration } from "@/lib/goals/milestones";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -25,10 +26,19 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    // Verify ownership
+    // Verify ownership + load fields needed for milestone detection.
     const existing = await prisma.goal.findFirst({
       where: { id: id, athleteId: athlete.id },
-      select: { id: true, targetValue: true, status: true },
+      select: {
+        id: true,
+        title: true,
+        unit: true,
+        targetValue: true,
+        currentValue: true,
+        startingValue: true,
+        status: true,
+        celebratedMilestones: true,
+      },
     });
     if (!existing) {
       return NextResponse.json({ success: false, error: "Goal not found." }, { status: 404 });
@@ -38,7 +48,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (parsed instanceof NextResponse) return parsed;
     const { currentValue, status, title, targetValue, deadline, description } = parsed;
 
-    // Build update payload
     const data: Record<string, unknown> = {};
 
     if (title !== undefined) data.title = title.trim();
@@ -56,18 +65,37 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       data.deadline = d;
     }
 
-    // Determine the effective target for auto-complete check
     const effectiveTarget = typeof targetValue === "number" ? targetValue : existing.targetValue;
+
+    let celebration: MilestoneCelebration | null = null;
 
     if (currentValue !== undefined) {
       data.currentValue = currentValue;
-      // Auto-complete: if progress meets or exceeds target
       if (currentValue >= effectiveTarget && existing.status === "ACTIVE") {
         data.status = "COMPLETED";
       }
+
+      // Compute milestone crossings against the snapshot loaded above. We
+      // build the celebration record using the *new* effective target so a
+      // simultaneous target lower also fires the right thresholds.
+      celebration = buildCelebration(
+        {
+          id: existing.id,
+          title: existing.title,
+          unit: existing.unit,
+          targetValue: effectiveTarget,
+          startingValue: existing.startingValue,
+          celebratedMilestones: existing.celebratedMilestones,
+        },
+        currentValue
+      );
+      if (celebration) {
+        data.celebratedMilestones = Array.from(
+          new Set([...existing.celebratedMilestones, ...celebration.thresholds])
+        );
+      }
     }
 
-    // Allow explicit status override (ACTIVE / COMPLETED / ABANDONED)
     if (status !== undefined) data.status = status;
 
     if (Object.keys(data).length === 0) {
@@ -90,11 +118,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         event: true,
         deadline: true,
         status: true,
+        celebratedMilestones: true,
         createdAt: true,
       },
     });
 
-    // Invalidate cached data so other widgets update without a page refresh
     revalidateTag(`athlete-${athlete.id}`);
     if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
@@ -107,6 +135,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         deadline: updated.deadline?.toISOString() ?? null,
         createdAt: updated.createdAt.toISOString(),
       },
+      celebration,
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/goals/[id]", { context: "api", error: err });
