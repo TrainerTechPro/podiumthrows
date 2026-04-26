@@ -108,6 +108,19 @@ const nextConfig = {
         destination: '/athlete/throws/readiness',
         permanent: true,
       },
+      // PR 7 (onboarding consolidation, 2026-04-25): /athlete/review-profile
+      // is retired. Invite-flow athletes (claimed via coach proxy) now land
+      // in the unified /athlete/onboarding wizard with ?from=invite, which
+      // shows 3 visible steps prefilled from coach data and jumps to the
+      // first-throw log. The register-claim API redirect was updated in
+      // the same commit; this entry catches direct external links (welcome
+      // email retries, coach-shared URLs, browser bookmarks) and any cached
+      // 307s from prior PR 1 work.
+      {
+        source: '/athlete/review-profile',
+        destination: '/athlete/onboarding?from=invite',
+        permanent: true,
+      },
       // Updated for PR 6: was /coach/athletes?tab=throws (now URL-state legacy).
       // The Tier-2 sibling /coach/athletes/throws is the canonical IA destination.
       {

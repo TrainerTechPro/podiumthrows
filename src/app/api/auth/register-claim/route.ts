@@ -133,13 +133,16 @@ export async function POST(request: NextRequest) {
 
     // Determine redirect target based on coach-populated data.
     // If the coach populated the basics (events + non-OTHER gender) on the
-    // proxy profile, send the athlete straight to the review page so they can
-    // confirm and edit. Otherwise run them through onboarding to collect those
-    // fields from scratch.
+    // proxy profile, send the athlete to the consolidated onboarding wizard
+    // in invite mode (3 visible steps, prefilled from coach data, jumps to
+    // first-throw log). Otherwise run them through the full 5-step flow.
+    // Both paths now land on /athlete/onboarding — the legacy /review-profile
+    // route is retired.
     const profile = result.profile;
     const hasEvents = Array.isArray(profile.events) && profile.events.length > 0;
     const hasGender = !!profile.gender && profile.gender !== "OTHER";
-    const redirectTo = hasEvents && hasGender ? "/athlete/review-profile" : "/athlete/onboarding";
+    const redirectTo =
+      hasEvents && hasGender ? "/athlete/onboarding?from=invite" : "/athlete/onboarding";
 
     void logAudit({
       userId: result.user.id,
