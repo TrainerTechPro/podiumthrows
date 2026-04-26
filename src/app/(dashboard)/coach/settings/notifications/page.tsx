@@ -6,6 +6,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { parseCoachPrefs } from "@/lib/notifications/coach-preferences";
 import { NotificationPreferencesClient } from "./_notifications-client";
 import { DeliveryPreferencesSection } from "@/components/delivery-preferences-section";
+import { EnablePushNotifications } from "@/components/notifications/EnablePushNotifications";
+import { TestPushButton } from "@/components/notifications/TestPushButton";
 
 export const metadata = { title: "Notifications — Podium Throws" };
 
@@ -36,6 +38,20 @@ export default async function CoachNotificationsSettingsPage() {
         <Bell size={24} className="text-primary-500" strokeWidth={1.75} aria-hidden="true" />
         <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Notifications</h1>
       </div>
+
+      <section className="card p-5 space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+          Push subscription
+        </h2>
+        <p className="text-xs text-muted">
+          Subscribe this browser to receive push notifications. The channel toggles below control
+          which categories actually fire once subscribed.
+        </p>
+        <EnablePushNotifications variant="compact" />
+        <div className="pt-2 border-t border-[var(--card-border)]">
+          <TestPushButton />
+        </div>
+      </section>
 
       <DeliveryPreferencesSection />
 

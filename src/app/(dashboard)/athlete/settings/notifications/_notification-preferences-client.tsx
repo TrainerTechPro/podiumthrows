@@ -12,6 +12,7 @@
 
 import { useState } from "react";
 import { EnablePushNotifications } from "@/components/notifications/EnablePushNotifications";
+import { TestPushButton } from "@/components/notifications/TestPushButton";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { PushPreferences, PushPreferenceKey } from "@/lib/push/preferences";
@@ -127,6 +128,9 @@ export function NotificationPreferencesClient({ initialPreferences }: Props) {
           below.
         </p>
         <EnablePushNotifications variant="compact" />
+        <div className="pt-2 border-t border-[var(--card-border)]">
+          <TestPushButton />
+        </div>
       </div>
 
       {/* ── Per-type toggles ──────────────────────────────────────────── */}

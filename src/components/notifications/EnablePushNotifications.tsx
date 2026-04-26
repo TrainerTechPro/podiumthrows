@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { BellRing, BellOff, CheckCircle2 } from "lucide-react";
+import { BellRing, BellOff, CheckCircle2, Smartphone } from "lucide-react";
 import { Button } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
@@ -23,6 +23,28 @@ import { useToast } from "@/components/ui/Toast";
 
 type PermissionState = "unsupported" | "default" | "granted" | "denied";
 type SubscriptionState = "unknown" | "subscribed" | "unsubscribed";
+
+/**
+ * iOS Safari requires the PWA to be added to the home screen AND iOS 16.4+
+ * before Web Push works at all. Even with a valid SW, a non-standalone iOS
+ * Safari tab will silently reject `pushManager.subscribe`. We detect this up
+ * front so the UI offers install guidance instead of a broken Enable button.
+ */
+function detectIosInstallNeeded(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  const isIos = /iPad|iPhone|iPod/.test(ua) && !("MSStream" in window);
+  if (!isIos) return false;
+
+  const standalone =
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    // Legacy iOS standalone signal
+    (typeof navigator !== "undefined" &&
+      "standalone" in navigator &&
+      (navigator as Navigator & { standalone?: boolean }).standalone === true);
+
+  return !standalone;
+}
 
 export type Props = {
   variant?: "card" | "compact";
@@ -56,6 +78,7 @@ export function EnablePushNotifications({
   const [permission, setPermission] = useState<PermissionState>("unsupported");
   const [subState, setSubState] = useState<SubscriptionState>("unknown");
   const [busy, setBusy] = useState(false);
+  const [iosInstallNeeded, setIosInstallNeeded] = useState(false);
 
   /* ── Detect initial state ───────────────────────────────────────────── */
 
@@ -66,6 +89,11 @@ export function EnablePushNotifications({
       !("PushManager" in window)
     ) {
       setPermission("unsupported");
+      return;
+    }
+
+    if (detectIosInstallNeeded()) {
+      setIosInstallNeeded(true);
       return;
     }
 
@@ -176,11 +204,27 @@ export function EnablePushNotifications({
   ══════════════════════════════════════════════════════════════════════ */
 
   if (variant === "compact") {
+    if (iosInstallNeeded) {
+      return (
+        <div className="flex items-start gap-2 rounded-lg bg-surface-100 dark:bg-surface-800 px-4 py-3">
+          <Smartphone
+            size={16}
+            strokeWidth={1.75}
+            className="text-muted shrink-0 mt-0.5"
+            aria-hidden="true"
+          />
+          <p className="text-xs text-muted leading-relaxed">
+            Install Podium to your home screen for notifications. Open the share sheet in Safari and
+            tap <strong>&ldquo;Add to Home Screen&rdquo;</strong>, then launch Podium from there to
+            enable push.
+          </p>
+        </div>
+      );
+    }
+
     if (permission === "unsupported") {
       return (
-        <p className="text-xs text-muted">
-          Push notifications are not supported by this browser.
-        </p>
+        <p className="text-xs text-muted">Push notifications are not supported by this browser.</p>
       );
     }
 
@@ -194,8 +238,8 @@ export function EnablePushNotifications({
             aria-hidden="true"
           />
           <p className="text-xs text-muted leading-relaxed">
-            Notifications are blocked. Open your browser or OS settings to re-enable
-            them for this site.
+            Notifications are blocked. Open your browser or OS settings to re-enable them for this
+            site.
           </p>
         </div>
       );
@@ -211,9 +255,7 @@ export function EnablePushNotifications({
               className="text-success-500 shrink-0"
               aria-hidden="true"
             />
-            <span className="text-sm text-[var(--foreground)]">
-              Push notifications enabled
-            </span>
+            <span className="text-sm text-[var(--foreground)]">Push notifications enabled</span>
           </div>
           <button
             type="button"
@@ -229,13 +271,7 @@ export function EnablePushNotifications({
 
     // default or granted-but-unsubscribed
     return (
-      <Button
-        variant="primary"
-        size="sm"
-        onClick={subscribeToPush}
-        loading={busy}
-        disabled={busy}
-      >
+      <Button variant="primary" size="sm" onClick={subscribeToPush} loading={busy} disabled={busy}>
         <BellRing size={14} strokeWidth={1.75} aria-hidden="true" />
         Enable Push Notifications
       </Button>
@@ -246,14 +282,43 @@ export function EnablePushNotifications({
      CARD VARIANT — full value-proposition UI for onboarding
   ══════════════════════════════════════════════════════════════════════ */
 
+  /* iOS Safari, not yet installed to Home Screen */
+  if (iosInstallNeeded) {
+    return (
+      <div className="card p-6 sm:p-8 space-y-4 text-center">
+        <div className="w-12 h-12 rounded-full bg-primary-500/15 flex items-center justify-center mx-auto">
+          <Smartphone size={24} strokeWidth={1.5} className="text-primary-500" aria-hidden="true" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
+            Install Podium for notifications
+          </h2>
+          <p className="text-sm text-muted mt-1 max-w-sm mx-auto">
+            iOS only delivers push to apps installed on the home screen. In Safari, tap the share
+            button and choose <strong>&ldquo;Add to Home Screen&rdquo;</strong>, then launch Podium
+            from there.
+          </p>
+        </div>
+        {showSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+          >
+            Skip for now
+          </button>
+        )}
+      </div>
+    );
+  }
+
   /* Unsupported browser */
   if (permission === "unsupported") {
     return (
       <div className="card p-6 sm:p-8 text-center space-y-4">
         <BellOff size={40} strokeWidth={1.5} className="mx-auto text-muted" aria-hidden="true" />
         <p className="text-sm text-muted">
-          Push notifications are not supported in this browser. You can still receive
-          in-app alerts.
+          Push notifications are not supported in this browser. You can still receive in-app alerts.
         </p>
         {showSkip && (
           <button
@@ -281,8 +346,8 @@ export function EnablePushNotifications({
               Notifications are blocked
             </h2>
             <p className="text-sm text-muted mt-0.5">
-              To enable them, open your browser or OS settings and allow notifications
-              for this site. Then come back here.
+              To enable them, open your browser or OS settings and allow notifications for this
+              site. Then come back here.
             </p>
           </div>
         </div>
@@ -304,7 +369,12 @@ export function EnablePushNotifications({
     return (
       <div className="card p-6 sm:p-8 text-center space-y-5">
         <div className="w-16 h-16 rounded-full bg-success-500/10 flex items-center justify-center mx-auto">
-          <CheckCircle2 size={32} strokeWidth={1.5} className="text-success-500" aria-hidden="true" />
+          <CheckCircle2
+            size={32}
+            strokeWidth={1.5}
+            className="text-success-500"
+            aria-hidden="true"
+          />
         </div>
         <div>
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)]">
@@ -331,9 +401,7 @@ export function EnablePushNotifications({
         <div className="w-16 h-16 rounded-full bg-white/15 flex items-center justify-center mx-auto mb-4">
           <BellRing size={32} strokeWidth={1.5} className="text-white" aria-hidden="true" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">
-          Stay in the loop
-        </h2>
+        <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">Stay in the loop</h2>
         <p className="text-white/80 mt-2 text-sm sm:text-base max-w-sm mx-auto">
           Get notified when your coach leaves feedback and when teammates hit PRs.
         </p>
@@ -370,9 +438,7 @@ export function EnablePushNotifications({
               <p className="text-sm font-medium text-[var(--foreground)]">
                 Teammate personal records
               </p>
-              <p className="text-xs text-muted">
-                Know when a training partner breaks a barrier
-              </p>
+              <p className="text-xs text-muted">Know when a training partner breaks a barrier</p>
             </div>
           </li>
           <li className="flex items-center gap-3">
@@ -386,9 +452,7 @@ export function EnablePushNotifications({
               <p className="text-sm font-medium text-[var(--foreground)]">
                 Practice reminders 30 min before
               </p>
-              <p className="text-xs text-muted">
-                Never be late to the throwing circle
-              </p>
+              <p className="text-xs text-muted">Never be late to the throwing circle</p>
             </div>
           </li>
         </ul>
