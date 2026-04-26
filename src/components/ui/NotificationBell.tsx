@@ -426,11 +426,21 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
         )}
       </button>
 
-      {/* Dropdown panel */}
+      {/* Dropdown panel.
+          Desktop: absolute, anchored under the bell button (top-full + mt-1.5).
+          Mobile (max-sm): fixed to the viewport, docked just below the topbar.
+          The mobile branch must override `top-full` — when position flips from
+          absolute to fixed, `top: 100%` resolves against the VIEWPORT (= 100vh),
+          which puts the panel below the visible screen. The bell click fired,
+          fetch ran, panel mounted — but invisibly off-screen. Calc with
+          env(safe-area-inset-top) to clear the notch on iPhones. */}
       {mounted && (
         <div
           className={cn(
-            "absolute right-0 top-full mt-1.5 w-[360px] sm:w-[400px] max-h-[480px] rounded-xl bg-[var(--surface-overlay)] border border-[var(--card-border)] shadow-xl z-50 flex flex-col overflow-hidden max-sm:fixed max-sm:inset-x-3 max-sm:right-3 max-sm:w-auto",
+            "absolute right-0 top-full mt-1.5 w-[360px] sm:w-[400px] max-h-[480px] rounded-xl bg-[var(--surface-overlay)] border border-[var(--card-border)] shadow-xl z-50 flex flex-col overflow-hidden",
+            "max-sm:fixed max-sm:inset-x-3 max-sm:right-3 max-sm:w-auto",
+            "max-sm:top-[calc(env(safe-area-inset-top)+3.5rem)] max-sm:mt-0",
+            "max-sm:max-h-[calc(100vh-env(safe-area-inset-top)-4.5rem)]",
             "origin-top transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
             visible
               ? "opacity-100 translate-y-0 max-sm:translate-x-0"
