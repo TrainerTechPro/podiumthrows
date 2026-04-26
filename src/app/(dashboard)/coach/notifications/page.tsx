@@ -14,12 +14,15 @@ export default async function CoachNotificationsPage() {
     redirect("/login");
   }
 
-  const { notifications, unreadCount } = await getNotifications(coach.id, "COACH", { limit: 100 });
+  const { notifications, nextCursor, unreadCount } = await getNotifications(coach.id, "COACH", {
+    limit: 50,
+  });
 
   return (
     <NotificationsClient
       initialNotifications={notifications}
-      unreadCount={unreadCount}
+      initialNextCursor={nextCursor}
+      initialUnreadCount={unreadCount}
       role="COACH"
     />
   );

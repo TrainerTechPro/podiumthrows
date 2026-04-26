@@ -32,7 +32,8 @@ export type NotificationType =
   | "PROGRAMMING_REQUESTED"
   | "COMPETITION_PR"
   | "COMPETITION_LOGGED"
-  | "INSIGHT_NEW";
+  | "INSIGHT_NEW"
+  | "WEEKLY_RECAP";
 
 export type NotificationItem = {
   id: string;
@@ -100,45 +101,111 @@ function serializeNotification(n: {
 }
 
 /**
- * Get paginated notifications for a user by role.
+ * Cursor-based notification listing. Cursor is the trailing item's
+ * `createdAt` ISO string + id, encoded as base64 to keep callers from
+ * relying on its shape. Returns `nextCursor: null` when no more rows.
+ *
+ * `types` is an array of notification.type strings — pass null/empty for
+ * no filter. `unreadOnly` clamps to read=false.
  */
 export async function getNotifications(
   profileId: string,
   role: "COACH" | "ATHLETE",
-  opts: { page?: number; limit?: number; unreadOnly?: boolean; type?: string } = {}
-): Promise<{ notifications: NotificationItem[]; total: number; unreadCount: number }> {
-  const { page = 1, limit = 50, unreadOnly = false, type } = opts;
-  const take = Math.min(Math.max(limit, 1), 100);
-  const skip = (Math.max(page, 1) - 1) * take;
+  opts: {
+    cursor?: string | null;
+    limit?: number;
+    unreadOnly?: boolean;
+    types?: string[] | null;
+  } = {}
+): Promise<{
+  notifications: NotificationItem[];
+  nextCursor: string | null;
+  unreadCount: number;
+}> {
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 100);
+  const decoded = decodeCursor(opts.cursor ?? null);
 
-  const where = {
-    ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
-    ...(unreadOnly ? { read: false } : {}),
-    ...(type ? { type } : {}),
+  const baseWhere = role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId };
+  const filterWhere = {
+    ...(opts.unreadOnly ? { read: false } : {}),
+    ...(opts.types && opts.types.length > 0 ? { type: { in: opts.types } } : {}),
   };
 
-  const [notifications, total, unreadCount] = await Promise.all([
+  // Cursor expresses "rows strictly older than (createdAt, id)" in
+  // descending order. Composite to break ties on identical timestamps.
+  const cursorFilter: Prisma.NotificationWhereInput | undefined = decoded
+    ? {
+        OR: [
+          { createdAt: { lt: decoded.createdAt } },
+          { createdAt: decoded.createdAt, id: { lt: decoded.id } },
+        ],
+      }
+    : undefined;
+
+  const where: Prisma.NotificationWhereInput = {
+    ...baseWhere,
+    ...filterWhere,
+    ...(cursorFilter ?? {}),
+  };
+
+  const [rows, unreadCount] = await Promise.all([
     prisma.notification.findMany({
       where,
-      orderBy: { createdAt: "desc" },
-      take,
-      skip,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
       select: NOTIFICATION_SELECT,
     }),
-    prisma.notification.count({ where }),
     prisma.notification.count({
-      where: {
-        ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
-        read: false,
-      },
+      where: { ...baseWhere, read: false },
     }),
   ]);
 
+  const hasMore = rows.length > limit;
+  const trimmed = hasMore ? rows.slice(0, limit) : rows;
+  const last = trimmed.at(-1);
+  const nextCursor = hasMore && last ? encodeCursor(last.createdAt, last.id) : null;
+
   return {
-    notifications: notifications.map(serializeNotification),
-    total,
+    notifications: trimmed.map(serializeNotification),
+    nextCursor,
     unreadCount,
   };
+}
+
+/**
+ * Delete a single notification (with ownership check). Returns false when
+ * the notification does not exist or belongs to another profile.
+ */
+export async function deleteNotification(
+  notificationId: string,
+  profileId: string,
+  role: "COACH" | "ATHLETE"
+): Promise<boolean> {
+  const result = await prisma.notification.deleteMany({
+    where: {
+      id: notificationId,
+      ...(role === "COACH" ? { coachId: profileId } : { athleteProfileId: profileId }),
+    },
+  });
+  return result.count > 0;
+}
+
+function encodeCursor(createdAt: Date, id: string): string {
+  return Buffer.from(`${createdAt.toISOString()}|${id}`, "utf8").toString("base64url");
+}
+
+function decodeCursor(cursor: string | null): { createdAt: Date; id: string } | null {
+  if (!cursor) return null;
+  try {
+    const raw = Buffer.from(cursor, "base64url").toString("utf8");
+    const [iso, id] = raw.split("|");
+    if (!iso || !id) return null;
+    const createdAt = new Date(iso);
+    if (Number.isNaN(createdAt.getTime())) return null;
+    return { createdAt, id };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -387,7 +454,7 @@ export async function notifyAthleteCompetitionReminder(
       event,
       date,
       threshold,
-      url: "/athlete/competitions",
+      url: `/athlete/competitions/${competitionId}`,
     },
   });
 }
@@ -439,9 +506,7 @@ export async function notifyCoachInvitationExpired(
     body: `Your invite for ${inviteeLabel} expired before they could claim it. Send a new one from your roster.`,
     metadata: {
       ...metadata,
-      url: metadata.athleteProfileId
-        ? `/coach/athletes/${metadata.athleteProfileId}`
-        : "/coach/athletes",
+      url: "/coach/athletes/invitations",
     },
   });
 }
@@ -545,7 +610,7 @@ export async function notifyCoachProgrammingRequested(
     metadata: {
       ...context,
       athleteName,
-      link: `/coach/schedule?athlete=${athleteProfileId}`,
+      url: `/coach/calendar?athlete=${athleteProfileId}`,
     },
   });
 }

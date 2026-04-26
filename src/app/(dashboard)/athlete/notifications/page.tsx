@@ -18,28 +18,16 @@ export default async function AthleteNotificationsPage() {
 
   if (!athlete) redirect("/login");
 
-  // TODO(pagination): wire ?page= + total count so athletes with >100
-  // notifications can load older pages. For now show 100 most recent and
-  // render a "See older" hint when at the cap. See tasks/harden-athlete-3.md.
-  const PAGE_LIMIT = 100;
-  const { notifications, unreadCount } = await getNotifications(athlete.id, "ATHLETE", {
-    limit: PAGE_LIMIT,
+  const { notifications, nextCursor, unreadCount } = await getNotifications(athlete.id, "ATHLETE", {
+    limit: 50,
   });
-  const mayHaveMore = notifications.length === PAGE_LIMIT;
 
   return (
-    <>
-      <NotificationsClient
-        initialNotifications={notifications}
-        unreadCount={unreadCount}
-        role="ATHLETE"
-      />
-      {mayHaveMore && (
-        <p className="text-center text-xs text-muted mt-6 px-4">
-          Showing the {PAGE_LIMIT} most recent. Older notifications stay in your history —
-          pagination will let you reach them soon.
-        </p>
-      )}
-    </>
+    <NotificationsClient
+      initialNotifications={notifications}
+      initialNextCursor={nextCursor}
+      initialUnreadCount={unreadCount}
+      role="ATHLETE"
+    />
   );
 }
