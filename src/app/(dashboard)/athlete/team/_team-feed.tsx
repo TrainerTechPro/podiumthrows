@@ -15,8 +15,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, MessageSquare, Target, Trophy, Dumbbell, Calendar } from "lucide-react";
+import { Flame, MessageSquare, Target, Trophy, Dumbbell, Calendar, Sparkles } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 import { logger } from "@/lib/logger";
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -146,8 +147,13 @@ export function TeamFeed() {
     const onVisibility = () => {
       if (document.visibilityState === "visible") void loadInitial();
     };
+    const onPullRefresh = () => void loadInitial();
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    window.addEventListener("podium:pull-to-refresh", onPullRefresh);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("podium:pull-to-refresh", onPullRefresh);
+    };
   }, [loadInitial]);
 
   async function toggleReaction(activityId: string, emoji: string) {
@@ -217,25 +223,22 @@ export function TeamFeed() {
 
   if (error) {
     return (
-      <div className="card p-6 text-center">
-        <p className="text-sm font-semibold text-[var(--foreground)]">
-          Couldn&apos;t load the feed
-        </p>
-        <button type="button" onClick={loadInitial} className="btn btn-secondary text-xs mt-3">
-          Try again
-        </button>
-      </div>
+      <EmptyState
+        tone="error"
+        title="Couldn't load the feed"
+        description="The team's activity is here — we just couldn't reach it. Try again?"
+        onRetry={loadInitial}
+      />
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="card p-8 text-center">
-        <p className="text-sm font-semibold text-[var(--foreground)]">No team activity yet</p>
-        <p className="text-xs text-muted mt-1">
-          Once your teammates start logging throws, their activity will show up here.
-        </p>
-      </div>
+      <EmptyState
+        icon={<Sparkles size={48} strokeWidth={1.5} aria-hidden="true" />}
+        title="No team activity this week"
+        description="Be first — your teammates are watching. Log a session and start the streak."
+      />
     );
   }
 
