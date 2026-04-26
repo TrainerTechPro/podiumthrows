@@ -11,7 +11,16 @@ export const metadata = { title: "Achievements — Podium Throws" };
 const CATEGORIES: { label: string; keys: readonly string[] }[] = [
   {
     label: "Consistency",
-    keys: ["checkin_first", "streak_7", "streak_14", "streak_30", "streak_60"],
+    keys: [
+      "checkin_first",
+      "streak_3",
+      "streak_7",
+      "streak_14",
+      "streak_30",
+      "streak_60",
+      "streak_100",
+      "streak_365",
+    ],
   },
   {
     label: "Training",

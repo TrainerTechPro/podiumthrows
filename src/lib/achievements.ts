@@ -13,32 +13,53 @@ import { AchievementType, Prisma } from "@prisma/client";
 
 export const STREAK_BADGES = [
   {
+    days: 3,
+    badgeKey: "streak_3",
+    title: "Threshold",
+    description: "Three days in a row — the streak takes hold.",
+    emoji: "🌱",
+  },
+  {
     days: 7,
     badgeKey: "streak_7",
-    title: "7-Day Streak 🔥",
-    description: "Checked in 7 days in a row.",
+    title: "Week Warrior",
+    description: "Seven straight days of showing up.",
     emoji: "🔥",
   },
   {
     days: 14,
     badgeKey: "streak_14",
-    title: "14-Day Streak 🔥🔥",
-    description: "Checked in 14 days in a row.",
-    emoji: "🔥🔥",
+    title: "Fortnight",
+    description: "Two solid weeks of daily presence.",
+    emoji: "🔥",
   },
   {
     days: 30,
     badgeKey: "streak_30",
-    title: "30-Day Streak ⚡",
-    description: "Checked in every day for a full month.",
+    title: "Month of Mondays",
+    description: "A full month — every single day.",
     emoji: "⚡",
   },
   {
     days: 60,
     badgeKey: "streak_60",
-    title: "60-Day Streak 💎",
-    description: "Two months of consistent check-ins.",
+    title: "Sixty",
+    description: "Two months of consistency.",
     emoji: "💎",
+  },
+  {
+    days: 100,
+    badgeKey: "streak_100",
+    title: "Centurion",
+    description: "One hundred consecutive days. Rare air.",
+    emoji: "💯",
+  },
+  {
+    days: 365,
+    badgeKey: "streak_365",
+    title: "All Year",
+    description: "An unbroken year. Reserved for the obsessed.",
+    emoji: "👑",
   },
 ] as const;
 
@@ -156,10 +177,7 @@ async function upsertAchievement({
  * Award a Personal Best achievement for a specific event.
  * Also awards the "first PR" badge if this is the athlete's first PR overall.
  */
-export async function awardPRAchievement(
-  athleteId: string,
-  event: string
-): Promise<void> {
+export async function awardPRAchievement(athleteId: string, event: string): Promise<void> {
   // Award event-specific PR badge
   const eventBadgeKey = `pr_${event}`;
   const eventBadge = PR_BADGES.find((b) => b.badgeKey === eventBadgeKey);
@@ -198,10 +216,7 @@ export async function awardPRAchievement(
  * Check streak thresholds and award any newly-earned streak badges.
  * Safe to call with any streak value — only awards badges at threshold crossings.
  */
-export async function awardStreakAchievements(
-  athleteId: string,
-  streak: number
-): Promise<void> {
+export async function awardStreakAchievements(athleteId: string, streak: number): Promise<void> {
   for (const badge of STREAK_BADGES) {
     if (streak >= badge.days) {
       await upsertAchievement({
@@ -219,9 +234,7 @@ export async function awardStreakAchievements(
 /**
  * Count athlete's total completed sessions and award session milestone badges.
  */
-export async function awardSessionAchievements(
-  athleteId: string
-): Promise<void> {
+export async function awardSessionAchievements(athleteId: string): Promise<void> {
   const sessionCount = await prisma.trainingSession.count({
     where: { athleteId, status: "COMPLETED" },
   });
@@ -243,9 +256,7 @@ export async function awardSessionAchievements(
 /**
  * Award the first check-in badge (one-time, idempotent).
  */
-export async function awardFirstCheckInAchievement(
-  athleteId: string
-): Promise<void> {
+export async function awardFirstCheckInAchievement(athleteId: string): Promise<void> {
   const checkInCount = await prisma.readinessCheckIn.count({
     where: { athleteId },
   });

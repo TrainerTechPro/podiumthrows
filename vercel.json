@@ -52,6 +52,10 @@
       "schedule": "0 1 * * *"
     },
     {
+      "path": "/api/cron/refill-streak-freezes",
+      "schedule": "0 5 * * *"
+    },
+    {
       "path": "/api/cron/competition-reminders",
       "schedule": "0 13 * * *"
     },

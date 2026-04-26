@@ -62,13 +62,26 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Flip all broken streaks in a single updateMany. Note: we intentionally
-    // leave lastActivityDate alone — the date still reflects when the athlete
-    // last actually trained, useful for analytics and re-engagement.
-    await prisma.athleteProfile.updateMany({
-      where: { id: { in: broken.map((a) => a.id) } },
-      data: { currentStreak: 0 },
-    });
+    // Flip all broken streaks. Stamp streakBrokenAt and lastBrokenStreakDays
+    // so the dashboard surfaces the gentle "Rebuild from day 1" card the next
+    // time the athlete opens the app. We intentionally leave lastActivityDate
+    // alone — the date still reflects when the athlete last actually trained,
+    // useful for analytics and re-engagement.
+    //
+    // Done as a per-athlete loop instead of updateMany because each athlete's
+    // lastBrokenStreakDays needs to capture THEIR streak count at break time.
+    await Promise.all(
+      broken.map((a) =>
+        prisma.athleteProfile.update({
+          where: { id: a.id },
+          data: {
+            currentStreak: 0,
+            streakBrokenAt: now,
+            lastBrokenStreakDays: a.currentStreak,
+          },
+        })
+      )
+    );
 
     // Only notify on meaningful streaks. Short streaks break silently.
     const toNotify = broken.filter((a) => a.currentStreak >= MIN_STREAK_FOR_NOTIFICATION);

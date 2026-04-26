@@ -35,6 +35,11 @@ export async function GET() {
         currentStreak: true,
         longestStreak: true,
         lastActivityDate: true,
+        freezesAvailable: true,
+        freezesResetAt: true,
+        lastFreezeUsedAt: true,
+        streakBrokenAt: true,
+        lastBrokenStreakDays: true,
       },
     });
     if (!athlete) {
@@ -81,6 +86,11 @@ export async function GET() {
         ? Math.round(hoursSinceLastThrow * 10) / 10
         : null,
       shouldRemindNow,
+      freezesAvailable: athlete.freezesAvailable,
+      freezesResetAt: athlete.freezesResetAt.toISOString(),
+      lastFreezeUsedAt: athlete.lastFreezeUsedAt?.toISOString() ?? null,
+      streakBrokenAt: athlete.streakBrokenAt?.toISOString() ?? null,
+      lastBrokenStreakDays: athlete.lastBrokenStreakDays,
     });
   } catch (err) {
     logger.error("GET /api/athlete/streak-status", {

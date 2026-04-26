@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Flame, Sparkles, Trophy } from "lucide-react";
+import { ArrowRight, Sparkles, Trophy } from "lucide-react";
 import { requireAthleteSession, getAthleteStats } from "@/lib/data/athlete";
 import { fetchUpcomingThrowsAssignments } from "@/lib/data/throws-hub";
 import prisma from "@/lib/prisma";
@@ -7,8 +7,11 @@ import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { StaleSessionChecker } from "./_stale-session-checker";
 import { StreakReminder } from "@/components/notifications/StreakReminder";
 import { StreakHaptic } from "./_streak-haptic";
+import { StreakBlock } from "./_streak-block";
+import { StreakCelebrationGate } from "./_streak-celebration";
 import { PwaVisitTracker } from "@/components/pwa/PwaVisitTracker";
 import { RecapSheet } from "./_recap-sheet";
+import { getStreakState } from "@/lib/athlete/streak-engine";
 
 /* ─── Athlete Home — canonical consumer-app shell ────────────────────────────
    ONE hero anchor in the thumb zone, state-aware:
@@ -79,28 +82,30 @@ export default async function AthleteDashboardPage() {
   const startOfStrip = new Date(startOfToday);
   startOfStrip.setDate(startOfToday.getDate() - 6);
 
-  const [stats, todayThrows, streakWindow, notifPrefs, upcomingAssignments] = await Promise.all([
-    getAthleteStats(athlete.id),
-    prisma.throwLog.findMany({
-      where: { athleteId: athlete.id, date: { gte: startOfToday } },
-      select: { distance: true, event: true, implementWeight: true },
-      orderBy: { distance: "desc" },
-    }),
-    // Last 7 days of session activity for the streak strip
-    prisma.trainingSession.findMany({
-      where: {
-        athleteId: athlete.id,
-        status: "COMPLETED",
-        completedDate: { gte: startOfStrip },
-      },
-      select: { completedDate: true },
-    }),
-    prisma.athleteProfile.findUnique({
-      where: { id: athlete.id },
-      select: { notificationPreferences: true },
-    }),
-    fetchUpcomingThrowsAssignments(athlete.id),
-  ]);
+  const [stats, todayThrows, streakWindow, notifPrefs, upcomingAssignments, streakState] =
+    await Promise.all([
+      getAthleteStats(athlete.id),
+      prisma.throwLog.findMany({
+        where: { athleteId: athlete.id, date: { gte: startOfToday } },
+        select: { distance: true, event: true, implementWeight: true },
+        orderBy: { distance: "desc" },
+      }),
+      // Last 7 days of session activity for the streak strip
+      prisma.trainingSession.findMany({
+        where: {
+          athleteId: athlete.id,
+          status: "COMPLETED",
+          completedDate: { gte: startOfStrip },
+        },
+        select: { completedDate: true },
+      }),
+      prisma.athleteProfile.findUnique({
+        where: { id: athlete.id },
+        select: { notificationPreferences: true },
+      }),
+      fetchUpcomingThrowsAssignments(athlete.id),
+      getStreakState(athlete.id),
+    ]);
 
   // Today's coach-assigned throws session, if any. Only treat ASSIGNED or
   // IN_PROGRESS as actionable — completed sessions take the threwToday path.
@@ -166,11 +171,22 @@ export default async function AthleteDashboardPage() {
       <PwaVisitTracker />
       <RecapSheet />
       <StreakHaptic streak={stats.currentStreak} />
+      <StreakCelebrationGate currentStreak={stats.currentStreak} />
       <StreakReminder
         currentStreak={stats.currentStreak}
         initialEnabled={streakReminderPrefs.enabled}
         initialPromptDismissed={streakReminderPrefs.promptDismissed}
       />
+      {streakState && (streakState.isInRebuild || streakState.currentStreak > 0) && (
+        <StreakBlock
+          currentStreak={streakState.currentStreak}
+          longestStreak={streakState.longestStreak}
+          freezesAvailable={streakState.freezesAvailable}
+          todayCovered={streakState.todayCovered}
+          isInRebuild={streakState.isInRebuild}
+          lastBrokenStreakDays={streakState.lastBrokenStreakDays}
+        />
+      )}
 
       {/* Greeting — warm, personal, restrained. No emoji, no gradient. */}
       <header className="pt-1">
@@ -209,17 +225,6 @@ export default async function AthleteDashboardPage() {
           >
             This week
           </h2>
-          {stats.currentStreak > 0 && (
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-primary)]">
-              <Flame
-                size={14}
-                strokeWidth={2}
-                aria-hidden="true"
-                style={{ color: "var(--color-brand)" }}
-              />
-              {stats.currentStreak}-day streak
-            </span>
-          )}
         </div>
 
         <ol className="flex items-end justify-between gap-1">

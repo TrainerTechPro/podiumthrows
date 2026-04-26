@@ -3,27 +3,40 @@ import prisma from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/push";
 import { getPushPreferences } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
+import { getLocalDate, getLocalHour, resolveTimezone } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
  * GET /api/cron/streak-reminder
- * Vercel Cron — runs every hour.
+ * Vercel Cron — runs every hour. Each athlete is evaluated against their own
+ * local clock and only paged in their personal 7pm–9pm window.
  *
- * Finds athletes whose lastActivityDate is 20–24 hours ago and who still have
- * an active streak, then sends a push notification reminding them to log a
- * session before their streak breaks.
+ * Trigger conditions (all must hold):
+ *   - currentStreak > 0
+ *   - athlete's local hour is in [REMIND_HOUR_START, REMIND_HOUR_END)
+ *   - last activity is not today (in athlete's local timezone)
+ *   - hasn't already been pushed in this local day (tag-based dedupe)
  *
- * Uses the `tag` field so a second cron run in the same window replaces the
- * prior notification rather than stacking a duplicate.
+ * Copy varies by freezesAvailable: when the athlete has a freeze in the bank,
+ * we offer it as a backup so the message reads as helpful rather than nagging.
+ *
+ * The `tag` includes the local YYYY-MM-DD so a second hourly run within the
+ * same window REPLACES the existing notification rather than stacking.
  */
+const REMIND_HOUR_START = 19; // 7pm local, inclusive
+const REMIND_HOUR_END = 21; //   9pm local, exclusive
+
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "CRON_SECRET not configured" },
+      { status: 500 }
+    );
   }
   if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -31,17 +44,16 @@ export async function GET(req: NextRequest) {
 
   try {
     const now = new Date();
-    // Window: activity between 20h and 24h ago
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const twentyHoursAgo = new Date(now.getTime() - 20 * 60 * 60 * 1000);
+
+    // Pre-filter at the DB layer to keep the per-athlete loop tight: only
+    // athletes with an active streak whose last activity was at least 12h
+    // ago are even worth evaluating.
+    const lastActivityCutoff = new Date(now.getTime() - 12 * 60 * 60 * 1000);
 
     const athletes = await prisma.athleteProfile.findMany({
       where: {
         currentStreak: { gt: 0 },
-        lastActivityDate: {
-          gte: twentyFourHoursAgo,
-          lte: twentyHoursAgo,
-        },
+        lastActivityDate: { lte: lastActivityCutoff },
       },
       select: {
         id: true,
@@ -49,6 +61,9 @@ export async function GET(req: NextRequest) {
         firstName: true,
         currentStreak: true,
         lastActivityDate: true,
+        lastFreezeUsedAt: true,
+        freezesAvailable: true,
+        timezone: true,
       },
     });
 
@@ -57,32 +72,50 @@ export async function GET(req: NextRequest) {
     let failed = 0;
 
     for (const athlete of athletes) {
+      const tz = resolveTimezone(athlete.timezone);
+      const localHour = getLocalHour(tz, now);
+      if (localHour < REMIND_HOUR_START || localHour >= REMIND_HOUR_END) {
+        skipped++;
+        continue;
+      }
+
+      // Skip if today already counts (activity OR freeze)
+      const todayLocal = getLocalDate(tz, now);
+      const lastActivityLocal = athlete.lastActivityDate
+        ? getLocalDate(tz, athlete.lastActivityDate)
+        : null;
+      const lastFreezeLocal = athlete.lastFreezeUsedAt
+        ? getLocalDate(tz, athlete.lastFreezeUsedAt)
+        : null;
+      if (lastActivityLocal === todayLocal || lastFreezeLocal === todayLocal) {
+        skipped++;
+        continue;
+      }
+
       const prefs = await getPushPreferences(athlete.id);
       if (!prefs.streakReminder) {
         skipped++;
         continue;
       }
 
-      const lastActivity = athlete.lastActivityDate ?? now;
-      const hoursSince = Math.floor(
-        (now.getTime() - lastActivity.getTime()) / (60 * 60 * 1000),
-      );
-      const hoursRemaining = Math.max(1, 24 - hoursSince);
+      const hasFreeze = athlete.freezesAvailable > 0;
+      const title = `🔥 ${athlete.currentStreak}-day streak at stake`;
+      const body = hasFreeze
+        ? "2 minutes to save it — log a check-in or throw, or use a freeze for a real rest day."
+        : "2 minutes to save it — a check-in, a single throw, or finish a session counts.";
 
       try {
         const delivered = await sendPushToUser(athlete.userId, {
-          title: "🔥 Don't break your streak!",
-          body: `${athlete.currentStreak} day streak ends in ~${hoursRemaining}h`,
+          title,
+          body,
           url: "/athlete/quick-log",
-          tag: `streak-${athlete.id}`,
+          // Per-local-day tag means second cron run in the same window
+          // replaces the notification instead of stacking.
+          tag: `streak-${athlete.id}-${todayLocal}`,
           data: { type: "streak_reminder", athleteId: athlete.id },
         });
-        if (delivered > 0) {
-          sent++;
-        } else {
-          // No active subscriptions — not really a failure, but not delivered
-          skipped++;
-        }
+        if (delivered > 0) sent++;
+        else skipped++; // no active subscriptions
       } catch (err) {
         failed++;
         logger.error("streak-reminder: push failed", {

@@ -361,6 +361,20 @@ model AthleteProfile {
   longestStreak    Int       @default(0)
   lastActivityDate DateTime?
 
+  // Streak freezes — one per calendar week, refilled by cron each Sunday.
+  // freezesAvailable holds the current quota. lastFreezeUsedAt is informational
+  // (UI surfaces "used 2 days ago"). freezesResetAt is the start of the
+  // current weekly window — used by the refill cron to detect rollover.
+  freezesAvailable Int       @default(1)
+  freezesResetAt   DateTime  @default(now())
+  lastFreezeUsedAt DateTime?
+
+  // When the current streak most recently broke. null = the streak is alive
+  // OR the athlete has already acknowledged the rebuild (cleared on next
+  // qualifying action). Powers the dashboard "Rebuild from day 1" card.
+  streakBrokenAt       DateTime?
+  lastBrokenStreakDays Int       @default(0)
+
   // Client-side notification preferences.
   // Shape: { streakReminder: { enabled: bool, promptDismissed: bool } }
   notificationPreferences Json?
