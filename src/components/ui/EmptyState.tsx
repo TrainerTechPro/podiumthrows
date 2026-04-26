@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Users, Calendar, Search } from "lucide-react";
+import { Users, Calendar, Search, AlertCircle, RefreshCw } from "lucide-react";
 
 export interface EmptyStateSuggestion {
   label: string;
@@ -18,6 +18,15 @@ export interface EmptyStateProps {
   className?: string;
   /** Compact layout for tables / small containers */
   compact?: boolean;
+  /**
+   * "default" — neutral empty.
+   * "error"   — failed-to-load surface; tints the icon danger and styles
+   *             the built-in retry button. When `onRetry` is supplied we
+   *             render the button automatically; pass `action` to override.
+   */
+  tone?: "default" | "error";
+  /** Built-in retry handler — only shown when tone='error'. */
+  onRetry?: () => void;
 }
 
 export function EmptyState({
@@ -28,7 +37,28 @@ export function EmptyState({
   suggestions,
   className,
   compact = false,
+  tone = "default",
+  onRetry,
 }: EmptyStateProps) {
+  const isError = tone === "error";
+  const resolvedIcon =
+    icon ??
+    (isError ? (
+      <AlertCircle size={compact ? 24 : 48} strokeWidth={1.5} aria-hidden="true" />
+    ) : null);
+  const resolvedAction =
+    action ??
+    (isError && onRetry ? (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-500/15 hover:bg-danger-100 dark:hover:bg-danger-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-danger-500/50"
+      >
+        <RefreshCw size={12} strokeWidth={2.25} aria-hidden="true" />
+        Try again
+      </button>
+    ) : undefined);
+
   return (
     <div
       className={cn(
@@ -37,14 +67,17 @@ export function EmptyState({
         className
       )}
     >
-      {icon && (
+      {resolvedIcon && (
         <div
           className={cn(
-            "text-surface-300 dark:text-surface-600 shrink-0",
-            compact ? "[&_svg]:w-6 [&_svg]:h-6" : "[&_svg]:w-9 [&_svg]:h-9"
+            "shrink-0",
+            isError
+              ? "text-danger-500 dark:text-danger-400"
+              : "text-surface-300 dark:text-surface-600",
+            compact ? "[&_svg]:w-6 [&_svg]:h-6" : "[&_svg]:w-12 [&_svg]:h-12"
           )}
         >
-          {icon}
+          {resolvedIcon}
         </div>
       )}
 
@@ -76,7 +109,7 @@ export function EmptyState({
                 "border border-surface-200 dark:border-surface-700",
                 "hover:border-primary-300 dark:hover:border-primary-500/30",
                 "transition-all duration-150",
-                "animate-chip-in",
+                "animate-chip-in"
               )}
               style={{ animationDelay: `${i * 75}ms` }}
             >
@@ -86,7 +119,7 @@ export function EmptyState({
         </div>
       )}
 
-      {action && <div className={cn(compact ? "mt-1" : "mt-2")}>{action}</div>}
+      {resolvedAction && <div className={cn(compact ? "mt-1" : "mt-2")}>{resolvedAction}</div>}
     </div>
   );
 }

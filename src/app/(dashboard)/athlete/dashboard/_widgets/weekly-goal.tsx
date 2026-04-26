@@ -7,6 +7,7 @@ import { Target, Plus, Check } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PRCelebration } from "@/components/ui/PRCelebration";
 import { AnimatedNumber } from "@/components";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { Input } from "@/components/ui/Input";
 import type { WeeklyGoalData } from "@/lib/data/dashboard-progress";
@@ -81,7 +82,7 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
             }}
           />
         ) : !data.goal ? (
-          <EmptyState onSetGoal={() => setShowSetDialog(true)} />
+          <WeeklyGoalEmpty onSetGoal={() => setShowSetDialog(true)} />
         ) : (
           <div>
             <div className="flex items-baseline justify-between mb-2">
@@ -120,21 +121,24 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
 
 /* ─── Empty state ────────────────────────────────────────────────────────── */
 
-function EmptyState({ onSetGoal }: { onSetGoal: () => void }) {
+function WeeklyGoalEmpty({ onSetGoal }: { onSetGoal: () => void }) {
   return (
-    <div className="flex flex-col items-center text-center py-4 gap-3">
-      <p className="text-sm text-muted max-w-[220px]">
-        Set a throws target for the week and track your progress.
-      </p>
-      <button
-        type="button"
-        onClick={onSetGoal}
-        className="btn btn-primary text-xs inline-flex items-center gap-1.5"
-      >
-        <Plus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
-        Set weekly goal
-      </button>
-    </div>
+    <EmptyState
+      compact
+      icon={<Target size={24} strokeWidth={1.5} aria-hidden="true" />}
+      title="Pick a number for the week"
+      description="A simple throws target — and we'll celebrate when you hit it."
+      action={
+        <button
+          type="button"
+          onClick={onSetGoal}
+          className="btn btn-primary text-xs inline-flex items-center gap-1.5"
+        >
+          <Plus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+          Set weekly goal
+        </button>
+      }
+    />
   );
 }
 

@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import { Input } from "@/components/ui/Input";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type {
   ProfileData,
   ThrowsProfileSummary,
@@ -184,15 +185,11 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
 
   if (events.length === 0) {
     return (
-      <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-8 text-center">
-        <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">
-          No Events Selected
-        </h2>
-        <p className="mt-2 text-sm text-muted">
-          Add your events in the <span className="font-semibold text-primary-500">Core Info</span>{" "}
-          tab to set up competition goals and distance bands.
-        </p>
-      </div>
+      <EmptyState
+        icon={<Target size={48} strokeWidth={1.5} aria-hidden="true" />}
+        title="Pick your events first"
+        description="Head to the Core Info tab and add the events you compete in. Then you can set goals and distance bands here."
+      />
     );
   }
 

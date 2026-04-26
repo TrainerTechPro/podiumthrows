@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import { CalendarCheck } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { CompetitionListCard } from "@/components/competitions/CompetitionListCard";
 import { StaggeredList } from "@/components/ui/StaggeredList";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { AthleteAddMeetButton } from "./_add-meet-button";
 import { ThrowsChipNav } from "../throws/_chip-nav";
 
@@ -54,17 +56,18 @@ export default async function AthleteCompetitionsPage() {
         <AthleteAddMeetButton athleteId={athlete.id} athleteEvents={athleteEvents} />
       </div>
       {items.length === 0 ? (
-        <div className="card flex flex-col items-center gap-3 p-6 text-center text-muted">
-          <p>
-            No competitions logged yet. Log a meet you&apos;ve already thrown at, or wait for your
-            coach to add one.
-          </p>
-          <AthleteAddMeetButton
-            athleteId={athlete.id}
-            athleteEvents={athleteEvents}
-            variant="empty"
-          />
-        </div>
+        <EmptyState
+          icon={<CalendarCheck size={48} strokeWidth={1.5} aria-hidden="true" />}
+          title="No competitions logged yet"
+          description="Log a meet you've already thrown at — even retroactive entries count toward your trends."
+          action={
+            <AthleteAddMeetButton
+              athleteId={athlete.id}
+              athleteEvents={athleteEvents}
+              variant="empty"
+            />
+          }
+        />
       ) : (
         <StaggeredList className="grid gap-3">
           {items.map((item) => (

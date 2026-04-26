@@ -16,6 +16,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { QuickActions } from "@/components/ui/QuickActions";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { CoachFeedbackInboxIcon } from "@/components/feedback/CoachFeedbackInboxIcon";
 import { useDetectTimezone } from "@/hooks/useDetectTimezone";
 import Link from "next/link";
@@ -440,6 +441,7 @@ export function isFocusMode(pathname: string | null | undefined): boolean {
 
 function AthleteShell({ user, children, className, notificationCount }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const focusMode = isFocusMode(pathname);
 
   // Mark <body> with `athlete-shell` so portaled UI (toasts, modals, sheets
@@ -470,7 +472,22 @@ function AthleteShell({ user, children, className, notificationCount }: Dashboar
             : "calc(5rem + env(safe-area-inset-bottom, 0px))",
         }}
       >
-        {children}
+        <PullToRefresh
+          disabled={focusMode}
+          onRefresh={async () => {
+            router.refresh();
+            // Let other client components (notifications list, team feed)
+            // opt into a custom refetch by listening to this event.
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("podium:pull-to-refresh"));
+            }
+            // Yield a frame so the indicator has time to render its
+            // committed state before we resolve.
+            await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+          }}
+        >
+          {children}
+        </PullToRefresh>
       </main>
 
       {!focusMode && <BottomTabBar />}

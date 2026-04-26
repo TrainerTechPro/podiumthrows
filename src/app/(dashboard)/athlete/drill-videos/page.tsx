@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Video, Search } from "lucide-react";
 import { useToast } from "@/components/toast";
 import DrillVideoUpload from "@/components/drill-video-upload";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { StaggeredList } from "@/components/ui/StaggeredList";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface DrillVideo {
   id: string;
@@ -200,36 +202,36 @@ export default function AthleteDrillVideosPage() {
           ))}
         </div>
       ) : filteredVideos.length === 0 ? (
-        <div className="card text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-[rgba(212,168,67,0.12)] flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-primary-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M15 10l4.553-2.069A1 1 0 0121 8.88v6.24a1 1 0 01-1.447.888L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">
-            {videos.length === 0 ? "No drill videos yet" : "No videos match your filters"}
-          </h3>
-          <p className="text-surface-700 dark:text-surface-300 text-sm mb-6 max-w-sm mx-auto">
-            {videos.length === 0
-              ? "Upload short video clips of your drill PRs to track your technique and progress over time."
-              : "Try adjusting your filters to see more videos."}
-          </p>
-          {videos.length === 0 && (
-            <button onClick={() => setShowUpload(true)} className="btn-primary mx-auto">
-              Upload Your First Drill Video
-            </button>
-          )}
-        </div>
+        videos.length === 0 ? (
+          <EmptyState
+            icon={<Video size={48} strokeWidth={1.5} aria-hidden="true" />}
+            title="No drill videos yet"
+            description="Upload a short clip of your standing throw — even 10 seconds. Future you will thank you when you watch it back."
+            action={
+              <button type="button" onClick={() => setShowUpload(true)} className="btn-primary">
+                Upload your first drill
+              </button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={<Search size={48} strokeWidth={1.5} aria-hidden="true" />}
+            title="No videos match your filters"
+            description="Try a different event or drill — or clear the filters to see everything."
+            action={
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterEvent("");
+                  setFilterDrill("");
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-[var(--foreground)] bg-[var(--card-bg)] border border-[var(--card-border)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+              >
+                Clear filters
+              </button>
+            }
+          />
+        )
       ) : (
         <StaggeredList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredVideos.map((video) => (
