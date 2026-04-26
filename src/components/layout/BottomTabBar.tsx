@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Calendar, PlusCircle, Activity, UserCircle } from "lucide-react";
+import { useHaptic } from "@/lib/hooks/useHaptic";
 
 /* ─── Bottom Tab Bar ─────────────────────────────────────────────────────────
    The athlete app is mobile-primary. This is its navigation — five
@@ -95,6 +96,7 @@ function isTabActive(tab: Tab, pathname: string): boolean {
 
 export function BottomTabBar() {
   const pathname = usePathname();
+  const haptic = useHaptic();
 
   return (
     <nav
@@ -115,6 +117,7 @@ export function BottomTabBar() {
           <Link
             key={tab.href}
             href={tab.href}
+            onClick={tab.primary ? () => haptic.medium() : undefined}
             aria-current={active ? "page" : undefined}
             className={cn(
               "relative flex flex-col items-center justify-center gap-0.5",

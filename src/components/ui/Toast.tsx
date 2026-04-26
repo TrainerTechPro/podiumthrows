@@ -12,6 +12,7 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, AlertTriangle, Info, X, Trophy } from "lucide-react";
+import { haptic } from "@/lib/haptic";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -101,8 +102,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [toast]
   );
   const error = useCallback(
-    (title: string, description?: string) =>
-      toast({ variant: "error", title, description, duration: 6000 }),
+    (title: string, description?: string) => {
+      // Athlete shell only — coaches don't buzz. AthleteShell marks <body>
+      // with `athlete-shell` so this works through the toast portal.
+      if (typeof document !== "undefined" && document.body.classList.contains("athlete-shell")) {
+        haptic.error();
+      }
+      return toast({ variant: "error", title, description, duration: 6000 });
+    },
     [toast]
   );
   const warning = useCallback(

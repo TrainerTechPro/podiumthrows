@@ -30,7 +30,19 @@ describe("haptic", () => {
 
     haptic.light();
 
-    expect(spy).toHaveBeenCalledWith(20);
+    expect(spy).toHaveBeenCalledWith(10);
+  });
+
+  it("calls navigator.vibrate with a multi-pulse streak pattern for streak()", () => {
+    const spy = vi.fn().mockReturnValue(true);
+    setVibrate(spy);
+
+    haptic.streak();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const arg = spy.mock.calls[0][0];
+    expect(Array.isArray(arg)).toBe(true);
+    expect((arg as number[]).length).toBeGreaterThan(1);
   });
 
   it("calls navigator.vibrate with a multi-pulse PR pattern for pr()", () => {
@@ -50,9 +62,11 @@ describe("haptic", () => {
 
     expect(() => haptic.light()).not.toThrow();
     expect(() => haptic.medium()).not.toThrow();
+    expect(() => haptic.heavy()).not.toThrow();
     expect(() => haptic.success()).not.toThrow();
     expect(() => haptic.pr()).not.toThrow();
     expect(() => haptic.error()).not.toThrow();
+    expect(() => haptic.streak()).not.toThrow();
   });
 
   it("swallows errors from navigator.vibrate (e.g. iOS gesture restrictions)", () => {

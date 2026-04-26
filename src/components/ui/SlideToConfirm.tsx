@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/haptic";
 
 export interface SlideToConfirmProps {
   /** Text shown in the track (e.g. "Slide to Complete Session") */
@@ -36,9 +37,7 @@ export function SlideToConfirm({
   const reducedMotion = useRef(false);
 
   useEffect(() => {
-    reducedMotion.current = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
   const thumbSize = 52;
@@ -73,6 +72,16 @@ export function SlideToConfirm({
     [dragging, disabled, completed]
   );
 
+  // High-stakes commit haptic — slide-to-confirm is reserved for irreversible
+  // actions (submit session, delete). Heavy buzz on the destructive variant,
+  // medium on a confirm variant. Athlete-shell only (gated at body class).
+  const fireConfirmHaptic = useCallback(() => {
+    if (typeof document === "undefined") return;
+    if (!document.body.classList.contains("athlete-shell")) return;
+    if (variant === "destructive") haptic.heavy();
+    else haptic.medium();
+  }, [variant]);
+
   const handleEnd = useCallback(() => {
     if (!dragging || disabled) return;
     setDragging(false);
@@ -81,21 +90,23 @@ export function SlideToConfirm({
       confirmedRef.current = true;
       setProgress(1);
       setCompleted(true);
+      fireConfirmHaptic();
       onConfirm();
     } else if (!completed) {
       // Spring back
       setSpringing(true);
       setProgress(0);
     }
-  }, [dragging, disabled, progress, completed, onConfirm]);
+  }, [dragging, disabled, progress, completed, onConfirm, fireConfirmHaptic]);
 
   const triggerConfirm = useCallback(() => {
     if (confirmedRef.current) return;
     confirmedRef.current = true;
     setProgress(1);
     setCompleted(true);
+    fireConfirmHaptic();
     onConfirm();
-  }, [onConfirm]);
+  }, [onConfirm, fireConfirmHaptic]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -242,9 +253,7 @@ export function SlideToConfirm({
           "absolute top-1 left-1 rounded-full flex items-center justify-center",
           "shadow-md active:shadow-lg",
           !disabled && "cursor-grab active:cursor-grabbing",
-          isConfirm
-            ? "bg-primary-500"
-            : "bg-danger-500"
+          isConfirm ? "bg-primary-500" : "bg-danger-500"
         )}
         onMouseDown={(e) => {
           e.preventDefault();

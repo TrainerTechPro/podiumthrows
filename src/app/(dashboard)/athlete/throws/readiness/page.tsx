@@ -22,6 +22,7 @@ import {
   type DeficitLevel,
 } from "@/lib/throws/podium-profile";
 import { ThrowsChipNav } from "../_chip-nav";
+import { haptic } from "@/lib/haptic";
 
 import { logger } from "@/lib/logger";
 // ── Constants ──────────────────────────────────────────────────────
@@ -197,6 +198,7 @@ export default function AthleteProfilePage() {
       if (!res.ok || !data?.success) {
         throw new Error(data?.error || `Check-in failed (${res.status})`);
       }
+      haptic.success();
       setShowCheckIn(false);
       loadProfile(athleteId);
     } catch (err) {

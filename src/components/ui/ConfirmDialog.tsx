@@ -3,6 +3,7 @@
 import { useState, ReactNode } from "react";
 import { Modal } from "./Modal";
 import { Button } from "./Button";
+import { haptic } from "@/lib/haptic";
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -34,6 +35,15 @@ export function ConfirmDialog({
   const isLoading = externalLoading ?? internalLoading;
 
   const handleConfirm = async () => {
+    // Athlete shell only (gated by body class). Heavy buzz on destructive
+    // confirm; coaches stay silent — they're not the audience for theatrics.
+    if (
+      variant === "danger" &&
+      typeof document !== "undefined" &&
+      document.body.classList.contains("athlete-shell")
+    ) {
+      haptic.heavy();
+    }
     const result = onConfirm();
     if (result instanceof Promise) {
       setInternalLoading(true);
@@ -56,12 +66,7 @@ export function ConfirmDialog({
       description={description}
       footer={
         <>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button variant="secondary" size="sm" onClick={onClose} disabled={isLoading}>
             {cancelLabel}
           </Button>
           <Button

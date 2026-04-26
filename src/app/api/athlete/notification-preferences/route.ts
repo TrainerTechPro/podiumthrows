@@ -31,9 +31,15 @@ export type FeedPrivacyPrefs = {
   shareGoals: boolean;
 };
 
+export type HapticsPrefs = {
+  /** Master haptic switch. Default ON — athletes opt out, not in. */
+  enabled: boolean;
+};
+
 export type NotificationPreferences = {
   streakReminder: StreakReminderPrefs;
   feedPrivacy: FeedPrivacyPrefs;
+  haptics: HapticsPrefs;
 };
 
 const DEFAULT_PREFS: NotificationPreferences = {
@@ -48,6 +54,9 @@ const DEFAULT_PREFS: NotificationPreferences = {
     shareSessions: true,
     shareStreaks: true,
     shareGoals: true,
+  },
+  haptics: {
+    enabled: true,
   },
 };
 
@@ -65,6 +74,9 @@ function parsePrefs(raw: unknown): NotificationPreferences {
       ? (r.feedPrivacy as Record<string, unknown>)
       : {};
 
+  const hapticsRaw =
+    r.haptics && typeof r.haptics === "object" ? (r.haptics as Record<string, unknown>) : {};
+
   return {
     streakReminder: {
       enabled: streakRaw.enabled === true,
@@ -76,6 +88,10 @@ function parsePrefs(raw: unknown): NotificationPreferences {
       shareSessions: feedRaw.shareSessions !== false,
       shareStreaks: feedRaw.shareStreaks !== false,
       shareGoals: feedRaw.shareGoals !== false,
+    },
+    haptics: {
+      // Default ON — only false when explicitly set to false.
+      enabled: hapticsRaw.enabled !== false,
     },
   };
 }
@@ -141,6 +157,11 @@ export async function POST(req: NextRequest) {
         ? (body.feedPrivacy as Record<string, unknown>)
         : null;
 
+    const incomingHaptics =
+      body.haptics && typeof body.haptics === "object"
+        ? (body.haptics as Record<string, unknown>)
+        : null;
+
     // Partial merge: for each key, take the incoming value if it's a
     // boolean, otherwise keep the current value. Unknown keys on the
     // input are ignored.
@@ -171,6 +192,9 @@ export async function POST(req: NextRequest) {
         shareSessions: pickBool(incomingFeed, "shareSessions", current.feedPrivacy.shareSessions),
         shareStreaks: pickBool(incomingFeed, "shareStreaks", current.feedPrivacy.shareStreaks),
         shareGoals: pickBool(incomingFeed, "shareGoals", current.feedPrivacy.shareGoals),
+      },
+      haptics: {
+        enabled: pickBool(incomingHaptics, "enabled", current.haptics.enabled),
       },
     };
 

@@ -710,6 +710,7 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
             description,
           });
         } else {
+          haptic.success();
           toast.success(editingSessionId ? "Session updated" : "Session saved");
         }
         await clearDraft();

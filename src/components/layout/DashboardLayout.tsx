@@ -442,6 +442,14 @@ function AthleteShell({ user, children, className, notificationCount }: Dashboar
   const pathname = usePathname();
   const focusMode = isFocusMode(pathname);
 
+  // Mark <body> with `athlete-shell` so portaled UI (toasts, modals, sheets
+  // — including the haptic hook) can detect the shell from a detached tree.
+  // The class is also kept on the wrapper div for layout-scoped CSS.
+  useEffect(() => {
+    document.body.classList.add("athlete-shell");
+    return () => document.body.classList.remove("athlete-shell");
+  }, []);
+
   return (
     <div
       className={cn(

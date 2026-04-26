@@ -8,6 +8,7 @@ import { Avatar } from "@/components";
 import { AthleteSettingsForm } from "./_form";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { FeedPrivacySettings } from "@/components/feedback/FeedPrivacySettings";
+import { HapticsSettings } from "@/components/settings/HapticsSettings";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 
 import { logger } from "@/lib/logger";
@@ -113,6 +114,9 @@ export default async function AthleteSettingsPage() {
           <ChevronRight size={20} className="text-muted" strokeWidth={1.75} aria-hidden="true" />
         </Link>
       </section>
+
+      {/* Haptics */}
+      <HapticsSettings />
 
       {/* Team Feed Privacy */}
       <FeedPrivacySettings />
