@@ -286,7 +286,7 @@ export function SessionSidebar({
     } finally {
       setSubmitting(false);
     }
-  }, [session, toast, toastError, toastSuccess, onSaved]);
+  }, [session, toast, toastSuccess, onSaved]);
 
   const confirmDelete = useCallback(() => {
     if (window.confirm("Delete this session? This cannot be undone.")) {
