@@ -5,6 +5,7 @@ import type { FormBlock, ConditionalRule } from "@/lib/forms/types";
 import { BlockRenderer } from "@/components/form-blocks/BlockRenderer";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { NavigationControls } from "./NavigationControls";
+import { PrefillFieldHint } from "./PrefillToggleBanner";
 import { resolveMergeTags } from "@/lib/forms/answer-piping";
 import { getJumpTarget } from "@/lib/forms/conditional-engine";
 import { INPUT_BLOCK_TYPES } from "@/lib/forms/types";
@@ -23,6 +24,8 @@ interface OnePerPageRendererProps {
   disabled?: boolean;
   initialIndex?: number;
   onIndexChange?: (index: number) => void;
+  prefilledIds?: Set<string>;
+  onDismissPrefill?: (id: string) => void;
 }
 
 export function OnePerPageRenderer({
@@ -39,12 +42,12 @@ export function OnePerPageRenderer({
   disabled,
   initialIndex = 0,
   onIndexChange,
+  prefilledIds,
+  onDismissPrefill,
 }: OnePerPageRendererProps) {
   const visibleSet = new Set(visibleBlockIds);
   const visibleBlocks = blocks.filter((b) => visibleSet.has(b.id));
-  const inputBlocks = visibleBlocks.filter((b) =>
-    INPUT_BLOCK_TYPES.includes(b.type)
-  );
+  const inputBlocks = visibleBlocks.filter((b) => INPUT_BLOCK_TYPES.includes(b.type));
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
@@ -68,11 +71,7 @@ export function OnePerPageRenderer({
 
     // Check for conditional jump
     if (conditionalLogic) {
-      const jumpTarget = getJumpTarget(
-        currentBlock.id,
-        conditionalLogic,
-        answers
-      );
+      const jumpTarget = getJumpTarget(currentBlock.id, conditionalLogic, answers);
       if (jumpTarget) {
         const jumpIdx = inputBlocks.findIndex((b) => b.id === jumpTarget);
         if (jumpIdx !== -1) {
@@ -113,8 +112,7 @@ export function OnePerPageRenderer({
     return null;
   }
 
-  const animClass =
-    direction === "forward" ? "animate-slide-in-up" : "animate-slide-in-down";
+  const animClass = direction === "forward" ? "animate-slide-in-up" : "animate-slide-in-down";
 
   return (
     <div className="flex flex-col min-h-[60vh] justify-between">
@@ -127,10 +125,7 @@ export function OnePerPageRenderer({
           requiredCount={0}
         />
 
-        <div
-          key={currentBlock.id}
-          className={`max-w-lg mx-auto py-8 ${animClass}`}
-        >
+        <div key={currentBlock.id} className={`max-w-lg mx-auto py-8 ${animClass}`}>
           <div className="mb-2 text-xs text-muted">
             {currentIndex + 1} of {inputBlocks.length}
           </div>
@@ -140,16 +135,16 @@ export function OnePerPageRenderer({
             onChange={(val) => onAnswer(currentBlock.id, val)}
             error={errors[currentBlock.id]}
             disabled={disabled || submitting}
-            resolvedLabel={resolveMergeTags(
-              currentBlock.label,
-              answers,
-              blocks
-            )}
+            resolvedLabel={resolveMergeTags(currentBlock.label, answers, blocks)}
             resolvedDescription={
               currentBlock.description
                 ? resolveMergeTags(currentBlock.description, answers, blocks)
                 : undefined
             }
+          />
+          <PrefillFieldHint
+            visible={!!prefilledIds?.has(currentBlock.id)}
+            onDismiss={onDismissPrefill ? () => onDismissPrefill(currentBlock.id) : undefined}
           />
         </div>
       </div>
@@ -167,7 +162,11 @@ export function OnePerPageRenderer({
       />
 
       <p className="text-center text-[10px] text-muted mt-2">
-        Press <kbd className="px-1 py-0.5 rounded bg-[var(--card-bg)] border border-[var(--card-border)] text-[10px]">Enter</kbd> to continue
+        Press{" "}
+        <kbd className="px-1 py-0.5 rounded bg-[var(--card-bg)] border border-[var(--card-border)] text-[10px]">
+          Enter
+        </kbd>{" "}
+        to continue
       </p>
     </div>
   );

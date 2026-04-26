@@ -4,6 +4,7 @@ import type { FormBlock, ConditionalRule } from "@/lib/forms/types";
 import { BlockRenderer } from "@/components/form-blocks/BlockRenderer";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { NavigationControls } from "./NavigationControls";
+import { PrefillFieldHint } from "./PrefillToggleBanner";
 import { resolveMergeTags } from "@/lib/forms/answer-piping";
 import { INPUT_BLOCK_TYPES } from "@/lib/forms/types";
 
@@ -19,6 +20,8 @@ interface AllAtOnceRendererProps {
   canSubmit: boolean;
   submitting: boolean;
   disabled?: boolean;
+  prefilledIds?: Set<string>;
+  onDismissPrefill?: (id: string) => void;
 }
 
 export function AllAtOnceRenderer({
@@ -32,13 +35,13 @@ export function AllAtOnceRenderer({
   canSubmit,
   submitting,
   disabled,
+  prefilledIds,
+  onDismissPrefill,
 }: AllAtOnceRendererProps) {
   const visibleSet = new Set(visibleBlockIds);
   const visibleBlocks = blocks.filter((b) => visibleSet.has(b.id));
 
-  const inputBlocks = visibleBlocks.filter((b) =>
-    INPUT_BLOCK_TYPES.includes(b.type)
-  );
+  const inputBlocks = visibleBlocks.filter((b) => INPUT_BLOCK_TYPES.includes(b.type));
   const requiredCount = inputBlocks.filter((b) => b.required).length;
   const answeredCount = inputBlocks.filter((b) => {
     if (!b.required) return false;
@@ -67,10 +70,12 @@ export function AllAtOnceRenderer({
               disabled={disabled || submitting}
               resolvedLabel={resolveMergeTags(block.label, answers, blocks)}
               resolvedDescription={
-                block.description
-                  ? resolveMergeTags(block.description, answers, blocks)
-                  : undefined
+                block.description ? resolveMergeTags(block.description, answers, blocks) : undefined
               }
+            />
+            <PrefillFieldHint
+              visible={!!prefilledIds?.has(block.id)}
+              onDismiss={onDismissPrefill ? () => onDismissPrefill(block.id) : undefined}
             />
           </div>
         ))}

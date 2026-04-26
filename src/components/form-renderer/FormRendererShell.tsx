@@ -21,7 +21,9 @@ import { AllAtOnceRenderer } from "./AllAtOnceRenderer";
 import { OnePerPageRenderer } from "./OnePerPageRenderer";
 import { SectionedRenderer } from "./SectionedRenderer";
 import { SaveResumeBar } from "./SaveResumeBar";
+import { PrefillToggleBanner } from "./PrefillToggleBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { usePrefill } from "@/lib/forms/use-prefill";
 
 import { logger } from "@/lib/logger";
 interface FormRendererShellProps {
@@ -76,6 +78,21 @@ export function FormRendererShell({
     if (!conditionalLogic?.length) return blocks.map((b) => b.id);
     return getVisibleBlockIds(blocks, conditionalLogic, answers);
   }, [blocks, conditionalLogic, answers]);
+
+  // Prefill from a previous submission. The known-id list is every input
+  // block in the *current* form definition — visibility is recomputed by
+  // the renderer, but prefill applies to all currently-defined inputs.
+  const inputBlockIds = useMemo(
+    () => blocks.filter((b) => INPUT_BLOCK_TYPES.includes(b.type)).map((b) => b.id),
+    [blocks]
+  );
+  const prefill = usePrefill({
+    questionnaireId,
+    knownIds: inputBlockIds,
+    answers,
+    setAnswers,
+    draftAnswers,
+  });
 
   // Required input blocks that are visible
   const visibleInputBlocks = useMemo(() => {
@@ -232,6 +249,13 @@ export function FormRendererShell({
         </div>
       )}
 
+      <PrefillToggleBanner
+        prefilledCount={prefill.prefilledIds.size}
+        previousCompletedAt={prefill.previousCompletedAt}
+        on={prefill.useToggle}
+        onChange={prefill.setUseToggle}
+      />
+
       {/* Renderer by mode */}
       {displayMode === "ALL_AT_ONCE" && (
         <AllAtOnceRenderer
@@ -245,6 +269,8 @@ export function FormRendererShell({
           onBack={goBack}
           canSubmit={allRequiredAnswered}
           submitting={submitting}
+          prefilledIds={prefill.prefilledIds}
+          onDismissPrefill={prefill.dismissPrefill}
         />
       )}
 
@@ -260,6 +286,8 @@ export function FormRendererShell({
           onBack={goBack}
           canSubmit={allRequiredAnswered}
           submitting={submitting}
+          prefilledIds={prefill.prefilledIds}
+          onDismissPrefill={prefill.dismissPrefill}
         />
       )}
 
@@ -275,6 +303,8 @@ export function FormRendererShell({
           onBack={goBack}
           canSubmit={allRequiredAnswered}
           submitting={submitting}
+          prefilledIds={prefill.prefilledIds}
+          onDismissPrefill={prefill.dismissPrefill}
         />
       )}
 

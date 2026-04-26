@@ -15,6 +15,11 @@ import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
 import { useDraftPersistence } from "@/lib/draft-persistence";
 import { enqueueMutation, useOutboxStatus } from "@/lib/outbox";
 import { FormRendererShell } from "@/components/form-renderer/FormRendererShell";
+import {
+  PrefillToggleBanner,
+  PrefillFieldHint,
+} from "@/components/form-renderer/PrefillToggleBanner";
+import { usePrefill } from "@/lib/forms/use-prefill";
 import type { FormBlock, FormDisplayMode, ConditionalRule } from "@/lib/forms/types";
 
 import { logger } from "@/lib/logger";
@@ -98,6 +103,21 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
     `${userId}:questionnaire:${questionnaire.id}`,
     initialAnswers
   );
+
+  // Repeat-fill prefill: when this athlete has submitted this questionnaire
+  // before, prefill matching questions with their last answer. Draft wins
+  // over previous; user can toggle off.
+  const knownIds = useMemo(
+    () => questionnaire.questions.map((q) => q.id),
+    [questionnaire.questions]
+  );
+  const prefill = usePrefill({
+    questionnaireId: questionnaire.id,
+    knownIds,
+    answers,
+    setAnswers: setAnswersDraft,
+    draftAnswers: initialAnswers,
+  });
 
   // Stable per-attempt id for server-side idempotency.
   const idempotencyKeyRef = useRef<string>("");
@@ -362,6 +382,13 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
         </div>
       )}
 
+      <PrefillToggleBanner
+        prefilledCount={prefill.prefilledIds.size}
+        previousCompletedAt={prefill.previousCompletedAt}
+        on={prefill.useToggle}
+        onChange={prefill.setUseToggle}
+      />
+
       {/* Questions */}
       <div className="space-y-5">
         {questionnaire.questions.map((q, i) => (
@@ -526,6 +553,11 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
                 })}
               </div>
             )}
+
+            <PrefillFieldHint
+              visible={prefill.prefilledIds.has(q.id)}
+              onDismiss={() => prefill.dismissPrefill(q.id)}
+            />
           </div>
         ))}
       </div>

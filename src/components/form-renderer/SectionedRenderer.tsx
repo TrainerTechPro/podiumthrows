@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import type { FormBlock, ConditionalRule } from "@/lib/forms/types";
 import { BlockRenderer } from "@/components/form-blocks/BlockRenderer";
 import { NavigationControls } from "./NavigationControls";
+import { PrefillFieldHint } from "./PrefillToggleBanner";
 import { resolveMergeTags } from "@/lib/forms/answer-piping";
 import { INPUT_BLOCK_TYPES } from "@/lib/forms/types";
 
@@ -26,12 +27,11 @@ interface SectionedRendererProps {
   canSubmit: boolean;
   submitting: boolean;
   disabled?: boolean;
+  prefilledIds?: Set<string>;
+  onDismissPrefill?: (id: string) => void;
 }
 
-function buildSections(
-  blocks: FormBlock[],
-  visibleSet: Set<string>
-): Section[] {
+function buildSections(blocks: FormBlock[], visibleSet: Set<string>): Section[] {
   const sections: Section[] = [];
   let current: Section = {
     id: "__default",
@@ -76,6 +76,8 @@ export function SectionedRenderer({
   canSubmit,
   submitting,
   disabled,
+  prefilledIds,
+  onDismissPrefill,
 }: SectionedRendererProps) {
   const visibleSet = new Set(visibleBlockIds);
   const sections = buildSections(blocks, visibleSet);
@@ -148,9 +150,7 @@ export function SectionedRenderer({
           {currentSection.title}
         </h3>
         {currentSection.subtitle && (
-          <p className="text-sm text-muted mt-0.5">
-            {currentSection.subtitle}
-          </p>
+          <p className="text-sm text-muted mt-0.5">{currentSection.subtitle}</p>
         )}
       </div>
 
@@ -172,6 +172,10 @@ export function SectionedRenderer({
                     ? resolveMergeTags(block.description, answers, blocks)
                     : undefined
                 }
+              />
+              <PrefillFieldHint
+                visible={!!prefilledIds?.has(block.id)}
+                onDismiss={onDismissPrefill ? () => onDismissPrefill(block.id) : undefined}
               />
             </div>
           );
