@@ -6,8 +6,10 @@ import {
   athleteJoinedBody,
   weeklyDigestBody,
   commentAddedBody,
+  athleteWeeklyRecapBody,
   type WeeklyDigestData,
   type CommentAddedData,
+  type AthleteWeeklyRecapEmailData,
 } from "./email-templates";
 
 import { logger } from "@/lib/logger";
@@ -146,6 +148,34 @@ export async function sendWeeklyDigestEmail(
     to: coachEmail,
     subject: `Your weekly summary — ${data.sessionsCompleted} sessions, ${data.newPRs.length} PRs`,
     html: wrapEmailHtml(weeklyDigestBody(data, baseUrl), baseUrl),
+  });
+}
+
+/**
+ * Athlete weekly recap — Sunday evening retention email. Includes
+ * RFC 2369 list-unsubscribe headers so Gmail/Outlook show the native
+ * one-click unsubscribe control alongside the inline footer link.
+ */
+export async function sendAthleteWeeklyRecapEmail(
+  to: string,
+  data: AthleteWeeklyRecapEmailData
+): Promise<void> {
+  const subjectStat =
+    data.prs.length > 0
+      ? `New ${data.prs[0].distance.toFixed(2)}m PR`
+      : data.sessionsLogged === 1
+        ? "1 session this week"
+        : `${data.sessionsLogged} sessions this week`;
+  const subject = `Your week in throws — ${subjectStat}`;
+  await transporter.sendMail({
+    from: FROM_EMAIL,
+    to,
+    subject,
+    html: wrapEmailHtml(athleteWeeklyRecapBody(data, baseUrl), baseUrl),
+    headers: {
+      "List-Unsubscribe": `<${data.unsubscribeUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 }
 

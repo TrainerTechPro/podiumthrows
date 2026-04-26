@@ -7,6 +7,10 @@ export type PushPreferences = {
   streakReminder: boolean;
   weeklyGoalReminder: boolean;
   practiceReminder: boolean;
+  /** Sunday weekly recap — email channel. */
+  weeklyRecapEmail: boolean;
+  /** Sunday weekly recap — in-app notification channel. */
+  weeklyRecapInApp: boolean;
 };
 
 export const DEFAULT_PUSH_PREFERENCES: PushPreferences = {
@@ -15,6 +19,8 @@ export const DEFAULT_PUSH_PREFERENCES: PushPreferences = {
   streakReminder: true,
   weeklyGoalReminder: true,
   practiceReminder: true,
+  weeklyRecapEmail: true,
+  weeklyRecapInApp: true,
 };
 
 export type PushPreferenceKey = keyof PushPreferences;
@@ -46,6 +52,14 @@ export function parsePushPreferences(raw: unknown): PushPreferences {
       typeof p.practiceReminder === "boolean"
         ? p.practiceReminder
         : DEFAULT_PUSH_PREFERENCES.practiceReminder,
+    weeklyRecapEmail:
+      typeof p.weeklyRecapEmail === "boolean"
+        ? p.weeklyRecapEmail
+        : DEFAULT_PUSH_PREFERENCES.weeklyRecapEmail,
+    weeklyRecapInApp:
+      typeof p.weeklyRecapInApp === "boolean"
+        ? p.weeklyRecapInApp
+        : DEFAULT_PUSH_PREFERENCES.weeklyRecapInApp,
   };
 }
 

@@ -56,6 +56,18 @@ const PREFERENCE_ITEMS: PreferenceItem[] = [
     title: "Practice reminders",
     description: "30 minutes before scheduled practice sessions",
   },
+  {
+    key: "weeklyRecapEmail",
+    emoji: "📧",
+    title: "Weekly recap email",
+    description: "Sunday evening — your week summarized in your inbox",
+  },
+  {
+    key: "weeklyRecapInApp",
+    emoji: "📊",
+    title: "Weekly recap in-app",
+    description: "Sunday evening — same recap as a notification you can re-open",
+  },
 ];
 
 /* ─── Props ──────────────────────────────────────────────────────────────── */
@@ -111,8 +123,8 @@ export function NotificationPreferencesClient({ initialPreferences }: Props) {
           </h2>
         </div>
         <p className="text-xs text-muted">
-          Allow Podium Throws to send you push notifications, then control which
-          alerts you receive below.
+          Allow Podium Throws to send you push notifications, then control which alerts you receive
+          below.
         </p>
         <EnablePushNotifications variant="compact" />
       </div>
@@ -123,8 +135,8 @@ export function NotificationPreferencesClient({ initialPreferences }: Props) {
           Alert Types
         </h2>
         <p className="text-xs text-muted mb-4">
-          Toggle which notifications you want to receive. These only fire when push
-          notifications are enabled above.
+          Toggle which notifications you want to receive. These only fire when push notifications
+          are enabled above.
         </p>
 
         <div className="space-y-0">
@@ -158,9 +170,7 @@ export function NotificationPreferencesClient({ initialPreferences }: Props) {
                   onClick={() => toggle(key)}
                   className={[
                     "relative h-6 w-11 rounded-full shrink-0 transition-colors",
-                    enabled
-                      ? "bg-primary-500"
-                      : "bg-surface-200 dark:bg-surface-700",
+                    enabled ? "bg-primary-500" : "bg-surface-200 dark:bg-surface-700",
                     busy ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
                   ].join(" ")}
                 >

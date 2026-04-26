@@ -163,6 +163,141 @@ export function weeklyDigestBody(data: WeeklyDigestData, baseUrl: string): strin
   `;
 }
 
+export interface AthleteWeeklyRecapEmailData {
+  firstName: string;
+  weekStart: string; // YYYY-MM-DD
+  weekEnd: string; // YYYY-MM-DD
+  sessionsLogged: number;
+  sessionsScheduled: number;
+  throwsLogged: number;
+  prs: { event: string; implement: string; distance: number }[];
+  streakEnd: number;
+  streakDelta: number;
+  readinessAvg: number | null;
+  shoutout: string;
+  nextWeekSessionsCount: number;
+  unsubscribeUrl: string;
+  preferencesUrl: string;
+}
+
+function eventLabelEmail(event: string): string {
+  return event
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatDateRangeEmail(startISO: string, endISO: string): string {
+  const start = new Date(`${startISO}T00:00:00Z`);
+  const end = new Date(`${endISO}T00:00:00Z`);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  return `${fmt(start)} – ${fmt(end)}`;
+}
+
+function recapHero(data: AthleteWeeklyRecapEmailData): { value: string; label: string } {
+  if (data.prs.length > 0) {
+    const top = data.prs[0];
+    return { value: `${top.distance.toFixed(2)}m`, label: `New ${eventLabelEmail(top.event)} PR` };
+  }
+  if (data.throwsLogged >= 50) {
+    return { value: String(data.throwsLogged), label: "throws this week" };
+  }
+  if (data.streakEnd > 0) {
+    return {
+      value: String(data.streakEnd),
+      label: `day streak${data.streakDelta > 0 ? ` (+${data.streakDelta})` : ""}`,
+    };
+  }
+  return { value: String(data.sessionsLogged), label: "sessions logged" };
+}
+
+export function athleteWeeklyRecapBody(data: AthleteWeeklyRecapEmailData, baseUrl: string): string {
+  const hero = recapHero(data);
+  const dateRange = formatDateRangeEmail(data.weekStart, data.weekEnd);
+
+  const highlights: string[] = [];
+  if (data.prs.length > 0) {
+    const top = data.prs[0];
+    highlights.push(
+      `<strong style="color:#f59e0b;">${top.distance.toFixed(2)}m</strong> ${esc(eventLabelEmail(top.event))} PR (${esc(top.implement)})`
+    );
+  }
+  highlights.push(
+    `<strong style="color:#f0ede6;">${data.sessionsLogged}</strong> session${
+      data.sessionsLogged === 1 ? "" : "s"
+    } logged${data.sessionsScheduled > 0 ? ` of ${data.sessionsScheduled} planned` : ""}`
+  );
+  if (data.throwsLogged > 0) {
+    highlights.push(
+      `<strong style="color:#f0ede6;">${data.throwsLogged}</strong> throw${
+        data.throwsLogged === 1 ? "" : "s"
+      } on the field`
+    );
+  }
+  if (data.streakEnd > 0) {
+    highlights.push(
+      `<strong style="color:#f0ede6;">${data.streakEnd}</strong>-day streak${
+        data.streakDelta > 0 ? ` — extended ${data.streakDelta}` : ""
+      }`
+    );
+  }
+  if (data.readinessAvg !== null) {
+    highlights.push(
+      `Readiness averaged <strong style="color:#f0ede6;">${data.readinessAvg.toFixed(1)}</strong>/10`
+    );
+  }
+  while (highlights.length > 5) highlights.pop();
+
+  const highlightsHtml = highlights
+    .map(
+      (h, i) =>
+        `<tr><td style="width:24px; vertical-align:top; padding:6px 0; color:#6b6560; font-size:13px; font-variant-numeric:tabular-nums;">${i + 1}.</td><td style="padding:6px 0; color:#e5e1d8; font-size:15px; line-height:1.6;">${h}</td></tr>`
+    )
+    .join("");
+
+  const nextWeekCopy =
+    data.nextWeekSessionsCount > 0
+      ? `<strong style="color:#f0ede6;">${data.nextWeekSessionsCount}</strong> session${
+          data.nextWeekSessionsCount === 1 ? "" : "s"
+        } on the board next week.`
+      : `Nothing scheduled yet next week — log one Monday to get a fresh start.`;
+
+  return `
+    <p style="color:#6b6560; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; margin:0 0 8px 0;">
+      Your week in throws · ${esc(dateRange)}
+    </p>
+    <h2 style="color:#f0ede6; font-size:22px; margin:0 0 24px 0; line-height:1.25;">
+      ${esc(data.firstName)}, here&#39;s how it went.
+    </h2>
+
+    <div style="text-align:center; padding:24px 0 28px 0; border-top:1px solid #2a2520; border-bottom:1px solid #2a2520; margin-bottom:24px;">
+      <p style="color:#f59e0b; font-size:48px; font-weight:700; margin:0; letter-spacing:-1px; line-height:1;">${esc(hero.value)}</p>
+      <p style="color:#a3a097; font-size:13px; margin:8px 0 0 0; letter-spacing:0.5px;">${esc(hero.label)}</p>
+    </div>
+
+    <table role="presentation" style="width:100%; border-collapse:collapse; margin:0 0 24px 0;">
+      ${highlightsHtml}
+    </table>
+
+    <blockquote style="border-left:3px solid #f59e0b; margin:0 0 28px 0; padding:6px 0 6px 16px; color:#e5e1d8; font-size:15px; line-height:1.5; font-style:italic;">
+      ${esc(data.shoutout)}
+    </blockquote>
+
+    <p style="color:#a3a097; font-size:14px; margin:0 0 28px 0; line-height:1.6;">
+      ${nextWeekCopy}
+    </p>
+
+    ${ctaButton(`${baseUrl}/athlete/dashboard?recap=${esc(data.weekStart)}`, "Open Podium")}
+
+    <p style="color:#6b6560; font-size:12px; margin:32px 0 0 0; line-height:1.6; text-align:center;">
+      <a href="${esc(data.preferencesUrl)}" style="color:#a3a097; text-decoration:underline;">Notification settings</a>
+      &nbsp;·&nbsp;
+      <a href="${esc(data.unsubscribeUrl)}" style="color:#a3a097; text-decoration:underline;">Unsubscribe from weekly recaps</a>
+    </p>
+  `;
+}
+
 export interface CommentAddedData {
   authorName: string;
   surfaceLabel: string; // e.g. "a throw", "a training session"

@@ -8,6 +8,7 @@ import { StaleSessionChecker } from "./_stale-session-checker";
 import { StreakReminder } from "@/components/notifications/StreakReminder";
 import { StreakHaptic } from "./_streak-haptic";
 import { PwaVisitTracker } from "@/components/pwa/PwaVisitTracker";
+import { RecapSheet } from "./_recap-sheet";
 
 /* ─── Athlete Home — canonical consumer-app shell ────────────────────────────
    ONE hero anchor in the thumb zone, state-aware:
@@ -163,6 +164,7 @@ export default async function AthleteDashboardPage() {
     <div className="max-w-xl mx-auto space-y-6">
       <StaleSessionChecker />
       <PwaVisitTracker />
+      <RecapSheet />
       <StreakHaptic streak={stats.currentStreak} />
       <StreakReminder
         currentStreak={stats.currentStreak}
