@@ -6,6 +6,8 @@ import { AlertTriangle, ArrowUpCircle } from "lucide-react";
 import { Button, Input, Modal, UpgradeModal, useModal } from "@/components";
 import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
+import { reportApiError } from "@/lib/form-errors";
+import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import type { PlanName } from "@/lib/stripe";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -212,9 +214,13 @@ export function AddAthleteButton({
           events,
         }),
       });
-      const payload = await res.json();
-      if (!res.ok || !payload.success) {
-        throw new Error(payload.error ?? `Request failed (${res.status})`);
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        const info = reportApiError({ res, payload }, toast, {
+          onRetry: () => handleCreateProfile(e),
+        });
+        setCreateError(info.message);
+        return;
       }
       const created = payload.data as { id: string; firstName: string; lastName: string };
 
@@ -236,9 +242,14 @@ export function AddAthleteButton({
       resetCreateForm();
       router.push(`/coach/athletes/${created.id}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to create athlete";
-      setCreateError(msg);
-      toast.error(msg);
+      logger.error("create athlete failed", {
+        context: "coach/athletes/invite",
+        error: err,
+      });
+      const info = reportApiError({ err }, toast, {
+        onRetry: () => handleCreateProfile(e),
+      });
+      setCreateError(info.message);
     } finally {
       setCreateLoading(false);
     }
@@ -271,8 +282,15 @@ export function AddAthleteButton({
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to create invitation");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        const info = reportApiError({ res, payload: data }, toast, {
+          onRetry: () => createInvite(inviteMode, inviteEmail),
+          silent: true,
+        });
+        setError(info.message);
+        return;
+      }
       const token = data.data?.token;
       const link = `${window.location.origin}/athletes/claim/${token}`;
       setInviteLink(link);
@@ -285,7 +303,15 @@ export function AddAthleteButton({
       setEmail("");
       setCanShare(typeof navigator !== "undefined" && !!navigator.share);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      logger.error("create invite failed", {
+        context: "coach/athletes/invite",
+        error: err,
+      });
+      const info = reportApiError({ err }, toast, {
+        onRetry: () => createInvite(inviteMode, inviteEmail),
+        silent: true,
+      });
+      setError(info.message);
     } finally {
       setLoading(false);
     }

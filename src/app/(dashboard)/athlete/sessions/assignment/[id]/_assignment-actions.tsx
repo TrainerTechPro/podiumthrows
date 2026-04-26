@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components";
 import { Play, SkipForward } from "lucide-react";
-import { useToast } from "@/components/toast";
+import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { reportApiError } from "@/lib/form-errors";
 
 import { logger } from "@/lib/logger";
 interface AssignmentActionsProps {
@@ -20,7 +21,7 @@ export function AssignmentActions({
   isInProgress,
 }: AssignmentActionsProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const toast = useToast();
   const [loading, setLoading] = useState<string | null>(null);
 
   async function handleAction(action: "start" | "skip") {
@@ -35,15 +36,17 @@ export function AssignmentActions({
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
-        toast(data?.error || `Something went wrong (${res.status})`, "error");
+        reportApiError({ res, payload: data }, toast, {
+          onRetry: () => handleAction(action),
+        });
         return;
       }
 
       if (action === "start") {
-        toast("Workout started!", "success");
+        toast.success("Workout started!");
         router.push(`/athlete/throws/${assignmentId}?view=live`);
       } else {
-        toast("Session skipped", "info");
+        toast.info("Session skipped");
         router.push("/athlete/dashboard");
       }
     } catch (err) {
@@ -51,7 +54,7 @@ export function AssignmentActions({
         context: "athlete/sessions/assignment/[id]/assignment-actions",
         error: err,
       });
-      toast(err instanceof Error ? err.message : "Network error", "error");
+      reportApiError({ err }, toast, { onRetry: () => handleAction(action) });
     } finally {
       setLoading(null);
     }

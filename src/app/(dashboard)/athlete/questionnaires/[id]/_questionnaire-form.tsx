@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/Toast";
 import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
 import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
 import { useDraftPersistence } from "@/lib/draft-persistence";
+import { reportApiError } from "@/lib/form-errors";
 import { enqueueMutation, useOutboxStatus } from "@/lib/outbox";
 import { FormRendererShell } from "@/components/form-renderer/FormRendererShell";
 import {
@@ -237,9 +238,11 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
     try {
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
-        const msg = data?.error || `Failed to submit (${res.status})`;
-        setError(msg);
-        toast.error(msg);
+        const info = reportApiError({ res, payload: data }, toast, {
+          onRetry: handleSubmit,
+          silent: true,
+        });
+        setError(info.message);
         return;
       }
 
@@ -252,9 +255,11 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
         context: "athlete/questionnaires/[id]/questionnaire-form",
         error: err,
       });
-      const msg = err instanceof Error ? err.message : "Something went wrong";
-      setError(msg);
-      toast.error(msg);
+      const info = reportApiError({ err }, toast, {
+        onRetry: handleSubmit,
+        silent: true,
+      });
+      setError(info.message);
     } finally {
       setSubmitting(false);
       setShowConfirm(false);

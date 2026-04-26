@@ -21,6 +21,7 @@ import { bumpLogsSubmitted } from "@/lib/pwa/install-counters";
 import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle, WifiOff } from "lucide-react";
 
 import { logger } from "@/lib/logger";
+import { reportApiError } from "@/lib/form-errors";
 import type { MilestoneCelebration } from "@/lib/goals/milestones";
 /* ─── Log Session — single-screen form (no wizard) ───────────────────────────
    Consumer-app pattern: one scrollable form with a sticky thumb-zone Save.
@@ -552,7 +553,8 @@ export function LogSessionWizard({
     try {
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || `Failed to save session (${res.status})`);
+        reportApiError({ res, payload: data }, toast, { onRetry: handleSubmit });
+        return;
       }
 
       track("session_saved", {
@@ -639,8 +641,11 @@ export function LogSessionWizard({
         sessionBest,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
-      toast.error(message);
+      logger.error("log-session: response handling failed", {
+        context: "athlete/log-session/wizard",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleSubmit });
     } finally {
       setSubmitting(false);
     }

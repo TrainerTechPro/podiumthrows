@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { parseApiError } from "@/lib/form-errors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -29,15 +30,15 @@ export default function ForgotPasswordPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Something went wrong");
+        const data = await res.json().catch(() => null);
+        setError(parseApiError({ res, payload: data }).message);
         setLoading(false);
         return;
       }
 
       setSent(true);
-    } catch {
-      setError("Network error. Please try again.");
+    } catch (err) {
+      setError(parseApiError({ err }).message);
     } finally {
       setLoading(false);
     }
@@ -47,14 +48,24 @@ export default function ForgotPasswordPage() {
     return (
       <div className="card p-8 text-center">
         <div className="w-16 h-16 rounded-full bg-success-50 dark:bg-success-500/10 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          <svg
+            className="w-8 h-8 text-success-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+            />
           </svg>
         </div>
         <h2 className="text-display-sm mb-2">Check your email</h2>
         <p className="text-muted text-sm mb-6">
-          If an account with that email exists, we&apos;ve sent a password reset link.
-          Check your inbox and spam folder.
+          If an account with that email exists, we&apos;ve sent a password reset link. Check your
+          inbox and spam folder.
         </p>
         <Link href="/login" className="btn-secondary">
           Back to login
@@ -72,7 +83,12 @@ export default function ForgotPasswordPage() {
           aria-label="Back to login"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </Link>
         <h2 className="text-display-sm">Reset Password</h2>

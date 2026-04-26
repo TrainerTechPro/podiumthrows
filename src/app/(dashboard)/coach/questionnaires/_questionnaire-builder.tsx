@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { parseApiError } from "@/lib/form-errors";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
 
@@ -100,10 +101,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
           title: initialData.title,
           description: initialData.description ?? "",
           type: initialData.type,
-          questions:
-            initialData.questions.length > 0
-              ? initialData.questions
-              : [EMPTY_QUESTION()],
+          questions: initialData.questions.length > 0 ? initialData.questions : [EMPTY_QUESTION()],
         }
       : { ...EMPTY_FORM, questions: [EMPTY_QUESTION()] }
   );
@@ -134,11 +132,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
         questions[index].options = ["", ""];
       }
       // If switching away from choice type, remove options
-      if (
-        updates.type &&
-        updates.type !== "single_choice" &&
-        updates.type !== "multiple_choice"
-      ) {
+      if (updates.type && updates.type !== "single_choice" && updates.type !== "multiple_choice") {
         questions[index].options = undefined;
       }
 
@@ -229,15 +223,15 @@ export function QuestionnaireBuilder({ initialData }: Props) {
         });
 
         if (!res.ok) {
-          const data = await res.json();
-          setError(data.error || "Failed to save questionnaire");
+          const data = await res.json().catch(() => null);
+          setError(parseApiError({ res, payload: data }).message);
           return;
         }
 
         router.push("/coach/questionnaires");
         router.refresh();
-      } catch {
-        setError("Something went wrong");
+      } catch (err) {
+        setError(parseApiError({ err }).message);
       } finally {
         setSaving(false);
       }
@@ -251,9 +245,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
-            Preview
-          </h2>
+          <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Preview</h2>
           <Button variant="ghost" onClick={() => setPreview(false)}>
             ← Back to Editor
           </Button>
@@ -264,9 +256,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
             <h3 className="text-xl font-bold text-[var(--foreground)]">
               {form.title || "Untitled Questionnaire"}
             </h3>
-            {form.description && (
-              <p className="text-sm text-muted mt-1">{form.description}</p>
-            )}
+            {form.description && <p className="text-sm text-muted mt-1">{form.description}</p>}
           </div>
 
           {form.questions.map((q, i) => (
@@ -301,17 +291,16 @@ export function QuestionnaireBuilder({ initialData }: Props) {
               )}
               {(q.type === "scale_1_5" || q.type === "scale_1_10") && (
                 <div className="flex gap-2">
-                  {Array.from(
-                    { length: q.type === "scale_1_5" ? 5 : 10 },
-                    (_, i) => i + 1
-                  ).map((n) => (
-                    <span
-                      key={n}
-                      className="w-9 h-9 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] flex items-center justify-center text-sm text-muted"
-                    >
-                      {n}
-                    </span>
-                  ))}
+                  {Array.from({ length: q.type === "scale_1_5" ? 5 : 10 }, (_, i) => i + 1).map(
+                    (n) => (
+                      <span
+                        key={n}
+                        className="w-9 h-9 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] flex items-center justify-center text-sm text-muted"
+                      >
+                        {n}
+                      </span>
+                    )
+                  )}
                 </div>
               )}
               {q.type === "single_choice" &&
@@ -365,15 +354,11 @@ export function QuestionnaireBuilder({ initialData }: Props) {
           placeholder="e.g., PAR-Q Health Screening"
         />
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-[var(--foreground)]">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-[var(--foreground)]">Description</label>
           <textarea
             className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[60px]"
             value={form.description}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, description: e.target.value }))
-            }
+            onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
             placeholder="Brief description of this questionnaire…"
             rows={2}
           />
@@ -429,33 +414,25 @@ export function QuestionnaireBuilder({ initialData }: Props) {
                       <input
                         type="checkbox"
                         checked={q.required}
-                        onChange={(e) =>
-                          updateQuestion(qIdx, { required: e.target.checked })
-                        }
+                        onChange={(e) => updateQuestion(qIdx, { required: e.target.checked })}
                         className="w-4 h-4 rounded border-[var(--card-border)] text-primary-500 focus:ring-primary-500/30"
                       />
                       Required
                     </label>
-                    <Badge variant="neutral">
-                      {QUESTION_TYPE_LABELS[q.type] ?? q.type}
-                    </Badge>
+                    <Badge variant="neutral">{QUESTION_TYPE_LABELS[q.type] ?? q.type}</Badge>
                   </div>
                 </div>
 
                 {/* Options for choice types */}
                 {(q.type === "single_choice" || q.type === "multiple_choice") && (
                   <div className="space-y-2 pl-1">
-                    <label className="text-xs font-medium text-muted">
-                      Options
-                    </label>
+                    <label className="text-xs font-medium text-muted">Options</label>
                     {(q.options || []).map((opt, oIdx) => (
                       <div key={oIdx} className="flex gap-2 items-center">
                         <span className="w-3 h-3 rounded-full border border-[var(--card-border)] shrink-0" />
                         <Input
                           value={opt}
-                          onChange={(e) =>
-                            updateOption(qIdx, oIdx, e.target.value)
-                          }
+                          onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
                           placeholder={`Option ${oIdx + 1}`}
                         />
                         {(q.options?.length ?? 0) > 2 && (
@@ -489,7 +466,16 @@ export function QuestionnaireBuilder({ initialData }: Props) {
                   className="p-1 text-muted hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
                   title="Move up"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="18 15 12 9 6 15" />
                   </svg>
                 </button>
@@ -500,7 +486,16 @@ export function QuestionnaireBuilder({ initialData }: Props) {
                   className="p-1 text-muted hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
                   title="Move down"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
@@ -511,7 +506,16 @@ export function QuestionnaireBuilder({ initialData }: Props) {
                     className="p-1 text-muted hover:text-red-500 transition-colors"
                     title="Delete question"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <polyline points="3 6 5 6 21 6" />
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
@@ -541,17 +545,11 @@ export function QuestionnaireBuilder({ initialData }: Props) {
           ← Back
         </Button>
         <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            onClick={() => handleSave("draft")}
-            loading={saving}
-          >
+          <Button variant="ghost" onClick={() => handleSave("draft")} loading={saving}>
             Save as Draft
           </Button>
           <Button onClick={() => handleSave("published")} loading={saving}>
-            {isEdit && initialData?.status === "published"
-              ? "Save Changes"
-              : "Publish"}
+            {isEdit && initialData?.status === "published" ? "Save Changes" : "Publish"}
           </Button>
         </div>
       </div>

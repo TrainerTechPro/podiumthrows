@@ -27,6 +27,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { useToast } from "@/components/ui/Toast";
+import { parseApiError } from "@/lib/form-errors";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -178,9 +179,7 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          {title}
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">{title}</h2>
         {count !== undefined && count > 0 && (
           <span className="text-xs font-mono tabular-nums px-1.5 py-0.5 rounded-full bg-surface-100 dark:bg-surface-800 text-muted">
             {count}
@@ -208,11 +207,7 @@ function AnnouncementCard({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div
-      className={`card p-4 relative group ${
-        pinned ? "border-l-4 border-primary-500" : ""
-      }`}
-    >
+    <div className={`card p-4 relative group ${pinned ? "border-l-4 border-primary-500" : ""}`}>
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -227,15 +222,9 @@ function AnnouncementCard({
             <h3 className="font-heading text-base font-semibold text-[var(--foreground)] leading-tight">
               {item.title}
             </h3>
-            {item.priority === "URGENT" && (
-              <Badge variant="danger">Urgent</Badge>
-            )}
-            {item.targetType === "GROUP" && (
-              <Badge variant="info">Group</Badge>
-            )}
-            {item.targetType === "INDIVIDUAL" && (
-              <Badge variant="neutral">Individual</Badge>
-            )}
+            {item.priority === "URGENT" && <Badge variant="danger">Urgent</Badge>}
+            {item.targetType === "GROUP" && <Badge variant="info">Group</Badge>}
+            {item.targetType === "INDIVIDUAL" && <Badge variant="neutral">Individual</Badge>}
           </div>
           <p className="text-sm text-[var(--foreground)]/80 leading-relaxed whitespace-pre-wrap">
             {item.body}
@@ -336,13 +325,9 @@ function UpcomingCard({ item }: { item: UpcomingItem }) {
         <h3 className="font-heading text-base font-semibold text-[var(--foreground)] leading-tight">
           {item.title}
         </h3>
-        {item.meta && (
-          <p className="text-sm text-muted truncate">{item.meta}</p>
-        )}
+        {item.meta && <p className="text-sm text-muted truncate">{item.meta}</p>}
         {item.time && (
-          <p className="text-xs text-muted font-mono tabular-nums">
-            {formatTime12(item.time)}
-          </p>
+          <p className="text-xs text-muted font-mono tabular-nums">{formatTime12(item.time)}</p>
         )}
       </div>
     </div>
@@ -366,16 +351,12 @@ function FileRow({
         {fileIcon(file.mimeType)}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[var(--foreground)] truncate">
-          {file.name}
-        </p>
+        <p className="text-sm font-medium text-[var(--foreground)] truncate">{file.name}</p>
         <div className="flex items-center gap-2 flex-wrap mt-0.5">
           <span className="text-xs text-muted font-mono tabular-nums">
             {formatFileSize(file.fileSize)}
           </span>
-          {file.category && (
-            <Badge variant="neutral">{file.category}</Badge>
-          )}
+          {file.category && <Badge variant="neutral">{file.category}</Badge>}
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
@@ -437,18 +418,11 @@ function LinkPill({
             {link.icon}
           </span>
         ) : (
-          <Link2
-            size={14}
-            strokeWidth={1.75}
-            aria-hidden="true"
-            className="text-muted shrink-0"
-          />
+          <Link2 size={14} strokeWidth={1.75} aria-hidden="true" className="text-muted shrink-0" />
         )}
         {link.title}
       </a>
-      {link.category && (
-        <span className="text-[10px] text-muted">{link.category}</span>
-      )}
+      {link.category && <span className="text-[10px] text-muted">{link.category}</span>}
       {isCoach && (
         <div className="absolute -top-2 -right-2 hidden group-hover:flex items-center gap-0.5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full px-1 py-0.5 shadow-sm z-10">
           {showUp && (
@@ -522,14 +496,10 @@ function AnnouncementForm({
   const [body, setBody] = useState(initial?.body ?? "");
   const [priority, setPriority] = useState(initial?.priority ?? "NORMAL");
   const [pinned, setPinned] = useState(initial?.pinned ?? false);
-  const [targetType, setTargetType] = useState(
-    initial?.targetType ?? "ALL"
-  );
+  const [targetType, setTargetType] = useState(initial?.targetType ?? "ALL");
   const [targetId, setTargetId] = useState<string>(initial?.targetId ?? "");
   const [expiresAt, setExpiresAt] = useState(
-    initial?.expiresAt
-      ? new Date(initial.expiresAt).toISOString().split("T")[0]
-      : ""
+    initial?.expiresAt ? new Date(initial.expiresAt).toISOString().split("T")[0] : ""
   );
 
   const canSave = title.trim().length > 0 && body.trim().length > 0;
@@ -542,11 +512,8 @@ function AnnouncementForm({
       priority,
       pinned,
       targetType,
-      targetId:
-        targetType !== "ALL" && targetId ? targetId : null,
-      expiresAt: expiresAt
-        ? new Date(expiresAt + "T23:59:59").toISOString()
-        : null,
+      targetId: targetType !== "ALL" && targetId ? targetId : null,
+      expiresAt: expiresAt ? new Date(expiresAt + "T23:59:59").toISOString() : null,
     });
   }
 
@@ -572,9 +539,7 @@ function AnnouncementForm({
           maxLength={2000}
           className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
         />
-        <p className="text-xs text-muted mt-1 text-right">
-          {body.length}/2000
-        </p>
+        <p className="text-xs text-muted mt-1 text-right">{body.length}/2000</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -667,18 +632,14 @@ function AnnouncementForm({
 
         <div className="flex flex-col justify-end">
           <div className="flex items-center justify-between py-2.5 px-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)]">
-            <span className="text-sm text-[var(--foreground)]">
-              Pin to top
-            </span>
+            <span className="text-sm text-[var(--foreground)]">Pin to top</span>
             <button
               type="button"
               role="switch"
               aria-checked={pinned}
               onClick={() => setPinned(!pinned)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50 ${
-                pinned
-                  ? "bg-primary-500"
-                  : "bg-surface-300 dark:bg-surface-600"
+                pinned ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600"
               }`}
             >
               <span
@@ -698,12 +659,7 @@ function AnnouncementForm({
         <Button onClick={handleSave} disabled={!canSave || saving}>
           {saving ? (
             <>
-              <Loader2
-                size={14}
-                strokeWidth={2}
-                className="animate-spin"
-                aria-hidden="true"
-              />
+              <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
               Saving…
             </>
           ) : initial ? (
@@ -726,12 +682,7 @@ function LinkForm({
   saving,
 }: {
   initial?: LinkItem;
-  onSave: (data: {
-    title: string;
-    url: string;
-    icon: string;
-    category: string;
-  }) => void;
+  onSave: (data: { title: string; url: string; icon: string; category: string }) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -741,8 +692,7 @@ function LinkForm({
   const [category, setCategory] = useState(initial?.category ?? "");
   const [urlError, setUrlError] = useState("");
 
-  const canSave =
-    title.trim().length > 0 && url.trim().length > 0 && !urlError;
+  const canSave = title.trim().length > 0 && url.trim().length > 0 && !urlError;
 
   function handleUrlBlur() {
     if (url && !validateUrl(url)) {
@@ -787,9 +737,7 @@ function LinkForm({
           }}
           onBlur={handleUrlBlur}
         />
-        {urlError && (
-          <p className="text-xs text-danger-500 mt-1">{urlError}</p>
-        )}
+        {urlError && <p className="text-xs text-danger-500 mt-1">{urlError}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -814,12 +762,7 @@ function LinkForm({
         <Button onClick={handleSave} disabled={!canSave || saving}>
           {saving ? (
             <>
-              <Loader2
-                size={14}
-                strokeWidth={2}
-                className="animate-spin"
-                aria-hidden="true"
-              />
+              <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
               Saving…
             </>
           ) : initial ? (
@@ -835,21 +778,15 @@ function LinkForm({
 
 // ─── File Upload Form ─────────────────────────────────────────────────────────
 
-function FileUploadForm({
-  onDone,
-  onCancel,
-}: {
-  onDone: () => void;
-  onCancel: () => void;
-}) {
+function FileUploadForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
   const { success, error: showError } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [category, setCategory] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<
-    "idle" | "url" | "upload" | "register"
-  >("idle");
+  const [uploadProgress, setUploadProgress] = useState<"idle" | "url" | "upload" | "register">(
+    "idle"
+  );
 
   const MAX_SIZE = 25 * 1024 * 1024; // 25 MB
 
@@ -857,10 +794,7 @@ function FileUploadForm({
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_SIZE) {
-      showError(
-        "File too large",
-        "Maximum file size is 25 MB"
-      );
+      showError("File too large", "Maximum file size is 25 MB");
       e.target.value = "";
       return;
     }
@@ -939,10 +873,8 @@ function FileUploadForm({
       success("File Uploaded", selectedFile.name);
       onDone();
     } catch (err) {
-      showError(
-        "Upload Failed",
-        err instanceof Error ? err.message : "Something went wrong"
-      );
+      const info = parseApiError({ err });
+      showError("Upload Failed", info.message);
     } finally {
       setUploading(false);
       setUploadProgress("idle");
@@ -953,10 +885,10 @@ function FileUploadForm({
     uploadProgress === "url"
       ? "Preparing upload…"
       : uploadProgress === "upload"
-      ? "Uploading file…"
-      : uploadProgress === "register"
-      ? "Finalizing…"
-      : "";
+        ? "Uploading file…"
+        : uploadProgress === "register"
+          ? "Finalizing…"
+          : "";
 
   return (
     <div className="space-y-4">
@@ -974,12 +906,8 @@ function FileUploadForm({
                 {fileIcon(selectedFile.type)}
               </span>
               <div className="text-left">
-                <p className="text-sm font-medium text-[var(--foreground)]">
-                  {selectedFile.name}
-                </p>
-                <p className="text-xs text-muted">
-                  {formatFileSize(selectedFile.size)}
-                </p>
+                <p className="text-sm font-medium text-[var(--foreground)]">{selectedFile.name}</p>
+                <p className="text-xs text-muted">{formatFileSize(selectedFile.size)}</p>
               </div>
             </div>
           ) : (
@@ -990,9 +918,7 @@ function FileUploadForm({
                 className="mx-auto text-muted mb-2"
                 aria-hidden="true"
               />
-              <p className="text-sm text-muted">
-                Click to select a file (max 25 MB)
-              </p>
+              <p className="text-sm text-muted">Click to select a file (max 25 MB)</p>
             </div>
           )}
         </div>
@@ -1029,18 +955,10 @@ function FileUploadForm({
         <Button variant="ghost" onClick={onCancel} disabled={uploading}>
           Cancel
         </Button>
-        <Button
-          onClick={handleUpload}
-          disabled={!selectedFile || uploading}
-        >
+        <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
           {uploading ? (
             <>
-              <Loader2
-                size={14}
-                strokeWidth={2}
-                className="animate-spin"
-                aria-hidden="true"
-              />
+              <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
               Uploading…
             </>
           ) : (
@@ -1069,8 +987,7 @@ function ManageDrawer({
   const { success, error: showError } = useToast();
   const [activeTab, setActiveTab] = useState<ManageTab>("announcements");
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
-  const [editingAnnouncement, setEditingAnnouncement] =
-    useState<AnnouncementItem | null>(null);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<AnnouncementItem | null>(null);
   const [savingAnnouncement, setSavingAnnouncement] = useState(false);
 
   const [showLinkForm, setShowLinkForm] = useState(false);
@@ -1117,19 +1034,13 @@ function ManageDrawer({
         throw new Error(json.error || "Failed to save");
       }
 
-      success(
-        isEdit ? "Announcement Updated" : "Announcement Posted",
-        formData.title
-      );
+      success(isEdit ? "Announcement Updated" : "Announcement Posted", formData.title);
       setShowAnnouncementForm(false);
       setEditingAnnouncement(null);
       router.refresh();
       onMutated();
     } catch (err) {
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to save announcement"
-      );
+      showError("Error", err instanceof Error ? err.message : "Failed to save announcement");
     } finally {
       setSavingAnnouncement(false);
     }
@@ -1163,9 +1074,7 @@ function ManageDrawer({
     setSavingLink(true);
     try {
       const isEdit = !!editingLink;
-      const url = isEdit
-        ? `/api/coach/team-links/${editingLink.id}`
-        : "/api/coach/team-links";
+      const url = isEdit ? `/api/coach/team-links/${editingLink.id}` : "/api/coach/team-links";
       const method = isEdit ? "PATCH" : "POST";
 
       const res = await fetch(url, {
@@ -1193,10 +1102,7 @@ function ManageDrawer({
       router.refresh();
       onMutated();
     } catch (err) {
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to save link"
-      );
+      showError("Error", err instanceof Error ? err.message : "Failed to save link");
     } finally {
       setSavingLink(false);
     }
@@ -1328,13 +1234,7 @@ function ManageDrawer({
               {data.announcements.length === 0 ? (
                 <EmptyState
                   compact
-                  icon={
-                    <Megaphone
-                      size={28}
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  }
+                  icon={<Megaphone size={28} strokeWidth={1.5} aria-hidden="true" />}
                   title="No announcements yet"
                   description="Post updates for your athletes here."
                 />
@@ -1358,13 +1258,9 @@ function ManageDrawer({
                           <p className="text-sm font-medium text-[var(--foreground)] truncate">
                             {a.title}
                           </p>
-                          {a.priority === "URGENT" && (
-                            <Badge variant="danger">Urgent</Badge>
-                          )}
+                          {a.priority === "URGENT" && <Badge variant="danger">Urgent</Badge>}
                         </div>
-                        <p className="text-xs text-muted mt-0.5">
-                          {formatRelative(a.createdAt)}
-                        </p>
+                        <p className="text-xs text-muted mt-0.5">{formatRelative(a.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
@@ -1374,11 +1270,7 @@ function ManageDrawer({
                           className="p-1.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                           aria-label={`Edit ${a.title}`}
                         >
-                          <Pencil
-                            size={13}
-                            strokeWidth={1.75}
-                            aria-hidden="true"
-                          />
+                          <Pencil size={13} strokeWidth={1.75} aria-hidden="true" />
                         </button>
                         <button
                           type="button"
@@ -1395,11 +1287,7 @@ function ManageDrawer({
                               aria-hidden="true"
                             />
                           ) : (
-                            <Trash2
-                              size={13}
-                              strokeWidth={1.75}
-                              aria-hidden="true"
-                            />
+                            <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" />
                           )}
                         </button>
                       </div>
@@ -1427,24 +1315,14 @@ function ManageDrawer({
             />
           ) : (
             <>
-              <Button
-                variant="outline"
-                onClick={() => setShowLinkForm(true)}
-                className="w-full"
-              >
+              <Button variant="outline" onClick={() => setShowLinkForm(true)} className="w-full">
                 <Plus size={15} strokeWidth={1.75} aria-hidden="true" />
                 Add Link
               </Button>
               {data.links.length === 0 ? (
                 <EmptyState
                   compact
-                  icon={
-                    <Link2
-                      size={28}
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  }
+                  icon={<Link2 size={28} strokeWidth={1.5} aria-hidden="true" />}
                   title="No links yet"
                   description="Add quick-access links for your team."
                 />
@@ -1465,11 +1343,7 @@ function ManageDrawer({
                             className="p-0.5 rounded text-muted hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             aria-label={`Move ${l.title} up`}
                           >
-                            <ChevronUp
-                              size={13}
-                              strokeWidth={2}
-                              aria-hidden="true"
-                            />
+                            <ChevronUp size={13} strokeWidth={2} aria-hidden="true" />
                           </button>
                           <button
                             type="button"
@@ -1478,23 +1352,15 @@ function ManageDrawer({
                             className="p-0.5 rounded text-muted hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             aria-label={`Move ${l.title} down`}
                           >
-                            <ChevronDown
-                              size={13}
-                              strokeWidth={2}
-                              aria-hidden="true"
-                            />
+                            <ChevronDown size={13} strokeWidth={2} aria-hidden="true" />
                           </button>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                            {l.icon && (
-                              <span className="mr-1.5">{l.icon}</span>
-                            )}
+                            {l.icon && <span className="mr-1.5">{l.icon}</span>}
                             {l.title}
                           </p>
-                          <p className="text-xs text-muted truncate">
-                            {l.url}
-                          </p>
+                          <p className="text-xs text-muted truncate">{l.url}</p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <button
@@ -1504,11 +1370,7 @@ function ManageDrawer({
                             className="p-1.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                             aria-label={`Edit ${l.title}`}
                           >
-                            <Pencil
-                              size={13}
-                              strokeWidth={1.75}
-                              aria-hidden="true"
-                            />
+                            <Pencil size={13} strokeWidth={1.75} aria-hidden="true" />
                           </button>
                           <button
                             type="button"
@@ -1525,11 +1387,7 @@ function ManageDrawer({
                                 aria-hidden="true"
                               />
                             ) : (
-                              <Trash2
-                                size={13}
-                                strokeWidth={1.75}
-                                aria-hidden="true"
-                              />
+                              <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" />
                             )}
                           </button>
                         </div>
@@ -1556,24 +1414,14 @@ function ManageDrawer({
             />
           ) : (
             <>
-              <Button
-                variant="outline"
-                onClick={() => setShowUploadForm(true)}
-                className="w-full"
-              >
+              <Button variant="outline" onClick={() => setShowUploadForm(true)} className="w-full">
                 <Plus size={15} strokeWidth={1.75} aria-hidden="true" />
                 Upload File
               </Button>
               {data.files.length === 0 ? (
                 <EmptyState
                   compact
-                  icon={
-                    <FileText
-                      size={28}
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                    />
-                  }
+                  icon={<FileText size={28} strokeWidth={1.5} aria-hidden="true" />}
                   title="No files yet"
                   description="Upload schedules, training plans, and other documents."
                 />
@@ -1603,11 +1451,7 @@ function ManageDrawer({
                           className="p-1.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
                           aria-label={`Download ${f.name}`}
                         >
-                          <Download
-                            size={13}
-                            strokeWidth={1.75}
-                            aria-hidden="true"
-                          />
+                          <Download size={13} strokeWidth={1.75} aria-hidden="true" />
                         </a>
                         <button
                           type="button"
@@ -1624,11 +1468,7 @@ function ManageDrawer({
                               aria-hidden="true"
                             />
                           ) : (
-                            <Trash2
-                              size={13}
-                              strokeWidth={1.75}
-                              aria-hidden="true"
-                            />
+                            <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" />
                           )}
                         </button>
                       </div>
@@ -1660,8 +1500,7 @@ export function TeamHubClient({ mode, data }: Props) {
 
   const [savingAnnouncement, setSavingAnnouncement] = useState(false);
   const [savingLink, setSavingLink] = useState(false);
-  const [editingAnnouncement, setEditingAnnouncement] =
-    useState<AnnouncementItem | null>(null);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<AnnouncementItem | null>(null);
   const [editingLink, setEditingLink] = useState<LinkItem | null>(null);
   const [, setDeletingId] = useState<string | null>(null);
 
@@ -1685,9 +1524,7 @@ export function TeamHubClient({ mode, data }: Props) {
     ) => {
       setSavingAnnouncement(true);
       try {
-        const url = editId
-          ? `/api/coach/announcements/${editId}`
-          : "/api/coach/announcements";
+        const url = editId ? `/api/coach/announcements/${editId}` : "/api/coach/announcements";
         const method = editId ? "PATCH" : "POST";
         const res = await fetch(url, {
           method,
@@ -1701,18 +1538,12 @@ export function TeamHubClient({ mode, data }: Props) {
           const json = await res.json();
           throw new Error(json.error || "Failed to save");
         }
-        success(
-          editId ? "Announcement Updated" : "Announcement Posted",
-          formData.title
-        );
+        success(editId ? "Announcement Updated" : "Announcement Posted", formData.title);
         setShowInlineAnnouncement(false);
         setEditingAnnouncement(null);
         router.refresh();
       } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to save"
-        );
+        showError("Error", err instanceof Error ? err.message : "Failed to save");
       } finally {
         setSavingAnnouncement(false);
       }
@@ -1749,9 +1580,7 @@ export function TeamHubClient({ mode, data }: Props) {
     ) => {
       setSavingLink(true);
       try {
-        const url = editId
-          ? `/api/coach/team-links/${editId}`
-          : "/api/coach/team-links";
+        const url = editId ? `/api/coach/team-links/${editId}` : "/api/coach/team-links";
         const method = editId ? "PATCH" : "POST";
         const res = await fetch(url, {
           method,
@@ -1775,10 +1604,7 @@ export function TeamHubClient({ mode, data }: Props) {
         setEditingLink(null);
         router.refresh();
       } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to save link"
-        );
+        showError("Error", err instanceof Error ? err.message : "Failed to save link");
       } finally {
         setSavingLink(false);
       }
@@ -1861,9 +1687,7 @@ export function TeamHubClient({ mode, data }: Props) {
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-[var(--foreground)]">
-            Team Hub
-          </h1>
+          <h1 className="font-heading text-2xl font-bold text-[var(--foreground)]">Team Hub</h1>
           <p className="text-sm text-muted mt-1">
             {isCoach
               ? "Announcements, quick links, and files for your team"
@@ -1871,24 +1695,15 @@ export function TeamHubClient({ mode, data }: Props) {
           </p>
         </div>
         {isCoach && (
-          <Button
-            variant="outline"
-            onClick={() => setShowManage(true)}
-            className="shrink-0"
-          >
-            <Pencil
-              size={15}
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
+          <Button variant="outline" onClick={() => setShowManage(true)} className="shrink-0">
+            <Pencil size={15} strokeWidth={1.75} aria-hidden="true" />
             Manage
           </Button>
         )}
       </div>
 
       {/* ── Section 1: Pinned Announcements ────────────────────────────────── */}
-      {(pinnedAnnouncements.length > 0 ||
-        (isCoach && showInlineAnnouncement)) && (
+      {(pinnedAnnouncements.length > 0 || (isCoach && showInlineAnnouncement)) && (
         <section>
           <SectionHeader
             title="Pinned"
@@ -1923,9 +1738,7 @@ export function TeamHubClient({ mode, data }: Props) {
                 initial={editingAnnouncement}
                 eventGroups={data.eventGroups}
                 athletes={data.athletes}
-                onSave={(fd) =>
-                  saveAnnouncement(fd, editingAnnouncement.id)
-                }
+                onSave={(fd) => saveAnnouncement(fd, editingAnnouncement.id)}
                 onCancel={() => setEditingAnnouncement(null)}
                 saving={savingAnnouncement}
               />
@@ -1998,15 +1811,8 @@ export function TeamHubClient({ mode, data }: Props) {
             }
             action={
               isCoach ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowInlineLink(true)}
-                >
-                  <Plus
-                    size={15}
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
+                <Button variant="outline" onClick={() => setShowInlineLink(true)}>
+                  <Plus size={15} strokeWidth={1.75} aria-hidden="true" />
                   Add Link
                 </Button>
               ) : undefined
@@ -2033,16 +1839,11 @@ export function TeamHubClient({ mode, data }: Props) {
 
       {/* ── Section 3: Coming Up ───────────────────────────────────────────── */}
       <section>
-        <SectionHeader
-          title="Coming Up"
-          count={data.upcoming.length}
-        />
+        <SectionHeader title="Coming Up" count={data.upcoming.length} />
         {data.upcoming.length === 0 ? (
           <EmptyState
             compact
-            icon={
-              <Calendar size={28} strokeWidth={1.5} aria-hidden="true" />
-            }
+            icon={<Calendar size={28} strokeWidth={1.5} aria-hidden="true" />}
             title="Nothing scheduled in the next 30 days"
             description="Practices and competitions will appear here."
           />
@@ -2089,13 +1890,7 @@ export function TeamHubClient({ mode, data }: Props) {
         {data.files.length === 0 && !showInlineUpload ? (
           <EmptyState
             compact
-            icon={
-              <FileSpreadsheet
-                size={28}
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
-            }
+            icon={<FileSpreadsheet size={28} strokeWidth={1.5} aria-hidden="true" />}
             title="No files shared yet"
             description={
               isCoach
@@ -2104,15 +1899,8 @@ export function TeamHubClient({ mode, data }: Props) {
             }
             action={
               isCoach ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowInlineUpload(true)}
-                >
-                  <Plus
-                    size={15}
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
+                <Button variant="outline" onClick={() => setShowInlineUpload(true)}>
+                  <Plus size={15} strokeWidth={1.75} aria-hidden="true" />
                   Upload File
                 </Button>
               ) : undefined
@@ -2121,12 +1909,7 @@ export function TeamHubClient({ mode, data }: Props) {
         ) : (
           <StaggeredList className="space-y-2">
             {data.files.map((f) => (
-              <FileRow
-                key={f.id}
-                file={f}
-                isCoach={isCoach}
-                onDelete={deleteFile}
-              />
+              <FileRow key={f.id} file={f} isCoach={isCoach} onDelete={deleteFile} />
             ))}
           </StaggeredList>
         )}
@@ -2153,9 +1936,7 @@ export function TeamHubClient({ mode, data }: Props) {
         {recentAnnouncements.length === 0 ? (
           <EmptyState
             compact
-            icon={
-              <Megaphone size={28} strokeWidth={1.5} aria-hidden="true" />
-            }
+            icon={<Megaphone size={28} strokeWidth={1.5} aria-hidden="true" />}
             title="No announcements yet"
             description={
               isCoach
@@ -2164,15 +1945,8 @@ export function TeamHubClient({ mode, data }: Props) {
             }
             action={
               isCoach ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowInlineAnnouncement(true)}
-                >
-                  <Plus
-                    size={15}
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
+                <Button variant="outline" onClick={() => setShowInlineAnnouncement(true)}>
+                  <Plus size={15} strokeWidth={1.75} aria-hidden="true" />
                   Post Announcement
                 </Button>
               ) : undefined
@@ -2217,9 +1991,7 @@ export function TeamHubClient({ mode, data }: Props) {
             initial={editingAnnouncement}
             eventGroups={data.eventGroups}
             athletes={data.athletes}
-            onSave={(fd) =>
-              saveAnnouncement(fd, editingAnnouncement.id)
-            }
+            onSave={(fd) => saveAnnouncement(fd, editingAnnouncement.id)}
             onCancel={() => setEditingAnnouncement(null)}
             saving={savingAnnouncement}
           />
@@ -2228,12 +2000,7 @@ export function TeamHubClient({ mode, data }: Props) {
 
       {/* ── Inline edit modal for links (if triggered from pills) ────────── */}
       {editingLink && !showManage && isCoach && (
-        <Modal
-          open
-          onClose={() => setEditingLink(null)}
-          title="Edit Link"
-          size="md"
-        >
+        <Modal open onClose={() => setEditingLink(null)} title="Edit Link" size="md">
           <LinkForm
             initial={editingLink}
             onSave={(fd) => saveLink(fd, editingLink.id)}

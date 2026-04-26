@@ -6,6 +6,8 @@ import { Button } from "@/components";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { reportApiError } from "@/lib/form-errors";
+import { logger } from "@/lib/logger";
 
 const COOLDOWN_MS = 48 * 60 * 60 * 1000;
 
@@ -37,19 +39,34 @@ export function RequestProgramming({
         method: "POST",
         headers: csrfHeaders(),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (res.ok && data.success) {
+      if (res.ok && data?.success) {
         setCooldownUntil(data.cooldownUntil);
-        toast.success("Request sent!", `${coachName} has been notified with your training context.`);
-      } else if (res.status === 429) {
-        setCooldownUntil(data.cooldownUntil);
-        toast.warning("Already requested", "Your coach was already notified. Please wait before requesting again.");
-      } else {
-        toast.error("Failed to send request");
+        toast.success(
+          "Request sent!",
+          `${coachName} has been notified with your training context.`
+        );
+        return;
       }
-    } catch {
-      toast.error("Something went wrong");
+
+      // 429 with cooldown is expected, not an error — surface as info.
+      if (res.status === 429 && data?.cooldownUntil) {
+        setCooldownUntil(data.cooldownUntil);
+        toast.warning(
+          "Already requested",
+          "Your coach was already notified. Please wait before requesting again."
+        );
+        return;
+      }
+
+      reportApiError({ res, payload: data }, toast, { onRetry: handleRequest });
+    } catch (err) {
+      logger.error("request-programming failed", {
+        context: "athlete/sessions/request-programming",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleRequest });
     } finally {
       setLoading(false);
     }
@@ -66,9 +83,7 @@ export function RequestProgramming({
     <div
       className={cn(
         "card p-5 border-l-4",
-        isOnCooldown
-          ? "border-l-emerald-500/50"
-          : "border-l-primary-500/50"
+        isOnCooldown ? "border-l-emerald-500/50" : "border-l-primary-500/50"
       )}
     >
       <div className="flex items-start gap-4">
@@ -90,11 +105,10 @@ export function RequestProgramming({
         <div className="flex-1 min-w-0">
           {isOnCooldown ? (
             <>
-              <h3 className="text-sm font-semibold text-[var(--foreground)]">
-                Request sent
-              </h3>
+              <h3 className="text-sm font-semibold text-[var(--foreground)]">Request sent</h3>
               <p className="text-xs text-muted mt-1">
-                {coachName} was notified on {requestedDate}. They&apos;ll program your next sessions soon.
+                {coachName} was notified on {requestedDate}. They&apos;ll program your next sessions
+                soon.
               </p>
             </>
           ) : (
@@ -117,7 +131,12 @@ export function RequestProgramming({
                 disabled={loading}
                 leftIcon={
                   loading ? (
-                    <Clock size={14} strokeWidth={1.75} aria-hidden="true" className="animate-spin" />
+                    <Clock
+                      size={14}
+                      strokeWidth={1.75}
+                      aria-hidden="true"
+                      className="animate-spin"
+                    />
                   ) : (
                     <Send size={14} strokeWidth={1.75} aria-hidden="true" />
                   )

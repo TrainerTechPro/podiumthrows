@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Sheet } from "@/components/ui/Sheet";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
+import { reportApiError } from "@/lib/form-errors";
 import { TemplatePicker } from "./_template-picker";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { cn } from "@/lib/utils";
@@ -71,7 +72,8 @@ export function SessionSidebar({
   const [athletes, setAthletes] = useState<AthleteOption[]>([]);
   const [athletesLoading, setAthletesLoading] = useState(false);
 
-  const { success: toastSuccess, error: toastError } = useToast();
+  const toast = useToast();
+  const { success: toastSuccess, error: toastError } = toast;
 
   /* Sheet + Modal both handle their own Escape; nothing extra needed here. */
 
@@ -145,7 +147,11 @@ export function SessionSidebar({
       toastSuccess("Saved", "Session saved as draft.");
       onSaved();
     } catch (err) {
-      toastError("Error", err instanceof Error ? err.message : "Something went wrong.");
+      logger.error("session save failed", {
+        context: "coach/schedule/session-sidebar",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleSaveDraft });
     } finally {
       setSubmitting(false);
     }
@@ -158,8 +164,9 @@ export function SessionSidebar({
     tier,
     groupId,
     notes,
-    toastSuccess,
+    toast,
     toastError,
+    toastSuccess,
     onSaved,
   ]);
 
@@ -229,7 +236,14 @@ export function SessionSidebar({
       toastSuccess("Published!", `${created} assigned, ${updated} updated`);
       onSaved();
     } catch (err) {
-      toastError("Publish failed", err instanceof Error ? err.message : "Something went wrong.");
+      logger.error("publish session failed", {
+        context: "coach/schedule/session-sidebar",
+        error: err,
+      });
+      reportApiError({ err }, toast, {
+        onRetry: handlePublish,
+        titleOverride: "Publish failed",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -242,8 +256,9 @@ export function SessionSidebar({
     tier,
     groupId,
     notes,
-    toastSuccess,
+    toast,
     toastError,
+    toastSuccess,
     onSaved,
   ]);
 
@@ -263,11 +278,15 @@ export function SessionSidebar({
       toastSuccess("Deleted", "Session has been removed.");
       onSaved();
     } catch (err) {
-      toastError("Error", err instanceof Error ? err.message : "Something went wrong.");
+      logger.error("delete session failed", {
+        context: "coach/schedule/session-sidebar",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleDelete });
     } finally {
       setSubmitting(false);
     }
-  }, [session, toastSuccess, toastError, onSaved]);
+  }, [session, toast, toastError, toastSuccess, onSaved]);
 
   const confirmDelete = useCallback(() => {
     if (window.confirm("Delete this session? This cannot be undone.")) {
@@ -322,7 +341,11 @@ export function SessionSidebar({
       setOverrideOpen(false);
       onSaved();
     } catch (err) {
-      toastError("Error", err instanceof Error ? err.message : "Something went wrong.");
+      logger.error("create override failed", {
+        context: "coach/schedule/session-sidebar",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleSubmitOverride });
     } finally {
       setSubmitting(false);
     }
@@ -332,8 +355,9 @@ export function SessionSidebar({
     overrideTier,
     overrideGroupId,
     overrideAthleteId,
-    toastSuccess,
+    toast,
     toastError,
+    toastSuccess,
     onSaved,
   ]);
 

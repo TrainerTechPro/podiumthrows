@@ -2,15 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  AlertTriangle,
-  CalendarPlus,
-  Lock,
-  RefreshCw,
-  X,
-} from "lucide-react";
+import { AlertTriangle, CalendarPlus, Lock, RefreshCw, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { reportApiError } from "@/lib/form-errors";
+import { logger } from "@/lib/logger";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Button } from "@/components/ui/Button";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
@@ -63,7 +59,11 @@ const DAYS_PER_WEEK_OPTIONS = [2, 3, 4, 5] as const;
 
 const PROGRAM_TYPES = [
   { value: "THROWS_ONLY", label: "Throws Only", description: "Focused throwing sessions" },
-  { value: "THROWS_AND_LIFTING", label: "Throws + Lifting", description: "Throws with strength blocks" },
+  {
+    value: "THROWS_AND_LIFTING",
+    label: "Throws + Lifting",
+    description: "Throws with strength blocks",
+  },
 ] as const;
 
 const PRIMARY_GOALS = [
@@ -116,18 +116,13 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
   const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const update = useCallback(
-    <K extends keyof typeof form>(field: K, value: (typeof form)[K]) => {
-      setForm((prev) => ({ ...prev, [field]: value }));
-    },
-    [],
-  );
+  const update = useCallback(<K extends keyof typeof form>(field: K, value: (typeof form)[K]) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
   function toggleDay(day: string) {
     const current = form.preferredDays;
-    const next = current.includes(day)
-      ? current.filter((d) => d !== day)
-      : [...current, day];
+    const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day];
     update("preferredDays", next);
   }
 
@@ -141,25 +136,20 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
   function removeCompetitionDate(index: number) {
     update(
       "competitionDates",
-      form.competitionDates.filter((_, i) => i !== index),
+      form.competitionDates.filter((_, i) => i !== index)
     );
   }
 
-  function updateCompetitionDate(
-    index: number,
-    field: keyof CompetitionDate,
-    value: string,
-  ) {
+  function updateCompetitionDate(index: number, field: keyof CompetitionDate, value: string) {
     const updated = form.competitionDates.map((cd, i) =>
-      i === index ? { ...cd, [field]: value } : cd,
+      i === index ? { ...cd, [field]: value } : cd
     );
     update("competitionDates", updated);
   }
 
   // Mismatch warning for preferred days vs daysPerWeek
   const daysMismatch =
-    form.preferredDays.length > 0 &&
-    form.preferredDays.length !== form.daysPerWeek;
+    form.preferredDays.length > 0 && form.preferredDays.length !== form.daysPerWeek;
 
   /* ─── Regeneration Flow ───────────────────────────────────────────────── */
 
@@ -183,25 +173,41 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
       });
       if (!putRes.ok) {
         const data = await putRes.json().catch(() => null);
-        throw new Error(data?.error ?? "Failed to save settings");
+        const info = reportApiError({ res: putRes, payload: data }, toast, {
+          onRetry: regenerate,
+          titleOverride: "Couldn't save settings",
+          silent: true,
+        });
+        setError(info.message);
+        return;
       }
 
       // 2. Regenerate program
-      const genRes = await fetch(
-        `/api/athlete/self-program/${config.id}/generate`,
-        { method: "POST", headers: csrfHeaders() },
-      );
+      const genRes = await fetch(`/api/athlete/self-program/${config.id}/generate`, {
+        method: "POST",
+        headers: csrfHeaders(),
+      });
       if (!genRes.ok) {
         const data = await genRes.json().catch(() => null);
-        const msg = data?.error ?? "Failed to regenerate program";
+        const info = reportApiError({ res: genRes, payload: data }, toast, {
+          onRetry: regenerate,
+          titleOverride: "Couldn't regenerate program",
+          silent: true,
+        });
         const details = data?.validationErrors;
-        throw new Error(details?.length ? `${msg}: ${details.join(", ")}` : msg);
+        setError(details?.length ? `${info.message} (${details.join(", ")})` : info.message);
+        return;
       }
 
       toast.success("Program Regenerated", "Your new program is ready.");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      logger.error("program regenerate failed", {
+        context: "athlete/self-program/program-settings",
+        error: err,
+      });
+      const info = reportApiError({ err }, toast, { onRetry: regenerate, silent: true });
+      setError(info.message);
     } finally {
       setRegenerating(false);
     }
@@ -209,7 +215,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
 
   const handleDesktopRegenerate = () => {
     const confirmed = window.confirm(
-      "This will replace your current program. Completed sessions are preserved in your history. Continue?",
+      "This will replace your current program. Completed sessions are preserved in your history. Continue?"
     );
     if (confirmed) {
       regenerate();
@@ -229,17 +235,13 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
         <div className="card p-5 space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-                Event
-              </p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Event</p>
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 {formatEventName(config.event)}
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-                Gender
-              </p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Gender</p>
               <p className="text-sm font-semibold text-[var(--foreground)] capitalize">
                 {config.gender.toLowerCase()}
               </p>
@@ -277,9 +279,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
 
       {/* ── 2. Schedule Section ────────────────────────────────────────── */}
       <section className="space-y-5">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Schedule
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Schedule</h2>
 
         {/* Days per week */}
         <div>
@@ -300,7 +300,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                   "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all",
                   form.daysPerWeek === n
                     ? "bg-primary-500 text-white shadow-md"
-                    : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700",
+                    : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700"
                 )}
               >
                 {n}
@@ -311,9 +311,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
 
         {/* Sessions per day */}
         <div>
-          <p className="text-sm font-medium text-[var(--foreground)] mb-2">
-            Sessions per day
-          </p>
+          <p className="text-sm font-medium text-[var(--foreground)] mb-2">Sessions per day</p>
           <div className="flex rounded-xl border border-[var(--card-border)] overflow-hidden">
             {[1, 2].map((n) => (
               <button
@@ -324,7 +322,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                   "flex-1 py-2.5 text-sm font-medium transition-all",
                   form.sessionsPerDay === n
                     ? "bg-primary-500 text-white"
-                    : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]",
+                    : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
                 )}
               >
                 {n === 1 ? "Single Session" : "Double Sessions"}
@@ -355,7 +353,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                     "py-2.5 rounded-lg text-xs font-semibold transition-all",
                     isSelected
                       ? "bg-primary-500 text-white shadow-sm"
-                      : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700",
+                      : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700"
                   )}
                 >
                   {day.label}
@@ -373,8 +371,8 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               />
               <p className="text-xs text-amber-800 dark:text-amber-300">
                 You selected {form.preferredDays.length} day
-                {form.preferredDays.length !== 1 ? "s" : ""} but your schedule is set
-                to {form.daysPerWeek} days/week.
+                {form.preferredDays.length !== 1 ? "s" : ""} but your schedule is set to{" "}
+                {form.daysPerWeek} days/week.
               </p>
             </div>
           )}
@@ -383,9 +381,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
 
       {/* ── 3. Program Type ────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Program Type
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Program Type</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {PROGRAM_TYPES.map((pt) => (
             <button
@@ -396,12 +392,10 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                 "card p-4 text-left transition-all",
                 form.programType === pt.value
                   ? "ring-2 ring-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
-                  : "hover:bg-surface-50 dark:hover:bg-surface-800/50",
+                  : "hover:bg-surface-50 dark:hover:bg-surface-800/50"
               )}
             >
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                {pt.label}
-              </p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{pt.label}</p>
               <p className="text-xs text-muted mt-0.5">{pt.description}</p>
             </button>
           ))}
@@ -410,9 +404,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
 
       {/* ── 4. Primary Goal ────────────────────────────────────────────── */}
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Primary Goal
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Primary Goal</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {PRIMARY_GOALS.map((goal) => (
             <button
@@ -423,12 +415,10 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                 "card p-4 text-left transition-all",
                 form.primaryGoal === goal.value
                   ? "ring-2 ring-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
-                  : "hover:bg-surface-50 dark:hover:bg-surface-800/50",
+                  : "hover:bg-surface-50 dark:hover:bg-surface-800/50"
               )}
             >
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                {goal.label}
-              </p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{goal.label}</p>
               <p className="text-xs text-muted mt-0.5">{goal.description}</p>
             </button>
           ))}
@@ -455,27 +445,21 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                 <input
                   type="date"
                   value={cd.date}
-                  onChange={(e) =>
-                    updateCompetitionDate(idx, "date", e.target.value)
-                  }
+                  onChange={(e) => updateCompetitionDate(idx, "date", e.target.value)}
                   className="input w-full sm:w-auto flex-shrink-0"
                   aria-label="Competition date"
                 />
                 <input
                   type="text"
                   value={cd.name}
-                  onChange={(e) =>
-                    updateCompetitionDate(idx, "name", e.target.value)
-                  }
+                  onChange={(e) => updateCompetitionDate(idx, "name", e.target.value)}
                   placeholder="Meet name"
                   className="input w-full sm:flex-1"
                   aria-label="Competition name"
                 />
                 <select
                   value={cd.priority}
-                  onChange={(e) =>
-                    updateCompetitionDate(idx, "priority", e.target.value)
-                  }
+                  onChange={(e) => updateCompetitionDate(idx, "priority", e.target.value)}
                   className="input w-full sm:w-auto flex-shrink-0"
                   aria-label="Competition priority"
                 >

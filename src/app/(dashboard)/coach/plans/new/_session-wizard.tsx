@@ -9,6 +9,7 @@ import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
 import { useDraftPersistence } from "@/lib/draft-persistence";
 import { useOutboxStatus } from "@/lib/outbox";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { parseApiError } from "@/lib/form-errors";
 import { StepBasics, type BasicsData } from "./_step-basics";
 import { StepBlocks, type BlockData } from "./_step-blocks";
 import { StepExercises } from "./_step-exercises";
@@ -252,8 +253,8 @@ export function SessionWizard({
           });
 
           if (!assignRes.ok) {
-            const data = await assignRes.json();
-            setError(data.error ?? "Plan saved, but failed to assign sessions.");
+            const data = await assignRes.json().catch(() => null);
+            setError(parseApiError({ res: assignRes, payload: data }).message);
             return;
           }
         }
@@ -262,8 +263,8 @@ export function SessionWizard({
         await draftStatus.clearDraft();
         router.push("/coach/plans");
         router.refresh();
-      } catch {
-        setError("Something went wrong. Please try again.");
+      } catch (err) {
+        setError(parseApiError({ err }).message);
       }
     });
   }

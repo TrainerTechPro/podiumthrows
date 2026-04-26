@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { logger } from "@/lib/logger";
+import { reportApiError } from "@/lib/form-errors";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -188,7 +189,11 @@ export function GoalWizardSheet({ open, onClose, onCreated, preset }: GoalWizard
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
-        setError(data?.error ?? `Failed to create goal (${res.status}).`);
+        const info = reportApiError({ res, payload: data }, toast, {
+          onRetry: handleCreate,
+          silent: true,
+        });
+        setError(info.message);
         return;
       }
       toast.success("Goal set", "Now go earn it.");
@@ -196,7 +201,8 @@ export function GoalWizardSheet({ open, onClose, onCreated, preset }: GoalWizard
       onClose();
     } catch (err) {
       logger.error("goal create failed", { context: "athlete/goals/wizard", error: err });
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      const info = reportApiError({ err }, toast, { onRetry: handleCreate, silent: true });
+      setError(info.message);
     } finally {
       setSubmitting(false);
     }

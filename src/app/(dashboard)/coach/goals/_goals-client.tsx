@@ -16,6 +16,7 @@ import type { TeamGoalItem, AthletePickerItem } from "@/lib/data/coach";
 import { formatEventType } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { logger } from "@/lib/logger";
+import { parseApiError } from "@/lib/form-errors";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
@@ -518,9 +519,9 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
             description: form.description || null,
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => null);
         if (!res.ok) {
-          setAddError(data.error ?? "Failed to create goal.");
+          setAddError(parseApiError({ res, payload: data }).message);
           return;
         }
         // Refresh full list
@@ -528,8 +529,12 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
         const listData = await listRes.json();
         if (listRes.ok) setGoals(listData.goals ?? []);
         setShowAddModal(false);
-      } catch {
-        setAddError("Something went wrong.");
+      } catch (err) {
+        logger.error("create coach goal failed", {
+          context: "coach/goals/goals-client",
+          error: err,
+        });
+        setAddError(parseApiError({ err }).message);
       }
     });
   }, []);

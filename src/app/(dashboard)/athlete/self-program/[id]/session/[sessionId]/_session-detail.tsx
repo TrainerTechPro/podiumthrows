@@ -27,6 +27,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { reportApiError } from "@/lib/form-errors";
+import { logger } from "@/lib/logger";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -197,7 +199,8 @@ export function SessionDetail({
   nextSessionId,
 }: SessionDetailProps) {
   const router = useRouter();
-  const { success, error: toastError } = useToast();
+  const toast = useToast();
+  const { success } = toast;
   const [status, setStatus] = useState(session.status);
   const [currentScheduledDate, setCurrentScheduledDate] = useState(initialScheduledDate);
   const [skipping, setSkipping] = useState(false);
@@ -252,12 +255,18 @@ export function SessionDetail({
         success("Workout started", "Launching live view...");
         router.push(`/athlete/throws/${data.assignmentId}?view=live`);
       } else if (res.status === 409) {
-        toastError("Already done", data.error || "Session already completed");
+        // 409 means the session is already completed — informational, not
+        // an error worth a Try-again action.
+        toast.warning("Already done", data.error || "Session already completed");
       } else {
-        toastError("Error", data.error || "Failed to start workout");
+        reportApiError({ res, payload: data }, toast, { onRetry: handleStartWorkout });
       }
-    } catch {
-      toastError("Error", "Something went wrong");
+    } catch (err) {
+      logger.error("start-live failed", {
+        context: "athlete/self-program/session-detail",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleStartWorkout });
     } finally {
       setStarting(false);
     }
@@ -273,10 +282,15 @@ export function SessionDetail({
         setStatus("SKIPPED");
         success("Session skipped");
       } else {
-        toastError("Error", "Failed to skip session");
+        const data = await res.json().catch(() => null);
+        reportApiError({ res, payload: data }, toast, { onRetry: handleSkip });
       }
-    } catch {
-      toastError("Error", "Something went wrong");
+    } catch (err) {
+      logger.error("skip session failed", {
+        context: "athlete/self-program/session-detail",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleSkip });
     } finally {
       setSkipping(false);
     }
@@ -295,11 +309,15 @@ export function SessionDetail({
         success("Session rescheduled");
         router.refresh();
       } else {
-        const data = await res.json().catch(() => ({}));
-        toastError("Error", data.error || "Failed to reschedule");
+        const data = await res.json().catch(() => null);
+        reportApiError({ res, payload: data }, toast, { onRetry: handleReschedule });
       }
-    } catch {
-      toastError("Error", "Something went wrong");
+    } catch (err) {
+      logger.error("reschedule failed", {
+        context: "athlete/self-program/session-detail",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleReschedule });
     } finally {
       setRescheduling(false);
     }
@@ -316,11 +334,15 @@ export function SessionDetail({
         setShowModify(false);
         success("Modifications saved");
       } else {
-        const data = await res.json().catch(() => ({}));
-        toastError("Error", data.error || "Failed to save modifications");
+        const data = await res.json().catch(() => null);
+        reportApiError({ res, payload: data }, toast, { onRetry: handleSaveModification });
       }
-    } catch {
-      toastError("Error", "Something went wrong");
+    } catch (err) {
+      logger.error("save modification failed", {
+        context: "athlete/self-program/session-detail",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleSaveModification });
     } finally {
       setSavingMod(false);
     }
@@ -337,11 +359,15 @@ export function SessionDetail({
         success("Workout Reset", "Session cleared — you can start fresh.");
         router.refresh();
       } else {
-        const data = await res.json().catch(() => ({}));
-        toastError("Error", data.error || "Failed to reset workout");
+        const data = await res.json().catch(() => null);
+        reportApiError({ res, payload: data }, toast, { onRetry: handleResetWorkout });
       }
-    } catch {
-      toastError("Error", "Something went wrong");
+    } catch (err) {
+      logger.error("reset workout failed", {
+        context: "athlete/self-program/session-detail",
+        error: err,
+      });
+      reportApiError({ err }, toast, { onRetry: handleResetWorkout });
     } finally {
       setResetting(false);
       setShowResetConfirm(false);

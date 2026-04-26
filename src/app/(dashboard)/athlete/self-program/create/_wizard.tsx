@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { reportApiError } from "@/lib/form-errors";
 import { Button } from "@/components/ui/Button";
 import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
 import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
@@ -222,7 +223,8 @@ export function SelfProgramWizard({
   prefill,
 }: SelfProgramWizardProps) {
   const router = useRouter();
-  const { success, error: toastError, celebration } = useToast();
+  const toast = useToast();
+  const { success, celebration } = toast;
   const showResumeToast = useDraftResumeToast();
   const outboxStatus = useOutboxStatus();
   const resumeToastFiredRef = useRef(false);
@@ -548,8 +550,11 @@ export function SelfProgramWizard({
           body: JSON.stringify({ ...payload, isDraft: false }),
         });
         if (!putRes.ok) {
-          const err = await putRes.json().catch(() => ({ error: "Failed to finalize config" }));
-          toastError("Error", err.error || "Failed to finalize program config.");
+          const err = await putRes.json().catch(() => null);
+          reportApiError({ res: putRes, payload: err }, toast, {
+            onRetry: handleGenerate,
+            titleOverride: "Couldn't finalize program",
+          });
           return;
         }
       } else {
@@ -560,7 +565,11 @@ export function SelfProgramWizard({
           body: JSON.stringify(payload),
         });
         if (!createRes.ok) {
-          toastError("Error", "Failed to save program config.");
+          const err = await createRes.json().catch(() => null);
+          reportApiError({ res: createRes, payload: err }, toast, {
+            onRetry: handleGenerate,
+            titleOverride: "Couldn't save program config",
+          });
           return;
         }
         const created = await createRes.json();
@@ -615,9 +624,12 @@ export function SelfProgramWizard({
       }
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Failed to generate program" }));
-        setErrors({ generate: err.error || "Failed to generate program" });
-        toastError("Generation Failed", err.error || "Something went wrong");
+        const err = await res.json().catch(() => null);
+        const info = reportApiError({ res, payload: err }, toast, {
+          onRetry: handleGenerate,
+          titleOverride: "Generation Failed",
+        });
+        setErrors({ generate: info.message });
         return;
       }
 
@@ -631,9 +643,13 @@ export function SelfProgramWizard({
       // Drop the client-side draft now that the program is live on the server.
       await draftStatus.clearDraft();
       router.push(`/athlete/self-program/${configId}`);
-    } catch {
-      setErrors({ generate: "Something went wrong. Please try again." });
-      toastError("Error", "Something went wrong. Please try again.");
+    } catch (err) {
+      logger.error("program generation failed", {
+        context: "athlete/self-program/create/wizard",
+        error: err,
+      });
+      const info = reportApiError({ err }, toast, { onRetry: handleGenerate });
+      setErrors({ generate: info.message });
     } finally {
       setGenerating(false);
     }

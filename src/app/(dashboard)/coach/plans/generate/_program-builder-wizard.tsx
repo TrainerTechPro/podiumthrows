@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { parseApiError } from "@/lib/form-errors";
 import Link from "next/link";
 import { AlertTriangle, Check } from "lucide-react";
 import { GeneratingOverlay } from "@/components/throws/GeneratingOverlay";
@@ -496,8 +497,8 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
         });
 
         if (!res.ok) {
-          const err = await res.json();
-          setErrors({ generate: err.error || "Failed to generate program" });
+          const errPayload = await res.json().catch(() => null);
+          setErrors({ generate: parseApiError({ res, payload: errPayload }).message });
           setGenerating(false);
           return;
         }
@@ -505,8 +506,12 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
         const { data } = await res.json();
         setGeneratedResult({ mode: "real", ...data });
       }
-    } catch {
-      setErrors({ generate: "Something went wrong. Please try again." });
+    } catch (err) {
+      logger.error("program builder generation failed", {
+        context: "coach/plans/generate/program-builder-wizard",
+        error: err,
+      });
+      setErrors({ generate: parseApiError({ err }).message });
     } finally {
       setGenerating(false);
     }

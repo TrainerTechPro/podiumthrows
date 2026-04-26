@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { Input } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { parseApiError } from "@/lib/form-errors";
 
 interface ProfileFormProps {
   initial: {
@@ -42,14 +43,15 @@ export function ProfileForm({ initial }: ProfileFormProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Failed to save changes.");
+        const data = await res.json().catch(() => null);
+        setError(parseApiError({ res, payload: data }).message);
+        return;
       }
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(parseApiError({ err }).message);
     } finally {
       setLoading(false);
     }
@@ -125,13 +127,15 @@ export function UpgradeButton({ plan }: { plan: "PRO" | "ELITE" }) {
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ plan }),
       });
-      const payload = await res.json();
-      if (!res.ok || !payload.success) {
-        throw new Error(payload.error || "Could not start checkout.");
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        setError(parseApiError({ res, payload }).message);
+        setLoading(false);
+        return;
       }
       window.location.href = payload.data.url;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(parseApiError({ err }).message);
       setLoading(false);
     }
   }
@@ -157,13 +161,15 @@ export function PortalButton({ hasStripe }: { hasStripe: boolean }) {
     setError(null);
     try {
       const res = await fetch("/api/stripe/portal", { method: "POST", headers: csrfHeaders() });
-      const payload = await res.json();
-      if (!res.ok || !payload.success) {
-        throw new Error(payload.error || "Could not open billing portal.");
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        setError(parseApiError({ res, payload }).message);
+        setLoading(false);
+        return;
       }
       window.location.href = payload.data.url;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(parseApiError({ err }).message);
       setLoading(false);
     }
   }
