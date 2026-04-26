@@ -1,638 +1,385 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { cn, localToday } from "@/lib/utils";
-import { Avatar, Button, ProgressBar } from "@/components";
-import { csrfHeaders } from "@/lib/csrf-client";
-import { EnablePushNotifications } from "@/components/notifications/EnablePushNotifications";
-import { Input } from "@/components/ui/Input";
+import { useReducer, useEffect, useCallback, useTransition, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-
+import { useDraftPersistence } from "@/lib/draft-persistence";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { logger } from "@/lib/logger";
-/* ─── Constants ─────────────────────────────────────────────────────────── */
-
-type WizardStep = "welcome" | "events" | "pbs" | "physical" | "notifications" | "done";
-
-const EVENTS = [
-  { value: "SHOT_PUT", label: "Shot Put", icon: "🏋️" },
-  { value: "DISCUS", label: "Discus", icon: "🥏" },
-  { value: "HAMMER", label: "Hammer", icon: "🔨" },
-  { value: "JAVELIN", label: "Javelin", icon: "🎯" },
-] as const;
-
-const GENDERS = [
-  { value: "MALE", label: "Male" },
-  { value: "FEMALE", label: "Female" },
-  { value: "OTHER", label: "Prefer not to say" },
-] as const;
-
-const STEP_LABELS = ["Events", "Competition PBs", "Physical Profile", "Notifications"];
-
-/* ─── Props ─────────────────────────────────────────────────────────────── */
+import type { ThrowEvent } from "@/lib/throws/constants";
+import {
+  initialState,
+  onboardingReducer,
+  currentStepNumber,
+  canAdvance,
+  distanceToMeters,
+  weightToKg,
+  type OnboardingMode,
+  type OnboardingState,
+  type ClassStanding,
+  type TurnDirection,
+} from "./_state";
+import { OnboardingProgress } from "./_progress";
+import { Step1Event } from "./_steps/Step1Event";
+import { Step2Profile } from "./_steps/Step2Profile";
+import { Step3PR } from "./_steps/Step3PR";
+import { Step4FirstLog } from "./_steps/Step4FirstLog";
+import { Step5Celebrate } from "./_steps/Step5Celebrate";
 
 interface OnboardingWizardProps {
+  userId: string;
   firstName: string;
   coachFirstName: string;
-  coachLastName: string;
-  coachAvatarUrl: string | null;
+  hasCoach: boolean;
+  prefill: {
+    event: ThrowEvent | null;
+    classStanding: ClassStanding | null;
+    turnDirection: TurnDirection | null;
+    gradYear: number | null;
+  };
 }
 
-/* ─── Step Indicator ────────────────────────────────────────────────────── */
-
-function StepIndicator({ current, steps }: { current: number; steps: string[] }) {
-  return (
-    <div className="flex items-center gap-2 mb-8">
-      {steps.map((label, i) => (
-        <div key={i} className="flex items-center gap-2 flex-1">
-          <div
-            className={cn(
-              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors",
-              i < current
-                ? "bg-primary-500 text-white"
-                : i === current
-                  ? "bg-primary-500 text-white ring-4 ring-primary-500/20"
-                  : "bg-surface-200 dark:bg-surface-700 text-muted"
-            )}
-          >
-            {i < current ? (
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            ) : (
-              i + 1
-            )}
-          </div>
-          <span
-            className={cn(
-              "text-sm hidden sm:block",
-              i === current ? "font-semibold text-[var(--foreground)]" : "text-muted"
-            )}
-          >
-            {label}
-          </span>
-          {i < steps.length - 1 && (
-            <div
-              className={cn(
-                "h-px flex-1 min-w-[24px] mx-1 transition-colors",
-                i < current ? "bg-primary-500" : "bg-surface-200 dark:bg-surface-700"
-              )}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Wizard ────────────────────────────────────────────────────────────── */
-
+/**
+ * Five-step onboarding wizard. Replaces the legacy 6-step flow.
+ *
+ *   Step 1 — Welcome + Event picker (always visible)
+ *   Step 2 — Profile basics (signup mode only — invite skips)
+ *   Step 3 — Recent PR (signup mode only — invite skips)
+ *   Step 4 — First throw log (always visible)
+ *   Step 5 — Celebration → auto-route to dashboard
+ *
+ * Invite mode (?from=invite) shows 3 dots + Steps 1, 4, 5. Coach has
+ * already filled events/gender via proxy invite, so the profile + PR
+ * capture screens are noise. The coach name shows up at Step 4.
+ *
+ * Submit happens at Step 4: PATCH /api/athlete/profile (events,
+ * classStanding, turnDirection, completeOnboarding=true, optional
+ * competitionPBs from Step 3) + POST /api/athlete/throws (the first
+ * logged throw). On success → Step 5 fires PRCelebration + haptic + toast,
+ * auto-routes to /athlete/dashboard after 1500ms.
+ */
 export function OnboardingWizard({
+  userId,
   firstName,
   coachFirstName,
-  coachLastName,
-  coachAvatarUrl,
+  hasCoach,
+  prefill,
 }: OnboardingWizardProps) {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [step, setStep] = useState<WizardStep>("welcome");
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+  const [, startTransition] = useTransition();
 
-  // Form state — Step 1: Events
-  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const mode: OnboardingMode = searchParams.get("from") === "invite" ? "invite" : "signup";
 
-  // Form state — Step 2: Competition PBs
-  const [pbs, setPbs] = useState<Record<string, string>>({});
+  const [state, dispatch] = useReducer(onboardingReducer, mode, initialState);
 
-  // Form state — Step 3: Physical Profile
-  // Default to null so the athlete must explicitly pick. A silent default
-  // of "MALE" drives competition-weight selection and would produce the
-  // wrong implement weight for anyone who skips through without picking.
-  const [gender, setGender] = useState<string | null>(null);
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [heightCm, setHeightCm] = useState("");
-  const [weightKg, setWeightKg] = useState("");
+  // Draft persistence — keyed per user, per mode.
+  const draftKey = userId ? `onboarding:v2:${userId}:${mode}` : null;
+  const [draft, setDraft] = useDraftPersistence<Partial<OnboardingState>>(draftKey, {});
 
-  const coachFullName = `${coachFirstName} ${coachLastName}`;
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
 
-  // Step index for the indicator (welcome & done not counted)
-  const stepIndex =
-    step === "events"
-      ? 0
-      : step === "pbs"
-        ? 1
-        : step === "physical"
-          ? 2
-          : step === "notifications"
-            ? 3
-            : 0;
+    const merged: Partial<OnboardingState> = {
+      event: prefill.event,
+      classStanding: prefill.classStanding,
+      turnDirection: prefill.turnDirection,
+      ...draft, // draft wins for fields the athlete touched mid-flow
+    };
 
-  /* ─── Event toggling ──────────────────────────────────────────────── */
+    dispatch({ type: "HYDRATE", payload: merged });
+  }, [draft, prefill]);
 
-  function toggleEvent(value: string) {
-    setSelectedEvents((prev) =>
-      prev.includes(value) ? prev.filter((e) => e !== value) : [...prev, value]
-    );
-    // Clear PB for deselected event
-    setPbs((prev) => {
-      const next = { ...prev };
-      if (selectedEvents.includes(value)) {
-        delete next[value];
-      }
-      return next;
+  // Persist relevant fields to draft on change (debounced inside the hook).
+  useEffect(() => {
+    if (!state.hydrated) return;
+    setDraft({
+      event: state.event,
+      classStanding: state.classStanding,
+      trainingLevel: state.trainingLevel,
+      turnDirection: state.turnDirection,
+      prImplementWeight: state.prImplementWeight,
+      prImplementUnit: state.prImplementUnit,
+      prDistance: state.prDistance,
+      prDistanceUnit: state.prDistanceUnit,
+      prDate: state.prDate,
+      firstThrowDistance: state.firstThrowDistance,
+      firstThrowDistanceUnit: state.firstThrowDistanceUnit,
+      firstThrowImplementWeight: state.firstThrowImplementWeight,
+      firstThrowImplementUnit: state.firstThrowImplementUnit,
+      firstThrowRpe: state.firstThrowRpe,
     });
-  }
+  }, [state, setDraft]);
 
-  /* ─── PB update ───────────────────────────────────────────────────── */
+  /* ─── Submit at Step 4 → log throw + complete profile ─── */
 
-  function updatePb(event: string, value: string) {
-    setPbs((prev) => ({ ...prev, [event]: value }));
-  }
-
-  /* ─── Navigation ──────────────────────────────────────────────────── */
-
-  function goToEvents() {
-    setError(null);
-    setStep("events");
-  }
-
-  function goToPbs() {
-    if (selectedEvents.length === 0) {
-      setError("Please select at least one event.");
+  const handleSubmit = useCallback(async () => {
+    if (!state.event) return;
+    const distanceM = distanceToMeters(state.firstThrowDistance, state.firstThrowDistanceUnit);
+    if (distanceM == null || distanceM <= 0) {
+      dispatch({ type: "SUBMIT_ERROR", error: "Add a distance to log your throw." });
       return;
     }
-    setError(null);
-    setStep("pbs");
-  }
 
-  function goToPhysical() {
-    setError(null);
-    setStep("physical");
-  }
+    dispatch({ type: "SUBMIT_START" });
 
-  /* ─── Go to done ─────────────────────────────────────────────────── */
-  // Tracks the pending redirect so we can clear it if the user navigates
-  // away before 2s elapses.
-  const doneTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    try {
+      const prDistanceM = distanceToMeters(state.prDistance, state.prDistanceUnit);
+      const competitionPBs =
+        prDistanceM != null && prDistanceM > 0
+          ? [{ event: state.event, distance: prDistanceM }]
+          : undefined;
 
-  useEffect(() => {
-    return () => {
-      if (doneTimeoutRef.current) clearTimeout(doneTimeoutRef.current);
-    };
+      const profilePayload: Record<string, unknown> = {
+        events: [state.event],
+        classStanding: state.classStanding,
+        turnDirection: state.turnDirection,
+        completeOnboarding: true,
+      };
+      if (competitionPBs) profilePayload.competitionPBs = competitionPBs;
+
+      const profileRes = await fetch("/api/athlete/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify(profilePayload),
+      });
+      const profileData = await profileRes.json().catch(() => null);
+      if (!profileRes.ok || !profileData?.success) {
+        const msg = profileData?.error ?? `Couldn't save profile (${profileRes.status}).`;
+        dispatch({ type: "SUBMIT_ERROR", error: msg });
+        toast.error(msg);
+        return;
+      }
+
+      const implementKg =
+        weightToKg(state.firstThrowImplementWeight, state.firstThrowImplementUnit) ?? null;
+
+      const throwPayload: Record<string, unknown> = {
+        event: state.event,
+        distance: distanceM,
+        rpe: state.firstThrowRpe,
+      };
+      if (implementKg != null) {
+        throwPayload.implementKg = implementKg;
+        throwPayload.implementWeightUnit = state.firstThrowImplementUnit === "lb" ? "lbs" : "kg";
+        const implementOriginal = parseFloat(state.firstThrowImplementWeight);
+        if (Number.isFinite(implementOriginal)) {
+          throwPayload.implementWeightOriginal = implementOriginal;
+        }
+      }
+
+      const throwRes = await fetch("/api/athlete/throws", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify(throwPayload),
+      });
+      const throwData = await throwRes.json().catch(() => null);
+      if (!throwRes.ok || !throwData?.success) {
+        // Profile saved but throw failed — surface the warning, advance anyway
+        // so the athlete sees the celebration. Dashboard will reflect the
+        // saved profile; they can re-log the throw if needed.
+        const msg =
+          throwData?.error ??
+          `Saved your profile, but couldn't log the throw (${throwRes.status}).`;
+        toast.warning(msg);
+        logger.warn("[onboarding] throw POST failed after profile success", {
+          context: "athlete/onboarding",
+          metadata: { status: throwRes.status, error: throwData?.error },
+        });
+      }
+
+      dispatch({ type: "ADVANCE" });
+    } catch (err) {
+      logger.error("[onboarding] submit failed", {
+        context: "athlete/onboarding",
+        error: err,
+      });
+      dispatch({ type: "SUBMIT_ERROR", error: "Network error. Please try again." });
+      toast.error("Network error. Please try again.");
+    }
+  }, [state, toast]);
+
+  /* ─── Navigation ─── */
+
+  const handlePrimaryAction = useCallback(() => {
+    const step = currentStepNumber(state);
+    if (step === 4) {
+      void handleSubmit();
+      return;
+    }
+    if (canAdvance(state)) {
+      startTransition(() => dispatch({ type: "ADVANCE" }));
+    }
+  }, [state, handleSubmit]);
+
+  const handleBack = useCallback(() => {
+    if (state.currentIndex === 0) {
+      router.push("/athlete/dashboard");
+      return;
+    }
+    dispatch({ type: "BACK" });
+  }, [state.currentIndex, router]);
+
+  const handleSkipStep = useCallback(() => {
+    if (canAdvance(state)) {
+      dispatch({ type: "ADVANCE" });
+    }
+  }, [state]);
+
+  const handlePickEvent = useCallback((event: ThrowEvent) => {
+    dispatch({ type: "SET_EVENT", event });
+    setTimeout(() => dispatch({ type: "ADVANCE" }), 250);
   }, []);
 
-  function goToDone() {
-    setStep("done");
-    doneTimeoutRef.current = setTimeout(() => {
-      router.push("/athlete/dashboard");
-      router.refresh();
-    }, 2000);
-  }
+  const handleChangeEvent = useCallback(() => {
+    dispatch({ type: "GO_TO", index: 0 });
+  }, []);
 
-  /* ─── Submit ──────────────────────────────────────────────────────── */
-  const toast = useToast();
+  /* ─── Render ─── */
 
-  async function handleSubmit() {
-    setError(null);
-    if (!gender) {
-      setError("Please select an option for gender.");
-      toast.error("Please select an option for gender before continuing.");
-      return;
-    }
-    startTransition(async () => {
-      try {
-        // Fetch current profile for firstName/lastName. GET now returns
-        // the canonical { success, data } envelope — read through .data.
-        const profileRes = await fetch("/api/athlete/profile");
-        let currentFirstName = firstName;
-        let currentLastName = "";
-        if (profileRes.ok) {
-          const profilePayload = await profileRes.json().catch(() => null);
-          if (profilePayload?.success && profilePayload.data) {
-            currentFirstName = profilePayload.data.firstName ?? currentFirstName;
-            currentLastName = profilePayload.data.lastName ?? "";
-          }
-        }
+  const step = currentStepNumber(state);
+  const showBack = state.currentIndex > 0 && step !== 5;
+  const showPrimaryButton = step !== 1 && step !== 5;
+  const primaryLabel =
+    step === 2
+      ? "Looks good"
+      : step === 3
+        ? "Set my PR"
+        : step === 4
+          ? state.submitting
+            ? "Logging…"
+            : "Log it"
+          : "Continue";
 
-        // Build competition PBs array. Explicit empty-string check so a
-        // user typing `0` isn't silently dropped (though 0m isn't a
-        // realistic PB, the parser shouldn't conflate "blank" with "0").
-        const competitionPBs = selectedEvents
-          .filter((ev) => {
-            const raw = pbs[ev];
-            if (raw === "" || raw == null) return false;
-            const n = parseFloat(raw);
-            return Number.isFinite(n) && n > 0;
-          })
-          .map((ev) => ({
-            event: ev,
-            distance: parseFloat(pbs[ev]),
-          }));
+  const showSecondarySkip = step === 2 || step === 3 || step === 4;
+  const secondaryLabel =
+    step === 2
+      ? "Skip for now"
+      : step === 3
+        ? "I haven't competed yet"
+        : "Skip — I'll log my first one later";
 
-        const payload = {
-          firstName: currentFirstName,
-          lastName: currentLastName,
-          events: selectedEvents,
-          gender,
-          dateOfBirth: dateOfBirth || null,
-          heightCm: heightCm ? parseFloat(heightCm) : null,
-          weightKg: weightKg ? parseFloat(weightKg) : null,
-          competitionPBs: competitionPBs.length > 0 ? competitionPBs : undefined,
-          completeOnboarding: true,
-        };
-
-        const res = await fetch("/api/athlete/profile", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.success) {
-          const msg = data?.error ?? `Something went wrong (${res.status}).`;
-          setError(msg);
-          toast.error(msg);
-          return;
-        }
-
-        // Go to the notifications step before the final done state
-        setStep("notifications");
-      } catch (err) {
-        logger.error("onboarding submit failed", {
-          context: "athlete/onboarding/wizard",
-          error: err,
-        });
-        const msg =
-          err instanceof Error ? err.message : "Failed to save profile. Please try again.";
-        setError(msg);
-        toast.error(msg);
-      }
-    });
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════ */
-  /*  RENDER                                                            */
-  /* ═══════════════════════════════════════════════════════════════════ */
-
-  /* ─── Welcome Panel ───────────────────────────────────────────────── */
-
-  if (step === "welcome") {
-    return (
-      <div className="card overflow-hidden">
-        {/* Gradient header */}
-        <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-amber-600 px-6 py-10 sm:px-8 sm:py-12 text-center">
-          <div className="mx-auto mb-4">
-            <Avatar
-              name={coachFullName}
-              src={coachAvatarUrl}
-              size="xl"
-              className="mx-auto ring-4 ring-white/20"
-            />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-heading text-white">
-            Welcome to Podium Throws
-          </h1>
-          <p className="text-white/80 mt-2 text-sm sm:text-base max-w-sm mx-auto">
-            Coach {coachFirstName} {coachLastName} invited you to join their team.
-          </p>
-        </div>
-
-        {/* Body */}
-        <div className="px-6 py-8 sm:px-8 text-center space-y-6">
-          <div className="space-y-2">
-            <p className="text-[var(--foreground)] font-medium">
-              Let&apos;s set up your athlete profile in 4 quick steps.
-            </p>
-            <p className="text-sm text-muted max-w-sm mx-auto">
-              This helps your coach build a personalised training programme tailored to your events
-              and abilities.
-            </p>
-          </div>
-
-          {/* Steps preview */}
-          <div className="flex flex-col gap-3 max-w-xs mx-auto text-left">
-            {STEP_LABELS.map((label, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-500/15 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-primary-600 dark:text-primary-400">
-                    {i + 1}
-                  </span>
-                </div>
-                <span className="text-sm text-[var(--foreground)]">{label}</span>
-              </div>
-            ))}
-          </div>
-
-          <Button variant="primary" size="lg" onClick={goToEvents} className="min-w-[200px]">
-            Get Started
-          </Button>
-
-          <p className="text-xs text-muted">Takes about 2 minutes</p>
-        </div>
-      </div>
-    );
-  }
-
-  /* ─── Notifications Step ─────────────────────────────────────────── */
-
-  if (step === "notifications") {
-    return (
-      <div>
-        <EnablePushNotifications variant="card" showSkip onComplete={goToDone} onSkip={goToDone} />
-      </div>
-    );
-  }
-
-  /* ─── Done State ──────────────────────────────────────────────────── */
-
-  if (step === "done") {
-    return (
-      <div className="card">
-        <div className="flex flex-col items-center justify-center py-16 text-center gap-5">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center animate-in zoom-in duration-300">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-              You&apos;re all set, {firstName}!
-            </h2>
-            <p className="text-sm text-muted">Taking you to your dashboard…</p>
-          </div>
-          <ProgressBar value={100} variant="primary" size="sm" animate className="max-w-[200px]" />
-        </div>
-      </div>
-    );
-  }
-
-  /* ─── Steps (events / pbs / physical) ─────────────────────────────── */
+  const primaryDisabled = step === 4 ? !canAdvance(state) || state.submitting : !canAdvance(state);
 
   return (
-    <div className="card p-6 sm:p-8">
-      <Link
-        href="/athlete/dashboard"
-        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors mb-4"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M19 12H5" />
-          <path d="M12 19l-7-7 7-7" />
-        </svg>
-        Skip for now
-      </Link>
-      <StepIndicator current={stepIndex} steps={STEP_LABELS} />
-
-      {/* ── Step 1: Events ──────────────────────────────────────────── */}
-      {step === "events" && (
-        <div>
-          <h2 className="text-xl font-bold font-heading text-[var(--foreground)] mb-1">
-            Which events do you compete in?
-          </h2>
-          <p className="text-sm text-muted mb-6">Select all that apply.</p>
-
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {EVENTS.map((ev) => {
-              const active = selectedEvents.includes(ev.value);
-              return (
-                <button
-                  key={ev.value}
-                  type="button"
-                  onClick={() => toggleEvent(ev.value)}
-                  className={cn(
-                    "px-4 py-4 rounded-xl border-2 text-left transition-all",
-                    active
-                      ? "border-primary-500 bg-primary-500/8 shadow-sm"
-                      : "border-[var(--card-border)] bg-[var(--card-bg)] hover:border-primary-300 dark:hover:border-primary-700"
-                  )}
-                >
-                  <span className="text-lg mb-1 block">{ev.icon}</span>
-                  <p
-                    className={cn(
-                      "font-semibold text-sm",
-                      active ? "text-primary-700 dark:text-primary-300" : "text-[var(--foreground)]"
-                    )}
-                  >
-                    {ev.label}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-
-          {error && <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">{error}</p>}
-
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => setStep("welcome")} className="flex-1">
-              Back
-            </Button>
-            <Button variant="primary" onClick={goToPbs} className="flex-1">
-              Continue
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Step 2: Competition PBs ─────────────────────────────────── */}
-      {step === "pbs" && (
-        <div>
-          <h2 className="text-xl font-bold font-heading text-[var(--foreground)] mb-1">
-            Your competition personal bests
-          </h2>
-          <p className="text-sm text-muted mb-6">
-            Enter your best competition marks so your coach has a baseline. Leave blank if
-            you&apos;re not sure.
-          </p>
-
-          <div className="space-y-4 mb-6">
-            {selectedEvents.map((eventValue) => {
-              const event = EVENTS.find((e) => e.value === eventValue);
-              if (!event) return null;
-              return (
-                <div key={eventValue}>
-                  <label
-                    htmlFor={`pb-${eventValue}`}
-                    className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                  >
-                    {event.icon} {event.label} PB
-                    <span className="text-muted font-normal ml-1">(metres)</span>
-                  </label>
-                  <Input
-                    id={`pb-${eventValue}`}
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.01}
-                    placeholder="e.g. 14.52"
-                    value={pbs[eventValue] ?? ""}
-                    onChange={(e) => updatePb(eventValue, e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {error && <p className="text-sm text-danger-600 dark:text-danger-400 mb-4">{error}</p>}
-
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={goToEvents} className="flex-1">
-              Back
-            </Button>
-            <Button variant="primary" onClick={goToPhysical} className="flex-1">
-              Continue
-            </Button>
-          </div>
-
+    <div className="min-h-[100dvh] flex flex-col px-4 sm:px-6 max-w-md mx-auto w-full">
+      <header className="flex items-center gap-3 pt-3 pb-2">
+        {showBack ? (
           <button
-            onClick={goToPhysical}
-            className="w-full text-center text-xs text-muted hover:text-[var(--foreground)] transition-colors mt-3"
+            type="button"
+            onClick={handleBack}
+            aria-label="Back"
+            className="h-9 w-9 -ml-2 inline-flex items-center justify-center rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
           >
-            Skip — I&apos;ll add these later
+            <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
           </button>
+        ) : (
+          <span className="h-9 w-9 -ml-2" aria-hidden="true" />
+        )}
+        <div className="flex-1">
+          <OnboardingProgress total={state.visibleSteps.length} current={state.currentIndex} />
         </div>
-      )}
+        <span className="h-9 w-9" aria-hidden="true" />
+      </header>
 
-      {/* ── Step 3: Physical Profile ────────────────────────────────── */}
-      {step === "physical" && (
-        <div>
-          <h2 className="text-xl font-bold font-heading text-[var(--foreground)] mb-1">
-            Tell us about yourself
-          </h2>
-          <p className="text-sm text-muted mb-6">
-            This helps your coach personalise your programme. Only gender is required.
-          </p>
+      <main className="flex-1 py-6">
+        {step === 1 && (
+          <Step1Event
+            firstName={firstName}
+            event={state.event}
+            mode={mode}
+            onPick={handlePickEvent}
+          />
+        )}
+        {step === 2 && (
+          <Step2Profile
+            classStanding={state.classStanding}
+            trainingLevel={state.trainingLevel}
+            turnDirection={state.turnDirection}
+            onClassStanding={(v) => dispatch({ type: "SET_CLASS_STANDING", value: v })}
+            onTrainingLevel={(v) => dispatch({ type: "SET_TRAINING_LEVEL", value: v })}
+            onTurnDirection={(v) => dispatch({ type: "SET_TURN_DIRECTION", value: v })}
+          />
+        )}
+        {step === 3 && (
+          <Step3PR
+            prImplementWeight={state.prImplementWeight}
+            prImplementUnit={state.prImplementUnit}
+            prDistance={state.prDistance}
+            prDistanceUnit={state.prDistanceUnit}
+            prDate={state.prDate}
+            onChange={(patch) => dispatch({ type: "SET_PR", patch })}
+          />
+        )}
+        {step === 4 && state.event && (
+          <Step4FirstLog
+            mode={mode}
+            coachFirstName={coachFirstName}
+            event={state.event}
+            firstThrowDistance={state.firstThrowDistance}
+            firstThrowDistanceUnit={state.firstThrowDistanceUnit}
+            firstThrowImplementWeight={state.firstThrowImplementWeight}
+            firstThrowImplementUnit={state.firstThrowImplementUnit}
+            firstThrowRpe={state.firstThrowRpe}
+            onChange={(patch) => dispatch({ type: "SET_FIRST_THROW", patch })}
+            onChangeEvent={handleChangeEvent}
+          />
+        )}
+        {step === 5 && (
+          <Step5Celebrate
+            mode={mode}
+            hasCoach={hasCoach}
+            distanceMeters={distanceToMeters(
+              state.firstThrowDistance,
+              state.firstThrowDistanceUnit
+            )}
+            displayUnit={state.firstThrowDistanceUnit}
+          />
+        )}
 
-          <div className="space-y-4">
-            {/* Gender */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Gender
-              </label>
-              <div className="flex gap-2">
-                {GENDERS.map((g) => (
-                  <button
-                    key={g.value}
-                    type="button"
-                    onClick={() => setGender(g.value)}
-                    className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg border text-sm font-medium transition-colors",
-                      gender === g.value
-                        ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
-                        : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
-                    )}
-                  >
-                    {g.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Date of Birth */}
-            <div>
-              <label
-                htmlFor="dob"
-                className="block text-sm font-medium text-[var(--foreground)] mb-1"
-              >
-                Date of birth <span className="text-muted font-normal">(optional)</span>
-              </label>
-              <input
-                id="dob"
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                max={localToday()}
-                className="input w-full"
-              />
-            </div>
-
-            {/* Height / Weight */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  htmlFor="height"
-                  className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                >
-                  Height (cm) <span className="text-muted font-normal">(optional)</span>
-                </label>
-                <Input
-                  id="height"
-                  type="number"
-                  min={100}
-                  max={250}
-                  step={0.1}
-                  placeholder="e.g. 185"
-                  value={heightCm}
-                  onChange={(e) => setHeightCm(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="weight"
-                  className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                >
-                  Weight (kg) <span className="text-muted font-normal">(optional)</span>
-                </label>
-                <Input
-                  id="weight"
-                  type="number"
-                  min={30}
-                  max={200}
-                  step={0.1}
-                  placeholder="e.g. 110"
-                  value={weightKg}
-                  onChange={(e) => setWeightKg(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-            </div>
+        {state.error && (
+          <div
+            role="alert"
+            className="mt-4 rounded-xl border border-danger-500/30 bg-danger-50 dark:bg-danger-500/10 px-4 py-3 text-sm text-danger-700 dark:text-danger-400"
+          >
+            {state.error}
           </div>
+        )}
+      </main>
 
-          {error && <p className="text-sm text-danger-600 dark:text-danger-400 mt-4">{error}</p>}
-
-          <div className="flex gap-3 mt-6">
+      {(showPrimaryButton || showSecondarySkip) && (
+        <footer
+          className="sticky bottom-0 bg-[var(--background)]/95 backdrop-blur-sm border-t border-[var(--card-border)] px-0 py-3 space-y-2"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+        >
+          {showPrimaryButton && (
             <Button
-              variant="ghost"
-              onClick={() => setStep("pbs")}
-              disabled={isPending}
-              className="flex-1"
+              type="button"
+              variant="primary"
+              size="lg"
+              onClick={handlePrimaryAction}
+              disabled={primaryDisabled}
+              className="w-full h-12 text-base"
             >
-              Back
+              {primaryLabel}
             </Button>
-            <Button variant="primary" onClick={handleSubmit} loading={isPending} className="flex-1">
-              {isPending ? "Saving…" : "Complete Setup"}
-            </Button>
-          </div>
-        </div>
+          )}
+          {showSecondarySkip && (
+            <button
+              type="button"
+              onClick={handleSkipStep}
+              disabled={state.submitting}
+              className="w-full h-10 text-sm font-medium text-muted hover:text-[var(--foreground)] transition-colors disabled:opacity-40"
+            >
+              {secondaryLabel}
+            </button>
+          )}
+        </footer>
       )}
     </div>
   );
