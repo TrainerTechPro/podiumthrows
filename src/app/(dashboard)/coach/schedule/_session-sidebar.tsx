@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import type { ProgrammedSessionWithDetails, SessionTier } from "@/lib/data/programming";
 import type { EventGroupItem } from "@/lib/data/event-groups";
 import { Button, Badge, Modal } from "@/components";
 import { Input } from "@/components/ui/Input";
+import { Sheet } from "@/components/ui/Sheet";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
 import { TemplatePicker } from "./_template-picker";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { cn } from "@/lib/utils";
-import { X, Users, User } from "lucide-react";
+import { Users, User } from "lucide-react";
 
 import { logger } from "@/lib/logger";
 /* ─── Tier badge colors ────────────────────────────────────────────────── */
@@ -70,27 +71,9 @@ export function SessionSidebar({
   const [athletes, setAthletes] = useState<AthleteOption[]>([]);
   const [athletesLoading, setAthletesLoading] = useState(false);
 
-  /* ── Refs ────────────────────────────────────────────────────────────── */
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
   const { success: toastSuccess, error: toastError } = useToast();
 
-  /* ── Slide-in animation ─────────────────────────────────────────────── */
-  useEffect(() => {
-    // Trigger slide-in after mount
-    const raf = requestAnimationFrame(() => setVisible(true));
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  /* ── Escape key ─────────────────────────────────────────────────────── */
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
+  /* Sheet + Modal both handle their own Escape; nothing extra needed here. */
 
   /* ── Fetch athletes for override modal ──────────────────────────────── */
   const fetchAthletes = useCallback(async () => {
@@ -355,50 +338,100 @@ export function SessionSidebar({
   ]);
 
   /* ── Render ─────────────────────────────────────────────────────────── */
+  const sheetTitle = (
+    <div className="flex items-center gap-2.5 min-w-0">
+      <span className="truncate">{mode === "create" ? "New Session" : "Edit Session"}</span>
+      <Badge variant={TIER_BADGE_VARIANT[tier]}>{tier}</Badge>
+    </div>
+  );
+
+  const sheetFooter = (
+    <div className="w-full space-y-3">
+      {/* Primary actions row */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleSaveDraft}
+          disabled={submitting}
+          loading={submitting}
+          className="flex-1"
+        >
+          Save Draft
+        </Button>
+
+        {/* Publish — desktop button */}
+        <div className="hidden sm:flex flex-1">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handlePublish}
+            disabled={submitting}
+            loading={submitting}
+            className="w-full"
+          >
+            Publish
+          </Button>
+        </div>
+      </div>
+
+      {/* Publish — mobile slide */}
+      <div className="sm:hidden">
+        <SlideToConfirm
+          label="Slide to Publish"
+          onConfirm={handlePublish}
+          disabled={submitting}
+          variant="confirm"
+        />
+      </div>
+
+      {/* Secondary actions (edit mode) */}
+      {mode === "edit" && session && (
+        <div className="flex items-center gap-2 pt-1">
+          {/* Create Override (TEAM tier only) */}
+          {tier === "TEAM" && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleOpenOverride}
+              disabled={submitting}
+              className="flex-1"
+            >
+              Create Override
+            </Button>
+          )}
+
+          {/* Delete — desktop */}
+          <div className="hidden sm:block">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={confirmDelete}
+              disabled={submitting}
+              className="text-danger-500 hover:text-danger-600"
+            >
+              Delete
+            </Button>
+          </div>
+
+          {/* Delete — mobile slide */}
+          <div className="sm:hidden flex-1">
+            <SlideToConfirm
+              label="Slide to Delete"
+              onConfirm={handleDelete}
+              disabled={submitting}
+              variant="destructive"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} aria-hidden="true" />
-
-      {/* Sidebar panel — desktop: right panel, mobile: bottom sheet */}
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-label={mode === "create" ? "New Session" : "Edit Session"}
-        className={cn(
-          /* Shared */
-          "fixed z-50 bg-[var(--card-bg)] shadow-2xl flex flex-col",
-          "transition-transform duration-250 ease-out",
-
-          /* Desktop (>= 640px): right panel */
-          "sm:right-0 sm:inset-y-0 sm:w-[420px] sm:border-l sm:border-[var(--card-border)]",
-          visible ? "sm:translate-x-0" : "sm:translate-x-full",
-
-          /* Mobile (< 640px): bottom sheet */
-          "max-sm:inset-x-0 max-sm:bottom-0 max-sm:rounded-t-2xl max-sm:max-h-[85vh]",
-          visible ? "max-sm:translate-y-0" : "max-sm:translate-y-full"
-        )}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-5 pt-5 pb-4 border-b border-[var(--card-border)] shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <h2 className="text-base font-semibold text-[var(--foreground)] truncate">
-              {mode === "create" ? "New Session" : "Edit Session"}
-            </h2>
-            <Badge variant={TIER_BADGE_VARIANT[tier]}>{tier}</Badge>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg p-1.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-800 dark:hover:text-surface-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
-            aria-label="Close sidebar"
-          >
-            <X size={18} strokeWidth={1.75} aria-hidden="true" />
-          </button>
-        </div>
-
-        {/* Form body */}
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+      <Sheet open onClose={onClose} side="right" size="lg" title={sheetTitle} footer={sheetFooter}>
+        <div className="space-y-5">
           {/* Title */}
           <Input
             label="Title"
@@ -455,89 +488,7 @@ export function SessionSidebar({
             </div>
           )}
         </div>
-
-        {/* Actions footer */}
-        <div className="shrink-0 border-t border-[var(--card-border)] px-5 py-4 space-y-3">
-          {/* Primary actions row */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleSaveDraft}
-              disabled={submitting}
-              loading={submitting}
-              className="flex-1"
-            >
-              Save Draft
-            </Button>
-
-            {/* Publish — desktop button */}
-            <div className="hidden sm:flex flex-1">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handlePublish}
-                disabled={submitting}
-                loading={submitting}
-                className="w-full"
-              >
-                Publish
-              </Button>
-            </div>
-          </div>
-
-          {/* Publish — mobile slide */}
-          <div className="sm:hidden">
-            <SlideToConfirm
-              label="Slide to Publish"
-              onConfirm={handlePublish}
-              disabled={submitting}
-              variant="confirm"
-            />
-          </div>
-
-          {/* Secondary actions (edit mode) */}
-          {mode === "edit" && session && (
-            <div className="flex items-center gap-2 pt-1">
-              {/* Create Override (TEAM tier only) */}
-              {tier === "TEAM" && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleOpenOverride}
-                  disabled={submitting}
-                  className="flex-1"
-                >
-                  Create Override
-                </Button>
-              )}
-
-              {/* Delete — desktop */}
-              <div className="hidden sm:block">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={confirmDelete}
-                  disabled={submitting}
-                  className="text-danger-500 hover:text-danger-600"
-                >
-                  Delete
-                </Button>
-              </div>
-
-              {/* Delete — mobile slide */}
-              <div className="sm:hidden flex-1">
-                <SlideToConfirm
-                  label="Slide to Delete"
-                  onConfirm={handleDelete}
-                  disabled={submitting}
-                  variant="destructive"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      </Sheet>
 
       {/* Override Modal */}
       <Modal
