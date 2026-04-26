@@ -1,26 +1,26 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, ReactNode } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Search, User, Calendar, ListChecks, Trophy, Clock, X } from "lucide-react";
+import {
+  Search,
+  User,
+  Calendar,
+  ListChecks,
+  Trophy,
+  Clock,
+  X,
+  Dumbbell,
+  Activity,
+  Video,
+  StickyNote,
+} from "lucide-react";
 import type { NavSection } from "./Sidebar";
-import type { SearchResultItem } from "@/app/api/search/route";
+import type { SearchResultItem, SearchResponse, SearchCategory } from "@/app/api/search/route";
+import { rankResults } from "@/lib/search/rank";
 import { logger } from "@/lib/logger";
-
-/* ─── Types ──────────────────────────────────────────────────────────────── */
-
-interface FlatItem {
-  label: string;
-  href: string;
-  icon: ReactNode;
-  group?: string;
-}
-
-export interface CommandPaletteProps {
-  sections: NavSection[];
-}
 
 /* ─── Open trigger (call from any component) ─────────────────────────────── */
 
@@ -30,22 +30,151 @@ export function openCommandPalette() {
   window.dispatchEvent(new CustomEvent(OPEN_EVENT));
 }
 
+/* ─── Types ──────────────────────────────────────────────────────────────── */
+
+export interface CommandPaletteProps {
+  sections: NavSection[];
+}
+
+interface FlatNav {
+  label: string;
+  href: string;
+  icon: ReactNode;
+  group?: string;
+}
+
+type GroupKey = "page" | SearchCategory;
+
+interface UnifiedItem {
+  key: string;
+  label: string;
+  subtitle?: string;
+  href: string;
+  icon: ReactNode;
+  group: GroupKey;
+  /** Lower = better. Used to sort within a group. */
+  rank: number;
+}
+
 /* ─── Constants ──────────────────────────────────────────────────────────── */
 
 const RECENT_KEY = "podium-search-recent";
-const MAX_RECENT = 5;
+const MAX_RECENT = 8;
+const PER_GROUP_DISPLAY = 5;
+const DEBOUNCE_MS = 150;
 
-const CATEGORY_META: Record<string, { label: string; icon: ReactNode }> = {
-  athlete: { label: "Athletes", icon: <User size={15} strokeWidth={1.75} /> },
-  session: { label: "Sessions", icon: <Calendar size={15} strokeWidth={1.75} /> },
-  program: { label: "Programs", icon: <ListChecks size={15} strokeWidth={1.75} /> },
-  pr: { label: "Personal Records", icon: <Trophy size={15} strokeWidth={1.75} /> },
+const ICON_PROPS = { size: 15, strokeWidth: 1.75 } as const;
+
+const GROUP_META: Record<
+  GroupKey,
+  { label: string; icon: ReactNode; showMoreHref?: string; order: number }
+> = {
+  page: { label: "Pages", icon: <ListChecks {...ICON_PROPS} />, order: 0 },
+  athlete: {
+    label: "Athletes",
+    icon: <User {...ICON_PROPS} />,
+    showMoreHref: "/coach/athletes",
+    order: 1,
+  },
+  session: {
+    label: "Sessions",
+    icon: <Calendar {...ICON_PROPS} />,
+    showMoreHref: "/coach/sessions",
+    order: 2,
+  },
+  program: {
+    label: "Plans",
+    icon: <ListChecks {...ICON_PROPS} />,
+    showMoreHref: "/coach/plans",
+    order: 3,
+  },
+  drill: {
+    label: "Drills",
+    icon: <Activity {...ICON_PROPS} />,
+    showMoreHref: "/coach/drills",
+    order: 4,
+  },
+  exercise: {
+    label: "Exercises",
+    icon: <Dumbbell {...ICON_PROPS} />,
+    showMoreHref: "/coach/exercises",
+    order: 5,
+  },
+  video: {
+    label: "Video Analyses",
+    icon: <Video {...ICON_PROPS} />,
+    showMoreHref: "/coach/videos",
+    order: 6,
+  },
+  note: {
+    label: "Notes",
+    icon: <StickyNote {...ICON_PROPS} />,
+    order: 7,
+  },
+  pr: {
+    label: "Personal Records",
+    icon: <Trophy {...ICON_PROPS} />,
+    order: 8,
+  },
 };
 
-/* ─── Flatten nav sections ───────────────────────────────────────────────── */
+type FilterKey = "all" | SearchCategory;
 
-function flattenSections(sections: NavSection[]): FlatItem[] {
-  const items: FlatItem[] = [];
+const FILTERS: Array<{ key: FilterKey; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "athlete", label: "Athletes" },
+  { key: "session", label: "Sessions" },
+  { key: "program", label: "Plans" },
+  { key: "drill", label: "Drills" },
+  { key: "exercise", label: "Exercises" },
+  { key: "video", label: "Videos" },
+  { key: "note", label: "Notes" },
+  { key: "pr", label: "PRs" },
+];
+
+/* ─── Recent searches (localStorage, capped) ─────────────────────────────── */
+
+function getRecentSearches(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    return raw ? (JSON.parse(raw) as string[]).slice(0, MAX_RECENT) : [];
+  } catch (err) {
+    logger.debug("recent search read failed", {
+      context: "ui/CommandPalette",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
+    return [];
+  }
+}
+
+function addRecentSearch(query: string) {
+  try {
+    const recent = getRecentSearches().filter((r) => r.toLowerCase() !== query.toLowerCase());
+    recent.unshift(query);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
+  } catch (err) {
+    logger.debug("recent search write failed", {
+      context: "ui/CommandPalette",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
+  }
+}
+
+/* ─── Debounce hook ──────────────────────────────────────────────────────── */
+
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
+/* ─── Flatten nav sections into a flat searchable list ───────────────────── */
+
+function flattenSections(sections: NavSection[]): FlatNav[] {
+  const items: FlatNav[] = [];
   for (const section of sections) {
     for (const item of section.items) {
       if (item.children && item.children.length > 0) {
@@ -70,154 +199,68 @@ function flattenSections(sections: NavSection[]): FlatItem[] {
   return items;
 }
 
-/* ─── Fuzzy match ────────────────────────────────────────────────────────── */
-
-function matches(query: string, item: FlatItem): boolean {
-  const q = query.toLowerCase();
-  return (
-    item.label.toLowerCase().includes(q) ||
-    item.href.toLowerCase().includes(q) ||
-    (item.group?.toLowerCase().includes(q) ?? false)
-  );
-}
-
-/* ─── Recent searches (localStorage) ─────────────────────────────────────── */
-
-function getRecentSearches(): string[] {
-  try {
-    const raw = localStorage.getItem(RECENT_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function addRecentSearch(query: string) {
-  try {
-    const recent = getRecentSearches().filter((r) => r !== query);
-    recent.unshift(query);
-    localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
-  } catch (err) {
-    // localStorage unavailable
-    logger.debug("localStorage unavailable", {
-      context: "src/components/ui/CommandPalette.tsx",
-      metadata: { reason: err instanceof Error ? err.message : "unknown" },
-    });
-  }
-}
-
-/* ─── Debounce hook ──────────────────────────────────────────────────────── */
-
-function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
-
-/* ─── Unified result item type ───────────────────────────────────────────── */
-
-type UnifiedItem = {
-  key: string;
-  label: string;
-  subtitle?: string;
-  href: string;
-  icon: ReactNode;
-  group: string;
-};
-
 /* ─── CommandPalette ─────────────────────────────────────────────────────── */
 
 export function CommandPalette({ sections }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<FilterKey>("all");
   const [activeIndex, setActiveIndex] = useState(0);
   const [dataResults, setDataResults] = useState<SearchResultItem[]>([]);
+  const [hasMore, setHasMore] = useState<Partial<Record<SearchCategory, boolean>>>({});
   const [searching, setSearching] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const router = useRouter();
 
-  const allItems = flattenSections(sections);
-  const debouncedQuery = useDebouncedValue(query, 300);
+  const allNavItems = useMemo(() => flattenSections(sections), [sections]);
+  const debouncedQuery = useDebouncedValue(query, DEBOUNCE_MS);
 
-  // Page results (client-side filter)
-  const filteredPages: UnifiedItem[] = query.trim()
-    ? allItems
-        .filter((item) => matches(query, item))
-        .slice(0, 5)
-        .map((item) => ({
-          key: `page:${item.href}`,
-          label: item.label,
-          href: item.href,
-          icon: item.icon,
-          group: "Pages",
-        }))
-    : [];
-
-  // Data results (from API)
-  const dataItems: UnifiedItem[] = dataResults.map((r) => ({
-    key: `data:${r.category}:${r.id}`,
-    label: r.title,
-    subtitle: r.subtitle,
-    href: r.href,
-    icon: CATEGORY_META[r.category]?.icon ?? <Search size={15} strokeWidth={1.75} />,
-    group: CATEGORY_META[r.category]?.label ?? r.category,
-  }));
-
-  // Combine all results
-  const allResults: UnifiedItem[] = [...filteredPages, ...dataItems];
-
-  // Group results for rendering
-  const grouped = new Map<string, UnifiedItem[]>();
-  for (const item of allResults) {
-    if (!grouped.has(item.group)) grouped.set(item.group, []);
-    grouped.get(item.group)!.push(item);
-  }
-
-  const flatResults = allResults; // for keyboard navigation
-
-  /* ── Fetch data results on debounced query ─────────────────────────── */
+  /* ── Server fetch on debounced query / filter change ──────────────────── */
   useEffect(() => {
-    if (!debouncedQuery || debouncedQuery.length < 2) {
+    if (!debouncedQuery || debouncedQuery.trim().length < 2) {
       setDataResults([]);
+      setHasMore({});
       setSearching(false);
       return;
     }
 
-    // Abort previous request
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-
     setSearching(true);
 
-    fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`, {
-      signal: controller.signal,
-    })
+    const params = new URLSearchParams({ q: debouncedQuery });
+    if (filter !== "all") params.set("category", filter);
+
+    fetch(`/api/search?${params.toString()}`, { signal: controller.signal })
       .then((res) => res.json())
-      .then((data) => {
-        if (!controller.signal.aborted) {
-          setDataResults(data.results ?? []);
-          setSearching(false);
-        }
+      .then((data: SearchResponse) => {
+        if (controller.signal.aborted) return;
+        setDataResults(data.results ?? []);
+        setHasMore(data.hasMore ?? {});
+        setSearching(false);
       })
       .catch((err) => {
         if (err.name !== "AbortError") {
+          logger.warn("command palette search failed", {
+            context: "ui/CommandPalette",
+            metadata: { reason: err instanceof Error ? err.message : "unknown" },
+          });
           setDataResults([]);
+          setHasMore({});
           setSearching(false);
         }
       });
 
     return () => controller.abort();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, filter]);
 
-  /* ── Global keyboard shortcut (Cmd+K / Ctrl+K) + custom event ────────── */
+  /* ── Open / close keyboard shortcut + custom event ────────────────────── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -236,18 +279,19 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     };
   }, []);
 
-  /* ── Reset state on open ────────────────────────────────────────────── */
+  /* ── Reset state when opening ─────────────────────────────────────────── */
   useEffect(() => {
-    if (open) {
-      setQuery("");
-      setActiveIndex(0);
-      setDataResults([]);
-      setRecentSearches(getRecentSearches());
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
+    if (!open) return;
+    setQuery("");
+    setFilter("all");
+    setActiveIndex(0);
+    setDataResults([]);
+    setHasMore({});
+    setRecentSearches(getRecentSearches());
+    requestAnimationFrame(() => inputRef.current?.focus());
   }, [open]);
 
-  /* ── Lock body scroll ───────────────────────────────────────────────── */
+  /* ── Lock body scroll while open ──────────────────────────────────────── */
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -257,42 +301,107 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     };
   }, [open]);
 
-  /* ── Reset active index when results change ─────────────────────────── */
+  /* ── Compute the flat result list and groups ──────────────────────────── */
+  const grouped = useMemo<Map<GroupKey, UnifiedItem[]>>(() => {
+    const map = new Map<GroupKey, UnifiedItem[]>();
+    const trimmed = query.trim();
+    if (!trimmed) return map;
+
+    // Pages — only when the filter is "all" (nav routes are not a SearchCategory).
+    if (filter === "all") {
+      const ranked = rankResults(allNavItems, trimmed, (it) => [
+        it.label,
+        ...(it.group ? [it.group] : []),
+      ]);
+      const pageItems: UnifiedItem[] = ranked.slice(0, PER_GROUP_DISPLAY).map((r) => ({
+        key: `page:${r.item.href}`,
+        label: r.item.label,
+        href: r.item.href,
+        icon: r.item.icon,
+        group: "page",
+        rank: r.score,
+      }));
+      if (pageItems.length > 0) map.set("page", pageItems);
+    }
+
+    // Server-side categories — re-rank the candidate set per group.
+    const byCategory = new Map<SearchCategory, SearchResultItem[]>();
+    for (const r of dataResults) {
+      if (!byCategory.has(r.category)) byCategory.set(r.category, []);
+      byCategory.get(r.category)!.push(r);
+    }
+
+    for (const [cat, rows] of byCategory) {
+      const ranked = rankResults(rows, trimmed, (r) => [r.title, r.subtitle ?? ""]);
+      const items: UnifiedItem[] = ranked.slice(0, PER_GROUP_DISPLAY).map((r) => ({
+        key: `${cat}:${r.item.id}`,
+        label: r.item.title,
+        subtitle: r.item.subtitle,
+        href: r.item.href,
+        icon: GROUP_META[cat].icon,
+        group: cat,
+        rank: r.score,
+      }));
+      if (items.length > 0) map.set(cat, items);
+    }
+
+    // Sort groups by canonical order so the layout is deterministic across runs.
+    return new Map(
+      [...map.entries()].sort(([a], [b]) => GROUP_META[a].order - GROUP_META[b].order)
+    );
+  }, [query, filter, allNavItems, dataResults]);
+
+  // Flat list for keyboard navigation, ordered the same way the UI renders.
+  const flatResults = useMemo<UnifiedItem[]>(() => {
+    const out: UnifiedItem[] = [];
+    for (const items of grouped.values()) out.push(...items);
+    return out;
+  }, [grouped]);
+
+  /* ── Keep activeIndex in range when results change ────────────────────── */
   useEffect(() => {
     setActiveIndex(0);
-  }, [query, dataResults]);
+  }, [query, filter, dataResults]);
 
-  /* ── Scroll active item into view ───────────────────────────────────── */
+  /* ── Scroll active result into view ───────────────────────────────────── */
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
-    const items = list.querySelectorAll("[role='option']");
-    const active = items[activeIndex] as HTMLElement | undefined;
-    active?.scrollIntoView({ block: "nearest" });
+    const el = list.querySelector(`[data-result-index="${activeIndex}"]`) as HTMLElement | null;
+    el?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);
 
   const close = useCallback(() => setOpen(false), []);
 
   const navigate = useCallback(
     (href: string) => {
-      if (query.trim().length >= 2) addRecentSearch(query.trim());
+      const trimmed = query.trim();
+      if (trimmed.length >= 2) addRecentSearch(trimmed);
       close();
       router.push(href);
     },
     [close, router, query]
   );
 
-  /* ── Keyboard navigation inside palette ─────────────────────────────── */
+  const cycleFilter = useCallback((direction: 1 | -1) => {
+    setFilter((current) => {
+      const idx = FILTERS.findIndex((f) => f.key === current);
+      const next = (idx + direction + FILTERS.length) % FILTERS.length;
+      return FILTERS[next].key;
+    });
+  }, []);
+
+  /* ── Keyboard handling inside the palette ─────────────────────────────── */
   function handleKeyDown(e: React.KeyboardEvent) {
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setActiveIndex((i) => (i + 1) % Math.max(flatResults.length, 1));
+        setActiveIndex((i) => (flatResults.length === 0 ? 0 : (i + 1) % flatResults.length));
         break;
       case "ArrowUp":
         e.preventDefault();
-        setActiveIndex(
-          (i) => (i - 1 + Math.max(flatResults.length, 1)) % Math.max(flatResults.length, 1)
+        setActiveIndex((i) =>
+          flatResults.length === 0 ? 0 : (i - 1 + flatResults.length) % flatResults.length
         );
         break;
       case "Enter":
@@ -303,6 +412,10 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
         e.preventDefault();
         close();
         break;
+      case "Tab":
+        e.preventDefault();
+        cycleFilter(e.shiftKey ? -1 : 1);
+        break;
     }
   }
 
@@ -312,10 +425,13 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
 
   if (!open) return null;
 
-  const hasQuery = query.trim().length > 0;
-  const noResults = hasQuery && flatResults.length === 0 && !searching;
+  const trimmed = query.trim();
+  const hasQuery = trimmed.length > 0;
+  const noResults = hasQuery && trimmed.length >= 2 && flatResults.length === 0 && !searching;
+  const queryTooShort = hasQuery && trimmed.length < 2;
+  const activeId = flatResults[activeIndex] ? `cmdk-option-${activeIndex}` : undefined;
 
-  let flatIndex = 0;
+  let renderedIndex = 0;
 
   return createPortal(
     <div
@@ -326,15 +442,12 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
       aria-modal="true"
       aria-label="Search"
     >
-      {/* Backdrop */}
+      {/* Backdrop scrim — translucent is fine here; only the *content panel*
+          must be opaque per CLAUDE.md §Overlay Surfaces. */}
       <div className="absolute inset-0 bg-black/70 animate-fade-in" aria-hidden="true" />
 
-      {/* Panel — overlay content MUST use --surface-overlay per CLAUDE.md
-          §Overlay Surfaces. --card-bg is for inline cards in a known-opaque
-          parent; floating/portaled content needs the dedicated raised token
-          so it stays readable regardless of what a future token change does. */}
       <div
-        className="relative w-full max-w-lg bg-[var(--surface-overlay)] border border-[var(--card-border)] rounded-2xl shadow-2xl animate-spring-up overflow-hidden"
+        className="relative w-full max-w-xl bg-[var(--surface-overlay)] border border-[var(--card-border)] rounded-2xl shadow-2xl animate-spring-up overflow-hidden"
         onKeyDown={handleKeyDown}
       >
         {/* Search input */}
@@ -350,13 +463,22 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search athletes, sessions, programs..."
+            placeholder="Search athletes, sessions, plans, drills…"
             className="flex-1 bg-transparent py-3.5 text-sm text-[var(--foreground)] placeholder:text-surface-400 outline-none font-heading"
             autoComplete="off"
             spellCheck={false}
+            role="combobox"
+            aria-expanded={true}
+            aria-controls="cmdk-listbox"
+            aria-autocomplete="list"
+            aria-activedescendant={activeId}
           />
           {searching && (
-            <div className="w-4 h-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
+            <div
+              className="w-4 h-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin"
+              aria-label="Searching"
+              role="status"
+            />
           )}
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
             ESC
@@ -371,14 +493,49 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
           </button>
         </div>
 
+        {/* Filter pills */}
+        <div
+          className="flex items-center gap-1.5 px-3 py-2 border-b border-[var(--card-border)] overflow-x-auto custom-scrollbar"
+          role="tablist"
+          aria-label="Result type filter"
+        >
+          {FILTERS.map((f) => {
+            const active = filter === f.key;
+            return (
+              <button
+                key={f.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setFilter(f.key)}
+                className={cn(
+                  "shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                  active
+                    ? "bg-primary-500/15 text-primary-700 dark:text-primary-300 border border-primary-500/30"
+                    : "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 border border-transparent hover:text-[var(--foreground)]"
+                )}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+          <span className="ml-auto hidden sm:inline-flex items-center gap-1 text-[10px] text-surface-400 shrink-0 pr-1">
+            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+              Tab
+            </kbd>
+            cycle
+          </span>
+        </div>
+
         {/* Results */}
         <div
           ref={listRef}
+          id="cmdk-listbox"
           className="max-h-[50vh] overflow-y-auto custom-scrollbar py-2"
           role="listbox"
         >
-          {/* Recent searches (when no query) */}
-          {!hasQuery && recentSearches.length > 0 && (
+          {/* Recent searches — only when no query and not scoped */}
+          {!hasQuery && filter === "all" && recentSearches.length > 0 && (
             <>
               <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Clock size={12} strokeWidth={1.75} aria-hidden="true" />
@@ -403,58 +560,83 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
             </>
           )}
 
-          {/* No results */}
+          {/* Query too short */}
+          {queryTooShort && (
+            <p className="px-4 py-6 text-sm text-center text-surface-400">
+              Keep typing — at least 2 characters.
+            </p>
+          )}
+
+          {/* No matches */}
           {noResults && (
             <p className="px-4 py-6 text-sm text-center text-surface-400">
-              No results for &ldquo;{query}&rdquo; — try a different search term
+              No matches for &ldquo;{query}&rdquo;. Try searching by athlete name or session title.
             </p>
           )}
 
           {/* Grouped results */}
-          {Array.from(grouped.entries()).map(([group, items]) => (
-            <div key={group}>
-              <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider">
-                {group}
-              </div>
-              {items.map((item) => {
-                const idx = flatIndex++;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    role="option"
-                    aria-selected={idx === activeIndex}
-                    onClick={() => navigate(item.href)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left",
-                      idx === activeIndex
-                        ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
-                        : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
-                    )}
-                  >
-                    <span
+          {[...grouped.entries()].map(([group, items]) => {
+            const meta = GROUP_META[group];
+            const showMore = group !== "page" && hasMore[group as SearchCategory];
+            return (
+              <div key={group} role="group" aria-label={meta.label}>
+                <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="shrink-0">{meta.icon}</span>
+                  {meta.label}
+                </div>
+                {items.map((item) => {
+                  const idx = renderedIndex++;
+                  const optionId = `cmdk-option-${idx}`;
+                  return (
+                    <button
+                      key={item.key}
+                      id={optionId}
+                      type="button"
+                      role="option"
+                      aria-selected={idx === activeIndex}
+                      data-result-index={idx}
+                      onClick={() => navigate(item.href)}
+                      onMouseEnter={() => setActiveIndex(idx)}
                       className={cn(
-                        "w-5 h-5 shrink-0 flex items-center justify-center",
+                        "w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left",
                         idx === activeIndex
-                          ? "text-primary-600 dark:text-primary-400"
-                          : "text-surface-400 dark:text-surface-500"
+                          ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
+                          : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
                       )}
                     >
-                      {item.icon}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <span className="truncate block">{item.label}</span>
-                      {item.subtitle && (
-                        <span className="text-xs text-surface-400 dark:text-surface-500 truncate block">
-                          {item.subtitle}
-                        </span>
-                      )}
-                    </div>
+                      <span
+                        className={cn(
+                          "w-5 h-5 shrink-0 flex items-center justify-center",
+                          idx === activeIndex
+                            ? "text-primary-600 dark:text-primary-400"
+                            : "text-surface-400 dark:text-surface-500"
+                        )}
+                      >
+                        {item.icon}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="truncate block">{item.label}</span>
+                        {item.subtitle && (
+                          <span className="text-xs text-surface-400 dark:text-surface-500 truncate block">
+                            {item.subtitle}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+                {showMore && meta.showMoreHref && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(meta.showMoreHref!)}
+                    className="w-full text-left px-4 py-2 text-[11px] font-medium text-primary-600 dark:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                  >
+                    Show more in {meta.label} →
                   </button>
-                );
-              })}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Footer hint */}
@@ -470,6 +652,12 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
               &crarr;
             </kbd>
             open
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+              Tab
+            </kbd>
+            scope
           </span>
           <span className="flex items-center gap-1">
             <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
