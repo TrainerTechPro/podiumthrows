@@ -22,6 +22,15 @@ const AUTH_PATHS = ["/login", "/register"];
 
 const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
+// Phone-class user agents (excludes iPad in tablet/desktop UA modes). Used
+// to gate the coach sideline redirect — sideline is for the actual field
+// device, not iPad-on-the-bench. See CLAUDE.md §Dual Product Identity.
+const PHONE_UA_RE = /iPhone|iPod|Android.*Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i;
+
+function isPhoneUA(ua: string | null): boolean {
+  return ua ? PHONE_UA_RE.test(ua) : false;
+}
+
 // Route prefixes gated by feature flags
 const FLAG_GATED_ROUTES: { prefix: string; flag: FlagKey }[] = [
   { prefix: "/athlete/self-program", flag: "selfProgram" },
@@ -126,6 +135,24 @@ export async function middleware(request: NextRequest) {
     }
   } else {
     response = NextResponse.next();
+  }
+
+  // ── Coach sideline redirect (mobile-only) ────────────────────────────
+  // Per CLAUDE.md §Dual Product Identity, the coach desktop is "research
+  // software" — the editorial dashboard isn't the right home on a phone in
+  // the field. Phone-class UAs landing on /coach/dashboard get sent to the
+  // sideline-optimized home unless they've explicitly opted into the full
+  // dashboard via the `coach_mobile_view=full` cookie.
+  if (
+    payload?.role === "COACH" &&
+    !payload.isAdmin &&
+    pathname === "/coach/dashboard" &&
+    isPhoneUA(request.headers.get("user-agent"))
+  ) {
+    const view = request.cookies.get("coach_mobile_view")?.value;
+    if (view !== "full") {
+      response = NextResponse.redirect(new URL("/coach/sideline", request.url));
+    }
   }
 
   // ── Feature flag gating ───────────────────────────────────────────
