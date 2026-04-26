@@ -11,26 +11,42 @@ test.describe("Coach Dashboard", () => {
     await expect(page.getByRole("heading", { name: "Your program, today." })).toBeVisible();
   });
 
-  test("coach can navigate to athletes page", async ({ page }) => {
+  // Sidebar navigation is scoped via aria-label="Sidebar navigation" on the
+  // <aside>. Targeting the sidebar by-label and then by exact role+name
+  // beats the previous regex-first-match-on-whole-page pattern, which broke
+  // every time a new top-bar icon, dashboard card, or athlete link happened
+  // to match. See tasks/lessons.md (commit 4.5 incident) and the
+  // <button>-vs-<Link> distinction for collapsible nav parents.
+
+  test("coach can navigate to athletes page from sidebar", async ({ page }) => {
     await page.goto("/coach/dashboard");
-    const athleteLink = page.getByRole("link", { name: /athlete|roster/i }).first();
-    if (await athleteLink.isVisible()) {
-      await athleteLink.click();
-      await page.waitForURL(/\/coach\/(athletes|throws\/roster)/, {
-        timeout: 10000,
-      });
-    }
+    const sidebar = page.getByLabel("Sidebar navigation");
+    // Athletes parent has children, so it renders as a <button> that expands —
+    // it doesn't navigate. Click to expand, then click the Roster leaf link.
+    await sidebar.getByRole("button", { name: "Athletes" }).click();
+    await sidebar.getByRole("link", { name: "Roster", exact: true }).click();
+    await expect(page).toHaveURL(/\/coach\/athletes(\?|$|#)/);
   });
 
-  test("coach can navigate to programs page", async ({ page }) => {
+  test("coach can navigate to library from sidebar", async ({ page }) => {
     await page.goto("/coach/dashboard");
-    const programLink = page.getByRole("link", { name: /program|session/i }).first();
-    if (await programLink.isVisible()) {
-      await programLink.click();
-      // Speculative nav — accept any coach-surface URL change, not just
-      // /my-program or /sessions. Different dashboard modes surface
-      // different program links; we just want to verify a link works.
-      await page.waitForURL(/\/coach\/[^/]+/, { timeout: 10000 });
-    }
+    const sidebar = page.getByLabel("Sidebar navigation");
+    // Library is a leaf nav item — single click navigates.
+    await sidebar.getByRole("link", { name: "Library", exact: true }).click();
+    await expect(page).toHaveURL(/\/coach\/library(\?|$|#)/);
+  });
+
+  test("coach can navigate to calendar from sidebar", async ({ page }) => {
+    await page.goto("/coach/dashboard");
+    const sidebar = page.getByLabel("Sidebar navigation");
+    await sidebar.getByRole("link", { name: "Calendar", exact: true }).click();
+    await expect(page).toHaveURL(/\/coach\/calendar(\?|$|#)/);
+  });
+
+  test("coach can navigate to builder from sidebar", async ({ page }) => {
+    await page.goto("/coach/dashboard");
+    const sidebar = page.getByLabel("Sidebar navigation");
+    await sidebar.getByRole("link", { name: "Builder", exact: true }).click();
+    await expect(page).toHaveURL(/\/coach\/builder(\?|$|#)/);
   });
 });
