@@ -1119,6 +1119,29 @@ export const QuickLogEditSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
+/**
+ * POST /api/drill-videos/recommend — return 3 ranked watch-next suggestions
+ * after a clip ends. `athleteId` is optional and validated server-side against
+ * the session for forward compatibility (e.g. a coach previewing on behalf of
+ * an athlete in a future iteration).
+ */
+export const DrillVideoRecommendSchema = z.object({
+  justWatchedId: z.string().min(1, "justWatchedId is required"),
+  athleteId: z.string().min(1).nullable().optional(),
+});
+
+/**
+ * POST /api/drill-videos/views — record that an athlete watched a drill clip.
+ * `recommendedFromId` is set when this view originated from the WatchNextOverlay
+ * (either tap-through or 5s autoplay) so we can compute click-through rate.
+ */
+export const DrillVideoViewSchema = z.object({
+  drillVideoId: z.string().min(1, "drillVideoId is required"),
+  source: z.enum(["manual", "recommendation", "autoplay"]).default("manual"),
+  recommendedFromId: z.string().min(1).nullable().optional(),
+  completed: z.boolean().nullable().optional(),
+});
+
 // ── parseBody Helper ────────────────────────────────────────────────────
 
 /**

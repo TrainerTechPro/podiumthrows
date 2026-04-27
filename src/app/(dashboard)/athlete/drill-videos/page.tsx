@@ -7,6 +7,11 @@ import DrillVideoUpload from "@/components/drill-video-upload";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { StaggeredList } from "@/components/ui/StaggeredList";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { logger } from "@/lib/logger";
+import {
+  WatchNextOverlay,
+  type WatchNextRecommendation,
+} from "@/components/video/WatchNextOverlay";
 
 interface DrillVideo {
   id: string;
@@ -67,6 +72,85 @@ export default function AthleteDrillVideosPage() {
   const [filterEvent, setFilterEvent] = useState("");
   const [filterDrill, setFilterDrill] = useState("");
   const _videoRef = useRef<HTMLVideoElement>(null);
+
+  // Watch-next: when a clip ends, fetch 3 recommendations and overlay them
+  // on top of the same player. `endedVideoId` doubles as "show overlay over
+  // this card" — clearing it dismisses the overlay.
+  const [endedVideoId, setEndedVideoId] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<WatchNextRecommendation[]>([]);
+  const [recFocusKeywords, setRecFocusKeywords] = useState<string[]>([]);
+
+  async function recordView(input: {
+    drillVideoId: string;
+    source: "manual" | "recommendation" | "autoplay";
+    recommendedFromId?: string | null;
+  }) {
+    try {
+      await fetch("/api/drill-videos/views", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify(input),
+      });
+    } catch (err) {
+      // View tracking is best-effort — log but don't break playback.
+      logger.warn("drill view record failed", {
+        context: "athlete/drill-videos",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
+    }
+  }
+
+  async function handleVideoEnded(justWatchedId: string) {
+    setEndedVideoId(justWatchedId);
+    try {
+      const res = await fetch("/api/drill-videos/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ justWatchedId }),
+      });
+      const payload = await res.json();
+      if (!res.ok || !payload.success) {
+        // No recommendations? Just hide the overlay and reset the card.
+        setEndedVideoId(null);
+        setPlayingId(null);
+        return;
+      }
+      const recs: WatchNextRecommendation[] = payload.data.recommendations ?? [];
+      if (recs.length === 0) {
+        setEndedVideoId(null);
+        setPlayingId(null);
+        return;
+      }
+      setRecommendations(recs);
+      setRecFocusKeywords(payload.data.focusKeywords ?? []);
+    } catch {
+      setEndedVideoId(null);
+      setPlayingId(null);
+    }
+  }
+
+  function handleWatchNextSelect(
+    rec: WatchNextRecommendation,
+    source: "recommendation" | "autoplay"
+  ) {
+    const justWatchedId = endedVideoId;
+    // Record the click-through immediately for analytics. Don't await — the
+    // user shouldn't wait on a tracking fetch to start their next video.
+    recordView({
+      drillVideoId: rec.id,
+      source,
+      recommendedFromId: justWatchedId,
+    });
+    setEndedVideoId(null);
+    setRecommendations([]);
+    setPlayingId(rec.id);
+  }
+
+  function handleWatchNextDismiss() {
+    setEndedVideoId(null);
+    setRecommendations([]);
+    setPlayingId(null);
+  }
 
   async function loadVideos(cursor?: string) {
     const isInitial = !cursor;
@@ -245,7 +329,13 @@ export default function AthleteDrillVideosPage() {
                     autoPlay
                     controls
                     playsInline
-                    onEnded={() => setPlayingId(null)}
+                    onPlay={() => {
+                      // Best-effort manual-source view ping. Source defaults
+                      // to "manual"; recommendation source is logged from
+                      // the overlay's select handler, so we don't double-log.
+                      recordView({ drillVideoId: video.id, source: "manual" });
+                    }}
+                    onEnded={() => handleVideoEnded(video.id)}
                   />
                 ) : (
                   <button
@@ -266,6 +356,17 @@ export default function AthleteDrillVideosPage() {
                     </span>
                   </button>
                 )}
+
+                {/* Watch-next overlay — only over the card whose clip just
+                    ended. The player stays mounted underneath but is fully
+                    covered, so the next click in the overlay drives state. */}
+                <WatchNextOverlay
+                  open={endedVideoId === video.id && recommendations.length > 0}
+                  recommendations={recommendations}
+                  focusKeywords={recFocusKeywords}
+                  onSelect={handleWatchNextSelect}
+                  onDismiss={handleWatchNextDismiss}
+                />
               </div>
 
               {/* Metadata */}

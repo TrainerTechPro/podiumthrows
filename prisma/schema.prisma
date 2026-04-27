@@ -441,6 +441,7 @@ model AthleteProfile {
   throwAnalyses        ThrowAnalysis[]
   videoAnalyses        VideoAnalysis[]
   drillVideos          DrillVideo[]
+  drillVideoViews      DrillVideoView[]
   throwsProfiles       ThrowsProfile[]
   throwsTestingRecords ThrowsTestingRecord[]
   throwsInjuries       ThrowsInjury[]
@@ -2365,10 +2366,46 @@ model DrillVideo {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
+  views          DrillVideoView[]
+  recommendedFor DrillVideoView[] @relation("DrillVideoRecommendedFrom")
+
   @@index([athleteId, createdAt])
   @@index([coachId])
   @@index([drillType])
   @@index([event])
+}
+
+/// View record powering "unseen" filtering in recommendations and click-through
+/// rate analytics. `recommendedFromId` is set when the view was triggered by
+/// tapping a card in the WatchNextOverlay — that relationship lets us compute
+/// CTR per source video without scanning logs.
+model DrillVideoView {
+  id           String         @id @default(cuid())
+  athleteId    String
+  athlete      AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  drillVideoId String
+  drillVideo   DrillVideo     @relation(fields: [drillVideoId], references: [id], onDelete: Cascade)
+
+  /// Origin of the view. "manual" = athlete tapped the card; "recommendation"
+  /// = athlete tapped a WatchNextOverlay card; "autoplay" = the 5s countdown
+  /// elapsed and the top suggestion auto-advanced.
+  source String @default("manual")
+
+  /// When source is "recommendation" or "autoplay", the DrillVideo that the
+  /// athlete had just finished watching. null for organic views from the
+  /// gallery.
+  recommendedFromId String?
+  recommendedFrom   DrillVideo? @relation("DrillVideoRecommendedFrom", fields: [recommendedFromId], references: [id], onDelete: SetNull)
+
+  /// True once the athlete watches >= 90% of the clip. Coarse "completed"
+  /// signal we use to flag truly novel content vs. brief glances.
+  completed Boolean  @default(false)
+  viewedAt  DateTime @default(now())
+
+  @@index([athleteId, drillVideoId])
+  @@index([athleteId, viewedAt])
+  @@index([drillVideoId, viewedAt])
+  @@index([recommendedFromId])
 }
 
 // ─── GLOBAL EXERCISE LIBRARY ─────────────────────────────────────────────────
