@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
@@ -10,6 +10,10 @@ import type {
 } from "@/components/competitions/CompetitionThrowsTable";
 import { CompetitionMeetHeader } from "@/components/competitions/CompetitionMeetHeader";
 import type { MeetHeaderValue } from "@/components/competitions/CompetitionMeetHeader";
+import { MeetHero } from "@/components/competitions/MeetHero";
+import { SeriesAtAGlance } from "@/components/competitions/SeriesAtAGlance";
+import { MeetCoachNotes } from "@/components/competitions/MeetCoachNotes";
+import type { CoachComment } from "@/components/competitions/MeetCoachNotes";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -29,18 +33,51 @@ type MeetRow = {
   format: "THREE_PLUS_THREE" | "FOUR_STRAIGHT";
   madeFinals: boolean | null;
   throws: CompThrowRow[];
+  notes?: string | null;
 };
 
 type Props = {
   meet: MeetRow;
   backHref: string;
   backLabel: string;
+  /**
+   * Highest non-foul mark anywhere this season prior to this meet. Optional
+   * so the coach-side page (which doesn't yet wire it) keeps working —
+   * delta chip just hides when null.
+   */
+  seasonBestDistance?: number | null;
+  /** All-time best distance for this athlete + event, used for the medal. */
+  allTimeBestDistance?: number | null;
+  athlete?: { firstName: string; lastName: string } | null;
+  coachComments?: CoachComment[];
 };
 
-export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
+export function MeetDetailClient({
+  meet,
+  backHref,
+  backLabel,
+  seasonBestDistance = null,
+  allTimeBestDistance = null,
+  athlete = null,
+  coachComments = [],
+}: Props) {
   const toast = useToast();
   const [throws, setThrows] = useState<CompThrowRow[]>(meet.throws);
   const [meetState, setMeetState] = useState(meet);
+
+  // Derived once per render — cheap, but memo keeps the share-card payload
+  // referentially stable when ThrowsTable re-renders for unrelated reasons.
+  const { bestThrow, isPersonalBest } = useMemo(() => {
+    const valid = throws.filter((t) => !t.isFoul && !t.isPass && t.distance != null);
+    if (valid.length === 0) return { bestThrow: null, isPersonalBest: false };
+    const best = valid.reduce((a, b) =>
+      (a.distance ?? -Infinity) >= (b.distance ?? -Infinity) ? a : b
+    );
+    const distance = best.distance ?? 0;
+    const isPB =
+      allTimeBestDistance == null ? distance > 0 : distance >= allTimeBestDistance - 1e-3;
+    return { bestThrow: best, isPersonalBest: isPB };
+  }, [throws, allTimeBestDistance]);
 
   const headerValue: MeetHeaderValue = {
     id: meetState.id,
@@ -184,6 +221,22 @@ export function MeetDetailClient({ meet, backHref, backLabel }: Props) {
           <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" />
           {backLabel}
         </Link>
+
+        <MeetHero
+          meetName={meetState.name}
+          date={meetState.date}
+          event={meetState.event}
+          bestDistance={bestThrow?.distance ?? null}
+          seasonBestDistance={seasonBestDistance}
+          isPersonalBest={isPersonalBest && bestThrow != null}
+          placeFinish={meetState.placeFinish}
+          athlete={athlete}
+          meetStatus={meetState.meetStatus}
+        />
+
+        <SeriesAtAGlance throws={throws} bestThrowId={bestThrow?.id ?? null} />
+
+        <MeetCoachNotes comments={coachComments} athleteNote={meetState.notes ?? null} />
 
         <CompetitionMeetHeader
           value={headerValue}
