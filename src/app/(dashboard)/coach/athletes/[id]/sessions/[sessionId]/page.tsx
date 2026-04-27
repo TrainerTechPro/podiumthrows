@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function CoachSessionDetailPage({
   params,
 }: {
-  params: Promise<{ athleteId: string; sessionId: string }>;
+  params: Promise<{ id: string; sessionId: string }>;
 }) {
-  const { athleteId, sessionId } = await params;
+  const { id: athleteId, sessionId } = await params;
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "COACH") redirect("/login");
