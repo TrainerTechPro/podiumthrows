@@ -187,7 +187,7 @@ export function Select<T extends string | number = string>({
         {open && (
           <div
             className={cn(
-              "absolute z-20 mt-1.5 w-full bg-[var(--card-bg)] border border-[var(--card-border)]",
+              "absolute z-20 mt-1.5 w-full bg-[var(--surface-overlay)] border border-[var(--card-border)]",
               "rounded-xl shadow-xl overflow-hidden",
               "animate-[slideDown_120ms_cubic-bezier(0.4,0,0.2,1)]"
             )}

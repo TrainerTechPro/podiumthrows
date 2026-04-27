@@ -354,7 +354,7 @@ export function OnboardingWizard({
 
       {(showPrimaryButton || showSecondarySkip) && (
         <footer
-          className="sticky bottom-0 bg-[var(--background)]/95 backdrop-blur-sm border-t border-[var(--card-border)] px-0 py-3 space-y-2"
+          className="sticky bottom-0 bg-[var(--surface-overlay)] border-t border-[var(--card-border)] px-0 py-3 space-y-2"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
         >
           {showPrimaryButton && (

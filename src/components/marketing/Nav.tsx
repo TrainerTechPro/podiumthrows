@@ -40,7 +40,13 @@ export default function MarketingNav() {
 
   return (
     <>
-      {/* Floating pill nav */}
+      {/* Floating pill nav.
+          Intentional editorial glass: marketing routes are forced-dark over an
+          opaque --landing-bg (#06060a), so the translucent + blur combination
+          renders against a guaranteed-opaque parent. This is the explicit
+          opt-in carve-out described in CLAUDE.md §Overlay Surfaces — do not
+          "fix" by replacing with --surface-overlay; that would flatten the
+          editorial register that distinguishes the marketing surface. */}
       <div className="fixed top-[14px] left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-[780px]">
         <header
           className={`rounded-[14px] border border-white/[0.06] transition-all duration-300 ${
@@ -52,8 +58,13 @@ export default function MarketingNav() {
           <div className="h-[46px] flex items-center justify-between px-3 gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0 group">
-              <div className="w-[26px] h-[26px] rounded-[6px] bg-primary-500 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                <span className="font-heading font-bold text-[13px] text-surface-950 leading-none">P</span>
+              <div
+                className="w-[26px] h-[26px] rounded-[6px] bg-primary-500 flex items-center justify-center flex-shrink-0"
+                aria-hidden="true"
+              >
+                <span className="font-heading font-bold text-[13px] text-surface-950 leading-none">
+                  P
+                </span>
               </div>
               <span className="font-heading font-bold text-[14px] text-white group-hover:text-primary-400 transition-colors tracking-tight">
                 Podium Throws
