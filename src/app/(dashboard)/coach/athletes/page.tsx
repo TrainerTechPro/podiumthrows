@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Printer } from "lucide-react";
 import { AddAthleteButton } from "./_invite";
 import { BulkInviteBar } from "./_bulk-invite-bar";
 import { CsvImportButton } from "./_csv-import-button";
@@ -173,6 +173,19 @@ export default async function AthletesPage({
           {teamOptions.length > 0 && (
             <TeamFilter teams={teamOptions} currentTeamId={resolvedTeamId} />
           )}
+          <Link
+            href={
+              resolvedTeamId
+                ? `/coach/athletes/print?teamId=${encodeURIComponent(resolvedTeamId)}`
+                : "/coach/athletes/print"
+            }
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+            aria-label="Open print view of roster"
+          >
+            <Printer size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span className="hidden sm:inline">Print roster</span>
+          </Link>
           <CsvImportButton
             athleteCount={roster.length}
             planLimit={planLimit}

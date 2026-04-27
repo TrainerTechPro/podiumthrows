@@ -4,7 +4,7 @@ import { requireCoachSession, getWorkoutPlanDetail, getAthletePickerList } from 
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatEventType } from "@/lib/utils";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Printer } from "lucide-react";
 import { PlanActions } from "./_plan-actions";
 
 const STATUS_VARIANTS: Record<string, "info" | "warning" | "success" | "neutral" | "danger"> = {
@@ -72,12 +72,23 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           {plan.description && <p className="text-sm text-muted">{plan.description}</p>}
         </div>
 
-        <PlanActions
-          planId={plan.id}
-          planName={plan.name}
-          planEvent={plan.event}
-          athletes={athletes}
-        />
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href={`/coach/plans/${plan.id}/print`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+            aria-label="Open print view of plan"
+          >
+            <Printer size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span className="hidden sm:inline">Print plan</span>
+          </Link>
+          <PlanActions
+            planId={plan.id}
+            planName={plan.name}
+            planEvent={plan.event}
+            athletes={athletes}
+          />
+        </div>
       </div>
 
       {/* Metadata row */}
