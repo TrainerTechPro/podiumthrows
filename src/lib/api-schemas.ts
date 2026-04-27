@@ -1003,6 +1003,48 @@ export const SessionLogSchema = z.object({
   implementKg: z.number().min(0).optional(),
 });
 
+// Coach Session Detail edits — sparse update sent from drag/drop + reps editor.
+// Each entry references an existing BlockExercise by id and patches only what
+// the coach changed. Order arrays preserve sequence after a drop.
+export const CoachSessionPatchSchema = z.object({
+  blockOrder: z.array(z.string().min(1)).nullable().optional(),
+  exerciseUpdates: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        blockId: z.string().min(1).nullable().optional(),
+        order: z.number().int().min(0).nullable().optional(),
+        sets: z.number().int().min(0).nullable().optional(),
+        reps: z.string().max(120).nullable().optional(),
+        weight: z.string().max(120).nullable().optional(),
+        rpe: z.number().min(1).max(10).nullable().optional(),
+        implementKg: z.number().min(0).nullable().optional(),
+        notes: z.string().max(2000).nullable().optional(),
+      })
+    )
+    .nullable()
+    .optional(),
+});
+
+// Coach session note — replaces TrainingSession.coachNotes for THIS session.
+export const CoachSessionNoteSchema = z.object({
+  content: z.string().min(1, "Note cannot be empty").max(5000),
+});
+
+// Dedicated throw-logging input for the athlete Session Detail screen.
+// Every form-sourced field is .nullable().optional() — React form state uses
+// null for empty, and .optional()-only would 400 on legitimate input (per
+// CLAUDE.md §Code Quality Standards rule 4).
+export const ThrowLogInputSchema = z.object({
+  event: z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]),
+  implementKg: z.number().min(0, "Implement weight must be ≥ 0"),
+  distance: z.number().min(0).nullable().optional(),
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  voiceNoteUrl: z.string().url().nullable().optional(),
+  attemptNumber: z.number().int().min(0).nullable().optional(),
+});
+
 // ── Goals ───────────────────────────────────────────────────────────────
 
 export const GoalCreateSchema = z.object({
