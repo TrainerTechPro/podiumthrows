@@ -4,7 +4,7 @@
 >
 > **Production database.** Supabase project `PodiumThrows`, ref `bfmswuxblbwomntvkwdw`, region East US (North Virginia). Schema: 113 tables across `public`, `auth`, `storage`, `supabase_migrations`. App data lives in `public`.
 >
-> **Last drill.** `2026-04-27` — Drill A (logical dump → local pg17 → smoke). PASS. RTO 5m44s worst-case / 1m23s clean-path. RPO 0s (live dump). Drill B (cloud-restore-to-new-project) **not yet exercised** — see §[Drill B](#drill-b-cloud-to-cloud-restore-not-yet-exercised).
+> **Last drill.** `2026-04-27` — Drill A (logical dump → local pg17 → smoke). PASS. RTO 50s end-to-end script run. RPO 0s (live dump). Drill B (cloud-restore-to-new-project) **not yet exercised** — see §[Drill B](#drill-b-cloud-to-cloud-restore-not-yet-exercised).
 
 ---
 
