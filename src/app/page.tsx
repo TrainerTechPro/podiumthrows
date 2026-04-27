@@ -50,7 +50,7 @@ function Divider() {
 export default function HomePage() {
   return (
     <div
-      className="landing-grain min-h-screen font-body selection:bg-primary-500/30 selection:text-white"
+      className="dark landing-grain min-h-screen font-body selection:bg-primary-500/30 selection:text-white"
       style={{
         backgroundColor: "var(--landing-bg)",
         color: "var(--landing-text)",
