@@ -11,6 +11,7 @@ import { Sidebar, COACH_NAV_SECTIONS, NavSection } from "@/components/ui/Sidebar
 import { SkipLink } from "@/components/ui/SkipLink";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { CommandPalette, openCommandPalette } from "@/components/ui/CommandPalette";
+import { KeyboardShortcutsModal } from "@/components/ui/KeyboardShortcutsModal";
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -369,6 +370,7 @@ function CoachShell({
       />
 
       <CommandPalette sections={sections} />
+      <KeyboardShortcutsModal />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <CoachTopBar
