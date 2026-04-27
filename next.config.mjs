@@ -334,9 +334,12 @@ const nextConfig = {
       },
 
       // Tools and Integrations get absorbed as Settings tabs (per mapping).
+      // Coach settings has no standalone "tools" tab — Tools was folded into
+      // Integrations during the IA refactor. Redirect both to that tab so a
+      // bookmarked /coach/tools doesn't fall through to Profile.
       {
         source: '/coach/tools',
-        destination: '/coach/settings?tab=tools',
+        destination: '/coach/settings?tab=integrations',
         permanent: true,
       },
       {
