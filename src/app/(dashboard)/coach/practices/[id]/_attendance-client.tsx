@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-  useMemo,
-} from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -198,9 +192,7 @@ function AthleteCard({
       <motion.div
         layout
         animate={{
-          backgroundColor: cfg
-            ? cfg.bg.replace("bg-", "").replace("/10", "")
-            : "transparent",
+          backgroundColor: cfg ? cfg.bg.replace("bg-", "").replace("/10", "") : "transparent",
         }}
         transition={{ duration: 0.15 }}
         className={`card flex items-center gap-3 p-4 min-h-[64px] cursor-pointer select-none touch-manipulation active:scale-[0.99] transition-transform ${
@@ -249,7 +241,7 @@ function AthleteCard({
             </div>
             {athlete.conflict && (
               <span className="flex items-center gap-1 text-[10px] text-warning-600 dark:text-warning-400">
-                <AlertTriangle size={9} strokeWidth={2} aria-hidden="true" />
+                <AlertTriangle size={9} strokeWidth={1.75} aria-hidden="true" />
                 {athlete.conflict.reason}
               </span>
             )}
@@ -266,12 +258,10 @@ function AthleteCard({
               </span>
             </>
           ) : (
-            <span className="text-[11px] font-medium text-muted uppercase tracking-wider">
-              —
-            </span>
+            <span className="text-[11px] font-medium text-muted uppercase tracking-wider">—</span>
           )}
           {notes && (
-            <Pencil size={11} strokeWidth={2} className="text-muted ml-1" aria-hidden="true" />
+            <Pencil size={11} strokeWidth={1.75} className="text-muted ml-1" aria-hidden="true" />
           )}
         </div>
       </motion.div>
@@ -335,11 +325,13 @@ function SaveStatus({ state }: { state: "idle" | "saving" | "saved" | "error" })
           state === "saving"
             ? "text-muted"
             : state === "saved"
-            ? "text-emerald-500"
-            : "text-danger-500"
+              ? "text-emerald-500"
+              : "text-danger-500"
         }`}
       >
-        {state === "saving" && <Loader2 size={11} strokeWidth={2} className="animate-spin" aria-hidden="true" />}
+        {state === "saving" && (
+          <Loader2 size={11} strokeWidth={1.75} className="animate-spin" aria-hidden="true" />
+        )}
         {state === "saved" && <Check size={11} strokeWidth={2.5} aria-hidden="true" />}
         {state === "saving" ? "Saving…" : state === "saved" ? "Saved" : "Save failed"}
       </motion.div>
@@ -418,7 +410,9 @@ function EditPracticeModal({
       size="lg"
       footer={
         <div className="flex items-center justify-end gap-3 w-full">
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
           <Button onClick={handleSave} disabled={saving || !title.trim()}>
             {saving ? "Saving…" : "Save Changes"}
           </Button>
@@ -430,29 +424,47 @@ function EditPracticeModal({
         <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">Start Time</label>
+            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              Start Time
+            </label>
             <select
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
             >
-              {TIME_OPTIONS_EDIT.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {TIME_OPTIONS_EDIT.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">End Time</label>
+            <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+              End Time
+            </label>
             <select
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
             >
-              {TIME_OPTIONS_EDIT.filter((o) => o.value > startTime).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {TIME_OPTIONS_EDIT.filter((o) => o.value > startTime).map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
-        <Input label="Location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <Input
+          label="Location (optional)"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
         <div>
-          <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">Notes</label>
+          <label className="text-sm font-semibold text-muted uppercase tracking-wider block mb-1.5">
+            Notes
+          </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -500,9 +512,7 @@ export function AttendanceClient({
   });
 
   // Queue of pending saves: athleteId → { status, notes }
-  const pendingQueue = useRef<
-    Map<string, { status: AttStatus; notes?: string }>
-  >(new Map());
+  const pendingQueue = useRef<Map<string, { status: AttStatus; notes?: string }>>(new Map());
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -524,13 +534,10 @@ export function AttendanceClient({
     return count;
   }, [statusMap]);
 
-  const unmarkedCount = eligibleAthletes.filter(
-    (a) => !statusMap.get(a.id)
-  ).length;
+  const unmarkedCount = eligibleAthletes.filter((a) => !statusMap.get(a.id)).length;
 
-  const progressPct = eligibleAthletes.length > 0
-    ? Math.round((markedCount / eligibleAthletes.length) * 100)
-    : 0;
+  const progressPct =
+    eligibleAthletes.length > 0 ? Math.round((markedCount / eligibleAthletes.length) * 100) : 0;
 
   // Sort: unmarked first, then by name
   const sortedAthletes = useMemo(() => {
@@ -649,7 +656,9 @@ export function AttendanceClient({
 
   // ── Mark All Present ──
   async function handleMarkAllPresent() {
-    const alreadyMarked = eligibleAthletes.filter((a) => statusMap.get(a.id) !== null && statusMap.get(a.id) !== undefined);
+    const alreadyMarked = eligibleAthletes.filter(
+      (a) => statusMap.get(a.id) !== null && statusMap.get(a.id) !== undefined
+    );
 
     if (
       alreadyMarked.length > 0 &&
@@ -681,7 +690,10 @@ export function AttendanceClient({
       );
       if (!res.ok) throw new Error("Failed");
       const json = await res.json();
-      success("All Present", `Marked ${json.data.marked} athlete${json.data.marked !== 1 ? "s" : ""} as present`);
+      success(
+        "All Present",
+        `Marked ${json.data.marked} athlete${json.data.marked !== 1 ? "s" : ""} as present`
+      );
     } catch {
       showError("Error", "Could not mark all present. Please try again.");
       // Refetch to sync
@@ -737,7 +749,7 @@ export function AttendanceClient({
           href="/coach/practices"
           className="flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors shrink-0"
         >
-          <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
+          <ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />
           Practices
         </Link>
 
@@ -760,9 +772,7 @@ export function AttendanceClient({
                 </span>
               </>
             )}
-            {practice.status === "CANCELLED" && (
-              <Badge variant="danger">Cancelled</Badge>
-            )}
+            {practice.status === "CANCELLED" && <Badge variant="danger">Cancelled</Badge>}
           </div>
         </div>
 
@@ -799,20 +809,12 @@ export function AttendanceClient({
 
         <div className="flex items-center gap-2 ml-auto">
           <SaveStatus state={saveState} />
-          <Button
-            variant="ghost"
-            onClick={() => setShowEdit(true)}
-            className="gap-1.5"
-          >
+          <Button variant="ghost" onClick={() => setShowEdit(true)} className="gap-1.5">
             <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />
             <span className="hidden sm:inline">Edit</span>
           </Button>
           {practice.status !== "CANCELLED" && (
-            <Button
-              variant="danger"
-              onClick={() => setShowCancelConfirm(true)}
-              className="gap-1.5"
-            >
+            <Button variant="danger" onClick={() => setShowCancelConfirm(true)} className="gap-1.5">
               <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
               <span className="hidden sm:inline">Cancel Practice</span>
             </Button>
@@ -824,7 +826,12 @@ export function AttendanceClient({
       <div className="pt-4 space-y-2">
         {sortedAthletes.length === 0 ? (
           <div className="py-12 text-center">
-            <Users size={36} strokeWidth={1.5} className="text-surface-300 dark:text-surface-600 mx-auto mb-3" aria-hidden="true" />
+            <Users
+              size={36}
+              strokeWidth={1.75}
+              className="text-surface-300 dark:text-surface-600 mx-auto mb-3"
+              aria-hidden="true"
+            />
             <p className="text-sm text-muted">No athletes in this practice.</p>
           </div>
         ) : (
@@ -878,11 +885,7 @@ export function AttendanceClient({
               <Button variant="ghost" onClick={() => setShowCancelConfirm(false)}>
                 Keep Practice
               </Button>
-              <Button
-                variant="danger"
-                onClick={handleCancelPractice}
-                disabled={cancelling}
-              >
+              <Button variant="danger" onClick={handleCancelPractice} disabled={cancelling}>
                 {cancelling ? "Cancelling…" : "Cancel Practice"}
               </Button>
             </div>

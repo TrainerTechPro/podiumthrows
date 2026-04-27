@@ -42,12 +42,19 @@ function generateThumbnail(file: File): Promise<Blob | null> {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { resolve(null); return; }
+      if (!ctx) {
+        resolve(null);
+        return;
+      }
       ctx.drawImage(video, 0, 0);
-      canvas.toBlob((blob) => {
-        URL.revokeObjectURL(video.src);
-        resolve(blob);
-      }, "image/jpeg", 0.85);
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(video.src);
+          resolve(blob);
+        },
+        "image/jpeg",
+        0.85
+      );
     };
 
     video.onerror = () => {
@@ -280,7 +287,10 @@ export function VideoUploadForm({ athletes }: Props) {
         <div
           role={!videoFile && !uploading ? "button" : undefined}
           tabIndex={!videoFile && !uploading ? 0 : undefined}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => !uploading && !videoFile && fileInputRef.current?.click()}
@@ -290,7 +300,9 @@ export function VideoUploadForm({ athletes }: Props) {
               fileInputRef.current?.click();
             }
           }}
-          aria-label={videoFile ? `Selected: ${videoFile.name}` : "Drop a video file or press Enter to browse"}
+          aria-label={
+            videoFile ? `Selected: ${videoFile.name}` : "Drop a video file or press Enter to browse"
+          }
           className={`mt-1 border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
             videoFile
               ? "border-success-500/50 bg-success-50"
@@ -311,18 +323,24 @@ export function VideoUploadForm({ athletes }: Props) {
           {videoFile ? (
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-2">
-                <Check size={20} strokeWidth={2} className="text-success-500" aria-hidden="true" />
+                <Check
+                  size={20}
+                  strokeWidth={1.75}
+                  className="text-success-500"
+                  aria-hidden="true"
+                />
                 <span className="text-sm font-medium text-[var(--foreground)]">
                   {videoFile.name}
                 </span>
               </div>
-              <p className="text-xs text-muted">
-                {(videoFile.size / 1024 / 1024).toFixed(1)} MB
-              </p>
+              <p className="text-xs text-muted">{(videoFile.size / 1024 / 1024).toFixed(1)} MB</p>
               {!uploading && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); clearFile(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearFile();
+                  }}
                   className="inline-flex items-center gap-1 text-xs text-danger-500 hover:text-danger-600 transition-colors"
                 >
                   <X size={14} strokeWidth={2} aria-hidden="true" />
@@ -332,12 +350,19 @@ export function VideoUploadForm({ athletes }: Props) {
             </div>
           ) : (
             <div className="space-y-2">
-              <Upload size={32} strokeWidth={1.5} className="mx-auto text-muted" aria-hidden="true" />
+              <Upload
+                size={32}
+                strokeWidth={1.75}
+                className="mx-auto text-muted"
+                aria-hidden="true"
+              />
               <p className="text-sm font-medium text-muted">
                 Drag & drop a video, or click to browse
               </p>
               <p className="text-xs text-muted">MP4, MOV, or WebM — up to 200MB</p>
-              <p className="text-xs text-surface-500 mt-0.5">Best results with 720p or 1080p at 30–60fps</p>
+              <p className="text-xs text-surface-500 mt-0.5">
+                Best results with 720p or 1080p at 30–60fps
+              </p>
             </div>
           )}
         </div>
@@ -349,7 +374,11 @@ export function VideoUploadForm({ athletes }: Props) {
           <label className="label">Generated Thumbnail</label>
           <div className="mt-1 w-40 aspect-video rounded-lg overflow-hidden bg-surface-900 border border-surface-200 dark:border-surface-700">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={thumbnailPreview} alt="Thumbnail preview" className="w-full h-full object-cover" />
+            <img
+              src={thumbnailPreview}
+              alt="Thumbnail preview"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       )}
@@ -371,7 +400,9 @@ export function VideoUploadForm({ athletes }: Props) {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted">Uploading…</span>
-            <span className="font-medium text-[var(--foreground)] tabular-nums">{uploadProgress}%</span>
+            <span className="font-medium text-[var(--foreground)] tabular-nums">
+              {uploadProgress}%
+            </span>
           </div>
           <div className="w-full bg-surface-200 dark:bg-surface-700 rounded-full h-2">
             <div
@@ -406,12 +437,12 @@ export function VideoUploadForm({ athletes }: Props) {
         >
           {uploading ? (
             <>
-              <Video size={16} strokeWidth={2} className="animate-pulse" aria-hidden="true" />
+              <Video size={16} strokeWidth={1.75} className="animate-pulse" aria-hidden="true" />
               Uploading…
             </>
           ) : (
             <>
-              <Upload size={16} strokeWidth={2} aria-hidden="true" />
+              <Upload size={16} strokeWidth={1.75} aria-hidden="true" />
               Upload & Analyze
             </>
           )}

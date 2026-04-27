@@ -315,7 +315,7 @@ function GroupRow({
                 className="p-1.5 rounded-lg text-primary-500 hover:bg-primary-500/10 disabled:opacity-50"
                 aria-label="Save"
               >
-                <Check size={14} strokeWidth={2} aria-hidden="true" />
+                <Check size={14} strokeWidth={1.75} aria-hidden="true" />
               </button>
               <button
                 type="button"

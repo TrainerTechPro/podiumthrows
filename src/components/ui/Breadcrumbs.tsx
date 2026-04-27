@@ -13,7 +13,6 @@ export interface BreadcrumbsProps {
   className?: string;
 }
 
-
 export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
   return (
     <nav aria-label="Breadcrumb" className={cn("flex items-center flex-wrap gap-1", className)}>
@@ -47,7 +46,12 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
               </li>
               {!isLast && (
                 <li aria-hidden="true" className="flex items-center">
-                  <ChevronRightIcon size={14} strokeWidth={2} className="text-surface-300 dark:text-surface-600 shrink-0" aria-hidden="true" />
+                  <ChevronRightIcon
+                    size={14}
+                    strokeWidth={1.75}
+                    className="text-surface-300 dark:text-surface-600 shrink-0"
+                    aria-hidden="true"
+                  />
                 </li>
               )}
             </Fragment>

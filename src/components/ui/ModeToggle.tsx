@@ -115,7 +115,7 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
           transition={iconTransition}
           className="flex items-center justify-center"
         >
-          <Icon size={18} strokeWidth={2} aria-hidden="true" />
+          <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
         </motion.span>
       </AnimatePresence>
     </button>

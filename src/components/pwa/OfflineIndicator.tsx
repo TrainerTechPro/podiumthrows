@@ -10,10 +10,8 @@ export function OfflineIndicator() {
 
   return (
     <div className="fixed top-14 left-0 right-0 z-30 flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 dark:bg-amber-700 text-white text-xs font-medium animate-spring-up">
-      <WifiOff size={14} strokeWidth={2.5} />
-      <span>
-        You&apos;re offline — changes will sync when reconnected
-      </span>
+      <WifiOff size={14} strokeWidth={2.5} aria-hidden="true" />
+      <span>You&apos;re offline — changes will sync when reconnected</span>
     </div>
   );
 }

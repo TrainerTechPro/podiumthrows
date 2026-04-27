@@ -270,7 +270,7 @@ export default async function AthleteDashboardPage() {
           className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
         >
           See all trends
-          <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
+          <ArrowRight size={14} strokeWidth={1.75} aria-hidden="true" />
         </Link>
       </div>
     </div>

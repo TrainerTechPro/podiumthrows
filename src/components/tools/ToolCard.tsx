@@ -26,7 +26,7 @@ export function CalcCard({
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth={1.8}
+            strokeWidth={1.75}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
           </svg>
@@ -108,7 +108,13 @@ export function ResultBox({ label, value, sub }: { label: string; value: string;
   );
 }
 
-export function UnitToggle({ value, onChange }: { value: UnitSystem; onChange: (v: UnitSystem) => void }) {
+export function UnitToggle({
+  value,
+  onChange,
+}: {
+  value: UnitSystem;
+  onChange: (v: UnitSystem) => void;
+}) {
   return (
     <div className="flex rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 w-fit">
       {(["imperial", "metric"] as UnitSystem[]).map((u) => (

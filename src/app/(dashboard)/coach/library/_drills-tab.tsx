@@ -135,7 +135,7 @@ export function DrillsTab({
               className="card card-interactive !p-0 overflow-hidden flex flex-col"
             >
               <div className="w-full aspect-video bg-[var(--muted-bg)] flex items-center justify-center">
-                <Video size={32} className="text-muted" strokeWidth={1.5} aria-hidden="true" />
+                <Video size={32} className="text-muted" strokeWidth={1.75} aria-hidden="true" />
               </div>
               <div className="p-3 space-y-2 flex-1">
                 <h3 className="font-semibold text-sm text-[var(--foreground)] line-clamp-2">

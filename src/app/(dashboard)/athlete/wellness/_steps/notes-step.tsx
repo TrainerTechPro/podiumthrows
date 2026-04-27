@@ -17,9 +17,7 @@ export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
           <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">
             Step
           </span>
-          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">
-            5/5
-          </span>
+          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">5/5</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-[var(--muted-bg)] overflow-hidden">
           <div
@@ -70,7 +68,7 @@ export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
           size="lg"
           className="min-h-[48px] px-4"
           onClick={onBack}
-          leftIcon={<ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />}
+          leftIcon={<ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Back
         </Button>
@@ -87,11 +85,7 @@ export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
 
         {/* Submit — mobile: SlideToConfirm / desktop: Button */}
         <div className="flex-[2] sm:hidden">
-          <SlideToConfirm
-            label="Slide to Submit"
-            onConfirm={onNext}
-            variant="confirm"
-          />
+          <SlideToConfirm label="Slide to Submit" onConfirm={onNext} variant="confirm" />
         </div>
         <Button
           variant="primary"

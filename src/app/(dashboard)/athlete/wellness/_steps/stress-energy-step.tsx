@@ -56,9 +56,7 @@ export function StressEnergyStep({
           <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">
             Step
           </span>
-          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">
-            3/5
-          </span>
+          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">3/5</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-[var(--muted-bg)] overflow-hidden">
           <div
@@ -77,9 +75,7 @@ export function StressEnergyStep({
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Stress &amp; Energy
           </h2>
-          <p className="text-[13px] text-muted leading-snug">
-            How are you feeling today?
-          </p>
+          <p className="text-[13px] text-muted leading-snug">How are you feeling today?</p>
         </div>
       </div>
 
@@ -94,7 +90,10 @@ export function StressEnergyStep({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <label htmlFor="stress-level" className="text-sm font-semibold text-[var(--foreground)]">
+            <label
+              htmlFor="stress-level"
+              className="text-sm font-semibold text-[var(--foreground)]"
+            >
               Stress Level
             </label>
             <p className="text-[10px] text-muted mt-0.5">
@@ -144,9 +143,7 @@ export function StressEnergyStep({
             <label htmlFor="energy-mood" className="text-sm font-semibold text-[var(--foreground)]">
               Energy / Mood
             </label>
-            <p className="text-[10px] text-muted mt-0.5">
-              1 = exhausted &middot; 10 = fired up
-            </p>
+            <p className="text-[10px] text-muted mt-0.5">1 = exhausted &middot; 10 = fired up</p>
           </div>
           <NumberFlow
             value={data.energyMood}
@@ -194,7 +191,7 @@ export function StressEnergyStep({
           size="lg"
           className="min-h-[48px] px-4"
           onClick={onBack}
-          leftIcon={<ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />}
+          leftIcon={<ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Back
         </Button>
@@ -204,7 +201,7 @@ export function StressEnergyStep({
           size="lg"
           className="flex-1 rounded-xl min-h-[48px] text-sm font-bold text-black"
           onClick={onNext}
-          rightIcon={<ChevronRight size={16} strokeWidth={2} aria-hidden="true" />}
+          rightIcon={<ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Next
         </Button>

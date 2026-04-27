@@ -27,7 +27,7 @@ export function AddNoteCTA({ roster }: { roster: SidelineRosterAthlete[] }) {
       >
         <div className="flex items-center gap-3 text-left">
           <span className="rounded-full bg-surface-950/10 p-2.5">
-            <MessageSquarePlus size={20} strokeWidth={2} aria-hidden="true" />
+            <MessageSquarePlus size={20} strokeWidth={1.75} aria-hidden="true" />
           </span>
           <div>
             <p className="text-base font-bold">Add note or video</p>
@@ -36,7 +36,7 @@ export function AddNoteCTA({ roster }: { roster: SidelineRosterAthlete[] }) {
             </p>
           </div>
         </div>
-        <ChevronRight size={18} strokeWidth={2} aria-hidden="true" />
+        <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
       </button>
 
       <Sheet
@@ -96,7 +96,7 @@ export function AddNoteCTA({ roster }: { roster: SidelineRosterAthlete[] }) {
                     </div>
                     <ChevronRight
                       size={16}
-                      strokeWidth={2}
+                      strokeWidth={1.75}
                       aria-hidden="true"
                       style={{ color: "var(--color-text-secondary)" }}
                     />

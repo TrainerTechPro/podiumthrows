@@ -3,11 +3,7 @@
 import { ShieldCheck, ShieldAlert, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/EmptyState";
-import type {
-  ProfileData,
-  ThrowsInjuryRecord,
-  MovementRestrictionsData,
-} from "./_types";
+import type { ProfileData, ThrowsInjuryRecord, MovementRestrictionsData } from "./_types";
 
 /* ─── Date formatter ───────────────────────────────────────────────────── */
 
@@ -48,20 +44,14 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
     <div className="space-y-6">
       {/* ── Managed badge ────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 text-xs text-muted">
-        <ShieldCheck
-          className="w-4 h-4"
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
+        <ShieldCheck className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
         <span>Managed by your coach</span>
       </div>
 
       {/* ── Empty state ──────────────────────────────────────────────── */}
       {!hasAnyData ? (
         <EmptyState
-          icon={
-            <ShieldAlert size={24} strokeWidth={1.5} aria-hidden="true" />
-          }
+          icon={<ShieldAlert size={24} strokeWidth={1.75} aria-hidden="true" />}
           title="No injury data recorded"
           description="Your coach manages this section. Injury history and movement restrictions will appear here once they add them."
         />
@@ -77,7 +67,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
               <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-4 py-3">
                 <Check
                   className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
-                  strokeWidth={2}
+                  strokeWidth={1.75}
                   aria-hidden="true"
                 />
                 <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
@@ -91,9 +81,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     key={injury.id}
                     className={cn(
                       "card p-4 space-y-2 border-l-4",
-                      injury.severity === "severe"
-                        ? "border-l-red-500"
-                        : "border-l-amber-500"
+                      injury.severity === "severe" ? "border-l-red-500" : "border-l-amber-500"
                     )}
                   >
                     {/* Header: body part + side + severity badge */}
@@ -146,9 +134,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     {/* Treatment plan */}
                     {injury.treatmentPlan && (
                       <div className="pt-2 border-t border-[var(--card-border)]">
-                        <p className="text-xs text-muted">
-                          Treatment: {injury.treatmentPlan}
-                        </p>
+                        <p className="text-xs text-muted">Treatment: {injury.treatmentPlan}</p>
                       </div>
                     )}
                   </div>
@@ -168,15 +154,10 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                 {sortedHistory.map((injury) => (
                   <div
                     key={injury.id}
-                    className={cn(
-                      "card p-3 space-y-1",
-                      injury.recovered && "opacity-60"
-                    )}
+                    className={cn("card p-3 space-y-1", injury.recovered && "opacity-60")}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted">
-                        {formatDate(injury.injuryDate)}
-                      </span>
+                      <span className="text-xs text-muted">{formatDate(injury.injuryDate)}</span>
                       {injury.recovered && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
                           Recovered
@@ -185,8 +166,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     </div>
                     <p className="text-sm font-medium text-[var(--foreground)]">
                       {injury.bodyPart}
-                      {injury.side ? ` (${injury.side})` : ""} &mdash;{" "}
-                      {injury.severity}
+                      {injury.side ? ` (${injury.side})` : ""} &mdash; {injury.severity}
                     </p>
                     {injury.description && (
                       <p className="text-xs text-muted">{injury.description}</p>
@@ -195,9 +175,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                       <p className="text-xs text-muted">
                         {injury.returnToThrowDate &&
                           `Return to throwing: ${formatDate(injury.returnToThrowDate)}`}
-                        {injury.returnToThrowDate &&
-                          injury.fullReturnDate &&
-                          " \u00B7 "}
+                        {injury.returnToThrowDate && injury.fullReturnDate && " \u00B7 "}
                         {injury.fullReturnDate &&
                           `Full return: ${formatDate(injury.fullReturnDate)}`}
                       </p>
@@ -215,34 +193,23 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
             </h3>
 
             {restrictions === null ? (
-              <p className="text-sm text-muted">
-                No movement restrictions data recorded.
-              </p>
+              <p className="text-sm text-muted">No movement restrictions data recorded.</p>
             ) : (
               <div className="card p-4 space-y-3">
                 {RESTRICTION_ITEMS.map((item) => {
-                  const ok =
-                    restrictions[
-                      item.key as keyof MovementRestrictionsData
-                    ] === true;
+                  const ok = restrictions[item.key as keyof MovementRestrictionsData] === true;
                   return (
                     <div key={item.key} className="flex items-center gap-3">
                       {ok ? (
                         <Check
                           className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
-                          strokeWidth={2}
+                          strokeWidth={1.75}
                           aria-hidden="true"
                         />
                       ) : (
-                        <X
-                          className="w-4 h-4 text-red-500"
-                          strokeWidth={2}
-                          aria-hidden="true"
-                        />
+                        <X className="w-4 h-4 text-red-500" strokeWidth={2} aria-hidden="true" />
                       )}
-                      <span className="text-sm text-[var(--foreground)]">
-                        {item.label}
-                      </span>
+                      <span className="text-sm text-[var(--foreground)]">{item.label}</span>
                     </div>
                   );
                 })}

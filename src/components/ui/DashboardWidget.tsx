@@ -62,15 +62,19 @@ export function DashboardWidget({
     readiness == null
       ? "text-surface-400"
       : readiness >= 8
-      ? "text-emerald-400"
-      : readiness >= 5
-      ? "text-amber-400"
-      : "text-red-400";
+        ? "text-emerald-400"
+        : readiness >= 5
+          ? "text-amber-400"
+          : "text-red-400";
 
   const contentStyle: React.CSSProperties | undefined =
     reducedMotion.current || phase === "visible"
       ? phase === "visible"
-        ? { opacity: 1, transform: "translateY(0)", transition: "opacity 250ms ease-out, transform 250ms ease-out" }
+        ? {
+            opacity: 1,
+            transform: "translateY(0)",
+            transition: "opacity 250ms ease-out, transform 250ms ease-out",
+          }
         : undefined
       : {
           opacity: 0,
@@ -104,7 +108,12 @@ export function DashboardWidget({
           {/* Readiness */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-surface-800/60 flex items-center justify-center shrink-0">
-              <Activity size={18} strokeWidth={2} className={readinessColor} />
+              <Activity
+                size={18}
+                strokeWidth={1.75}
+                aria-hidden="true"
+                className={readinessColor}
+              />
             </div>
             <div className="min-w-0">
               <p className={cn("text-lg font-bold tabular-nums font-heading", readinessColor)}>
@@ -117,7 +126,12 @@ export function DashboardWidget({
           {/* Streak */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-surface-800/60 flex items-center justify-center shrink-0">
-              <TrendingUp size={18} strokeWidth={2} className="text-amber-400" />
+              <TrendingUp
+                size={18}
+                strokeWidth={1.75}
+                aria-hidden="true"
+                className="text-amber-400"
+              />
             </div>
             <div className="min-w-0">
               {streakDays > 0 ? (
@@ -134,7 +148,7 @@ export function DashboardWidget({
           {/* Next session */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-surface-800/60 flex items-center justify-center shrink-0">
-              <Calendar size={18} strokeWidth={2} className="text-blue-400" />
+              <Calendar size={18} strokeWidth={1.75} aria-hidden="true" className="text-blue-400" />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[var(--foreground)] truncate">
@@ -147,7 +161,7 @@ export function DashboardWidget({
           {/* Notifications */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-surface-800/60 flex items-center justify-center shrink-0 relative">
-              <Bell size={18} strokeWidth={2} className="text-surface-400" />
+              <Bell size={18} strokeWidth={1.75} aria-hidden="true" className="text-surface-400" />
               {notificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center px-1 tabular-nums">
                   {notificationCount > 99 ? "99+" : notificationCount}

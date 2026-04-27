@@ -746,7 +746,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
         {groups.length === 0 && !showBlockForm && (
           <EmptyState
             compact
-            icon={<Clock size={22} strokeWidth={1.5} aria-hidden="true" />}
+            icon={<Clock size={22} strokeWidth={1.75} aria-hidden="true" />}
             title="No availability set"
             description="Add time blocks to tell your coach when you're free each week."
           />
@@ -764,7 +764,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
                       size="sm"
                       loading={editSaving}
                       onClick={() => saveEdit(g)}
-                      leftIcon={<Check size={14} strokeWidth={2} aria-hidden="true" />}
+                      leftIcon={<Check size={14} strokeWidth={1.75} aria-hidden="true" />}
                     >
                       Save
                     </Button>
@@ -802,7 +802,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
                 size="sm"
                 loading={blockSaving}
                 onClick={saveBlock}
-                leftIcon={<Check size={14} strokeWidth={2} aria-hidden="true" />}
+                leftIcon={<Check size={14} strokeWidth={1.75} aria-hidden="true" />}
               >
                 Save Block
               </Button>
@@ -1134,7 +1134,7 @@ function OverrideForm({
           size="sm"
           loading={saving}
           onClick={onSave}
-          leftIcon={<Check size={14} strokeWidth={2} aria-hidden="true" />}
+          leftIcon={<Check size={14} strokeWidth={1.75} aria-hidden="true" />}
         >
           Save Change
         </Button>

@@ -480,7 +480,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
               <div className="py-10 px-4 text-center">
                 <Bell
                   size={28}
-                  strokeWidth={1.5}
+                  strokeWidth={1.75}
                   className="mx-auto text-surface-400 dark:text-surface-600 mb-2"
                   aria-hidden="true"
                 />

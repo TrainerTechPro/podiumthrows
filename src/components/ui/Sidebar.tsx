@@ -117,6 +117,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           )}
           <ChevronRight
             size={14}
+            aria-hidden="true"
             className={cn(
               "shrink-0 transition-transform duration-200 text-surface-400",
               expanded && "rotate-90"

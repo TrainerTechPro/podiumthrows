@@ -169,7 +169,7 @@ export function LiveCapture({ athletes }: Props) {
     } finally {
       detectingRef.current = false;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cameraReady]);
 
   useEffect(() => {
@@ -218,8 +218,8 @@ export function LiveCapture({ athletes }: Props) {
       "video/webm;codecs=vp8",
       "video/webm",
     ];
-    const mimeType = candidates.find((t) =>
-      typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)
+    const mimeType = candidates.find(
+      (t) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)
     );
     if (!mimeType) {
       showError("Recording not supported on this browser");
@@ -351,10 +351,13 @@ export function LiveCapture({ athletes }: Props) {
     return (
       <div className="space-y-4 animate-spring-up max-w-2xl mx-auto">
         <nav className="flex items-center gap-1.5 text-sm text-muted">
-          <Link href="/coach/video-analysis" className="hover:text-[var(--foreground)] transition-colors">
+          <Link
+            href="/coach/video-analysis"
+            className="hover:text-[var(--foreground)] transition-colors"
+          >
             Pose Analysis
           </Link>
-          <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
+          <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
           <span className="text-[var(--foreground)]">Save Live Capture</span>
         </nav>
 
@@ -440,7 +443,7 @@ export function LiveCapture({ athletes }: Props) {
               disabled={saving || !athleteId || !event || !title.trim()}
               className="btn-primary disabled:opacity-50 flex items-center gap-2"
             >
-              <Save size={16} strokeWidth={2} aria-hidden="true" />
+              <Save size={16} strokeWidth={1.75} aria-hidden="true" />
               {saving ? "Saving…" : "Save Analysis"}
             </button>
           </div>
@@ -454,19 +457,20 @@ export function LiveCapture({ athletes }: Props) {
     <div className="space-y-4 animate-spring-up">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-sm text-muted">
-        <Link href="/coach/video-analysis" className="hover:text-[var(--foreground)] transition-colors">
+        <Link
+          href="/coach/video-analysis"
+          className="hover:text-[var(--foreground)] transition-colors"
+        >
           Pose Analysis
         </Link>
-        <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
+        <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
         <span className="text-[var(--foreground)]">Live Capture</span>
       </nav>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Live Capture</h1>
-          <p className="text-sm text-muted mt-0.5">
-            Real-time pose analysis from your camera
-          </p>
+          <p className="text-sm text-muted mt-0.5">Real-time pose analysis from your camera</p>
         </div>
         {isRecording && (
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-danger-500/15 border border-danger-500/30">
@@ -482,12 +486,18 @@ export function LiveCapture({ athletes }: Props) {
       {cameraError && (
         <div className="card p-6 border-danger-500/30 bg-danger-50">
           <div className="flex items-start gap-3">
-            <AlertCircle size={20} strokeWidth={2} className="text-danger-500 shrink-0 mt-0.5" aria-hidden="true" />
+            <AlertCircle
+              size={20}
+              strokeWidth={1.75}
+              className="text-danger-500 shrink-0 mt-0.5"
+              aria-hidden="true"
+            />
             <div className="space-y-2">
               <p className="text-sm font-semibold text-danger-500">Camera unavailable</p>
               <p className="text-xs text-muted">{cameraError}</p>
               <p className="text-xs text-muted">
-                Make sure your browser has camera permission. On iOS, this requires HTTPS and Safari 14+.
+                Make sure your browser has camera permission. On iOS, this requires HTTPS and Safari
+                14+.
               </p>
               <button
                 type="button"
@@ -531,7 +541,7 @@ export function LiveCapture({ athletes }: Props) {
 
             {/* Pose model loading */}
             {pose.loading && cameraReady && (
-              <div className="absolute top-3 left-3 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-sm">
+              <div className="absolute top-3 left-3 px-2 py-1 rounded-lg bg-black">
                 <span className="text-xs text-white">Loading pose model…</span>
               </div>
             )}
@@ -571,7 +581,7 @@ export function LiveCapture({ athletes }: Props) {
                   className="p-2.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-40"
                   aria-label="Flip camera"
                 >
-                  <RefreshCw size={16} strokeWidth={2} aria-hidden="true" />
+                  <RefreshCw size={16} strokeWidth={1.75} aria-hidden="true" />
                 </button>
 
                 <button
@@ -584,7 +594,7 @@ export function LiveCapture({ athletes }: Props) {
                   }`}
                   aria-label={showAngles ? "Hide angle labels" : "Show angle labels"}
                 >
-                  <Ruler size={16} strokeWidth={2} aria-hidden="true" />
+                  <Ruler size={16} strokeWidth={1.75} aria-hidden="true" />
                 </button>
 
                 <button
@@ -597,7 +607,11 @@ export function LiveCapture({ athletes }: Props) {
                   }`}
                   aria-label={showOverlay ? "Hide skeleton" : "Show skeleton"}
                 >
-                  {showOverlay ? <Eye size={16} strokeWidth={2} aria-hidden="true" /> : <EyeOff size={16} strokeWidth={2} aria-hidden="true" />}
+                  {showOverlay ? (
+                    <Eye size={16} strokeWidth={1.75} aria-hidden="true" />
+                  ) : (
+                    <EyeOff size={16} strokeWidth={1.75} aria-hidden="true" />
+                  )}
                 </button>
               </div>
             </div>
@@ -618,9 +632,7 @@ export function LiveCapture({ athletes }: Props) {
               Live Angles
             </p>
             {!cameraReady ? (
-              <p className="text-sm text-muted text-center py-6">
-                Waiting for camera…
-              </p>
+              <p className="text-sm text-muted text-center py-6">Waiting for camera…</p>
             ) : !throwAngles ? (
               <p className="text-sm text-muted text-center py-6">
                 Position the athlete in frame to see angles
@@ -629,7 +641,13 @@ export function LiveCapture({ athletes }: Props) {
               <div className="grid grid-cols-2 gap-2">
                 {getAnglesWithStatus(throwAngles)
                   .filter((a) =>
-                    ["shoulderSeparation", "hipShoulderDifferential", "blockLegKnee", "rearLegKnee", "trunkLean"].includes(a.key)
+                    [
+                      "shoulderSeparation",
+                      "hipShoulderDifferential",
+                      "blockLegKnee",
+                      "rearLegKnee",
+                      "trunkLean",
+                    ].includes(a.key)
                   )
                   .map((angle) => (
                     <AngleIndicator
@@ -670,7 +688,7 @@ export function LiveCapture({ athletes }: Props) {
               disabled={!throwAngles}
               className="btn-primary w-full text-sm disabled:opacity-40 flex items-center justify-center gap-2"
             >
-              <MapPin size={14} strokeWidth={2} aria-hidden="true" />
+              <MapPin size={14} strokeWidth={1.75} aria-hidden="true" />
               Mark &ldquo;{selectedLabel}&rdquo;
               {isRecording && (
                 <span className="font-mono tabular-nums text-xs">
@@ -697,7 +715,12 @@ export function LiveCapture({ athletes }: Props) {
                       key={m.id}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700"
                     >
-                      <MapPin size={12} strokeWidth={2} className="text-primary-500 shrink-0" aria-hidden="true" />
+                      <MapPin
+                        size={12}
+                        strokeWidth={1.75}
+                        className="text-primary-500 shrink-0"
+                        aria-hidden="true"
+                      />
                       <span className="text-sm font-medium text-[var(--foreground)] flex-1 truncate">
                         {m.label}
                       </span>
@@ -710,7 +733,7 @@ export function LiveCapture({ athletes }: Props) {
                         className="p-1 rounded hover:bg-danger-500/10 text-surface-400 hover:text-danger-500 transition-colors"
                         aria-label={`Delete ${m.label} mark`}
                       >
-                        <Trash2 size={12} strokeWidth={2} aria-hidden="true" />
+                        <Trash2 size={12} strokeWidth={1.75} aria-hidden="true" />
                       </button>
                     </div>
                   );
@@ -722,7 +745,7 @@ export function LiveCapture({ athletes }: Props) {
           {/* Tips */}
           <div className="card p-4 space-y-2">
             <p className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
-              <VideoIcon size={10} strokeWidth={2} aria-hidden="true" />
+              <VideoIcon size={10} strokeWidth={1.75} aria-hidden="true" />
               Tips
             </p>
             <ul className="text-xs text-muted space-y-1 list-disc pl-4">

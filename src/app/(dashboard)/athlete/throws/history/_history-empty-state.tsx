@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 export function HistoryEmptyState() {
   return (
     <EmptyState
-      icon={<Target size={48} strokeWidth={1.5} aria-hidden="true" />}
+      icon={<Target size={48} strokeWidth={1.75} aria-hidden="true" />}
       title="No throws yet"
       description="Log your first throw and we'll start building your history. Every rep counts — even the ones that miss."
       action={

@@ -228,7 +228,7 @@ export function StreakReminder({
           disabled={saving}
           className="btn btn-primary text-xs inline-flex items-center gap-1.5 h-8"
         >
-          <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+          <Check className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           Enable
         </button>
       </div>

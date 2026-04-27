@@ -227,9 +227,9 @@ function FeedbackRow({
               aria-label={playing ? "Pause" : "Play"}
             >
               {playing ? (
-                <Pause className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+                <Pause className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               ) : (
-                <Play className="h-4 w-4 ml-0.5" strokeWidth={2} aria-hidden="true" />
+                <Play className="h-4 w-4 ml-0.5" strokeWidth={1.75} aria-hidden="true" />
               )}
             </button>
             <div className="flex-1 min-w-0">
@@ -290,7 +290,7 @@ function FeedbackRow({
         <div className="flex-1" />
         {!isUnread && (
           <span className="text-[10px] text-muted inline-flex items-center gap-1">
-            <Check className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
+            <Check className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
             Read
           </span>
         )}

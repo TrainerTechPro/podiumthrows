@@ -44,9 +44,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
           <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">
             Step
           </span>
-          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">
-            2/5
-          </span>
+          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">2/5</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-[var(--muted-bg)] overflow-hidden">
           <div
@@ -65,9 +63,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Soreness
           </h2>
-          <p className="text-[13px] text-muted leading-snug">
-            Rate overall and tap sore areas
-          </p>
+          <p className="text-[13px] text-muted leading-snug">Rate overall and tap sore areas</p>
         </div>
       </div>
 
@@ -102,7 +98,12 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
             value={data.soreness}
             onChange={(e) => onChange({ soreness: parseInt(e.target.value) })}
             className="rpe-slider w-full"
-            style={{ background: trackGradient(data.soreness, 1, 10), "--rpe-color": color } as React.CSSProperties}
+            style={
+              {
+                background: trackGradient(data.soreness, 1, 10),
+                "--rpe-color": color,
+              } as React.CSSProperties
+            }
             aria-label="Overall soreness"
             aria-valuemin={1}
             aria-valuemax={10}
@@ -120,8 +121,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
       {/* ── Body Map ───────────────────────────────────────────────────── */}
       <div className="space-y-2">
         <p className="text-sm font-semibold text-[var(--foreground)]">
-          Sore Areas{" "}
-          <span className="text-muted font-normal text-xs">(optional)</span>
+          Sore Areas <span className="text-muted font-normal text-xs">(optional)</span>
         </p>
         <InteractiveBodyMap
           value={data.sorenessArea}
@@ -139,7 +139,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
           size="lg"
           className="min-h-[48px] px-4"
           onClick={onBack}
-          leftIcon={<ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />}
+          leftIcon={<ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Back
         </Button>
@@ -149,7 +149,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
           size="lg"
           className="flex-1 rounded-xl min-h-[48px] text-sm font-bold text-black"
           onClick={onNext}
-          rightIcon={<ChevronRight size={16} strokeWidth={2} aria-hidden="true" />}
+          rightIcon={<ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Next
         </Button>

@@ -1,4 +1,9 @@
-import { requireCoachSession, getCoachVideos, getCoachVideoStats, type VideoStats } from "@/lib/data/coach";
+import {
+  requireCoachSession,
+  getCoachVideos,
+  getCoachVideoStats,
+  type VideoStats,
+} from "@/lib/data/coach";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -13,11 +18,7 @@ type SearchParams = {
   search?: string;
 };
 
-export default async function VideoLibraryPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function VideoLibraryPage({ searchParams }: { searchParams: SearchParams }) {
   let coach;
   try {
     const session = await requireCoachSession();
@@ -36,9 +37,10 @@ export default async function VideoLibraryPage({
   ]);
 
   const videos = videosResult.status === "fulfilled" ? videosResult.value : [];
-  const stats: VideoStats = statsResult.status === "fulfilled"
-    ? statsResult.value
-    : { total: 0, byEvent: {}, recentCount: 0 };
+  const stats: VideoStats =
+    statsResult.status === "fulfilled"
+      ? statsResult.value
+      : { total: 0, byEvent: {}, recentCount: 0 };
 
   const categories = [
     { label: "All", value: "" },
@@ -53,12 +55,10 @@ export default async function VideoLibraryPage({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">
-            Video Library
-          </h1>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">Video Library</h1>
           <p className="text-sm text-muted mt-0.5">
-            {stats.total} video{stats.total !== 1 ? "s" : ""} ·{" "}
-            {stats.recentCount} uploaded this week
+            {stats.total} video{stats.total !== 1 ? "s" : ""} · {stats.recentCount} uploaded this
+            week
           </p>
         </div>
         <Link href="/coach/videos/upload" className="btn-primary">
@@ -114,9 +114,7 @@ export default async function VideoLibraryPage({
           {searchParams.category && (
             <input type="hidden" name="category" value={searchParams.category} />
           )}
-          {searchParams.event && (
-            <input type="hidden" name="event" value={searchParams.event} />
-          )}
+          {searchParams.event && <input type="hidden" name="event" value={searchParams.event} />}
           <input
             type="text"
             name="search"
@@ -144,7 +142,7 @@ export default async function VideoLibraryPage({
       {/* Video Grid */}
       {videos.length === 0 ? (
         <EmptyState
-          icon={<Video size={24} strokeWidth={1.5} aria-hidden="true" />}
+          icon={<Video size={24} strokeWidth={1.75} aria-hidden="true" />}
           title={searchParams.search ? `No results for "${searchParams.search}"` : "No videos yet"}
           description={
             searchParams.search

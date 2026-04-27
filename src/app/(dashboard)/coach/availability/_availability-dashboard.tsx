@@ -507,7 +507,7 @@ export function AvailabilityDashboard({
         {!loading && !hasAnyData && (
           <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)]">
             <EmptyState
-              icon={<Calendar size={32} strokeWidth={1.5} aria-hidden="true" />}
+              icon={<Calendar size={32} strokeWidth={1.75} aria-hidden="true" />}
               title="No availability data yet"
               description="Athletes can submit their schedules from their Availability page. Once submitted, best practice windows will appear here."
             />
@@ -517,7 +517,7 @@ export function AvailabilityDashboard({
         {!loading && hasAnyData && data.bestWindows.length === 0 && (
           <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)]">
             <EmptyState
-              icon={<Calendar size={32} strokeWidth={1.5} aria-hidden="true" />}
+              icon={<Calendar size={32} strokeWidth={1.75} aria-hidden="true" />}
               title="No overlapping windows found"
               description="No time slots have 50% or more athletes available simultaneously. Ask athletes to review their schedules."
             />

@@ -372,7 +372,7 @@ Priya,Patel,FEMALE,JAVELIN`;
                 {r.ok ? (
                   <Check
                     size={16}
-                    strokeWidth={2}
+                    strokeWidth={1.75}
                     className="text-emerald-600 dark:text-emerald-400 shrink-0"
                     aria-hidden="true"
                   />

@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  cacheVideo,
-  removeCachedVideo,
-  isVideoCached,
-} from "@/lib/pwa/video-cache";
+import { cacheVideo, removeCachedVideo, isVideoCached } from "@/lib/pwa/video-cache";
 import { useToast } from "@/components/ui/Toast";
 import { Download, Check, Trash2, Loader2 } from "lucide-react";
 
@@ -22,9 +18,9 @@ export function OfflineVideoButton({
   title,
   fileSizeMb = 0,
 }: OfflineVideoButtonProps) {
-  const [state, setState] = useState<
-    "loading" | "idle" | "downloading" | "cached" | "removing"
-  >("loading");
+  const [state, setState] = useState<"loading" | "idle" | "downloading" | "cached" | "removing">(
+    "loading"
+  );
   const [progress, setProgress] = useState(0);
   const { success, error: showError } = useToast();
 
@@ -50,10 +46,7 @@ export function OfflineVideoButton({
       success("Video saved offline", `"${title}" is available offline`);
     } catch (err) {
       setState("idle");
-      showError(
-        "Download failed",
-        err instanceof Error ? err.message : "Could not cache video"
-      );
+      showError("Download failed", err instanceof Error ? err.message : "Could not cache video");
     }
   }, [videoId, videoUrl, title, fileSizeMb, success, showError]);
 
@@ -78,7 +71,7 @@ export function OfflineVideoButton({
     return (
       <div className="flex items-center gap-1.5">
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
-          <Check size={10} strokeWidth={3} />
+          <Check size={10} strokeWidth={3} aria-hidden="true" />
           Offline
         </span>
         <button
@@ -89,8 +82,9 @@ export function OfflineVideoButton({
           }}
           className="p-1 rounded-md text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors"
           title="Remove offline copy"
+          aria-label="Remove offline copy"
         >
-          <Trash2 size={12} />
+          <Trash2 size={12} aria-hidden="true" />
         </button>
       </div>
     );
@@ -105,9 +99,7 @@ export function OfflineVideoButton({
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="text-[10px] text-muted tabular-nums font-mono">
-          {progress}%
-        </span>
+        <span className="text-[10px] text-muted tabular-nums font-mono">{progress}%</span>
       </div>
     );
   }
@@ -115,7 +107,7 @@ export function OfflineVideoButton({
   if (state === "removing") {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] text-muted">
-        <Loader2 size={10} className="animate-spin" />
+        <Loader2 size={10} className="animate-spin" aria-hidden="true" />
         Removing…
       </span>
     );
@@ -132,7 +124,7 @@ export function OfflineVideoButton({
       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-muted hover:text-primary-600 dark:hover:text-primary-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
       title={`Save offline${fileSizeMb ? ` (${fileSizeMb.toFixed(1)} MB)` : ""}`}
     >
-      <Download size={10} />
+      <Download size={10} aria-hidden="true" />
       Save Offline
     </button>
   );

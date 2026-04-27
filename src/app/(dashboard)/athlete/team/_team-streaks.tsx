@@ -98,7 +98,7 @@ export function TeamStreaks() {
   if (entries.length === 0) {
     return (
       <EmptyState
-        icon={<Flame size={48} strokeWidth={1.5} aria-hidden="true" />}
+        icon={<Flame size={48} strokeWidth={1.75} aria-hidden="true" />}
         title="No active streaks yet"
         description="Be the spark — log a session today and you'll start one. Your teammates will follow."
       />
@@ -130,7 +130,7 @@ export function TeamStreaks() {
               <p className="text-[11px] text-muted tabular-nums">Best: {entry.longestStreak}d</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <Flame className={`h-4 w-4 ${tone}`} strokeWidth={2} aria-hidden="true" />
+              <Flame className={`h-4 w-4 ${tone}`} strokeWidth={1.75} aria-hidden="true" />
               <span className={`font-mono tabular-nums text-base font-bold ${tone}`}>
                 {entry.currentStreak}
                 <span className="text-xs"> d</span>

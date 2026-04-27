@@ -43,9 +43,7 @@ export default async function CoachFeedbackInboxPage() {
       {rows.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           <div className="card p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-              Unread
-            </p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Unread</p>
             <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-[var(--foreground)]">
               {totalUnread}
             </p>
@@ -71,12 +69,10 @@ export default async function CoachFeedbackInboxPage() {
 
       {rows.length === 0 ? (
         <div className="card p-8 text-center">
-          <p className="text-sm font-semibold text-[var(--foreground)]">
-            No feedback sent yet
-          </p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">No feedback sent yet</p>
           <p className="text-xs text-muted mt-1">
-            Leave a note on any throw or session — it&apos;ll appear here
-            along with the athlete&apos;s acknowledgments.
+            Leave a note on any throw or session — it&apos;ll appear here along with the
+            athlete&apos;s acknowledgments.
           </p>
         </div>
       ) : (
@@ -105,21 +101,19 @@ export default async function CoachFeedbackInboxPage() {
                 </p>
                 <p className="text-xs text-muted mt-0.5">
                   {row.totalFeedback} note{row.totalFeedback === 1 ? "" : "s"}
-                  {row.lastFeedbackAt && (
-                    <> · last sent {formatRelative(row.lastFeedbackAt)}</>
-                  )}
+                  {row.lastFeedbackAt && <> · last sent {formatRelative(row.lastFeedbackAt)}</>}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {row.unread > 0 && (
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-500">
-                    <AlertCircle className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                    <AlertCircle className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                     {row.unread} unread
                   </span>
                 )}
                 {row.unread === 0 && row.reacted > 0 && (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-500">
-                    <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                    <Check className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                     All seen
                   </span>
                 )}
@@ -128,7 +122,7 @@ export default async function CoachFeedbackInboxPage() {
                     className="inline-flex items-center gap-1 text-xs font-medium text-red-500"
                     aria-label={`${row.thumbsDown} thumbs down`}
                   >
-                    <ThumbsDown className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                    <ThumbsDown className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                     {row.thumbsDown}
                   </span>
                 )}

@@ -29,7 +29,7 @@ export default async function AthleteTeamPage() {
         </header>
 
         <EmptyState
-          icon={<UserPlus size={48} strokeWidth={1.5} aria-hidden="true" />}
+          icon={<UserPlus size={48} strokeWidth={1.75} aria-hidden="true" />}
           title="You haven't been added to a team yet"
           description="Ask your coach to invite you. Once teammates are on board, their PRs and streaks land here."
           action={

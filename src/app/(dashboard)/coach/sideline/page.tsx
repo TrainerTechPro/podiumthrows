@@ -14,7 +14,7 @@ function StatusGlyph({ status }: { status: string }) {
     return (
       <CheckCircle2
         size={16}
-        strokeWidth={2}
+        strokeWidth={1.75}
         aria-label="Completed"
         style={{ color: "var(--color-status-success-fg)" }}
       />
@@ -24,7 +24,7 @@ function StatusGlyph({ status }: { status: string }) {
     return (
       <PlayCircle
         size={16}
-        strokeWidth={2}
+        strokeWidth={1.75}
         aria-label="In progress"
         style={{ color: "var(--color-brand-strong)" }}
       />
@@ -55,7 +55,7 @@ function SessionRow({ session }: { session: SidelineSessionItem }) {
       </div>
       <ChevronRight
         size={16}
-        strokeWidth={2}
+        strokeWidth={1.75}
         aria-hidden="true"
         style={{ color: "var(--color-text-secondary)" }}
       />
@@ -104,7 +104,7 @@ export default async function CoachSidelinePage() {
           <div className="flex flex-col items-center text-center py-6 text-sm text-[var(--color-text-secondary)]">
             <CalendarCheck
               size={28}
-              strokeWidth={1.5}
+              strokeWidth={1.75}
               aria-hidden="true"
               className="mb-2 opacity-60"
             />

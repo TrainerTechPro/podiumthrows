@@ -37,9 +37,7 @@ export function MiniPlayer({
   return (
     <div
       className={`fixed inset-x-0 z-10 lg:hidden transition-all duration-200 ease-out ${
-        visible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 -translate-y-full pointer-events-none"
+        visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
       }`}
       style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       role="region"
@@ -53,11 +51,7 @@ export function MiniPlayer({
           {thumbnailUrl && (
             <div className="w-8 h-8 rounded overflow-hidden shrink-0 bg-surface-800">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={thumbnailUrl}
-                alt=""
-                className="w-full h-full object-cover"
-              />
+              <img src={thumbnailUrl} alt="" className="w-full h-full object-cover" />
             </div>
           )}
 
@@ -70,7 +64,7 @@ export function MiniPlayer({
               aria-label="Previous frame"
               tabIndex={visible ? 0 : -1}
             >
-              <SkipBack size={14} strokeWidth={2} aria-hidden="true" />
+              <SkipBack size={14} strokeWidth={1.75} aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -80,9 +74,9 @@ export function MiniPlayer({
               tabIndex={visible ? 0 : -1}
             >
               {isPlaying ? (
-                <Pause size={14} strokeWidth={2} aria-hidden="true" />
+                <Pause size={14} strokeWidth={1.75} aria-hidden="true" />
               ) : (
-                <Play size={14} strokeWidth={2} aria-hidden="true" />
+                <Play size={14} strokeWidth={1.75} aria-hidden="true" />
               )}
             </button>
             <button
@@ -92,7 +86,7 @@ export function MiniPlayer({
               aria-label="Next frame"
               tabIndex={visible ? 0 : -1}
             >
-              <SkipForward size={14} strokeWidth={2} aria-hidden="true" />
+              <SkipForward size={14} strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
 

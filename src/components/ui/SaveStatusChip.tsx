@@ -104,7 +104,7 @@ function Chip({ children, Icon, tone, spin, className, ...rest }: ChipProps) {
     >
       <Icon
         size={12}
-        strokeWidth={2}
+        strokeWidth={1.75}
         aria-hidden="true"
         className={spin ? "animate-spin" : undefined}
       />

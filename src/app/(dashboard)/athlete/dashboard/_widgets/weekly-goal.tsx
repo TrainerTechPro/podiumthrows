@@ -108,7 +108,7 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
             />
             {data.isHit && (
               <p className="mt-2 text-xs font-semibold text-emerald-500 flex items-center gap-1">
-                <Check className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
+                <Check className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
                 Goal reached — keep the momentum going.
               </p>
             )}
@@ -125,7 +125,7 @@ function WeeklyGoalEmpty({ onSetGoal }: { onSetGoal: () => void }) {
   return (
     <EmptyState
       compact
-      icon={<Target size={24} strokeWidth={1.5} aria-hidden="true" />}
+      icon={<Target size={24} strokeWidth={1.75} aria-hidden="true" />}
       title="Pick a number for the week"
       description="A simple throws target — and we'll celebrate when you hit it."
       action={
@@ -134,7 +134,7 @@ function WeeklyGoalEmpty({ onSetGoal }: { onSetGoal: () => void }) {
           onClick={onSetGoal}
           className="btn btn-primary text-xs inline-flex items-center gap-1.5"
         >
-          <Plus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+          <Plus className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           Set weekly goal
         </button>
       }

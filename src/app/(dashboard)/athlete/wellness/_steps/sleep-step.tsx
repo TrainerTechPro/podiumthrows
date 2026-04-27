@@ -53,15 +53,17 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
   /* Wearable badge content */
   const wearableBadge = useMemo(() => {
     if (ouraData?.sleepScore != null) {
-      const duration = ouraData.sleepDurationSec != null
-        ? ` \u00b7 ${formatSleepDuration(ouraData.sleepDurationSec)}`
-        : "";
+      const duration =
+        ouraData.sleepDurationSec != null
+          ? ` \u00b7 ${formatSleepDuration(ouraData.sleepDurationSec)}`
+          : "";
       return `Oura Ring \u00b7 Sleep score ${Math.round(ouraData.sleepScore)}${duration}`;
     }
     if (whoopData?.sleepPerformance != null) {
-      const duration = whoopData.sleepDurationMs != null
-        ? ` \u00b7 ${formatSleepDurationMs(whoopData.sleepDurationMs)}`
-        : "";
+      const duration =
+        whoopData.sleepDurationMs != null
+          ? ` \u00b7 ${formatSleepDurationMs(whoopData.sleepDurationMs)}`
+          : "";
       return `WHOOP \u00b7 Sleep ${Math.round(whoopData.sleepPerformance)}%${duration}`;
     }
     return null;
@@ -75,9 +77,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
           <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">
             Step
           </span>
-          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">
-            1/5
-          </span>
+          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">1/5</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-[var(--muted-bg)] overflow-hidden">
           <div
@@ -96,19 +96,20 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Sleep
           </h2>
-          <p className="text-[13px] text-muted leading-snug">
-            How did you sleep last night?
-          </p>
+          <p className="text-[13px] text-muted leading-snug">How did you sleep last night?</p>
         </div>
       </div>
 
       {/* ── Wearable badge ─────────────────────────────────────────────── */}
       {wearableBadge && (
         <div className="flex items-center gap-2 rounded-xl bg-indigo-500/[0.08] border border-indigo-500/15 px-3 py-2">
-          <Clock size={14} strokeWidth={1.75} className="text-indigo-400 shrink-0" aria-hidden="true" />
-          <span className="text-xs font-medium text-indigo-400 leading-snug">
-            {wearableBadge}
-          </span>
+          <Clock
+            size={14}
+            strokeWidth={1.75}
+            className="text-indigo-400 shrink-0"
+            aria-hidden="true"
+          />
+          <span className="text-xs font-medium text-indigo-400 leading-snug">{wearableBadge}</span>
         </div>
       )}
 
@@ -135,7 +136,12 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
             value={data.sleepQuality}
             onChange={(e) => onChange({ sleepQuality: parseInt(e.target.value) })}
             className="rpe-slider w-full"
-            style={{ background: trackGradient(data.sleepQuality, 1, 10), "--rpe-color": color } as React.CSSProperties}
+            style={
+              {
+                background: trackGradient(data.sleepQuality, 1, 10),
+                "--rpe-color": color,
+              } as React.CSSProperties
+            }
             aria-label="Sleep quality"
             aria-valuemin={1}
             aria-valuemax={10}
@@ -204,7 +210,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
         size="lg"
         className="w-full rounded-xl min-h-[48px] text-sm font-bold text-black"
         onClick={onNext}
-        rightIcon={<ChevronRight size={16} strokeWidth={2} aria-hidden="true" />}
+        rightIcon={<ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />}
       >
         Next
       </Button>

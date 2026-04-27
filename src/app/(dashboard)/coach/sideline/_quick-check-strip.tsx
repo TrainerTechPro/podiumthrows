@@ -113,7 +113,12 @@ function AthleteSheetBody({ athlete }: { athlete: SidelineRosterAthlete }) {
             color: "var(--color-status-danger-fg)",
           }}
         >
-          <AlertTriangle size={14} strokeWidth={2} aria-hidden="true" className="mt-0.5 shrink-0" />
+          <AlertTriangle
+            size={14}
+            strokeWidth={1.75}
+            aria-hidden="true"
+            className="mt-0.5 shrink-0"
+          />
           <span className="font-medium">Active injury flag</span>
         </div>
       )}
@@ -145,10 +150,10 @@ function AthleteSheetBody({ athlete }: { athlete: SidelineRosterAthlete }) {
           className="flex items-center justify-between gap-3 rounded-xl px-4 py-3 bg-primary-500 text-surface-950 font-semibold text-sm active:scale-[0.97] transition-transform"
         >
           <span className="flex items-center gap-2">
-            <MessageSquarePlus size={16} strokeWidth={2} aria-hidden="true" />
+            <MessageSquarePlus size={16} strokeWidth={1.75} aria-hidden="true" />
             Add note
           </span>
-          <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
+          <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
         </Link>
         <Link
           href={`/coach/athletes/${athlete.athleteId}`}
@@ -157,7 +162,7 @@ function AthleteSheetBody({ athlete }: { athlete: SidelineRosterAthlete }) {
           <span>Open profile</span>
           <ChevronRight
             size={16}
-            strokeWidth={2}
+            strokeWidth={1.75}
             aria-hidden="true"
             style={{ color: "var(--color-text-secondary)" }}
           />

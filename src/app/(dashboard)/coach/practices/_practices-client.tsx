@@ -233,7 +233,7 @@ function ConflictSidebar({
                       <li key={c.athleteId} className="flex items-start gap-1.5 text-xs text-muted">
                         <AlertTriangle
                           size={11}
-                          strokeWidth={2}
+                          strokeWidth={1.75}
                           className="text-warning-500 shrink-0 mt-0.5"
                           aria-hidden="true"
                         />
@@ -428,7 +428,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
           <Button onClick={handleSave} disabled={!canSave || saving}>
             {saving ? (
               <>
-                <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
+                <Loader2 size={14} strokeWidth={1.75} className="animate-spin" aria-hidden="true" />
                 Saving…
               </>
             ) : recurringEnabled && instanceCount > 1 ? (
@@ -537,7 +537,12 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <div className="mt-3">
               {groupsLoading ? (
                 <div className="flex items-center gap-2 text-sm text-muted py-2">
-                  <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
+                  <Loader2
+                    size={14}
+                    strokeWidth={1.75}
+                    className="animate-spin"
+                    aria-hidden="true"
+                  />
                   Loading groups…
                 </div>
               ) : groups.length === 0 ? (
@@ -597,7 +602,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
                 <p className="text-xs text-muted flex items-center gap-1.5">
                   <RotateCcw
                     size={11}
-                    strokeWidth={2}
+                    strokeWidth={1.75}
                     aria-hidden="true"
                     className="text-primary-500"
                   />
@@ -726,7 +731,7 @@ export function PracticesClient({
           disabled={loading}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--card-border)] text-sm font-medium text-muted hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
         >
-          <ChevronLeft size={15} strokeWidth={2} aria-hidden="true" />
+          <ChevronLeft size={15} strokeWidth={1.75} aria-hidden="true" />
           Prev
         </button>
 
@@ -746,7 +751,7 @@ export function PracticesClient({
           {loading && (
             <Loader2
               size={13}
-              strokeWidth={2}
+              strokeWidth={1.75}
               className="inline-block ml-2 animate-spin text-muted"
               aria-hidden="true"
             />
@@ -760,7 +765,7 @@ export function PracticesClient({
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--card-border)] text-sm font-medium text-muted hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
         >
           Next
-          <ChevronRight size={15} strokeWidth={2} aria-hidden="true" />
+          <ChevronRight size={15} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
 
@@ -773,7 +778,7 @@ export function PracticesClient({
         <div className="lg:col-span-2 space-y-3">
           {practices.length === 0 && !loading ? (
             <EmptyState
-              icon={<Calendar size={40} strokeWidth={1.5} aria-hidden="true" />}
+              icon={<Calendar size={40} strokeWidth={1.75} aria-hidden="true" />}
               title="No practices this week"
               description="Click 'New Practice' to schedule one."
               action={

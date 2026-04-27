@@ -84,9 +84,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             inputMode={autoInputMode}
             disabled={disabled}
             aria-invalid={!!error}
-            aria-describedby={
-              error ? `${inputId}-error` : helper ? `${inputId}-helper` : undefined
-            }
+            aria-describedby={error ? `${inputId}-error` : helper ? `${inputId}-helper` : undefined}
             className={cn(
               "input flex-1 min-w-0",
               leftAddon && "rounded-l-none",
@@ -108,7 +106,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? <EyeOffIcon size={16} strokeWidth={2} aria-hidden="true" /> : <EyeIcon size={16} strokeWidth={2} aria-hidden="true" />}
+              {showPassword ? (
+                <EyeOffIcon size={16} strokeWidth={1.75} aria-hidden="true" />
+              ) : (
+                <EyeIcon size={16} strokeWidth={1.75} aria-hidden="true" />
+              )}
             </button>
           )}
 
@@ -128,7 +130,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         </div>
 
         {error && (
-          <p id={`${inputId}-error`} className="text-xs text-danger-500 dark:text-danger-400 flex items-center gap-1.5">
+          <p
+            id={`${inputId}-error`}
+            className="text-xs text-danger-500 dark:text-danger-400 flex items-center gap-1.5"
+          >
             <AlertCircle size={12} aria-hidden="true" />
             {error}
           </p>
@@ -143,4 +148,3 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   }
 );
 Input.displayName = "Input";
-

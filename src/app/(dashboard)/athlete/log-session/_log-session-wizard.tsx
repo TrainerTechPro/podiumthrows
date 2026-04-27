@@ -857,7 +857,7 @@ export function LogSessionWizard({
             disabled={!event}
             className="mt-3 w-full flex items-center justify-center gap-1.5 min-h-[48px] rounded-xl border-2 border-dashed border-[var(--color-border-default)] text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
             {drills.length === 0 ? "Add your first drill" : "Add another drill"}
           </button>
         </Section>
@@ -933,7 +933,7 @@ export function LogSessionWizard({
           viewport bottom because the AthleteShell hides the BottomTabBar
           on focus-mode routes (including log-session). */}
       <div
-        className="fixed left-0 right-0 z-20 px-4 py-3 bg-[var(--color-bg-canvas)]/95 backdrop-blur-sm border-t border-[var(--color-border-default)]"
+        className="fixed left-0 right-0 z-20 px-4 py-3 bg-[var(--surface-overlay)] border-t border-[var(--color-border-default)]"
         style={{ bottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="max-w-lg mx-auto">
@@ -1323,7 +1323,7 @@ function DoneScreen({
             >
               <AlertTriangle
                 size={16}
-                strokeWidth={2}
+                strokeWidth={1.75}
                 aria-hidden="true"
                 className="mt-0.5 shrink-0"
                 style={{ color: "var(--color-status-warning-fg)" }}

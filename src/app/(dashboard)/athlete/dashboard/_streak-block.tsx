@@ -143,7 +143,7 @@ export function StreakBlock(props: StreakBlockProps) {
           >
             <Flame
               size={14}
-              strokeWidth={2}
+              strokeWidth={1.75}
               aria-hidden="true"
               className="text-[var(--color-brand)]"
               style={{

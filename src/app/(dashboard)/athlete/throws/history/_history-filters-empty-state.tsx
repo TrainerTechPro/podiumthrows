@@ -8,7 +8,7 @@ interface Props {
 export function HistoryFiltersEmptyState({ onClear }: Props) {
   return (
     <EmptyState
-      icon={<Search size={48} strokeWidth={1.5} aria-hidden="true" />}
+      icon={<Search size={48} strokeWidth={1.75} aria-hidden="true" />}
       title="No throws match these filters"
       description="Try a wider date range or a different event."
       action={

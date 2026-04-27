@@ -174,7 +174,7 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
               disabled={switchingMode}
               className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-[var(--color-brand-strong)] hover:bg-[var(--color-brand-subtle)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <SwitchIcon size={16} strokeWidth={2} aria-hidden="true" />
+              <SwitchIcon size={16} strokeWidth={1.75} aria-hidden="true" />
               {switchingMode ? "Switching…" : switchLabel}
             </button>
           )}
@@ -185,9 +185,9 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
           >
             {isDark ? (
-              <Sun size={16} strokeWidth={2} aria-hidden="true" />
+              <Sun size={16} strokeWidth={1.75} aria-hidden="true" />
             ) : (
-              <Moon size={16} strokeWidth={2} aria-hidden="true" />
+              <Moon size={16} strokeWidth={1.75} aria-hidden="true" />
             )}
             {isDark ? "Switch to light mode" : "Switch to dark mode"}
           </button>
@@ -197,7 +197,7 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
             onClick={() => setOpen(false)}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
           >
-            <Settings size={16} strokeWidth={2} aria-hidden="true" />
+            <Settings size={16} strokeWidth={1.75} aria-hidden="true" />
             Settings
           </Link>
 
@@ -206,7 +206,7 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
             onClick={handleLogout}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors border-t border-[var(--card-border)]"
           >
-            <LogOut size={16} strokeWidth={2} aria-hidden="true" />
+            <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
             Log out
           </button>
         </div>
@@ -232,7 +232,7 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
       {open ? (
         <X size={20} strokeWidth={2} aria-hidden="true" />
       ) : (
-        <Menu size={20} strokeWidth={2} aria-hidden="true" />
+        <Menu size={20} strokeWidth={1.75} aria-hidden="true" />
       )}
     </button>
   );
@@ -281,7 +281,7 @@ function CoachTopBar({
         className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm text-surface-400 hover:text-surface-600 dark:hover:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors border border-transparent hover:border-[var(--card-border)]"
         aria-label="Search"
       >
-        <Search size={16} strokeWidth={2} aria-hidden="true" />
+        <Search size={16} strokeWidth={1.75} aria-hidden="true" />
         <span className="text-surface-400">Search</span>
         <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
           ⌘K

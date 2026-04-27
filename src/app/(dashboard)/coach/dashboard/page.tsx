@@ -602,7 +602,7 @@ function InjuryAlert({
     >
       <AlertTriangle
         size={16}
-        strokeWidth={2}
+        strokeWidth={1.75}
         aria-hidden="true"
         className="mt-0.5 shrink-0"
         style={{ color: "var(--color-status-danger-fg)" }}

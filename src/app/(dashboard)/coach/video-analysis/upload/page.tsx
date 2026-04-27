@@ -27,10 +27,13 @@ export default async function VideoAnalysisUploadPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-sm text-muted">
-        <Link href="/coach/video-analysis" className="hover:text-[var(--foreground)] transition-colors">
+        <Link
+          href="/coach/video-analysis"
+          className="hover:text-[var(--foreground)] transition-colors"
+        >
           Pose Analysis
         </Link>
-        <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
+        <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
         <span className="text-[var(--foreground)]">Upload</span>
       </nav>
 

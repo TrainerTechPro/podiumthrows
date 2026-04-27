@@ -93,7 +93,12 @@ export function WhatsNewModal() {
         <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-2">
           <div className="flex items-start gap-3 min-w-0">
             <div className="w-9 h-9 rounded-lg bg-primary-500/15 flex items-center justify-center shrink-0">
-              <Sparkles size={18} strokeWidth={2} className="text-primary-500" aria-hidden="true" />
+              <Sparkles
+                size={18}
+                strokeWidth={1.75}
+                className="text-primary-500"
+                aria-hidden="true"
+              />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">

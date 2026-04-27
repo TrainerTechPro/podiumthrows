@@ -186,7 +186,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
   if (events.length === 0) {
     return (
       <EmptyState
-        icon={<Target size={48} strokeWidth={1.5} aria-hidden="true" />}
+        icon={<Target size={48} strokeWidth={1.75} aria-hidden="true" />}
         title="Pick your events first"
         description="Head to the Core Info tab and add the events you compete in. Then you can set goals and distance bands here."
       />

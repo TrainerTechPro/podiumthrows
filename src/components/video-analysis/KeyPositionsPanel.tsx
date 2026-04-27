@@ -58,9 +58,7 @@ export function KeyPositionsPanel({
     <div className="space-y-4">
       {/* Mark Position Controls */}
       <div className="space-y-2">
-        <p className="text-[11px] font-bold text-muted uppercase tracking-wider">
-          Mark Position
-        </p>
+        <p className="text-[11px] font-bold text-muted uppercase tracking-wider">Mark Position</p>
 
         {/* Label selector */}
         <div className="flex flex-wrap gap-1.5">
@@ -87,14 +85,12 @@ export function KeyPositionsPanel({
           disabled={!isDetecting || !currentAngles}
           className="btn-primary w-full text-sm disabled:opacity-40 flex items-center justify-center gap-2"
         >
-          <MapPin size={14} strokeWidth={2} aria-hidden="true" />
+          <MapPin size={14} strokeWidth={1.75} aria-hidden="true" />
           Mark &ldquo;{selectedLabel}&rdquo; at {formatTimestamp(currentTime)}
         </button>
 
         {!isDetecting && (
-          <p className="text-xs text-muted text-center">
-            Enable pose detection to mark positions
-          </p>
+          <p className="text-xs text-muted text-center">Enable pose detection to mark positions</p>
         )}
       </div>
 
@@ -109,7 +105,12 @@ export function KeyPositionsPanel({
             {positions.map((pos) => {
               const isExpanded = expandedId === pos.id;
               const angles = getAnglesWithStatus(pos.angles);
-              const primaryKeys = ["shoulderSeparation", "hipShoulderDifferential", "blockLegKnee", "trunkLean"];
+              const primaryKeys = [
+                "shoulderSeparation",
+                "hipShoulderDifferential",
+                "blockLegKnee",
+                "trunkLean",
+              ];
               const primaryAngles = angles.filter((a) => primaryKeys.includes(a.key));
 
               return (
@@ -126,7 +127,12 @@ export function KeyPositionsPanel({
                       className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-50 dark:hover:bg-surface-800/50 rounded transition-colors px-1 py-0.5"
                       aria-label={`Jump to ${pos.label} at ${formatTimestamp(pos.timestamp)}`}
                     >
-                      <MapPin size={14} strokeWidth={2} className="text-primary-500 shrink-0" aria-hidden="true" />
+                      <MapPin
+                        size={14}
+                        strokeWidth={1.75}
+                        className="text-primary-500 shrink-0"
+                        aria-hidden="true"
+                      />
                       <span className="text-sm font-medium text-[var(--foreground)]">
                         {pos.label}
                       </span>
@@ -145,7 +151,7 @@ export function KeyPositionsPanel({
                     >
                       <ChevronDown
                         size={14}
-                        strokeWidth={2}
+                        strokeWidth={1.75}
                         className={`text-muted transition-transform ${isExpanded ? "rotate-180" : ""}`}
                         aria-hidden="true"
                       />
@@ -158,7 +164,7 @@ export function KeyPositionsPanel({
                       className="p-1 rounded hover:bg-danger-500/10 text-surface-400 hover:text-danger-500 transition-colors"
                       aria-label={`Delete ${pos.label} position`}
                     >
-                      <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+                      <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
                     </button>
                   </div>
 
@@ -182,8 +188,15 @@ export function KeyPositionsPanel({
                       {/* Notes */}
                       <div>
                         <div className="flex items-center gap-1 mb-1">
-                          <MessageSquare size={12} strokeWidth={2} className="text-muted" aria-hidden="true" />
-                          <span className="text-[11px] text-muted uppercase font-semibold tracking-wider">Notes</span>
+                          <MessageSquare
+                            size={12}
+                            strokeWidth={1.75}
+                            className="text-muted"
+                            aria-hidden="true"
+                          />
+                          <span className="text-[11px] text-muted uppercase font-semibold tracking-wider">
+                            Notes
+                          </span>
                         </div>
                         <textarea
                           value={pos.notes}

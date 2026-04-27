@@ -184,7 +184,7 @@ export function CompetitionMeetHeader({ value, onChange, canMakeFinals }: Props)
           {saveState === "saving" && <span className="text-xs text-muted">Saving…</span>}
           {saveState === "saved" && !hasDirty && (
             <span className="flex items-center gap-1 text-xs text-success-500">
-              <Check size={12} strokeWidth={2} aria-hidden="true" />
+              <Check size={12} strokeWidth={1.75} aria-hidden="true" />
               Saved
             </span>
           )}

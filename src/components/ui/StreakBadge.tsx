@@ -30,11 +30,8 @@ export function StreakBadge({ days, isActive = true, className }: StreakBadgePro
     >
       <Flame
         size={14}
-        strokeWidth={2}
-        className={cn(
-          "shrink-0",
-          isActive && "animate-streak-flame text-amber-500"
-        )}
+        strokeWidth={1.75}
+        className={cn("shrink-0", isActive && "animate-streak-flame text-amber-500")}
         aria-hidden="true"
       />
       {days}-day streak

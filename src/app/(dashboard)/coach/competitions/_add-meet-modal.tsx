@@ -52,9 +52,7 @@ export function AddMeetModal({
   const [weather, setWeather] = useState("");
 
   // Filter athletes who have at least one selected event
-  const eligibleAthletes = athletes.filter((a) =>
-    a.events.some((e) => selectedEvents.has(e)),
-  );
+  const eligibleAthletes = athletes.filter((a) => a.events.some((e) => selectedEvents.has(e)));
 
   function toggleEvent(event: string) {
     setSelectedEvents((prev) => {
@@ -110,15 +108,24 @@ export function AddMeetModal({
           implementWeightKg:
             implementWeightKg === "" || implementWeightKg == null
               ? null
-              : (() => { const n = parseFloat(implementWeightKg); return Number.isFinite(n) ? n : null; })(),
+              : (() => {
+                  const n = parseFloat(implementWeightKg);
+                  return Number.isFinite(n) ? n : null;
+                })(),
           placeFinish:
             placeFinish === "" || placeFinish == null
               ? null
-              : (() => { const n = parseInt(placeFinish, 10); return Number.isFinite(n) ? n : null; })(),
+              : (() => {
+                  const n = parseInt(placeFinish, 10);
+                  return Number.isFinite(n) ? n : null;
+                })(),
           windMps:
             windMps === "" || windMps == null
               ? null
-              : (() => { const n = parseFloat(windMps); return Number.isFinite(n) ? n : null; })(),
+              : (() => {
+                  const n = parseFloat(windMps);
+                  return Number.isFinite(n) ? n : null;
+                })(),
           weather: weather.trim() || null,
         }),
       });
@@ -167,12 +174,7 @@ export function AddMeetModal({
             onChange={(e) => setName(e.target.value)}
             autoFocus
           />
-          <Input
-            label="Date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
 
         {/* Priority */}
@@ -216,7 +218,7 @@ export function AddMeetModal({
                 }`}
               >
                 {selectedEvents.has(e.value) && (
-                  <Check size={14} strokeWidth={2} aria-hidden="true" />
+                  <Check size={14} strokeWidth={1.75} aria-hidden="true" />
                 )}
                 {e.label}
               </button>
@@ -269,14 +271,28 @@ export function AddMeetModal({
                             : "border-surface-300 dark:border-surface-600"
                         }`}
                       >
-                        {checked && <Check size={12} strokeWidth={3} className="text-white" />}
+                        {checked && (
+                          <Check
+                            size={12}
+                            strokeWidth={3}
+                            className="text-white"
+                            aria-hidden="true"
+                          />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-[var(--foreground)] truncate">
                           {a.firstName} {a.lastName}
                         </p>
                         <p className="text-xs text-muted truncate">
-                          {athleteEvents.map((e) => e.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())).join(", ")}
+                          {athleteEvents
+                            .map((e) =>
+                              e
+                                .replace(/_/g, " ")
+                                .toLowerCase()
+                                .replace(/\b\w/g, (c) => c.toUpperCase())
+                            )
+                            .join(", ")}
                         </p>
                       </div>
                     </button>

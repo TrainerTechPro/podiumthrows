@@ -401,7 +401,7 @@ function DesktopOverflowMenu({
         aria-expanded={open}
         className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 rounded-md p-1.5 text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500/50"
       >
-        <MoreHorizontal size={14} strokeWidth={2} aria-hidden="true" />
+        <MoreHorizontal size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
         <div
@@ -779,7 +779,7 @@ export function NotificationsClient({
         </div>
       ) : items.length === 0 ? (
         <EmptyState
-          icon={<Bell size={32} strokeWidth={1.5} />}
+          icon={<Bell size={32} strokeWidth={1.75} />}
           title={empty.title}
           description={empty.description}
         />
@@ -810,7 +810,7 @@ export function NotificationsClient({
                   <>
                     <Loader2
                       size={12}
-                      strokeWidth={2}
+                      strokeWidth={1.75}
                       className="animate-spin"
                       aria-hidden="true"
                     />

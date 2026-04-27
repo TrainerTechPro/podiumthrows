@@ -134,14 +134,14 @@ export default async function VideoAnalysisPage({ searchParams }: { searchParams
             href="/coach/video-analysis/live"
             className="btn-secondary flex items-center gap-1.5"
           >
-            <Radio size={16} strokeWidth={2} aria-hidden="true" />
+            <Radio size={16} strokeWidth={1.75} aria-hidden="true" />
             Go Live
           </Link>
           <Link
             href="/coach/video-analysis/upload"
             className="btn-primary flex items-center gap-1.5"
           >
-            <Upload size={16} strokeWidth={2} aria-hidden="true" />
+            <Upload size={16} strokeWidth={1.75} aria-hidden="true" />
             Upload Video
           </Link>
         </div>
@@ -190,7 +190,7 @@ export default async function VideoAnalysisPage({ searchParams }: { searchParams
       {/* Grid */}
       {analyses.length === 0 ? (
         <EmptyState
-          icon={<Video size={24} strokeWidth={1.5} aria-hidden="true" />}
+          icon={<Video size={24} strokeWidth={1.75} aria-hidden="true" />}
           title="No video analyses yet"
           description="Upload your first throw video to start analyzing technique with AI-powered pose detection."
           action={

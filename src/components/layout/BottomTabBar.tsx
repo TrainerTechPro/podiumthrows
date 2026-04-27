@@ -140,7 +140,7 @@ export function BottomTabBar() {
                 )}
                 aria-hidden="true"
               >
-                <Icon size={24} strokeWidth={2} />
+                <Icon size={24} strokeWidth={1.75} />
               </span>
             ) : (
               <Icon

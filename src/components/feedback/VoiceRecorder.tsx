@@ -352,7 +352,7 @@ export function VoiceRecorder({
               className="btn btn-primary inline-flex items-center gap-1.5 text-xs"
               aria-label="Start recording"
             >
-              <Mic className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+              <Mic className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               Record
             </button>
           </div>
@@ -386,7 +386,7 @@ export function VoiceRecorder({
               className="btn btn-primary inline-flex items-center gap-1.5 text-xs"
               aria-label="Stop recording"
             >
-              <Square className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+              <Square className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               Stop
             </button>
           </div>
@@ -413,9 +413,9 @@ export function VoiceRecorder({
               aria-label={playing ? "Pause preview" : "Play preview"}
             >
               {playing ? (
-                <Pause className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+                <Pause className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               ) : (
-                <Play className="h-4 w-4 ml-0.5" strokeWidth={2} aria-hidden="true" />
+                <Play className="h-4 w-4 ml-0.5" strokeWidth={1.75} aria-hidden="true" />
               )}
             </button>
             <div className="flex-1 min-w-0">
@@ -430,7 +430,7 @@ export function VoiceRecorder({
               className="btn btn-secondary flex-1 text-xs inline-flex items-center justify-center gap-1.5"
               aria-label="Discard recording"
             >
-              <Trash2 className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+              <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
               Discard
             </button>
             <button
@@ -439,7 +439,7 @@ export function VoiceRecorder({
               className="btn btn-primary flex-1 text-xs inline-flex items-center justify-center gap-1.5"
               aria-label="Send voice note"
             >
-              <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+              <Check className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
               Send
             </button>
           </div>
@@ -455,7 +455,7 @@ export function VoiceRecorder({
 
       {phase === "done" && (
         <div className="text-sm text-emerald-500 flex items-center gap-2">
-          <Check className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+          <Check className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           Sent
         </div>
       )}

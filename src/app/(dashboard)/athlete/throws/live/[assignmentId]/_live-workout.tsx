@@ -139,7 +139,7 @@ function TimelineNode({
                 {isCompleted && (
                   <Check
                     size={14}
-                    strokeWidth={2}
+                    strokeWidth={1.75}
                     className="inline mr-1.5 -mt-0.5"
                     style={{ color: "#00FF88" }}
                     aria-hidden="true"

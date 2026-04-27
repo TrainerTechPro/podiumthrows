@@ -39,7 +39,7 @@ function ProgressRow({ row }: { row: Row }) {
           >
             {unlocked ? (
               <span className="inline-flex items-center gap-1">
-                <CheckCircle2 size={12} strokeWidth={2} aria-hidden="true" />
+                <CheckCircle2 size={12} strokeWidth={1.75} aria-hidden="true" />
                 Ready
               </span>
             ) : (

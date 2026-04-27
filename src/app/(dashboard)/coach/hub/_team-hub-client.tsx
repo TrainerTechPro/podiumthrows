@@ -214,7 +214,7 @@ function AnnouncementCard({
             {pinned && (
               <Pin
                 size={12}
-                strokeWidth={2}
+                strokeWidth={1.75}
                 aria-hidden="true"
                 className="text-primary-500 shrink-0"
               />
@@ -432,7 +432,7 @@ function LinkPill({
               className="p-1 rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
               aria-label={`Move ${link.title} left`}
             >
-              <ChevronUp size={11} strokeWidth={2} aria-hidden="true" />
+              <ChevronUp size={11} strokeWidth={1.75} aria-hidden="true" />
             </button>
           )}
           {showDown && (
@@ -442,7 +442,7 @@ function LinkPill({
               className="p-1 rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
               aria-label={`Move ${link.title} right`}
             >
-              <ChevronDown size={11} strokeWidth={2} aria-hidden="true" />
+              <ChevronDown size={11} strokeWidth={1.75} aria-hidden="true" />
             </button>
           )}
           <button
@@ -451,7 +451,7 @@ function LinkPill({
             className="p-1 rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
             aria-label={`Edit ${link.title}`}
           >
-            <Pencil size={11} strokeWidth={2} aria-hidden="true" />
+            <Pencil size={11} strokeWidth={1.75} aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -659,7 +659,7 @@ function AnnouncementForm({
         <Button onClick={handleSave} disabled={!canSave || saving}>
           {saving ? (
             <>
-              <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
+              <Loader2 size={14} strokeWidth={1.75} className="animate-spin" aria-hidden="true" />
               Saving…
             </>
           ) : initial ? (
@@ -762,7 +762,7 @@ function LinkForm({
         <Button onClick={handleSave} disabled={!canSave || saving}>
           {saving ? (
             <>
-              <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
+              <Loader2 size={14} strokeWidth={1.75} className="animate-spin" aria-hidden="true" />
               Saving…
             </>
           ) : initial ? (
@@ -914,7 +914,7 @@ function FileUploadForm({ onDone, onCancel }: { onDone: () => void; onCancel: ()
             <div>
               <File
                 size={32}
-                strokeWidth={1.5}
+                strokeWidth={1.75}
                 className="mx-auto text-muted mb-2"
                 aria-hidden="true"
               />
@@ -943,7 +943,7 @@ function FileUploadForm({ onDone, onCancel }: { onDone: () => void; onCancel: ()
         <div className="flex items-center gap-2 text-sm text-muted py-1">
           <Loader2
             size={14}
-            strokeWidth={2}
+            strokeWidth={1.75}
             className="animate-spin text-primary-500"
             aria-hidden="true"
           />
@@ -958,7 +958,7 @@ function FileUploadForm({ onDone, onCancel }: { onDone: () => void; onCancel: ()
         <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
           {uploading ? (
             <>
-              <Loader2 size={14} strokeWidth={2} className="animate-spin" aria-hidden="true" />
+              <Loader2 size={14} strokeWidth={1.75} className="animate-spin" aria-hidden="true" />
               Uploading…
             </>
           ) : (
@@ -1234,7 +1234,7 @@ function ManageDrawer({
               {data.announcements.length === 0 ? (
                 <EmptyState
                   compact
-                  icon={<Megaphone size={28} strokeWidth={1.5} aria-hidden="true" />}
+                  icon={<Megaphone size={28} strokeWidth={1.75} aria-hidden="true" />}
                   title="No announcements yet"
                   description="Post updates for your athletes here."
                 />
@@ -1250,7 +1250,7 @@ function ManageDrawer({
                           {a.pinned && (
                             <Pin
                               size={11}
-                              strokeWidth={2}
+                              strokeWidth={1.75}
                               className="text-primary-500 shrink-0"
                               aria-hidden="true"
                             />
@@ -1282,7 +1282,7 @@ function ManageDrawer({
                           {deletingId === a.id ? (
                             <Loader2
                               size={13}
-                              strokeWidth={2}
+                              strokeWidth={1.75}
                               className="animate-spin"
                               aria-hidden="true"
                             />
@@ -1322,7 +1322,7 @@ function ManageDrawer({
               {data.links.length === 0 ? (
                 <EmptyState
                   compact
-                  icon={<Link2 size={28} strokeWidth={1.5} aria-hidden="true" />}
+                  icon={<Link2 size={28} strokeWidth={1.75} aria-hidden="true" />}
                   title="No links yet"
                   description="Add quick-access links for your team."
                 />
@@ -1343,7 +1343,7 @@ function ManageDrawer({
                             className="p-0.5 rounded text-muted hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             aria-label={`Move ${l.title} up`}
                           >
-                            <ChevronUp size={13} strokeWidth={2} aria-hidden="true" />
+                            <ChevronUp size={13} strokeWidth={1.75} aria-hidden="true" />
                           </button>
                           <button
                             type="button"
@@ -1352,7 +1352,7 @@ function ManageDrawer({
                             className="p-0.5 rounded text-muted hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             aria-label={`Move ${l.title} down`}
                           >
-                            <ChevronDown size={13} strokeWidth={2} aria-hidden="true" />
+                            <ChevronDown size={13} strokeWidth={1.75} aria-hidden="true" />
                           </button>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1382,7 +1382,7 @@ function ManageDrawer({
                             {deletingId === l.id ? (
                               <Loader2
                                 size={13}
-                                strokeWidth={2}
+                                strokeWidth={1.75}
                                 className="animate-spin"
                                 aria-hidden="true"
                               />
@@ -1421,7 +1421,7 @@ function ManageDrawer({
               {data.files.length === 0 ? (
                 <EmptyState
                   compact
-                  icon={<FileText size={28} strokeWidth={1.5} aria-hidden="true" />}
+                  icon={<FileText size={28} strokeWidth={1.75} aria-hidden="true" />}
                   title="No files yet"
                   description="Upload schedules, training plans, and other documents."
                 />
@@ -1463,7 +1463,7 @@ function ManageDrawer({
                           {deletingId === f.id ? (
                             <Loader2
                               size={13}
-                              strokeWidth={2}
+                              strokeWidth={1.75}
                               className="animate-spin"
                               aria-hidden="true"
                             />
@@ -1802,7 +1802,7 @@ export function TeamHubClient({ mode, data }: Props) {
         {sortedLinks.length === 0 && !showInlineLink ? (
           <EmptyState
             compact
-            icon={<Link2 size={28} strokeWidth={1.5} aria-hidden="true" />}
+            icon={<Link2 size={28} strokeWidth={1.75} aria-hidden="true" />}
             title="No quick links yet"
             description={
               isCoach
@@ -1843,7 +1843,7 @@ export function TeamHubClient({ mode, data }: Props) {
         {data.upcoming.length === 0 ? (
           <EmptyState
             compact
-            icon={<Calendar size={28} strokeWidth={1.5} aria-hidden="true" />}
+            icon={<Calendar size={28} strokeWidth={1.75} aria-hidden="true" />}
             title="Nothing scheduled in the next 30 days"
             description="Practices and competitions will appear here."
           />
@@ -1890,7 +1890,7 @@ export function TeamHubClient({ mode, data }: Props) {
         {data.files.length === 0 && !showInlineUpload ? (
           <EmptyState
             compact
-            icon={<FileSpreadsheet size={28} strokeWidth={1.5} aria-hidden="true" />}
+            icon={<FileSpreadsheet size={28} strokeWidth={1.75} aria-hidden="true" />}
             title="No files shared yet"
             description={
               isCoach
@@ -1936,7 +1936,7 @@ export function TeamHubClient({ mode, data }: Props) {
         {recentAnnouncements.length === 0 ? (
           <EmptyState
             compact
-            icon={<Megaphone size={28} strokeWidth={1.5} aria-hidden="true" />}
+            icon={<Megaphone size={28} strokeWidth={1.75} aria-hidden="true" />}
             title="No announcements yet"
             description={
               isCoach

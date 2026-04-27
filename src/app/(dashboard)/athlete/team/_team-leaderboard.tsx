@@ -34,7 +34,11 @@ function rankBadge(rank: number): {
   if (rank === 1) {
     return {
       icon: (
-        <Trophy className="h-3.5 w-3.5 text-amber-500" strokeWidth={2} aria-label="First place" />
+        <Trophy
+          className="h-3.5 w-3.5 text-amber-500"
+          strokeWidth={1.75}
+          aria-label="First place"
+        />
       ),
       bg: "bg-amber-500/15",
       ring: "ring-amber-500/40",
@@ -43,7 +47,11 @@ function rankBadge(rank: number): {
   if (rank === 2) {
     return {
       icon: (
-        <Medal className="h-3.5 w-3.5 text-slate-300" strokeWidth={2} aria-label="Second place" />
+        <Medal
+          className="h-3.5 w-3.5 text-slate-300"
+          strokeWidth={1.75}
+          aria-label="Second place"
+        />
       ),
       bg: "bg-slate-300/15",
       ring: "ring-slate-300/30",
@@ -52,7 +60,11 @@ function rankBadge(rank: number): {
   if (rank === 3) {
     return {
       icon: (
-        <Award className="h-3.5 w-3.5 text-orange-400" strokeWidth={2} aria-label="Third place" />
+        <Award
+          className="h-3.5 w-3.5 text-orange-400"
+          strokeWidth={1.75}
+          aria-label="Third place"
+        />
       ),
       bg: "bg-orange-400/15",
       ring: "ring-orange-400/30",
@@ -166,7 +178,7 @@ export function TeamLeaderboard() {
         />
       ) : entries.length === 0 ? (
         <EmptyState
-          icon={<Trophy size={48} strokeWidth={1.5} aria-hidden="true" />}
+          icon={<Trophy size={48} strokeWidth={1.75} aria-hidden="true" />}
           title="No PRs in this event yet"
           description="Be first — log a PR and you'll lead the board."
         />

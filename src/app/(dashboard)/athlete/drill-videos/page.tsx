@@ -204,7 +204,7 @@ export default function AthleteDrillVideosPage() {
       ) : filteredVideos.length === 0 ? (
         videos.length === 0 ? (
           <EmptyState
-            icon={<Video size={48} strokeWidth={1.5} aria-hidden="true" />}
+            icon={<Video size={48} strokeWidth={1.75} aria-hidden="true" />}
             title="No drill videos yet"
             description="Upload a short clip of your standing throw — even 10 seconds. Future you will thank you when you watch it back."
             action={
@@ -215,7 +215,7 @@ export default function AthleteDrillVideosPage() {
           />
         ) : (
           <EmptyState
-            icon={<Search size={48} strokeWidth={1.5} aria-hidden="true" />}
+            icon={<Search size={48} strokeWidth={1.75} aria-hidden="true" />}
             title="No videos match your filters"
             description="Try a different event or drill — or clear the filters to see everything."
             action={

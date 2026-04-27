@@ -48,7 +48,7 @@ export function FullCoachViewPill() {
               disabled={pending}
               className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-surface-950 bg-primary-500 hover:bg-primary-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <Monitor size={14} strokeWidth={2} aria-hidden="true" />
+              <Monitor size={14} strokeWidth={1.75} aria-hidden="true" />
               {pending ? "Switching…" : "Show full view"}
             </button>
           </>

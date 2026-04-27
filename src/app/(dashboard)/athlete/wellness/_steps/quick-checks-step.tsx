@@ -115,16 +115,9 @@ function TappableCard<T extends string>({
           selected ? option.bgClass : "bg-surface-100 dark:bg-surface-800"
         )}
       >
-        <span className={selected ? option.colorClass : "text-muted"}>
-          {option.icon}
-        </span>
+        <span className={selected ? option.colorClass : "text-muted"}>{option.icon}</span>
       </div>
-      <span
-        className={cn(
-          "text-xs font-semibold",
-          selected ? option.colorClass : "text-muted"
-        )}
-      >
+      <span className={cn("text-xs font-semibold", selected ? option.colorClass : "text-muted")}>
         {option.label}
       </span>
     </button>
@@ -157,9 +150,7 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
           <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">
             Step
           </span>
-          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">
-            4/5
-          </span>
+          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">4/5</span>
         </div>
         <div className="h-1.5 w-full rounded-full bg-[var(--muted-bg)] overflow-hidden">
           <div
@@ -172,15 +163,18 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-          <CheckCircle size={20} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />
+          <CheckCircle
+            size={20}
+            strokeWidth={1.75}
+            className="text-emerald-500"
+            aria-hidden="true"
+          />
         </div>
         <div>
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Quick Checks
           </h2>
-          <p className="text-[13px] text-muted leading-snug">
-            Tap to select
-          </p>
+          <p className="text-[13px] text-muted leading-snug">Tap to select</p>
         </div>
       </div>
 
@@ -220,13 +214,14 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
           ref={notesRef}
           className={cn(
             "transition-all duration-200 overflow-hidden",
-            showInjuryNotes
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-2"
+            showInjuryNotes ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
           )}
         >
           <div className="space-y-2">
-            <label htmlFor="injury-notes" className="text-sm font-semibold text-[var(--foreground)]">
+            <label
+              htmlFor="injury-notes"
+              className="text-sm font-semibold text-[var(--foreground)]"
+            >
               Injury Notes
             </label>
             <textarea
@@ -256,7 +251,7 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
           size="lg"
           className="min-h-[48px] px-4"
           onClick={onBack}
-          leftIcon={<ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />}
+          leftIcon={<ChevronLeft size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Back
         </Button>
@@ -266,7 +261,7 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
           size="lg"
           className="flex-1 rounded-xl min-h-[48px] text-sm font-bold text-black"
           onClick={onNext}
-          rightIcon={<ChevronRight size={16} strokeWidth={2} aria-hidden="true" />}
+          rightIcon={<ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />}
         >
           Next
         </Button>

@@ -3,15 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Trophy,
-  Plus,
-  Calendar,
-  Users,
-  ChevronRight,
-  CheckCircle2,
-  Clock,
-} from "lucide-react";
+import { Trophy, Plus, Calendar, Users, ChevronRight, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -32,14 +24,25 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_STYLES: Record<string, { label: string; color: string }> = {
-  A: { label: "A Meet", color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" },
+  A: {
+    label: "A Meet",
+    color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+  },
   B: { label: "B Meet", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" },
-  C: { label: "C Meet", color: "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400" },
+  C: {
+    label: "C Meet",
+    color: "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400",
+  },
 };
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function isUpcoming(dateStr: string): boolean {
@@ -51,16 +54,14 @@ function isUpcoming(dateStr: string): boolean {
 function MeetCard({ meet }: { meet: MeetSummary }) {
   const upcoming = isUpcoming(meet.date);
   const prio = PRIORITY_STYLES[meet.priority] || PRIORITY_STYLES.B;
-  const fillRate = meet.totalEntries > 0 ? Math.round((meet.totalResults / meet.totalEntries) * 100) : 0;
+  const fillRate =
+    meet.totalEntries > 0 ? Math.round((meet.totalResults / meet.totalEntries) * 100) : 0;
   // Link to first entry's detail page; if multiple entries exist, show the grouped view via first id
   const firstEntryId = meet.entries[0]?.id;
   const href = firstEntryId ? `/coach/competitions/${firstEntryId}` : "#";
 
   return (
-    <Link
-      href={href}
-      className="card card-interactive p-5 flex flex-col gap-3"
-    >
+    <Link href={href} className="card card-interactive p-5 flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -94,14 +95,19 @@ function MeetCard({ meet }: { meet: MeetSummary }) {
           <Users size={14} strokeWidth={1.75} aria-hidden="true" />
           <span className="font-mono tabular-nums">
             <AnimatedNumber value={meet.totalEntries} />
-          </span>
-          {" "}entries
+          </span>{" "}
+          entries
         </span>
 
         {!upcoming && (
           <span className="flex items-center gap-1.5 text-muted">
             {fillRate === 100 ? (
-              <CheckCircle2 size={14} strokeWidth={1.75} aria-hidden="true" className="text-green-500" />
+              <CheckCircle2
+                size={14}
+                strokeWidth={1.75}
+                aria-hidden="true"
+                className="text-green-500"
+              />
             ) : (
               <Clock size={14} strokeWidth={1.75} aria-hidden="true" />
             )}
@@ -151,9 +157,7 @@ export function CompetitionsClient({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-[var(--foreground)]">
-            Competitions
-          </h1>
+          <h1 className="font-heading text-2xl font-bold text-[var(--foreground)]">Competitions</h1>
           <p className="text-sm text-muted mt-1">
             Schedule meets and enter results for your athletes
           </p>
@@ -169,7 +173,7 @@ export function CompetitionsClient({
       {/* Empty state */}
       {initialMeets.length === 0 && (
         <EmptyState
-          icon={<Trophy size={40} strokeWidth={1.5} />}
+          icon={<Trophy size={40} strokeWidth={1.75} />}
           title="No competitions yet"
           description="Schedule upcoming meets and track your athletes' competition results all in one place."
           action={

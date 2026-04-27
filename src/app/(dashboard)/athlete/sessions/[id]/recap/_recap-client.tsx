@@ -368,7 +368,7 @@ export function RecapClient({
               className="h-12 w-12 rounded-full flex items-center justify-center bg-amber-500/10"
               aria-hidden="true"
             >
-              <Flame className="h-6 w-6 text-amber-500" strokeWidth={1.75} />
+              <Flame className="h-6 w-6 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted">

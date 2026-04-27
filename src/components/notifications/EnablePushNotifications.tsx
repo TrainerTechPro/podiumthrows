@@ -287,7 +287,12 @@ export function EnablePushNotifications({
     return (
       <div className="card p-6 sm:p-8 space-y-4 text-center">
         <div className="w-12 h-12 rounded-full bg-primary-500/15 flex items-center justify-center mx-auto">
-          <Smartphone size={24} strokeWidth={1.5} className="text-primary-500" aria-hidden="true" />
+          <Smartphone
+            size={24}
+            strokeWidth={1.75}
+            className="text-primary-500"
+            aria-hidden="true"
+          />
         </div>
         <div>
           <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
@@ -316,7 +321,7 @@ export function EnablePushNotifications({
   if (permission === "unsupported") {
     return (
       <div className="card p-6 sm:p-8 text-center space-y-4">
-        <BellOff size={40} strokeWidth={1.5} className="mx-auto text-muted" aria-hidden="true" />
+        <BellOff size={40} strokeWidth={1.75} className="mx-auto text-muted" aria-hidden="true" />
         <p className="text-sm text-muted">
           Push notifications are not supported in this browser. You can still receive in-app alerts.
         </p>
@@ -339,7 +344,7 @@ export function EnablePushNotifications({
       <div className="card p-6 sm:p-8 space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0">
-            <BellOff size={24} strokeWidth={1.5} className="text-muted" aria-hidden="true" />
+            <BellOff size={24} strokeWidth={1.75} className="text-muted" aria-hidden="true" />
           </div>
           <div>
             <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
@@ -371,7 +376,7 @@ export function EnablePushNotifications({
         <div className="w-16 h-16 rounded-full bg-success-500/10 flex items-center justify-center mx-auto">
           <CheckCircle2
             size={32}
-            strokeWidth={1.5}
+            strokeWidth={1.75}
             className="text-success-500"
             aria-hidden="true"
           />
@@ -399,7 +404,7 @@ export function EnablePushNotifications({
       {/* Gradient header */}
       <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-amber-600 px-6 py-8 sm:px-8 sm:py-10 text-center">
         <div className="w-16 h-16 rounded-full bg-white/15 flex items-center justify-center mx-auto mb-4">
-          <BellRing size={32} strokeWidth={1.5} className="text-white" aria-hidden="true" />
+          <BellRing size={32} strokeWidth={1.75} className="text-white" aria-hidden="true" />
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold font-heading text-white">Stay in the loop</h2>
         <p className="text-white/80 mt-2 text-sm sm:text-base max-w-sm mx-auto">

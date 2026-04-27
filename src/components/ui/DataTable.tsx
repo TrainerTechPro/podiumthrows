@@ -126,7 +126,7 @@ export function DataTable<T extends Record<string, unknown>>({
             <div className="relative flex-1 min-w-[180px] max-w-xs">
               <SearchLucide
                 size={16}
-                strokeWidth={2}
+                strokeWidth={1.75}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"
                 aria-hidden="true"
               />
@@ -346,7 +346,7 @@ export function DataTableSearch({
     <div className={cn("relative flex-1 min-w-[180px] max-w-xs", className)}>
       <SearchLucide
         size={16}
-        strokeWidth={2}
+        strokeWidth={1.75}
         className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"
         aria-hidden="true"
       />

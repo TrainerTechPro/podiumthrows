@@ -146,7 +146,7 @@ function IosSafariInstructions({ onDismiss }: { onDismiss: () => void }) {
           Scroll down and tap <em className="font-medium not-italic">Add to Home Screen</em>{" "}
           <Plus
             size={14}
-            strokeWidth={2}
+            strokeWidth={1.75}
             className="inline align-middle text-muted"
             aria-hidden="true"
           />

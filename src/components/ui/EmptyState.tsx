@@ -44,7 +44,7 @@ export function EmptyState({
   const resolvedIcon =
     icon ??
     (isError ? (
-      <AlertCircle size={compact ? 24 : 48} strokeWidth={1.5} aria-hidden="true" />
+      <AlertCircle size={compact ? 24 : 48} strokeWidth={1.75} aria-hidden="true" />
     ) : null);
   const resolvedAction =
     action ??
@@ -129,7 +129,7 @@ export function EmptyState({
 export function NoAthletesEmpty({ onInvite }: { onInvite?: () => void }) {
   return (
     <EmptyState
-      icon={<Users size={24} strokeWidth={1.5} aria-hidden="true" />}
+      icon={<Users size={24} strokeWidth={1.75} aria-hidden="true" />}
       title="No athletes yet"
       description="Invite your first athlete to get started. They'll appear here once they accept."
       action={
@@ -146,7 +146,7 @@ export function NoAthletesEmpty({ onInvite }: { onInvite?: () => void }) {
 export function NoSessionsEmpty({ onCreate }: { onCreate?: () => void }) {
   return (
     <EmptyState
-      icon={<Calendar size={24} strokeWidth={1.5} aria-hidden="true" />}
+      icon={<Calendar size={24} strokeWidth={1.75} aria-hidden="true" />}
       title="No sessions logged"
       description="Sessions will appear here once you start logging throws and training."
       action={
@@ -164,7 +164,7 @@ export function NoResultsEmpty({ query }: { query?: string }) {
   return (
     <EmptyState
       compact
-      icon={<Search size={24} strokeWidth={1.5} aria-hidden="true" />}
+      icon={<Search size={24} strokeWidth={1.75} aria-hidden="true" />}
       title={query ? `No results for "${query}"` : "No results found"}
       description="Try different keywords or clear your filters."
     />

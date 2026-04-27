@@ -171,7 +171,7 @@ export function AthleteAddMeetModal({ athleteId, athleteEvents, onClose }: Props
                     : "border-[var(--card-border)] text-muted hover:bg-surface-100 dark:hover:bg-surface-800"
                 }`}
               >
-                {event === e.value && <Check size={14} strokeWidth={2} aria-hidden="true" />}
+                {event === e.value && <Check size={14} strokeWidth={1.75} aria-hidden="true" />}
                 {e.label}
               </button>
             ))}

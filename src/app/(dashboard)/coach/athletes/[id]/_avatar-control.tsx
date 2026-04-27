@@ -76,7 +76,7 @@ export function AthleteAvatarControl({ athleteId, name, avatarUrl, isProxy }: Pr
       >
         <Avatar name={name} src={avatarUrl} size="lg" />
         <span className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary-500 text-black shadow ring-2 ring-[var(--card-bg)] transition-transform group-hover:scale-110">
-          <Camera size={12} strokeWidth={2} aria-hidden="true" />
+          <Camera size={12} strokeWidth={1.75} aria-hidden="true" />
         </span>
       </button>
 

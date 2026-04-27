@@ -261,9 +261,9 @@ function CustomizerPanel({
                   : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
               )}
             >
-              {side === "left" && <ChevronLeft size={12} strokeWidth={2} aria-hidden="true" />}
+              {side === "left" && <ChevronLeft size={12} strokeWidth={1.75} aria-hidden="true" />}
               {side === "left" ? "Left" : "Right"}
-              {side === "right" && <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />}
+              {side === "right" && <ChevronRight size={12} strokeWidth={1.75} aria-hidden="true" />}
             </button>
           ))}
         </div>

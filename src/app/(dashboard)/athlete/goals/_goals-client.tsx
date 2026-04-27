@@ -214,7 +214,7 @@ function AchievedGoalCard({ goal }: { goal: DecoratedGoal }) {
         className="w-9 h-9 rounded-xl bg-success-500/15 text-success-600 dark:text-success-400 flex items-center justify-center shrink-0"
         aria-hidden="true"
       >
-        <Trophy size={16} strokeWidth={1.75} />
+        <Trophy size={16} strokeWidth={1.75} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-[var(--foreground)] truncate">{goal.title}</div>
@@ -241,7 +241,7 @@ function SuggestedGoalCard({ suggestion, onAccept }: SuggestedGoalCardProps) {
         className="w-9 h-9 rounded-xl bg-primary-500/15 text-primary-500 flex items-center justify-center shrink-0"
         aria-hidden="true"
       >
-        <Sparkles size={16} strokeWidth={1.75} />
+        <Sparkles size={16} strokeWidth={1.75} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="text-sm font-semibold text-[var(--foreground)]">{suggestion.title}</h3>

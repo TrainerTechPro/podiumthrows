@@ -193,7 +193,12 @@ export function WeekCalendar({
                       )}
                       aria-label={`${c.athleteName} — ${c.meetName} (${c.priority}-Meet)`}
                     >
-                      <Trophy size={10} strokeWidth={2} aria-hidden="true" className="shrink-0" />
+                      <Trophy
+                        size={10}
+                        strokeWidth={1.75}
+                        aria-hidden="true"
+                        className="shrink-0"
+                      />
                       <span className="truncate">{c.athleteName}</span>
                       <span className="shrink-0 opacity-70">· {c.priority}</span>
                     </Link>

@@ -63,7 +63,7 @@ const MAX_RECENT = 8;
 const PER_GROUP_DISPLAY = 5;
 const DEBOUNCE_MS = 150;
 
-const ICON_PROPS = { size: 15, strokeWidth: 1.75 } as const;
+const ICON_PROPS = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
 
 const GROUP_META: Record<
   GroupKey,
@@ -454,7 +454,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
         <div className="flex items-center gap-3 px-4 border-b border-[var(--card-border)]">
           <Search
             size={18}
-            strokeWidth={2}
+            strokeWidth={1.75}
             className="shrink-0 text-surface-400"
             aria-hidden="true"
           />

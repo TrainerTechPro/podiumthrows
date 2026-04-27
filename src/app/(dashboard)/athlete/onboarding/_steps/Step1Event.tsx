@@ -67,7 +67,7 @@ export function Step1Event({ firstName, event, mode, onPick }: Step1EventProps) 
               >
                 <Icon
                   size={36}
-                  strokeWidth={1.5}
+                  strokeWidth={1.75}
                   aria-hidden="true"
                   className={cn(
                     "transition-colors",

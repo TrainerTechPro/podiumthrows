@@ -219,12 +219,12 @@ export function RecommenderRail({ event, onAdd }: Props) {
                                 state.status === "added" ? (
                                   <Check
                                     size={12}
-                                    strokeWidth={2}
+                                    strokeWidth={1.75}
                                     className="text-green-500"
                                     aria-hidden="true"
                                   />
                                 ) : (
-                                  <Plus size={12} strokeWidth={2} aria-hidden="true" />
+                                  <Plus size={12} strokeWidth={1.75} aria-hidden="true" />
                                 )
                               }
                               onClick={() => handleAdd(rec)}
@@ -239,7 +239,7 @@ export function RecommenderRail({ event, onAdd }: Props) {
                           <div className="flex items-start gap-1.5 pt-1 border-t border-amber-500/20">
                             <AlertTriangle
                               size={12}
-                              strokeWidth={2}
+                              strokeWidth={1.75}
                               className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
                               aria-hidden="true"
                             />

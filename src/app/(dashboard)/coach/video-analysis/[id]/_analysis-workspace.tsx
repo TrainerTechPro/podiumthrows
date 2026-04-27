@@ -168,7 +168,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
     } finally {
       detectingRef.current = false;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable ref: pose.detectFrame identity is stable via useCallback
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable ref: pose.detectFrame identity is stable via useCallback
   }, []);
 
   // Detect pose when time changes (scrubbing or stepping)
@@ -280,9 +280,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
   }
 
   function handleUpdateNotes(id: string, notes: string) {
-    setPositions((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, notes } : p))
-    );
+    setPositions((prev) => prev.map((p) => (p.id === id ? { ...p, notes } : p)));
   }
 
   /* ── Auto-save + Navigation Guard ───────────────────────────────────── */
@@ -373,7 +371,8 @@ export function AnalysisWorkspace({ analysis }: Props) {
 
   async function handleSaveTitle() {
     setEditingTitle(false);
-    if (title.trim() === analysis.title && description.trim() === (analysis.description || "")) return;
+    if (title.trim() === analysis.title && description.trim() === (analysis.description || ""))
+      return;
     try {
       const res = await fetch(`/api/video-analysis/${analysis.id}`, {
         method: "PATCH",
@@ -434,13 +433,14 @@ export function AnalysisWorkspace({ analysis }: Props) {
       {/* Breadcrumbs + Actions */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <nav className="flex items-center gap-1.5 text-sm text-muted">
-          <Link href="/coach/video-analysis" className="hover:text-[var(--foreground)] transition-colors">
+          <Link
+            href="/coach/video-analysis"
+            className="hover:text-[var(--foreground)] transition-colors"
+          >
             Pose Analysis
           </Link>
-          <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
-          <span className="text-[var(--foreground)] truncate max-w-[200px]">
-            {analysis.title}
-          </span>
+          <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
+          <span className="text-[var(--foreground)] truncate max-w-[200px]">{analysis.title}</span>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -454,17 +454,20 @@ export function AnalysisWorkspace({ analysis }: Props) {
           >
             {saveStatus === "saving" ? (
               <>
-                <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+                <div
+                  className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"
+                  aria-hidden="true"
+                />
                 Saving…
               </>
             ) : isDirty ? (
               <>
-                <Save size={14} strokeWidth={2} aria-hidden="true" />
+                <Save size={14} strokeWidth={1.75} aria-hidden="true" />
                 Save
               </>
             ) : (
               <>
-                <Check size={14} strokeWidth={2} aria-hidden="true" />
+                <Check size={14} strokeWidth={1.75} aria-hidden="true" />
                 Saved
               </>
             )}
@@ -476,7 +479,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
             className="btn-secondary text-sm text-danger-500 hover:text-danger-600 flex items-center gap-1.5"
             aria-label="Delete analysis"
           >
-            <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+            <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
             <span className="sm:hidden">Delete</span>
           </button>
           <ConfirmDialog
@@ -501,7 +504,14 @@ export function AnalysisWorkspace({ analysis }: Props) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleSaveTitle}
-              onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(); if (e.key === "Escape") { setTitle(analysis.title); setDescription(analysis.description || ""); setEditingTitle(false); } }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveTitle();
+                if (e.key === "Escape") {
+                  setTitle(analysis.title);
+                  setDescription(analysis.description || "");
+                  setEditingTitle(false);
+                }
+              }}
               className="input text-xl font-bold w-full"
               maxLength={200}
               autoFocus
@@ -511,7 +521,14 @@ export function AnalysisWorkspace({ analysis }: Props) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onBlur={handleSaveTitle}
-              onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(); if (e.key === "Escape") { setTitle(analysis.title); setDescription(analysis.description || ""); setEditingTitle(false); } }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveTitle();
+                if (e.key === "Escape") {
+                  setTitle(analysis.title);
+                  setDescription(analysis.description || "");
+                  setEditingTitle(false);
+                }
+              }}
               placeholder="Add a description…"
               className="input text-sm w-full"
               maxLength={2000}
@@ -526,10 +543,16 @@ export function AnalysisWorkspace({ analysis }: Props) {
               aria-label="Edit title and description"
             >
               <h1 className="text-xl font-bold text-[var(--foreground)]">{title}</h1>
-              <Pencil size={14} strokeWidth={2} className="text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-hidden="true" />
+              <Pencil
+                size={14}
+                strokeWidth={1.75}
+                className="text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                aria-hidden="true"
+              />
             </button>
             <p className="text-sm text-muted mt-0.5">
-              {analysis.athlete.firstName} {analysis.athlete.lastName} · {EVENT_LABELS[analysis.event] || analysis.event}
+              {analysis.athlete.firstName} {analysis.athlete.lastName} ·{" "}
+              {EVENT_LABELS[analysis.event] || analysis.event}
               {description && ` · ${description}`}
             </p>
           </div>
@@ -541,7 +564,10 @@ export function AnalysisWorkspace({ analysis }: Props) {
         {/* Video Section (60%) */}
         <div className="lg:w-[60%] space-y-3">
           {/* Video with Pose Overlay */}
-          <div ref={videoContainerRef} className="relative rounded-xl overflow-hidden bg-black border border-surface-200 dark:border-surface-700">
+          <div
+            ref={videoContainerRef}
+            className="relative rounded-xl overflow-hidden bg-black border border-surface-200 dark:border-surface-700"
+          >
             <VideoPlayer
               ref={videoRef}
               src={analysis.videoUrl}
@@ -556,18 +582,12 @@ export function AnalysisWorkspace({ analysis }: Props) {
 
             {/* First-time pose detection prompt */}
             {!hasActivatedPose && !pose.active && (
-              <PoseDetectionOverlay
-                onEnable={handleTogglePose}
-                onSkip={handleOverlaySkip}
-              />
+              <PoseDetectionOverlay onEnable={handleTogglePose} onSkip={handleOverlaySkip} />
             )}
 
             {/* Pose skeleton overlay */}
             {showOverlay && pose.active && (
-              <PoseOverlay
-                pose={currentPose}
-                showAngles={showAngles}
-              />
+              <PoseOverlay pose={currentPose} showAngles={showAngles} />
             )}
 
             {/* Pose loading indicator */}
@@ -607,7 +627,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
                   className="p-2.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                   aria-label="Previous frame"
                 >
-                  <SkipBack size={16} strokeWidth={2} aria-hidden="true" />
+                  <SkipBack size={16} strokeWidth={1.75} aria-hidden="true" />
                 </button>
 
                 {/* Play/Pause */}
@@ -617,9 +637,9 @@ export function AnalysisWorkspace({ analysis }: Props) {
                   className="p-2 rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
                 >
                   {isPlaying ? (
-                    <Pause size={18} strokeWidth={2} aria-hidden="true" />
+                    <Pause size={18} strokeWidth={1.75} aria-hidden="true" />
                   ) : (
-                    <Play size={18} strokeWidth={2} aria-hidden="true" />
+                    <Play size={18} strokeWidth={1.75} aria-hidden="true" />
                   )}
                 </button>
 
@@ -630,7 +650,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
                   className="p-2.5 rounded-lg text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                   aria-label="Next frame"
                 >
-                  <SkipForward size={16} strokeWidth={2} aria-hidden="true" />
+                  <SkipForward size={16} strokeWidth={1.75} aria-hidden="true" />
                 </button>
               </div>
 
@@ -682,9 +702,9 @@ export function AnalysisWorkspace({ analysis }: Props) {
                   aria-label={pose.active ? "Disable pose detection" : "Enable pose detection"}
                 >
                   {showOverlay ? (
-                    <Eye size={16} strokeWidth={2} aria-hidden="true" />
+                    <Eye size={16} strokeWidth={1.75} aria-hidden="true" />
                   ) : (
-                    <EyeOff size={16} strokeWidth={2} aria-hidden="true" />
+                    <EyeOff size={16} strokeWidth={1.75} aria-hidden="true" />
                   )}
                 </button>
 
@@ -700,7 +720,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
                     }`}
                     aria-label={showAngles ? "Hide angle labels" : "Show angle labels"}
                   >
-                    <Ruler size={16} strokeWidth={2} aria-hidden="true" />
+                    <Ruler size={16} strokeWidth={1.75} aria-hidden="true" />
                   </button>
                 )}
 
@@ -717,9 +737,9 @@ export function AnalysisWorkspace({ analysis }: Props) {
                     aria-label={showOverlay ? "Hide skeleton" : "Show skeleton"}
                   >
                     {showOverlay ? (
-                      <Eye size={16} strokeWidth={2} aria-hidden="true" />
+                      <Eye size={16} strokeWidth={1.75} aria-hidden="true" />
                     ) : (
-                      <EyeOff size={16} strokeWidth={2} aria-hidden="true" />
+                      <EyeOff size={16} strokeWidth={1.75} aria-hidden="true" />
                     )}
                   </button>
                 )}
@@ -777,7 +797,6 @@ export function AnalysisWorkspace({ analysis }: Props) {
                 onSeek={handleSeek}
               />
             )}
-
           </div>
         </div>
       </div>

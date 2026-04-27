@@ -58,13 +58,15 @@ export function VideoAnalysisCard({ analysis }: { analysis: Analysis }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Video size={32} strokeWidth={1.5} className="text-surface-600" aria-hidden="true" />
+            <Video size={32} strokeWidth={1.75} className="text-surface-600" aria-hidden="true" />
           </div>
         )}
 
         {/* Status badge overlay */}
         <div className="absolute top-2 right-2">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyle.bg} ${statusStyle.text}`}>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusStyle.bg} ${statusStyle.text}`}
+          >
             {statusStyle.label}
           </span>
         </div>
@@ -77,7 +79,9 @@ export function VideoAnalysisCard({ analysis }: { analysis: Analysis }) {
         </h3>
 
         <div className="flex items-center gap-2">
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${eventStyle.bg} ${eventStyle.text}`}>
+          <span
+            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${eventStyle.bg} ${eventStyle.text}`}
+          >
             {eventStyle.label}
           </span>
           <span className="text-xs text-muted truncate">
@@ -86,7 +90,7 @@ export function VideoAnalysisCard({ analysis }: { analysis: Analysis }) {
         </div>
 
         <div className="flex items-center gap-1 text-xs text-muted">
-          <Clock size={12} strokeWidth={2} aria-hidden="true" />
+          <Clock size={12} strokeWidth={1.75} aria-hidden="true" />
           <time dateTime={date.toISOString()}>
             {date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
           </time>

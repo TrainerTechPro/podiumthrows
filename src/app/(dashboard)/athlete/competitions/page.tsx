@@ -57,7 +57,7 @@ export default async function AthleteCompetitionsPage() {
       </div>
       {items.length === 0 ? (
         <EmptyState
-          icon={<CalendarCheck size={48} strokeWidth={1.5} aria-hidden="true" />}
+          icon={<CalendarCheck size={48} strokeWidth={1.75} aria-hidden="true" />}
           title="No competitions logged yet"
           description="Log a meet you've already thrown at — even retroactive entries count toward your trends."
           action={

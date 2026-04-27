@@ -235,7 +235,7 @@ export function TeamFeed() {
   if (items.length === 0) {
     return (
       <EmptyState
-        icon={<Sparkles size={48} strokeWidth={1.5} aria-hidden="true" />}
+        icon={<Sparkles size={48} strokeWidth={1.75} aria-hidden="true" />}
         title="No team activity this week"
         description="Be first — your teammates are watching. Log a session and start the streak."
       />
@@ -342,7 +342,7 @@ function Avatar({ athlete, type }: { athlete: AthleteRef | null; type: string })
   if (type === "COACH_POST") {
     return (
       <div className="h-8 w-8 rounded-full bg-primary-500/15 flex items-center justify-center shrink-0">
-        <MessageSquare className="h-4 w-4 text-primary-500" strokeWidth={2} aria-hidden="true" />
+        <MessageSquare className="h-4 w-4 text-primary-500" strokeWidth={1.75} aria-hidden="true" />
       </div>
     );
   }

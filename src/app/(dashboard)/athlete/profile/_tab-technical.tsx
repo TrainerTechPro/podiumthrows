@@ -46,20 +46,14 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
     <div className="space-y-6">
       {/* ── Managed badge ────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 text-xs text-muted">
-        <ShieldCheck
-          className="w-4 h-4"
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
+        <ShieldCheck className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
         <span>Managed by your coach</span>
       </div>
 
       {/* ── Empty state or content ───────────────────────────────────── */}
       {!data ? (
         <EmptyState
-          icon={
-            <Target size={24} strokeWidth={1.5} aria-hidden="true" />
-          }
+          icon={<Target size={24} strokeWidth={1.75} aria-hidden="true" />}
           title="No technical profile yet"
           description="Your coach hasn't set up your technical profile yet. This section will show your strengths, weaknesses, and coaching cues once they add it."
         />
@@ -71,9 +65,7 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
               <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-1">
                 Primary Limiter
               </p>
-              <p className="text-sm text-[var(--foreground)]">
-                {data.primaryLimiter}
-              </p>
+              <p className="text-sm text-[var(--foreground)]">{data.primaryLimiter}</p>
             </div>
           )}
 
@@ -121,25 +113,21 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
               <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
                 Cues That Work
               </h3>
-              {Array.from(groupCuesByPhase(data.cuesWork)).map(
-                ([phase, cues]) => (
-                  <div key={phase} className="space-y-2">
-                    <h4 className="text-xs font-semibold text-[var(--foreground)] uppercase tracking-wider">
-                      {phase}
-                    </h4>
-                    <StaggeredList className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {cues.map((cue, i) => (
-                        <div key={i} className="card p-3 space-y-1">
-                          <p className="text-sm font-medium text-[var(--foreground)]">
-                            {cue.cue}
-                          </p>
-                          <p className="text-xs text-muted">{cue.why}</p>
-                        </div>
-                      ))}
-                    </StaggeredList>
-                  </div>
-                )
-              )}
+              {Array.from(groupCuesByPhase(data.cuesWork)).map(([phase, cues]) => (
+                <div key={phase} className="space-y-2">
+                  <h4 className="text-xs font-semibold text-[var(--foreground)] uppercase tracking-wider">
+                    {phase}
+                  </h4>
+                  <StaggeredList className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {cues.map((cue, i) => (
+                      <div key={i} className="card p-3 space-y-1">
+                        <p className="text-sm font-medium text-[var(--foreground)]">{cue.cue}</p>
+                        <p className="text-xs text-muted">{cue.why}</p>
+                      </div>
+                    ))}
+                  </StaggeredList>
+                </div>
+              ))}
             </div>
           )}
 
@@ -155,9 +143,7 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
                     key={i}
                     className="card p-3 space-y-1 border border-red-500/20 bg-red-50/30 dark:bg-red-900/10"
                   >
-                    <p className="text-sm font-medium text-red-700 dark:text-red-400">
-                      {cue.cue}
-                    </p>
+                    <p className="text-sm font-medium text-red-700 dark:text-red-400">{cue.cue}</p>
                     <p className="text-xs text-muted">{cue.why}</p>
                   </div>
                 ))}
