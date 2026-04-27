@@ -156,6 +156,17 @@ export const EVENT_SCHEMAS = {
       field: "string — the preference key that changed",
     },
   },
+
+  /** Visitor pressed play on the landing-page demo video. Conversion proxy. */
+  demo_video_played: {
+    description: "Visitor pressed play on the landing-page demo video embed.",
+    surface: "public",
+    props: {
+      placement: 'string — surface slug, e.g. "landing_above_features"',
+      videoId: "string — provider id (Loom/YouTube) or 'placeholder'",
+      firstPlay: "boolean — true on the first play of this page load",
+    },
+  },
 } as const satisfies Record<string, EventDescriptor>;
 
 type EventDescriptor = {
@@ -232,6 +243,11 @@ export type EventPayloads = {
   };
   preferences_updated: {
     field: string;
+  };
+  demo_video_played: {
+    placement: string;
+    videoId: string;
+    firstPlay: boolean;
   };
 };
 

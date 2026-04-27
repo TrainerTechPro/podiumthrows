@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import MarketingNav from "@/components/marketing/Nav";
 import HeroSection from "@/components/marketing/HeroSection";
 import DataStrip from "@/components/marketing/DataStrip";
+import DemoVideo from "@/components/marketing/DemoVideo";
 import BondarchukProof from "@/components/marketing/BondarchukProof";
 import StickyFeatures from "@/components/marketing/StickyFeatures";
 import BentoFeatures from "@/components/marketing/BentoFeatures";
@@ -65,10 +66,9 @@ export default function HomePage() {
           zIndex: 0,
           pointerEvents: "none",
           backgroundImage:
-            "linear-gradient(rgba(245,158,11,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.06) 1px, transparent 1px)",
+            "linear-gradient(var(--landing-amber-glow) 1px, transparent 1px), linear-gradient(90deg, var(--landing-amber-glow) 1px, transparent 1px)",
           backgroundSize: "80px 80px",
-          maskImage:
-            "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%)",
+          maskImage: "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%)",
           WebkitMaskImage:
             "radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%)",
         }}
@@ -78,6 +78,8 @@ export default function HomePage() {
         <MarketingNav />
         <HeroSection />
         <DataStrip />
+        <Divider />
+        <DemoVideo placement="landing_above_features" />
         <Divider />
         <StickyFeatures />
         <Divider />
