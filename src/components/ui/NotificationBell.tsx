@@ -413,7 +413,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
       <button
         type="button"
         onClick={handleToggle}
-        className="relative p-3 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        className="relative p-3 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
         aria-label={`Notifications${count > 0 ? ` (${count} unread)` : ""}`}
         aria-expanded={open}
         aria-haspopup="true"

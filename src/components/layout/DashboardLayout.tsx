@@ -8,6 +8,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { clearAllUserDrafts } from "@/lib/draft-persistence";
 import { Sun, Moon, Menu, X, LogOut, Search, Settings, Megaphone, Dumbbell } from "lucide-react";
 import { Sidebar, COACH_NAV_SECTIONS, NavSection } from "@/components/ui/Sidebar";
+import { SkipLink } from "@/components/ui/SkipLink";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { CommandPalette, openCommandPalette } from "@/components/ui/CommandPalette";
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
@@ -152,7 +153,7 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
         aria-label="User menu"
         aria-expanded={open}
         aria-haspopup="true"
@@ -225,7 +226,7 @@ function HamburgerButton({ open, onClick }: { open: boolean; onClick: () => void
   return (
     <button
       onClick={onClick}
-      className="lg:hidden p-3 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+      className="lg:hidden p-3 rounded-xl text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
       aria-label={open ? "Close navigation" : "Open navigation"}
       aria-expanded={open}
     >
@@ -358,6 +359,7 @@ function CoachShell({
 
   return (
     <div className="flex h-screen bg-[var(--background)] overflow-hidden">
+      <SkipLink />
       <Sidebar
         sections={sections}
         header={<SidebarHeader />}
@@ -459,6 +461,7 @@ function AthleteShell({ user, children, className, notificationCount }: Dashboar
         focusMode && "athlete-shell-focus"
       )}
     >
+      <SkipLink />
       <AthleteTopBar user={user} notificationCount={notificationCount} />
 
       <main

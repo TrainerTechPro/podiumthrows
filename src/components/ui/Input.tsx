@@ -92,7 +92,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               leftIcon && "pl-10",
               (rightIcon || isPassword) && "pr-10",
               error &&
-                "border-danger-500 dark:border-danger-500 focus:ring-danger-500/50 focus:border-danger-500",
+                "border-danger-500 dark:border-danger-500 focus-visible:ring-danger-500/50 focus-visible:border-danger-500",
               className
             )}
             {...props}

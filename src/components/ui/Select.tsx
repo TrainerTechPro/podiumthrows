@@ -146,7 +146,8 @@ export function Select<T extends string | number = string>({
           onKeyDown={handleKeyDown}
           className={cn(
             "input w-full flex items-center justify-between text-left gap-2 cursor-pointer",
-            error && "border-danger-500 focus:ring-danger-500/50 focus:border-danger-500",
+            error &&
+              "border-danger-500 focus-visible:ring-danger-500/50 focus-visible:border-danger-500",
             disabled && "opacity-50 cursor-not-allowed"
           )}
         >

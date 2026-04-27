@@ -222,7 +222,7 @@ export function Sheet({
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="shrink-0 rounded-lg p-1.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-800 dark:hover:text-surface-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                className="shrink-0 rounded-lg p-1.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 dark:hover:bg-surface-800 dark:hover:text-surface-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
               >
                 <X size={16} strokeWidth={2.5} aria-hidden="true" />
               </button>

@@ -100,7 +100,7 @@ export function ModeToggle({ activeMode, className }: ModeToggleProps) {
         "relative flex items-center justify-center h-9 w-9 rounded-full",
         "bg-[var(--gold)] text-surface-950",
         "transition-transform duration-150 active:scale-[0.94] hover:scale-[1.04]",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
         "disabled:cursor-not-allowed disabled:opacity-70",
         className
       )}

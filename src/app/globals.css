@@ -447,7 +447,7 @@
     @apply inline-flex items-center justify-center gap-2 px-4 py-3
       bg-primary-500 text-surface-950 font-semibold text-sm min-h-[44px] uppercase tracking-wider
       hover:bg-primary-400 active:bg-primary-600 active:scale-[0.97]
-      focus:outline-none focus:ring-2 focus:ring-primary-500/50
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50
       disabled:opacity-50 disabled:cursor-not-allowed
       transition-all duration-150;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
@@ -458,7 +458,7 @@
       bg-surface-50 dark:bg-surface-800 text-[var(--foreground)]
       font-medium text-sm border border-surface-100 dark:border-surface-600 min-h-[44px]
       hover:bg-surface-100 dark:hover:bg-surface-700 hover:border-[var(--gold)] hover:border-opacity-30 active:scale-[0.97]
-      focus:outline-none focus:ring-2 focus:ring-surface-400/50
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50
       disabled:opacity-50 disabled:cursor-not-allowed
       transition-all duration-150;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
@@ -468,7 +468,7 @@
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
       bg-danger-500 text-white font-semibold text-sm uppercase tracking-wider
       hover:bg-danger-600 active:bg-danger-700 active:scale-[0.97]
-      focus:outline-none focus:ring-2 focus:ring-danger-500/50
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500/50
       disabled:opacity-50 disabled:cursor-not-allowed
       transition-all duration-150;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
@@ -478,8 +478,8 @@
     @apply w-full px-3.5 py-2.5 text-sm font-body
       bg-white dark:bg-surface-900 border border-surface-100 dark:border-surface-600
       text-[var(--foreground)] placeholder:text-surface-200 dark:placeholder:text-surface-200
-      focus:outline-none focus:ring-[2px] focus:ring-primary-500/40 focus:border-primary-500
-      focus:shadow-[0_0_12px_rgb(255_200_0/0.1)]
+      focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-primary-500/50 focus-visible:border-primary-500
+      focus-visible:shadow-[0_0_12px_rgb(255_200_0/0.1)]
       disabled:opacity-50 disabled:cursor-not-allowed
       transition-all duration-150;
     clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
@@ -739,6 +739,25 @@
   to   { transform: translateX(100%); }
 }
 
+/* ─── Focus-visible backstop ─────────────────────────────────────────────
+   Catches every focusable element keyboard users can land on, so anything
+   missing explicit Tailwind classes still shows a brand-amber ring. Modern
+   browsers respect border-radius on `outline`, so this hugs rounded corners
+   correctly. Explicit utility classes (`focus-visible:ring-*`) win via
+   higher specificity inside Tailwind layers — this is the safety net, not
+   the primary mechanism.
+
+   Skipped on form `:focus` for non-keyboard cases via :focus-visible
+   (browser decides), so mouse clicks don't bloom rings. */
+:focus-visible {
+  outline: 2px solid #FFC800;
+  outline-offset: 2px;
+}
+
+/* Suppress the default outline only when we're providing our own ring via
+   utility classes. We can't selectively suppress everywhere without losing
+   the backstop, so keep explicit `focus-visible:outline-none` opt-in. */
+
 /* ─── Reduced Motion ────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -752,10 +771,30 @@
 }
 
 /* ─── Print ────────────────────────────────────────────────────────────── */
+
+/* Named pages let print views opt into an orientation by setting the `page`
+   CSS property on the wrapper. Default page rule applies to anything that
+   doesn't opt in (e.g. accidental Cmd-P on a non-print route). */
+@page { margin: 1.5cm 1cm; }
+@page print-portrait { size: portrait; margin: 1.5cm 1cm; }
+@page print-landscape { size: landscape; margin: 1cm; }
+
 @media print {
-  html, body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; -webkit-print-color-adjust: exact; }
+  html, body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   aside, header, .no-print { display: none !important; }
   #main-content { overflow: visible !important; padding: 0 0.5cm !important; height: auto !important; flex: none !important; }
   #main-content > * { max-width: 100% !important; }
   .flex.h-screen { display: block !important; height: auto !important; overflow: visible !important; }
+
+  /* Print shell helpers — opt-in via class on the wrapper or row. */
+  .print-shell-portrait { page: print-portrait; }
+  .print-shell-landscape { page: print-landscape; }
+  .print-row,
+  .print-block,
+  .print-keep-together { break-inside: avoid; page-break-inside: avoid; }
+  .print-page-break { break-after: page; page-break-after: always; }
+  /* Long tables: keep header repeated, avoid splitting individual rows. */
+  .print-table { page-break-inside: auto; }
+  .print-table thead { display: table-header-group; }
+  .print-table tr { break-inside: avoid; page-break-inside: avoid; }
 }

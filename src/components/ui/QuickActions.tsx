@@ -526,8 +526,8 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
           "flex items-center justify-center",
           "bg-primary-500 hover:bg-primary-600 active:scale-95",
           "text-white shadow-xl shadow-primary-500/25",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
-          "focus:ring-offset-2 focus:ring-offset-[var(--background)]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+          "focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
           "transition-all duration-150",
           position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6"
         )}

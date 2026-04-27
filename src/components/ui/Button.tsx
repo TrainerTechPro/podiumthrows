@@ -18,7 +18,7 @@ const variants: Record<ButtonVariant, string> = {
   primary: [
     "bg-primary-500 text-white",
     "hover:bg-primary-600 active:bg-primary-700",
-    "focus:ring-primary-500/40",
+    "focus-visible:ring-primary-500/50",
     "shadow-sm hover:shadow",
   ].join(" "),
   secondary: [
@@ -26,24 +26,24 @@ const variants: Record<ButtonVariant, string> = {
     "text-surface-900 dark:text-surface-100",
     "border border-surface-200 dark:border-surface-700",
     "hover:bg-surface-200 dark:hover:bg-surface-700",
-    "focus:ring-surface-400/40",
+    "focus-visible:ring-primary-500/50",
   ].join(" "),
   outline: [
     "bg-transparent border border-primary-500",
     "text-primary-600 dark:text-primary-400",
     "hover:bg-primary-50 dark:hover:bg-primary-500/10",
-    "focus:ring-primary-500/40",
+    "focus-visible:ring-primary-500/50",
   ].join(" "),
   danger: [
     "bg-danger-500 text-white",
     "hover:bg-danger-600 active:bg-danger-700",
-    "focus:ring-danger-500/40",
+    "focus-visible:ring-danger-500/50",
     "shadow-sm hover:shadow",
   ].join(" "),
   ghost: [
     "bg-transparent text-surface-700 dark:text-surface-300",
     "hover:bg-surface-100 dark:hover:bg-surface-800",
-    "focus:ring-surface-400/40",
+    "focus-visible:ring-primary-500/50",
   ].join(" "),
 };
 
@@ -65,7 +65,11 @@ const Spinner = () => (
     aria-hidden="true"
   >
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    <path
+      className="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+    />
   </svg>
 );
 
@@ -123,8 +127,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           "inline-flex items-center justify-center font-medium select-none",
           "transition-[background-color,box-shadow,color] duration-150",
-          "focus:outline-none focus:ring-2 focus:ring-offset-2",
-          "focus:ring-offset-[var(--background)]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          "focus-visible:ring-offset-[var(--background)]",
           "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
           variants[variant],
           sizes[size],

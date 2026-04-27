@@ -47,6 +47,7 @@ next-env.d.ts
 .claude/settings.local.json
 .claude/worktrees/
 .claude/skills/
+.claude/scheduled_tasks.lock
 .mcp.json
 
 # AI / IDE tool workspaces — each tool scaffolds its own dotdir; none belong in the repo

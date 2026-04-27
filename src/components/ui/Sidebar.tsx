@@ -87,6 +87,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           onClick={() => setExpanded(!expanded)}
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
             isParentActive
               ? "text-primary-700 dark:text-primary-300"
               : "text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800/70 hover:text-surface-900 dark:hover:text-surface-100"
@@ -143,6 +144,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
       href={item.href}
       className={cn(
         "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 group",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
         depth > 0 ? "px-3 py-2" : "px-3 py-2.5",
         isActive
           ? "bg-primary-500/12 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.15)]"

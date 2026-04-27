@@ -5,7 +5,20 @@ import { cookies } from "next/headers";
 import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
 import { Analytics } from "@vercel/analytics/next";
 import { WebVitalsReporter } from "./web-vitals";
+import dynamic from "next/dynamic";
 import "./globals.css";
+
+/* AxeReporter is dev-only. The ternary collapses to `() => null` after
+   webpack's NODE_ENV substitution in production, leaving the dynamic +
+   import() literal in dead code. Terser then eliminates the AxeReporter
+   module reference and its transitive @axe-core/react import — confirmed
+   by bundle analyzer (no axe-core in prod static chunks). */
+const AxeReporter =
+  process.env.NODE_ENV === "production"
+    ? () => null
+    : dynamic(() => import("@/components/dev/AxeReporter").then((m) => m.AxeReporter), {
+        ssr: false,
+      });
 
 const chakraPetch = Chakra_Petch({
   subsets: ["latin"],
@@ -120,6 +133,7 @@ export default async function RootLayout({
         <Analytics />
         {process.env.NODE_ENV !== "production" && (
           <>
+            <AxeReporter />
             <Script
               src="https://skills-pearl.vercel.app/budge.iife.js"
               strategy="afterInteractive"
