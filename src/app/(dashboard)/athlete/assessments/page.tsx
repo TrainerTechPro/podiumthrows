@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { MiniSparkline, type MiniSparklinePoint } from "@/components/charts/MiniSparkline";
 import { requireAthleteSession } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 
@@ -32,9 +33,7 @@ function formatAthleteType(type: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function athleteTypeBadgeVariant(
-  type: string
-): "primary" | "success" | "warning" | "info" {
+function athleteTypeBadgeVariant(type: string): "primary" | "success" | "warning" | "info" {
   switch (type) {
     case "EXPLOSIVE":
       return "warning";
@@ -51,15 +50,7 @@ function athleteTypeBadgeVariant(
 
 /* ─── Metric Cell ──────────────────────────────────────────────────────────── */
 
-function MetricCell({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: number | null;
-  unit: string;
-}) {
+function MetricCell({ label, value, unit }: { label: string; value: number | null; unit: string }) {
   if (value === null || value === undefined) return null;
   return (
     <div className="text-center">
@@ -67,9 +58,128 @@ function MetricCell({
         {value}
         <span className="text-xs font-normal text-muted ml-0.5">{unit}</span>
       </p>
-      <p className="text-[10px] text-muted uppercase tracking-wide mt-0.5">
-        {label}
-      </p>
+      <p className="text-[10px] text-muted uppercase tracking-wide mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+/* ─── Trend helpers ────────────────────────────────────────────────────────── */
+
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+
+function parseTestDate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function formatDelta(delta: number, unit: string): string {
+  const abs = Math.abs(delta);
+  // 1 decimal for distances (m), whole numbers for kg
+  const formatted =
+    unit === "m" ? abs.toFixed(2) : Number.isInteger(abs) ? String(abs) : abs.toFixed(1);
+  if (delta === 0) return `0${unit}`;
+  return `${delta > 0 ? "+" : "−"}${formatted}${unit}`;
+}
+
+function formatBaselineAge(baselineDate: string): string {
+  const days = Math.round(
+    (Date.now() - parseTestDate(baselineDate).getTime()) / (24 * 60 * 60 * 1000)
+  );
+  if (days < 120) return "vs 90d";
+  if (days < 365) return `vs ${Math.round(days / 30)}mo`;
+  return `vs ${(days / 365).toFixed(1)}y`;
+}
+
+interface MetricTrend {
+  history: MiniSparklinePoint[];
+  delta: { value: number; baselineDate: string } | null;
+}
+
+function buildTrend(history: MiniSparklinePoint[]): MetricTrend {
+  if (history.length === 0) return { history: [], delta: null };
+  // history is desc (newest first). Find newest record older than 90 days.
+  const cutoff = Date.now() - NINETY_DAYS_MS;
+  const baseline = history.find((p) => parseTestDate(p.date).getTime() <= cutoff);
+  const latest = history[0];
+  const delta = baseline
+    ? { value: latest.value - baseline.value, baselineDate: baseline.date }
+    : null;
+  // Sparkline takes oldest→newest, last 4 entries.
+  const sparkData = history.slice(0, 4).reverse();
+  return { history: sparkData, delta };
+}
+
+/* ─── Delta chip ───────────────────────────────────────────────────────────── */
+
+function DeltaChip({
+  delta,
+  unit,
+  baselineDate,
+}: {
+  delta: number | null;
+  unit: string;
+  baselineDate: string | null;
+}) {
+  if (delta === null || baselineDate === null) {
+    return (
+      <span className="inline-flex items-center text-[10px] font-mono text-muted/60 px-1.5 py-0.5">
+        no 90d baseline
+      </span>
+    );
+  }
+  const tone =
+    delta > 0
+      ? "text-success-500 bg-success-500/10"
+      : delta < 0
+        ? "text-danger-500 bg-danger-500/10"
+        : "text-muted bg-surface-100 dark:bg-surface-800/60";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-mono font-semibold tabular-nums px-1.5 py-0.5 rounded-md ${tone}`}
+      title={`Baseline: ${baselineDate}`}
+    >
+      {formatDelta(delta, unit)}
+      <span className="font-normal opacity-70">{formatBaselineAge(baselineDate)}</span>
+    </span>
+  );
+}
+
+/* ─── Snapshot tile ────────────────────────────────────────────────────────── */
+
+function SnapshotTile({
+  label,
+  value,
+  unit,
+  trend,
+}: {
+  label: string;
+  value: number | null;
+  unit: string;
+  trend: MetricTrend;
+}) {
+  if (value === null) return null;
+  return (
+    <div className="card px-4 py-3 flex flex-col gap-2 min-w-0">
+      <p className="text-[10px] text-muted uppercase tracking-wider truncate">{label}</p>
+      <div className="flex items-baseline gap-1">
+        <span className="text-2xl font-bold font-heading tabular-nums text-[var(--foreground)]">
+          {value}
+        </span>
+        <span className="text-xs font-normal text-muted">{unit}</span>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <MiniSparkline
+          data={trend.history}
+          width={88}
+          height={32}
+          ariaLabel={`${label} trend across ${trend.history.length} tests`}
+        />
+        <DeltaChip
+          delta={trend.delta?.value ?? null}
+          unit={unit}
+          baselineDate={trend.delta?.baselineDate ?? null}
+        />
+      </div>
     </div>
   );
 }
@@ -114,6 +224,41 @@ export default async function AthleteAssessmentsPage() {
   ]);
 
   const isEmpty = testingRecords.length === 0 && assessments.length === 0;
+
+  /* Build per-metric history for the snapshot. testingRecords is desc by testDate. */
+  const latest = testingRecords[0] ?? null;
+
+  const buildHistoryFor = (
+    field: "competitionMark" | "squatKg" | "benchKg" | "snatchKg" | "cleanKg" | "bodyWeightKg"
+  ): MiniSparklinePoint[] =>
+    testingRecords
+      .map((r) => ({ date: r.testDate, value: r[field] }))
+      .filter((p): p is MiniSparklinePoint => p.value !== null && p.value !== undefined);
+
+  // Heavy/light history is only comparable when implement weight matches the latest entry.
+  const buildImplementHistory = (
+    markField: "heavyImplMark" | "lightImplMark",
+    kgField: "heavyImplKg" | "lightImplKg"
+  ): { history: MiniSparklinePoint[]; kg: number | null } => {
+    const latestKg =
+      testingRecords.find((r) => r[markField] !== null && r[kgField] !== null)?.[kgField] ?? null;
+    if (latestKg === null) return { history: [], kg: null };
+    const history = testingRecords
+      .filter((r) => r[markField] !== null && r[kgField] === latestKg)
+      .map((r) => ({ date: r.testDate, value: r[markField] as number }));
+    return { history, kg: latestKg };
+  };
+
+  const compTrend = buildTrend(buildHistoryFor("competitionMark"));
+  const heavy = buildImplementHistory("heavyImplMark", "heavyImplKg");
+  const heavyTrend = buildTrend(heavy.history);
+  const light = buildImplementHistory("lightImplMark", "lightImplKg");
+  const lightTrend = buildTrend(light.history);
+  const squatTrend = buildTrend(buildHistoryFor("squatKg"));
+  const benchTrend = buildTrend(buildHistoryFor("benchKg"));
+  const snatchTrend = buildTrend(buildHistoryFor("snatchKg"));
+  const cleanTrend = buildTrend(buildHistoryFor("cleanKg"));
+  const bwTrend = buildTrend(buildHistoryFor("bodyWeightKg"));
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -173,6 +318,52 @@ export default async function AthleteAssessmentsPage() {
         </div>
       )}
 
+      {/* Snapshot — latest values with trend */}
+      {latest && (
+        <section className="space-y-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+              Latest Snapshot
+            </h2>
+            <p className="text-xs text-muted">{formatTestDate(latest.testDate)}</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <SnapshotTile
+              label="Competition"
+              value={latest.competitionMark}
+              unit="m"
+              trend={compTrend}
+            />
+            {heavy.kg !== null && (
+              <SnapshotTile
+                label={`Heavy ${heavy.kg}kg`}
+                value={latest.heavyImplKg === heavy.kg ? latest.heavyImplMark : null}
+                unit="m"
+                trend={heavyTrend}
+              />
+            )}
+            {light.kg !== null && (
+              <SnapshotTile
+                label={`Light ${light.kg}kg`}
+                value={latest.lightImplKg === light.kg ? latest.lightImplMark : null}
+                unit="m"
+                trend={lightTrend}
+              />
+            )}
+            <SnapshotTile label="Squat" value={latest.squatKg} unit="kg" trend={squatTrend} />
+            <SnapshotTile label="Bench" value={latest.benchKg} unit="kg" trend={benchTrend} />
+            <SnapshotTile label="Snatch" value={latest.snatchKg} unit="kg" trend={snatchTrend} />
+            <SnapshotTile label="Clean" value={latest.cleanKg} unit="kg" trend={cleanTrend} />
+            <SnapshotTile
+              label="Body Weight"
+              value={latest.bodyWeightKg}
+              unit="kg"
+              trend={bwTrend}
+            />
+          </div>
+        </section>
+      )}
+
       {/* Testing Records Timeline */}
       {testingRecords.length > 0 && (
         <section className="space-y-4">
@@ -189,24 +380,16 @@ export default async function AthleteAssessmentsPage() {
                     <p className="text-base font-semibold font-heading text-[var(--foreground)]">
                       {formatTestDate(record.testDate)}
                     </p>
-                    <p className="text-xs text-muted mt-0.5">
-                      {formatTestType(record.testType)}
-                    </p>
+                    <p className="text-xs text-muted mt-0.5">{formatTestType(record.testType)}</p>
                   </div>
                   {record.distanceBandAtTest && (
-                    <Badge variant="primary">
-                      Band: {record.distanceBandAtTest}
-                    </Badge>
+                    <Badge variant="primary">Band: {record.distanceBandAtTest}</Badge>
                   )}
                 </div>
 
                 {/* Metrics grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 py-2">
-                  <MetricCell
-                    label="Comp. Mark"
-                    value={record.competitionMark}
-                    unit="m"
-                  />
+                  <MetricCell label="Comp. Mark" value={record.competitionMark} unit="m" />
                   {record.heavyImplMark !== null && (
                     <MetricCell
                       label={`Heavy (${record.heavyImplKg ?? "?"}kg)`}
@@ -223,17 +406,9 @@ export default async function AthleteAssessmentsPage() {
                   )}
                   <MetricCell label="Squat" value={record.squatKg} unit="kg" />
                   <MetricCell label="Bench" value={record.benchKg} unit="kg" />
-                  <MetricCell
-                    label="Snatch"
-                    value={record.snatchKg}
-                    unit="kg"
-                  />
+                  <MetricCell label="Snatch" value={record.snatchKg} unit="kg" />
                   <MetricCell label="Clean" value={record.cleanKg} unit="kg" />
-                  <MetricCell
-                    label="Body Weight"
-                    value={record.bodyWeightKg}
-                    unit="kg"
-                  />
+                  <MetricCell label="Body Weight" value={record.bodyWeightKg} unit="kg" />
                 </div>
 
                 {/* Notes */}
@@ -260,10 +435,7 @@ export default async function AthleteAssessmentsPage() {
 
           <div className="space-y-3">
             {assessments.map((assessment) => (
-              <div
-                key={assessment.id}
-                className="card px-6 py-5 flex items-start gap-4"
-              >
+              <div key={assessment.id} className="card px-6 py-5 flex items-start gap-4">
                 {/* Type icon */}
                 <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
                   <svg
@@ -284,26 +456,19 @@ export default async function AthleteAssessmentsPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge
-                      variant={athleteTypeBadgeVariant(assessment.athleteType)}
-                    >
+                    <Badge variant={athleteTypeBadgeVariant(assessment.athleteType)}>
                       {formatAthleteType(assessment.athleteType)}
                     </Badge>
                     <span className="text-xs text-muted">
-                      {new Date(assessment.completedAt).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )}
+                      {new Date(assessment.completedAt).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                   {assessment.notes && (
-                    <p className="text-sm text-muted mt-2 leading-relaxed">
-                      {assessment.notes}
-                    </p>
+                    <p className="text-sm text-muted mt-2 leading-relaxed">{assessment.notes}</p>
                   )}
                 </div>
               </div>
