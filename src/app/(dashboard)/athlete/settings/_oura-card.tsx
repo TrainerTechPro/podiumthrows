@@ -14,6 +14,8 @@ interface OuraCardProps {
   syncMode?: string;
   lastSyncAt?: string | null;
   needsReauth?: boolean;
+  lastSyncError?: string | null;
+  lastSyncErrorAt?: string | null;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -31,7 +33,14 @@ function relativeTime(iso: string): string {
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
-export function OuraCard({ connected, syncMode: initialSyncMode, lastSyncAt, needsReauth: initialNeedsReauth }: OuraCardProps) {
+export function OuraCard({
+  connected,
+  syncMode: initialSyncMode,
+  lastSyncAt,
+  needsReauth: initialNeedsReauth,
+  lastSyncError: initialLastSyncError,
+  lastSyncErrorAt: initialLastSyncErrorAt,
+}: OuraCardProps) {
   const { success, error: toastError, warning } = useToast();
   const [syncMode, setSyncMode] = useState(initialSyncMode ?? "ASSISTED");
   const [syncing, setSyncing] = useState(false);
@@ -39,13 +48,22 @@ export function OuraCard({ connected, syncMode: initialSyncMode, lastSyncAt, nee
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastSync, setLastSync] = useState(lastSyncAt ?? null);
   const [needsReauth, setNeedsReauth] = useState(initialNeedsReauth ?? false);
+  const [lastSyncError, setLastSyncError] = useState<string | null>(initialLastSyncError ?? null);
+  const [lastSyncErrorAt, setLastSyncErrorAt] = useState<string | null>(
+    initialLastSyncErrorAt ?? null
+  );
 
-  // Show toast on initial mount if ?oura=connected was handled by parent
+  // Show toast on initial mount if ?oura=connected was handled by parent.
+  // On a fresh connect (or post-reauth), trigger an immediate sync so the
+  // athlete sees readiness/HRV land without a second tap.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("oura") === "connected") {
       setNeedsReauth(false);
-      success("Oura Ring Connected", "Your Oura Ring is now linked to your account.");
+      setLastSyncError(null);
+      setLastSyncErrorAt(null);
+      success("Oura Ring Connected", "Your Oura Ring is linked. Syncing your latest data now…");
+      handleSync();
     } else if (params.get("oura") === "error") {
       const reason = params.get("reason") || "unknown";
       toastError("Oura Ring Connection Failed", `Error: ${reason.replace(/_/g, " ")}`);
@@ -92,14 +110,22 @@ export function OuraCard({ connected, syncMode: initialSyncMode, lastSyncAt, nee
       if (res.ok) {
         setLastSync(new Date().toISOString());
         setNeedsReauth(false);
+        setLastSyncError(null);
+        setLastSyncErrorAt(null);
         success("Oura Ring Synced", "Your latest data has been imported.");
       } else {
         const data = await res.json().catch(() => null);
         if (data?.error === "reauth_required") {
           setNeedsReauth(true);
-          warning("Oura Ring Reconnection Needed", "Your authorization has expired. Tap Reconnect to fix this.");
+          warning(
+            "Oura Ring Reconnection Needed",
+            "Your authorization has expired. Tap Reconnect to fix this."
+          );
         } else {
-          toastError("Sync failed", data?.detail ?? "Please try again in a moment.");
+          const detail = data?.detail ?? "Please try again in a moment.";
+          setLastSyncError(detail);
+          setLastSyncErrorAt(new Date().toISOString());
+          toastError("Sync failed", detail);
         }
       }
     } catch {
@@ -136,7 +162,9 @@ export function OuraCard({ connected, syncMode: initialSyncMode, lastSyncAt, nee
       <div className="card p-5 space-y-4">
         <div className="flex items-center gap-3">
           <Circle size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
-          <h3 className="font-heading font-semibold text-[var(--foreground)]">Oura Ring Integration</h3>
+          <h3 className="font-heading font-semibold text-[var(--foreground)]">
+            Oura Ring Integration
+          </h3>
         </div>
         <p className="text-sm text-muted leading-relaxed">
           Connect your Oura Ring to automatically sync readiness, sleep, and HRV data with your
@@ -178,13 +206,32 @@ export function OuraCard({ connected, syncMode: initialSyncMode, lastSyncAt, nee
           )}
         </div>
 
-        {/* Last sync */}
-        {lastSync && !needsReauth && <p className="text-xs text-muted">Last synced {relativeTime(lastSync)}</p>}
+        {/* Last sync — keep visible alongside any non-reauth error chip so
+            "synced 4h ago, errored 14m ago" is meaningful info. */}
+        {!needsReauth && (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {lastSync && <span className="text-muted">Last synced {relativeTime(lastSync)}</span>}
+            {lastSyncError && lastSyncErrorAt && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger-500/10 text-danger-600 dark:text-danger-400 font-medium">
+                <AlertTriangle size={11} strokeWidth={1.75} aria-hidden="true" />
+                Sync failed {relativeTime(lastSyncErrorAt)}
+              </span>
+            )}
+          </div>
+        )}
+        {!needsReauth && lastSyncError && (
+          <p className="text-xs text-muted leading-relaxed">{lastSyncError}</p>
+        )}
 
         {/* Reauth banner */}
         {needsReauth && (
           <div className="rounded-lg bg-warning-500/10 border border-warning-500/30 p-3 flex items-start gap-3">
-            <AlertTriangle size={16} strokeWidth={1.75} className="text-warning-500 mt-0.5 shrink-0" aria-hidden="true" />
+            <AlertTriangle
+              size={16}
+              strokeWidth={1.75}
+              className="text-warning-500 mt-0.5 shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-[var(--foreground)]">Authorization expired</p>
               <p className="text-xs text-muted mt-0.5">
@@ -194,7 +241,9 @@ export function OuraCard({ connected, syncMode: initialSyncMode, lastSyncAt, nee
                 variant="primary"
                 size="sm"
                 className="mt-2"
-                onClick={() => { window.location.href = "/api/oura/authorize"; }}
+                onClick={() => {
+                  window.location.href = "/api/oura/authorize";
+                }}
               >
                 Reconnect Oura Ring
               </Button>

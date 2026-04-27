@@ -12,6 +12,8 @@ import { StreakCelebrationGate } from "./_streak-celebration";
 import { PwaVisitTracker } from "@/components/pwa/PwaVisitTracker";
 import { RecapSheet } from "./_recap-sheet";
 import { getStreakState } from "@/lib/athlete/streak-engine";
+import { getWearableHealth } from "@/lib/data/wearable-health";
+import { IntegrationsReauthBanner } from "@/components/notifications/IntegrationsReauthBanner";
 
 /* ─── Athlete Home — canonical consumer-app shell ────────────────────────────
    ONE hero anchor in the thumb zone, state-aware:
@@ -82,30 +84,38 @@ export default async function AthleteDashboardPage() {
   const startOfStrip = new Date(startOfToday);
   startOfStrip.setDate(startOfToday.getDate() - 6);
 
-  const [stats, todayThrows, streakWindow, notifPrefs, upcomingAssignments, streakState] =
-    await Promise.all([
-      getAthleteStats(athlete.id),
-      prisma.throwLog.findMany({
-        where: { athleteId: athlete.id, date: { gte: startOfToday } },
-        select: { distance: true, event: true, implementWeight: true },
-        orderBy: { distance: "desc" },
-      }),
-      // Last 7 days of session activity for the streak strip
-      prisma.trainingSession.findMany({
-        where: {
-          athleteId: athlete.id,
-          status: "COMPLETED",
-          completedDate: { gte: startOfStrip },
-        },
-        select: { completedDate: true },
-      }),
-      prisma.athleteProfile.findUnique({
-        where: { id: athlete.id },
-        select: { notificationPreferences: true },
-      }),
-      fetchUpcomingThrowsAssignments(athlete.id),
-      getStreakState(athlete.id),
-    ]);
+  const [
+    stats,
+    todayThrows,
+    streakWindow,
+    notifPrefs,
+    upcomingAssignments,
+    streakState,
+    wearableHealth,
+  ] = await Promise.all([
+    getAthleteStats(athlete.id),
+    prisma.throwLog.findMany({
+      where: { athleteId: athlete.id, date: { gte: startOfToday } },
+      select: { distance: true, event: true, implementWeight: true },
+      orderBy: { distance: "desc" },
+    }),
+    // Last 7 days of session activity for the streak strip
+    prisma.trainingSession.findMany({
+      where: {
+        athleteId: athlete.id,
+        status: "COMPLETED",
+        completedDate: { gte: startOfStrip },
+      },
+      select: { completedDate: true },
+    }),
+    prisma.athleteProfile.findUnique({
+      where: { id: athlete.id },
+      select: { notificationPreferences: true },
+    }),
+    fetchUpcomingThrowsAssignments(athlete.id),
+    getStreakState(athlete.id),
+    getWearableHealth(athlete.id),
+  ]);
 
   // Today's coach-assigned throws session, if any. Only treat ASSIGNED or
   // IN_PROGRESS as actionable — completed sessions take the threwToday path.
@@ -176,6 +186,23 @@ export default async function AthleteDashboardPage() {
         currentStreak={stats.currentStreak}
         initialEnabled={streakReminderPrefs.enabled}
         initialPromptDismissed={streakReminderPrefs.promptDismissed}
+      />
+
+      {/* Wearable reauth banner — only renders when WHOOP/Oura tokens are
+          dead. Dismissible for 24h via localStorage; long-expired tokens
+          silently break readiness check-ins so we keep nagging until fixed. */}
+      <IntegrationsReauthBanner
+        athleteId={athlete.id}
+        whoop={
+          wearableHealth.whoop
+            ? { provider: "whoop", needsReauth: wearableHealth.whoop.needsReauth }
+            : null
+        }
+        oura={
+          wearableHealth.oura
+            ? { provider: "oura", needsReauth: wearableHealth.oura.needsReauth }
+            : null
+        }
       />
       {streakState && (streakState.isInRebuild || streakState.currentStreak > 0) && (
         <StreakBlock

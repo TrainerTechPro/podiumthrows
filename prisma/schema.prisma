@@ -2932,19 +2932,21 @@ model SelfProgramConfig {
 // ─── WHOOP INTEGRATION ────────────────────────────────────────────────────────
 
 model WhoopConnection {
-  id             String               @id @default(cuid())
-  athleteId      String               @unique
-  athlete        AthleteProfile       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  whoopUserId    Int
-  accessToken    String
-  refreshToken   String
-  tokenExpiresAt DateTime
-  scopes         String
-  syncMode       String               @default("ASSISTED")
-  lastSyncAt     DateTime?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-  snapshots      WhoopDailySnapshot[]
+  id               String               @id @default(cuid())
+  athleteId        String               @unique
+  athlete          AthleteProfile       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  whoopUserId      Int
+  accessToken      String
+  refreshToken     String
+  tokenExpiresAt   DateTime
+  scopes           String
+  syncMode         String               @default("ASSISTED")
+  lastSyncAt       DateTime?
+  lastSyncError    String? // Plain message from the most recent failed sync — null when last sync succeeded.
+  lastSyncErrorAt  DateTime? // Timestamp the error was recorded, so the UI can show "failed 14m ago".
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  snapshots        WhoopDailySnapshot[]
 
   @@index([whoopUserId])
 }
@@ -2976,19 +2978,21 @@ model WhoopDailySnapshot {
 // ─── OURA RING INTEGRATION ──────────────────────────────────────────────────
 
 model OuraConnection {
-  id             String              @id @default(cuid())
-  athleteId      String              @unique
-  athlete        AthleteProfile      @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  ouraUserId     String
-  accessToken    String
-  refreshToken   String
-  tokenExpiresAt DateTime
-  scopes         String
-  syncMode       String              @default("ASSISTED")
-  lastSyncAt     DateTime?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  snapshots      OuraDailySnapshot[]
+  id               String              @id @default(cuid())
+  athleteId        String              @unique
+  athlete          AthleteProfile      @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  ouraUserId       String
+  accessToken      String
+  refreshToken     String
+  tokenExpiresAt   DateTime
+  scopes           String
+  syncMode         String              @default("ASSISTED")
+  lastSyncAt       DateTime?
+  lastSyncError    String? // Most recent failed-sync message; null when last sync succeeded.
+  lastSyncErrorAt  DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  snapshots        OuraDailySnapshot[]
 
   @@index([ouraUserId])
 }

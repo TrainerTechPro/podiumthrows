@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 import { Activity, Heart } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { needsReauth } from "@/lib/wearable-auth";
 import { StaggeredList } from "@/components";
 import { WhoopCard } from "../settings/_whoop-card";
 import { OuraCard } from "../settings/_oura-card";
+import { getWearableHealth } from "@/lib/data/wearable-health";
 import { logger } from "@/lib/logger";
 
 export default async function AthleteIntegrationsPage() {
@@ -18,56 +18,37 @@ export default async function AthleteIntegrationsPage() {
   });
   if (!athlete) redirect("/login");
 
-  let whoopConnection: {
-    syncMode: string;
-    lastSyncAt: Date | null;
-    refreshToken: string;
-    scopes: string;
-  } | null = null;
+  // Sync-mode lives outside the health summary because the cards still
+  // need to display + edit it. One round-trip each — small, parallelizable.
+  let whoopSyncMode: string | undefined;
+  let ouraSyncMode: string | undefined;
   try {
-    whoopConnection = await prisma.whoopConnection.findUnique({
+    const row = await prisma.whoopConnection.findUnique({
       where: { athleteId: athlete.id },
-      select: { syncMode: true, lastSyncAt: true, refreshToken: true, scopes: true },
+      select: { syncMode: true },
     });
+    whoopSyncMode = row?.syncMode;
   } catch (err) {
-    // Table may not exist yet
-    logger.debug("Table may not exist yet", {
+    logger.debug("whoopConnection syncMode lookup failed", {
+      context: "src/app/(dashboard)/athlete/integrations/page.tsx",
+      metadata: { reason: err instanceof Error ? err.message : "unknown" },
+    });
+  }
+  try {
+    const row = await prisma.ouraConnection.findUnique({
+      where: { athleteId: athlete.id },
+      select: { syncMode: true },
+    });
+    ouraSyncMode = row?.syncMode;
+  } catch (err) {
+    logger.debug("ouraConnection syncMode lookup failed", {
       context: "src/app/(dashboard)/athlete/integrations/page.tsx",
       metadata: { reason: err instanceof Error ? err.message : "unknown" },
     });
   }
 
-  // Detect unhealthy connections using shared utility
-  const whoopNeedsReauth = whoopConnection
-    ? needsReauth(whoopConnection.refreshToken, whoopConnection.scopes, "offline")
-    : false;
-
-  let ouraConnection: {
-    syncMode: string;
-    lastSyncAt: Date | null;
-    refreshToken: string;
-    scopes: string;
-  } | null = null;
-  try {
-    ouraConnection = await prisma.ouraConnection.findUnique({
-      where: { athleteId: athlete.id },
-      select: { syncMode: true, lastSyncAt: true, refreshToken: true, scopes: true },
-    });
-  } catch (err) {
-    // Table may not exist yet
-    logger.debug("Table may not exist yet", {
-      context: "src/app/(dashboard)/athlete/integrations/page.tsx",
-      metadata: { reason: err instanceof Error ? err.message : "unknown" },
-    });
-  }
-
-  // Oura doesn't use a separate "offline" scope — refresh tokens are always granted.
-  // Check for empty refresh token only.
-  const ouraNeedsReauth = ouraConnection
-    ? needsReauth(ouraConnection.refreshToken, ouraConnection.scopes, "")
-    : false;
-
-  const connectedCount = (whoopConnection ? 1 : 0) + (ouraConnection ? 1 : 0);
+  const health = await getWearableHealth(athlete.id);
+  const connectedCount = (health.whoop ? 1 : 0) + (health.oura ? 1 : 0);
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -88,18 +69,22 @@ export default async function AthleteIntegrationsPage() {
         <StaggeredList className="space-y-4" staggerDelay={80}>
           <div>
             <WhoopCard
-              connected={!!whoopConnection}
-              syncMode={whoopConnection?.syncMode}
-              lastSyncAt={whoopConnection?.lastSyncAt?.toISOString() ?? null}
-              needsReauth={whoopNeedsReauth}
+              connected={!!health.whoop}
+              syncMode={whoopSyncMode}
+              lastSyncAt={health.whoop?.lastSyncAt ?? null}
+              needsReauth={health.whoop?.needsReauth ?? false}
+              lastSyncError={health.whoop?.lastSyncError ?? null}
+              lastSyncErrorAt={health.whoop?.lastSyncErrorAt ?? null}
             />
           </div>
           <div>
             <OuraCard
-              connected={!!ouraConnection}
-              syncMode={ouraConnection?.syncMode}
-              lastSyncAt={ouraConnection?.lastSyncAt?.toISOString() ?? null}
-              needsReauth={ouraNeedsReauth}
+              connected={!!health.oura}
+              syncMode={ouraSyncMode}
+              lastSyncAt={health.oura?.lastSyncAt ?? null}
+              needsReauth={health.oura?.needsReauth ?? false}
+              lastSyncError={health.oura?.lastSyncError ?? null}
+              lastSyncErrorAt={health.oura?.lastSyncErrorAt ?? null}
             />
           </div>
         </StaggeredList>

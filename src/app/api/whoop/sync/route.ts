@@ -69,10 +69,44 @@ export async function POST(request: Request) {
 
     await syncWhoopData(connection.id);
 
+    // Successful sync — clear any prior error stamp so the dashboard banner
+    // and integrations card stop nagging.
+    await prisma.whoopConnection.update({
+      where: { id: connection.id },
+      data: { lastSyncError: null, lastSyncErrorAt: null },
+    });
+
     return NextResponse.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     logger.error("POST /api/whoop/sync", { context: "api", error: err, metadata: { message } });
+
+    // Persist the failure so the dashboard banner + integrations page can
+    // surface it without round-tripping. We look up by athleteId again
+    // (rather than relying on the in-scope `connection`) because the throw
+    // could have come from before we set that variable.
+    try {
+      const session = await getSession();
+      if (session) {
+        const athlete = await prisma.athleteProfile.findUnique({
+          where: { userId: session.userId },
+          select: { id: true },
+        });
+        if (athlete) {
+          await prisma.whoopConnection.update({
+            where: { athleteId: athlete.id },
+            data: { lastSyncError: message.slice(0, 500), lastSyncErrorAt: new Date() },
+          });
+        }
+      }
+    } catch (writeErr) {
+      // ok: best-effort error stamp. If we can't update the row, we still
+      // want to return the original sync error to the client below.
+      logger.debug("Failed to record whoop lastSyncError", {
+        context: "api/whoop/sync",
+        metadata: { reason: writeErr instanceof Error ? writeErr.message : "unknown" },
+      });
+    }
 
     if (isReauthError(message)) {
       return NextResponse.json(

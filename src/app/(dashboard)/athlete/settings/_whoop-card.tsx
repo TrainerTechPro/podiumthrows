@@ -14,6 +14,8 @@ interface WhoopCardProps {
   syncMode?: string;
   lastSyncAt?: string | null;
   needsReauth?: boolean;
+  lastSyncError?: string | null;
+  lastSyncErrorAt?: string | null;
 }
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -31,7 +33,14 @@ function relativeTime(iso: string): string {
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
-export function WhoopCard({ connected, syncMode: initialSyncMode, lastSyncAt, needsReauth: initialNeedsReauth }: WhoopCardProps) {
+export function WhoopCard({
+  connected,
+  syncMode: initialSyncMode,
+  lastSyncAt,
+  needsReauth: initialNeedsReauth,
+  lastSyncError: initialLastSyncError,
+  lastSyncErrorAt: initialLastSyncErrorAt,
+}: WhoopCardProps) {
   const { success, error: toastError, warning } = useToast();
   const [syncMode, setSyncMode] = useState(initialSyncMode ?? "ASSISTED");
   const [syncing, setSyncing] = useState(false);
@@ -39,13 +48,24 @@ export function WhoopCard({ connected, syncMode: initialSyncMode, lastSyncAt, ne
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [lastSync, setLastSync] = useState(lastSyncAt ?? null);
   const [needsReauth, setNeedsReauth] = useState(initialNeedsReauth ?? false);
+  const [lastSyncError, setLastSyncError] = useState<string | null>(initialLastSyncError ?? null);
+  const [lastSyncErrorAt, setLastSyncErrorAt] = useState<string | null>(
+    initialLastSyncErrorAt ?? null
+  );
 
-  // Show toast on initial mount if ?whoop=connected was handled by parent
+  // Show toast on initial mount if ?whoop=connected was handled by parent.
+  // On a fresh connect (or post-reauth), trigger an immediate sync so the
+  // athlete sees recovery + HRV land without a second tap.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("whoop") === "connected") {
       setNeedsReauth(false);
-      success("WHOOP Connected", "Your WHOOP strap is now linked to your account.");
+      setLastSyncError(null);
+      setLastSyncErrorAt(null);
+      success("WHOOP Connected", "Your WHOOP strap is linked. Syncing your latest data now…");
+      // Fire-and-forget initial sync. Errors surface via the existing toast
+      // path inside handleSync.
+      handleSync();
     } else if (params.get("whoop") === "error") {
       const reason = params.get("reason") || "unknown";
       toastError("WHOOP Connection Failed", `Error: ${reason.replace(/_/g, " ")}`);
@@ -92,14 +112,22 @@ export function WhoopCard({ connected, syncMode: initialSyncMode, lastSyncAt, ne
       if (res.ok) {
         setLastSync(new Date().toISOString());
         setNeedsReauth(false);
+        setLastSyncError(null);
+        setLastSyncErrorAt(null);
         success("WHOOP Synced", "Your latest data has been imported.");
       } else {
         const data = await res.json().catch(() => null);
         if (data?.error === "reauth_required") {
           setNeedsReauth(true);
-          warning("WHOOP Reconnection Needed", "Your authorization has expired. Tap Reconnect to fix this.");
+          warning(
+            "WHOOP Reconnection Needed",
+            "Your authorization has expired. Tap Reconnect to fix this."
+          );
         } else {
-          toastError("Sync failed", data?.detail ?? "Please try again in a moment.");
+          const detail = data?.detail ?? "Please try again in a moment.";
+          setLastSyncError(detail);
+          setLastSyncErrorAt(new Date().toISOString());
+          toastError("Sync failed", detail);
         }
       }
     } catch {
@@ -178,13 +206,32 @@ export function WhoopCard({ connected, syncMode: initialSyncMode, lastSyncAt, ne
           )}
         </div>
 
-        {/* Last sync */}
-        {lastSync && !needsReauth && <p className="text-xs text-muted">Last synced {relativeTime(lastSync)}</p>}
+        {/* Last sync — always show when no reauth issue, regardless of error
+            state, because "synced 4h ago, errored 14m ago" is meaningful info. */}
+        {!needsReauth && (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {lastSync && <span className="text-muted">Last synced {relativeTime(lastSync)}</span>}
+            {lastSyncError && lastSyncErrorAt && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger-500/10 text-danger-600 dark:text-danger-400 font-medium">
+                <AlertTriangle size={11} strokeWidth={1.75} aria-hidden="true" />
+                Sync failed {relativeTime(lastSyncErrorAt)}
+              </span>
+            )}
+          </div>
+        )}
+        {!needsReauth && lastSyncError && (
+          <p className="text-xs text-muted leading-relaxed">{lastSyncError}</p>
+        )}
 
         {/* Reauth banner */}
         {needsReauth && (
           <div className="rounded-lg bg-warning-500/10 border border-warning-500/30 p-3 flex items-start gap-3">
-            <AlertTriangle size={16} strokeWidth={1.75} className="text-warning-500 mt-0.5 shrink-0" aria-hidden="true" />
+            <AlertTriangle
+              size={16}
+              strokeWidth={1.75}
+              className="text-warning-500 mt-0.5 shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-[var(--foreground)]">Authorization expired</p>
               <p className="text-xs text-muted mt-0.5">
@@ -194,7 +241,9 @@ export function WhoopCard({ connected, syncMode: initialSyncMode, lastSyncAt, ne
                 variant="primary"
                 size="sm"
                 className="mt-2"
-                onClick={() => { window.location.href = "/api/whoop/authorize"; }}
+                onClick={() => {
+                  window.location.href = "/api/whoop/authorize";
+                }}
               >
                 Reconnect WHOOP
               </Button>
