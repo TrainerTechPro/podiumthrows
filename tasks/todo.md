@@ -397,3 +397,9 @@ Work deferred during the PR 6 commit chain (`b120d62..f95ce4c`, 13 commits, 2026
 - **Athletes-tab IA Profile/Assessments header links** — `/coach/athletes/[id]/page.tsx` doesn't yet link to the new `/profile` and `/assessments` sub-routes (created in 6c). Coaches can only reach them via direct URL or the Throws Profile button (which legacy-redirects). Add header pills or section-nav entries that link to the sub-routes once the Profile inline extraction lands — the two work together.
 - **Roster-as-lens refactor** — when a second comparative roster view ships (Strength program, Wellness program, etc.), fold `/coach/athletes/throws` (the Podium Profile sibling) back into Roster as a lens picker (Default | Throws | Strength | …). With one lens it's overkill; with three+ it's the Steve Jobs cut. Tracked but unscheduled.
 - **Test-selector legacy elsewhere** — `coach-dashboard.spec.ts` was hardened in commit 9 (sidebar-scoped `getByLabel("Sidebar navigation")` + exact-name match). If other specs surface the same `getByRole("link", { name: /regex/ }).first()` pattern, lift the same fix. `coach-roster-detail.spec.ts` already uses scoped selectors and is clean.
+
+---
+
+## Drive-bys (queue, no dependencies)
+
+- **Drop `maximumScale: 1` from the `viewport` export in `src/app/layout.tsx`.** axe-core flags it on every route as WCAG 1.4.4 (Resize Text) failure: pinch-zoom is a non-negotiable mobile a11y need; the rationale for setting maximum-scale (preventing accidental zoom on form input focus) is not worth disabling assistive zoom for everyone. ~5-line change. Discovered during P2-8 axe validation, 2026-04-27.

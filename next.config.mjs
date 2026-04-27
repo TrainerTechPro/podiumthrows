@@ -69,6 +69,14 @@ const nextConfig = {
       // to revisit without browsers caching the decision forever.
       // See tasks/todo.md + tasks/route-consolidation-manifest.md.
 
+      // Settings consolidation — both roles got tabbed shells that read ?tab=.
+      // Old standalone sub-routes 307 here so deep-links from emails / push
+      // notifications / browser bookmarks keep landing on the same surface.
+      { source: '/athlete/settings/notifications',   destination: '/athlete/settings?tab=notifications',  permanent: false },
+      { source: '/coach/settings/notifications',     destination: '/coach/settings?tab=notifications',    permanent: false },
+      { source: '/coach/settings/security',          destination: '/coach/settings?tab=security',         permanent: false },
+      { source: '/coach/settings/autoregulation',    destination: '/coach/settings?tab=autoregulation',   permanent: false },
+
       // Page-level redirect stubs promoted to config.
       { source: '/athlete/hub',        destination: '/athlete/dashboard',           permanent: false },
       { source: '/coach/my-program',   destination: '/athlete/dashboard',           permanent: false },

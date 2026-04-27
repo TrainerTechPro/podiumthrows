@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/toast";
@@ -10,7 +11,20 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
-import { Bell, ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronRight, Zap } from "lucide-react";
+
+// Sub-page client components — lazy-loaded so the initial profile-tab paint
+// doesn't pull in their bundles. Each is the same component the standalone
+// /coach/settings/<sub> route used to mount; the standalone routes now
+// 307-redirect here with ?tab=<id>.
+const CoachNotificationsTabContent = dynamic(
+  () => import("./_notifications-tab").then((m) => ({ default: m.CoachNotificationsTabContent })),
+  { ssr: false }
+);
+const CoachSecurityClient = dynamic(() => import("./security/page"), { ssr: false });
+const CoachAutoregulationClient = dynamic(() => import("./autoregulation/page"), {
+  ssr: false,
+});
 
 const ProfilePictureEditor = dynamic(() => import("@/components/profile-picture-editor"), {
   ssr: false,
@@ -52,7 +66,44 @@ interface InvitationItem {
   inviteUrl?: string;
 }
 
-type TabId = "profile" | "billing" | "invitations" | "activity" | "preferences";
+type TabId =
+  | "profile"
+  | "team"
+  | "billing"
+  | "notifications"
+  | "security"
+  | "autoregulation"
+  | "integrations"
+  // Legacy IDs retained so existing render branches still match. Tabs
+  // that aren't in the visible list (activity, preferences, invitations)
+  // are reachable via the consolidated panels above.
+  | "invitations"
+  | "activity"
+  | "preferences";
+
+const VISIBLE_TABS: { id: TabId; label: string }[] = [
+  { id: "profile", label: "Profile" },
+  { id: "team", label: "Team" },
+  { id: "billing", label: "Billing" },
+  { id: "notifications", label: "Notifications" },
+  { id: "security", label: "Security" },
+  { id: "autoregulation", label: "Autoregulation" },
+  { id: "integrations", label: "Integrations" },
+];
+
+const VALID_TAB_IDS: readonly TabId[] = [
+  "profile",
+  "team",
+  "billing",
+  "notifications",
+  "security",
+  "autoregulation",
+  "integrations",
+];
+
+function isValidTabId(v: string | null | undefined): v is TabId {
+  return !!v && (VALID_TAB_IDS as readonly string[]).includes(v);
+}
 
 interface CoachPreferences {
   globalDefaultPage?: string;
@@ -105,7 +156,31 @@ function formatRelativeTime(dateStr: string): string {
 export default function CoachSettingsPage() {
   const { toast } = useToast();
   const { fontSize, setFontSize, reducedMotion, setReducedMotion } = useAccessibility();
-  const [activeTab, setActiveTab] = useState<TabId>("profile");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab: TabId = isValidTabId(searchParams?.get("tab"))
+    ? (searchParams!.get("tab") as TabId)
+    : "profile";
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+
+  // Keep URL ↔ tab in sync. Profile is the default and gets a clean URL.
+  useEffect(() => {
+    const current = searchParams?.get("tab");
+    if (current === activeTab) return;
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    if (activeTab === "profile") params.delete("tab");
+    else params.set("tab", activeTab);
+    const qs = params.toString();
+    router.replace(qs ? `/coach/settings?${qs}` : "/coach/settings", { scroll: false });
+  }, [activeTab, router, searchParams]);
+
+  // Respond to external URL changes (e.g. someone clicks a Link?tab=security).
+  useEffect(() => {
+    const fromUrl = searchParams?.get("tab");
+    if (isValidTabId(fromUrl) && fromUrl !== activeTab) setActiveTab(fromUrl);
+    else if (!fromUrl && activeTab !== "profile") setActiveTab("profile");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [showPhotoEditor, setShowPhotoEditor] = useState(false);
   const [profile, setProfile] = useState<Profile>({
     firstName: "",
@@ -184,17 +259,17 @@ export default function CoachSettingsPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "activity") {
+    // Activity log lives inside the Security tab now.
+    if (activeTab === "security") {
       fetch("/api/activity")
         .then((r) => r.json())
         .then((data) => {
           if (data.success) setActivities(data.data);
         });
     }
-    if (activeTab === "invitations") {
+    // Invitations + preferences both live inside the Team tab.
+    if (activeTab === "team") {
       loadInvitations();
-    }
-    if (activeTab === "preferences") {
       fetch("/api/coach/preferences")
         .then((r) => r.json())
         .then((data) => {
@@ -382,13 +457,13 @@ export default function CoachSettingsPage() {
   // creation — invitation tokens are now stored as SHA-256 hashes. The raw
   // token lives only in the recipient's email. To re-share, revoke and reissue.
 
-  const tabs: { id: TabId; label: string }[] = [
-    { id: "profile", label: "Profile" },
-    { id: "billing", label: "Billing" },
-    { id: "invitations", label: "Invitations" },
-    { id: "activity", label: "Activity" },
-    { id: "preferences", label: "Preferences" },
-  ];
+  // Visible-tabs list comes from the consolidated VISIBLE_TABS constant —
+  // [Profile | Team | Billing | Notifications | Security | Autoregulation |
+  // Integrations]. The legacy IDs (invitations / activity / preferences)
+  // still drive existing render branches; the "team" tab below mounts
+  // invitations + preferences into one panel, and "security" mounts the
+  // activity log alongside the security sub-page content.
+  const tabs = VISIBLE_TABS;
 
   const planColors: Record<string, string> = {
     FREE: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300",
@@ -437,28 +512,9 @@ export default function CoachSettingsPage() {
           </p>
         </div>
 
-        {/* Security — top-level entry above tabs/preferences because account
-            protection ranks higher than day-to-day preferences. */}
-        <Link
-          href="/coach/settings/security"
-          className="card card-interactive p-4 mb-6 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
-            <ShieldCheck
-              size={20}
-              className="text-primary-500"
-              strokeWidth={1.75}
-              aria-hidden="true"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[var(--foreground)]">Security</p>
-            <p className="text-xs text-muted">Two-factor authentication and account protection</p>
-          </div>
-          <ChevronRight size={20} className="text-muted" strokeWidth={1.75} aria-hidden="true" />
-        </Link>
-
-        {/* Tabs */}
+        {/* Tabs — Security and Autoregulation now live inline as tab panels;
+            the previous standalone /coach/settings/{security,autoregulation,
+            notifications} routes 307-redirect here with ?tab=. */}
         <div className="flex gap-1 mb-6 bg-[var(--muted-bg)] rounded-lg p-1 overflow-x-auto">
           {tabs.map((tab) => (
             <button
@@ -473,12 +529,6 @@ export default function CoachSettingsPage() {
               {tab.label}
             </button>
           ))}
-          <Link
-            href="/coach/settings/autoregulation"
-            className="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap text-center text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
-          >
-            Autoregulation
-          </Link>
         </div>
 
         {/* Profile Tab */}
@@ -979,8 +1029,10 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Invitations Tab */}
-        {activeTab === "invitations" && (
+        {/* Team Tab — invitations roster + coach preferences (the panel below
+            handles preferences). Both share the "team" id; the original
+            invitations/preferences IDs only ran the data fetch. */}
+        {activeTab === "team" && (
           <div className="animate-spring-up space-y-6">
             <form onSubmit={handleSendInvite} className="card">
               <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
@@ -1126,8 +1178,9 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Activity Tab */}
-        {activeTab === "activity" && (
+        {/* Activity log — surfaced inside the Security tab so coaches can
+            triage logins/account events alongside MFA + password tools. */}
+        {activeTab === "security" && (
           <div className="animate-spring-up">
             <div className="card">
               <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
@@ -1198,34 +1251,10 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Preferences Tab */}
-        {activeTab === "preferences" && (
-          <div className="animate-spring-up space-y-6">
-            {/* Notifications link */}
-            <Link
-              href="/coach/settings/notifications"
-              className="card card-interactive p-4 flex items-center gap-3"
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
-                <Bell
-                  size={20}
-                  className="text-primary-500"
-                  strokeWidth={1.75}
-                  aria-hidden="true"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[var(--foreground)]">Notifications</p>
-                <p className="text-xs text-muted">Choose which in-app alerts reach your tray</p>
-              </div>
-              <ChevronRight
-                size={20}
-                className="text-muted"
-                strokeWidth={1.75}
-                aria-hidden="true"
-              />
-            </Link>
-
+        {/* Coach preferences — folded into the Team tab. The Notifications
+            link card was dropped: notifications now have a dedicated tab. */}
+        {activeTab === "team" && (
+          <div className="animate-spring-up space-y-6 mt-6">
             {/* Global Default Page */}
             <div className="card">
               <h2 className="text-lg font-semibold text-[var(--foreground)] mb-1">
@@ -1497,7 +1526,61 @@ export default function CoachSettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Notifications Tab — mounts the existing /coach/settings/notifications
+            client component, which now lives only here. */}
+        {activeTab === "notifications" && (
+          <div className="animate-spring-up">
+            <CoachNotificationsTabContent />
+          </div>
+        )}
+
+        {/* Autoregulation Tab — mounts the original autoregulation page client. */}
+        {activeTab === "autoregulation" && (
+          <div className="animate-spring-up">
+            <CoachAutoregulationClient />
+          </div>
+        )}
+
+        {/* Integrations Tab — coaches don't have wearable connections of
+            their own; the link routes to the athlete-side integrations
+            hub when they're operating in Training Mode. */}
+        {activeTab === "integrations" && (
+          <div className="animate-spring-up space-y-3">
+            <Link
+              href="/athlete/integrations"
+              className="card card-interactive p-4 flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center shrink-0">
+                <Zap size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--foreground)]">
+                  Wearable Integrations
+                </p>
+                <p className="text-xs text-muted">
+                  Available in Training Mode — connects WHOOP, Oura Ring, and more.
+                </p>
+              </div>
+              <ChevronRight
+                size={16}
+                strokeWidth={1.75}
+                className="text-muted"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
+        )}
       </div>
+
+      {/* Security Tab — mounts the existing /coach/settings/security client
+          alongside the activity log block above. The activity log itself
+          renders inside `activeTab === "security"` further up. */}
+      {activeTab === "security" && (
+        <div className="max-w-2xl animate-spring-up mt-6">
+          <CoachSecurityClient />
+        </div>
+      )}
 
       {/* Profile Picture Editor Modal */}
       {showPhotoEditor && (
