@@ -8,6 +8,7 @@ import { useAccessibility } from "@/components/accessibility-provider";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 import { Bell, ChevronRight, ShieldCheck } from "lucide-react";
 
@@ -653,14 +654,12 @@ export default function CoachSettingsPage() {
                   <label htmlFor="currentPassword" className="label">
                     Current Password
                   </label>
-                  <input
+                  <PasswordInput
                     id="currentPassword"
-                    type="password"
                     value={passwordForm.currentPassword}
                     onChange={(e) =>
                       setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))
                     }
-                    className="input"
                     autoComplete="current-password"
                   />
                 </div>
@@ -668,14 +667,12 @@ export default function CoachSettingsPage() {
                   <label htmlFor="newPassword" className="label">
                     New Password
                   </label>
-                  <input
+                  <PasswordInput
                     id="newPassword"
-                    type="password"
                     value={passwordForm.newPassword}
                     onChange={(e) =>
                       setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))
                     }
-                    className="input"
                     autoComplete="new-password"
                   />
                 </div>
@@ -683,14 +680,12 @@ export default function CoachSettingsPage() {
                   <label htmlFor="confirmPassword" className="label">
                     Confirm New Password
                   </label>
-                  <input
+                  <PasswordInput
                     id="confirmPassword"
-                    type="password"
                     value={passwordForm.confirmPassword}
                     onChange={(e) =>
                       setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))
                     }
-                    className="input"
                     autoComplete="new-password"
                   />
                 </div>

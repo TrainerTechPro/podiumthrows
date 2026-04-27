@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 type Role = "COACH" | "ATHLETE";
 
@@ -135,7 +136,9 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push(data.data?.redirectTo || (role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard"));
+      router.push(
+        data.data?.redirectTo || (role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard")
+      );
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -143,9 +146,7 @@ export default function RegisterPage() {
   }
 
   function toggleClaimEvent(ev: string) {
-    setEditedEvents((prev) =>
-      prev.includes(ev) ? prev.filter((e) => e !== ev) : [...prev, ev]
-    );
+    setEditedEvents((prev) => (prev.includes(ev) ? prev.filter((e) => e !== ev) : [...prev, ev]));
   }
 
   async function handleClaim(e: FormEvent) {
@@ -207,8 +208,18 @@ export default function RegisterPage() {
     return (
       <div className="card p-8 text-center space-y-4">
         <div className="w-12 h-12 mx-auto rounded-full bg-danger-50 dark:bg-danger-500/10 flex items-center justify-center">
-          <svg className="w-6 h-6 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-6 h-6 text-danger-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </div>
         <div>
@@ -231,12 +242,8 @@ export default function RegisterPage() {
             <div className="w-14 h-14 mx-auto rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center text-primary-600 dark:text-primary-400 text-2xl mb-3">
               🥇
             </div>
-            <h2 className="font-heading font-semibold text-xl">
-              Welcome to Podium Throws
-            </h2>
-            <p className="text-sm text-muted mt-1">
-              Coach {coachName} has set up your profile
-            </p>
+            <h2 className="font-heading font-semibold text-xl">Welcome to Podium Throws</h2>
+            <p className="text-sm text-muted mt-1">Coach {coachName} has set up your profile</p>
           </div>
 
           <div className="space-y-4">
@@ -284,7 +291,9 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setClaimStep("credentials")}
-              disabled={!editedFirstName.trim() || !editedLastName.trim() || editedEvents.length === 0}
+              disabled={
+                !editedFirstName.trim() || !editedLastName.trim() || editedEvents.length === 0
+              }
               className="btn-primary w-full"
             >
               Looks Good — Set Up My Account
@@ -314,7 +323,12 @@ export default function RegisterPage() {
             aria-label="Go back"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <h2 className="text-display-sm">Set Up Your Login</h2>
@@ -347,12 +361,10 @@ export default function RegisterPage() {
             <label htmlFor="claimPassword" className="label">
               Password
             </label>
-            <input
+            <PasswordInput
               id="claimPassword"
-              type="password"
               value={claimPassword}
               onChange={(e) => setClaimPassword(e.target.value)}
-              className="input"
               placeholder="Minimum 8 characters"
               autoComplete="new-password"
               minLength={8}
@@ -364,12 +376,10 @@ export default function RegisterPage() {
             <label htmlFor="claimConfirmPassword" className="label">
               Confirm Password
             </label>
-            <input
+            <PasswordInput
               id="claimConfirmPassword"
-              type="password"
               value={claimConfirmPassword}
               onChange={(e) => setClaimConfirmPassword(e.target.value)}
-              className="input"
               placeholder="Re-enter your password"
               autoComplete="new-password"
               required
@@ -432,9 +442,7 @@ export default function RegisterPage() {
                 <p className="font-heading font-semibold text-lg group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   I&apos;m a Coach
                 </p>
-                <p className="text-sm text-muted">
-                  Manage athletes, plan training, track throws
-                </p>
+                <p className="text-sm text-muted">Manage athletes, plan training, track throws</p>
               </div>
             </div>
           </button>
@@ -485,7 +493,12 @@ export default function RegisterPage() {
             aria-label="Go back"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
         )}
@@ -552,12 +565,10 @@ export default function RegisterPage() {
           <label htmlFor="password" className="label">
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="input"
             placeholder="Minimum 8 characters"
             autoComplete="new-password"
             minLength={8}
@@ -569,12 +580,10 @@ export default function RegisterPage() {
           <label htmlFor="confirmPassword" className="label">
             Confirm Password
           </label>
-          <input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="input"
             placeholder="Re-enter your password"
             autoComplete="new-password"
             required

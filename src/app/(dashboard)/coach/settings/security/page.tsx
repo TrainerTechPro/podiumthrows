@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/toast";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 type Phase = "loading" | "disabled" | "setup-qr" | "setup-verify" | "backup-codes" | "enabled";
 
@@ -346,11 +347,9 @@ export default function SecuritySettingsPage() {
 
             <div>
               <label className="label">Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={disablePassword}
                 onChange={(e) => setDisablePassword(e.target.value)}
-                className="input"
                 placeholder="Enter your password"
                 autoComplete="current-password"
               />

@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -19,8 +20,18 @@ export default function ResetPasswordPage() {
     return (
       <div className="card p-8 text-center">
         <div className="w-16 h-16 rounded-full bg-danger-50 dark:bg-danger-500/10 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <svg
+            className="w-8 h-8 text-danger-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+            />
           </svg>
         </div>
         <h2 className="text-display-sm mb-2">Invalid Reset Link</h2>
@@ -76,9 +87,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="card p-8">
       <h2 className="text-display-sm text-center mb-2">Set New Password</h2>
-      <p className="text-center text-muted text-sm mb-6">
-        Enter your new password below.
-      </p>
+      <p className="text-center text-muted text-sm mb-6">Enter your new password below.</p>
 
       {error && (
         <div className="mb-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm">
@@ -91,12 +100,10 @@ export default function ResetPasswordPage() {
           <label htmlFor="password" className="label">
             New Password
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="input"
             placeholder="Minimum 8 characters"
             autoComplete="new-password"
             minLength={8}
@@ -108,12 +115,10 @@ export default function ResetPasswordPage() {
           <label htmlFor="confirmPassword" className="label">
             Confirm New Password
           </label>
-          <input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="input"
             placeholder="Re-enter your password"
             autoComplete="new-password"
             required

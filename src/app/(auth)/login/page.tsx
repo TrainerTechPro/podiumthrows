@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -87,12 +88,10 @@ export default function LoginPage() {
           <label htmlFor="password" className="label">
             Password
           </label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="input"
             placeholder="Enter your password"
             autoComplete="current-password"
             required
