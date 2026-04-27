@@ -11,6 +11,7 @@ import {
   fmt,
   type UnitSystem,
 } from "./ToolCard";
+import { PlateCalculator } from "@/components/ui/PlateCalculator";
 
 // ── Strength-specific constants ─────────────────────────────────────
 
@@ -170,100 +171,11 @@ function WorkloadCalc() {
   );
 }
 
-const LB_PLATES = [55, 45, 35, 25, 10, 5, 2.5];
-const KG_PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
-const BAR_LB = 45;
-const BAR_KG = 20;
-
-function rackPlates(weightPerSide: number, plates: number[]): { plate: number; count: number }[] {
-  const result: { plate: number; count: number }[] = [];
-  let remaining = weightPerSide;
-  for (const p of plates) {
-    if (remaining <= 0) break;
-    const count = Math.floor(remaining / p);
-    if (count > 0) {
-      result.push({ plate: p, count });
-      remaining -= count * p;
-      remaining = Math.round(remaining * 1000) / 1000;
-    }
-  }
-  return result;
-}
-
 function BarbellRackCalc() {
-  const [target, setTarget] = useState("");
-  const [unit, setUnit] = useState<UnitSystem>("imperial");
-  const [result, setResult] = useState<{
-    plates: { plate: number; count: number }[];
-    actual: number;
-    bar: number;
-  } | null>(null);
-
-  const calc = useCallback(() => {
-    const t = parseFloat(target);
-    if (!t) return;
-    const bar = unit === "imperial" ? BAR_LB : BAR_KG;
-    const plates = unit === "imperial" ? LB_PLATES : KG_PLATES;
-    const perSide = (t - bar) / 2;
-    if (perSide < 0) return;
-    const platesResult = rackPlates(perSide, plates);
-    const actual = bar + platesResult.reduce((s, p) => s + p.plate * p.count, 0) * 2;
-    setResult({ plates: platesResult, actual, bar });
-  }, [target, unit]);
-
-  const unitLabel = unit === "imperial" ? "lbs" : "kg";
-
-  return (
-    <CalcCard title="Barbell Racking" icon="M3 10h18M3 14h18M10 4v16M14 4v16">
-      <UnitToggle value={unit} onChange={setUnit} />
-      <Row label={`Target weight (${unitLabel})`}>
-        <NumInput
-          value={target}
-          onChange={setTarget}
-          placeholder={unit === "imperial" ? "225" : "100"}
-          min="1"
-        />
-      </Row>
-      <p className="text-sm text-gray-400 dark:text-gray-500">
-        Bar weight: {unit === "imperial" ? "45 lbs" : "20 kg"}
-      </p>
-      <CalcButton onClick={calc} />
-      {result && (
-        <div className="space-y-3">
-          <ResultBox
-            label="Actual total"
-            value={`${fmt(result.actual, 1)} ${unitLabel}`}
-            sub={
-              result.actual !== parseFloat(target)
-                ? `⚠ Can't hit ${target} exactly with standard plates`
-                : "✓ Exact match"
-            }
-          />
-          {result.plates.length > 0 ? (
-            <div className="rounded-xl border border-gray-200/60 dark:border-white/5 overflow-hidden">
-              <div className="bg-surface-50 dark:bg-surface-800 px-3 py-2">
-                <p className="label text-gray-500 dark:text-gray-400">Plates per side</p>
-              </div>
-              <div className="divide-y divide-gray-100 dark:divide-white/5">
-                {result.plates.map((p) => (
-                  <div key={p.plate} className="flex justify-between items-center px-3 py-2">
-                    <span className="text-body text-gray-700 dark:text-gray-300">
-                      {p.plate} {unitLabel}
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                      × {p.count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-caption text-gray-400">Bar only</p>
-          )}
-        </div>
-      )}
-    </CalcCard>
-  );
+  // Tools-page surface — the polished interactive component lives in
+  // src/components/ui/PlateCalculator.tsx and is also embedded inline in
+  // session-execution flows.
+  return <PlateCalculator initialUnit="kg" />;
 }
 
 function RepMaxCalc() {

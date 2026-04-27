@@ -9,6 +9,7 @@ export * from "./ui/Input";
 export * from "./ui/Select";
 export * from "./ui/RPESlider";
 export * from "./ui/InteractiveBodyMap";
+export * from "./ui/PlateCalculator";
 
 /* ─── Display ────────────────────────────────────────────────────────────── */
 export * from "./ui/Card";
