@@ -16,9 +16,17 @@ import {
   Activity,
   Video,
   StickyNote,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
 import type { NavSection } from "./Sidebar";
-import type { SearchResultItem, SearchResponse, SearchCategory } from "@/lib/search/types";
+import type {
+  SearchResultItem,
+  SearchResponse,
+  SearchCategory,
+  ContentHit,
+  ContentSearchResponse,
+} from "@/lib/search/types";
 import { rankResults } from "@/lib/search/rank";
 import { logger } from "@/lib/logger";
 
@@ -43,12 +51,14 @@ interface FlatNav {
   group?: string;
 }
 
-type GroupKey = "page" | SearchCategory;
+type GroupKey = "page" | "content" | SearchCategory;
 
 interface UnifiedItem {
   key: string;
   label: string;
   subtitle?: string;
+  /** Structured snippet segments — only set on content rows. */
+  snippet?: import("@/lib/search/types").SnippetSegment[];
   href: string;
   icon: ReactNode;
   group: GroupKey;
@@ -61,6 +71,7 @@ interface UnifiedItem {
 const RECENT_KEY = "podium-search-recent";
 const MAX_RECENT = 8;
 const PER_GROUP_DISPLAY = 5;
+const CONTENT_INLINE_DISPLAY = 3;
 const DEBOUNCE_MS = 150;
 
 const ICON_PROPS = { size: 15, strokeWidth: 1.75, "aria-hidden": true } as const;
@@ -70,6 +81,11 @@ const GROUP_META: Record<
   { label: string; icon: ReactNode; showMoreHref?: string; order: number }
 > = {
   page: { label: "Pages", icon: <ListChecks {...ICON_PROPS} />, order: 0 },
+  content: {
+    label: "In your content",
+    icon: <FileText {...ICON_PROPS} />,
+    order: 9,
+  },
   athlete: {
     label: "Athletes",
     icon: <User {...ICON_PROPS} />,
@@ -208,6 +224,8 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [dataResults, setDataResults] = useState<SearchResultItem[]>([]);
   const [hasMore, setHasMore] = useState<Partial<Record<SearchCategory, boolean>>>({});
+  const [contentHits, setContentHits] = useState<ContentHit[]>([]);
+  const [contentHasMore, setContentHasMore] = useState(false);
   const [searching, setSearching] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
@@ -215,6 +233,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const contentAbortRef = useRef<AbortController | null>(null);
   const router = useRouter();
 
   const allNavItems = useMemo(() => flattenSections(sections), [sections]);
@@ -260,6 +279,44 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     return () => controller.abort();
   }, [debouncedQuery, filter]);
 
+  /* ── Parallel content search (free-text grep across coach prose) ──────
+     Only runs when the filter is "all" — when the coach narrows to a
+     specific entity type they don't want noisy snippets at the bottom.
+     ─────────────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (filter !== "all" || !debouncedQuery || debouncedQuery.trim().length < 2) {
+      setContentHits([]);
+      setContentHasMore(false);
+      return;
+    }
+
+    contentAbortRef.current?.abort();
+    const controller = new AbortController();
+    contentAbortRef.current = controller;
+
+    fetch(`/api/search/content?q=${encodeURIComponent(debouncedQuery)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data: ContentSearchResponse) => {
+        if (controller.signal.aborted) return;
+        setContentHits(data.hits ?? []);
+        setContentHasMore(Object.values(data.hasMore ?? {}).some(Boolean));
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          logger.warn("command palette content search failed", {
+            context: "ui/CommandPalette",
+            metadata: { reason: err instanceof Error ? err.message : "unknown" },
+          });
+          setContentHits([]);
+          setContentHasMore(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [debouncedQuery, filter]);
+
   /* ── Open / close keyboard shortcut + custom event ────────────────────── */
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -287,6 +344,8 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
     setActiveIndex(0);
     setDataResults([]);
     setHasMore({});
+    setContentHits([]);
+    setContentHasMore(false);
     setRecentSearches(getRecentSearches());
     requestAnimationFrame(() => inputRef.current?.focus());
   }, [open]);
@@ -345,11 +404,29 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
       if (items.length > 0) map.set(cat, items);
     }
 
+    // Content snippets — only when the filter is "all" so a scoped search
+    // stays focused on entity rows. Top N inline; "See all" footer routes
+    // to the full results page.
+    if (filter === "all" && contentHits.length > 0) {
+      const items: UnifiedItem[] = contentHits.slice(0, CONTENT_INLINE_DISPLAY).map((h) => ({
+        key: `content:${h.kind}:${h.id}`,
+        label: h.title,
+        subtitle: h.parentLabel,
+        snippet: h.snippet,
+        href: h.href,
+        icon: GROUP_META.content.icon,
+        group: "content",
+        // Negate so higher backend scores come first within the group.
+        rank: -h.score,
+      }));
+      if (items.length > 0) map.set("content", items);
+    }
+
     // Sort groups by canonical order so the layout is deterministic across runs.
     return new Map(
       [...map.entries()].sort(([a], [b]) => GROUP_META[a].order - GROUP_META[b].order)
     );
-  }, [query, filter, allNavItems, dataResults]);
+  }, [query, filter, allNavItems, dataResults, contentHits]);
 
   // Flat list for keyboard navigation, ordered the same way the UI renders.
   const flatResults = useMemo<UnifiedItem[]>(() => {
@@ -361,7 +438,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
   /* ── Keep activeIndex in range when results change ────────────────────── */
   useEffect(() => {
     setActiveIndex(0);
-  }, [query, filter, dataResults]);
+  }, [query, filter, dataResults, contentHits]);
 
   /* ── Scroll active result into view ───────────────────────────────────── */
   useEffect(() => {
@@ -404,10 +481,18 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
           flatResults.length === 0 ? 0 : (i - 1 + flatResults.length) % flatResults.length
         );
         break;
-      case "Enter":
+      case "Enter": {
         e.preventDefault();
-        if (flatResults[activeIndex]) navigate(flatResults[activeIndex].href);
+        const q = query.trim();
+        // ⌘/Ctrl-Enter on a query jumps to the full content search page —
+        // useful when the inline 3 hits aren't the one you're after.
+        if ((e.metaKey || e.ctrlKey) && q.length >= 2) {
+          navigate(`/coach/search?q=${encodeURIComponent(q)}`);
+        } else if (flatResults[activeIndex]) {
+          navigate(flatResults[activeIndex].href);
+        }
         break;
+      }
       case "Escape":
         e.preventDefault();
         close();
@@ -577,7 +662,16 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
           {/* Grouped results */}
           {[...grouped.entries()].map(([group, items]) => {
             const meta = GROUP_META[group];
-            const showMore = group !== "page" && hasMore[group as SearchCategory];
+            const isContentGroup = group === "content";
+            const showMore = isContentGroup
+              ? contentHasMore || contentHits.length > CONTENT_INLINE_DISPLAY
+              : group !== "page" && hasMore[group as SearchCategory];
+            const showMoreHref = isContentGroup
+              ? `/coach/search?q=${encodeURIComponent(trimmed)}`
+              : meta.showMoreHref;
+            const showMoreLabel = isContentGroup
+              ? "See all matches in content"
+              : `Show more in ${meta.label}`;
             return (
               <div key={group} role="group" aria-label={meta.label}>
                 <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -587,6 +681,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                 {items.map((item) => {
                   const idx = renderedIndex++;
                   const optionId = `cmdk-option-${idx}`;
+                  const isContentRow = item.group === "content";
                   return (
                     <button
                       key={item.key}
@@ -598,7 +693,8 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                       onClick={() => navigate(item.href)}
                       onMouseEnter={() => setActiveIndex(idx)}
                       className={cn(
-                        "w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left",
+                        "w-full flex gap-3 px-4 py-2.5 text-sm transition-colors text-left",
+                        isContentRow ? "items-start" : "items-center",
                         idx === activeIndex
                           ? "bg-primary-50 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300"
                           : "text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
@@ -607,6 +703,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                       <span
                         className={cn(
                           "w-5 h-5 shrink-0 flex items-center justify-center",
+                          isContentRow && "mt-0.5",
                           idx === activeIndex
                             ? "text-primary-600 dark:text-primary-400"
                             : "text-surface-400 dark:text-surface-500"
@@ -615,9 +712,33 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                         {item.icon}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <span className="truncate block">{item.label}</span>
-                        {item.subtitle && (
-                          <span className="text-xs text-surface-400 dark:text-surface-500 truncate block">
+                        <span className={cn("truncate block", isContentRow && "font-medium")}>
+                          {item.label}
+                        </span>
+                        {item.snippet ? (
+                          <span className="text-xs text-surface-500 dark:text-surface-400 line-clamp-2 block leading-snug mt-0.5">
+                            {item.snippet.map((seg, i) =>
+                              seg.marked ? (
+                                <mark
+                                  key={i}
+                                  className="bg-primary-500/25 text-[var(--foreground)] rounded-sm px-0.5"
+                                >
+                                  {seg.text}
+                                </mark>
+                              ) : (
+                                <span key={i}>{seg.text}</span>
+                              )
+                            )}
+                          </span>
+                        ) : (
+                          item.subtitle && (
+                            <span className="text-xs text-surface-400 dark:text-surface-500 truncate block">
+                              {item.subtitle}
+                            </span>
+                          )
+                        )}
+                        {isContentRow && item.subtitle && (
+                          <span className="text-[10px] uppercase tracking-wider text-surface-400 dark:text-surface-500 mt-0.5 truncate block">
                             {item.subtitle}
                           </span>
                         )}
@@ -625,13 +746,14 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                     </button>
                   );
                 })}
-                {showMore && meta.showMoreHref && (
+                {showMore && showMoreHref && (
                   <button
                     type="button"
-                    onClick={() => navigate(meta.showMoreHref!)}
-                    className="w-full text-left px-4 py-2 text-[11px] font-medium text-primary-600 dark:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                    onClick={() => navigate(showMoreHref)}
+                    className="w-full text-left px-4 py-2 text-[11px] font-medium text-primary-600 dark:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors flex items-center gap-1"
                   >
-                    Show more in {meta.label} →
+                    {showMoreLabel}
+                    <ArrowRight size={11} strokeWidth={1.75} aria-hidden="true" />
                   </button>
                 )}
               </div>
