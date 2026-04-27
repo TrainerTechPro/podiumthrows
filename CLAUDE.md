@@ -464,11 +464,13 @@ The marketing surface is the third product. It does **not** honor the user's the
 Each marketing-route page wraps its top-level container in `dark`:
 
 ```tsx
-// src/app/pricing/page.tsx, src/app/changelog/page.tsx, etc.
+// src/app/page.tsx, src/app/pricing/page.tsx, src/app/changelog/page.tsx, etc.
 <div className="dark min-h-screen ...">{/* page content */}</div>
 ```
 
 Tailwind's `darkMode: "class"` resolves `dark:` variants when any ancestor has `.dark`. CSS custom properties defined under the `.dark { ... }` selector cascade by specificity, so `var(--background)` and `var(--foreground)` resolve to dark values inside the wrapper even when `<html>` has no `dark` class.
+
+The landing page is the easy one to forget because it sets `backgroundColor: var(--landing-bg)` inline — the page LOOKS dark in light mode even without the `dark` class, since `--landing-*` tokens live outside the theme cascade. But that only covers the elements that consume `--landing-*` directly. Any child component using a Tailwind `dark:` variant or a `--background`/`--foreground` semantic token would silently render the light branch. The `dark` wrapper is the belt — the inline `--landing-*` styles are the suspenders. Both belong.
 
 ### Authoring rules for marketing pages
 
