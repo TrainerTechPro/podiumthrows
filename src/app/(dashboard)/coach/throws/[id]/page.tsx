@@ -12,6 +12,7 @@ import {
   StickyNote,
   CalendarDays,
   Timer,
+  Printer,
 } from "lucide-react";
 import { requireCoachSession, getAssignmentDetailForCoach } from "@/lib/data/coach";
 import { CommentThread } from "@/components/comment-thread";
@@ -354,13 +355,22 @@ export default async function CoachThrowsAssignmentPage({
     <div className="max-w-4xl mx-auto space-y-6">
       <ScrollProgressBar />
 
-      <Link
-        href={`/coach/athletes/${athleteId}`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
-      >
-        <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" />
-        Back to Athlete
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href={`/coach/athletes/${athleteId}`}
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
+        >
+          <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" />
+          Back to Athlete
+        </Link>
+        <Link
+          href={`/coach/throws/${assignmentId}/print`}
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
+        >
+          <Printer size={16} strokeWidth={1.75} aria-hidden="true" />
+          Print Card
+        </Link>
+      </div>
 
       <div className="card p-6 space-y-4">
         <div className="flex items-start justify-between gap-4">
