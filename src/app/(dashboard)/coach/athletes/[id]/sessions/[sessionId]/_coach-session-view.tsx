@@ -33,9 +33,38 @@ import {
   type CoachLaneDTO,
   type CoachExerciseDTO,
 } from "@/lib/coach/session-detail";
+import { CoachSessionMobile } from "./_coach-session-mobile";
 
 interface Props {
   initial: CoachSessionDetailDTO;
+}
+
+/**
+ * Viewport-conditional render. Below 768px the coach sees the sideline-glance
+ * layout (read-only viewer, FAB for observation capture). At 768px+ the
+ * editorial workspace below is rendered (drag/drop, inspector, ⌘K).
+ */
+export function CoachSessionDetailView({ initial }: Props) {
+  const isMobile = useIsMobileViewport();
+  if (isMobile) return <CoachSessionMobile initial={initial} />;
+  return <CoachSessionDesktop initial={initial} />;
+}
+
+// SSR-safe matchMedia. Server and first client paint render the desktop tree;
+// once the listener fires on a phone we swap to the mobile tree. The flash is
+// bounded by the page's auth+fetch round-trip and is acceptable for a route
+// that already requires server-side data loading.
+function useIsMobileViewport(): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, []);
+  return isMobile;
 }
 
 // In-flight edits the coach hasn't saved yet. Keyed by exercise id.
@@ -50,7 +79,7 @@ type PendingExerciseEdit = {
   notes?: string | null;
 };
 
-export function CoachSessionDetailView({ initial }: Props) {
+function CoachSessionDesktop({ initial }: Props) {
   const [dto, setDto] = useState<CoachSessionDetailDTO>(initial);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(
     initial.blocks.find((b) => b.status === "active")?.exercises[0]?.id ?? null
