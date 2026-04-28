@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- seed script uses console.log for progress reporting */
 import { PrismaClient, AchievementType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -1204,18 +1205,29 @@ async function main() {
     // Assign plans: event-specific athletes get matching plan + general strength
     const applicablePlans = workoutPlans.filter((p) => p.event === event || p.event === null);
 
-    // Create 10 training sessions over the past 21 days
+    // Create 10 training sessions: 8 completed in the past 14 days +
+    // 2 scheduled 2-5 days in the future. The future-dated scheduled
+    // sessions are required for the TrainingHub state classifier to
+    // return "active" (it filters for `s.date > today` per the
+    // hasUpcomingWithin7Days check). The prior layout put scheduled
+    // sessions 3-5 days in the past — that was historical-data shaped,
+    // not contract-shaped, and broke athlete-training-hub.spec.ts once
+    // seed runs aged.
     for (let s = 0; s < 10; s++) {
-      const dayOffset = Math.floor(s * 2) + randomInt(0, 1);
       const isCompleted = s < 8; // First 8 completed, last 2 scheduled
+      // Negative n to daysAgo() returns a future date.
+      const daysAgoCount = isCompleted
+        ? 14 - s * 2 + randomInt(0, 1) // 0..15 days in the past
+        : -((s - 7) * 2 + randomInt(0, 1)); // 2-5 days in the future
+      const sessionDate = daysAgo(daysAgoCount);
       const plan = applicablePlans[s % applicablePlans.length];
 
       const session = await prisma.trainingSession.create({
         data: {
           planId: plan.id,
           athleteId: athlete.id,
-          scheduledDate: daysAgo(21 - dayOffset),
-          completedDate: isCompleted ? daysAgo(21 - dayOffset) : null,
+          scheduledDate: sessionDate,
+          completedDate: isCompleted ? sessionDate : null,
           status: isCompleted ? "COMPLETED" : "SCHEDULED",
           rpe: isCompleted ? randomBetween(6.0, 9.0, 1) : null,
           notes: isCompleted
@@ -1703,7 +1715,12 @@ async function main() {
         type: "PR_ALERT",
         title: `New PR — ${athlete1.firstName} ${athlete1.lastName}`,
         body: `${athlete1.firstName} just hit a new Shot Put PR: 18.42m`,
-        metadata: { event: "SHOT_PUT", distance: 18.42, unit: "m", athleteName: `${athlete1.firstName} ${athlete1.lastName}` },
+        metadata: {
+          event: "SHOT_PUT",
+          distance: 18.42,
+          unit: "m",
+          athleteName: `${athlete1.firstName} ${athlete1.lastName}`,
+        },
         read: false,
         createdAt: daysAgo(0),
       },
@@ -1713,7 +1730,10 @@ async function main() {
         type: "LOW_READINESS",
         title: `Low Readiness — ${athlete2.firstName} ${athlete2.lastName}`,
         body: `${athlete2.firstName} checked in with a readiness score of 3.2/10. Consider adjusting today's training load.`,
-        metadata: { readinessScore: 3.2, athleteName: `${athlete2.firstName} ${athlete2.lastName}` },
+        metadata: {
+          readinessScore: 3.2,
+          athleteName: `${athlete2.firstName} ${athlete2.lastName}`,
+        },
         read: false,
         createdAt: daysAgo(0),
       },
@@ -1733,7 +1753,10 @@ async function main() {
         type: "QUESTIONNAIRE_COMPLETE",
         title: `Questionnaire Completed — ${athlete1.firstName}`,
         body: `${athlete1.firstName} completed "Weekly Wellness Check".`,
-        metadata: { questionnaireName: "Weekly Wellness Check", athleteName: `${athlete1.firstName} ${athlete1.lastName}` },
+        metadata: {
+          questionnaireName: "Weekly Wellness Check",
+          athleteName: `${athlete1.firstName} ${athlete1.lastName}`,
+        },
         read: true,
         createdAt: daysAgo(2),
       },
@@ -1756,7 +1779,7 @@ async function main() {
         athleteProfileId: athlete1.id,
         type: "WORKOUT_ASSIGNED",
         title: "New Workout Assigned",
-        body: "Coach Marcus assigned you \"PM Throws — Heavy Implements\" for today.",
+        body: 'Coach Marcus assigned you "PM Throws — Heavy Implements" for today.',
         metadata: { url: "/athlete/sessions" },
         read: false,
         createdAt: daysAgo(0),
@@ -1765,7 +1788,7 @@ async function main() {
         athleteProfileId: athlete1.id,
         type: "QUESTIONNAIRE_ASSIGNED",
         title: "New Questionnaire",
-        body: "Coach Marcus wants you to complete \"Pre-Competition Readiness\".",
+        body: 'Coach Marcus wants you to complete "Pre-Competition Readiness".',
         metadata: { url: "/athlete/questionnaires" },
         read: false,
         createdAt: daysAgo(0),
