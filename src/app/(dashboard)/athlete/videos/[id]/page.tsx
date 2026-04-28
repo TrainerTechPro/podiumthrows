@@ -7,8 +7,10 @@ export const metadata = { title: "Video — Podium Throws" };
 export default async function AthleteVideoDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+
   let athlete;
   try {
     const session = await requireAthleteSession();
@@ -17,7 +19,7 @@ export default async function AthleteVideoDetailPage({
     redirect("/login");
   }
 
-  const video = await getAthleteVideoById(params.id, athlete.id);
+  const video = await getAthleteVideoById(id, athlete.id);
   if (!video) notFound();
 
   return <AthleteVideoViewer video={video} />;

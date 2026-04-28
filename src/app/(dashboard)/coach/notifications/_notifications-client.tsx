@@ -22,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Badge, EmptyState } from "@/components";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { logger } from "@/lib/logger";
@@ -728,9 +729,14 @@ export function NotificationsClient({
             Notifications
           </h1>
           <p className="text-sm text-muted mt-0.5">
-            {visibleUnread > 0
-              ? `${visibleUnread} unread${category !== "all" ? " in this view" : ""}`
-              : "All caught up"}
+            {visibleUnread > 0 ? (
+              <>
+                <AnimatedNumber value={visibleUnread} /> unread
+                {category !== "all" ? " in this view" : ""}
+              </>
+            ) : (
+              "All caught up"
+            )}
           </p>
         </div>
         <button

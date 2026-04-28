@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { requireAthleteSession } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import { WearableDashboard } from "../_wearable-dashboard";
+import { WearableNotConnected } from "../_wearable-not-connected";
 import { avg, type OuraRow } from "../_wearable-helpers";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function OuraPage() {
   });
 
   if (!connection) {
-    redirect("/athlete/settings");
+    return <WearableNotConnected provider="oura" />;
   }
 
   const snapshots = await prisma.ouraDailySnapshot.findMany({
@@ -78,7 +78,9 @@ export default async function OuraPage() {
       <div className="flex items-center justify-between gap-4 max-w-4xl mx-auto mb-8">
         <div>
           <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">Oura Data</h1>
-          <p className="text-sm text-muted mt-0.5">Readiness, sleep, and activity from your Oura Ring</p>
+          <p className="text-sm text-muted mt-0.5">
+            Readiness, sleep, and activity from your Oura Ring
+          </p>
         </div>
         <Link href="/athlete/settings" className="text-xs text-primary-500 hover:underline">
           Settings

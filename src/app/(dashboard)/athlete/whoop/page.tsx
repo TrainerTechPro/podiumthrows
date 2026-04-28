@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { requireAthleteSession } from "@/lib/data/athlete";
 import prisma from "@/lib/prisma";
 import { WearableDashboard } from "../_wearable-dashboard";
+import { WearableNotConnected } from "../_wearable-not-connected";
 import { avg, type WhoopRow } from "../_wearable-helpers";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function WhoopPage() {
   });
 
   if (!connection) {
-    redirect("/athlete/settings");
+    return <WearableNotConnected provider="whoop" />;
   }
 
   const snapshots = await prisma.whoopDailySnapshot.findMany({

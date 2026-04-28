@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatImplementWeight } from "@/lib/throws";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -92,7 +93,9 @@ function ScaleDots({ value, max = 5 }: { value: number | null; max?: number }) {
 
 function LogDetail({ session }: { session: AthleteLog }) {
   const totalThrows = session.drillLogs.reduce((sum, d) => sum + d.throwCount, 0);
-  const bestDists = session.drillLogs.map((d) => d.bestMark).filter((n): n is number => n !== null && n > 0);
+  const bestDists = session.drillLogs
+    .map((d) => d.bestMark)
+    .filter((n): n is number => n !== null && n > 0);
   const sessionBest = bestDists.length > 0 ? Math.max(...bestDists) : null;
 
   return (
@@ -106,19 +109,25 @@ function LogDetail({ session }: { session: AthleteLog }) {
         {sessionBest && (
           <div>
             <span className="text-muted uppercase tracking-wider">Best</span>
-            <p className="font-semibold text-[var(--foreground)] tabular-nums">{sessionBest.toFixed(2)}m</p>
+            <p className="font-semibold text-[var(--foreground)] tabular-nums">
+              {sessionBest.toFixed(2)}m
+            </p>
           </div>
         )}
         {session.sessionRpe && (
           <div>
             <span className="text-muted uppercase tracking-wider">RPE</span>
-            <p className="font-semibold text-[var(--foreground)] tabular-nums">{session.sessionRpe}/10</p>
+            <p className="font-semibold text-[var(--foreground)] tabular-nums">
+              {session.sessionRpe}/10
+            </p>
           </div>
         )}
         {session.sessionFeeling && (
           <div>
             <span className="text-muted uppercase tracking-wider">Feeling</span>
-            <p className="font-semibold text-[var(--foreground)]">{FEELING_LABELS[session.sessionFeeling] ?? session.sessionFeeling}</p>
+            <p className="font-semibold text-[var(--foreground)]">
+              {FEELING_LABELS[session.sessionFeeling] ?? session.sessionFeeling}
+            </p>
           </div>
         )}
         {session.focus && (
@@ -132,9 +141,24 @@ function LogDetail({ session }: { session: AthleteLog }) {
       {/* Readiness */}
       {(session.sleepQuality || session.sorenessLevel || session.energyLevel) && (
         <div className="flex gap-6 text-xs">
-          <div><span className="text-muted">Sleep</span><div className="mt-0.5"><ScaleDots value={session.sleepQuality} /></div></div>
-          <div><span className="text-muted">Soreness</span><div className="mt-0.5"><ScaleDots value={session.sorenessLevel} /></div></div>
-          <div><span className="text-muted">Energy</span><div className="mt-0.5"><ScaleDots value={session.energyLevel} /></div></div>
+          <div>
+            <span className="text-muted">Sleep</span>
+            <div className="mt-0.5">
+              <ScaleDots value={session.sleepQuality} />
+            </div>
+          </div>
+          <div>
+            <span className="text-muted">Soreness</span>
+            <div className="mt-0.5">
+              <ScaleDots value={session.sorenessLevel} />
+            </div>
+          </div>
+          <div>
+            <span className="text-muted">Energy</span>
+            <div className="mt-0.5">
+              <ScaleDots value={session.energyLevel} />
+            </div>
+          </div>
         </div>
       )}
 
@@ -142,10 +166,20 @@ function LogDetail({ session }: { session: AthleteLog }) {
       {(session.techniqueRating || session.mentalFocus) && (
         <div className="flex gap-6 text-xs">
           {session.techniqueRating && (
-            <div><span className="text-muted">Technique</span><div className="mt-0.5"><ScaleDots value={session.techniqueRating} /></div></div>
+            <div>
+              <span className="text-muted">Technique</span>
+              <div className="mt-0.5">
+                <ScaleDots value={session.techniqueRating} />
+              </div>
+            </div>
           )}
           {session.mentalFocus && (
-            <div><span className="text-muted">Mental Focus</span><div className="mt-0.5"><ScaleDots value={session.mentalFocus} /></div></div>
+            <div>
+              <span className="text-muted">Mental Focus</span>
+              <div className="mt-0.5">
+                <ScaleDots value={session.mentalFocus} />
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -167,8 +201,18 @@ function LogDetail({ session }: { session: AthleteLog }) {
                 <tr key={d.id} className="border-b border-[var(--card-border)] last:border-0">
                   <td className="py-1.5 text-[var(--foreground)] font-medium">{d.drillType}</td>
                   <td className="py-1.5 text-right tabular-nums text-muted">{d.throwCount}</td>
-                  <td className="py-1.5 text-right tabular-nums text-muted">{d.implementWeight ? formatImplementWeight(d.implementWeight, d.implementWeightUnit, d.implementWeightOriginal) : "--"}</td>
-                  <td className="py-1.5 text-right tabular-nums text-muted">{d.bestMark ? `${d.bestMark.toFixed(2)}m` : "--"}</td>
+                  <td className="py-1.5 text-right tabular-nums text-muted">
+                    {d.implementWeight
+                      ? formatImplementWeight(
+                          d.implementWeight,
+                          d.implementWeightUnit,
+                          d.implementWeightOriginal
+                        )
+                      : "--"}
+                  </td>
+                  <td className="py-1.5 text-right tabular-nums text-muted">
+                    {d.bestMark ? `${d.bestMark.toFixed(2)}m` : "--"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -179,9 +223,24 @@ function LogDetail({ session }: { session: AthleteLog }) {
       {/* Text feedback */}
       {(session.bestPart || session.improvementArea || session.notes) && (
         <div className="space-y-1 text-xs">
-          {session.bestPart && <p><span className="text-muted">Went well:</span> <span className="text-[var(--foreground)]">{session.bestPart}</span></p>}
-          {session.improvementArea && <p><span className="text-muted">Needs work:</span> <span className="text-[var(--foreground)]">{session.improvementArea}</span></p>}
-          {session.notes && <p><span className="text-muted">Notes:</span> <span className="text-[var(--foreground)]">{session.notes}</span></p>}
+          {session.bestPart && (
+            <p>
+              <span className="text-muted">Went well:</span>{" "}
+              <span className="text-[var(--foreground)]">{session.bestPart}</span>
+            </p>
+          )}
+          {session.improvementArea && (
+            <p>
+              <span className="text-muted">Needs work:</span>{" "}
+              <span className="text-[var(--foreground)]">{session.improvementArea}</span>
+            </p>
+          )}
+          {session.notes && (
+            <p>
+              <span className="text-muted">Notes:</span>{" "}
+              <span className="text-[var(--foreground)]">{session.notes}</span>
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -196,8 +255,9 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
   const [filterAthlete, setFilterAthlete] = useState("");
 
   // Unique athletes for filter
-  const athletes = [...new Map(sessions.map((s) => [s.athlete.id, s.athlete])).values()]
-    .sort((a, b) => a.lastName.localeCompare(b.lastName));
+  const athletes = [...new Map(sessions.map((s) => [s.athlete.id, s.athlete])).values()].sort(
+    (a, b) => a.lastName.localeCompare(b.lastName)
+  );
 
   const filtered = sessions.filter((s) => {
     if (filterEvent && s.event !== filterEvent) return false;
@@ -209,7 +269,9 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
     return (
       <div className="card py-12 text-center">
         <p className="text-sm text-muted">No athlete session logs yet.</p>
-        <p className="text-xs text-muted mt-1">When athletes log their own sessions, they&apos;ll appear here.</p>
+        <p className="text-xs text-muted mt-1">
+          When athletes log their own sessions, they&apos;ll appear here.
+        </p>
       </div>
     );
   }
@@ -226,7 +288,9 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
         >
           <option value="">All Athletes</option>
           {athletes.map((a) => (
-            <option key={a.id} value={a.id}>{a.firstName} {a.lastName}</option>
+            <option key={a.id} value={a.id}>
+              {a.firstName} {a.lastName}
+            </option>
           ))}
         </select>
 
@@ -248,7 +312,7 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
         </div>
 
         <span className="text-xs text-muted ml-auto whitespace-nowrap">
-          {filtered.length} session{filtered.length !== 1 ? "s" : ""}
+          <AnimatedNumber value={filtered.length} /> session{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
 
@@ -276,7 +340,21 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
                     <span className="text-[10px] font-semibold uppercase tracking-wide leading-none">
                       {(() => {
                         const [, m] = session.date.split("-").map(Number);
-                        return ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m];
+                        return [
+                          "",
+                          "Jan",
+                          "Feb",
+                          "Mar",
+                          "Apr",
+                          "May",
+                          "Jun",
+                          "Jul",
+                          "Aug",
+                          "Sep",
+                          "Oct",
+                          "Nov",
+                          "Dec",
+                        ][m];
                       })()}
                     </span>
                     <span className="text-lg font-bold leading-tight tabular-nums">
@@ -287,7 +365,9 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[session.event] ?? "bg-surface-400"}`} />
+                      <span
+                        className={`w-2 h-2 rounded-full shrink-0 ${EVENT_DOT[session.event] ?? "bg-surface-400"}`}
+                      />
                       <p className="text-sm font-semibold text-[var(--foreground)] truncate">
                         {session.athlete.firstName} {session.athlete.lastName}
                       </p>
@@ -298,7 +378,12 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
                     <p className="text-xs text-muted truncate mt-0.5">
                       {formatSessionDate(session.date)}
                       {session.focus && <> &middot; {session.focus}</>}
-                      {drillCount > 0 && <> &middot; {drillCount} drill{drillCount !== 1 ? "s" : ""}</>}
+                      {drillCount > 0 && (
+                        <>
+                          {" "}
+                          &middot; {drillCount} drill{drillCount !== 1 ? "s" : ""}
+                        </>
+                      )}
                       {totalThrows > 0 && <> &middot; {totalThrows} throws</>}
                       {session.sessionRpe && <> &middot; RPE {session.sessionRpe}</>}
                     </p>
@@ -306,8 +391,14 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
 
                   {/* Chevron */}
                   <svg
-                    width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
                     aria-hidden="true"
                   >

@@ -8,8 +8,10 @@ export const metadata = { title: "Pose Analysis — Podium Throws" };
 export default async function VideoAnalysisDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+
   let coach;
   try {
     const session = await requireCoachSession();
@@ -19,7 +21,7 @@ export default async function VideoAnalysisDetailPage({
   }
 
   const analysis = await prisma.videoAnalysis.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       athlete: {
         select: { id: true, firstName: true, lastName: true, avatarUrl: true, events: true },
@@ -31,9 +33,5 @@ export default async function VideoAnalysisDetailPage({
     notFound();
   }
 
-  return (
-    <AnalysisWorkspace
-      analysis={JSON.parse(JSON.stringify(analysis))}
-    />
-  );
+  return <AnalysisWorkspace analysis={JSON.parse(JSON.stringify(analysis))} />;
 }

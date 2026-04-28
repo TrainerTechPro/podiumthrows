@@ -4,6 +4,7 @@ import { ALL_BADGE_DEFINITIONS, STREAK_BADGES, SESSION_BADGES } from "@/lib/achi
 import prisma from "@/lib/prisma";
 import { ThrowsChipNav } from "../throws/_chip-nav";
 import { AchievementsGrid, type BadgeWithProgress, type AchievementCategory } from "./_grid";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 export const metadata = { title: "Achievements — Podium Throws" };
 
@@ -215,7 +216,7 @@ export default async function AthleteAchievementsPage() {
         {earnedCount > 0 && (
           <div className="text-right">
             <div className="text-3xl font-bold text-amber-500 tabular-nums leading-none">
-              {earnedCount}
+              <AnimatedNumber value={earnedCount} />
             </div>
             <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">Earned</div>
           </div>

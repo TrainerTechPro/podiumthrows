@@ -5,11 +5,9 @@ import { VideoEditor } from "./_video-editor";
 
 export const metadata = { title: "Video Editor — Podium Throws" };
 
-export default async function VideoDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function VideoDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   let coach;
   try {
     const session = await requireCoachSession();
@@ -18,7 +16,7 @@ export default async function VideoDetailPage({
     redirect("/login");
   }
 
-  const video = await getVideoById(params.id, coach.id);
+  const video = await getVideoById(id, coach.id);
   if (!video) notFound();
 
   // Fetch athletes for the share modal
@@ -37,10 +35,5 @@ export default async function VideoDetailPage({
     name: `${a.firstName} ${a.lastName}`,
   }));
 
-  return (
-    <VideoEditor
-      video={video}
-      athletes={athleteList}
-    />
-  );
+  return <VideoEditor video={video} athletes={athleteList} />;
 }

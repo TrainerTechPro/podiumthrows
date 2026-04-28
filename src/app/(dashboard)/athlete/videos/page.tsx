@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { formatEventType } from "@/lib/utils";
 import { formatTimestamp } from "@/components/video/types";
 
@@ -23,11 +24,10 @@ export default async function AthleteVideosPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-          My Videos
-        </h1>
+        <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">My Videos</h1>
         <p className="text-sm text-muted mt-0.5">
-          {videos.length} video{videos.length !== 1 ? "s" : ""} shared with you
+          <AnimatedNumber value={videos.length} /> video{videos.length !== 1 ? "s" : ""} shared with
+          you
         </p>
       </div>
 
@@ -35,7 +35,14 @@ export default async function AthleteVideosPage() {
       {videos.length === 0 ? (
         <EmptyState
           icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
@@ -63,7 +70,16 @@ export default async function AthleteVideosPage() {
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full text-surface-400">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <polygon points="23 7 16 12 23 17 23 7" />
                       <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                     </svg>
@@ -79,7 +95,13 @@ export default async function AthleteVideosPage() {
                 {/* Play overlay */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                   <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-surface-900 ml-0.5">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="text-surface-900 ml-0.5"
+                    >
                       <polygon points="5 3 19 12 5 21" />
                     </svg>
                   </div>
@@ -93,20 +115,23 @@ export default async function AthleteVideosPage() {
                 </h3>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {video.coachName && (
-                    <span className="text-xs text-muted">
-                      From {video.coachName}
-                    </span>
+                    <span className="text-xs text-muted">From {video.coachName}</span>
                   )}
-                  {video.event && (
-                    <Badge variant="primary">
-                      {formatEventType(video.event)}
-                    </Badge>
-                  )}
+                  {video.event && <Badge variant="primary">{formatEventType(video.event)}</Badge>}
                 </div>
                 <div className="flex items-center gap-3 mt-2 text-[10px] text-surface-400">
                   {video.annotationCount > 0 && (
                     <span className="flex items-center gap-0.5">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <path d="M12 19l7-7 3 3-7 7-3-3z" />
                         <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
                       </svg>
