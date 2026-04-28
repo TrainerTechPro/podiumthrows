@@ -21,7 +21,7 @@ export const ATHLETE_STORAGE = path.join(AUTH_DIR, "athlete.json");
 setup("authenticate as coach", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill(COACH.email);
-  await page.getByLabel("Password").fill(COACH.password);
+  await page.getByLabel("Password", { exact: true }).fill(COACH.password);
   await page.getByRole("button", { name: "Sign In" }).click();
   await page.waitForURL(/\/coach\/dashboard/, { timeout: 15000 });
   await page.context().storageState({ path: COACH_STORAGE });
@@ -30,7 +30,7 @@ setup("authenticate as coach", async ({ page }) => {
 setup("authenticate as athlete", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill(ATHLETE_1.email);
-  await page.getByLabel("Password").fill(ATHLETE_1.password);
+  await page.getByLabel("Password", { exact: true }).fill(ATHLETE_1.password);
   await page.getByRole("button", { name: "Sign In" }).click();
   await page.waitForURL(/\/athlete\//, { timeout: 15000 });
   await page.context().storageState({ path: ATHLETE_STORAGE });

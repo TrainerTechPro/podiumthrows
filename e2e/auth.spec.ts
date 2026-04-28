@@ -12,7 +12,7 @@ test.describe("Authentication", () => {
   test("login with wrong password shows error", async ({ page }) => {
     await page.goto("/login");
     await page.getByLabel("Email").fill("coach@example.com");
-    await page.getByLabel("Password").fill("wrong-password");
+    await page.getByLabel("Password", { exact: true }).fill("wrong-password");
     await page.getByRole("button", { name: "Sign In" }).click();
     await expect(page.locator("body")).toContainText("Invalid email or password");
     await expect(page).toHaveURL(/\/login/);

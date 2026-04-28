@@ -62,7 +62,7 @@ const REDIRECTS: RedirectCase[] = [
   { source: "/coach/hub", destination: "/coach/dashboard" },
 
   // Settings tabs.
-  { source: "/coach/tools", destination: "/coach/settings?tab=tools" },
+  { source: "/coach/tools", destination: "/coach/settings?tab=integrations" },
   { source: "/coach/integrations", destination: "/coach/settings?tab=integrations" },
 
   // Throws Analyze + Video merges into Video Analysis.

@@ -33,7 +33,7 @@ test.describe("Athlete Authentication", () => {
   test("login with bad athlete password shows error", async ({ page }) => {
     await page.goto("/login");
     await page.getByLabel("Email").fill(ATHLETE_1.email);
-    await page.getByLabel("Password").fill("wrong");
+    await page.getByLabel("Password", { exact: true }).fill("wrong");
     await page.getByRole("button", { name: "Sign In" }).click();
     await expect(page.locator("body")).toContainText("Invalid email or password");
     await expect(page).toHaveURL(/\/login/);
