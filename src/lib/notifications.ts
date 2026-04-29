@@ -234,6 +234,51 @@ export async function getUnreadCount(
 }
 
 /**
+ * Resolve which (profileId, role) the bell + notifications API should query
+ * for this session. Mirrors what the dashboard layouts render server-side:
+ * athlete/layout.tsx fetches the athlete profile's unread count, coach/layout
+ * fetches the coach profile's. The bell + listing endpoints used to pick by
+ * JWT role alone, which silently diverged from the layout for a coach in
+ * TRAINING mode (badge counted athlete-side unread, dropdown queried coach-
+ * side notifications → "All caught up" with a non-zero badge).
+ *
+ * `User.activeMode` is the authoritative source — the `active-mode` cookie is
+ * client-writable and explicitly untrusted for data scoping.
+ */
+export async function resolveNotificationContext(session: {
+  userId: string;
+  role: "COACH" | "ATHLETE";
+}): Promise<{ profileId: string; effectiveRole: "COACH" | "ATHLETE" } | null> {
+  if (session.role === "ATHLETE") {
+    const athlete = await prisma.athleteProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
+    });
+    return athlete ? { profileId: athlete.id, effectiveRole: "ATHLETE" } : null;
+  }
+
+  const [user, coach, athlete] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { activeMode: true },
+    }),
+    prisma.coachProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
+    }),
+    prisma.athleteProfile.findUnique({
+      where: { userId: session.userId },
+      select: { id: true },
+    }),
+  ]);
+
+  if (user?.activeMode === "TRAINING" && athlete) {
+    return { profileId: athlete.id, effectiveRole: "ATHLETE" };
+  }
+  return coach ? { profileId: coach.id, effectiveRole: "COACH" } : null;
+}
+
+/**
  * Mark a single notification as read (with ownership check).
  */
 export async function markAsRead(

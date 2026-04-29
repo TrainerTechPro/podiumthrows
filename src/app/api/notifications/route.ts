@@ -1,25 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { getNotifications } from "@/lib/notifications";
+import { getNotifications, resolveNotificationContext } from "@/lib/notifications";
 import { categoryToTypes, type NotificationCategory } from "@/lib/notifications/deep-links";
 import { logger } from "@/lib/logger";
-
-async function resolveProfileId(userId: string, role: "COACH" | "ATHLETE"): Promise<string | null> {
-  if (role === "COACH") {
-    const coach = await prisma.coachProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    return coach?.id ?? null;
-  }
-  const athlete = await prisma.athleteProfile.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
-  return athlete?.id ?? null;
-}
 
 const QuerySchema = z.object({
   cursor: z.string().nullable().optional(),
@@ -58,8 +42,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const profileId = await resolveProfileId(session.userId, session.role);
-    if (!profileId) {
+    const ctx = await resolveNotificationContext(session);
+    if (!ctx) {
       return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
@@ -80,11 +64,11 @@ export async function GET(req: NextRequest) {
 
     // Explicit `types=` wins over category mapping (used internally for
     // single-type filters like the legacy bell dropdown).
-    const fromCategory = categoryToTypes(parsed.data.category, session.role);
+    const fromCategory = categoryToTypes(parsed.data.category, ctx.effectiveRole);
     const types =
       parsed.data.types && parsed.data.types.length > 0 ? parsed.data.types : fromCategory;
 
-    const result = await getNotifications(profileId, session.role, {
+    const result = await getNotifications(ctx.profileId, ctx.effectiveRole, {
       cursor: parsed.data.cursor ?? null,
       limit: parsed.data.limit,
       unreadOnly: parsed.data.unreadOnly,

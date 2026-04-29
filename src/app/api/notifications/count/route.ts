@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { getUnreadCount } from "@/lib/notifications";
+import { getUnreadCount, resolveNotificationContext } from "@/lib/notifications";
 
 /* ─── GET — lightweight unread count for badge polling ───────────────────── */
 
@@ -13,26 +12,12 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    let profileId: string | null = null;
-    if (session.role === "COACH") {
-      const coach = await prisma.coachProfile.findUnique({
-        where: { userId: session.userId },
-        select: { id: true },
-      });
-      profileId = coach?.id ?? null;
-    } else {
-      const athlete = await prisma.athleteProfile.findUnique({
-        where: { userId: session.userId },
-        select: { id: true },
-      });
-      profileId = athlete?.id ?? null;
-    }
-
-    if (!profileId) {
+    const ctx = await resolveNotificationContext(session);
+    if (!ctx) {
       return NextResponse.json({ success: true, data: { count: 0 } });
     }
 
-    const count = await getUnreadCount(profileId, session.role);
+    const count = await getUnreadCount(ctx.profileId, ctx.effectiveRole);
     return NextResponse.json({ success: true, data: { count } });
   } catch (err) {
     // Previously returned 200/count=0 which hid outages from monitoring.
