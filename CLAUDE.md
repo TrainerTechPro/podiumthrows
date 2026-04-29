@@ -428,6 +428,7 @@ Podium Throws is **two products sharing a database and a brand**, not one produc
 | Decorative icons      | OK in moderation                                          | Only when functional                       |
 | Copy register         | Personal, warm ("Your session is logged")                 | Neutral, informational ("Session saved")   |
 | Empty-state tone      | Teaches the interface, invites first action               | Describes what will appear here            |
+| Settings page shape   | Discrete sub-pages, list-of-rows-with-chevron landing     | Tabs or sidebar nav OK                     |
 
 ### Shared Tokens, Different Identity
 
