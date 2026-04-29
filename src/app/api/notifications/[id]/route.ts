@@ -1,26 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { markAsRead, deleteNotification } from "@/lib/notifications";
+import { markAsRead, deleteNotification, resolveNotificationContext } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-async function resolveProfileId(userId: string, role: "COACH" | "ATHLETE"): Promise<string | null> {
-  if (role === "COACH") {
-    const coach = await prisma.coachProfile.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
-    return coach?.id ?? null;
-  }
-  const athlete = await prisma.athleteProfile.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
-  return athlete?.id ?? null;
-}
 
 const PatchSchema = z.object({
   read: z.boolean().nullable().optional(),
@@ -36,8 +20,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const profileId = await resolveProfileId(session.userId, session.role);
-    if (!profileId) {
+    const ctx = await resolveNotificationContext(session);
+    if (!ctx) {
       return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
@@ -48,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
     const readValue = parsed.data.read ?? true;
 
-    const updated = await markAsRead(id, profileId, session.role, readValue);
+    const updated = await markAsRead(id, ctx.profileId, ctx.effectiveRole, readValue);
     if (!updated) {
       return NextResponse.json(
         { success: false, error: "Notification not found." },
@@ -79,12 +63,12 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const profileId = await resolveProfileId(session.userId, session.role);
-    if (!profileId) {
+    const ctx = await resolveNotificationContext(session);
+    if (!ctx) {
       return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
-    const removed = await deleteNotification(id, profileId, session.role);
+    const removed = await deleteNotification(id, ctx.profileId, ctx.effectiveRole);
     if (!removed) {
       return NextResponse.json(
         { success: false, error: "Notification not found." },
