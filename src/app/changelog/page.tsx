@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollDepthTracker } from "@/components/analytics/ScrollDepthTracker";
+import MarketingNav from "@/components/marketing/Nav";
+import MarketingFooter from "@/components/marketing/Footer";
 import {
   RELEASES,
   formatEntryDate,
@@ -28,34 +30,32 @@ export default function ChangelogPage() {
   const months = releasesByMonth();
 
   return (
-    <div className="dark min-h-screen bg-surface-50 dark:bg-surface-950 py-12 sm:py-16 px-4">
+    <div className="dark min-h-screen font-body bg-surface-50 dark:bg-surface-950 text-[var(--foreground)]">
       <ScrollDepthTracker />
-      <main className="max-w-2xl mx-auto">
-        <header className="space-y-3 mb-10 sm:mb-14">
-          <Link
-            href="/"
-            className="inline-block text-sm text-primary-500 hover:text-primary-400 transition-colors"
-          >
-            &larr; Back to home
-          </Link>
-          <h1 className="text-display-sm sm:text-display font-heading text-[var(--foreground)]">
-            What&rsquo;s new
-          </h1>
-          <p className="text-muted leading-relaxed">
-            Product updates, shipped. Newest first. Grouped by month.
-          </p>
-        </header>
+      <MarketingNav />
+      <main className="pt-[96px] sm:pt-[112px] pb-16 px-4">
+        <div className="max-w-2xl mx-auto">
+          <header className="space-y-3 mb-10 sm:mb-14">
+            <h1 className="text-display-sm sm:text-display font-heading text-[var(--foreground)]">
+              What&rsquo;s new
+            </h1>
+            <p className="text-muted leading-relaxed">
+              Product updates, shipped. Newest first. Grouped by month.
+            </p>
+          </header>
 
-        {months.length === 0 ? (
-          <EmptyChangelog />
-        ) : (
-          <div className="space-y-12 sm:space-y-16">
-            {months.map((month) => (
-              <MonthSection key={month.monthKey} {...month} />
-            ))}
-          </div>
-        )}
+          {months.length === 0 ? (
+            <EmptyChangelog />
+          ) : (
+            <div className="space-y-12 sm:space-y-16">
+              {months.map((month) => (
+                <MonthSection key={month.monthKey} {...month} />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
+      <MarketingFooter />
     </div>
   );
 }

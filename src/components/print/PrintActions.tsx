@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { ArrowLeft, Printer } from "lucide-react";
 import Link from "next/link";
 
@@ -9,6 +10,14 @@ interface Props {
 }
 
 export function PrintActions({ backHref, backLabel = "Back" }: Props) {
+  const fired = useRef(false);
+  useEffect(() => {
+    if (fired.current) return;
+    fired.current = true;
+    const id = window.setTimeout(() => window.print(), 250);
+    return () => window.clearTimeout(id);
+  }, []);
+
   return (
     <div className="no-print flex items-center gap-3 mb-6">
       <Link
