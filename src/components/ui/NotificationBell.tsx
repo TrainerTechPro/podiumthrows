@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { NotificationItem } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
+import { useToast } from "@/components/ui/Toast";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
@@ -256,9 +257,11 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
   const [visible, setVisible] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useRef(false);
   const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
     reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -334,22 +337,34 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
     };
   }, [open]);
 
-  // Fetch notifications when dropdown opens
+  // Fetch notifications when dropdown opens.
+  //
+  // Response envelope is `{ success: true, data: { notifications, unreadCount, nextCursor } }`
+  // — read from `payload.data`, not the top level. Earlier code read
+  // `data.notifications` (undefined), which silently emptied the dropdown
+  // and clobbered the badge to 0. Surfacing failures via `loadError` keeps
+  // the dropdown honest instead of falsely claiming "All caught up".
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`/api/notifications?limit=${DROPDOWN_LIMIT}`);
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications ?? []);
-        setCount(data.unreadCount ?? 0);
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        const message = payload?.error || `Couldn't load notifications (${res.status})`;
+        setLoadError(message);
+        return;
       }
+      const list: NotificationItem[] = payload.data?.notifications ?? [];
+      const unread: number = payload.data?.unreadCount ?? 0;
+      setNotifications(list);
+      setCount(unread);
     } catch (err) {
-      // Silent
-      logger.debug("Silent", {
+      logger.error("notification dropdown fetch failed", {
         context: "src/components/ui/NotificationBell.tsx",
         metadata: { reason: err instanceof Error ? err.message : "unknown" },
       });
+      setLoadError("Network error — try again");
     } finally {
       setLoading(false);
     }
@@ -362,37 +377,65 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
   }
 
   async function handleMarkRead(id: string) {
+    // Optimistic flip + rollback on failure. Surfacing the error keeps the
+    // badge honest — silent failures used to leave the count one short of
+    // reality until the next 30s poll reconciled.
+    const prevNotifications = notifications;
+    const prevCount = count;
+    setNotifications(prevNotifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setCount(Math.max(0, prevCount - 1));
     try {
-      await fetch(`/api/notifications/${id}`, {
+      const res = await fetch(`/api/notifications/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ read: true }),
       });
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-      setCount((c) => Math.max(0, c - 1));
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok || !payload?.success) {
+        setNotifications(prevNotifications);
+        setCount(prevCount);
+        toast.error(payload?.error || "Couldn't mark read — try again");
+      }
     } catch (err) {
-      // Silent
-      logger.debug("Silent", {
+      setNotifications(prevNotifications);
+      setCount(prevCount);
+      logger.error("notification mark-read failed", {
         context: "src/components/ui/NotificationBell.tsx",
         metadata: { reason: err instanceof Error ? err.message : "unknown" },
       });
+      toast.error("Network error — try again");
     }
   }
 
   async function handleMarkAllRead() {
+    // The dedicated endpoint is POST /api/notifications/mark-all-read.
+    // The previous PATCH /api/notifications hit a route with no PATCH
+    // handler — Next.js returned 405, the catch was empty, and the badge
+    // visibly reset (optimistic) but the DB never changed; the next poll
+    // restored the count and the user thought the button was broken.
+    const prevNotifications = notifications;
+    const prevCount = count;
+    setNotifications(prevNotifications.map((n) => ({ ...n, read: true })));
+    setCount(0);
     try {
-      await fetch("/api/notifications", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+      const res = await fetch("/api/notifications/mark-all-read", {
+        method: "POST",
+        headers: csrfHeaders(),
       });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setCount(0);
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok || !payload?.success) {
+        setNotifications(prevNotifications);
+        setCount(prevCount);
+        toast.error(payload?.error || "Couldn't mark all read — try again");
+      }
     } catch (err) {
-      // Silent
-      logger.debug("Silent", {
+      setNotifications(prevNotifications);
+      setCount(prevCount);
+      logger.error("notification mark-all-read failed", {
         context: "src/components/ui/NotificationBell.tsx",
         metadata: { reason: err instanceof Error ? err.message : "unknown" },
       });
+      toast.error("Network error — try again");
     }
   }
 
@@ -475,6 +518,17 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
                     </div>
                   </div>
                 ))}
+              </div>
+            ) : loadError ? (
+              <div className="py-10 px-4 text-center">
+                <p className="text-sm text-[var(--foreground)]">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={fetchNotifications}
+                  className="mt-2 text-xs font-semibold text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                >
+                  Try again
+                </button>
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-10 px-4 text-center">

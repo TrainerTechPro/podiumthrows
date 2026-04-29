@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -274,15 +274,37 @@ function NotificationCard({
     setOffsetX(0);
   }
 
+  // Swipe affordance: drawer is invisible at rest and fades in
+  // proportional to swipe distance, fully visible at the latch threshold.
+  // Two reasons this matters:
+  //   1. The unread row uses bg-amber-500/5 (95% transparent) so a
+  //      full-opacity drawer behind it bled blue/red through every unread
+  //      card even when the user wasn't swiping.
+  //   2. iOS Safari promotes the foreground (transform: translateX) to a
+  //      composited layer that sometimes paints behind the absolute drawer
+  //      sibling — `isolation: isolate` on the parent plus an explicit
+  //      z-index on each child pins the order regardless of layer fusion.
+  const swipeOpen = offsetX < 0;
+  const drawerOpacity = Math.min(1, Math.abs(offsetX) / SWIPE_THRESHOLD_PX);
+
   return (
     <div
-      className="relative overflow-hidden rounded-xl"
+      className="relative overflow-hidden rounded-xl isolate"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {/* Behind-row action drawer (swipe-left reveals these) */}
-      <div className="absolute inset-y-0 right-0 flex items-stretch" aria-hidden={offsetX === 0}>
+      <div
+        className={`absolute inset-y-0 right-0 z-0 flex items-stretch ${
+          animating ? "transition-opacity duration-200 ease-out" : ""
+        }`}
+        style={{
+          opacity: drawerOpacity,
+          pointerEvents: swipeOpen ? "auto" : "none",
+        }}
+        aria-hidden={!swipeOpen}
+      >
         <button
           type="button"
           onClick={() => {
@@ -291,7 +313,7 @@ function NotificationCard({
             else onMarkRead(n.id, false);
           }}
           className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-info-500 text-white text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-info-500/50"
-          tabIndex={offsetX < 0 ? 0 : -1}
+          tabIndex={swipeOpen ? 0 : -1}
         >
           <Check size={16} strokeWidth={2.25} aria-hidden="true" />
           {n.read ? "Unread" : "Read"}
@@ -303,7 +325,7 @@ function NotificationCard({
             onDelete(n.id);
           }}
           className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-danger-500 text-white text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-danger-500/50"
-          tabIndex={offsetX < 0 ? 0 : -1}
+          tabIndex={swipeOpen ? 0 : -1}
         >
           <Trash2 size={16} strokeWidth={2.25} aria-hidden="true" />
           Delete
@@ -312,7 +334,7 @@ function NotificationCard({
 
       {/* Foreground row */}
       <div
-        className={`group relative flex items-start gap-3 p-4 border ${
+        className={`group relative z-10 flex items-start gap-3 p-4 border ${
           !n.read
             ? "border-amber-400/20 bg-amber-50/50 dark:bg-amber-500/5"
             : "border-surface-200 dark:border-surface-800 bg-[var(--card-bg)]"
@@ -529,13 +551,12 @@ export function NotificationsClient({
   const [markingAll, setMarkingAll] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const visibleUnread = useMemo(() => {
-    // Optimistic local count: server unread + (any locally-flipped reads we
-    // haven't reconciled). Simpler/safer to recompute from items when the
-    // user is in "all" view; for filtered views fall back to server count.
-    if (category !== "all") return serverUnread;
-    return items.filter((n) => !n.read).length;
-  }, [items, serverUnread, category]);
+  // Server is the source of truth — items only contain the loaded page,
+  // so unread notifications older than the cursor would silently vanish
+  // from a local recount and leave the bell badge ahead of the page.
+  // Optimistic mutations below adjust serverUnread by the same delta they
+  // apply to items, so this stays accurate without recomputing.
+  const visibleUnread = serverUnread;
 
   const fetchPage = useCallback(
     async (opts: { reset: boolean; cursor: string | null }): Promise<FetchPayload | null> => {
@@ -634,8 +655,16 @@ export function NotificationsClient({
   }
 
   async function markRead(id: string, read: boolean) {
-    const prev = items;
+    const prevItems = items;
+    const prevUnread = serverUnread;
+    const target = items.find((n) => n.id === id);
+    // Only count a delta when the read flag actually flipped — toggling a
+    // read notification to read again must not move the badge.
+    const delta = target && target.read !== read ? (read ? -1 : 1) : 0;
     setItems((curr) => curr.map((n) => (n.id === id ? { ...n, read } : n)));
+    if (delta !== 0) {
+      setServerUnread((c) => Math.max(0, c + delta));
+    }
     try {
       const res = await fetch(`/api/notifications/${id}`, {
         method: "PATCH",
@@ -644,25 +673,27 @@ export function NotificationsClient({
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok || !payload.success) {
-        setItems(prev);
+        setItems(prevItems);
+        setServerUnread(prevUnread);
         toast.error(payload.error || "Couldn't update — try again");
         return;
       }
-      // Sync server unread count for filtered views.
-      if (category !== "all") {
-        setServerUnread((c) => Math.max(0, c + (read ? -1 : 1)));
-      }
     } catch (err) {
       logger.error("markRead failed", { context: "notifications/client", error: err });
-      setItems(prev);
+      setItems(prevItems);
+      setServerUnread(prevUnread);
       toast.error("Network error — try again");
     }
   }
 
   async function deleteOne(id: string) {
-    const prev = items;
+    const prevItems = items;
+    const prevUnread = serverUnread;
     const target = items.find((n) => n.id === id);
     setItems((curr) => curr.filter((n) => n.id !== id));
+    if (target && !target.read) {
+      setServerUnread((c) => Math.max(0, c - 1));
+    }
     try {
       const res = await fetch(`/api/notifications/${id}`, {
         method: "DELETE",
@@ -670,20 +701,19 @@ export function NotificationsClient({
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok || !payload.success) {
-        setItems(prev);
+        setItems(prevItems);
+        setServerUnread(prevUnread);
         toast.error(payload.error || "Couldn't delete — try again");
         return;
       }
       toast.success("Notification deleted");
-      if (target && !target.read && category !== "all") {
-        setServerUnread((c) => Math.max(0, c - 1));
-      }
     } catch (err) {
       logger.error("delete notification failed", {
         context: "notifications/client",
         error: err,
       });
-      setItems(prev);
+      setItems(prevItems);
+      setServerUnread(prevUnread);
       toast.error("Network error — try again");
     }
   }

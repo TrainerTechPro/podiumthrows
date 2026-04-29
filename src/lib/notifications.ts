@@ -148,6 +148,18 @@ export async function getNotifications(
     ...(cursorFilter ?? {}),
   };
 
+  // unreadCount honors the same `types` filter as the listing query — so
+  // filtered views (e.g. category=feedback) report unread count for that
+  // view, not the global total. The "all" view (types=null) still gets
+  // the total. `unreadOnly` and the cursor are intentionally excluded —
+  // unreadOnly would always equal items.length, and the cursor scopes a
+  // page rather than the user's true unread state.
+  const unreadWhere: Prisma.NotificationWhereInput = {
+    ...baseWhere,
+    read: false,
+    ...(opts.types && opts.types.length > 0 ? { type: { in: opts.types } } : {}),
+  };
+
   const [rows, unreadCount] = await Promise.all([
     prisma.notification.findMany({
       where,
@@ -155,9 +167,7 @@ export async function getNotifications(
       take: limit + 1,
       select: NOTIFICATION_SELECT,
     }),
-    prisma.notification.count({
-      where: { ...baseWhere, read: false },
-    }),
+    prisma.notification.count({ where: unreadWhere }),
   ]);
 
   const hasMore = rows.length > limit;
