@@ -97,9 +97,8 @@ export default async function CoachThrowsSessionPrintPage({
   });
   if (!coach) redirect("/login");
 
-  const assignment = await getAssignmentDetailForCoach(assignmentId);
+  const assignment = await getAssignmentDetailForCoach(coach.id, assignmentId);
   if (!assignment) notFound();
-  if (assignment.athlete.coachId !== coach.id) notFound();
 
   const athlete = assignment.athlete;
   const ses = assignment.session;

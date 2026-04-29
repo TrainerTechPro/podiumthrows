@@ -329,13 +329,8 @@ export default async function CoachThrowsAssignmentPage({
 
   const { coach } = await requireCoachSession();
 
-  // Permissions are enforced via the assignment itself — the coach must own
-  // the athlete the assignment belongs to. The optional `?athlete=` search
-  // param is for breadcrumb/display only and is not consulted here.
-  const assignment = await getAssignmentDetailForCoach(assignmentId);
-
+  const assignment = await getAssignmentDetailForCoach(coach.id, assignmentId);
   if (!assignment) notFound();
-  if (assignment.athlete.coachId !== coach.id) notFound();
 
   const athleteId = assignment.athleteId;
   const session = assignment.session;

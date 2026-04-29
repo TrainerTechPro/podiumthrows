@@ -904,8 +904,8 @@ export async function getAthleteThrowsAssignments(
   });
 }
 
-export async function getAssignmentDetailForCoach(assignmentId: string) {
-  return prisma.throwsAssignment.findUnique({
+export async function getAssignmentDetailForCoach(coachId: string, assignmentId: string) {
+  const assignment = await prisma.throwsAssignment.findUnique({
     where: { id: assignmentId },
     include: {
       session: {
@@ -927,6 +927,9 @@ export async function getAssignmentDetailForCoach(assignmentId: string) {
       },
     },
   });
+  if (!assignment) return null;
+  if (assignment.athlete.coachId !== coachId) return null;
+  return assignment;
 }
 
 export async function getAthleteGoals(athleteId: string): Promise<GoalItem[]> {
