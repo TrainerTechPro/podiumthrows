@@ -180,6 +180,80 @@ export async function sendAthleteWeeklyRecapEmail(
 }
 
 /**
+ * Pilot feedback notification — sent to the maintainer (FEEDBACK_RECIPIENT_EMAIL,
+ * defaults to toncamedia@gmail.com) every time a beta tester submits via the
+ * in-app feedback widget. Best-effort: caller invokes via waitUntil so a
+ * mailer outage never blocks the user submission.
+ */
+export interface FeedbackEmailInput {
+  feedbackId: string;
+  type: "BUG" | "CONFUSION" | "FEATURE" | "PRAISE";
+  body: string;
+  url: string;
+  viewport: string | null;
+  userAgent: string | null;
+  user: {
+    name: string;
+    email: string;
+    role: string;
+  };
+  notionUrl: string | null;
+  screenshotUrl: string | null;
+  inboxUrl: string;
+}
+
+export async function sendBetaFeedbackEmail(input: FeedbackEmailInput): Promise<void> {
+  const recipient = process.env.FEEDBACK_RECIPIENT_EMAIL || "toncamedia@gmail.com";
+  const typeLabel = {
+    BUG: "🐞 Bug",
+    CONFUSION: "❓ Confusing",
+    FEATURE: "💡 Idea",
+    PRAISE: "❤️ Praise",
+  }[input.type];
+
+  const preview = input.body.length > 60 ? input.body.slice(0, 57) + "…" : input.body;
+  const subject = `[Pilot] ${typeLabel}: ${preview}`;
+
+  const esc = (s: string): string =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  const screenshotBlock = input.screenshotUrl
+    ? `<p style="margin: 16px 0;"><a href="${esc(input.screenshotUrl)}" style="color: #f59e0b;">View screenshot</a></p>`
+    : "";
+
+  const notionBlock = input.notionUrl
+    ? `<a href="${esc(input.notionUrl)}" style="display: inline-block; background: #f59e0b; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-right: 8px;">Open in Notion</a>`
+    : "";
+
+  const html = `
+    <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px;">
+      <p style="color: #a3a3a3; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 8px;">Pilot feedback · ${typeLabel}</p>
+      <h1 style="color: #171717; font-size: 22px; margin: 0 0 16px; line-height: 1.3;">${esc(preview)}</h1>
+      <div style="background: #fafafa; border-left: 3px solid #f59e0b; padding: 16px 20px; border-radius: 4px; color: #404040; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${esc(input.body)}</div>
+      ${screenshotBlock}
+      <table style="margin: 24px 0; border-collapse: collapse; font-size: 13px; color: #525252;">
+        <tr><td style="padding: 4px 12px 4px 0; color: #a3a3a3;">From</td><td style="padding: 4px 0;">${esc(input.user.name)} &lt;${esc(input.user.email)}&gt; (${esc(input.user.role)})</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; color: #a3a3a3;">Page</td><td style="padding: 4px 0;"><code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px;">${esc(input.url)}</code></td></tr>
+        ${input.viewport ? `<tr><td style="padding: 4px 12px 4px 0; color: #a3a3a3;">Viewport</td><td style="padding: 4px 0;">${esc(input.viewport)}</td></tr>` : ""}
+        ${input.userAgent ? `<tr><td style="padding: 4px 12px 4px 0; color: #a3a3a3; vertical-align: top;">UA</td><td style="padding: 4px 0; color: #737373; font-size: 11px;">${esc(input.userAgent)}</td></tr>` : ""}
+        <tr><td style="padding: 4px 12px 4px 0; color: #a3a3a3;">ID</td><td style="padding: 4px 0; color: #737373; font-family: monospace; font-size: 11px;">${esc(input.feedbackId)}</td></tr>
+      </table>
+      <div style="margin-top: 24px;">
+        ${notionBlock}
+        <a href="${esc(input.inboxUrl)}" style="display: inline-block; background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: 600;">Open inbox</a>
+      </div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: FROM_EMAIL,
+    to: recipient,
+    subject,
+    html,
+  });
+}
+
+/**
  * Transactional email for a new comment on any training surface.
  * Subject prefixes the author name and preview. Body deep-links into the
  * recipient's inbox. Includes list-unsubscribe headers per RFC 2369 so

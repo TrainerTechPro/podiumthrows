@@ -20,6 +20,7 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 import { QuickActions } from "@/components/ui/QuickActions";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { CoachFeedbackInboxIcon } from "@/components/feedback/CoachFeedbackInboxIcon";
+import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 import { useDetectTimezone } from "@/hooks/useDetectTimezone";
 import Link from "next/link";
 import { logger } from "@/lib/logger";
@@ -396,6 +397,7 @@ function CoachShell({
       </div>
 
       <QuickActions role={user.role} />
+      <FeedbackButton role="COACH" />
     </div>
   );
 }
@@ -496,6 +498,7 @@ function AthleteShell({ user, children, className, notificationCount }: Dashboar
       </main>
 
       {!focusMode && <BottomTabBar />}
+      {!focusMode && <FeedbackButton role="ATHLETE" />}
     </div>
   );
 }

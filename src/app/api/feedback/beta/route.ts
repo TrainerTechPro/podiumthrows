@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
@@ -22,9 +23,12 @@ import {
   uploadSingleFile,
   saveFileLocally,
   generateImageKey,
+  getPublicUrl,
   isAllowedImageType,
   MAX_IMAGE_SIZE_MB,
 } from "@/lib/r2";
+import { mirrorFeedbackToNotion } from "@/lib/feedback/notion-mirror";
+import { sendBetaFeedbackEmail } from "@/lib/email";
 
 const BetaFeedbackSchema = z.object({
   type: z.enum(["BUG", "CONFUSION", "FEATURE", "PRAISE"]),
@@ -155,6 +159,76 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, createdAt: true },
     });
+
+    // Side effects (Notion mirror + email Tony) run in waitUntil so a slow
+    // or failing third party never blocks the user. Both helpers are
+    // soft-fail by design — failures get logged and the canonical
+    // BetaFeedback row is the source of truth.
+    const screenshotUrl = screenshotKey ? getPublicUrl(screenshotKey) : null;
+    const userInfo = await prisma.user
+      .findUnique({
+        where: { id: session.userId },
+        select: {
+          email: true,
+          coachProfile: { select: { firstName: true, lastName: true } },
+          athleteProfile: { select: { firstName: true, lastName: true } },
+        },
+      })
+      .catch(() => null);
+    const profile = userInfo?.coachProfile ?? userInfo?.athleteProfile ?? null;
+    const userName = profile ? `${profile.firstName} ${profile.lastName}`.trim() : "Unknown user";
+    const userEmail = userInfo?.email ?? "unknown@unknown";
+
+    const mirrorInput = {
+      feedbackId: row.id,
+      type: data.type,
+      body: data.body,
+      url: data.url,
+      userAgent: data.userAgent ?? null,
+      viewport: data.viewport ?? null,
+      consoleErrors: data.consoleErrors ?? null,
+      screenshotUrl,
+      user: {
+        userId: session.userId,
+        email: userEmail,
+        name: userName,
+        role: session.role,
+      },
+      createdAt: row.createdAt,
+    };
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const inboxUrl = `${baseUrl}/coach/feedback-inbox`;
+
+    waitUntil(
+      (async () => {
+        const notion = await mirrorFeedbackToNotion(mirrorInput);
+        try {
+          await sendBetaFeedbackEmail({
+            feedbackId: row.id,
+            type: data.type,
+            body: data.body,
+            url: data.url,
+            viewport: data.viewport ?? null,
+            userAgent: data.userAgent ?? null,
+            user: {
+              name: userName,
+              email: userEmail,
+              role: session.role,
+            },
+            notionUrl: notion?.pageUrl ?? null,
+            screenshotUrl,
+            inboxUrl,
+          });
+        } catch (err) {
+          logger.error("Beta feedback email failed", {
+            context: "api/feedback",
+            metadata: { feedbackId: row.id },
+            error: err,
+          });
+        }
+      })()
+    );
 
     return NextResponse.json({
       success: true,
