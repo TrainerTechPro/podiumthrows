@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trophy, CheckCircle2, Flame, Play, ChevronRight } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { NumberFlow } from "@/components/ui/NumberFlow";
+import { PerformanceTestsTile } from "@/components/performance-tests/PerformanceTestsTile";
 import type {
   AthleteDashboardDTO,
   PrescriptionToken,
@@ -18,6 +19,7 @@ import type {
 interface Props {
   initial: AthleteDashboardDTO;
   hour: number;
+  athleteId: string;
 }
 
 const EVENT_LABEL: Record<string, string> = {
@@ -34,7 +36,7 @@ const EVENT_LABEL: Record<string, string> = {
  * lives in the AthleteShell wrapper and triggers router.refresh(); we re-key the
  * subtree on the DTO timestamp so entrance animations replay after a refresh.
  */
-export function AthleteHomeClient({ initial, hour }: Props) {
+export function AthleteHomeClient({ initial, hour, athleteId }: Props) {
   const greeting = useMemo(() => timeGreeting(hour), [hour]);
 
   return (
@@ -52,6 +54,10 @@ export function AthleteHomeClient({ initial, hour }: Props) {
       )}
       <SectionHeader label="This week" trailingHref="/athlete/sessions" trailingLabel="See plan" />
       <WeekStrip strip={initial.week} />
+      <SectionHeader label="Performance" />
+      <div className="px-4 sm:px-6">
+        <PerformanceTestsTile athleteId={athleteId} />
+      </div>
       <SectionHeader
         label="Recent"
         trailingHref="/athlete/throws/trends"
@@ -336,21 +342,24 @@ function SectionHeader({
   trailingLabel,
 }: {
   label: string;
-  trailingHref: string;
-  trailingLabel: string;
+  trailingHref?: string;
+  trailingLabel?: string;
 }) {
+  const showTrail = trailingHref && trailingLabel;
   return (
     <div className="mt-7 flex items-center justify-between px-5 pb-3">
       <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
         {label}
       </h3>
-      <Link
-        href={trailingHref}
-        className="inline-flex items-center gap-0.5 font-mono text-[11px] tracking-[0.04em] text-[var(--muted)] hover:text-[var(--foreground)]"
-      >
-        {trailingLabel}
-        <ChevronRight className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
-      </Link>
+      {showTrail && (
+        <Link
+          href={trailingHref}
+          className="inline-flex items-center gap-0.5 font-mono text-[11px] tracking-[0.04em] text-[var(--muted)] hover:text-[var(--foreground)]"
+        >
+          {trailingLabel}
+          <ChevronRight className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
+        </Link>
+      )}
     </div>
   );
 }

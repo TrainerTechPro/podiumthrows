@@ -18,5 +18,5 @@ export default async function AthleteDashboardPage() {
 
   const dto = await loadAthleteDashboard(athlete.id, athlete.firstName);
 
-  return <AthleteHomeClient initial={dto} hour={new Date().getHours()} />;
+  return <AthleteHomeClient initial={dto} hour={new Date().getHours()} athleteId={athlete.id} />;
 }

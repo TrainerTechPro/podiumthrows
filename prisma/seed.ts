@@ -31,6 +31,8 @@ async function main() {
   console.log("🌱 Seeding database...\n");
 
   // Clean existing data
+  // Performance tests cascade-delete from athletes, but the test types themselves
+  // are catalog-style (idempotent upsert below) — never wipe them.
   await prisma.eventGroupMember.deleteMany();
   await prisma.eventGroup.deleteMany();
   await prisma.invitation.deleteMany();
@@ -1824,6 +1826,82 @@ async function main() {
   });
 
   console.log("  ✓ Notifications seeded (5 coach, 5 athlete)\n");
+
+  // ─── PERFORMANCE TEST TYPES (idempotent catalog) ────────────────────────
+
+  const performanceTestTypes = [
+    {
+      key: "vertical_jump",
+      name: "Vertical Jump",
+      unit: "cm",
+      lowerIsBetter: false,
+      defaultAttempts: 3,
+      iconKey: "ArrowUp",
+      sortOrder: 10,
+    },
+    {
+      key: "broad_jump",
+      name: "Broad Jump",
+      unit: "cm",
+      lowerIsBetter: false,
+      defaultAttempts: 3,
+      iconKey: "MoveRight",
+      sortOrder: 20,
+    },
+    {
+      key: "sprint_10m",
+      name: "10 m Sprint",
+      unit: "sec",
+      lowerIsBetter: true,
+      defaultAttempts: 3,
+      iconKey: "Timer",
+      sortOrder: 30,
+    },
+    {
+      key: "sprint_20m",
+      name: "20 m Sprint",
+      unit: "sec",
+      lowerIsBetter: true,
+      defaultAttempts: 3,
+      iconKey: "Timer",
+      sortOrder: 40,
+    },
+    {
+      key: "sprint_30m",
+      name: "30 m Sprint",
+      unit: "sec",
+      lowerIsBetter: true,
+      defaultAttempts: 2,
+      iconKey: "Timer",
+      sortOrder: 50,
+    },
+    {
+      key: "sprint_40yd",
+      name: "40 yd Sprint",
+      unit: "sec",
+      lowerIsBetter: true,
+      defaultAttempts: 2,
+      iconKey: "Timer",
+      sortOrder: 60,
+    },
+  ];
+
+  for (const t of performanceTestTypes) {
+    await prisma.performanceTestType.upsert({
+      where: { key: t.key },
+      create: t,
+      update: {
+        name: t.name,
+        unit: t.unit,
+        lowerIsBetter: t.lowerIsBetter,
+        defaultAttempts: t.defaultAttempts,
+        iconKey: t.iconKey,
+        sortOrder: t.sortOrder,
+        archived: false,
+      },
+    });
+  }
+  console.log(`  ✓ ${performanceTestTypes.length} performance test types seeded\n`);
 
   console.log("🏆 Seed complete! Database is ready.\n");
   console.log("  Test accounts:");

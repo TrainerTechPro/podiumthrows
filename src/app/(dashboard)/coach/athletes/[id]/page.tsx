@@ -36,6 +36,7 @@ import { CoachActionBar } from "./_action-bar";
 import { AthleteAvatarControl } from "./_avatar-control";
 import { CoachInsightsSection } from "./_coach-insights-section";
 import { toWire } from "@/lib/insights/serialize";
+import { PerformanceTestsSection } from "@/components/performance-tests/PerformanceTestsSection";
 import prisma from "@/lib/prisma";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -46,6 +47,7 @@ const VALID_SECTIONS = [
   "overview",
   "training",
   "throws",
+  "performance",
   "readiness",
   "wellness",
   "goals",
@@ -1738,6 +1740,16 @@ export default async function AthleteProfilePage({
       <section id="throws" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Throws</h2>
         <ThrowsTab throws={throws} chartThrows={chartThrows} />
+      </section>
+
+      <section
+        id="performance"
+        className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8"
+      >
+        <PerformanceTestsSection
+          athleteId={athlete.id}
+          athleteName={`${athlete.firstName} ${athlete.lastName}`}
+        />
       </section>
 
       <section

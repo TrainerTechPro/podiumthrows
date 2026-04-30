@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { LogSessionWizard } from "./_log-session-wizard";
+import { LogSessionTypeSwitcher } from "./_log-session-type-switcher";
 
 export default async function AthleteLogSessionPage() {
   const session = await getSession();
@@ -17,13 +18,14 @@ export default async function AthleteLogSessionPage() {
 
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
-    select: { events: true },
+    select: { id: true, events: true },
   });
 
   if (!athlete) redirect("/login");
 
   return (
-    <div className="py-6 px-4">
+    <div className="py-6 px-4 space-y-3">
+      <LogSessionTypeSwitcher athleteId={athlete.id} />
       <LogSessionWizard userId={session.userId} allowedEvents={athlete.events ?? []} />
     </div>
   );

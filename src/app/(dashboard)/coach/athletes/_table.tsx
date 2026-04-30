@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Timer } from "lucide-react";
 import { Avatar, Badge, DataTable, type Column } from "@/components";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AthleteRosterItem, ClaimStatus } from "@/lib/data/coach";
+import { CoachTestCaptureSheet } from "@/components/performance-tests/CoachTestCaptureSheet";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -235,6 +236,7 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
   const toast = useToast();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [logTestFor, setLogTestFor] = useState<AthleteRosterItem | null>(null);
 
   async function handleSendInvite(row: AthleteRosterItem) {
     setBusyId(row.id);
@@ -328,6 +330,27 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       hideOnMobile: true,
     },
     {
+      key: "logTest",
+      header: "",
+      cell: (row) =>
+        row.claimStatus === "PROXY" ? null : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLogTestFor(row);
+            }}
+            onKeyDown={(e) => e.stopPropagation()}
+            aria-label={`Log a performance test for ${row.firstName} ${row.lastName}`}
+            title="Log performance test"
+            className="inline-flex items-center justify-center rounded-md p-1.5 text-muted hover:text-primary-500 hover:bg-primary-500/10 transition-colors"
+          >
+            <Timer size={16} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        ),
+      className: "w-10 text-right",
+    },
+    {
       key: "id",
       header: "",
       cell: () => <ActionCell />,
@@ -336,17 +359,25 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
   ];
 
   return (
-    <DataTable
-      data={data}
-      columns={columns}
-      rowKey="id"
-      searchable
-      searchPlaceholder="Search by name…"
-      pageSize={25}
-      rowClassName={getRowClassName}
-      onRowClick={(row) => router.push(`/coach/athletes/${row.id}`)}
-      emptyTitle="No athletes on your roster"
-      emptyDescription="Send an invite to get your first athlete set up. They'll appear here once they accept."
-    />
+    <>
+      <DataTable
+        data={data}
+        columns={columns}
+        rowKey="id"
+        searchable
+        searchPlaceholder="Search by name…"
+        pageSize={25}
+        rowClassName={getRowClassName}
+        onRowClick={(row) => router.push(`/coach/athletes/${row.id}`)}
+        emptyTitle="No athletes on your roster"
+        emptyDescription="Send an invite to get your first athlete set up. They'll appear here once they accept."
+      />
+      <CoachTestCaptureSheet
+        open={logTestFor != null}
+        onClose={() => setLogTestFor(null)}
+        athleteId={logTestFor?.id ?? ""}
+        athleteName={logTestFor ? `${logTestFor.firstName} ${logTestFor.lastName}` : undefined}
+      />
+    </>
   );
 }

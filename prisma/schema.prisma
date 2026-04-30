@@ -238,6 +238,9 @@ model User {
   betaFeedback           BetaFeedback[]
   notificationPreference NotificationPreference?
 
+  // Performance Tests — recorder-of-record (athlete or coach)
+  recordedPerformanceTests PerformanceTestSession[] @relation("PerformanceTestRecorder")
+
   @@index([email])
   @@index([role])
 }
@@ -245,30 +248,30 @@ model User {
 // ─── COACH ──────────────────────────────────────────────────────────────────
 
 model CoachProfile {
-  id                    String           @id @default(cuid())
-  userId                String           @unique
-  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  firstName             String
-  lastName              String
-  bio                   String?
-  organization          String?
-  avatarUrl             String?
-  plan                  SubscriptionPlan @default(FREE)
-  stripeCustomerId      String?          @unique
-  stripeSubscriptionId  String?          @unique
-  currentPeriodEnd      DateTime?
-  paymentFailedAt       DateTime?
-  cancelAtPeriodEnd     Boolean          @default(false)
-  leadId                String? // ID of the Lead record that converted into this coach (deficit-finder funnel)
-  preferences           String?          @default("{}")
+  id                      String           @id @default(cuid())
+  userId                  String           @unique
+  user                    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName               String
+  lastName                String
+  bio                     String?
+  organization            String?
+  avatarUrl               String?
+  plan                    SubscriptionPlan @default(FREE)
+  stripeCustomerId        String?          @unique
+  stripeSubscriptionId    String?          @unique
+  currentPeriodEnd        DateTime?
+  paymentFailedAt         DateTime?
+  cancelAtPeriodEnd       Boolean          @default(false)
+  leadId                  String? // ID of the Lead record that converted into this coach (deficit-finder funnel)
+  preferences             String?          @default("{}")
   /// Notification opt-outs keyed by NotificationType. Shape:
   /// { inApp: { PR_ALERT: bool, LOW_READINESS: bool, ... } }
   /// Missing keys default to TRUE (coach receives the notification).
   notificationPreferences Json?
-  enabledModules        String?          @default("[\"general\",\"throws\"]") @db.Text
-  onboardingCompletedAt DateTime? // null = not completed; timestamp = completed/dismissed
-  trainingEnabled       Boolean          @default(false)
-  events                EventType[]      @default([]) // coach's own throwing events for self-training
+  enabledModules          String?          @default("[\"general\",\"throws\"]") @db.Text
+  onboardingCompletedAt   DateTime? // null = not completed; timestamp = completed/dismissed
+  trainingEnabled         Boolean          @default(false)
+  events                  EventType[]      @default([]) // coach's own throwing events for self-training
 
   // Timezone (IANA name, e.g. "America/New_York"). NULL = not yet detected.
   timezone String?
@@ -484,6 +487,9 @@ model AthleteProfile {
 
   // Trend insight layer
   insights AthleteInsight[]
+
+  // Performance Tests — vertical/broad/sprint sessions
+  performanceTests PerformanceTestSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1159,23 +1165,23 @@ model EventGroupMember {
 // ─── ROSTER GROUPS (Coach-Defined Teams) ────────────────────────────────────
 
 model Team {
-  id            String       @id @default(cuid())
-  coachId       String
-  coach         CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
-  name          String
-  description   String?
+  id           String       @id @default(cuid())
+  coachId      String
+  coach        CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
   /// Self-referential parent for 2-level nesting (group → sub-group).
   /// Top-level groups have parentTeamId = null. Sub-groups cannot themselves
   /// have children — enforced in the API layer, not the schema.
-  parentTeamId  String?
-  parent        Team?        @relation("TeamHierarchy", fields: [parentTeamId], references: [id], onDelete: Cascade)
-  children      Team[]       @relation("TeamHierarchy")
+  parentTeamId String?
+  parent       Team?        @relation("TeamHierarchy", fields: [parentTeamId], references: [id], onDelete: Cascade)
+  children     Team[]       @relation("TeamHierarchy")
   /// Manual sort order within each parent scope (top-level or sibling
   /// sub-groups). Lower values render first; ties broken by createdAt.
-  order         Int          @default(0)
-  members       TeamMember[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  order        Int          @default(0)
+  members      TeamMember[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@index([coachId])
   @@index([parentTeamId])
@@ -2932,21 +2938,21 @@ model SelfProgramConfig {
 // ─── WHOOP INTEGRATION ────────────────────────────────────────────────────────
 
 model WhoopConnection {
-  id               String               @id @default(cuid())
-  athleteId        String               @unique
-  athlete          AthleteProfile       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  whoopUserId      Int
-  accessToken      String
-  refreshToken     String
-  tokenExpiresAt   DateTime
-  scopes           String
-  syncMode         String               @default("ASSISTED")
-  lastSyncAt       DateTime?
-  lastSyncError    String? // Plain message from the most recent failed sync — null when last sync succeeded.
-  lastSyncErrorAt  DateTime? // Timestamp the error was recorded, so the UI can show "failed 14m ago".
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  snapshots        WhoopDailySnapshot[]
+  id              String               @id @default(cuid())
+  athleteId       String               @unique
+  athlete         AthleteProfile       @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  whoopUserId     Int
+  accessToken     String
+  refreshToken    String
+  tokenExpiresAt  DateTime
+  scopes          String
+  syncMode        String               @default("ASSISTED")
+  lastSyncAt      DateTime?
+  lastSyncError   String? // Plain message from the most recent failed sync — null when last sync succeeded.
+  lastSyncErrorAt DateTime? // Timestamp the error was recorded, so the UI can show "failed 14m ago".
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  snapshots       WhoopDailySnapshot[]
 
   @@index([whoopUserId])
 }
@@ -2978,21 +2984,21 @@ model WhoopDailySnapshot {
 // ─── OURA RING INTEGRATION ──────────────────────────────────────────────────
 
 model OuraConnection {
-  id               String              @id @default(cuid())
-  athleteId        String              @unique
-  athlete          AthleteProfile      @relation(fields: [athleteId], references: [id], onDelete: Cascade)
-  ouraUserId       String
-  accessToken      String
-  refreshToken     String
-  tokenExpiresAt   DateTime
-  scopes           String
-  syncMode         String              @default("ASSISTED")
-  lastSyncAt       DateTime?
-  lastSyncError    String? // Most recent failed-sync message; null when last sync succeeded.
-  lastSyncErrorAt  DateTime?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  snapshots        OuraDailySnapshot[]
+  id              String              @id @default(cuid())
+  athleteId       String              @unique
+  athlete         AthleteProfile      @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  ouraUserId      String
+  accessToken     String
+  refreshToken    String
+  tokenExpiresAt  DateTime
+  scopes          String
+  syncMode        String              @default("ASSISTED")
+  lastSyncAt      DateTime?
+  lastSyncError   String? // Most recent failed-sync message; null when last sync succeeded.
+  lastSyncErrorAt DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  snapshots       OuraDailySnapshot[]
 
   @@index([ouraUserId])
 }
@@ -3079,10 +3085,10 @@ model TeamAnnouncement {
 /// context. Screenshot (optional) is stored in R2; `screenshotKey` is the
 /// object key, rendered via getPublicUrl().
 model BetaFeedback {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userRole      String // "COACH" | "ATHLETE"
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userRole String // "COACH" | "ATHLETE"
 
   /// "BUG" | "CONFUSION" | "FEATURE" | "PRAISE"
   type String
@@ -3163,4 +3169,72 @@ model AthleteInsight {
 
   @@index([athleteId, category, computedAt])
   @@index([athleteId, computedAt])
+}
+
+// ─── PERFORMANCE TESTS ──────────────────────────────────────────────────────
+// Ad-hoc athletic tests with multi-attempt capture (vertical jump, broad jump,
+// sprints). Both athletes and coaches record sessions; aggregates recompute on
+// every attempt mutation inside the same transaction. Domain logic lives in
+// src/lib/performance-tests.ts.
+
+model PerformanceTestType {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  name            String
+  unit            String // "cm" | "sec"
+  lowerIsBetter   Boolean  @default(false)
+  defaultAttempts Int      @default(3)
+  iconKey         String // lucide icon name (e.g. "ArrowUp", "Timer")
+  sortOrder       Int      @default(0)
+  archived        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  sessions PerformanceTestSession[]
+}
+
+model PerformanceTestSession {
+  id             String   @id @default(cuid())
+  athleteId      String
+  testTypeId     String
+  performedAt    DateTime
+  recordedById   String
+  recordedByRole String // "ATHLETE" | "COACH" — denormalized for fast attribution
+  notes          String?
+  conditions     String?
+
+  // Computed-on-write across isValid=true attempts. Null = zero valid attempts.
+  peakValue    Float?
+  avgValue     Float?
+  attemptCount Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  athlete    AthleteProfile           @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  testType   PerformanceTestType      @relation(fields: [testTypeId], references: [id])
+  recordedBy User                     @relation("PerformanceTestRecorder", fields: [recordedById], references: [id])
+  attempts   PerformanceTestAttempt[]
+
+  @@index([athleteId, testTypeId, performedAt(sort: Desc)])
+  @@index([athleteId, performedAt(sort: Desc)])
+}
+
+model PerformanceTestAttempt {
+  id            String  @id @default(cuid())
+  sessionId     String
+  attemptNumber Int // 1-based, server-assigned. Gaps allowed after delete.
+  value         Float
+  isValid       Boolean @default(true) // false = foul/false start, excluded from peak/avg
+  notes         String?
+
+  // Edit attribution. Null until first edit by someone other than the recorder
+  // (or any edit at all — handler always populates on PATCH).
+  lastEditedById String?
+  lastEditedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  session PerformanceTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, attemptNumber])
 }
