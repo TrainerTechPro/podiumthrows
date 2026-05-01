@@ -5,7 +5,15 @@ import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
-import { EventType } from "@prisma/client";
+import { findCatalogMatchForWeight, recomputeManyPRs } from "@/lib/implements";
+import { EventType, type ImplementType } from "@prisma/client";
+
+/** EventType (SHOT_PUT) → ImplementType (SHOT). */
+function eventToImplementType(event: string): ImplementType | null {
+  if (event === "SHOT_PUT") return "SHOT";
+  if (event === "HAMMER" || event === "DISCUS" || event === "JAVELIN") return event;
+  return null;
+}
 
 /* ── GET — single session detail (athlete-self OR their coach) ── */
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -97,46 +105,104 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // PRs are intentionally NOT recomputed on edit — the ThrowsPR table
     // remains authoritative and is only advanced on create. This prevents
     // edits from retroactively lowering a PR.
-    const updated = await prisma.$transaction(async (tx) => {
-      // Drill logs stay "replace" — they're a separate relation the client
-      // always sends in full. The merge rule is for scalar session fields.
-      await tx.athleteDrillLog.deleteMany({ where: { sessionId: id } });
-      return tx.athleteThrowsSession.update({
-        where: { id },
-        data: {
-          event: p.event as EventType,
-          date: p.date,
-          ...(p.focus !== undefined && { focus: p.focus || null }),
-          ...(p.notes !== undefined && { notes: p.notes?.trim() || null }),
-          ...(p.sleepQuality !== undefined && { sleepQuality: p.sleepQuality }),
-          ...(p.sorenessLevel !== undefined && { sorenessLevel: p.sorenessLevel }),
-          ...(p.energyLevel !== undefined && { energyLevel: p.energyLevel }),
-          ...(p.sessionRpe !== undefined && { sessionRpe: p.sessionRpe }),
-          ...(p.sessionFeeling !== undefined && { sessionFeeling: p.sessionFeeling || null }),
-          ...(p.techniqueRating !== undefined && { techniqueRating: p.techniqueRating }),
-          ...(p.mentalFocus !== undefined && { mentalFocus: p.mentalFocus }),
-          ...(p.bestPart !== undefined && { bestPart: p.bestPart?.trim() || null }),
-          ...(p.improvementArea !== undefined && {
-            improvementArea: p.improvementArea?.trim() || null,
-          }),
-          drillLogs: {
-            create: (p.drills || []).map((d) => ({
-              drillType: d.drillType,
-              implementWeight: d.implementWeight ?? null,
-              implementWeightUnit: d.implementWeightUnit ?? "kg",
-              implementWeightOriginal: d.implementWeightOriginal ?? null,
-              wireLength: d.wireLength ?? null,
-              throwCount: d.throwCount ?? 0,
-              bestMark: d.bestMark ?? null,
-              bestMarkUnit: d.bestMarkUnit ?? "meters",
-              bestMarkOriginal: d.bestMarkOriginal ?? null,
-              notes: d.notes?.trim() || null,
-            })),
-          },
-        },
-        include: { drillLogs: true },
+    // Resolve catalog implementId for each drill before insert (same pattern
+    // as POST). Edit replaces drill logs wholesale, so we recompute PR for
+    // every (athlete, implement) combo touched by either the DELETED set or
+    // the NEW set — covers the case where editing changed an implement.
+    const throwType = eventToImplementType(p.event);
+    const drillsWithCatalog: Array<{
+      drillType: string;
+      implementId: string | null;
+      implementWeight: number | null;
+      implementWeightUnit: string;
+      implementWeightOriginal: number | null;
+      wireLength: string | null;
+      throwCount: number;
+      bestMark: number | null;
+      bestMarkUnit: "meters" | "feet";
+      bestMarkOriginal: number | null;
+      notes: string | null;
+    }> = [];
+    for (const d of p.drills || []) {
+      let implementId: string | null = null;
+      if (throwType && d.implementWeight && d.implementWeight > 0) {
+        const isLb = d.implementWeightUnit === "lbs" || d.implementWeightUnit === "lb";
+        const match = await findCatalogMatchForWeight(d.implementWeight, throwType, {
+          unitSystem: isLb ? "imperial" : "metric",
+        });
+        if (match.kind === "exact" || match.kind === "tolerated") {
+          implementId = match.implement.id;
+        }
+      }
+      drillsWithCatalog.push({
+        drillType: d.drillType,
+        implementId,
+        implementWeight: d.implementWeight ?? null,
+        implementWeightUnit: d.implementWeightUnit ?? "kg",
+        implementWeightOriginal: d.implementWeightOriginal ?? null,
+        wireLength: d.wireLength ?? null,
+        throwCount: d.throwCount ?? 0,
+        bestMark: d.bestMark ?? null,
+        bestMarkUnit: d.bestMarkUnit ?? "meters",
+        bestMarkOriginal: d.bestMarkOriginal ?? null,
+        notes: d.notes?.trim() || null,
       });
-    });
+    }
+
+    const updated = await prisma.$transaction(
+      async (tx) => {
+        // Capture pre-edit implementIds so we recompute the OLD combos too
+        // (covers implement-change-on-edit cases).
+        const oldDrills = await tx.athleteDrillLog.findMany({
+          where: { sessionId: id },
+          select: { implementId: true },
+        });
+        const oldImplementIds = new Set(
+          oldDrills.map((d) => d.implementId).filter((x): x is string => x != null)
+        );
+
+        // Drill logs stay "replace" — they're a separate relation the client
+        // always sends in full. The merge rule is for scalar session fields.
+        await tx.athleteDrillLog.deleteMany({ where: { sessionId: id } });
+        const result = await tx.athleteThrowsSession.update({
+          where: { id },
+          data: {
+            event: p.event as EventType,
+            date: p.date,
+            ...(p.focus !== undefined && { focus: p.focus || null }),
+            ...(p.notes !== undefined && { notes: p.notes?.trim() || null }),
+            ...(p.sleepQuality !== undefined && { sleepQuality: p.sleepQuality }),
+            ...(p.sorenessLevel !== undefined && { sorenessLevel: p.sorenessLevel }),
+            ...(p.energyLevel !== undefined && { energyLevel: p.energyLevel }),
+            ...(p.sessionRpe !== undefined && { sessionRpe: p.sessionRpe }),
+            ...(p.sessionFeeling !== undefined && { sessionFeeling: p.sessionFeeling || null }),
+            ...(p.techniqueRating !== undefined && { techniqueRating: p.techniqueRating }),
+            ...(p.mentalFocus !== undefined && { mentalFocus: p.mentalFocus }),
+            ...(p.bestPart !== undefined && { bestPart: p.bestPart?.trim() || null }),
+            ...(p.improvementArea !== undefined && {
+              improvementArea: p.improvementArea?.trim() || null,
+            }),
+            drillLogs: { create: drillsWithCatalog },
+          },
+          include: { drillLogs: true },
+        });
+
+        // Recompute every (athlete, implement) we either left or arrived at.
+        const allImplementIds = new Set<string>(oldImplementIds);
+        for (const d of drillsWithCatalog) {
+          if (d.implementId) allImplementIds.add(d.implementId);
+        }
+        const targets = Array.from(allImplementIds).map((implementId) => ({
+          athleteId: athlete.id,
+          implementId,
+        }));
+        if (targets.length > 0) {
+          await recomputeManyPRs(tx, targets);
+        }
+        return result;
+      },
+      { timeout: 30_000 }
+    );
 
     revalidateTag(`athlete-${athlete.id}`);
     if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);

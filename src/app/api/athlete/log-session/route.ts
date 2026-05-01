@@ -11,7 +11,15 @@ import {
 } from "@/lib/bondarchuk";
 import { recordThrow } from "@/lib/throws/pr";
 import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
-import { EventType } from "@prisma/client";
+import { findCatalogMatchForWeight, recomputeManyPRs } from "@/lib/implements";
+import { EventType, type ImplementType } from "@prisma/client";
+
+/** EventType (SHOT_PUT) → ImplementType (SHOT). */
+function eventToImplementType(event: string): ImplementType | null {
+  if (event === "SHOT_PUT") return "SHOT";
+  if (event === "HAMMER" || event === "DISCUS" || event === "JAVELIN") return event;
+  return null;
+}
 import { onSessionComplete } from "@/lib/sessions/on-session-complete";
 import type { MilestoneCelebration } from "@/lib/goals/milestones";
 
@@ -142,6 +150,50 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
       return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
     }
 
+    // Resolve catalog implementId for each drill so new logs land
+    // catalog-keyed from day one. The matcher uses the per-drill unit hint;
+    // exact/tolerated → assign, ambiguous/none → leave null (the Fix UI
+    // will surface them).
+    const throwType = eventToImplementType(event);
+    const drillsWithCatalog: Array<{
+      drillType: string;
+      implementId: string | null;
+      implementWeight: number | null;
+      implementWeightUnit: string;
+      implementWeightOriginal: number | null;
+      wireLength: string | null;
+      throwCount: number;
+      bestMark: number | null;
+      bestMarkUnit: "meters" | "feet";
+      bestMarkOriginal: number | null;
+      notes: string | null;
+    }> = [];
+    for (const d of drills || []) {
+      let implementId: string | null = null;
+      if (throwType && d.implementWeight && d.implementWeight > 0) {
+        const isLb = d.implementWeightUnit === "lbs" || d.implementWeightUnit === "lb";
+        const match = await findCatalogMatchForWeight(d.implementWeight, throwType, {
+          unitSystem: isLb ? "imperial" : "metric",
+        });
+        if (match.kind === "exact" || match.kind === "tolerated") {
+          implementId = match.implement.id;
+        }
+      }
+      drillsWithCatalog.push({
+        drillType: d.drillType,
+        implementId,
+        implementWeight: d.implementWeight ?? null,
+        implementWeightUnit: d.implementWeightUnit ?? "kg",
+        implementWeightOriginal: d.implementWeightOriginal ?? null,
+        wireLength: d.wireLength ?? null,
+        throwCount: d.throwCount || 0,
+        bestMark: d.bestMark ?? null,
+        bestMarkUnit: d.bestMarkUnit ?? "meters",
+        bestMarkOriginal: d.bestMarkOriginal ?? null,
+        notes: d.notes?.trim() || null,
+      });
+    }
+
     const created = await prisma.athleteThrowsSession.create({
       data: {
         athleteId: athlete.id,
@@ -158,38 +210,23 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
         mentalFocus: mentalFocus ?? null,
         bestPart: bestPart?.trim() || null,
         improvementArea: improvementArea?.trim() || null,
-        drillLogs: {
-          create: (drills || []).map(
-            (d: {
-              drillType: string;
-              implementWeight?: number;
-              implementWeightUnit?: string;
-              implementWeightOriginal?: number;
-              wireLength?: string;
-              throwCount: number;
-              bestMark?: number;
-              bestMarkUnit?: "meters" | "feet";
-              bestMarkOriginal?: number;
-              notes?: string;
-            }) => ({
-              drillType: d.drillType,
-              implementWeight: d.implementWeight ?? null,
-              implementWeightUnit: d.implementWeightUnit ?? "kg",
-              implementWeightOriginal: d.implementWeightOriginal ?? null,
-              wireLength: d.wireLength ?? null,
-              throwCount: d.throwCount || 0,
-              bestMark: d.bestMark ?? null,
-              bestMarkUnit: d.bestMarkUnit ?? "meters",
-              bestMarkOriginal: d.bestMarkOriginal ?? null,
-              notes: d.notes?.trim() || null,
-            })
-          ),
-        },
+        drillLogs: { create: drillsWithCatalog },
       },
       include: {
         drillLogs: true,
       },
     });
+
+    // Recompute catalog AthleteImplementPR for every distinct (athlete,
+    // implement) we just touched. De-duped inside recomputeManyPRs.
+    const recomputeTargets = drillsWithCatalog
+      .filter((d): d is typeof d & { implementId: string } => d.implementId != null)
+      .map((d) => ({ athleteId: athlete.id, implementId: d.implementId }));
+    if (recomputeTargets.length > 0) {
+      await prisma.$transaction(async (tx) => recomputeManyPRs(tx, recomputeTargets), {
+        timeout: 30_000,
+      });
+    }
 
     // PR detection: check each drill with implementWeight + bestMark > 0
     type PRResult = { event: string; implement: string; distance: number; previousBest?: number };
