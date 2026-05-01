@@ -1914,6 +1914,9 @@ model AthleteDrillLog {
   sessionId               String
   session                 AthleteThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   drillType               String // STANDING, POWER_POSITION, HALF_TURN, SOUTH_AFRICAN, GLIDE, SPIN, FULL_THROW
+  // Catalog identity. Nullable until backfill completes (Phase E).
+  implementId             String?
+  implement               Implement?           @relation(fields: [implementId], references: [id])
   implementWeight         Float? // kg (always stored in kg for calculations)
   implementWeightUnit     String               @default("kg") // "kg" | "lbs"
   implementWeightOriginal Float? // original value the user typed
@@ -1926,6 +1929,7 @@ model AthleteDrillLog {
   createdAt               DateTime             @default(now())
 
   @@index([sessionId])
+  @@index([implementId])
 }
 
 /// Coach self-logged training session (mirrors AthleteThrowsSession).
@@ -3302,10 +3306,11 @@ model Implement {
   sortOrder    Int           @default(0)
   createdAt    DateTime      @default(now())
 
-  categoryTags  ImplementCategoryTag[]
-  throwLogs     ThrowLog[]
-  athletePRs    AthleteImplementPR[]
-  backfillAudit ThrowLogBackfillAudit[]
+  categoryTags     ImplementCategoryTag[]
+  throwLogs        ThrowLog[]
+  athleteDrillLogs AthleteDrillLog[]
+  athletePRs       AthleteImplementPR[]
+  backfillAudit    ThrowLogBackfillAudit[]
 
   @@unique([throwType, weightKg, primaryUnit])
   @@index([throwType, active, sortOrder])

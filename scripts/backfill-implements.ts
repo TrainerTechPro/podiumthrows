@@ -151,7 +151,8 @@ async function backfillAthlete(
 
   const fallbackHint = await computeAthleteFallbackHint(athleteId);
 
-  const unassigned = await prisma.throwLog.findMany({
+  // ── Source 1: ThrowLog ────────────────────────────────────────────────────
+  const unassignedThrowLogs = await prisma.throwLog.findMany({
     where: { athleteId, implementId: null },
     select: {
       id: true,
@@ -163,30 +164,74 @@ async function backfillAthlete(
     },
   });
 
-  // Always compute — gives an accurate "nothing to do, X already done" report.
-  summary.alreadyAssigned = await prisma.throwLog.count({
-    where: { athleteId, implementId: { not: null } },
+  // ── Source 2: AthleteDrillLog (joined via session.athleteId) ──────────────
+  const unassignedDrillLogs = await prisma.athleteDrillLog.findMany({
+    where: {
+      session: { athleteId },
+      implementId: null,
+      implementWeight: { not: null, gt: 0 },
+    },
+    select: {
+      id: true,
+      implementWeight: true,
+      implementWeightUnit: true,
+      implementWeightOriginal: true,
+      session: { select: { event: true } },
+    },
   });
 
-  if (unassigned.length === 0) {
+  // Already-assigned tally for the report.
+  summary.alreadyAssigned =
+    (await prisma.throwLog.count({ where: { athleteId, implementId: { not: null } } })) +
+    (await prisma.athleteDrillLog.count({
+      where: { session: { athleteId }, implementId: { not: null } },
+    }));
+
+  if (unassignedThrowLogs.length === 0 && unassignedDrillLogs.length === 0) {
     return summary;
   }
 
-  // Run per-athlete in one transaction. Partial failure of one athlete
-  // doesn't poison the others — the outer for-loop catches and continues.
-  // Prisma's default 5s interactive-tx timeout is too tight against a remote
-  // Supabase DB when an athlete has 50+ throws (each row → update + audit
-  // upsert + per-combo PR recompute). Bumping to 60s with 10s queue wait.
+  // Normalize drill logs into the same ThrowsRow shape so processBatch can
+  // handle both. Tag with __source so the writer knows which table to update.
+  type DrillBatchRow = ThrowsRow & { __source: "drill" };
+  const drillRows: DrillBatchRow[] = unassignedDrillLogs
+    .filter((d): d is typeof d & { implementWeight: number } => d.implementWeight != null)
+    .map((d) => ({
+      id: d.id,
+      athleteId,
+      event: d.session.event,
+      implementWeight: d.implementWeight,
+      implementWeightUnit: d.implementWeightUnit,
+      implementWeightOriginal: d.implementWeightOriginal,
+      __source: "drill" as const,
+    }));
+
   if (apply) {
     await prisma.$transaction(
       async (tx) => {
-        const recomputeTargets = await processBatch(tx, unassigned, fallbackHint, summary, true);
-        await recomputeManyPRs(tx, recomputeTargets);
+        const throwLogTargets = await processBatch(
+          tx,
+          unassignedThrowLogs,
+          fallbackHint,
+          summary,
+          true,
+          "throwLog"
+        );
+        const drillTargets = await processBatch(
+          tx,
+          drillRows,
+          fallbackHint,
+          summary,
+          true,
+          "drill"
+        );
+        const allTargets = [...throwLogTargets, ...drillTargets];
+        await recomputeManyPRs(tx, allTargets);
 
-        // After recompute, sync isPersonalBest flags for every (athlete, implement)
-        // we touched.
+        // After recompute, sync isPersonalBest flags on ThrowLog (drill rows
+        // have no isPersonalBest column — best is tracked via PR row only).
         const seenCombos = new Set<string>();
-        for (const target of recomputeTargets) {
+        for (const target of allTargets) {
           const key = `${target.athleteId}|${target.implementId}`;
           if (seenCombos.has(key)) continue;
           seenCombos.add(key);
@@ -204,7 +249,9 @@ async function backfillAthlete(
             data: { isPersonalBest: false },
           });
           if (pr?.bestThrowLogId) {
-            await tx.throwLog.update({
+            // bestThrowLogId may now reference an AthleteDrillLog id — try
+            // updating ThrowLog (no-op if not found, so safe).
+            await tx.throwLog.updateMany({
               where: { id: pr.bestThrowLogId },
               data: { isPersonalBest: true },
             });
@@ -214,8 +261,8 @@ async function backfillAthlete(
       { timeout: 60_000, maxWait: 10_000 }
     );
   } else {
-    // Dry run — use prisma directly; no writes happen because helpers branch on apply.
-    await processBatch(prisma, unassigned, fallbackHint, summary, false);
+    await processBatch(prisma, unassignedThrowLogs, fallbackHint, summary, false, "throwLog");
+    await processBatch(prisma, drillRows, fallbackHint, summary, false, "drill");
   }
 
   return summary;
@@ -231,7 +278,8 @@ async function processBatch(
   rows: ThrowsRow[],
   fallbackHint: PerThrowHint,
   summary: AthleteSummary,
-  apply: boolean
+  apply: boolean,
+  source: "throwLog" | "drill" = "throwLog"
 ): Promise<{ athleteId: string; implementId: string }[]> {
   const recomputeTargets: { athleteId: string; implementId: string }[] = [];
 
@@ -239,9 +287,7 @@ async function processBatch(
     const throwType = implementTypeFromEvent(row.event);
     if (!throwType) {
       summary.none++;
-      if (apply) {
-        await writeAuditNone(client, row, "none");
-      }
+      if (apply) await writeAuditNone(client, row, "none");
       continue;
     }
 
@@ -255,16 +301,26 @@ async function processBatch(
       else summary.tolerated++;
 
       if (apply) {
-        await (client as PrismaTx).throwLog.update({
-          where: { id: row.id },
-          data: { implementId: match.implement.id },
-        });
-        await writeAuditAssigned(client, row, match.implement.id, match.deltaKg, match.kind);
+        if (source === "throwLog") {
+          await (client as PrismaTx).throwLog.update({
+            where: { id: row.id },
+            data: { implementId: match.implement.id },
+          });
+          // Audit table targets ThrowLog rows by FK; only record audit for that source.
+          await writeAuditAssigned(client, row, match.implement.id, match.deltaKg, match.kind);
+        } else {
+          await (client as PrismaTx).athleteDrillLog.update({
+            where: { id: row.id },
+            data: { implementId: match.implement.id },
+          });
+          // Drill rows aren't audited (the audit table is keyed by throwLogId).
+          // The implementId itself is the durable record of the assignment.
+        }
         recomputeTargets.push({ athleteId: row.athleteId, implementId: match.implement.id });
       }
     } else if (match.kind === "ambiguous") {
       summary.ambiguous++;
-      if (apply) {
+      if (apply && source === "throwLog") {
         await writeAuditAmbiguous(
           client,
           row,
@@ -273,7 +329,7 @@ async function processBatch(
       }
     } else {
       summary.none++;
-      if (apply) {
+      if (apply && source === "throwLog") {
         await writeAuditNone(client, row, "none");
       }
     }

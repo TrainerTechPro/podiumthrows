@@ -70,7 +70,7 @@ export async function GET() {
 
     // ── Fetch all data sources in parallel ────────────────────────────────
 
-    const [practiceAttempts, throwLogs, throwsPRs, throwsBlockLogs, athleteDrillLogs] =
+    const [practiceAttempts, throwLogs, athleteImplementPRs, throwsBlockLogs, athleteDrillLogs] =
       await Promise.all([
         // PracticeAttempt — coach-led practice throws
         prisma.practiceAttempt.findMany({
@@ -99,17 +99,18 @@ export async function GET() {
           orderBy: { date: "asc" },
         }),
 
-        // ThrowsPR — personal records
-        prisma.throwsPR.findMany({
-          where: { athleteId: athlete.id },
-          select: {
-            event: true,
-            implement: true,
-            distance: true,
-            achievedAt: true,
-            source: true,
+        // AthleteImplementPR — catalog-keyed PRs (one row per
+        // (athlete, implement)). Uniqueness constraint structurally prevents
+        // the duplicate-label problem that plagued ThrowsPR. Sources both
+        // ThrowLog AND AthleteDrillLog data via recomputeAthleteImplementPR.
+        prisma.athleteImplementPR.findMany({
+          where: { athleteId: athlete.id, bestDistance: { not: null } },
+          orderBy: { bestAchievedAt: "desc" },
+          include: {
+            implement: {
+              select: { throwType: true, displayLabel: true, weightKg: true },
+            },
           },
-          orderBy: { achievedAt: "asc" },
         }),
 
         // ThrowsBlockLog — structured session throws
@@ -222,16 +223,30 @@ export async function GET() {
     distanceTrends.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // ── Build PR timeline ──────────────────────────────────────────────────
+    //
+    // Reads from AthleteImplementPR (catalog-keyed, one row per
+    // (athlete, implement) by uniqueness constraint). This is what
+    // structurally fixes the "same throw shown 3 times under different
+    // labels" bug that the legacy ThrowsPR table couldn't avoid.
+    //
+    // Implements that aren't yet catalog-assigned (rare — backfill resolves
+    // most) silently fall through here. Athletes with unresolved cases see
+    // them in the Fix Old Throws UI banner.
 
-    const prTimeline = throwsPRs.map((pr) => ({
-      event: pr.event,
-      implement: pr.implement,
-      distance: pr.distance,
-      date: pr.achievedAt,
-      source: pr.source || "TRAINING",
-    }));
+    const eventFromImplementType = (t: "HAMMER" | "SHOT" | "DISCUS" | "JAVELIN"): string =>
+      t === "SHOT" ? "SHOT_PUT" : t;
 
-    // Sort newest first
+    const prTimeline = athleteImplementPRs
+      .filter((pr) => pr.bestDistance != null && pr.bestAchievedAt != null)
+      .map((pr) => ({
+        event: eventFromImplementType(pr.implement.throwType),
+        implement: pr.implement.displayLabel,
+        distance: pr.bestDistance!,
+        date: pr.bestAchievedAt!.toISOString().slice(0, 10),
+        source: pr.bestContext === "COMPETITION" ? "COMPETITION" : "TRAINING",
+      }));
+
+    // Sort newest first.
     prTimeline.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // ── Build competition vs practice split ────────────────────────────────

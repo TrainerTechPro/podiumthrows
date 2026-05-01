@@ -167,51 +167,93 @@ export async function getRecentThrows(
 
 /**
  * Recompute the AthleteImplementPR row for one (athlete, implement) inside
- * an active transaction. Call this after every ThrowLog insert, update that
- * affects implementId/distance/isCompetition, or delete.
+ * an active transaction. Call this after every ThrowLog or AthleteDrillLog
+ * insert/update that affects implementId/distance/isCompetition, or delete.
  *
- * Reads fresh ThrowLog rows so it's safe to call even if the caller already
- * mutated the relation in the same `tx` — Prisma sees the in-flight writes.
+ * Reads fresh rows so it's safe to call even if the caller already mutated
+ * the relations in the same `tx` — Prisma sees the in-flight writes.
  *
- * If zero non-foul throws remain for the combo, deletes the PR row entirely.
+ * Unions sources for the all-time best:
+ *   - ThrowLog where isFoul=false, distance != null
+ *   - AthleteDrillLog where bestMark > 0
+ *
+ * Competition best stays ThrowLog-only (drill logs are training-only by
+ * model — they have no isCompetition flag).
+ *
+ * If zero candidates remain for the combo, deletes the PR row entirely.
  */
 export async function recomputeAthleteImplementPR(
   tx: PrismaTx,
   athleteId: string,
   implementId: string
 ): Promise<void> {
-  const throws = await tx.throwLog.findMany({
-    where: {
-      athleteId,
-      implementId,
-      isFoul: false,
-    },
-    orderBy: [{ distance: "desc" }, { date: "desc" }],
-    select: {
-      id: true,
-      distance: true,
-      date: true,
-      isCompetition: true,
-    },
-  });
+  const [throwLogRows, drillRows] = await Promise.all([
+    tx.throwLog.findMany({
+      where: { athleteId, implementId, isFoul: false },
+      select: { id: true, distance: true, date: true, isCompetition: true },
+    }),
+    tx.athleteDrillLog.findMany({
+      where: {
+        implementId,
+        session: { athleteId },
+        bestMark: { not: null, gt: 0 },
+      },
+      select: {
+        id: true,
+        bestMark: true,
+        createdAt: true,
+        session: { select: { date: true } },
+      },
+    }),
+  ]);
 
-  if (throws.length === 0) {
-    await tx.athleteImplementPR.deleteMany({
-      where: { athleteId, implementId },
-    });
+  // Normalize into a unified candidate shape.
+  type Candidate = {
+    id: string;
+    distance: number | null;
+    date: Date;
+    isCompetition: boolean;
+  };
+
+  const candidates: Candidate[] = [
+    ...throwLogRows.map((t) => ({
+      id: t.id,
+      distance: t.distance,
+      date: t.date,
+      isCompetition: t.isCompetition,
+    })),
+    ...drillRows.map((d) => ({
+      id: d.id,
+      distance: d.bestMark,
+      // AthleteThrowsSession.date is a YYYY-MM-DD string; fall back to createdAt.
+      date: d.session.date ? new Date(d.session.date + "T00:00:00") : d.createdAt,
+      isCompetition: false,
+    })),
+  ];
+
+  if (candidates.length === 0) {
+    await tx.athleteImplementPR.deleteMany({ where: { athleteId, implementId } });
     return;
   }
 
-  const withDistance = throws.filter(
-    (t): t is typeof t & { distance: number } => t.distance != null
+  // Sort: distance desc, date desc — top is the all-time best.
+  candidates.sort((a, b) => {
+    const da = a.distance ?? -Infinity;
+    const db = b.distance ?? -Infinity;
+    if (db !== da) return db - da;
+    return b.date.getTime() - a.date.getTime();
+  });
+
+  const withDistance = candidates.filter(
+    (t): t is Candidate & { distance: number } => t.distance != null
   );
   const compRows = withDistance.filter((t) => t.isCompetition);
 
   const best = withDistance[0] ?? null;
   const bestComp = compRows[0] ?? null;
-  const lastThrownAt = throws.reduce<Date>(
+  const lastThrownAt = candidates.reduce<Date>(
     (acc, t) => (t.date > acc ? t.date : acc),
-    throws[0].date
+    candidates[0].date
   );
 
   await tx.athleteImplementPR.upsert({
@@ -226,7 +268,7 @@ export async function recomputeAthleteImplementPR(
       bestCompDistance: bestComp?.distance ?? null,
       bestCompThrowLogId: bestComp?.id ?? null,
       bestCompAchievedAt: bestComp?.date ?? null,
-      throwCountAllTime: throws.length,
+      throwCountAllTime: candidates.length,
       lastThrownAt,
     },
     update: {
@@ -237,7 +279,7 @@ export async function recomputeAthleteImplementPR(
       bestCompDistance: bestComp?.distance ?? null,
       bestCompThrowLogId: bestComp?.id ?? null,
       bestCompAchievedAt: bestComp?.date ?? null,
-      throwCountAllTime: throws.length,
+      throwCountAllTime: candidates.length,
       lastThrownAt,
     },
   });
