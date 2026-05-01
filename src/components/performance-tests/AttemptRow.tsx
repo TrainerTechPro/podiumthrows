@@ -4,15 +4,20 @@ import { useState, useRef, type PointerEvent } from "react";
 import { cn } from "@/lib/utils";
 import { Trash2, Flag, Pencil, Check, X } from "lucide-react";
 import {
+  CM_TO_INCHES,
   formatTestValueShort,
   type PerformanceTestAttemptDTO,
   type PerformanceTestTypeDTO,
 } from "@/lib/performance-tests-display";
 
+const CM_PER_INCH = 2.54;
+
 export interface AttemptRowProps {
   attempt: PerformanceTestAttemptDTO;
   testType: PerformanceTestTypeDTO;
   busy?: boolean;
+  /** When the parent's input is "in", edit input + commit also use inches. */
+  inputUnit?: "cm" | "in";
   onEdit: (attemptId: string, value: number) => Promise<void> | void;
   onToggleFoul: (attemptId: string, nextIsValid: boolean) => Promise<void> | void;
   onDelete: (attemptId: string) => Promise<void> | void;
@@ -34,12 +39,20 @@ export function AttemptRow({
   attempt,
   testType,
   busy = false,
+  inputUnit = "cm",
   onEdit,
   onToggleFoul,
   onDelete,
 }: AttemptRowProps) {
+  // Edit input shows the value in the user's preferred unit (only meaningful
+  // for cm-unit tests; sec/inputUnit="cm" tests behave unchanged).
+  const editsInInches = testType.unit === "cm" && inputUnit === "in";
+
+  const toEditDisplay = (cm: number): string =>
+    editsInInches ? (cm * CM_TO_INCHES).toFixed(1) : cm.toString();
+
   const [editing, setEditing] = useState(false);
-  const [draftValue, setDraftValue] = useState(attempt.value.toString());
+  const [draftValue, setDraftValue] = useState(toEditDisplay(attempt.value));
   const [translateX, setTranslateX] = useState(0);
   const startXRef = useRef(0);
   const dragRef = useRef(false);
@@ -48,15 +61,20 @@ export function AttemptRow({
   const isFoul = !attempt.isValid;
 
   function commitEdit() {
-    const next = parseFloat(draftValue);
-    if (Number.isFinite(next) && next >= 0 && next !== attempt.value) {
+    const typed = parseFloat(draftValue);
+    if (!Number.isFinite(typed) || typed < 0) {
+      setEditing(false);
+      return;
+    }
+    const next = editsInInches ? +(typed * CM_PER_INCH).toFixed(1) : typed;
+    if (next !== attempt.value) {
       void onEdit(attempt.id, next);
     }
     setEditing(false);
   }
 
   function cancelEdit() {
-    setDraftValue(attempt.value.toString());
+    setDraftValue(toEditDisplay(attempt.value));
     setEditing(false);
   }
 
@@ -186,7 +204,7 @@ export function AttemptRow({
               <button
                 type="button"
                 onClick={() => {
-                  setDraftValue(attempt.value.toString());
+                  setDraftValue(toEditDisplay(attempt.value));
                   setEditing(true);
                 }}
                 disabled={busy}

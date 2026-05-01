@@ -17,6 +17,24 @@ import {
   type PerformanceTestTypeDTO,
 } from "@/lib/performance-tests-display";
 
+/* ── Input unit preference (cm tests only — sec tests have no alt unit) ── */
+
+const INPUT_UNIT_STORAGE_KEY = "pt-input-unit";
+const CM_PER_INCH = 2.54;
+
+type InputUnit = "cm" | "in";
+
+function readStoredInputUnit(): InputUnit {
+  if (typeof window === "undefined") return "cm";
+  const stored = window.localStorage.getItem(INPUT_UNIT_STORAGE_KEY);
+  return stored === "in" ? "in" : "cm";
+}
+
+function writeStoredInputUnit(unit: InputUnit): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(INPUT_UNIT_STORAGE_KEY, unit);
+}
+
 /* ── API helpers ──────────────────────────────────────────────────────────── */
 
 function uuid() {
@@ -107,6 +125,20 @@ export function TestCapture({
   const [busyAttemptIds, setBusyAttemptIds] = useState<Set<string>>(new Set());
   const [bestPr, setBestPr] = useState<{ value: number; isAllTime: boolean } | null>(null);
 
+  // cm/in toggle — only meaningful for cm-unit tests. Sec tests ignore it.
+  const supportsInchToggle = testType.unit === "cm";
+  const [inputUnit, setInputUnit] = useState<InputUnit>(() =>
+    supportsInchToggle ? readStoredInputUnit() : "cm"
+  );
+
+  const setInputUnitPersisted = useCallback(
+    (next: InputUnit) => {
+      setInputUnit(next);
+      if (supportsInchToggle) writeStoredInputUnit(next);
+    },
+    [supportsInchToggle]
+  );
+
   // One stable idempotency key per "Add attempt" press. Reset after every
   // successful POST so the next attempt has a fresh key.
   const idempotencyKeyRef = useRef<string>(uuid());
@@ -171,11 +203,14 @@ export function TestCapture({
   async function handleAdd() {
     const raw = inputValue.trim();
     if (raw === "") return;
-    const value = parseFloat(raw);
-    if (!Number.isFinite(value) || value < 0) {
+    const typed = parseFloat(raw);
+    if (!Number.isFinite(typed) || typed < 0) {
       toast.error("Enter a valid number");
       return;
     }
+    // Always persist canonical cm (or sec). Convert from inches if needed.
+    const value =
+      supportsInchToggle && inputUnit === "in" ? +(typed * CM_PER_INCH).toFixed(decimals) : typed;
 
     setSubmittingAdd(true);
     const ensured = await ensureSession();
@@ -475,9 +510,43 @@ export function TestCapture({
 
       {/* Numeric input + Add attempt */}
       <div>
-        <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted mb-1.5">
-          Attempt {(session?.attempts.length ?? 0) + 1}
-        </label>
+        <div className="flex items-end justify-between mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            Attempt {(session?.attempts.length ?? 0) + 1}
+          </label>
+          {supportsInchToggle && (
+            <div
+              role="group"
+              aria-label="Input unit"
+              className="inline-flex rounded-lg border border-[var(--card-border)] p-0.5 text-[11px] font-semibold"
+            >
+              <button
+                type="button"
+                onClick={() => setInputUnitPersisted("cm")}
+                aria-pressed={inputUnit === "cm"}
+                className={
+                  inputUnit === "cm"
+                    ? "rounded-md bg-primary-500 text-white px-2 py-0.5 transition-colors"
+                    : "rounded-md text-muted hover:text-[var(--foreground)] px-2 py-0.5 transition-colors"
+                }
+              >
+                cm
+              </button>
+              <button
+                type="button"
+                onClick={() => setInputUnitPersisted("in")}
+                aria-pressed={inputUnit === "in"}
+                className={
+                  inputUnit === "in"
+                    ? "rounded-md bg-primary-500 text-white px-2 py-0.5 transition-colors"
+                    : "rounded-md text-muted hover:text-[var(--foreground)] px-2 py-0.5 transition-colors"
+                }
+              >
+                in
+              </button>
+            </div>
+          )}
+        </div>
         <div className="flex items-stretch gap-2">
           <input
             ref={inputRef}
@@ -493,9 +562,11 @@ export function TestCapture({
                 void handleAdd();
               }
             }}
-            placeholder={testType.unit === "cm" ? "72.0" : "1.78"}
+            placeholder={testType.unit === "cm" ? (inputUnit === "in" ? "28.3" : "72.0") : "1.78"}
             className="input flex-1 font-mono tabular-nums text-lg"
-            aria-label={`${testType.name} value in ${testType.unit}`}
+            aria-label={`${testType.name} value in ${
+              testType.unit === "cm" ? inputUnit : testType.unit
+            }`}
           />
           <button
             type="button"
@@ -513,7 +584,9 @@ export function TestCapture({
         </div>
         <p className="mt-1 text-[11px] text-muted">
           {testType.unit === "cm"
-            ? "Centimeters. Tip: 1 in ≈ 2.54 cm"
+            ? inputUnit === "in"
+              ? "Inches. Stored as cm internally — 1 in = 2.54 cm."
+              : "Centimeters. Tip: 1 in ≈ 2.54 cm."
             : "Seconds with two decimals (1.78)"}
         </p>
       </div>
@@ -527,6 +600,7 @@ export function TestCapture({
               attempt={a}
               testType={testType}
               busy={busyAttemptIds.has(a.id)}
+              inputUnit={inputUnit}
               onEdit={handleEdit}
               onToggleFoul={handleToggleFoul}
               onDelete={handleDelete}
