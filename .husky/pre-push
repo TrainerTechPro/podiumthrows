@@ -1,11 +1,10 @@
 # Pre-push verification.
 #
-# Gates: typecheck → lint → e2e. Keeps broken code out of main and out of
-# the Vercel build pipeline (each build charges Vercel compute — see
-# memory/feedback_batch_pushes.md).
+# Gates: typecheck → lint. Keeps obviously-broken code out of feat/* branches
+# so CI doesn't burn a run on a typo. Vitest + e2e are CI's responsibility
+# now that we use feat/* + auto-merge — see memory/project_setup_auto_merge_workflow.md.
 #
-# Escape hatch for hotfixes: SKIP_VERIFY=1 git push
-# Escape hatch for e2e only:  SKIP_E2E=1 git push
+# Escape hatch: SKIP_VERIFY=1 git push
 
 set -e
 
@@ -19,12 +18,5 @@ npm run typecheck
 
 echo "▸ lint"
 npm run lint
-
-if [ "$SKIP_E2E" = "1" ]; then
-  echo "⚠️  SKIP_E2E=1 — skipping e2e"
-else
-  echo "▸ e2e (pre-push gate — Playwright spawns a local dev server)"
-  npm run test:e2e
-fi
 
 echo "✓ pre-push checks passed"
