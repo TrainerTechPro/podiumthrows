@@ -28,17 +28,18 @@ export interface MigrationBannerProps {
   /** Where the banner links to. Default: athlete-self Fix page. Coach
    *  surfaces should pass `/coach/athletes/${id}/fix-throws`. */
   href?: string;
-  /** Override the headline copy. Default is athlete-voice ("X throws need
-   *  an implement assigned"). Coach surfaces can pass an athlete-name-aware
-   *  variant. */
-  title?: (count: number) => string;
+  /** When set, the headline switches to the coach-on-behalf voice
+   *  ("Riley has 5 throws…"). Omit for the athlete-self default
+   *  ("5 throws need an implement assigned"). String-only so the prop
+   *  serializes across the Server→Client boundary. */
+  athleteFirstName?: string;
   description?: string;
 }
 
 export function MigrationBanner({
   athleteId,
   href = "/athlete/settings/fix-throw-history",
-  title,
+  athleteFirstName,
   description = "Confirm the catalog match so PRs use the right label.",
 }: MigrationBannerProps) {
   const [count, setCount] = useState<number | null>(null);
@@ -66,9 +67,10 @@ export function MigrationBanner({
 
   if (count == null || count === 0) return null;
 
-  const headline = title
-    ? title(count)
-    : `${count} throw${count === 1 ? "" : "s"} need an implement assigned`;
+  const plural = count === 1 ? "" : "s";
+  const headline = athleteFirstName
+    ? `${athleteFirstName} has ${count} throw${plural} that need an implement assigned`
+    : `${count} throw${plural} need an implement assigned`;
 
   return (
     <Link

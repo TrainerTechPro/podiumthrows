@@ -1720,9 +1720,7 @@ export default async function AthleteProfilePage({
       <MigrationBanner
         athleteId={athlete.id}
         href={`/coach/athletes/${athlete.id}/fix-throws`}
-        title={(count) =>
-          `${athlete.firstName} has ${count} throw${count === 1 ? "" : "s"} that need an implement assigned`
-        }
+        athleteFirstName={athlete.firstName}
         description="Confirm the catalog match — keeps PRs labeled correctly."
       />
 
