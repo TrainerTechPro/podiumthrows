@@ -37,6 +37,7 @@ import { AthleteAvatarControl } from "./_avatar-control";
 import { CoachInsightsSection } from "./_coach-insights-section";
 import { toWire } from "@/lib/insights/serialize";
 import { PerformanceTestsSection } from "@/components/performance-tests/PerformanceTestsSection";
+import { MigrationBanner } from "@/components/throws/MigrationBanner";
 import prisma from "@/lib/prisma";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -1711,6 +1712,18 @@ export default async function AthleteProfilePage({
         athleteName={`${athlete.firstName} ${athlete.lastName}`}
         events={athlete.events as string[]}
         gender={athlete.gender}
+      />
+
+      {/* Catalog migration banner — self-hides when the athlete has 0
+          unassigned throws across all 4 source models. Coach mirror of
+          the athlete-side banner; routes to the coach Fix page. */}
+      <MigrationBanner
+        athleteId={athlete.id}
+        href={`/coach/athletes/${athlete.id}/fix-throws`}
+        title={(count) =>
+          `${athlete.firstName} has ${count} throw${count === 1 ? "" : "s"} that need an implement assigned`
+        }
+        description="Confirm the catalog match — keeps PRs labeled correctly."
       />
 
       {/* Floating section nav (desktop only) */}

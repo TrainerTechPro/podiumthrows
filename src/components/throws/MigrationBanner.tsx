@@ -23,7 +23,24 @@ interface MigrationStatusErr {
   error: string;
 }
 
-export function MigrationBanner({ athleteId }: { athleteId: string }) {
+export interface MigrationBannerProps {
+  athleteId: string;
+  /** Where the banner links to. Default: athlete-self Fix page. Coach
+   *  surfaces should pass `/coach/athletes/${id}/fix-throws`. */
+  href?: string;
+  /** Override the headline copy. Default is athlete-voice ("X throws need
+   *  an implement assigned"). Coach surfaces can pass an athlete-name-aware
+   *  variant. */
+  title?: (count: number) => string;
+  description?: string;
+}
+
+export function MigrationBanner({
+  athleteId,
+  href = "/athlete/settings/fix-throw-history",
+  title,
+  description = "Confirm the catalog match so PRs use the right label.",
+}: MigrationBannerProps) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -49,21 +66,21 @@ export function MigrationBanner({ athleteId }: { athleteId: string }) {
 
   if (count == null || count === 0) return null;
 
+  const headline = title
+    ? title(count)
+    : `${count} throw${count === 1 ? "" : "s"} need an implement assigned`;
+
   return (
     <Link
-      href="/athlete/settings/fix-throw-history"
+      href={href}
       className="mx-4 sm:mx-6 my-3 flex items-center gap-3 rounded-xl border border-primary-500/40 bg-primary-500/5 px-4 py-3 transition-colors hover:bg-primary-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
     >
       <div className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-primary-500/15 text-primary-600 dark:text-primary-400">
         <Wrench size={18} strokeWidth={1.75} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-[var(--foreground)]">
-          {count} throw{count === 1 ? "" : "s"} need an implement assigned
-        </p>
-        <p className="text-xs text-muted mt-0.5">
-          Confirm the catalog match so PRs use the right label.
-        </p>
+        <p className="text-sm font-semibold text-[var(--foreground)]">{headline}</p>
+        <p className="text-xs text-muted mt-0.5">{description}</p>
       </div>
       <ChevronRight
         size={18}

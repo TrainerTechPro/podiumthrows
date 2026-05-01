@@ -59,7 +59,19 @@ function formatGroupWeight(g: FixGroup): string {
   return `${g.weightKg} kg`;
 }
 
-export function FixThrowHistoryClient({ athleteId }: { athleteId: string }) {
+export function FixThrowHistoryClient({
+  athleteId,
+  backHref = "/athlete/settings",
+  backLabel = "Back to settings",
+  title = "Fix throw history",
+  intro = "Older throws were stored with raw kg values, losing the original unit. Confirm the catalog match for each group below so PRs use the right label.",
+}: {
+  athleteId: string;
+  backHref?: string;
+  backLabel?: string;
+  title?: string;
+  intro?: string;
+}) {
   const toast = useToast();
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -149,19 +161,16 @@ export function FixThrowHistoryClient({ athleteId }: { athleteId: string }) {
     <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
       <div className="mb-6">
         <Link
-          href="/athlete/settings"
+          href={backHref}
           className="inline-flex items-center gap-1 text-sm text-muted hover:text-[var(--foreground)] transition-colors"
         >
           <ArrowLeft size={14} strokeWidth={1.75} aria-hidden="true" />
-          Back to settings
+          {backLabel}
         </Link>
         <h1 className="font-heading text-2xl font-semibold text-[var(--foreground)] mt-2">
-          Fix throw history
+          {title}
         </h1>
-        <p className="text-sm text-muted mt-1 max-w-prose">
-          Older throws were stored with raw kg values, losing the original unit. Confirm the catalog
-          match for each group below so PRs use the right label.
-        </p>
+        <p className="text-sm text-muted mt-1 max-w-prose">{intro}</p>
       </div>
 
       {status === "loading" && (
