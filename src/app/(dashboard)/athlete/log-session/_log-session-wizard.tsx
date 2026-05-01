@@ -1147,16 +1147,14 @@ function DrillCard({
             >
               {drill.implementUnit}
             </button>
-            {athleteId && (
-              <button
-                type="button"
-                onClick={() => setPickerOpen(true)}
-                aria-label="Pick implement from catalog"
-                className="shrink-0 min-w-[44px] px-2 text-xs font-bold rounded-lg border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
-              >
-                Pick
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              aria-label="Pick implement from catalog"
+              className="shrink-0 min-w-[44px] px-2 text-xs font-bold rounded-lg border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
+            >
+              Pick
+            </button>
           </div>
         </div>
       </div>
@@ -1241,30 +1239,28 @@ function DrillCard({
         </div>
       </div>
 
-      {athleteId && (
-        <ImplementPicker
-          open={pickerOpen}
-          onClose={() => setPickerOpen(false)}
-          athleteId={athleteId}
-          side="bottom"
-          throwType={pickerThrowType}
-          title="Pick implement"
-          onSelect={(row: ImplementCatalogRow) => {
-            // Catalog primaryUnit drives the form's unit toggle. Decimal
-            // weight value comes from the canonical kg/lb on the catalog row.
-            // Note: discus 600 g shows as 0.6 kg here — DrillEntry's
-            // unit type is "kg" | "lbs" only; gram-typed implements stay
-            // in kg internally.
-            if (row.primaryUnit === "lb") {
-              onUpdate("implementUnit", "lbs");
-              onUpdate("implementWeight", String(row.weightLb));
-            } else {
-              onUpdate("implementUnit", "kg");
-              onUpdate("implementWeight", String(row.weightKg));
-            }
-          }}
-        />
-      )}
+      <ImplementPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        athleteId={athleteId ?? null}
+        side="bottom"
+        throwType={pickerThrowType}
+        title="Pick implement"
+        onSelect={(row: ImplementCatalogRow) => {
+          // Catalog primaryUnit drives the form's unit toggle. Decimal
+          // weight value comes from the canonical kg/lb on the catalog row.
+          // Note: discus 600 g shows as 0.6 kg here — DrillEntry's
+          // unit type is "kg" | "lbs" only; gram-typed implements stay
+          // in kg internally.
+          if (row.primaryUnit === "lb") {
+            onUpdate("implementUnit", "lbs");
+            onUpdate("implementWeight", String(row.weightLb));
+          } else {
+            onUpdate("implementUnit", "kg");
+            onUpdate("implementWeight", String(row.weightKg));
+          }
+        }}
+      />
     </div>
   );
 }

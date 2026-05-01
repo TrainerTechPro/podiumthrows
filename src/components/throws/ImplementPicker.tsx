@@ -3,9 +3,11 @@
 /**
  * Catalog-aware implement picker.
  *
- * Sheet-based — bottom on the athlete shell, right on the coach shell. Loads
- * /api/athletes/:athleteId/implements on first open, surfaces recent first,
- * then falls back to the full active catalog grouped by throw type.
+ * Sheet-based — bottom on the athlete shell, right on the coach shell.
+ *
+ * - With athleteId: GET /api/athletes/:id/implements — recent + all.
+ * - Without athleteId (coach self-training): GET /api/implements — catalog
+ *   only, no "Recent" section.
  *
  * Distinct from the file-local <ImplementPicker> still embedded in the
  * legacy /athlete/throws/log surface — that one is kg-input only and gets
@@ -27,8 +29,10 @@ import { cn } from "@/lib/utils";
 export interface ImplementPickerProps {
   open: boolean;
   onClose: () => void;
-  /** Required. Drives recent-list fetch. */
-  athleteId: string;
+  /** When set, drives the recent-list fetch and shows a "Recent" section.
+   *  Omit (or pass null) on coach self-training surfaces — picker falls
+   *  back to the catalog-only list. */
+  athleteId?: string | null;
   /** Athlete shell → "bottom"; coach shell → "right". Required. */
   side: SheetSide;
   /** Called with the catalog row when the user taps a tile. The picker
@@ -46,18 +50,25 @@ export interface ImplementCatalogRow extends ImplementDisplay {
   categories: ImplementCategory[];
 }
 
-interface PayloadOk {
+type WithCategoryTags = Implement & { categoryTags?: { category: ImplementCategory }[] };
+
+interface AthletePayloadOk {
   success: true;
   data: {
     recent: Implement[];
     all: Array<Implement & { categoryTags: { category: ImplementCategory }[] }>;
   };
 }
+interface CatalogPayloadOk {
+  success: true;
+  data: WithCategoryTags[];
+}
 interface PayloadErr {
   success: false;
   error: string;
 }
-type Payload = PayloadOk | PayloadErr;
+type AthletePayload = AthletePayloadOk | PayloadErr;
+type CatalogPayload = CatalogPayloadOk | PayloadErr;
 
 /** Convert API row → display row + categories array. */
 function toRow(
@@ -102,9 +113,10 @@ export function ImplementPicker({
     setStatus("loading");
     setErrorMsg(null);
 
-    fetch(`/api/athletes/${athleteId}/implements`, { credentials: "same-origin" })
+    const url = athleteId ? `/api/athletes/${athleteId}/implements` : `/api/implements`;
+    fetch(url, { credentials: "same-origin" })
       .then(async (res) => {
-        const payload = (await res.json()) as Payload;
+        const payload = (await res.json()) as AthletePayload | CatalogPayload;
         if (cancelled) return;
         if (!res.ok || !payload.success) {
           const msg = payload.success ? "Request failed" : payload.error;
@@ -112,8 +124,15 @@ export function ImplementPicker({
           setStatus("error");
           return;
         }
-        setRecent(payload.data.recent.map(toRow));
-        setAll(payload.data.all.map(toRow));
+        // Two payload shapes: per-athlete returns { recent, all }; catalog-only
+        // returns a flat array. Normalize.
+        if (Array.isArray(payload.data)) {
+          setRecent([]);
+          setAll(payload.data.map(toRow));
+        } else {
+          setRecent(payload.data.recent.map(toRow));
+          setAll(payload.data.all.map(toRow));
+        }
         setStatus("ready");
       })
       .catch((err) => {
