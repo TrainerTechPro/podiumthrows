@@ -10,11 +10,19 @@ vi.mock("react", async (importOriginal) => {
 
 const mockFindUnique = vi.fn();
 const mockFindMany = vi.fn();
+// Catalog augment stubs (Phase D). Default: no catalog match → augment is
+// a no-op and the legacy ThrowLog-scan results pass through unchanged.
+const mockImplementFindFirst = vi.fn().mockResolvedValue(null);
+const mockAthleteImplementPRFindUnique = vi.fn().mockResolvedValue(null);
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     athleteProfile: { findUnique: (...args: unknown[]) => mockFindUnique(...args) },
     throwLog: { findMany: (...args: unknown[]) => mockFindMany(...args) },
+    implement: { findFirst: (...args: unknown[]) => mockImplementFindFirst(...args) },
+    athleteImplementPR: {
+      findUnique: (...args: unknown[]) => mockAthleteImplementPRFindUnique(...args),
+    },
   },
 }));
 
