@@ -85,13 +85,26 @@ async function findCurrentPR(
   athleteId: string,
   event: EventType
 ): Promise<{ distance: number; implementLabel: string } | null> {
-  const pr = await prisma.throwsPR.findFirst({
-    where: { athleteId, event: event as unknown as string },
-    orderBy: { distance: "desc" },
-    select: { distance: true, implement: true },
+  // Catalog-keyed best for the event. ImplementType (SHOT) maps to
+  // EventType (SHOT_PUT) — filter on the matched throwTypes.
+  const throwTypes =
+    event === "SHOT_PUT" ? (["SHOT"] as const) : ([event] as ReadonlyArray<string>);
+  const pr = await prisma.athleteImplementPR.findFirst({
+    where: {
+      athleteId,
+      bestDistance: { not: null },
+      implement: {
+        throwType: { in: throwTypes as unknown as ("SHOT" | "HAMMER" | "DISCUS" | "JAVELIN")[] },
+      },
+    },
+    orderBy: { bestDistance: "desc" },
+    select: {
+      bestDistance: true,
+      implement: { select: { displayLabel: true } },
+    },
   });
-  if (!pr) return null;
-  return { distance: pr.distance, implementLabel: pr.implement };
+  if (!pr || pr.bestDistance == null) return null;
+  return { distance: pr.bestDistance, implementLabel: pr.implement.displayLabel };
 }
 
 async function activeGoalKeys(athleteId: string): Promise<Set<string>> {

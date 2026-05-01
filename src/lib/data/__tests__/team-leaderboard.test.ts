@@ -7,7 +7,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({
   default: {
-    throwsPR: { findMany: (...a: unknown[]) => mocks.prFindMany(...a) },
+    // Catalog-keyed PRs (post-Phase-D). Mock returns rows in the
+    // AthleteImplementPR + Implement include shape.
+    athleteImplementPR: { findMany: (...a: unknown[]) => mocks.prFindMany(...a) },
     athleteProfile: { findMany: (...a: unknown[]) => mocks.athleteFindMany(...a) },
   },
 }));
@@ -24,6 +26,21 @@ const PR_ATHLETE = (id: string, firstName: string, lastName: string, prefs: unkn
   notificationPreferences: prefs,
 });
 
+/** Build a catalog-keyed PR row in the shape the migrated query returns. */
+const CATALOG_PR = (
+  throwType: "HAMMER" | "SHOT" | "DISCUS" | "JAVELIN",
+  displayLabel: string,
+  distance: number,
+  achievedAt: string,
+  athlete: ReturnType<typeof PR_ATHLETE>
+) => ({
+  id: `pr_${athlete.id}_${throwType}`,
+  bestDistance: distance,
+  bestAchievedAt: new Date(achievedAt + "T00:00:00"),
+  implement: { throwType, displayLabel },
+  athlete,
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -31,34 +48,10 @@ beforeEach(() => {
 describe("getTeamLeaderboardByEvent", () => {
   it("returns top N PRs sorted distance desc, ties broken by earlier achievedAt then athleteId", async () => {
     mocks.prFindMany.mockResolvedValue([
-      {
-        event: "HAMMER",
-        implement: "7.26kg",
-        distance: 60.5,
-        achievedAt: "2026-04-10",
-        athlete: PR_ATHLETE("ath_b", "Bryce", "B"),
-      },
-      {
-        event: "HAMMER",
-        implement: "7.26kg",
-        distance: 70.0,
-        achievedAt: "2026-04-15",
-        athlete: PR_ATHLETE("ath_c", "Cory", "C"),
-      },
-      {
-        event: "HAMMER",
-        implement: "7.26kg",
-        distance: 70.0,
-        achievedAt: "2026-04-12",
-        athlete: PR_ATHLETE("ath_a", "Ari", "A"),
-      },
-      {
-        event: "HAMMER",
-        implement: "7.26kg",
-        distance: 50.0,
-        achievedAt: "2026-04-01",
-        athlete: PR_ATHLETE("ath_d", "Dee", "D"),
-      },
+      CATALOG_PR("HAMMER", "7.26 kg", 60.5, "2026-04-10", PR_ATHLETE("ath_b", "Bryce", "B")),
+      CATALOG_PR("HAMMER", "7.26 kg", 70.0, "2026-04-15", PR_ATHLETE("ath_c", "Cory", "C")),
+      CATALOG_PR("HAMMER", "7.26 kg", 70.0, "2026-04-12", PR_ATHLETE("ath_a", "Ari", "A")),
+      CATALOG_PR("HAMMER", "7.26 kg", 50.0, "2026-04-01", PR_ATHLETE("ath_d", "Dee", "D")),
     ]);
 
     const top = await getTeamLeaderboardByEvent({
@@ -75,22 +68,14 @@ describe("getTeamLeaderboardByEvent", () => {
 
   it("filters out athletes with feedPrivacy.sharePRs=false for ATHLETE callers", async () => {
     mocks.prFindMany.mockResolvedValue([
-      {
-        event: "SHOT_PUT",
-        implement: "7.26kg",
-        distance: 18.0,
-        achievedAt: "2026-04-01",
-        athlete: PR_ATHLETE("ath_open", "Open", "A"),
-      },
-      {
-        event: "SHOT_PUT",
-        implement: "7.26kg",
-        distance: 19.5,
-        achievedAt: "2026-04-02",
-        athlete: PR_ATHLETE("ath_hidden", "Hidden", "X", {
-          feedPrivacy: { sharePRs: false },
-        }),
-      },
+      CATALOG_PR("SHOT", "7.26 kg", 18.0, "2026-04-01", PR_ATHLETE("ath_open", "Open", "A")),
+      CATALOG_PR(
+        "SHOT",
+        "7.26 kg",
+        19.5,
+        "2026-04-02",
+        PR_ATHLETE("ath_hidden", "Hidden", "X", { feedPrivacy: { sharePRs: false } })
+      ),
     ]);
 
     const athleteView = await getTeamLeaderboardByEvent({
@@ -111,13 +96,7 @@ describe("getTeamLeaderboardByEvent", () => {
 
   it("flags isViewer=true on the requesting athlete's row", async () => {
     mocks.prFindMany.mockResolvedValue([
-      {
-        event: "DISCUS",
-        implement: "2kg",
-        distance: 60,
-        achievedAt: "2026-04-01",
-        athlete: PR_ATHLETE("ath_self", "Me", "M"),
-      },
+      CATALOG_PR("DISCUS", "2 kg", 60, "2026-04-01", PR_ATHLETE("ath_self", "Me", "M")),
     ]);
 
     const top = await getTeamLeaderboardByEvent({
@@ -132,13 +111,15 @@ describe("getTeamLeaderboardByEvent", () => {
 
   it("clamps limit between 1 and 50", async () => {
     mocks.prFindMany.mockResolvedValue(
-      Array.from({ length: 60 }, (_, i) => ({
-        event: "JAVELIN",
-        implement: "800g",
-        distance: 80 - i * 0.1,
-        achievedAt: "2026-04-01",
-        athlete: PR_ATHLETE(`ath_${i}`, `A${i}`, "X"),
-      }))
+      Array.from({ length: 60 }, (_, i) =>
+        CATALOG_PR(
+          "JAVELIN",
+          "800 g",
+          80 - i * 0.1,
+          "2026-04-01",
+          PR_ATHLETE(`ath_${i}`, `A${i}`, "X")
+        )
+      )
     );
 
     const tooHigh = await getTeamLeaderboardByEvent({

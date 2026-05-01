@@ -74,17 +74,23 @@ export async function getTeamLeaderboardByEvent(args: {
   // privacy prefs in one query. Filtering in JS keeps the SQL simple and
   // lets us use the canonical `parseFeedPrivacy` shape without trying to
   // express it as a Prisma JSON path filter.
-  const rows = await prisma.throwsPR.findMany({
+  // Catalog-keyed leaderboard. ImplementType (SHOT) maps to EventType
+  // (SHOT_PUT) — filter on the matched throwType. (athleteId, implementId)
+  // uniqueness eliminates the duplicate-label rows that previously skewed
+  // legacy leaderboards.
+  const throwType: "SHOT" | "HAMMER" | "DISCUS" | "JAVELIN" =
+    args.event === "SHOT_PUT" ? "SHOT" : (args.event as "HAMMER" | "DISCUS" | "JAVELIN");
+  const catalogRows = await prisma.athleteImplementPR.findMany({
     where: {
-      event: args.event,
+      bestDistance: { not: null },
+      implement: { throwType },
       athlete: { coachId: args.coachId },
     },
     select: {
       id: true,
-      event: true,
-      implement: true,
-      distance: true,
-      achievedAt: true,
+      bestDistance: true,
+      bestAchievedAt: true,
+      implement: { select: { throwType: true, displayLabel: true } },
       athlete: {
         select: {
           id: true,
@@ -96,6 +102,17 @@ export async function getTeamLeaderboardByEvent(args: {
       },
     },
   });
+
+  // Reshape to the legacy {id, event, implement, distance, achievedAt}
+  // contract the leaderboard consumer below uses.
+  const rows = catalogRows.map((r) => ({
+    id: r.id,
+    event: r.implement.throwType === "SHOT" ? "SHOT_PUT" : r.implement.throwType,
+    implement: r.implement.displayLabel,
+    distance: r.bestDistance!,
+    achievedAt: r.bestAchievedAt?.toISOString().slice(0, 10) ?? "",
+    athlete: r.athlete,
+  }));
 
   const filtered =
     args.viewerRole === "COACH"

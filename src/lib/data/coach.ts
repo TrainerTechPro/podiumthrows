@@ -382,10 +382,12 @@ export async function getCoachStats(coachId: string): Promise<CoachStats> {
       },
     }),
 
-    // prsThisWeek source 1: ThrowsPR (achievedAt is String YYYY-MM-DD)
-    prisma.throwsPR.count({
+    // prsThisWeek source 1: catalog-keyed AthleteImplementPR. bestAchievedAt
+    // is DateTime; daysAgoISO returns YYYY-MM-DD — convert.
+    prisma.athleteImplementPR.count({
       where: {
-        achievedAt: { gte: daysAgoISO(7) },
+        bestAchievedAt: { gte: new Date(daysAgoISO(7) + "T00:00:00") },
+        bestDistance: { not: null },
         athlete: { coachId },
       },
     }),

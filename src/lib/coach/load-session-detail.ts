@@ -90,11 +90,14 @@ export async function loadCoachSessionDetail(args: {
   // delta vs the previous session (any throw), latest readiness, latest coach
   // note. All best-effort — null when not available.
   const [topPr, prevSessionTopThrow, latestReadiness, latestCoachNote] = await Promise.all([
-    prisma.throwsPR.findFirst({
-      where: { athleteId: athleteProfileId },
-      orderBy: { distance: "desc" },
-      select: { distance: true },
-    }),
+    // Catalog-keyed top distance across all implements.
+    prisma.athleteImplementPR
+      .findFirst({
+        where: { athleteId: athleteProfileId, bestDistance: { not: null } },
+        orderBy: { bestDistance: "desc" },
+        select: { bestDistance: true },
+      })
+      .then((row) => (row ? { distance: row.bestDistance! } : null)),
     prisma.trainingSession.findFirst({
       where: {
         athleteId: athleteProfileId,

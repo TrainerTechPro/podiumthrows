@@ -55,24 +55,27 @@ export const getRecentTeamPRs = cache(
     const tz = await getCoachTimezone(coachId);
     const cutoff = daysAgoISO(tz, days);
 
-    const [throwsPRs, drillPRs] = await Promise.all([
-      prisma.throwsPR.findMany({
+    // Catalog-keyed PRs achieved in the cutoff window. bestAchievedAt is
+    // DateTime; cutoff is a YYYY-MM-DD string — convert.
+    const cutoffDateTime = new Date(cutoff + "T00:00:00");
+    const [catalogPRs, drillPRs] = await Promise.all([
+      prisma.athleteImplementPR.findMany({
         where: {
-          achievedAt: { gte: cutoff },
+          bestAchievedAt: { gte: cutoffDateTime },
+          bestDistance: { not: null },
           athlete: { coachId },
         },
         select: {
           athleteId: true,
-          event: true,
-          implement: true,
-          distance: true,
-          achievedAt: true,
-          source: true,
+          bestDistance: true,
+          bestAchievedAt: true,
+          bestContext: true,
+          implement: { select: { throwType: true, displayLabel: true } },
           athlete: {
             select: { firstName: true, lastName: true, avatarUrl: true },
           },
         },
-        orderBy: { achievedAt: "desc" },
+        orderBy: { bestAchievedAt: "desc" },
       }),
       prisma.throwsDrillPR.findMany({
         where: {
@@ -95,15 +98,17 @@ export const getRecentTeamPRs = cache(
     ]);
 
     const merged: TeamPR[] = [
-      ...throwsPRs.map((pr) => ({
+      ...catalogPRs.map((pr) => ({
         athleteId: pr.athleteId,
         athleteName: `${pr.athlete.firstName} ${pr.athlete.lastName}`,
         avatarUrl: pr.athlete.avatarUrl,
-        event: pr.event,
-        implement: pr.implement,
-        distance: pr.distance,
-        date: pr.achievedAt,
-        source: (pr.source as "TRAINING" | "COMPETITION") ?? null,
+        event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+        implement: pr.implement.displayLabel,
+        distance: pr.bestDistance!,
+        date: pr.bestAchievedAt!.toISOString().slice(0, 10),
+        source: (pr.bestContext === "COMPETITION" ? "COMPETITION" : "TRAINING") as
+          | "TRAINING"
+          | "COMPETITION",
       })),
       ...drillPRs.map((pr) => ({
         athleteId: pr.athleteId,
@@ -137,223 +142,220 @@ export interface TeamLoadEntry {
   sessionsToForm: number | null;
 }
 
-export const getTeamLoadOverview = cache(
-  async (coachId: string): Promise<TeamLoadEntry[]> => {
-    // 1. Get all roster athletes
-    const athletes = await prisma.athleteProfile.findMany({
-      where: { coachId },
+export const getTeamLoadOverview = cache(async (coachId: string): Promise<TeamLoadEntry[]> => {
+  // 1. Get all roster athletes
+  const athletes = await prisma.athleteProfile.findMany({
+    where: { coachId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+    },
+  });
+
+  if (athletes.length === 0) return [];
+
+  const athleteIds = athletes.map((a) => a.id);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  // 2. Parallel queries for volume + risk + adaptation + profile + typing
+  const [
+    blockLogs,
+    practiceAttempts,
+    drillLogs,
+    riskAssessments,
+    adaptationCheckpoints,
+    throwsProfiles,
+    throwsTypings,
+  ] = await Promise.all([
+    // ThrowsBlockLog — need to resolve assignmentId -> ThrowsAssignment.athleteId
+    prisma.throwsBlockLog.findMany({
+      where: {
+        createdAt: { gte: sevenDaysAgo },
+        assignment: { athleteId: { in: athleteIds } },
+      },
       select: {
         id: true,
-        firstName: true,
-        lastName: true,
-        avatarUrl: true,
+        assignment: { select: { athleteId: true } },
       },
-    });
+    }),
 
-    if (athletes.length === 0) return [];
+    // PracticeAttempt — direct athleteId
+    prisma.practiceAttempt.groupBy({
+      by: ["athleteId"],
+      where: {
+        athleteId: { in: athleteIds },
+        createdAt: { gte: sevenDaysAgo },
+      },
+      _count: { id: true },
+    }),
 
-    const athleteIds = athletes.map((a) => a.id);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // AthleteDrillLog — resolve sessionId -> AthleteThrowsSession.athleteId
+    prisma.athleteDrillLog.findMany({
+      where: {
+        createdAt: { gte: sevenDaysAgo },
+        session: { athleteId: { in: athleteIds } },
+      },
+      select: {
+        throwCount: true,
+        session: { select: { athleteId: true } },
+      },
+    }),
 
-    // 2. Parallel queries for volume + risk + adaptation + profile + typing
-    const [
-      blockLogs,
-      practiceAttempts,
-      drillLogs,
-      riskAssessments,
-      adaptationCheckpoints,
-      throwsProfiles,
-      throwsTypings,
-    ] = await Promise.all([
-      // ThrowsBlockLog — need to resolve assignmentId -> ThrowsAssignment.athleteId
-      prisma.throwsBlockLog.findMany({
-        where: {
-          createdAt: { gte: sevenDaysAgo },
-          assignment: { athleteId: { in: athleteIds } },
-        },
-        select: {
-          id: true,
-          assignment: { select: { athleteId: true } },
-        },
-      }),
+    // Latest RiskAssessment per athlete
+    prisma.riskAssessment.findMany({
+      where: { athleteId: { in: athleteIds } },
+      orderBy: { createdAt: "desc" },
+      distinct: ["athleteId"],
+      select: {
+        athleteId: true,
+        acwr: true,
+        riskLevel: true,
+      },
+    }),
 
-      // PracticeAttempt — direct athleteId
-      prisma.practiceAttempt.groupBy({
-        by: ["athleteId"],
-        where: {
-          athleteId: { in: athleteIds },
-          createdAt: { gte: sevenDaysAgo },
-        },
-        _count: { id: true },
-      }),
+    // Latest AdaptationCheckpoint per athlete via program.athleteId
+    prisma.adaptationCheckpoint.findMany({
+      where: {
+        program: { athleteId: { in: athleteIds } },
+      },
+      orderBy: { checkDate: "desc" },
+      distinct: ["programId"],
+      select: {
+        recommendation: true,
+        program: { select: { athleteId: true } },
+      },
+    }),
 
-      // AthleteDrillLog — resolve sessionId -> AthleteThrowsSession.athleteId
-      prisma.athleteDrillLog.findMany({
-        where: {
-          createdAt: { gte: sevenDaysAgo },
-          session: { athleteId: { in: athleteIds } },
-        },
-        select: {
-          throwCount: true,
-          session: { select: { athleteId: true } },
-        },
-      }),
+    // ThrowsProfile — deficit classification
+    prisma.throwsProfile.findMany({
+      where: { athleteId: { in: athleteIds } },
+      select: {
+        athleteId: true,
+        deficitStatus: true,
+        overPowered: true,
+        muscledOut: true,
+      },
+    }),
 
-      // Latest RiskAssessment per athlete
-      prisma.riskAssessment.findMany({
-        where: { athleteId: { in: athleteIds } },
-        orderBy: { createdAt: "desc" },
-        distinct: ["athleteId"],
-        select: {
-          athleteId: true,
-          acwr: true,
-          riskLevel: true,
-        },
-      }),
+    // ThrowsTyping — estimatedSessionsToForm
+    prisma.throwsTyping.findMany({
+      where: { athleteId: { in: athleteIds } },
+      select: {
+        athleteId: true,
+        estimatedSessionsToForm: true,
+      },
+    }),
+  ]);
 
-      // Latest AdaptationCheckpoint per athlete via program.athleteId
-      prisma.adaptationCheckpoint.findMany({
-        where: {
-          program: { athleteId: { in: athleteIds } },
-        },
-        orderBy: { checkDate: "desc" },
-        distinct: ["programId"],
-        select: {
-          recommendation: true,
-          program: { select: { athleteId: true } },
-        },
-      }),
+  // 3. Aggregate throw volume per athlete
 
-      // ThrowsProfile — deficit classification
-      prisma.throwsProfile.findMany({
-        where: { athleteId: { in: athleteIds } },
-        select: {
-          athleteId: true,
-          deficitStatus: true,
-          overPowered: true,
-          muscledOut: true,
-        },
-      }),
-
-      // ThrowsTyping — estimatedSessionsToForm
-      prisma.throwsTyping.findMany({
-        where: { athleteId: { in: athleteIds } },
-        select: {
-          athleteId: true,
-          estimatedSessionsToForm: true,
-        },
-      }),
-    ]);
-
-    // 3. Aggregate throw volume per athlete
-
-    // Block logs: count per athlete
-    const blockCountMap = new Map<string, number>();
-    for (const log of blockLogs) {
-      const aid = log.assignment.athleteId;
-      blockCountMap.set(aid, (blockCountMap.get(aid) ?? 0) + 1);
-    }
-
-    // Practice attempts: already grouped
-    const practiceCountMap = new Map<string, number>();
-    for (const row of practiceAttempts) {
-      practiceCountMap.set(row.athleteId, row._count.id);
-    }
-
-    // Drill logs: sum throwCount per athlete
-    const drillCountMap = new Map<string, number>();
-    for (const log of drillLogs) {
-      const aid = log.session.athleteId;
-      drillCountMap.set(aid, (drillCountMap.get(aid) ?? 0) + log.throwCount);
-    }
-
-    // 4. Build lookup maps
-
-    const riskMap = new Map(riskAssessments.map((r) => [r.athleteId, r]));
-
-    // Adaptation: deduplicate to latest per athlete (distinct is per programId, not athleteId)
-    const adaptationMap = new Map<string, string>();
-    for (const cp of adaptationCheckpoints) {
-      const aid = cp.program.athleteId;
-      if (aid && !adaptationMap.has(aid)) {
-        adaptationMap.set(aid, cp.recommendation);
-      }
-    }
-
-    const profileMap = new Map(throwsProfiles.map((p) => [p.athleteId, p]));
-    const typingMap = new Map(throwsTypings.map((t) => [t.athleteId, t]));
-
-    // 5. Assemble entries
-    const entries: TeamLoadEntry[] = athletes.map((athlete) => {
-      const throwsThisWeek =
-        (blockCountMap.get(athlete.id) ?? 0) +
-        (practiceCountMap.get(athlete.id) ?? 0) +
-        (drillCountMap.get(athlete.id) ?? 0);
-
-      // Risk
-      const risk = riskMap.get(athlete.id);
-      let acwr: number | null = null;
-      let riskLevel: "low" | "moderate" | "high" | null = null;
-      if (risk) {
-        acwr = risk.acwr;
-        if (risk.acwr > 1.3) riskLevel = "high";
-        else if (risk.acwr > 1.0) riskLevel = "moderate";
-        else riskLevel = "low";
-      }
-
-      // Adaptation phase
-      let adaptationPhase: string | null = null;
-      const rec = adaptationMap.get(athlete.id);
-      if (rec) {
-        if (rec === "ADVANCE_PHASE") adaptationPhase = "in-form";
-        else if (rec === "DELOAD" || rec === "REDUCE_VOLUME")
-          adaptationPhase = "readaptation-risk";
-        else if (rec === "IMPROVING") adaptationPhase = "adapting";
-        else adaptationPhase = "loading";
-      }
-
-      // Deficit classification
-      let deficitClassification: string | null = null;
-      const profile = profileMap.get(athlete.id);
-      if (profile) {
-        if (profile.muscledOut) deficitClassification = "Muscled Out";
-        else if (profile.overPowered) deficitClassification = "Over-powered";
-        else deficitClassification = profile.deficitStatus ?? null;
-      }
-
-      // Sessions to form
-      const typing = typingMap.get(athlete.id);
-      const sessionsToForm = typing?.estimatedSessionsToForm ?? null;
-
-      return {
-        athleteId: athlete.id,
-        athleteName: `${athlete.firstName} ${athlete.lastName}`,
-        avatarUrl: athlete.avatarUrl,
-        throwsThisWeek,
-        acwr,
-        riskLevel,
-        adaptationPhase,
-        deficitClassification,
-        sessionsToForm,
-      };
-    });
-
-    // 6. Sort: high risk first, then moderate, then low, then null
-    const riskOrder: Record<string, number> = {
-      high: 0,
-      moderate: 1,
-      low: 2,
-    };
-    entries.sort((a, b) => {
-      const aOrder = a.riskLevel != null ? riskOrder[a.riskLevel] : 3;
-      const bOrder = b.riskLevel != null ? riskOrder[b.riskLevel] : 3;
-      return aOrder - bOrder;
-    });
-
-    return entries;
+  // Block logs: count per athlete
+  const blockCountMap = new Map<string, number>();
+  for (const log of blockLogs) {
+    const aid = log.assignment.athleteId;
+    blockCountMap.set(aid, (blockCountMap.get(aid) ?? 0) + 1);
   }
-);
+
+  // Practice attempts: already grouped
+  const practiceCountMap = new Map<string, number>();
+  for (const row of practiceAttempts) {
+    practiceCountMap.set(row.athleteId, row._count.id);
+  }
+
+  // Drill logs: sum throwCount per athlete
+  const drillCountMap = new Map<string, number>();
+  for (const log of drillLogs) {
+    const aid = log.session.athleteId;
+    drillCountMap.set(aid, (drillCountMap.get(aid) ?? 0) + log.throwCount);
+  }
+
+  // 4. Build lookup maps
+
+  const riskMap = new Map(riskAssessments.map((r) => [r.athleteId, r]));
+
+  // Adaptation: deduplicate to latest per athlete (distinct is per programId, not athleteId)
+  const adaptationMap = new Map<string, string>();
+  for (const cp of adaptationCheckpoints) {
+    const aid = cp.program.athleteId;
+    if (aid && !adaptationMap.has(aid)) {
+      adaptationMap.set(aid, cp.recommendation);
+    }
+  }
+
+  const profileMap = new Map(throwsProfiles.map((p) => [p.athleteId, p]));
+  const typingMap = new Map(throwsTypings.map((t) => [t.athleteId, t]));
+
+  // 5. Assemble entries
+  const entries: TeamLoadEntry[] = athletes.map((athlete) => {
+    const throwsThisWeek =
+      (blockCountMap.get(athlete.id) ?? 0) +
+      (practiceCountMap.get(athlete.id) ?? 0) +
+      (drillCountMap.get(athlete.id) ?? 0);
+
+    // Risk
+    const risk = riskMap.get(athlete.id);
+    let acwr: number | null = null;
+    let riskLevel: "low" | "moderate" | "high" | null = null;
+    if (risk) {
+      acwr = risk.acwr;
+      if (risk.acwr > 1.3) riskLevel = "high";
+      else if (risk.acwr > 1.0) riskLevel = "moderate";
+      else riskLevel = "low";
+    }
+
+    // Adaptation phase
+    let adaptationPhase: string | null = null;
+    const rec = adaptationMap.get(athlete.id);
+    if (rec) {
+      if (rec === "ADVANCE_PHASE") adaptationPhase = "in-form";
+      else if (rec === "DELOAD" || rec === "REDUCE_VOLUME") adaptationPhase = "readaptation-risk";
+      else if (rec === "IMPROVING") adaptationPhase = "adapting";
+      else adaptationPhase = "loading";
+    }
+
+    // Deficit classification
+    let deficitClassification: string | null = null;
+    const profile = profileMap.get(athlete.id);
+    if (profile) {
+      if (profile.muscledOut) deficitClassification = "Muscled Out";
+      else if (profile.overPowered) deficitClassification = "Over-powered";
+      else deficitClassification = profile.deficitStatus ?? null;
+    }
+
+    // Sessions to form
+    const typing = typingMap.get(athlete.id);
+    const sessionsToForm = typing?.estimatedSessionsToForm ?? null;
+
+    return {
+      athleteId: athlete.id,
+      athleteName: `${athlete.firstName} ${athlete.lastName}`,
+      avatarUrl: athlete.avatarUrl,
+      throwsThisWeek,
+      acwr,
+      riskLevel,
+      adaptationPhase,
+      deficitClassification,
+      sessionsToForm,
+    };
+  });
+
+  // 6. Sort: high risk first, then moderate, then low, then null
+  const riskOrder: Record<string, number> = {
+    high: 0,
+    moderate: 1,
+    low: 2,
+  };
+  entries.sort((a, b) => {
+    const aOrder = a.riskLevel != null ? riskOrder[a.riskLevel] : 3;
+    const bOrder = b.riskLevel != null ? riskOrder[b.riskLevel] : 3;
+    return aOrder - bOrder;
+  });
+
+  return entries;
+});
 
 /* ─── 3. getUpcomingCompetitions ──────────────────────────────────────────── */
 
@@ -395,8 +397,7 @@ export const getUpcomingCompetitions = cache(
     });
 
     // Group by name + date (multiple athletes may share one competition)
-    const groupKey = (c: { name: string; date: string }) =>
-      `${c.name}|||${c.date}`;
+    const groupKey = (c: { name: string; date: string }) => `${c.name}|||${c.date}`;
 
     const grouped = new Map<
       string,
@@ -582,81 +583,79 @@ function weekdayIndex(date: Date, monday: Date): number {
   return Math.floor((d.getTime() - m.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export const getWeeklyVolumeBreakdown = cache(
-  async (coachId: string): Promise<WeeklyVolume> => {
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon …
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(now);
-    monday.setDate(monday.getDate() + mondayOffset);
-    monday.setHours(0, 0, 0, 0);
+export const getWeeklyVolumeBreakdown = cache(async (coachId: string): Promise<WeeklyVolume> => {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon …
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(monday.getDate() + mondayOffset);
+  monday.setHours(0, 0, 0, 0);
 
-    const sunday = new Date(monday);
-    sunday.setDate(sunday.getDate() + 7);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 7);
 
-    const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-    const buildResult = (counts: number[]): WeeklyVolume => ({
-      days: DAY_LABELS.map((label, i) => {
-        const date = new Date(monday);
-        date.setDate(date.getDate() + i);
-        return { label, throws: counts[i], date: date.toISOString().slice(0, 10) };
-      }),
-      todayIndex: todayIdx,
-    });
+  const buildResult = (counts: number[]): WeeklyVolume => ({
+    days: DAY_LABELS.map((label, i) => {
+      const date = new Date(monday);
+      date.setDate(date.getDate() + i);
+      return { label, throws: counts[i], date: date.toISOString().slice(0, 10) };
+    }),
+    todayIndex: todayIdx,
+  });
 
-    const athletes = await prisma.athleteProfile.findMany({
-      where: { coachId },
-      select: { id: true },
-    });
+  const athletes = await prisma.athleteProfile.findMany({
+    where: { coachId },
+    select: { id: true },
+  });
 
-    if (athletes.length === 0) return buildResult([0, 0, 0, 0, 0, 0, 0]);
+  if (athletes.length === 0) return buildResult([0, 0, 0, 0, 0, 0, 0]);
 
-    const athleteIds = athletes.map((a) => a.id);
+  const athleteIds = athletes.map((a) => a.id);
 
-    const [blockLogs, practiceAttempts, drillLogs] = await Promise.all([
-      prisma.throwsBlockLog.findMany({
-        where: {
-          createdAt: { gte: monday, lt: sunday },
-          assignment: { athleteId: { in: athleteIds } },
-        },
-        select: { createdAt: true },
-      }),
-      prisma.practiceAttempt.findMany({
-        where: {
-          createdAt: { gte: monday, lt: sunday },
-          athleteId: { in: athleteIds },
-        },
-        select: { createdAt: true },
-      }),
-      prisma.athleteDrillLog.findMany({
-        where: {
-          createdAt: { gte: monday, lt: sunday },
-          session: { athleteId: { in: athleteIds } },
-        },
-        select: { throwCount: true, createdAt: true },
-      }),
-    ]);
+  const [blockLogs, practiceAttempts, drillLogs] = await Promise.all([
+    prisma.throwsBlockLog.findMany({
+      where: {
+        createdAt: { gte: monday, lt: sunday },
+        assignment: { athleteId: { in: athleteIds } },
+      },
+      select: { createdAt: true },
+    }),
+    prisma.practiceAttempt.findMany({
+      where: {
+        createdAt: { gte: monday, lt: sunday },
+        athleteId: { in: athleteIds },
+      },
+      select: { createdAt: true },
+    }),
+    prisma.athleteDrillLog.findMany({
+      where: {
+        createdAt: { gte: monday, lt: sunday },
+        session: { athleteId: { in: athleteIds } },
+      },
+      select: { throwCount: true, createdAt: true },
+    }),
+  ]);
 
-    const counts = [0, 0, 0, 0, 0, 0, 0];
+  const counts = [0, 0, 0, 0, 0, 0, 0];
 
-    for (const log of blockLogs) {
-      const idx = weekdayIndex(log.createdAt, monday);
-      if (idx >= 0 && idx < 7) counts[idx]++;
-    }
-    for (const attempt of practiceAttempts) {
-      const idx = weekdayIndex(attempt.createdAt, monday);
-      if (idx >= 0 && idx < 7) counts[idx]++;
-    }
-    for (const drill of drillLogs) {
-      const idx = weekdayIndex(drill.createdAt, monday);
-      if (idx >= 0 && idx < 7) counts[idx] += drill.throwCount;
-    }
-
-    return buildResult(counts);
+  for (const log of blockLogs) {
+    const idx = weekdayIndex(log.createdAt, monday);
+    if (idx >= 0 && idx < 7) counts[idx]++;
   }
-);
+  for (const attempt of practiceAttempts) {
+    const idx = weekdayIndex(attempt.createdAt, monday);
+    if (idx >= 0 && idx < 7) counts[idx]++;
+  }
+  for (const drill of drillLogs) {
+    const idx = weekdayIndex(drill.createdAt, monday);
+    if (idx >= 0 && idx < 7) counts[idx] += drill.throwCount;
+  }
+
+  return buildResult(counts);
+});
 
 /* ─── 6. getSeasonGains ────────────────────────────────────────────────────── */
 
@@ -675,11 +674,7 @@ export interface SeasonGainEntry {
  * per athlete+event combination. Returns the single best event gain per athlete.
  */
 export const getSeasonGains = cache(
-  async (
-    coachId: string,
-    days: number = 30,
-    limit: number = 5
-  ): Promise<SeasonGainEntry[]> => {
+  async (coachId: string, days: number = 30, limit: number = 5): Promise<SeasonGainEntry[]> => {
     const athletes = await prisma.athleteProfile.findMany({
       where: { coachId },
       select: { id: true, firstName: true, lastName: true, avatarUrl: true },
