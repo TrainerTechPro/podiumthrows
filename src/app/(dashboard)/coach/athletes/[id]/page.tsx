@@ -444,6 +444,7 @@ function OverviewTab({
   lastAssessmentDate: string | null;
   attendanceStats: AttendanceStats;
 }) {
+  const isProxy = athlete.user.claimedAt === null;
   const infoRows = [
     { label: "Age", value: calcAge(athlete.dateOfBirth) },
     {
@@ -454,7 +455,7 @@ function OverviewTab({
     },
     { label: "Height", value: athlete.heightCm ? `${athlete.heightCm} cm` : "—" },
     { label: "Weight", value: athlete.weightKg ? `${athlete.weightKg} kg` : "—" },
-    { label: "Email", value: athlete.user.email },
+    { label: "Email", value: isProxy ? "Unclaimed" : athlete.user.email },
     { label: "Joined", value: formatDate(athlete.user.createdAt.toISOString()) },
     {
       label: "Best Streak",
@@ -465,8 +466,8 @@ function OverviewTab({
   return (
     <div className="grid lg:grid-cols-3 gap-6 pt-6">
       {/* Left: Athlete Details */}
-      <div className="space-y-4">
-        <div className="card p-5 space-y-4">
+      <div className="space-y-4 min-w-0">
+        <div className="card p-5 space-y-4 min-w-0">
           <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
             Athlete Info
           </h3>
@@ -474,7 +475,7 @@ function OverviewTab({
             {infoRows.map(({ label, value }) => (
               <div key={label} className="flex items-start justify-between gap-3">
                 <dt className="text-xs text-muted shrink-0 w-20">{label}</dt>
-                <dd className="text-xs font-medium text-[var(--foreground)] text-right truncate">
+                <dd className="text-xs font-medium text-[var(--foreground)] text-right truncate min-w-0 flex-1">
                   {value}
                 </dd>
               </div>
