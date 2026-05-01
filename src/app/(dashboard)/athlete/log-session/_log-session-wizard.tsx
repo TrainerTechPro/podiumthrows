@@ -19,6 +19,8 @@ import { haptic } from "@/lib/haptic";
 import { track } from "@/lib/analytics";
 import { bumpLogsSubmitted } from "@/lib/pwa/install-counters";
 import { ArrowLeft, Plus, X, CheckCircle2, Trophy, AlertTriangle, WifiOff } from "lucide-react";
+import { ImplementPicker, type ImplementCatalogRow } from "@/components/throws/ImplementPicker";
+import type { ImplementType } from "@prisma/client";
 
 import { logger } from "@/lib/logger";
 import { reportApiError } from "@/lib/form-errors";
@@ -147,6 +149,10 @@ interface WizardProps {
    *  wizard can still be reused from the coach surface (which doesn't carry
    *  athlete user-id context) — when omitted, draft persistence is disabled. */
   userId?: string;
+  /** Athlete profile id — when present, drill rows render the catalog
+   *  ImplementPicker as a one-tap alternative to typing the kg/lb manually.
+   *  Coach-on-behalf surfaces should pass the target athlete's id. */
+  athleteId?: string;
   /** API endpoint for saving (athlete or coach-on-behalf) */
   apiEndpoint?: string;
   /** Where to navigate on cancel / "view sessions" */
@@ -181,6 +187,7 @@ type WarningResult = { type: string; message: string; severity: string };
 
 export function LogSessionWizard({
   userId,
+  athleteId,
   apiEndpoint = "/api/athlete/log-session",
   sessionsPath = "/athlete/sessions",
   allowedEvents,
@@ -840,6 +847,7 @@ export function LogSessionWizard({
                 drill={drill}
                 index={idx + 1}
                 event={event}
+                athleteId={athleteId}
                 pastDrills={pastDrills}
                 showAll={!!showAllDrills[drill.id]}
                 onToggleShowAll={() =>
@@ -1014,6 +1022,7 @@ function DrillCard({
   drill,
   index,
   event,
+  athleteId,
   pastDrills,
   showAll,
   onToggleShowAll,
@@ -1023,6 +1032,7 @@ function DrillCard({
   drill: DrillEntry;
   index: number;
   event: string;
+  athleteId?: string;
   pastDrills: string[];
   showAll: boolean;
   onToggleShowAll: () => void;
@@ -1031,6 +1041,14 @@ function DrillCard({
 }) {
   const eventDrills = DRILLS_BY_EVENT[event] || [];
   const showPastChips = pastDrills.length > 0 && !showAll;
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // Pre-narrow the picker to the current event when one is selected.
+  const pickerThrowType: ImplementType | undefined =
+    event === "SHOT_PUT"
+      ? "SHOT"
+      : event === "HAMMER" || event === "DISCUS" || event === "JAVELIN"
+        ? event
+        : undefined;
 
   return (
     <div className="card p-4 space-y-3">
@@ -1129,6 +1147,16 @@ function DrillCard({
             >
               {drill.implementUnit}
             </button>
+            {athleteId && (
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                aria-label="Pick implement from catalog"
+                className="shrink-0 min-w-[44px] px-2 text-xs font-bold rounded-lg border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
+              >
+                Pick
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1212,6 +1240,31 @@ function DrillCard({
           />
         </div>
       </div>
+
+      {athleteId && (
+        <ImplementPicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          athleteId={athleteId}
+          side="bottom"
+          throwType={pickerThrowType}
+          title="Pick implement"
+          onSelect={(row: ImplementCatalogRow) => {
+            // Catalog primaryUnit drives the form's unit toggle. Decimal
+            // weight value comes from the canonical kg/lb on the catalog row.
+            // Note: discus 600 g shows as 0.6 kg here — DrillEntry's
+            // unit type is "kg" | "lbs" only; gram-typed implements stay
+            // in kg internally.
+            if (row.primaryUnit === "lb") {
+              onUpdate("implementUnit", "lbs");
+              onUpdate("implementWeight", String(row.weightLb));
+            } else {
+              onUpdate("implementUnit", "kg");
+              onUpdate("implementWeight", String(row.weightKg));
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

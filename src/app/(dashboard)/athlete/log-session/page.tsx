@@ -26,7 +26,11 @@ export default async function AthleteLogSessionPage() {
   return (
     <div className="py-6 px-4 space-y-3">
       <LogSessionTypeSwitcher athleteId={athlete.id} />
-      <LogSessionWizard userId={session.userId} allowedEvents={athlete.events ?? []} />
+      <LogSessionWizard
+        userId={session.userId}
+        athleteId={athlete.id}
+        allowedEvents={athlete.events ?? []}
+      />
     </div>
   );
 }
