@@ -50,15 +50,100 @@ export async function GET(_request: NextRequest, ctx: RouteCtx) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const unassigned = await prisma.throwLog.findMany({
-      where: { athleteId, implementId: null },
-      select: {
-        event: true,
-        implementWeight: true,
-        implementWeightUnit: true,
-        implementWeightOriginal: true,
-      },
-    });
+    // Pull unassigned rows from all four throw sources. The first two preserve
+    // the per-throw unit; PracticeAttempt + ThrowsBlockLog only have a String
+    // implement label, so we parse it for the kg + derive the unit from the
+    // suffix.
+    const KG_PER_LB = 0.45359237;
+    const parseLabel = (label: string): { kg: number; unit: string } | null => {
+      const m = label
+        .trim()
+        .toLowerCase()
+        .match(/^(-?\d+(?:\.\d+)?)\s*(kg|lbs?|g)?$/);
+      if (!m) return null;
+      const n = parseFloat(m[1]);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      const u = m[2];
+      if (u === "lb" || u === "lbs") return { kg: n * KG_PER_LB, unit: "lbs" };
+      if (u === "g") return { kg: n * 0.001, unit: "kg" };
+      return { kg: n, unit: "kg" };
+    };
+
+    const [throwLogs, drillLogs, practiceAttempts, blockLogs] = await Promise.all([
+      prisma.throwLog.findMany({
+        where: { athleteId, implementId: null },
+        select: {
+          event: true,
+          implementWeight: true,
+          implementWeightUnit: true,
+          implementWeightOriginal: true,
+        },
+      }),
+      prisma.athleteDrillLog.findMany({
+        where: {
+          session: { athleteId },
+          implementId: null,
+          implementWeight: { not: null, gt: 0 },
+        },
+        select: {
+          implementWeight: true,
+          implementWeightUnit: true,
+          implementWeightOriginal: true,
+          session: { select: { event: true } },
+        },
+      }),
+      prisma.practiceAttempt.findMany({
+        where: { athleteId, implementId: null },
+        select: { event: true, implement: true },
+      }),
+      prisma.throwsBlockLog.findMany({
+        where: { assignment: { athleteId }, implementId: null },
+        select: {
+          implement: true,
+          assignment: { select: { session: { select: { event: true } } } },
+        },
+      }),
+    ]);
+
+    // Normalize all four into a single shape: { event, weightKg, unit, original }.
+    const unassigned: Array<{
+      event: string;
+      implementWeight: number;
+      implementWeightUnit: string | null;
+      implementWeightOriginal: number | null;
+    }> = [];
+    for (const r of throwLogs) unassigned.push(r);
+    for (const r of drillLogs) {
+      if (r.implementWeight == null) continue;
+      unassigned.push({
+        event: r.session.event,
+        implementWeight: r.implementWeight,
+        implementWeightUnit: r.implementWeightUnit,
+        implementWeightOriginal: r.implementWeightOriginal,
+      });
+    }
+    for (const r of practiceAttempts) {
+      const parsed = parseLabel(r.implement);
+      if (!parsed) continue;
+      unassigned.push({
+        event: r.event,
+        implementWeight: parsed.kg,
+        implementWeightUnit: parsed.unit,
+        implementWeightOriginal: null,
+      });
+    }
+    for (const r of blockLogs) {
+      const event = r.assignment.session?.event;
+      if (!event) continue;
+      const parsed = parseLabel(r.implement);
+      if (!parsed) continue;
+      unassigned.push({
+        event,
+        implementWeight: parsed.kg,
+        implementWeightUnit: parsed.unit,
+        implementWeightOriginal: null,
+      });
+    }
 
     if (unassigned.length === 0) {
       return NextResponse.json({

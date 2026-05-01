@@ -58,8 +58,26 @@ export async function POST(request: NextRequest) {
     const implementWeightOriginal =
       newImpl.primaryUnit === "lb" ? newImpl.weightLb : newImpl.weightKg;
 
+    // String-implement parsing for PracticeAttempt + ThrowsBlockLog. Match
+    // anything whose parsed kg falls in [lo, hi].
+    const KG_PER_LB_LOCAL = 0.45359237;
+    const labelToKg = (label: string): number | null => {
+      const m = label
+        .trim()
+        .toLowerCase()
+        .match(/^(-?\d+(?:\.\d+)?)\s*(kg|lbs?|g)?$/);
+      if (!m) return null;
+      const n = parseFloat(m[1]);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      const u = m[2];
+      if (u === "lb" || u === "lbs") return n * KG_PER_LB_LOCAL;
+      if (u === "g") return n * 0.001;
+      return n;
+    };
+
     const result = await prisma.$transaction(async (tx) => {
-      const update = await tx.throwLog.updateMany({
+      // ThrowLog (kg-typed weight column).
+      const throwLogUpdate = await tx.throwLog.updateMany({
         where: {
           athleteId,
           implementId: null,
@@ -75,8 +93,62 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Audit rows for the relabel action — overwrites any prior "ambiguous"/"none" rows.
-      const updatedRows = await tx.throwLog.findMany({
+      // AthleteDrillLog (kg-typed; via session.athleteId).
+      const drillUpdate = await tx.athleteDrillLog.updateMany({
+        where: {
+          session: { athleteId },
+          implementId: null,
+          implementWeight: { gte: lo, lte: hi },
+        },
+        data: {
+          implementId: newImpl.id,
+          implementWeight: newImpl.weightKg,
+          implementWeightUnit,
+          implementWeightOriginal,
+        },
+      });
+
+      // PracticeAttempt + ThrowsBlockLog use a String `implement` field —
+      // load candidates and match in JS.
+      const practiceCandidates = await tx.practiceAttempt.findMany({
+        where: { athleteId, implementId: null },
+        select: { id: true, implement: true },
+      });
+      const practiceMatchIds = practiceCandidates
+        .filter((p) => {
+          const kg = labelToKg(p.implement);
+          return kg != null && kg >= lo && kg <= hi;
+        })
+        .map((p) => p.id);
+      const practiceUpdate =
+        practiceMatchIds.length > 0
+          ? await tx.practiceAttempt.updateMany({
+              where: { id: { in: practiceMatchIds } },
+              data: { implementId: newImpl.id },
+            })
+          : { count: 0 };
+
+      const blockCandidates = await tx.throwsBlockLog.findMany({
+        where: { assignment: { athleteId }, implementId: null },
+        select: { id: true, implement: true },
+      });
+      const blockMatchIds = blockCandidates
+        .filter((b) => {
+          const kg = labelToKg(b.implement);
+          return kg != null && kg >= lo && kg <= hi;
+        })
+        .map((b) => b.id);
+      const blockUpdate =
+        blockMatchIds.length > 0
+          ? await tx.throwsBlockLog.updateMany({
+              where: { id: { in: blockMatchIds } },
+              data: { implementId: newImpl.id },
+            })
+          : { count: 0 };
+
+      // Audit rows for ThrowLog assignments only (audit table is keyed by
+      // throwLogId — drill/practice/block aren't tracked there).
+      const updatedThrowLogRows = await tx.throwLog.findMany({
         where: { athleteId, implementId: newImpl.id },
         select: {
           id: true,
@@ -85,7 +157,7 @@ export async function POST(request: NextRequest) {
           implementWeightOriginal: true,
         },
       });
-      for (const r of updatedRows) {
+      for (const r of updatedThrowLogRows) {
         await tx.throwLogBackfillAudit.upsert({
           where: { throwLogId: r.id },
           create: {
@@ -118,13 +190,16 @@ export async function POST(request: NextRequest) {
         data: { isPersonalBest: false },
       });
       if (pr?.bestThrowLogId) {
-        await tx.throwLog.update({
+        await tx.throwLog.updateMany({
           where: { id: pr.bestThrowLogId },
           data: { isPersonalBest: true },
         });
       }
 
-      return { updated: update.count };
+      return {
+        updated:
+          throwLogUpdate.count + drillUpdate.count + practiceUpdate.count + blockUpdate.count,
+      };
     });
 
     return NextResponse.json({ success: true, data: result });
