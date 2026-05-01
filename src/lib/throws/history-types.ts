@@ -3,7 +3,7 @@ import type { EventType } from "@prisma/client";
 /** One individual throw inside a drill — only populated for ThrowLog-sourced drills. */
 export type HistoryThrow = {
   id: string;
-  throwNumber: number;
+  throwNumber: number | null; // null on legacy rows where attemptNumber wasn't recorded
   distance: number | null;
   performedAt: string; // ISO datetime
   isCompetition: boolean;
