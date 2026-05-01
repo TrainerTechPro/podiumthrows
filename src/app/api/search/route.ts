@@ -113,26 +113,39 @@ export async function GET(req: NextRequest) {
           : [],
 
         want("pr")
-          ? prisma.throwsPR.findMany({
-              where: {
-                athlete: {
-                  coachId: coach.id,
-                  OR: [
-                    { firstName: { contains: q, mode: insensitive } },
-                    { lastName: { contains: q, mode: insensitive } },
-                  ],
+          ? // Catalog-keyed PR search — reshape to the legacy {event,
+            // implement, distance} contract the search results UI consumes.
+            // (athleteId, implementId) uniqueness eliminates the
+            // duplicate-label rows that polluted the legacy ThrowsPR-backed
+            // search results.
+            prisma.athleteImplementPR
+              .findMany({
+                where: {
+                  bestDistance: { not: null },
+                  athlete: {
+                    coachId: coach.id,
+                    OR: [
+                      { firstName: { contains: q, mode: insensitive } },
+                      { lastName: { contains: q, mode: insensitive } },
+                    ],
+                  },
                 },
-              },
-              select: {
-                id: true,
-                event: true,
-                implement: true,
-                distance: true,
-                athlete: { select: { id: true, firstName: true, lastName: true } },
-              },
-              take,
-              orderBy: { distance: "desc" },
-            })
+                include: {
+                  implement: { select: { throwType: true, displayLabel: true } },
+                  athlete: { select: { id: true, firstName: true, lastName: true } },
+                },
+                take,
+                orderBy: { bestDistance: "desc" },
+              })
+              .then((rows) =>
+                rows.map((pr) => ({
+                  id: pr.id,
+                  event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+                  implement: pr.implement.displayLabel,
+                  distance: pr.bestDistance!,
+                  athlete: pr.athlete,
+                }))
+              )
           : [],
 
         want("drill")

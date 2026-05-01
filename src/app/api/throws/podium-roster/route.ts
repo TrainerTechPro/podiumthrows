@@ -48,8 +48,15 @@ export async function GET() {
             user: {
               select: { id: true, email: true },
             },
-            throwsPRs: {
-              select: { event: true, implement: true, distance: true },
+            // Catalog-keyed PRs reshaped to the legacy throwsPRs contract so
+            // the podium-roster UI stays unchanged. (athleteId, implementId)
+            // uniqueness eliminates label-format dupes.
+            athleteImplementPRs: {
+              where: { bestDistance: { not: null } },
+              select: {
+                bestDistance: true,
+                implement: { select: { throwType: true, displayLabel: true } },
+              },
             },
           },
         },
@@ -62,7 +69,19 @@ export async function GET() {
       orderBy: { enrolledAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, data: roster });
+    const reshaped = roster.map((r) => ({
+      ...r,
+      athlete: {
+        ...r.athlete,
+        throwsPRs: r.athlete.athleteImplementPRs.map((pr) => ({
+          event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+          implement: pr.implement.displayLabel,
+          distance: pr.bestDistance!,
+        })),
+      },
+    }));
+
+    return NextResponse.json({ success: true, data: reshaped });
   } catch (error) {
     logger.error("Get podium roster error", { context: "throws/podium-roster", error: error });
     return NextResponse.json({ success: false, error: "Failed to fetch roster" }, { status: 500 });
@@ -140,10 +159,14 @@ export async function POST(request: NextRequest) {
           })
         : [];
 
-    // ThrowsPR best distance per event (already aggregated PRs)
-    const throwsPRBests = await prisma.throwsPR.findMany({
-      where: { athleteId: parsed.athleteId },
-      select: { event: true, implement: true, distance: true },
+    // Catalog-keyed best distance per implement. ImplementType (SHOT) maps
+    // to ThrowEvent (SHOT_PUT) before the EventCode lookup.
+    const catalogPRBests = await prisma.athleteImplementPR.findMany({
+      where: { athleteId: parsed.athleteId, bestDistance: { not: null } },
+      select: {
+        bestDistance: true,
+        implement: { select: { throwType: true } },
+      },
     });
 
     // Build a map of best mark per EventCode from all sources
@@ -158,11 +181,11 @@ export async function POST(request: NextRequest) {
         }
       }
     }
-    for (const pr of throwsPRBests) {
-      // ThrowsPR.event is stored as ThrowEvent (e.g. "SHOT_PUT")
-      const code = Object.entries(CODE_EVENT_MAP).find(([, v]) => v === pr.event)?.[0];
-      if (code && pr.distance > 0) {
-        bestMarkByEvent[code] = Math.max(bestMarkByEvent[code] ?? 0, pr.distance);
+    for (const pr of catalogPRBests) {
+      const event = pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType;
+      const code = Object.entries(CODE_EVENT_MAP).find(([, v]) => v === event)?.[0];
+      if (code && pr.bestDistance != null && pr.bestDistance > 0) {
+        bestMarkByEvent[code] = Math.max(bestMarkByEvent[code] ?? 0, pr.bestDistance);
       }
     }
 

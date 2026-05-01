@@ -46,11 +46,24 @@ export default async function SelfProgramCreatePage({
     });
   }
 
-  // Fetch latest ThrowsPRs for auto-prefill (best distance per event)
-  const throwsPRs = await prisma.throwsPR.findMany({
-    where: { athleteId: athlete.id },
-    orderBy: { distance: "desc" },
+  // Fetch catalog-keyed PRs for auto-prefill (best distance per implement).
+  // Reshape to the legacy {event, implement, distance} contract that the
+  // prefill logic below already consumes — uniqueness on
+  // (athleteId, implementId) eliminates the duplicate-label rows that
+  // could confuse the comp-implement match.
+  const catalogPRs = await prisma.athleteImplementPR.findMany({
+    where: { athleteId: athlete.id, bestDistance: { not: null } },
+    orderBy: { bestDistance: "desc" },
+    include: {
+      implement: { select: { throwType: true, displayLabel: true, weightKg: true } },
+    },
   });
+  const throwsPRs = catalogPRs.map((pr) => ({
+    event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+    implement: pr.implement.displayLabel,
+    weightKg: pr.implement.weightKg,
+    distance: pr.bestDistance!,
+  }));
 
   // Find the most recent completed SelfProgramConfig for prefill
   // (years of experience, competition level, etc. from their last program)
@@ -80,15 +93,17 @@ export default async function SelfProgramCreatePage({
 
   // Find competition-implement PR for the athlete's primary event.
   // Competition weight is the standard implement (e.g. 7.26kg for men's shot).
+  // Match on numeric kg (with 0.05 kg tolerance) instead of string equality —
+  // catalog labels are "7.26 kg" with a space, but the legacy compImplementStr
+  // is "7.26kg" without; comparing weightKg is robust to both.
   const primaryEvent = (athlete.events[0] ?? "SHOT_PUT") as ThrowEvent;
   const eventCode = EVENT_CODE_MAP[primaryEvent] as EventCode;
   const genderCode = (athlete.gender === "MALE" ? "M" : "F") as GenderCode;
   const compWeight = COMPETITION_WEIGHTS[eventCode]?.[genderCode];
-  const compImplementStr = compWeight ? `${compWeight}kg` : null;
 
   // Prefer the competition implement PR; fall back to any PR for this event
-  const compPR = compImplementStr
-    ? throwsPRs.find((pr) => pr.event === primaryEvent && pr.implement === compImplementStr)
+  const compPR = compWeight
+    ? throwsPRs.find((pr) => pr.event === primaryEvent && Math.abs(pr.weightKg - compWeight) < 0.05)
     : null;
   const eventPR = !compPR ? throwsPRs.find((pr) => pr.event === primaryEvent) : null;
   const bestPR = compPR ?? eventPR ?? null;

@@ -20,7 +20,10 @@ export async function GET(
       where: { userId: currentUser.userId },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const session = await prisma.practiceSession.findUnique({
@@ -42,8 +45,14 @@ export async function GET(
                     lightImplementKg: true,
                   },
                 },
-                throwsPRs: {
-                  select: { event: true, implement: true, distance: true },
+                // Catalog-keyed PRs reshaped below to legacy throwsPRs shape
+                // so the practice session UI stays unchanged.
+                athleteImplementPRs: {
+                  where: { bestDistance: { not: null } },
+                  select: {
+                    bestDistance: true,
+                    implement: { select: { throwType: true, displayLabel: true } },
+                  },
                 },
               },
             },
@@ -57,9 +66,28 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Session not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: session });
+    // Reshape athleteImplementPRs → throwsPRs contract per attempt's athlete.
+    const reshaped = {
+      ...session,
+      attempts: session.attempts.map((attempt) => ({
+        ...attempt,
+        athlete: {
+          ...attempt.athlete,
+          throwsPRs: attempt.athlete.athleteImplementPRs.map((pr) => ({
+            event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+            implement: pr.implement.displayLabel,
+            distance: pr.bestDistance!,
+          })),
+        },
+      })),
+    };
+
+    return NextResponse.json({ success: true, data: reshaped });
   } catch (error) {
-    logger.error("GET /api/throws/practice/[sessionId] error", { context: "throws/practice", error: error });
+    logger.error("GET /api/throws/practice/[sessionId] error", {
+      context: "throws/practice",
+      error: error,
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
@@ -80,7 +108,10 @@ export async function PATCH(
       where: { userId: currentUser.userId },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const existing = await prisma.practiceSession.findUnique({
@@ -105,7 +136,10 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
-    logger.error("PATCH /api/throws/practice/[sessionId] error", { context: "throws/practice", error: error });
+    logger.error("PATCH /api/throws/practice/[sessionId] error", {
+      context: "throws/practice",
+      error: error,
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
