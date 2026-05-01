@@ -238,9 +238,14 @@ export async function DELETE(
       );
     }
 
+    // Capture each drill log's catalog identity BEFORE delete so we can
+    // recompute the affected (athlete, implement) PRs after the cascade.
     const entry = await prisma.athleteThrowsSession.findUnique({
       where: { id: id },
-      select: { athleteId: true },
+      select: {
+        athleteId: true,
+        drillLogs: { select: { implementId: true } },
+      },
     });
 
     if (!entry || entry.athleteId !== athlete.id) {
@@ -250,7 +255,24 @@ export async function DELETE(
       );
     }
 
-    await prisma.athleteThrowsSession.delete({ where: { id: id } });
+    const affectedImplementIds = Array.from(
+      new Set(entry.drillLogs.map((d) => d.implementId).filter((x): x is string => x != null))
+    );
+
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.athleteThrowsSession.delete({ where: { id: id } });
+        if (affectedImplementIds.length > 0) {
+          const targets = affectedImplementIds.map((implementId) => ({
+            athleteId: athlete.id,
+            implementId,
+          }));
+          await recomputeManyPRs(tx, targets);
+        }
+      },
+      { timeout: 30_000 }
+    );
+
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/athlete/log-session/[id]", { context: "api", error: err });

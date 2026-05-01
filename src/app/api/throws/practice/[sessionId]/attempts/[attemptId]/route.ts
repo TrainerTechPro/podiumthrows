@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { recomputeAthleteImplementPR } from "@/lib/implements";
 
 // DELETE /api/throws/practice/[sessionId]/attempts/[attemptId] — remove a logged attempt
 export async function DELETE(
@@ -19,7 +20,10 @@ export async function DELETE(
       where: { userId: currentUser.userId },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const session = await prisma.practiceSession.findUnique({
@@ -31,16 +35,32 @@ export async function DELETE(
 
     const attempt = await prisma.practiceAttempt.findUnique({
       where: { id: attemptId },
+      select: { id: true, sessionId: true, athleteId: true, implementId: true },
     });
     if (!attempt || attempt.sessionId !== sessionId) {
       return NextResponse.json({ success: false, error: "Attempt not found" }, { status: 404 });
     }
 
-    await prisma.practiceAttempt.delete({ where: { id: attemptId } });
+    // Capture catalog identity BEFORE delete so the recompute knows which
+    // (athlete, implement) PR to refresh after the row is gone.
+    const { athleteId, implementId } = attempt;
+
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.practiceAttempt.delete({ where: { id: attemptId } });
+        if (implementId) {
+          await recomputeAthleteImplementPR(tx, athleteId, implementId);
+        }
+      },
+      { timeout: 30_000 }
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("DELETE /api/throws/practice/[sessionId]/attempts/[attemptId] error", { context: "throws/practice/attempts", error: error });
+    logger.error("DELETE /api/throws/practice/[sessionId]/attempts/[attemptId] error", {
+      context: "throws/practice/attempts",
+      error: error,
+    });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
