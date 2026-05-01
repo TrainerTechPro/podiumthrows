@@ -167,8 +167,8 @@ export async function getRecentThrows(
 
 /**
  * Recompute the AthleteImplementPR row for one (athlete, implement) inside
- * an active transaction. Call this after every ThrowLog or AthleteDrillLog
- * insert/update that affects implementId/distance/isCompetition, or delete.
+ * an active transaction. Call this after any throw model insert/update that
+ * affects implementId/distance/isCompetition, or delete.
  *
  * Reads fresh rows so it's safe to call even if the caller already mutated
  * the relations in the same `tx` — Prisma sees the in-flight writes.
@@ -176,9 +176,11 @@ export async function getRecentThrows(
  * Unions sources for the all-time best:
  *   - ThrowLog where isFoul=false, distance != null
  *   - AthleteDrillLog where bestMark > 0
+ *   - PracticeAttempt where distance != null (coach-led live practice)
+ *   - ThrowsBlockLog where distance != null (structured session throws)
  *
- * Competition best stays ThrowLog-only (drill logs are training-only by
- * model — they have no isCompetition flag).
+ * Competition best stays ThrowLog-only (the other three models have no
+ * isCompetition flag — they're training-only by model definition).
  *
  * If zero candidates remain for the combo, deletes the PR row entirely.
  */
@@ -187,7 +189,7 @@ export async function recomputeAthleteImplementPR(
   athleteId: string,
   implementId: string
 ): Promise<void> {
-  const [throwLogRows, drillRows] = await Promise.all([
+  const [throwLogRows, drillRows, practiceRows, blockLogRows] = await Promise.all([
     tx.throwLog.findMany({
       where: { athleteId, implementId, isFoul: false },
       select: { id: true, distance: true, date: true, isCompetition: true },
@@ -203,6 +205,22 @@ export async function recomputeAthleteImplementPR(
         bestMark: true,
         createdAt: true,
         session: { select: { date: true } },
+      },
+    }),
+    tx.practiceAttempt.findMany({
+      where: { athleteId, implementId, distance: { not: null } },
+      select: { id: true, distance: true, createdAt: true },
+    }),
+    tx.throwsBlockLog.findMany({
+      where: {
+        implementId,
+        distance: { not: null },
+        assignment: { athleteId },
+      },
+      select: {
+        id: true,
+        distance: true,
+        createdAt: true,
       },
     }),
   ]);
@@ -227,6 +245,18 @@ export async function recomputeAthleteImplementPR(
       distance: d.bestMark,
       // AthleteThrowsSession.date is a YYYY-MM-DD string; fall back to createdAt.
       date: d.session.date ? new Date(d.session.date + "T00:00:00") : d.createdAt,
+      isCompetition: false,
+    })),
+    ...practiceRows.map((p) => ({
+      id: p.id,
+      distance: p.distance,
+      date: p.createdAt,
+      isCompetition: false,
+    })),
+    ...blockLogRows.map((b) => ({
+      id: b.id,
+      distance: b.distance,
+      date: b.createdAt,
       isCompetition: false,
     })),
   ];

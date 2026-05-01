@@ -32,6 +32,7 @@
 
 import { PrismaClient, type Prisma, type ImplementType } from "@prisma/client";
 import { findCatalogMatchForWeight, recomputeManyPRs, type PrismaTx } from "../src/lib/implements";
+import { parseImplementKg } from "../src/lib/throws";
 
 const prisma = new PrismaClient();
 
@@ -180,21 +181,50 @@ async function backfillAthlete(
     },
   });
 
-  // Already-assigned tally for the report.
+  // ── Source 3: PracticeAttempt (direct athleteId; String implement field) ──
+  const unassignedPracticeAttempts = await prisma.practiceAttempt.findMany({
+    where: { athleteId, implementId: null },
+    select: { id: true, event: true, implement: true },
+  });
+
+  // ── Source 4: ThrowsBlockLog (joined via assignment.athleteId; String impl) ──
+  const unassignedBlockLogs = await prisma.throwsBlockLog.findMany({
+    where: {
+      assignment: { athleteId },
+      implementId: null,
+    },
+    select: {
+      id: true,
+      implement: true,
+      assignment: { select: { session: { select: { event: true } } } },
+    },
+  });
+
+  // Already-assigned tally for the report (across all 4 sources).
   summary.alreadyAssigned =
     (await prisma.throwLog.count({ where: { athleteId, implementId: { not: null } } })) +
     (await prisma.athleteDrillLog.count({
       where: { session: { athleteId }, implementId: { not: null } },
+    })) +
+    (await prisma.practiceAttempt.count({
+      where: { athleteId, implementId: { not: null } },
+    })) +
+    (await prisma.throwsBlockLog.count({
+      where: { assignment: { athleteId }, implementId: { not: null } },
     }));
 
-  if (unassignedThrowLogs.length === 0 && unassignedDrillLogs.length === 0) {
+  if (
+    unassignedThrowLogs.length === 0 &&
+    unassignedDrillLogs.length === 0 &&
+    unassignedPracticeAttempts.length === 0 &&
+    unassignedBlockLogs.length === 0
+  ) {
     return summary;
   }
 
   // Normalize drill logs into the same ThrowsRow shape so processBatch can
   // handle both. Tag with __source so the writer knows which table to update.
-  type DrillBatchRow = ThrowsRow & { __source: "drill" };
-  const drillRows: DrillBatchRow[] = unassignedDrillLogs
+  const drillRows: ThrowsRow[] = unassignedDrillLogs
     .filter((d): d is typeof d & { implementWeight: number } => d.implementWeight != null)
     .map((d) => ({
       id: d.id,
@@ -203,8 +233,42 @@ async function backfillAthlete(
       implementWeight: d.implementWeight,
       implementWeightUnit: d.implementWeightUnit,
       implementWeightOriginal: d.implementWeightOriginal,
-      __source: "drill" as const,
     }));
+
+  // PracticeAttempt + ThrowsBlockLog use a String `implement` field (e.g.
+  // "9kg", "7.26kg", "14lbs"). Parse to canonical kg for the matcher; tag
+  // implementWeightUnit so per-throw hint still drives unit selection.
+  const practiceRows: ThrowsRow[] = [];
+  for (const a of unassignedPracticeAttempts) {
+    const kg = parseImplementKg(a.implement);
+    if (kg == null || kg <= 0) continue;
+    const isLb = /lbs?\b/i.test(a.implement);
+    practiceRows.push({
+      id: a.id,
+      athleteId,
+      event: a.event,
+      implementWeight: kg,
+      implementWeightUnit: isLb ? "lbs" : "kg",
+      implementWeightOriginal: null,
+    });
+  }
+  const blockLogRows: ThrowsRow[] = [];
+  for (const b of unassignedBlockLogs) {
+    const kg = parseImplementKg(b.implement);
+    if (kg == null || kg <= 0) continue;
+    // ThrowsBlockLog has no event field directly — pull from session via assignment.
+    const event = b.assignment.session?.event;
+    if (!event) continue;
+    const isLb = /lbs?\b/i.test(b.implement);
+    blockLogRows.push({
+      id: b.id,
+      athleteId,
+      event,
+      implementWeight: kg,
+      implementWeightUnit: isLb ? "lbs" : "kg",
+      implementWeightOriginal: null,
+    });
+  }
 
   if (apply) {
     await prisma.$transaction(
@@ -225,7 +289,28 @@ async function backfillAthlete(
           true,
           "drill"
         );
-        const allTargets = [...throwLogTargets, ...drillTargets];
+        const practiceTargets = await processBatch(
+          tx,
+          practiceRows,
+          fallbackHint,
+          summary,
+          true,
+          "practice"
+        );
+        const blockLogTargets = await processBatch(
+          tx,
+          blockLogRows,
+          fallbackHint,
+          summary,
+          true,
+          "blockLog"
+        );
+        const allTargets = [
+          ...throwLogTargets,
+          ...drillTargets,
+          ...practiceTargets,
+          ...blockLogTargets,
+        ];
         await recomputeManyPRs(tx, allTargets);
 
         // After recompute, sync isPersonalBest flags on ThrowLog (drill rows
@@ -263,6 +348,8 @@ async function backfillAthlete(
   } else {
     await processBatch(prisma, unassignedThrowLogs, fallbackHint, summary, false, "throwLog");
     await processBatch(prisma, drillRows, fallbackHint, summary, false, "drill");
+    await processBatch(prisma, practiceRows, fallbackHint, summary, false, "practice");
+    await processBatch(prisma, blockLogRows, fallbackHint, summary, false, "blockLog");
   }
 
   return summary;
@@ -279,7 +366,7 @@ async function processBatch(
   fallbackHint: PerThrowHint,
   summary: AthleteSummary,
   apply: boolean,
-  source: "throwLog" | "drill" = "throwLog"
+  source: "throwLog" | "drill" | "practice" | "blockLog" = "throwLog"
 ): Promise<{ athleteId: string; implementId: string }[]> {
   const recomputeTargets: { athleteId: string; implementId: string }[] = [];
 
@@ -306,15 +393,23 @@ async function processBatch(
             where: { id: row.id },
             data: { implementId: match.implement.id },
           });
-          // Audit table targets ThrowLog rows by FK; only record audit for that source.
+          // Audit table is keyed by throwLogId — only ThrowLog rows audit.
           await writeAuditAssigned(client, row, match.implement.id, match.deltaKg, match.kind);
-        } else {
+        } else if (source === "drill") {
           await (client as PrismaTx).athleteDrillLog.update({
             where: { id: row.id },
             data: { implementId: match.implement.id },
           });
-          // Drill rows aren't audited (the audit table is keyed by throwLogId).
-          // The implementId itself is the durable record of the assignment.
+        } else if (source === "practice") {
+          await (client as PrismaTx).practiceAttempt.update({
+            where: { id: row.id },
+            data: { implementId: match.implement.id },
+          });
+        } else if (source === "blockLog") {
+          await (client as PrismaTx).throwsBlockLog.update({
+            where: { id: row.id },
+            data: { implementId: match.implement.id },
+          });
         }
         recomputeTargets.push({ athleteId: row.athleteId, implementId: match.implement.id });
       }

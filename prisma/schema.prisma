@@ -1652,7 +1652,10 @@ model ThrowsBlockLog {
   block        ThrowsBlock      @relation(fields: [blockId], references: [id], onDelete: Cascade)
   throwNumber  Int
   distance     Float? // meters
-  implement    String // e.g. "9kg", "7.26kg"
+  // Catalog identity. Nullable until backfill completes (Phase E continued).
+  implementId  String?
+  implementRef Implement?       @relation(fields: [implementId], references: [id])
+  implement    String // e.g. "9kg", "7.26kg" — legacy String label, going away post-soak
   notes        String?
   createdAt    DateTime         @default(now())
 
@@ -1660,6 +1663,7 @@ model ThrowsBlockLog {
   @@index([blockId])
   @@index([assignmentId, blockId])
   @@index([createdAt])
+  @@index([implementId])
 }
 
 // ─── LIVE PRACTICE LOGGING ──────────────────────────────────────────────────
@@ -1689,7 +1693,10 @@ model PracticeAttempt {
   athleteId     String
   athlete       AthleteProfile  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   event         EventType // SHOT_PUT | DISCUS | HAMMER | JAVELIN
-  implement     String // e.g. "7.26kg"
+  // Catalog identity. Nullable until backfill completes (Phase E continued).
+  implementId   String?
+  implementRef  Implement?      @relation(fields: [implementId], references: [id])
+  implement     String // e.g. "7.26kg" — legacy String label, going away post-soak
   distance      Float? // meters
   drillType     String? // STANDING | POWER_POSITION | HALF_TURN | SOUTH_AFRICAN | GLIDE | SPIN | FULL_THROW | OTHER
   coachNote     String?
@@ -1701,6 +1708,7 @@ model PracticeAttempt {
   @@index([sessionId])
   @@index([athleteId, event])
   @@index([athleteId, createdAt])
+  @@index([implementId])
 }
 
 // ─── THROWS PRs ──────────────────────────────────────────────────────────────
@@ -3309,6 +3317,8 @@ model Implement {
   categoryTags     ImplementCategoryTag[]
   throwLogs        ThrowLog[]
   athleteDrillLogs AthleteDrillLog[]
+  practiceAttempts PracticeAttempt[]
+  throwsBlockLogs  ThrowsBlockLog[]
   athletePRs       AthleteImplementPR[]
   backfillAudit    ThrowLogBackfillAudit[]
 
