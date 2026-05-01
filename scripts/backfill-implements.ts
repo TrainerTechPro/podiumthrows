@@ -174,39 +174,45 @@ async function backfillAthlete(
 
   // Run per-athlete in one transaction. Partial failure of one athlete
   // doesn't poison the others — the outer for-loop catches and continues.
+  // Prisma's default 5s interactive-tx timeout is too tight against a remote
+  // Supabase DB when an athlete has 50+ throws (each row → update + audit
+  // upsert + per-combo PR recompute). Bumping to 60s with 10s queue wait.
   if (apply) {
-    await prisma.$transaction(async (tx) => {
-      const recomputeTargets = await processBatch(tx, unassigned, fallbackHint, summary, true);
-      await recomputeManyPRs(tx, recomputeTargets);
+    await prisma.$transaction(
+      async (tx) => {
+        const recomputeTargets = await processBatch(tx, unassigned, fallbackHint, summary, true);
+        await recomputeManyPRs(tx, recomputeTargets);
 
-      // After recompute, sync isPersonalBest flags for every (athlete, implement)
-      // we touched.
-      const seenCombos = new Set<string>();
-      for (const target of recomputeTargets) {
-        const key = `${target.athleteId}|${target.implementId}`;
-        if (seenCombos.has(key)) continue;
-        seenCombos.add(key);
+        // After recompute, sync isPersonalBest flags for every (athlete, implement)
+        // we touched.
+        const seenCombos = new Set<string>();
+        for (const target of recomputeTargets) {
+          const key = `${target.athleteId}|${target.implementId}`;
+          if (seenCombos.has(key)) continue;
+          seenCombos.add(key);
 
-        const pr = await tx.athleteImplementPR.findUnique({
-          where: { athleteId_implementId: target },
-          select: { bestThrowLogId: true },
-        });
-        await tx.throwLog.updateMany({
-          where: {
-            athleteId: target.athleteId,
-            implementId: target.implementId,
-            isPersonalBest: true,
-          },
-          data: { isPersonalBest: false },
-        });
-        if (pr?.bestThrowLogId) {
-          await tx.throwLog.update({
-            where: { id: pr.bestThrowLogId },
-            data: { isPersonalBest: true },
+          const pr = await tx.athleteImplementPR.findUnique({
+            where: { athleteId_implementId: target },
+            select: { bestThrowLogId: true },
           });
+          await tx.throwLog.updateMany({
+            where: {
+              athleteId: target.athleteId,
+              implementId: target.implementId,
+              isPersonalBest: true,
+            },
+            data: { isPersonalBest: false },
+          });
+          if (pr?.bestThrowLogId) {
+            await tx.throwLog.update({
+              where: { id: pr.bestThrowLogId },
+              data: { isPersonalBest: true },
+            });
+          }
         }
-      }
-    });
+      },
+      { timeout: 60_000, maxWait: 10_000 }
+    );
   } else {
     // Dry run — use prisma directly; no writes happen because helpers branch on apply.
     await processBatch(prisma, unassigned, fallbackHint, summary, false);
