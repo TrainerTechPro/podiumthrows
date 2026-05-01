@@ -62,9 +62,17 @@ export default async function AthleteProfilePage() {
         user: { select: { email: true } },
       },
     }),
-    prisma.throwsPR.findMany({
-      where: { athleteId: athlete.id },
-      orderBy: [{ event: "asc" }, { distance: "desc" }],
+    // Catalog-keyed PRs (one row per (athleteId, implementId) by uniqueness
+    // constraint — no label-format dupes). Sources both ThrowLog AND
+    // AthleteDrillLog data via recomputeAthleteImplementPR.
+    prisma.athleteImplementPR.findMany({
+      where: { athleteId: athlete.id, bestDistance: { not: null } },
+      orderBy: { bestDistance: "desc" },
+      include: {
+        implement: {
+          select: { throwType: true, displayLabel: true, weightKg: true },
+        },
+      },
     }),
     prisma.throwsInjury.findMany({
       where: { athleteId: athlete.id },
@@ -103,14 +111,17 @@ export default async function AthleteProfilePage() {
     email: profile.user.email,
   };
 
-  const serializedPRs: ThrowsPRRecord[] = throwsPRs.map((pr) => ({
-    id: pr.id,
-    event: pr.event,
-    implement: pr.implement,
-    distance: pr.distance,
-    achievedAt: pr.achievedAt,
-    source: pr.source,
-  }));
+  const serializedPRs: ThrowsPRRecord[] = throwsPRs
+    .filter((pr) => pr.bestDistance != null && pr.bestAchievedAt != null)
+    .map((pr) => ({
+      id: pr.id,
+      // ImplementType (SHOT) → EventType string the component expects (SHOT_PUT).
+      event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+      implement: pr.implement.displayLabel,
+      distance: pr.bestDistance!,
+      achievedAt: pr.bestAchievedAt!.toISOString().slice(0, 10),
+      source: pr.bestContext === "COMPETITION" ? "COMPETITION" : "TRAINING",
+    }));
 
   const serializedInjuries: ThrowsInjuryRecord[] = injuries.map((inj) => ({
     id: inj.id,

@@ -36,19 +36,13 @@ export const IMPLEMENT_STANDARDS: Record<string, { m: number; f: number }> = {
  * Returns the competition implement weight (in kg) for a given event + gender.
  * Used by the throws analysis chart to default to comp-weight-only view.
  */
-export function getCompetitionWeight(
-  event: string,
-  gender: "MALE" | "FEMALE"
-): number | null {
+export function getCompetitionWeight(event: string, gender: "MALE" | "FEMALE"): number | null {
   const std = IMPLEMENT_STANDARDS[event];
   if (!std) return null;
   return gender === "MALE" ? std.m : std.f;
 }
 
-function classifyImplement(
-  implement: string,
-  event: string
-): "heavy" | "competition" | "light" {
+function classifyImplement(implement: string, event: string): "heavy" | "competition" | "light" {
   const val = parseFloat(implement.replace(/[^0-9.]/g, "")) || 0;
   const std = IMPLEMENT_STANDARDS[event];
   if (!std) return "competition";
@@ -73,7 +67,16 @@ export async function getThrowsRosterPulse(coachId: string) {
           firstName: true,
           lastName: true,
           avatarUrl: true,
-          throwsPRs: { select: { event: true, implement: true, distance: true } },
+          // Catalog-keyed PRs (one row per (athleteId, implementId) — no
+          // label-format dupes). Sources both ThrowLog AND AthleteDrillLog
+          // via recomputeAthleteImplementPR.
+          athleteImplementPRs: {
+            where: { bestDistance: { not: null } },
+            select: {
+              bestDistance: true,
+              implement: { select: { throwType: true, displayLabel: true } },
+            },
+          },
           throwsCheckIns: {
             orderBy: { date: "desc" },
             take: 1,
@@ -162,18 +165,16 @@ export async function getThrowsRosterPulse(coachId: string) {
     const testingRecords = r.testingRecords ?? [];
     const daysSinceTest =
       testingRecords.length > 0
-        ? Math.floor(
-            (now.getTime() - new Date(testingRecords[0].testDate).getTime()) / 86_400_000
-          )
+        ? Math.floor((now.getTime() - new Date(testingRecords[0].testDate).getTime()) / 86_400_000)
         : null;
     const testStatus: "never" | "overdue" | "due-soon" | "ok" =
       testingRecords.length === 0
         ? "never"
         : daysSinceTest! > 14
-        ? "overdue"
-        : daysSinceTest! > 7
-        ? "due-soon"
-        : "ok";
+          ? "overdue"
+          : daysSinceTest! > 7
+            ? "due-soon"
+            : "ok";
 
     return {
       id: r.id,
@@ -190,7 +191,13 @@ export async function getThrowsRosterPulse(coachId: string) {
         firstName: r.athlete.firstName,
         lastName: r.athlete.lastName,
         avatarUrl: r.athlete.avatarUrl,
-        throwsPRs: r.athlete.throwsPRs,
+        // Reshape catalog rows to legacy throwsPRs contract so coach UIs
+        // (throws-view, _throws-view) keep working unchanged.
+        throwsPRs: r.athlete.athleteImplementPRs.map((pr) => ({
+          event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+          implement: pr.implement.displayLabel,
+          distance: pr.bestDistance!,
+        })),
       },
       testingRecords: r.testingRecords,
       testStatus,

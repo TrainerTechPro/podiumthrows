@@ -30,14 +30,21 @@ function formatDate(dateStr: string): string {
   });
 }
 
-/** Extract numeric kg from an implement string like "9kg", "800g", "7.26kg" */
+const KG_PER_LB = 0.45359237;
+
+/** Extract numeric kg from an implement label. Handles legacy formats
+ *  ("9kg", "800g", "7.26kg") AND catalog displayLabels ("14 lb", "600 g",
+ *  "7.26 kg") with optional spaces. Returns 0 on parse failure. */
 function parseWeightKg(implement: string): number {
   const lower = implement.toLowerCase().trim();
-  // Try kg pattern first
-  const kgMatch = lower.match(/([\d.]+)\s*kg/);
+  // Try lb / lbs first — catalog uses "14 lb"; legacy used "14lbs".
+  const lbMatch = lower.match(/([\d.]+)\s*lbs?\b/);
+  if (lbMatch) return parseFloat(lbMatch[1]) * KG_PER_LB;
+  // kg with optional space.
+  const kgMatch = lower.match(/([\d.]+)\s*kg\b/);
   if (kgMatch) return parseFloat(kgMatch[1]);
-  // Try grams pattern (javelin)
-  const gMatch = lower.match(/([\d.]+)\s*g(?!k)/);
+  // grams (javelin).
+  const gMatch = lower.match(/([\d.]+)\s*g\b/);
   if (gMatch) return parseFloat(gMatch[1]) / 1000;
   return 0;
 }
@@ -51,10 +58,7 @@ function getCompWeight(event: EventType, gender: Gender): number | null {
 }
 
 /** Determine if an implement IS the competition weight */
-function isCompetitionWeight(
-  implementKg: number,
-  compWeightKg: number
-): boolean {
+function isCompetitionWeight(implementKg: number, compWeightKg: number): boolean {
   // Allow small floating point tolerance
   return Math.abs(implementKg - compWeightKg) < 0.01;
 }
@@ -84,11 +88,7 @@ interface TabImplementsProps {
   gender: Gender;
 }
 
-export function TabImplements({
-  throwsPRs,
-  events,
-  gender,
-}: TabImplementsProps) {
+export function TabImplements({ throwsPRs, events, gender }: TabImplementsProps) {
   /* ── Empty state ───────────────────────────────────────────────────── */
 
   if (throwsPRs.length === 0) {
@@ -134,17 +134,14 @@ export function TabImplements({
 
         // Find competition implement PR for differential calculations
         const compPR = compWeight
-          ? prs.find((pr) =>
-              isCompetitionWeight(parseWeightKg(pr.implement), compWeight)
-            )
+          ? prs.find((pr) => isCompetitionWeight(parseWeightKg(pr.implement), compWeight))
           : null;
 
         // Process PRs: add weight parsing, sort DESCENDING by weight (Bondarchuk)
         const processed: ProcessedPR[] = prs
           .map((pr) => {
             const weightKg = parseWeightKg(pr.implement);
-            const isComp =
-              compWeight != null && isCompetitionWeight(weightKg, compWeight);
+            const isComp = compWeight != null && isCompetitionWeight(weightKg, compWeight);
 
             let differential: number | null = null;
             let ratio: number | null = null;
@@ -157,8 +154,7 @@ export function TabImplements({
           })
           .sort((a, b) => b.weightKg - a.weightKg);
 
-        const eventMeta =
-          EVENTS[event as keyof typeof EVENTS];
+        const eventMeta = EVENTS[event as keyof typeof EVENTS];
 
         return (
           <div
@@ -221,9 +217,7 @@ export function TabImplements({
                       <td className="px-5 py-3 text-right tabular-nums text-[var(--foreground)]">
                         {pr.distance.toFixed(2)}m
                       </td>
-                      <td className="px-5 py-3 text-muted">
-                        {formatDate(pr.achievedAt)}
-                      </td>
+                      <td className="px-5 py-3 text-muted">{formatDate(pr.achievedAt)}</td>
                       <td className="px-5 py-3 text-right tabular-nums">
                         {pr.isComp ? (
                           <span className="text-muted">--</span>
@@ -231,9 +225,7 @@ export function TabImplements({
                           <span className={getRatioColor(pr.ratio)}>
                             {pr.differential >= 0 ? "+" : ""}
                             {pr.differential.toFixed(2)}m{" "}
-                            <span className="text-xs opacity-75">
-                              ({pr.ratio.toFixed(0)}%)
-                            </span>
+                            <span className="text-xs opacity-75">({pr.ratio.toFixed(0)}%)</span>
                           </span>
                         ) : (
                           <span className="text-muted">No comp PR</span>
@@ -264,9 +256,7 @@ export function TabImplements({
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted">
-                      {formatDate(pr.achievedAt)}
-                    </span>
+                    <span className="text-muted">{formatDate(pr.achievedAt)}</span>
                     {pr.isComp ? (
                       <span className="text-muted">--</span>
                     ) : pr.differential != null && pr.ratio != null ? (

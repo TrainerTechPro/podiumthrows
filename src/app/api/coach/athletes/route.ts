@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
     const limit = PLAN_LIMITS[coach.plan];
     if (limit !== Infinity && athleteCount >= limit) {
       return NextResponse.json(
-        { success: false, error: `Your ${coach.plan} plan supports up to ${limit} athletes. Upgrade to add more.` },
+        {
+          success: false,
+          error: `Your ${coach.plan} plan supports up to ${limit} athletes. Upgrade to add more.`,
+        },
         { status: 403 }
       );
     }
@@ -67,7 +70,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (error) {
     logger.error("Error creating athlete", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to create athlete" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to create athlete" },
+      { status: 500 }
+    );
   }
 }
 
@@ -105,15 +111,40 @@ export async function GET(request: NextRequest) {
         user: {
           select: { email: true, claimedAt: true },
         },
-        throwsPRs: {
-          where: { source: "COMPETITION" },
-          orderBy: { distance: "desc" },
+        // Catalog-keyed PRs, restricted to competition bests so the coach
+        // roster card surfaces meet PRs (matches the legacy source=COMPETITION
+        // filter). Uniqueness on (athleteId, implementId) guarantees no
+        // label-format duplicates.
+        athleteImplementPRs: {
+          where: { bestCompDistance: { not: null } },
+          orderBy: { bestCompDistance: "desc" },
+          include: {
+            implement: {
+              select: { throwType: true, displayLabel: true },
+            },
+          },
         },
       },
       orderBy: { firstName: "asc" },
     });
 
-    return NextResponse.json({ success: true, data: athletes });
+    // Reshape to the existing throwsPRs contract so coach UIs (throws-view,
+    // _throws-view) keep working unchanged.
+    const reshaped = athletes.map((a) => ({
+      ...a,
+      throwsPRs: a.athleteImplementPRs
+        .filter((pr) => pr.bestCompDistance != null)
+        .map((pr) => ({
+          id: pr.id,
+          event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+          implement: pr.implement.displayLabel,
+          distance: pr.bestCompDistance!,
+          achievedAt: pr.bestCompAchievedAt?.toISOString().slice(0, 10) ?? null,
+          source: "COMPETITION",
+        })),
+    }));
+
+    return NextResponse.json({ success: true, data: reshaped });
   } catch (error) {
     logger.error("Error listing athletes", { context: "api", error });
     return NextResponse.json({ success: false, error: "Failed to list athletes" }, { status: 500 });
