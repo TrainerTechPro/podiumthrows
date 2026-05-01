@@ -1,5 +1,18 @@
 import type { EventType } from "@prisma/client";
 
+/** One individual throw inside a drill — only populated for ThrowLog-sourced drills. */
+export type HistoryThrow = {
+  id: string;
+  throwNumber: number | null; // null on legacy rows where attemptNumber wasn't recorded
+  distance: number | null;
+  performedAt: string; // ISO datetime
+  isCompetition: boolean;
+  isFoul: boolean;
+  notes: string | null;
+  implementId: string | null;
+  implementDisplayLabel: string;
+};
+
 /** One drill row inside an expanded day — shown to the user one per line. */
 export type HistoryDrill = {
   source: "assigned" | "free";
@@ -11,6 +24,13 @@ export type HistoryDrill = {
   throwCount: number;
   bestMark: number | null; // meters, nullable if no distance recorded
   isPersonalBest: boolean;
+  /** ThrowLog id of the throw that produced bestMark. null when the drill is
+   *  not ThrowLog-sourced (ThrowsBlockLog / AthleteDrillLog), or when no
+   *  throw in the drill recorded a non-foul distance. */
+  bestThrowLogId: string | null;
+  /** Individual throws — populated only for ThrowLog-sourced drills.
+   *  Empty for assigned blocks and AthleteDrillLog drills. */
+  throws: HistoryThrow[];
 };
 
 /** One day in the timeline — groups drills from both assigned and free sources. */
@@ -41,8 +61,8 @@ export type HistoryDay = {
 export type HistoryFilter = {
   range: "7d" | "30d" | "90d" | "ytd" | "all" | "custom";
   start: string | null; // ISO date, only when range=custom
-  end: string | null;   // ISO date, only when range=custom
-  events: EventType[];  // empty array = all events
+  end: string | null; // ISO date, only when range=custom
+  events: EventType[]; // empty array = all events
   implementsKg: number[]; // empty array = all implements
   prOnly: boolean;
 };

@@ -22,18 +22,12 @@ const DEFAULT_FILTER: HistoryFilter = {
 };
 
 function hasAnyActive(f: HistoryFilter): boolean {
-  return (
-    f.range !== "30d" ||
-    f.events.length > 0 ||
-    f.implementsKg.length > 0 ||
-    f.prOnly
-  );
+  return f.range !== "30d" || f.events.length > 0 || f.implementsKg.length > 0 || f.prOnly;
 }
 
 // Detect athlete's IANA timezone once for the session
-const ATHLETE_TZ = typeof window !== "undefined"
-  ? Intl.DateTimeFormat().resolvedOptions().timeZone
-  : undefined;
+const ATHLETE_TZ =
+  typeof window !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined;
 
 function filterToQueryString(f: HistoryFilter): string {
   const params = new URLSearchParams();
@@ -61,11 +55,28 @@ function weekKey(isoDate: string): string {
 
 function weekLabel(mondayIso: string): string {
   const d = new Date(`${mondayIso}T12:00:00`);
-  const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+  const month = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ][d.getMonth()];
   return `Week of ${month} ${d.getDate()}`;
 }
 
-export function HistoryClient() {
+interface HistoryClientProps {
+  athleteId: string;
+}
+
+export function HistoryClient({ athleteId }: HistoryClientProps) {
   const { error: toastError } = useToast();
   const [filter, setFilter] = useState<HistoryFilter>(DEFAULT_FILTER);
   const [days, setDays] = useState<HistoryDay[]>([]);
@@ -78,61 +89,73 @@ export function HistoryClient() {
   const abortRef = useRef<AbortController | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const fetchHistory = useCallback(async (f: HistoryFilter, cursor?: string) => {
-    // Cancel any in-flight fetch from a previous filter so an older slow
-    // response can't overwrite a newer one. Don't cancel for load-more
-    // fetches (those use their own flag).
-    if (!cursor) {
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-    }
+  const fetchHistory = useCallback(
+    async (f: HistoryFilter, cursor?: string) => {
+      // Cancel any in-flight fetch from a previous filter so an older slow
+      // response can't overwrite a newer one. Don't cancel for load-more
+      // fetches (those use their own flag).
+      if (!cursor) {
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+      }
 
-    if (!cursor) {
-      setStatus("loading");
-      setErrorMsg("");
-    } else {
-      setLoadingMore(true);
-    }
+      if (!cursor) {
+        setStatus("loading");
+        setErrorMsg("");
+      } else {
+        setLoadingMore(true);
+      }
 
-    try {
-      const qs = filterToQueryString(f) + (cursor ? `&cursor=${cursor}` : "");
-      const res = await fetch(`/api/throws/history?${qs}`, {
-        signal: cursor ? undefined : abortRef.current?.signal,
-      });
-      const payload = await res.json();
-      if (!res.ok || !payload.success) {
-        const msg = payload.error || `Request failed (${res.status})`;
+      try {
+        const qs = filterToQueryString(f) + (cursor ? `&cursor=${cursor}` : "");
+        const res = await fetch(`/api/throws/history?${qs}`, {
+          signal: cursor ? undefined : abortRef.current?.signal,
+        });
+        const payload = await res.json();
+        if (!res.ok || !payload.success) {
+          const msg = payload.error || `Request failed (${res.status})`;
+          if (!cursor) {
+            setErrorMsg(msg);
+            setStatus("error");
+          }
+          toastError(msg);
+          return;
+        }
+        const data = payload.data as HistoryResponse;
+        if (cursor) {
+          // Append to existing days
+          setDays((prev) => [...prev, ...data.days]);
+        } else {
+          // First page: replace
+          setDays(data.days);
+          if (data.totals) setTotals(data.totals);
+        }
+        setNextCursor(data.nextCursor);
+        if (!cursor) setStatus("ready");
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+        const msg = err instanceof Error ? err.message : "Network error";
         if (!cursor) {
           setErrorMsg(msg);
           setStatus("error");
         }
         toastError(msg);
-        return;
+      } finally {
+        if (cursor) setLoadingMore(false);
       }
-      const data = payload.data as HistoryResponse;
-      if (cursor) {
-        // Append to existing days
-        setDays((prev) => [...prev, ...data.days]);
-      } else {
-        // First page: replace
-        setDays(data.days);
-        if (data.totals) setTotals(data.totals);
-      }
-      setNextCursor(data.nextCursor);
-      if (!cursor) setStatus("ready");
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return;
-      const msg = err instanceof Error ? err.message : "Network error";
-      if (!cursor) {
-        setErrorMsg(msg);
-        setStatus("error");
-      }
-      toastError(msg);
-    } finally {
-      if (cursor) setLoadingMore(false);
-    }
-  }, [toastError]);
+    },
+    [toastError]
+  );
+
+  // Re-fetch the first page. Used by EditThrowSheet save/delete callbacks
+  // bubbled up through HistoryDayCard → HistoryDrillRow.
+  const refetch = useCallback(() => {
+    setDays([]);
+    setNextCursor(null);
+    setTotals(null);
+    fetchHistory(filter);
+  }, [fetchHistory, filter]);
 
   // Cancel the in-flight fetch on unmount.
   useEffect(() => {
@@ -203,7 +226,10 @@ export function HistoryClient() {
       {/* Summary line */}
       {status === "ready" && totals && (
         <div className="text-xs text-muted uppercase tracking-wider">
-          <span className="font-mono tabular-nums text-[var(--foreground)]">{totals.sessions}</span> sessions · <span className="font-mono tabular-nums text-[var(--foreground)]">{totals.throws}</span> throws
+          <span className="font-mono tabular-nums text-[var(--foreground)]">{totals.sessions}</span>{" "}
+          sessions ·{" "}
+          <span className="font-mono tabular-nums text-[var(--foreground)]">{totals.throws}</span>{" "}
+          throws
         </div>
       )}
 
@@ -221,10 +247,7 @@ export function HistoryClient() {
       )}
 
       {status === "error" && (
-        <HistoryErrorState
-          message={errorMsg}
-          onRetry={() => fetchHistory(filter)}
-        />
+        <HistoryErrorState message={errorMsg} onRetry={() => fetchHistory(filter)} />
       )}
 
       {status === "ready" && days.length === 0 && !filtersActive && <HistoryEmptyState />}
@@ -239,7 +262,7 @@ export function HistoryClient() {
               {gi > 0 && <HistoryWeekDivider label={weekLabel(group.weekStart)} />}
               {group.days.map((day) => (
                 <div key={day.date} className="mb-2">
-                  <HistoryDayCard day={day} />
+                  <HistoryDayCard day={day} athleteId={athleteId} onDataChanged={refetch} />
                 </div>
               ))}
             </div>
@@ -422,7 +445,9 @@ function FilterImplementSheetBody({
                   : "hover:bg-surface-100 dark:hover:bg-surface-800 text-[var(--foreground)]"
               }`}
             >
-              <span><span className="font-mono tabular-nums">{kg}</span>kg</span>
+              <span>
+                <span className="font-mono tabular-nums">{kg}</span>kg
+              </span>
               {on && <span aria-hidden="true">✓</span>}
             </button>
           </li>
@@ -445,7 +470,9 @@ function FilterPrSheetBody({
         type="button"
         onClick={() => onChange(false)}
         className={`w-full text-left px-3 py-3 rounded-lg ${
-          !value ? "bg-primary-500/15 text-primary-500" : "hover:bg-surface-100 dark:hover:bg-surface-800"
+          !value
+            ? "bg-primary-500/15 text-primary-500"
+            : "hover:bg-surface-100 dark:hover:bg-surface-800"
         }`}
       >
         All throws
@@ -454,7 +481,9 @@ function FilterPrSheetBody({
         type="button"
         onClick={() => onChange(true)}
         className={`w-full text-left px-3 py-3 rounded-lg ${
-          value ? "bg-primary-500/15 text-primary-500" : "hover:bg-surface-100 dark:hover:bg-surface-800"
+          value
+            ? "bg-primary-500/15 text-primary-500"
+            : "hover:bg-surface-100 dark:hover:bg-surface-800"
         }`}
       >
         ★ Personal bests only

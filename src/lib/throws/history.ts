@@ -9,12 +9,16 @@ export type ThrowLogInput = {
   id: string;
   athleteId: string;
   event: EventType;
+  implementId: string | null;
   implementWeight: number;
   distance: number | null;
   date: Date;
   isPersonalBest: boolean;
   isCompetition: boolean;
+  isFoul: boolean;
   sessionId: string | null;
+  throwNumber: number | null;
+  notes: string | null;
 };
 
 export type BlockLogInput = {
@@ -127,36 +131,86 @@ export function aggregateHistoryDays(input: {
   // Bucket free logs by their own date
   // Group same-event/same-implement throws into one "drill row" for display density.
   type FreeKey = string; // `${event}|${implementKg}|${date}`
-  const freeGroups = new Map<FreeKey, HistoryDrill>();
+  type FreeAccumulator = {
+    drill: HistoryDrill;
+    rawThrows: ThrowLogInput[]; // collected for per-throw data + bestThrowLogId resolution
+  };
+  const freeGroups = new Map<FreeKey, FreeAccumulator>();
 
   for (const log of input.throwLogs) {
     const date = isoDay(log.date, input.timezone);
     const key = `${log.event}|${log.implementWeight}|${date}`;
     const existing = freeGroups.get(key);
     if (existing) {
-      existing.throwCount += 1;
-      if (log.distance != null && (existing.bestMark == null || log.distance > existing.bestMark)) {
-        existing.bestMark = log.distance;
+      existing.drill.throwCount += 1;
+      if (
+        log.distance != null &&
+        (existing.drill.bestMark == null || log.distance > existing.drill.bestMark)
+      ) {
+        existing.drill.bestMark = log.distance;
       }
-      if (log.isPersonalBest) existing.isPersonalBest = true;
+      if (log.isPersonalBest) existing.drill.isPersonalBest = true;
+      existing.rawThrows.push(log);
     } else {
       freeGroups.set(key, {
-        source: "free",
-        event: log.event,
-        implementKg: log.implementWeight,
-        implementLabel: formatImplementDisplay(log.implementWeight, log.event, input.gender, {
-          compact: true,
-        }),
-        drillType: null,
-        drillTypeLabel: null,
-        throwCount: 1,
-        bestMark: log.distance ?? null,
-        isPersonalBest: log.isPersonalBest,
+        drill: {
+          source: "free",
+          event: log.event,
+          implementKg: log.implementWeight,
+          implementLabel: formatImplementDisplay(log.implementWeight, log.event, input.gender, {
+            compact: true,
+          }),
+          drillType: null,
+          drillTypeLabel: null,
+          throwCount: 1,
+          bestMark: log.distance ?? null,
+          isPersonalBest: log.isPersonalBest,
+          bestThrowLogId: null, // resolved after the loop
+          throws: [], // populated after the loop
+        },
+        rawThrows: [log],
       });
     }
   }
 
-  for (const [key, drill] of freeGroups.entries()) {
+  // Materialize throws[] and bestThrowLogId per free-log drill.
+  for (const acc of freeGroups.values()) {
+    const sorted = [...acc.rawThrows].sort((a, b) => {
+      // Sort by throwNumber ascending. Nulls last.
+      if (a.throwNumber == null && b.throwNumber == null) return 0;
+      if (a.throwNumber == null) return 1;
+      if (b.throwNumber == null) return -1;
+      return a.throwNumber - b.throwNumber;
+    });
+    acc.drill.throws = sorted.map((t) => ({
+      id: t.id,
+      throwNumber: t.throwNumber,
+      distance: t.distance,
+      performedAt: t.date.toISOString(),
+      isCompetition: t.isCompetition,
+      isFoul: t.isFoul,
+      notes: t.notes,
+      implementId: t.implementId,
+      implementDisplayLabel: acc.drill.implementLabel,
+    }));
+
+    // bestThrowLogId: highest non-foul distance. Tie-breaker: earliest performedAt.
+    const candidates = sorted.filter((t) => !t.isFoul && t.distance != null);
+    if (candidates.length > 0) {
+      const max = candidates.reduce((a, b) =>
+        (b.distance as number) > (a.distance as number)
+          ? b
+          : (b.distance as number) < (a.distance as number)
+            ? a
+            : b.date < a.date
+              ? b
+              : a
+      );
+      acc.drill.bestThrowLogId = max.id;
+    }
+  }
+
+  for (const [key, acc] of freeGroups.entries()) {
     const date = key.split("|")[2];
     const bucket = buckets.get(date) ?? {
       date,
@@ -165,8 +219,8 @@ export function aggregateHistoryDays(input: {
       assignmentId: null,
       selfLoggedSessionId: null,
     };
-    bucket.drills.push(drill);
-    bucket.events.add(drill.event);
+    bucket.drills.push(acc.drill);
+    bucket.events.add(acc.drill.event);
     buckets.set(date, bucket);
   }
 
@@ -219,6 +273,8 @@ export function aggregateHistoryDays(input: {
           throwCount: 1,
           bestMark: bl.distance ?? null,
           isPersonalBest: false,
+          bestThrowLogId: null,
+          throws: [],
         },
         date,
         assignmentId: bl.assignment.id,
@@ -295,6 +351,8 @@ export function aggregateHistoryDays(input: {
         throwCount: dl.throwCount,
         bestMark: dl.bestMark,
         isPersonalBest: isPR,
+        bestThrowLogId: null,
+        throws: [],
       });
     }
     buckets.set(session.date, bucket);

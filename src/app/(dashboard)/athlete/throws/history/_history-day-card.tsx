@@ -25,9 +25,11 @@ const EVENT_LABELS: Record<string, string> = {
 
 interface Props {
   day: HistoryDay;
+  athleteId: string;
+  onDataChanged: () => void;
 }
 
-export function HistoryDayCard({ day }: Props) {
+export function HistoryDayCard({ day, athleteId, onDataChanged }: Props) {
   const [expanded, setExpanded] = useState(false);
   const best = day.bestMarkOverall != null ? `${day.bestMarkOverall.toFixed(2)}m` : null;
 
@@ -97,7 +99,12 @@ export function HistoryDayCard({ day }: Props) {
       {expanded && (
         <div className="border-t border-[var(--card-border)] px-4 py-3 space-y-1">
           {day.drills.map((drill, idx) => (
-            <HistoryDrillRow key={idx} drill={drill} />
+            <HistoryDrillRow
+              key={idx}
+              drill={drill}
+              athleteId={athleteId}
+              onDataChanged={onDataChanged}
+            />
           ))}
           {day.selfLoggedSessionId && (
             <Link
