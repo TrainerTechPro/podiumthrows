@@ -27,7 +27,7 @@ vi.mock("@/lib/prisma", () => ({
       aggregate: (...a: unknown[]) => mocks.blockLogAggregate(...a),
       count: (...a: unknown[]) => mocks.blockLogCount(...a),
     },
-    throwsPR: {
+    athleteImplementPR: {
       findMany: (...a: unknown[]) => mocks.prFindMany(...a),
     },
     readinessCheckIn: {
@@ -81,9 +81,18 @@ describe("buildWeeklyRecap", () => {
     ]);
     mocks.assignmentCount.mockResolvedValue(3); // sessionsScheduled
     mocks.blockLogAggregate.mockResolvedValue({ _count: { _all: 42 } });
+    // Mock catalog-keyed PR rows (post-Phase-D shape). The reshape inside
+    // buildWeeklyRecap collapses these to the legacy {event, implement,
+    // distance} contract the rest of the function consumes.
     mocks.prFindMany.mockResolvedValue([
-      { event: "SHOT_PUT", implement: "7.26kg", distance: 18.42 },
-      { event: "DISCUS", implement: "2kg", distance: 60.5 },
+      {
+        bestDistance: 18.42,
+        implement: { throwType: "SHOT", displayLabel: "7.26 kg" },
+      },
+      {
+        bestDistance: 60.5,
+        implement: { throwType: "DISCUS", displayLabel: "2 kg" },
+      },
     ]);
     mocks.readinessFindMany.mockResolvedValue([
       { overallScore: 7 },

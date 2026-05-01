@@ -117,15 +117,32 @@ export async function buildWeeklyRecap(
       },
     }),
 
-    prisma.throwsPR.findMany({
-      where: {
-        athleteId,
-        achievedAt: { gte: weekStartISO, lte: weekEndISO },
-      },
-      select: { event: true, implement: true, distance: true },
-      orderBy: { distance: "desc" },
-      take: 5,
-    }),
+    // Catalog-keyed PRs. bestAchievedAt is DateTime; week bounds are
+    // YYYY-MM-DD strings — convert. Reshape to the legacy
+    // {event, implement, distance} contract the recap template consumes.
+    prisma.athleteImplementPR
+      .findMany({
+        where: {
+          athleteId,
+          bestAchievedAt: {
+            gte: new Date(weekStartISO + "T00:00:00"),
+            lte: new Date(weekEndISO + "T23:59:59"),
+          },
+          bestDistance: { not: null },
+        },
+        orderBy: { bestDistance: "desc" },
+        take: 5,
+        include: {
+          implement: { select: { throwType: true, displayLabel: true } },
+        },
+      })
+      .then((rows) =>
+        rows.map((pr) => ({
+          event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+          implement: pr.implement.displayLabel,
+          distance: pr.bestDistance!,
+        }))
+      ),
 
     prisma.readinessCheckIn.findMany({
       where: {

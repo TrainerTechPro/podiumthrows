@@ -18,62 +18,87 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
     }
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     // Fetch all profile data in parallel
-    const [athlete, typing, checkins, complexes, competitions, prs, drillPRs, throwLogs] = await Promise.all([
-      prisma.athleteProfile.findUnique({
-        where: { id: athleteId },
-        select: {
-          id: true,
-          gender: true,
-          weightKg: true,
-          heightCm: true,
-          firstName: true,
-          lastName: true,
-          user: { select: { id: true, email: true } },
-        },
-      }),
-      prisma.throwsTyping.findUnique({ where: { athleteId } }),
-      prisma.throwsCheckIn.findMany({
-        where: { athleteId },
-        orderBy: { date: "desc" },
-        take: 90,
-      }),
-      prisma.throwsComplex.findMany({
-        where: { athleteId },
-        orderBy: { startDate: "desc" },
-      }),
-      prisma.throwsCompetition.findMany({
-        where: { athleteId },
-        orderBy: { date: "asc" },
-      }),
-      prisma.throwsPR.findMany({
-        where: { athleteId },
-        orderBy: { distance: "desc" },
-      }),
-      prisma.throwsDrillPR.findMany({
-        where: { athleteId },
-        orderBy: [{ event: "asc" }, { drillType: "asc" }, { distance: "desc" }],
-      }),
-      prisma.throwsBlockLog.findMany({
-        where: {
-          assignment: { athleteId },
-        },
-        include: {
-          assignment: {
-            select: { assignedDate: true, status: true },
+    const [athlete, typing, checkins, complexes, competitions, prs, drillPRs, throwLogs] =
+      await Promise.all([
+        prisma.athleteProfile.findUnique({
+          where: { id: athleteId },
+          select: {
+            id: true,
+            gender: true,
+            weightKg: true,
+            heightCm: true,
+            firstName: true,
+            lastName: true,
+            user: { select: { id: true, email: true } },
           },
-          block: {
-            select: { config: true, blockType: true },
+        }),
+        prisma.throwsTyping.findUnique({ where: { athleteId } }),
+        prisma.throwsCheckIn.findMany({
+          where: { athleteId },
+          orderBy: { date: "desc" },
+          take: 90,
+        }),
+        prisma.throwsComplex.findMany({
+          where: { athleteId },
+          orderBy: { startDate: "desc" },
+        }),
+        prisma.throwsCompetition.findMany({
+          where: { athleteId },
+          orderBy: { date: "asc" },
+        }),
+        // Catalog-keyed PRs reshaped to the legacy {event, implement, distance,
+        // achievedAt, source} contract the throws/profile consumer expects.
+        // (athleteId, implementId) uniqueness eliminates label-format dupes.
+        prisma.athleteImplementPR
+          .findMany({
+            where: { athleteId, bestDistance: { not: null } },
+            orderBy: { bestDistance: "desc" },
+            include: {
+              implement: { select: { throwType: true, displayLabel: true } },
+            },
+          })
+          .then((rows) =>
+            rows.map((pr) => ({
+              id: pr.id,
+              athleteId: pr.athleteId,
+              event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+              implement: pr.implement.displayLabel,
+              distance: pr.bestDistance!,
+              achievedAt: pr.bestAchievedAt?.toISOString().slice(0, 10) ?? null,
+              source: pr.bestContext === "COMPETITION" ? "COMPETITION" : "TRAINING",
+            }))
+          ),
+        prisma.throwsDrillPR.findMany({
+          where: { athleteId },
+          orderBy: [{ event: "asc" }, { drillType: "asc" }, { distance: "desc" }],
+        }),
+        prisma.throwsBlockLog.findMany({
+          where: {
+            assignment: { athleteId },
           },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 500,
-      }),
-    ]);
+          include: {
+            assignment: {
+              select: { assignedDate: true, status: true },
+            },
+            block: {
+              select: { config: true, blockType: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 500,
+        }),
+      ]);
 
     if (!athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
@@ -104,8 +129,9 @@ export async function GET(request: NextRequest) {
       }));
 
     // Merge and sort chronologically — competition results take precedence visually
-    const competitionMarks = [...trainingMarks, ...competitionResultMarks]
-      .sort((a, b) => a.date.localeCompare(b.date));
+    const competitionMarks = [...trainingMarks, ...competitionResultMarks].sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
 
     // Get assignment stats
     const assignments = await prisma.throwsAssignment.findMany({
@@ -128,7 +154,7 @@ export async function GET(request: NextRequest) {
         athlete: {
           id: athlete.id,
           email: athlete.user.email,
-          
+
           gender: athlete.gender,
           sport: null,
           weight: athlete.weightKg,

@@ -33,9 +33,15 @@ export async function POST(request: Request) {
   const athlete = await prisma.athleteProfile.findFirst({
     where: { id: athleteId, coachId: auth.coach.id },
     include: {
-      throwsPRs: {
-        where: { source: "COMPETITION" },
-        orderBy: { distance: "desc" },
+      // Catalog-keyed PRs filtered to competition bests. (athleteId,
+      // implementId) uniqueness eliminates the legacy duplicate-label
+      // problem so the architect engine reads a clean signal.
+      athleteImplementPRs: {
+        where: { bestCompDistance: { not: null } },
+        orderBy: { bestCompDistance: "desc" },
+        include: {
+          implement: { select: { throwType: true, displayLabel: true } },
+        },
       },
     },
   });
@@ -51,10 +57,14 @@ export async function POST(request: Request) {
   const primaryEvent = (athlete.events[0] ?? "SHOT_PUT") as EventType;
   const gender = (athlete.gender ?? "MALE") as Gender;
 
-  // Find best competition PR for the primary event
-  const bestPR = athlete.throwsPRs
-    .filter((pr) => pr.event === primaryEvent)
-    .sort((a, b) => b.distance - a.distance)[0];
+  // Find best competition PR for the primary event. Map ImplementType (SHOT)
+  // to EventType (SHOT_PUT) when filtering.
+  const bestPR = athlete.athleteImplementPRs
+    .filter((pr) => {
+      const event = pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType;
+      return event === primaryEvent && pr.bestCompDistance != null;
+    })
+    .map((pr) => ({ distance: pr.bestCompDistance!, implement: pr.implement.displayLabel }))[0];
 
   // Parse strength numbers from JSON blob
   let strengthNumbers: Record<string, number> | null = null;

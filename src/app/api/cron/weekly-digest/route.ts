@@ -16,7 +16,10 @@ export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "CRON_SECRET not configured" },
+      { status: 500 }
+    );
   }
   if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -58,16 +61,31 @@ export async function GET(req: NextRequest) {
           },
         });
 
-        // New PRs this week (achievedAt is YYYY-MM-DD string)
-        const newPRs = await prisma.throwsPR.findMany({
+        // New PRs this week (catalog-keyed). bestAchievedAt is DateTime; the
+        // legacy weekAgoDate variable is a YYYY-MM-DD string, so convert.
+        const weekAgoDateTime = new Date(weekAgoDate + "T00:00:00");
+        const newCatalogPRs = await prisma.athleteImplementPR.findMany({
           where: {
             athleteId: { in: athleteIds },
-            achievedAt: { gte: weekAgoDate },
+            bestAchievedAt: { gte: weekAgoDateTime },
+            bestDistance: { not: null },
           },
-          include: { athlete: { select: { firstName: true, lastName: true } } },
-          orderBy: { achievedAt: "desc" },
+          include: {
+            athlete: { select: { firstName: true, lastName: true } },
+            implement: { select: { throwType: true, displayLabel: true } },
+          },
+          orderBy: { bestAchievedAt: "desc" },
           take: 10,
         });
+        // Reshape to the legacy {event, implement, distance, achievedAt}
+        // contract the digest template consumes.
+        const newPRs = newCatalogPRs.map((pr) => ({
+          event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+          implement: pr.implement.displayLabel,
+          distance: pr.bestDistance!,
+          achievedAt: pr.bestAchievedAt!.toISOString().slice(0, 10),
+          athlete: pr.athlete,
+        }));
 
         // Low readiness check-ins (score <= 3 out of 10) this week
         const lowReadiness = await prisma.readinessCheckIn.findMany({
@@ -116,9 +134,7 @@ export async function GET(req: NextRequest) {
 
         emailsSent++;
       } catch (err) {
-        errors.push(
-          `Coach ${coach.id}: ${err instanceof Error ? err.message : "Unknown error"}`
-        );
+        errors.push(`Coach ${coach.id}: ${err instanceof Error ? err.message : "Unknown error"}`);
       }
     }
 

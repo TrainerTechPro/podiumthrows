@@ -40,59 +40,73 @@ export async function POST() {
     const elapsed = Date.now() - lastRequest.createdAt.getTime();
     if (elapsed < COOLDOWN_MS) {
       const cooldownUntil = new Date(lastRequest.createdAt.getTime() + COOLDOWN_MS).toISOString();
-      return NextResponse.json({
-        success: false,
-        error: "Cooldown active",
-        cooldownUntil,
-      }, { status: 429 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Cooldown active",
+          cooldownUntil,
+        },
+        { status: 429 }
+      );
     }
   }
 
   // Gather context data for the notification
-  const [lastSession, latestReadiness, recentPRs, activeGoals, throwsTyping] =
-    await Promise.all([
-      // Most recent completed session (any source)
-      prisma.programSession.findFirst({
-        where: { program: { athleteId: athlete.id }, status: "COMPLETED" },
-        orderBy: { completedAt: "desc" },
-        select: { completedAt: true, scheduledDate: true },
-      }),
+  const [lastSession, latestReadiness, recentPRs, activeGoals, throwsTyping] = await Promise.all([
+    // Most recent completed session (any source)
+    prisma.programSession.findFirst({
+      where: { program: { athleteId: athlete.id }, status: "COMPLETED" },
+      orderBy: { completedAt: "desc" },
+      select: { completedAt: true, scheduledDate: true },
+    }),
 
-      // Latest readiness check-in
-      prisma.readinessCheckIn.findFirst({
-        where: { athleteId: athlete.id },
-        orderBy: { date: "desc" },
-        select: { overallScore: true },
-      }),
+    // Latest readiness check-in
+    prisma.readinessCheckIn.findFirst({
+      where: { athleteId: athlete.id },
+      orderBy: { date: "desc" },
+      select: { overallScore: true },
+    }),
 
-      // Recent PRs
-      prisma.throwsPR.findMany({
-        where: { athleteId: athlete.id },
-        orderBy: { distance: "desc" },
+    // Recent PRs (catalog-keyed; reshaped to the legacy
+    // {event, distance, implement} contract the notification code expects).
+    prisma.athleteImplementPR
+      .findMany({
+        where: { athleteId: athlete.id, bestDistance: { not: null } },
+        orderBy: { bestDistance: "desc" },
         take: 3,
-        select: { event: true, distance: true, implement: true },
-      }),
+        include: {
+          implement: { select: { throwType: true, displayLabel: true } },
+        },
+      })
+      .then((rows) =>
+        rows.map((pr) => ({
+          event: pr.implement.throwType === "SHOT" ? "SHOT_PUT" : pr.implement.throwType,
+          distance: pr.bestDistance!,
+          implement: pr.implement.displayLabel,
+        }))
+      ),
 
-      // Active goals
-      prisma.goal.findMany({
-        where: { athleteId: athlete.id, status: "ACTIVE" },
-        take: 3,
-        select: { title: true, targetValue: true, currentValue: true },
-      }),
+    // Active goals
+    prisma.goal.findMany({
+      where: { athleteId: athlete.id, status: "ACTIVE" },
+      take: 3,
+      select: { title: true, targetValue: true, currentValue: true },
+    }),
 
-      // Bondarchuk typing — ThrowsTyping model has the classification data.
-      // ThrowsProfile has no primaryType field; use recommendedMethod from ThrowsTyping.
-      prisma.throwsTyping.findUnique({
-        where: { athleteId: athlete.id },
-        select: { recommendedMethod: true },
-      }),
-    ]);
+    // Bondarchuk typing — ThrowsTyping model has the classification data.
+    // ThrowsProfile has no primaryType field; use recommendedMethod from ThrowsTyping.
+    prisma.throwsTyping.findUnique({
+      where: { athleteId: athlete.id },
+      select: { recommendedMethod: true },
+    }),
+  ]);
 
   // Compute days since last session
   let lastSessionDate: string | null = null;
   let daysSince: number | null = null;
   if (lastSession) {
-    const dateStr = lastSession.scheduledDate ?? lastSession.completedAt?.toISOString().slice(0, 10);
+    const dateStr =
+      lastSession.scheduledDate ?? lastSession.completedAt?.toISOString().slice(0, 10);
     if (dateStr) {
       lastSessionDate = typeof dateStr === "string" ? dateStr : null;
       const lastDate = new Date(dateStr + "T12:00:00");
