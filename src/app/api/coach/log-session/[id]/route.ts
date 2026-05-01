@@ -5,7 +5,15 @@ import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { recalculateCoachPRs } from "@/lib/coach-throws";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
-import { EventType } from "@prisma/client";
+import { findCatalogMatchForWeight } from "@/lib/implements";
+import { EventType, type ImplementType } from "@prisma/client";
+
+/** EventType (SHOT_PUT) → ImplementType (SHOT). */
+function eventToImplementType(event: string): ImplementType | null {
+  if (event === "SHOT_PUT") return "SHOT";
+  if (event === "HAMMER" || event === "DISCUS" || event === "JAVELIN") return event;
+  return null;
+}
 
 /* ── GET — single coach session detail ── */
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -82,6 +90,48 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
     }
 
+    // Resolve catalog implementId per drill before insert. Same pattern as
+    // POST and as the athlete log-session edit path.
+    const throwType = eventToImplementType(p.event);
+    const drillsWithCatalog: Array<{
+      drillType: string;
+      implementId: string | null;
+      implementWeight: number | null;
+      implementWeightUnit: string;
+      implementWeightOriginal: number | null;
+      wireLength: string | null;
+      throwCount: number;
+      bestMark: number | null;
+      bestMarkUnit: "meters" | "feet";
+      bestMarkOriginal: number | null;
+      notes: string | null;
+    }> = [];
+    for (const d of p.drills || []) {
+      let implementId: string | null = null;
+      if (throwType && d.implementWeight && d.implementWeight > 0) {
+        const isLb = d.implementWeightUnit === "lbs" || d.implementWeightUnit === "lb";
+        const match = await findCatalogMatchForWeight(d.implementWeight, throwType, {
+          unitSystem: isLb ? "imperial" : "metric",
+        });
+        if (match.kind === "exact" || match.kind === "tolerated") {
+          implementId = match.implement.id;
+        }
+      }
+      drillsWithCatalog.push({
+        drillType: d.drillType,
+        implementId,
+        implementWeight: d.implementWeight ?? null,
+        implementWeightUnit: d.implementWeightUnit ?? "kg",
+        implementWeightOriginal: d.implementWeightOriginal ?? null,
+        wireLength: d.wireLength ?? null,
+        throwCount: d.throwCount ?? 0,
+        bestMark: d.bestMark ?? null,
+        bestMarkUnit: d.bestMarkUnit ?? "meters",
+        bestMarkOriginal: d.bestMarkOriginal ?? null,
+        notes: d.notes?.trim() || null,
+      });
+    }
+
     // Merge-update: only fields present in the request are written. Omitted
     // fields are left alone; explicit null clears a field. Drill logs always
     // replace — they're a separate relation the client sends in full.
@@ -109,20 +159,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           ...(p.improvementArea !== undefined && {
             improvementArea: p.improvementArea?.trim() || null,
           }),
-          drillLogs: {
-            create: (p.drills || []).map((d) => ({
-              drillType: d.drillType,
-              implementWeight: d.implementWeight ?? null,
-              implementWeightUnit: d.implementWeightUnit ?? "kg",
-              implementWeightOriginal: d.implementWeightOriginal ?? null,
-              wireLength: d.wireLength ?? null,
-              throwCount: d.throwCount ?? 0,
-              bestMark: d.bestMark ?? null,
-              bestMarkUnit: d.bestMarkUnit ?? "meters",
-              bestMarkOriginal: d.bestMarkOriginal ?? null,
-              notes: d.notes?.trim() || null,
-            })),
-          },
+          drillLogs: { create: drillsWithCatalog },
         },
         include: { drillLogs: { orderBy: { createdAt: "asc" } } },
       });

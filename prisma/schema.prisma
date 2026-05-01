@@ -1976,6 +1976,9 @@ model CoachDrillLog {
   sessionId               String
   session                 CoachThrowsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   drillType               String
+  // Catalog identity. Nullable until backfill completes.
+  implementId             String?
+  implement               Implement?         @relation(fields: [implementId], references: [id])
   implementWeight         Float?
   implementWeightUnit     String             @default("kg") // "kg" | "lbs"
   implementWeightOriginal Float? // original value the user typed
@@ -1988,6 +1991,7 @@ model CoachDrillLog {
   createdAt               DateTime           @default(now())
 
   @@index([sessionId])
+  @@index([implementId])
 }
 
 // ─── COACH LIFTING PROGRAM ──────────────────────────────────────────────────
@@ -3317,6 +3321,7 @@ model Implement {
   categoryTags     ImplementCategoryTag[]
   throwLogs        ThrowLog[]
   athleteDrillLogs AthleteDrillLog[]
+  coachDrillLogs   CoachDrillLog[]
   practiceAttempts PracticeAttempt[]
   throwsBlockLogs  ThrowsBlockLog[]
   athletePRs       AthleteImplementPR[]
