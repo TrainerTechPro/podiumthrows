@@ -212,6 +212,24 @@ enum InsightTrigger {
   CRON
 }
 
+enum ImplementType {
+  HAMMER
+  SHOT
+  DISCUS
+  JAVELIN
+}
+
+enum ImplementCategory {
+  MEN_SENIOR
+  WOMEN_SENIOR
+  MEN_U20
+  WOMEN_U20
+  HS_BOYS
+  HS_GIRLS
+  TRAINING_HEAVY
+  TRAINING_LIGHT
+}
+
 // ─── USER & AUTH ────────────────────────────────────────────────────────────
 
 model User {
@@ -240,6 +258,10 @@ model User {
 
   // Performance Tests — recorder-of-record (athlete or coach)
   recordedPerformanceTests PerformanceTestSession[] @relation("PerformanceTestRecorder")
+
+  // Throw attribution — recorder + last editor (athlete or coach)
+  recordedThrows   ThrowLog[] @relation("ThrowLogRecorder")
+  lastEditedThrows ThrowLog[] @relation("ThrowLogLastEditor")
 
   @@index([email])
   @@index([role])
@@ -491,6 +513,9 @@ model AthleteProfile {
   // Performance Tests — vertical/broad/sprint sessions
   performanceTests PerformanceTestSession[]
 
+  // Catalog-keyed PRs (one row per implement the athlete has thrown).
+  athleteImplementPRs AthleteImplementPR[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -723,7 +748,11 @@ model ThrowLog {
   sessionId               String?
   session                 TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   event                   EventType
-  implementWeight         Float // kg (always stored in kg for calculations)
+  // Catalog identity. Nullable during the migration window (Phase A→C).
+  // After backfill + the follow-up cleanup PR drops implementWeight, this becomes the sole identity.
+  implementId             String?
+  implement               Implement?       @relation(fields: [implementId], references: [id])
+  implementWeight         Float // kg (always stored in kg for calculations) — derived display, going away in a follow-up PR
   implementWeightUnit     String           @default("kg") // "kg" | "lbs" — what the user entered
   implementWeightOriginal Float? // original value the user typed (e.g. 14 for 14lbs)
   distance                Float? // meters (nullable — Quick Log allows tap-to-count without distance)
@@ -735,6 +764,15 @@ model ThrowLog {
   wireLength              String? // FULL | THREE_QUARTER | HALF — hammer only
   notes                   String?
   videoUrl                String?
+
+  // Recorder + edit attribution (mirrors PerformanceTestSession pattern).
+  // Nullable until backfill — historical rows pre-attribution stay null.
+  recordedById   String?
+  recordedBy     User?     @relation("ThrowLogRecorder", fields: [recordedById], references: [id])
+  recordedByRole String? // "ATHLETE" | "COACH"
+  lastEditedById String?
+  lastEditedBy   User?     @relation("ThrowLogLastEditor", fields: [lastEditedById], references: [id])
+  lastEditedAt   DateTime?
 
   // NEW competition linkage (all nullable — practice rows leave null)
   competitionId  String?
@@ -753,6 +791,9 @@ model ThrowLog {
   @@index([date])
   @@index([isPersonalBest])
   @@index([competitionId])
+  @@index([athleteId, implementId, date(sort: Desc)])
+  @@index([athleteId, implementId, distance(sort: Desc)])
+  @@index([implementId, isPersonalBest])
 }
 
 // ─── THROW / SESSION COMMENTS ────────────────────────────────────────────────
@@ -3237,4 +3278,99 @@ model PerformanceTestAttempt {
   session PerformanceTestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, attemptNumber])
+}
+
+// ─── IMPLEMENT CATALOG ──────────────────────────────────────────────────────
+// Canonical, closed catalog of standard throwing implements. Every ThrowLog
+// (and eventually every block/practice/drill log) references one of these by
+// id. weightKg + primaryUnit together drive identity — "16 lb" hammer and
+// "7.26 kg" hammer are distinct rows even though their physical mass is the
+// same, because the user's chosen frame is part of identity.
+//
+// Domain logic in src/lib/implements.ts. Catalog is seeded by prisma/seed.ts
+// (idempotent upsert) and never wiped between seeds.
+
+model Implement {
+  id           String        @id @default(cuid())
+  throwType    ImplementType
+  weightKg     Float
+  weightLb     Float
+  primaryUnit  String // "kg" | "lb"
+  displayLabel String // "14 lb", "7.26 kg", "600 g"
+  shortLabel   String // "14lb", "7.26kg", "600g"
+  active       Boolean       @default(true)
+  sortOrder    Int           @default(0)
+  createdAt    DateTime      @default(now())
+
+  categoryTags  ImplementCategoryTag[]
+  throwLogs     ThrowLog[]
+  athletePRs    AthleteImplementPR[]
+  backfillAudit ThrowLogBackfillAudit[]
+
+  @@unique([throwType, weightKg, primaryUnit])
+  @@index([throwType, active, sortOrder])
+}
+
+/// Many-to-many tag join. An implement may belong to multiple categories
+/// (men senior shot = 7.26 kg metric AND 16 lb imperial both tag MEN_SENIOR).
+model ImplementCategoryTag {
+  id          String            @id @default(cuid())
+  implementId String
+  category    ImplementCategory
+  implement   Implement         @relation(fields: [implementId], references: [id], onDelete: Cascade)
+
+  @@unique([implementId, category])
+  @@index([category])
+}
+
+/// Materialized per-(athlete, implement) personal record. Updated in the same
+/// transaction as the throw write. All UI reads from here, never recomputes
+/// from raw ThrowLog rows.
+model AthleteImplementPR {
+  id          String @id @default(cuid())
+  athleteId   String
+  implementId String
+
+  // All-time best across practice + competition.
+  bestDistance   Float?
+  bestThrowLogId String?
+  bestAchievedAt DateTime?
+  bestContext    String? // "PRACTICE" | "COMPETITION" — denormalized
+
+  // Competition-only best (coaches care about meet PRs separately).
+  bestCompDistance   Float?
+  bestCompThrowLogId String?
+  bestCompAchievedAt DateTime?
+
+  throwCountAllTime Int       @default(0)
+  lastThrownAt      DateTime?
+  updatedAt         DateTime  @updatedAt
+
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  implement Implement      @relation(fields: [implementId], references: [id])
+
+  @@unique([athleteId, implementId])
+  @@index([athleteId, lastThrownAt(sort: Desc)])
+  @@index([implementId])
+}
+
+/// Audit row for every ThrowLog → Implement assignment performed by the
+/// backfill script. Lets us reconstruct "what did the migration do?" months
+/// later. Ambiguous + none rows surface in the Fix Old Throws UI.
+model ThrowLogBackfillAudit {
+  id                  String   @id @default(cuid())
+  throwLogId          String   @unique
+  beforeWeightKg      Float?
+  beforeUnit          String? // ThrowLog.implementWeightUnit at run time
+  beforeOriginal      Float? // ThrowLog.implementWeightOriginal at run time
+  assignedImplementId String?
+  deltaKg             Float? // |catalog.weightKg - throwLog.implementWeight|
+  kind                String // "exact" | "tolerated" | "ambiguous" | "none"
+  candidateIds        Json? // [implementId,...] for ambiguous
+  runAt               DateTime @default(now())
+
+  assigned Implement? @relation(fields: [assignedImplementId], references: [id])
+
+  @@index([kind])
+  @@index([runAt])
 }

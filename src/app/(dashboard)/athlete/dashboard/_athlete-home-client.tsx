@@ -6,6 +6,7 @@ import { Trophy, CheckCircle2, Flame, Play, ChevronRight } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { PerformanceTestsTile } from "@/components/performance-tests/PerformanceTestsTile";
+import { MigrationBanner } from "@/components/throws/MigrationBanner";
 import type {
   AthleteDashboardDTO,
   PrescriptionToken,
@@ -47,6 +48,7 @@ export function AthleteHomeClient({ initial, hour, athleteId }: Props) {
         readiness={initial.readiness}
         today={initial.today}
       />
+      <MigrationBanner athleteId={athleteId} />
       {initial.today ? (
         <TodayHeroCard today={initial.today} />
       ) : (

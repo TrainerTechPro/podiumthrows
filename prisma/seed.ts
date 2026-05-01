@@ -1,8 +1,22 @@
 /* eslint-disable no-console -- seed script uses console.log for progress reporting */
 import { PrismaClient, AchievementType } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import {
+  IMPLEMENT_CATALOG,
+  seedImplementCatalog as seedImplementCatalogShared,
+} from "../scripts/seed-implements";
 
 const prisma = new PrismaClient();
+
+/**
+ * Wrapper that delegates to the shared catalog seed (single source of truth
+ * lives in scripts/seed-implements.ts so prod and dev stay in lock-step).
+ * The standalone script is also what we invoke against prod after deploy.
+ */
+async function seedImplementCatalog(): Promise<void> {
+  await seedImplementCatalogShared(prisma);
+  console.log(`  ✓ ${IMPLEMENT_CATALOG.length} implement catalog rows seeded\n`);
+}
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 
@@ -1902,6 +1916,9 @@ async function main() {
     });
   }
   console.log(`  ✓ ${performanceTestTypes.length} performance test types seeded\n`);
+
+  // ─── IMPLEMENT CATALOG (idempotent — never wiped) ───────────────────────
+  await seedImplementCatalog();
 
   console.log("🏆 Seed complete! Database is ready.\n");
   console.log("  Test accounts:");

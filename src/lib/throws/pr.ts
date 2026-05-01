@@ -16,8 +16,13 @@
  * future cleanup pass can add cross-label normalization.
  */
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import prisma from "@/lib/prisma";
+
+/** Tx-bindable client — accepts both `prisma` and a `prisma.$transaction(tx)` callback param. */
+export type PrismaTx =
+  | PrismaClient
+  | Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
 export type PersonalRecordSource = "TRAINING" | "COMPETITION";
 
@@ -136,95 +141,105 @@ export async function checkIsPersonalBest(
  * setting isPersonalBest on the NEW row if the result says so.
  */
 export async function recordThrow(input: RecordThrowInput): Promise<RecordThrowResult> {
+  return prisma.$transaction((tx) => recordThrowInTx(tx, input));
+}
+
+/**
+ * Tx-bound variant. Use this from new write paths that already opened a
+ * transaction to insert/update/delete the ThrowLog row alongside the PR
+ * update — keeps everything atomic in a single tx.
+ */
+export async function recordThrowInTx(
+  tx: PrismaTx,
+  input: RecordThrowInput
+): Promise<RecordThrowResult> {
   const { athleteId, event, implementWeightKg, distance, source = "TRAINING", achievedAt } = input;
 
   const implement = input.implementLabel ?? defaultLabel(implementWeightKg);
   const achievedAtIso = toIsoDateString(achievedAt);
 
-  return prisma.$transaction(async (tx) => {
-    // Re-read inside tx for race safety (another request may have just set a PR).
-    const existingPR = await tx.throwsPR.findUnique({
-      where: {
-        athleteId_event_implement: { athleteId, event, implement },
-      },
-      select: { id: true, distance: true, achievedAt: true },
-    });
+  // Re-read inside tx for race safety (another request may have just set a PR).
+  const existingPR = await tx.throwsPR.findUnique({
+    where: {
+      athleteId_event_implement: { athleteId, event, implement },
+    },
+    select: { id: true, distance: true, achievedAt: true },
+  });
 
-    let previousDistance: number | null = existingPR?.distance ?? null;
-    const previousAchievedAt: string | null = existingPR?.achievedAt ?? null;
+  let previousDistance: number | null = existingPR?.distance ?? null;
+  const previousAchievedAt: string | null = existingPR?.achievedAt ?? null;
 
-    // Legacy fallback only if no ThrowsPR row exists yet.
-    if (previousDistance == null) {
-      const legacyBest = await tx.throwLog.findFirst({
-        where: {
-          athleteId,
-          event: event as never,
-          implementWeight: implementWeightKg,
-          distance: { not: null },
-        },
-        orderBy: { distance: "desc" },
-        select: { distance: true },
-      });
-      previousDistance = legacyBest?.distance ?? null;
-    }
-
-    const isPersonalBest = previousDistance == null || distance > previousDistance;
-
-    if (!isPersonalBest) {
-      return {
-        isPersonalBest: false,
-        previousDistance,
-        previousAchievedAt,
-        pr: existingPR
-          ? {
-              id: existingPR.id,
-              distance: existingPR.distance,
-              implement,
-              achievedAt: previousAchievedAt ?? achievedAtIso,
-            }
-          : null,
-      };
-    }
-
-    // Unmark any previously-flagged ThrowLog rows for this combo.
-    // Note: the caller's NEW row (if any) will be flipped to true afterwards.
-    await tx.throwLog.updateMany({
+  // Legacy fallback only if no ThrowsPR row exists yet.
+  if (previousDistance == null) {
+    const legacyBest = await tx.throwLog.findFirst({
       where: {
         athleteId,
         event: event as never,
         implementWeight: implementWeightKg,
-        isPersonalBest: true,
+        distance: { not: null },
       },
-      data: { isPersonalBest: false },
+      orderBy: { distance: "desc" },
+      select: { distance: true },
     });
+    previousDistance = legacyBest?.distance ?? null;
+  }
 
-    const pr = await tx.throwsPR.upsert({
-      where: {
-        athleteId_event_implement: { athleteId, event, implement },
-      },
-      update: {
-        distance,
-        achievedAt: achievedAtIso,
-        source,
-      },
-      create: {
-        athleteId,
-        event,
-        implement,
-        distance,
-        achievedAt: achievedAtIso,
-        source,
-      },
-      select: { id: true, distance: true, implement: true, achievedAt: true },
-    });
+  const isPersonalBest = previousDistance == null || distance > previousDistance;
 
+  if (!isPersonalBest) {
     return {
-      isPersonalBest: true,
+      isPersonalBest: false,
       previousDistance,
       previousAchievedAt,
-      pr,
+      pr: existingPR
+        ? {
+            id: existingPR.id,
+            distance: existingPR.distance,
+            implement,
+            achievedAt: previousAchievedAt ?? achievedAtIso,
+          }
+        : null,
     };
+  }
+
+  // Unmark any previously-flagged ThrowLog rows for this combo.
+  // Note: the caller's NEW row (if any) will be flipped to true afterwards.
+  await tx.throwLog.updateMany({
+    where: {
+      athleteId,
+      event: event as never,
+      implementWeight: implementWeightKg,
+      isPersonalBest: true,
+    },
+    data: { isPersonalBest: false },
   });
+
+  const pr = await tx.throwsPR.upsert({
+    where: {
+      athleteId_event_implement: { athleteId, event, implement },
+    },
+    update: {
+      distance,
+      achievedAt: achievedAtIso,
+      source,
+    },
+    create: {
+      athleteId,
+      event,
+      implement,
+      distance,
+      achievedAt: achievedAtIso,
+      source,
+    },
+    select: { id: true, distance: true, implement: true, achievedAt: true },
+  });
+
+  return {
+    isPersonalBest: true,
+    previousDistance,
+    previousAchievedAt,
+    pr,
+  };
 }
 
 /* ─── Recompute hook (for edit/delete flows) ────────────────────────────── */
