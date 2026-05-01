@@ -4,6 +4,16 @@ import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
 import { parseBody, ThrowsBlockLogCreateSchema } from "@/lib/api-schemas";
+import { parseImplementKg } from "@/lib/throws";
+import { findCatalogMatchForWeight, recomputeManyPRs } from "@/lib/implements";
+import type { ImplementType } from "@prisma/client";
+
+/** EventType (SHOT_PUT) → ImplementType (SHOT). */
+function eventToImplementType(event: string): ImplementType | null {
+  if (event === "SHOT_PUT") return "SHOT";
+  if (event === "HAMMER" || event === "DISCUS" || event === "JAVELIN") return event;
+  return null;
+}
 
 // POST /api/throws/logs — log throws for a block (batch create/upsert)
 export async function POST(req: NextRequest) {
@@ -24,36 +34,94 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user?.athleteProfile) {
-      return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: "Athlete profile not found" },
+        { status: 403 }
+      );
     }
 
     const assignment = await prisma.throwsAssignment.findUnique({
       where: { id: assignmentId },
+      include: { session: { select: { event: true } } },
     });
 
     if (!assignment || assignment.athleteId !== user.athleteProfile.id) {
       return NextResponse.json({ success: false, error: "Assignment not found" }, { status: 404 });
     }
 
-    // Atomically delete existing logs and create fresh ones
-    const throwLogs = await prisma.$transaction(async (tx) => {
-      await tx.throwsBlockLog.deleteMany({
-        where: { assignmentId, blockId },
+    // Resolve catalog implementId per throw (so the bulk insert lands
+    // catalog-keyed). Pull event off the parent session.
+    const throwType = assignment.session.event
+      ? eventToImplementType(assignment.session.event)
+      : null;
+    const throwsWithCatalog: Array<{
+      assignmentId: string;
+      blockId: string;
+      throwNumber: number;
+      distance: number | null;
+      implement: string;
+      implementId: string | null;
+      notes: string | null;
+    }> = [];
+    for (const t of throws) {
+      let implementId: string | null = null;
+      const kg = parseImplementKg(t.implement);
+      if (throwType && kg != null && kg > 0) {
+        const isLb = /lbs?\b/i.test(t.implement);
+        const match = await findCatalogMatchForWeight(kg, throwType, {
+          unitSystem: isLb ? "imperial" : "metric",
+        });
+        if (match.kind === "exact" || match.kind === "tolerated") {
+          implementId = match.implement.id;
+        }
+      }
+      throwsWithCatalog.push({
+        assignmentId,
+        blockId,
+        throwNumber: t.throwNumber,
+        distance: t.distance,
+        implement: t.implement,
+        implementId,
+        notes: t.notes || null,
       });
+    }
 
-      return tx.throwsBlockLog.createMany({
-        data: throws.map((t) => ({
-          assignmentId,
-          blockId,
-          throwNumber: t.throwNumber,
-          distance: t.distance,
-          implement: t.implement,
-          notes: t.notes || null,
-        })),
-      });
-    });
+    // Atomically delete existing logs and create fresh ones, then recompute
+    // catalog PRs for every (athlete, implement) we touched.
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // Capture pre-existing implementIds so we recompute the OLD combos
+        // too (covers cases where this batch replaces a different implement).
+        const oldRows = await tx.throwsBlockLog.findMany({
+          where: { assignmentId, blockId },
+          select: { implementId: true },
+        });
+        const oldImplementIds = new Set(
+          oldRows.map((r) => r.implementId).filter((x): x is string => x != null)
+        );
 
-    return NextResponse.json({ success: true, data: { count: throwLogs.count } });
+        await tx.throwsBlockLog.deleteMany({ where: { assignmentId, blockId } });
+        const created = await tx.throwsBlockLog.createMany({ data: throwsWithCatalog });
+
+        // Recompute every distinct (athlete, implement) we either left or
+        // arrived at — covers implement-change-on-edit.
+        const allImplementIds = new Set<string>(oldImplementIds);
+        for (const t of throwsWithCatalog) {
+          if (t.implementId) allImplementIds.add(t.implementId);
+        }
+        const targets = Array.from(allImplementIds).map((implementId) => ({
+          athleteId: user.athleteProfile!.id,
+          implementId,
+        }));
+        if (targets.length > 0) {
+          await recomputeManyPRs(tx, targets);
+        }
+        return created;
+      },
+      { timeout: 30_000 }
+    );
+
+    return NextResponse.json({ success: true, data: { count: result.count } });
   } catch (error) {
     logger.error("POST /api/throws/logs error", { context: "throws/logs", error: error });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
@@ -72,7 +140,10 @@ export async function GET(req: NextRequest) {
     const assignmentId = searchParams.get("assignmentId");
 
     if (!assignmentId) {
-      return NextResponse.json({ success: false, error: "assignmentId is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "assignmentId is required" },
+        { status: 400 }
+      );
     }
 
     // Verify caller has access to this assignment's athlete
@@ -83,7 +154,13 @@ export async function GET(req: NextRequest) {
     if (!assignment) {
       return NextResponse.json({ success: false, error: "Assignment not found" }, { status: 404 });
     }
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", assignment.athleteId))) {
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        assignment.athleteId
+      ))
+    ) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 

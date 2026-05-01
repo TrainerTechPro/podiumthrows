@@ -5,9 +5,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseImplementKg } from "@/lib/throws";
 import { recordThrow } from "@/lib/throws/pr";
+import { findCatalogMatchForWeight, recomputeAthleteImplementPR } from "@/lib/implements";
 import { notifyCoachPR } from "@/lib/notifications";
 import { awardPRAchievement } from "@/lib/achievements";
 import { emitPR } from "@/lib/team-activity";
+import type { ImplementType } from "@prisma/client";
+
+/** EventType (SHOT_PUT) → ImplementType (SHOT). */
+function eventToImplementType(event: string): ImplementType | null {
+  if (event === "SHOT_PUT") return "SHOT";
+  if (event === "HAMMER" || event === "DISCUS" || event === "JAVELIN") return event;
+  return null;
+}
 
 /**
  * POST /api/throws/assignments/[id]/log-throw
@@ -103,6 +112,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
+    // Resolve catalog implementId before insert so this row lands
+    // catalog-keyed from day one. Pulls the event off the parent session.
+    const event = assignment.session.event;
+    const implementKgForCatalog = parseImplementKg(implement);
+    let implementId: string | null = null;
+    const throwType = event ? eventToImplementType(event) : null;
+    if (throwType && implementKgForCatalog != null && implementKgForCatalog > 0) {
+      const isLb = typeof implement === "string" && /lbs?\b/i.test(implement);
+      const match = await findCatalogMatchForWeight(implementKgForCatalog, throwType, {
+        unitSystem: isLb ? "imperial" : "metric",
+      });
+      if (match.kind === "exact" || match.kind === "tolerated") {
+        implementId = match.implement.id;
+      }
+    }
+
     // Create the throw log
     const throwLog = await prisma.throwsBlockLog.create({
       data: {
@@ -111,9 +136,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         throwNumber,
         distance: typeof distance === "number" ? distance : null,
         implement: implement ?? "",
+        implementId,
         notes: notes ?? null,
       },
     });
+
+    // Update catalog PR rollup so trends widget + dashboard reflect this
+    // throw immediately. Skipped when implementId couldn't be resolved
+    // (the Fix UI will surface those rows for cleanup).
+    const athleteProfileId = user.athleteProfile.id;
+    if (implementId && typeof distance === "number" && distance > 0) {
+      await prisma.$transaction(
+        async (tx) => recomputeAthleteImplementPR(tx, athleteProfileId, implementId!),
+        { timeout: 30_000 }
+      );
+    }
 
     // PR detection (only for throws with valid distance)
     let isPersonalBest = false;
