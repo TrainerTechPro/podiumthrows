@@ -11,6 +11,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
+import { ExportDataButton } from "@/components/settings/ExportDataButton";
 import { ChevronRight, Zap } from "lucide-react";
 
 // Sub-page client components — lazy-loaded so the initial profile-tab paint
@@ -1579,6 +1580,24 @@ export default function CoachSettingsPage() {
       {activeTab === "security" && (
         <div className="max-w-2xl animate-spring-up mt-6">
           <CoachSecurityClient />
+        </div>
+      )}
+
+      {activeTab === "security" && (
+        <div className="max-w-2xl animate-spring-up mt-6">
+          <section className="card p-5 space-y-3">
+            <header className="space-y-1">
+              <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+                Your data
+              </h2>
+              <p className="text-sm text-[var(--foreground)]">
+                Download everything we&apos;ve stored about you — your roster, programs, notes,
+                settings. Athletes export their own data from their own accounts.
+              </p>
+            </header>
+            <ExportDataButton />
+            <p className="text-xs text-muted">Limited to one download per day.</p>
+          </section>
         </div>
       )}
 
