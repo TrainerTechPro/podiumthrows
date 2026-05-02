@@ -48,6 +48,10 @@
       "schedule": "15 0 * * *"
     },
     {
+      "path": "/api/cron/hard-delete-users",
+      "schedule": "0 4 * * *"
+    },
+    {
       "path": "/api/cron/detect-broken-streaks",
       "schedule": "0 1 * * *"
     },
