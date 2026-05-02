@@ -11,6 +11,7 @@ import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { FeedPrivacySettings } from "@/components/feedback/FeedPrivacySettings";
 import { HapticsSettings } from "@/components/settings/HapticsSettings";
 import { ExportDataButton } from "@/components/settings/ExportDataButton";
+import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 import { DeliveryPreferencesSection } from "@/components/delivery-preferences-section";
 import { NotificationPreferencesClient } from "./notifications/_notification-preferences-client";
@@ -194,6 +195,8 @@ export function AthleteSettingsTabs({
             <ExportDataButton />
             <p className="text-xs text-muted">Limited to one download per day.</p>
           </section>
+
+          <DeleteAccountSection role="ATHLETE" />
         </TabPanel>
 
         {/* ── Account ─────────────────────────────────────────────────── */}

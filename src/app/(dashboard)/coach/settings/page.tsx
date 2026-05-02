@@ -12,6 +12,7 @@ import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 import { ExportDataButton } from "@/components/settings/ExportDataButton";
+import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import { ChevronRight, Zap } from "lucide-react";
 
 // Sub-page client components — lazy-loaded so the initial profile-tab paint
@@ -1598,6 +1599,12 @@ export default function CoachSettingsPage() {
             <ExportDataButton />
             <p className="text-xs text-muted">Limited to one download per day.</p>
           </section>
+        </div>
+      )}
+
+      {activeTab === "security" && (
+        <div className="max-w-2xl animate-spring-up mt-6">
+          <DeleteAccountSection role="COACH" />
         </div>
       )}
 
