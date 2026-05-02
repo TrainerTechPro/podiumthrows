@@ -242,6 +242,14 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // Soft-delete markers (P0-9). deletedAt is set when the user requests
+  // deletion; deleteScheduledFor is deletedAt + 30d. The hard-delete cron
+  // removes rows whose deleteScheduledFor has passed. Auth treats any
+  // user with deletedAt != null as logged out (callers can offer restore
+  // during the grace window).
+  deletedAt          DateTime?
+  deleteScheduledFor DateTime?
+
   activeMode String @default("COACH")
 
   /// Slug of the most recent Release this user has acknowledged via the
@@ -265,6 +273,7 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([deleteScheduledFor])
 }
 
 // ─── COACH ──────────────────────────────────────────────────────────────────
