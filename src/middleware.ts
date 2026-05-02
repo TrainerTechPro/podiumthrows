@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/pricing",
   "/deficit-finder",
   "/privacy",
+  "/goodbye", // post-account-deletion landing — user is logged out by then
   "/availability", // public read-only share links /availability/[token]
   "/athletes/claim", // public athlete-invite preview /athletes/claim/[token]
   "/api/whoop/callback",
