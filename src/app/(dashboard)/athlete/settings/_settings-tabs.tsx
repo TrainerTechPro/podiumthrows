@@ -10,6 +10,7 @@ import { AthleteSettingsForm } from "./_form";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { FeedPrivacySettings } from "@/components/feedback/FeedPrivacySettings";
 import { HapticsSettings } from "@/components/settings/HapticsSettings";
+import { ExportDataButton } from "@/components/settings/ExportDataButton";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 import { DeliveryPreferencesSection } from "@/components/delivery-preferences-section";
 import { NotificationPreferencesClient } from "./notifications/_notification-preferences-client";
@@ -179,6 +180,20 @@ export function AthleteSettingsTabs({
         <TabPanel id="privacy" className="pt-6 space-y-6">
           <FeedPrivacySettings />
           <HapticsSettings />
+
+          <section className="card p-5 space-y-3">
+            <header className="space-y-1">
+              <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+                Your data
+              </h2>
+              <p className="text-sm text-[var(--foreground)]">
+                Download everything we&apos;ve stored about you — sessions, throws, notes, settings.
+                Other athletes&apos; data is never included.
+              </p>
+            </header>
+            <ExportDataButton />
+            <p className="text-xs text-muted">Limited to one download per day.</p>
+          </section>
         </TabPanel>
 
         {/* ── Account ─────────────────────────────────────────────────── */}
