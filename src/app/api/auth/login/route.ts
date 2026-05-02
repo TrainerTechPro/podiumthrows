@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const rl = await rateLimit(`login:${ip}`, { maxAttempts: 5, windowMs: 60_000 });
     if (!rl.success) {
       return NextResponse.json(
-        { success: false, error:"Too many requests. Please try again later." },
+        { success: false, error: "Too many requests. Please try again later." },
         { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfter / 1000)) } }
       );
     }
@@ -36,10 +36,16 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Per-account rate limit: 10 attempts per 15 minutes (protects against distributed stuffing)
-    const accountRl = await rateLimit(`login:email:${normalizedEmail}`, { maxAttempts: 10, windowMs: 15 * 60_000 });
+    const accountRl = await rateLimit(`login:email:${normalizedEmail}`, {
+      maxAttempts: 10,
+      windowMs: 15 * 60_000,
+    });
     if (!accountRl.success) {
       return NextResponse.json(
-        { success: false, error: "Too many login attempts for this account. Please try again later." },
+        {
+          success: false,
+          error: "Too many login attempts for this account. Please try again later.",
+        },
         { status: 429, headers: { "Retry-After": String(Math.ceil(accountRl.retryAfter / 1000)) } }
       );
     }
@@ -52,6 +58,8 @@ export async function POST(request: NextRequest) {
         role: true,
         passwordHash: true,
         isAdmin: true,
+        deletedAt: true,
+        deleteScheduledFor: true,
         coachProfile: { select: { mfaEnabled: true } },
       },
     });
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Always run bcrypt comparison to prevent timing-based email enumeration.
     // For missing users or unclaimed accounts, compare against a dummy hash.
-    const hashToCompare = user?.passwordHash || await getDummyHash();
+    const hashToCompare = user?.passwordHash || (await getDummyHash());
     const passwordValid = await verifyPassword(password, hashToCompare);
 
     if (!user) {
@@ -69,7 +77,10 @@ export async function POST(request: NextRequest) {
         metadata: { email: normalizedEmail, reason: "user_not_found" },
         ...reqInfo,
       });
-      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Invalid email or password" },
+        { status: 401 }
+      );
     }
 
     // Unclaimed placeholder accounts have no password — reject login
@@ -80,7 +91,10 @@ export async function POST(request: NextRequest) {
         metadata: { email: user.email, reason: "unclaimed_account" },
         ...reqInfo,
       });
-      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Invalid email or password" },
+        { status: 401 }
+      );
     }
 
     if (!passwordValid) {
@@ -90,7 +104,10 @@ export async function POST(request: NextRequest) {
         metadata: { email: user.email, reason: "wrong_password" },
         ...reqInfo,
       });
-      return NextResponse.json({ success: false, error: "Invalid email or password" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Invalid email or password" },
+        { status: 401 }
+      );
     }
 
     // MFA check — coaches with MFA enabled get a short-lived token instead of full JWT
@@ -114,6 +131,19 @@ export async function POST(request: NextRequest) {
       ...(user.isAdmin ? { isAdmin: true } : {}),
     });
 
+    // If the account is in the soft-delete grace window, surface that to
+    // the client so the UI can offer a Restore CTA. The session is still
+    // issued normally — the user can log in and use the app, and either
+    // hit POST /api/me/restore to cancel the pending deletion or let the
+    // hard-delete cron eventually remove the row.
+    const pendingDeletion =
+      user.deletedAt && user.deleteScheduledFor && user.deleteScheduledFor.getTime() > Date.now()
+        ? {
+            deletedAt: user.deletedAt.toISOString(),
+            deleteScheduledFor: user.deleteScheduledFor.toISOString(),
+          }
+        : null;
+
     const response = NextResponse.json({
       success: true,
       data: {
@@ -122,7 +152,12 @@ export async function POST(request: NextRequest) {
           email: user.email,
           role: user.role,
         },
-        redirectTo: user.role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard",
+        redirectTo: pendingDeletion
+          ? "/account-restore"
+          : user.role === "COACH"
+            ? "/coach/dashboard"
+            : "/athlete/dashboard",
+        ...(pendingDeletion ? { pendingDeletion } : {}),
       },
     });
 
@@ -139,6 +174,9 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (e) {
     logger.error("login error", { context: "api", error: e });
-    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "An unexpected error occurred" },
+      { status: 500 }
+    );
   }
 }
