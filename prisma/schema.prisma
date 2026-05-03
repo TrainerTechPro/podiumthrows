@@ -217,6 +217,9 @@ enum ImplementType {
   SHOT
   DISCUS
   JAVELIN
+  /// Non-traditional throws — tires, plates, weighted balls, sledgehammer drills.
+  /// Used only by per-coach custom Implement rows (ownerId != null).
+  WEIGHT_THROW
 }
 
 enum ImplementCategory {
@@ -362,6 +365,9 @@ model CoachProfile {
 
   // Bondarchuk assessment staleness overrides (audit trail)
   assessmentOverrides AssessmentOverride[]
+
+  // Custom implements owned by this coach (visible only to this roster).
+  customImplements Implement[] @relation("CoachCustomImplements")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3321,10 +3327,16 @@ model Implement {
   weightKg     Float
   weightLb     Float
   primaryUnit  String // "kg" | "lb"
-  displayLabel String // "14 lb", "7.26 kg", "600 g"
-  shortLabel   String // "14lb", "7.26kg", "600g"
+  displayLabel String // "14 lb", "7.26 kg", "18 lb · 3/4 wire"
+  shortLabel   String // "14lb", "7.26kg", "18lb 3/4w"
   active       Boolean       @default(true)
   sortOrder    Int           @default(0)
+  /// Free-form coach notes — wire length, plate type, fabrication detail, etc.
+  notes        String?
+  /// null  = global catalog row (visible to everyone, seeded by scripts/seed-implements.ts)
+  /// set   = per-coach custom row (visible only to that coach + their athletes)
+  ownerId      String?
+  owner        CoachProfile? @relation("CoachCustomImplements", fields: [ownerId], references: [id], onDelete: Cascade)
   createdAt    DateTime      @default(now())
 
   categoryTags     ImplementCategoryTag[]
@@ -3336,8 +3348,16 @@ model Implement {
   athletePRs       AthleteImplementPR[]
   backfillAudit    ThrowLogBackfillAudit[]
 
-  @@unique([throwType, weightKg, primaryUnit])
+  /// Uniqueness is enforced by two partial unique indexes (defined in the
+  /// custom-implements migration) rather than a Prisma `@@unique`, because
+  /// Postgres 14 doesn't support NULLS NOT DISTINCT and we need different
+  /// semantics for global vs custom rows:
+  ///   • global  (ownerId IS NULL):     UNIQUE(throwType, weightKg, primaryUnit, displayLabel)
+  ///   • custom  (ownerId IS NOT NULL): UNIQUE(ownerId, throwType, weightKg, primaryUnit, displayLabel)
+  /// Application code must enforce the same invariants — see
+  /// `findGlobalImplement` / `createCustomImplement` in `src/lib/implements.ts`.
   @@index([throwType, active, sortOrder])
+  @@index([ownerId])
 }
 
 /// Many-to-many tag join. An implement may belong to multiple categories

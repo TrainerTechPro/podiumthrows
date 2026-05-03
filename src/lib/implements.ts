@@ -43,12 +43,59 @@ export type PrismaTx =
 
 export const CATALOG_MATCH_TOLERANCE_KG = 0.05;
 
+/* ─── Viewer → coach resolution ─────────────────────────────────────────── */
+
+/**
+ * Given a logged-in user, resolve which coach's custom catalog they should
+ * see merged with the global catalog:
+ *   • COACH   → their own CoachProfile.id
+ *   • ATHLETE → their AthleteProfile.coachId (the coach who owns the roster)
+ *
+ * Returns null if no coach context applies — caller should fall back to
+ * global catalog only. Cheap single-row lookup; safe to call per request.
+ */
+export async function resolveViewerCoachId(
+  userId: string,
+  role: "COACH" | "ATHLETE"
+): Promise<string | null> {
+  if (role === "COACH") {
+    const coach = await prisma.coachProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    return coach?.id ?? null;
+  }
+  const athlete = await prisma.athleteProfile.findUnique({
+    where: { userId },
+    select: { coachId: true },
+  });
+  return athlete?.coachId ?? null;
+}
+
 /* ─── Reads ─────────────────────────────────────────────────────────────── */
 
 export interface ListImplementsFilter {
   throwType?: ImplementType;
   category?: ImplementCategory;
   activeOnly?: boolean;
+  /**
+   * When set, returned rows include this coach's custom implements (rows
+   * with ownerId === viewerCoachId) in addition to the global catalog
+   * (ownerId === null). Other coaches' customs are never returned.
+   *
+   * Omit (or pass null) to get the global catalog only — used by the
+   * unauthenticated landing pages and the legacy `/api/implements` shape.
+   */
+  viewerCoachId?: string | null;
+  /**
+   * Drop WEIGHT_THROW rows (tires, plates, weighted balls). These are coach
+   * customs that aren't competition events and aren't recordable in the
+   * throw log — `/api/throws` 400s if you try. Setting this flag at the
+   * read layer is belt-and-suspenders: the picker also de-facto hides them
+   * via THROW_TYPE_ORDER, but a future engineer adding WEIGHT_THROW to that
+   * order would silently surface unloggable items without this guard.
+   */
+  loggableInThrowLog?: boolean;
 }
 
 /**
@@ -65,10 +112,34 @@ export async function listImplements(
   if (filter.category) {
     where.categoryTags = { some: { category: filter.category } };
   }
+  if (filter.loggableInThrowLog) {
+    where.throwType = filter.throwType ?? { not: "WEIGHT_THROW" };
+  }
+  // Scope to global ∪ viewer's customs. Omitting the field returns globals only.
+  where.OR = filter.viewerCoachId
+    ? [{ ownerId: null }, { ownerId: filter.viewerCoachId }]
+    : [{ ownerId: null }];
 
   return prisma.implement.findMany({
     where,
+    // Globals first (sortOrder is dense in the 100-700 range), customs after
+    // (we initialize them at sortOrder 1000+ so they trail naturally).
     orderBy: [{ throwType: "asc" }, { sortOrder: "asc" }, { weightKg: "asc" }],
+    include: { categoryTags: { select: { category: true } } },
+  });
+}
+
+/**
+ * List a single coach's custom implements only (no globals). Used by the
+ * coach Settings → Implements page so the coach sees just what they own.
+ * Returns inactive (soft-deleted) rows too, so the UI can offer "restore".
+ */
+export async function listCustomImplementsForCoach(
+  coachId: string
+): Promise<Array<Implement & { categoryTags: { category: ImplementCategory }[] }>> {
+  return prisma.implement.findMany({
+    where: { ownerId: coachId },
+    orderBy: [{ active: "desc" }, { throwType: "asc" }, { sortOrder: "asc" }],
     include: { categoryTags: { select: { category: true } } },
   });
 }
@@ -411,4 +482,162 @@ export async function findCatalogMatchForWeight(
   if (exact) return { kind: "exact", implement: exact, deltaKg: 0 };
 
   return { kind: "ambiguous", candidates };
+}
+
+/* ─── Custom implements (per-coach) ─────────────────────────────────────── */
+
+const KG_PER_LB = 0.45359237;
+const round2 = (n: number) => Math.round(n * 100) / 100;
+/// Customs sort after every global row (globals top out around 700).
+const CUSTOM_SORT_BASE = 1000;
+
+export interface CustomImplementInput {
+  throwType: ImplementType;
+  /// Weight in the unit the coach typed it in.
+  weight: number;
+  unit: "kg" | "lb";
+  /// Optional override. When omitted, derived from weight+unit
+  /// (e.g. 18 + "lb" → "18 lb"). Coaches override for variants:
+  /// "18 lb · 3/4 wire", "20 kg plate", "tire (large)".
+  displayLabel?: string;
+  /// Optional override. Compact picker label. Defaults to displayLabel
+  /// with spaces removed.
+  shortLabel?: string;
+  notes?: string;
+  categories?: ImplementCategory[];
+}
+
+function deriveLabels(input: CustomImplementInput): { displayLabel: string; shortLabel: string } {
+  const auto = `${input.weight} ${input.unit}`;
+  const displayLabel = input.displayLabel?.trim() || auto;
+  const shortLabel = input.shortLabel?.trim() || displayLabel.replace(/\s+/g, "");
+  return { displayLabel, shortLabel };
+}
+
+function normalizeWeight(input: CustomImplementInput): { weightKg: number; weightLb: number } {
+  if (input.unit === "kg") {
+    const weightKg = round2(input.weight);
+    return { weightKg, weightLb: round2(weightKg / KG_PER_LB) };
+  }
+  const weightLb = round2(input.weight);
+  return { weightKg: round2(weightLb * KG_PER_LB), weightLb };
+}
+
+/**
+ * Create a custom implement owned by `coachId`. Validates the (coach,
+ * naturalKey) uniqueness via the partial index — Prisma will throw P2002
+ * if the coach already has this exact implement; callers translate that
+ * to a 409. Categories default to empty (no tags).
+ */
+export async function createCustomImplement(
+  coachId: string,
+  input: CustomImplementInput
+): Promise<Implement> {
+  const { displayLabel, shortLabel } = deriveLabels(input);
+  const { weightKg, weightLb } = normalizeWeight(input);
+
+  // Highest existing custom sortOrder + 10 keeps creations in chronological
+  // order without us having to pick a number.
+  const last = await prisma.implement.findFirst({
+    where: { ownerId: coachId },
+    orderBy: { sortOrder: "desc" },
+    select: { sortOrder: true },
+  });
+  const sortOrder = (last?.sortOrder ?? CUSTOM_SORT_BASE - 10) + 10;
+
+  return prisma.$transaction(async (tx) => {
+    const created = await tx.implement.create({
+      data: {
+        throwType: input.throwType,
+        weightKg,
+        weightLb,
+        primaryUnit: input.unit,
+        displayLabel,
+        shortLabel,
+        notes: input.notes?.trim() || null,
+        ownerId: coachId,
+        sortOrder,
+        active: true,
+      },
+    });
+    if (input.categories?.length) {
+      await tx.implementCategoryTag.createMany({
+        data: input.categories.map((category) => ({ implementId: created.id, category })),
+        skipDuplicates: true,
+      });
+    }
+    return created;
+  });
+}
+
+export interface UpdateCustomImplementInput {
+  displayLabel?: string;
+  shortLabel?: string;
+  notes?: string | null;
+  categories?: ImplementCategory[];
+  active?: boolean;
+}
+
+/**
+ * Update a custom implement. Throws if the implement isn't owned by the
+ * caller (or doesn't exist). Weight + throwType + unit are immutable —
+ * those changes would invalidate every historical PR. Coach should
+ * deactivate-and-recreate instead.
+ */
+export async function updateCustomImplement(
+  coachId: string,
+  implementId: string,
+  input: UpdateCustomImplementInput
+): Promise<Implement> {
+  const existing = await prisma.implement.findUnique({
+    where: { id: implementId },
+    select: { id: true, ownerId: true },
+  });
+  if (!existing || existing.ownerId !== coachId) {
+    throw new Error("Implement not found or not owned by this coach");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const data: Prisma.ImplementUpdateInput = {};
+    if (input.displayLabel !== undefined) data.displayLabel = input.displayLabel.trim();
+    if (input.shortLabel !== undefined) data.shortLabel = input.shortLabel.trim();
+    if (input.notes !== undefined) data.notes = input.notes?.trim() || null;
+    if (input.active !== undefined) data.active = input.active;
+
+    const updated = await tx.implement.update({ where: { id: implementId }, data });
+
+    if (input.categories) {
+      await tx.implementCategoryTag.deleteMany({
+        where: { implementId, category: { notIn: input.categories } },
+      });
+      if (input.categories.length) {
+        await tx.implementCategoryTag.createMany({
+          data: input.categories.map((category) => ({ implementId, category })),
+          skipDuplicates: true,
+        });
+      }
+    }
+    return updated;
+  });
+}
+
+/**
+ * Soft-delete (active=false). We never hard-delete custom implements
+ * because historical ThrowLog / AthleteImplementPR rows reference them
+ * — losing the row would break PR history. The picker filters on
+ * active=true, so soft-deleted customs disappear from athlete UI but
+ * old throws still resolve their implement label correctly.
+ */
+export async function softDeleteCustomImplement(
+  coachId: string,
+  implementId: string
+): Promise<void> {
+  const existing = await prisma.implement.findUnique({
+    where: { id: implementId },
+    select: { id: true, ownerId: true },
+  });
+  if (!existing || existing.ownerId !== coachId) {
+    throw new Error("Implement not found or not owned by this coach");
+  }
+  await prisma.implement.update({ where: { id: implementId }, data: { active: false } });
 }

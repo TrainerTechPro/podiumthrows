@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
-import { getRecentImplementsForAthlete, listImplements } from "@/lib/implements";
+import {
+  getRecentImplementsForAthlete,
+  listImplements,
+  resolveViewerCoachId,
+} from "@/lib/implements";
 
 type RouteCtx = { params: Promise<{ athleteId: string }> };
 
@@ -17,6 +21,8 @@ type RouteCtx = { params: Promise<{ athleteId: string }> };
  * always throws 7.26 kg + 6 kg sees those tiles first.
  */
 export async function GET(_request: NextRequest, ctx: RouteCtx) {
+  // _request is read below for the ?loggable= search param; underscore prefix
+  // is a vestige from when the body was unused.
   try {
     const { athleteId } = await ctx.params;
     const session = await getSession();
@@ -27,9 +33,15 @@ export async function GET(_request: NextRequest, ctx: RouteCtx) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
+    const viewerCoachId = await resolveViewerCoachId(session.userId, session.role);
+    // ?loggable=throws — caller is the throws-log picker. Filter out WEIGHT_THROW
+    // customs since they aren't recordable as ThrowLog rows. Drill-log
+    // surfaces omit this and get the full set.
+    const { searchParams } = new URL(_request.url);
+    const loggableInThrowLog = searchParams.get("loggable") === "throws";
     const [recent, all] = await Promise.all([
       getRecentImplementsForAthlete(athleteId, 6),
-      listImplements(),
+      listImplements({ viewerCoachId, loggableInThrowLog }),
     ]);
 
     return NextResponse.json({
