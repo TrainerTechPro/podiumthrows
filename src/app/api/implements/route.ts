@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { listImplements } from "@/lib/implements";
+import { listImplements, resolveViewerCoachId } from "@/lib/implements";
 import type { ImplementType, ImplementCategory } from "@prisma/client";
 
 const VALID_THROW_TYPES: ReadonlyArray<ImplementType> = ["HAMMER", "SHOT", "DISCUS", "JAVELIN"];
@@ -42,7 +42,17 @@ export async function GET(request: NextRequest) {
         ? (categoryParam as ImplementCategory)
         : undefined;
 
-    const items = await listImplements({ throwType, category });
+    const viewerCoachId = await resolveViewerCoachId(session.userId, session.role);
+    // ?loggable=throws — caller is the throws-log picker. Filter out WEIGHT_THROW
+    // customs since they aren't recordable as ThrowLog rows. Drill-log
+    // surfaces omit this and get the full set.
+    const loggableInThrowLog = searchParams.get("loggable") === "throws";
+    const items = await listImplements({
+      throwType,
+      category,
+      viewerCoachId,
+      loggableInThrowLog,
+    });
 
     return NextResponse.json({ success: true, data: items });
   } catch (error) {

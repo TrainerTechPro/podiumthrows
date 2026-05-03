@@ -72,7 +72,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const event = eventFromImplementType(implement.throwType);
+    let event;
+    try {
+      event = eventFromImplementType(implement.throwType);
+    } catch (err) {
+      // WEIGHT_THROW custom implements (tires, plates, weighted balls) aren't
+      // competition events — coaches log throws against them via drill logs.
+      return NextResponse.json(
+        {
+          success: false,
+          error: err instanceof Error ? err.message : "Implement not loggable as a throw",
+        },
+        { status: 400 }
+      );
+    }
     const date = performedAt ? new Date(performedAt) : new Date();
 
     // Carry the catalog primaryUnit forward into the legacy column. Phase F drops it.

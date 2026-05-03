@@ -40,7 +40,7 @@ export function formatImplement(
   return `${prettyThrowType(impl.throwType)} ${label}`;
 }
 
-/** "HAMMER" → "Hammer". Pure capitalize for the four throw types. */
+/** "HAMMER" → "Hammer". Pure capitalize for throw types. */
 export function prettyThrowType(throwType: ImplementType): string {
   switch (throwType) {
     case "HAMMER":
@@ -51,6 +51,8 @@ export function prettyThrowType(throwType: ImplementType): string {
       return "Discus";
     case "JAVELIN":
       return "Javelin";
+    case "WEIGHT_THROW":
+      return "Weight throw";
   }
 }
 

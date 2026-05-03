@@ -236,8 +236,20 @@ export async function GET() {
     const eventFromImplementType = (t: "HAMMER" | "SHOT" | "DISCUS" | "JAVELIN"): string =>
       t === "SHOT" ? "SHOT_PUT" : t;
 
+    // Filter out WEIGHT_THROW PRs — those are custom non-competition implements
+    // (tires, plates) that don't map to an EventType and shouldn't appear in
+    // the competition-style PR timeline.
     const prTimeline = athleteImplementPRs
-      .filter((pr) => pr.bestDistance != null && pr.bestAchievedAt != null)
+      .filter(
+        (
+          pr
+        ): pr is typeof pr & {
+          implement: { throwType: "HAMMER" | "SHOT" | "DISCUS" | "JAVELIN" };
+        } =>
+          pr.bestDistance != null &&
+          pr.bestAchievedAt != null &&
+          pr.implement.throwType !== "WEIGHT_THROW"
+      )
       .map((pr) => ({
         event: eventFromImplementType(pr.implement.throwType),
         implement: pr.implement.displayLabel,

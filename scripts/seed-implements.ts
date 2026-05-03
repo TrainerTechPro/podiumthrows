@@ -94,6 +94,7 @@ export const IMPLEMENT_CATALOG: CatalogRow[] = [
   lbRow("HAMMER", 12, 240, ["MEN_U20", "HS_BOYS", "WOMEN_SENIOR", "TRAINING_HEAVY"]),
   lbRow("HAMMER", 14, 250, ["TRAINING_LIGHT"]),
   lbRow("HAMMER", 16, 260, ["MEN_SENIOR"]),
+  lbRow("HAMMER", 18, 265, ["MEN_SENIOR", "TRAINING_HEAVY"]),
   lbRow("HAMMER", 20, 270, ["MEN_SENIOR", "TRAINING_HEAVY"]),
   lbRow("HAMMER", 25, 280, ["TRAINING_HEAVY"]),
   lbRow("HAMMER", 35, 290, ["TRAINING_HEAVY"]),
@@ -139,36 +140,48 @@ export const IMPLEMENT_CATALOG: CatalogRow[] = [
 /**
  * Idempotent upsert. Safe to call repeatedly. Never deletes catalog rows
  * — only inserts new ones and updates labels/sort/categories on existing.
+ *
+ * Uses findFirst+create/update rather than `upsert` because the compound
+ * unique key was replaced by partial unique indexes when per-coach custom
+ * implements were added (see 20260502120000_add_custom_implements).
  */
 export async function seedImplementCatalog(prisma: PrismaClient): Promise<void> {
   for (const row of IMPLEMENT_CATALOG) {
     const weightLb = round2(row.weightKg / KG_PER_LB);
-    const upserted = await prisma.implement.upsert({
+
+    const existing = await prisma.implement.findFirst({
       where: {
-        throwType_weightKg_primaryUnit: {
-          throwType: row.throwType,
-          weightKg: row.weightKg,
-          primaryUnit: row.primaryUnit,
-        },
-      },
-      create: {
+        ownerId: null,
         throwType: row.throwType,
         weightKg: row.weightKg,
-        weightLb,
         primaryUnit: row.primaryUnit,
         displayLabel: row.displayLabel,
-        shortLabel: row.shortLabel,
-        sortOrder: row.sortOrder,
-        active: true,
       },
-      update: {
-        weightLb,
-        displayLabel: row.displayLabel,
-        shortLabel: row.shortLabel,
-        sortOrder: row.sortOrder,
-        active: true,
-      },
+      select: { id: true },
     });
+
+    const upserted = existing
+      ? await prisma.implement.update({
+          where: { id: existing.id },
+          data: {
+            weightLb,
+            shortLabel: row.shortLabel,
+            sortOrder: row.sortOrder,
+            active: true,
+          },
+        })
+      : await prisma.implement.create({
+          data: {
+            throwType: row.throwType,
+            weightKg: row.weightKg,
+            weightLb,
+            primaryUnit: row.primaryUnit,
+            displayLabel: row.displayLabel,
+            shortLabel: row.shortLabel,
+            sortOrder: row.sortOrder,
+            active: true,
+          },
+        });
 
     // Replace category tags for this implement (idempotent — never deletes rows
     // in the wider tag table; only deletes tags that are no longer in the row's

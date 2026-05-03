@@ -332,12 +332,20 @@ export const LegacyPromoteSchema = z.object({});
 
 const DrillLogSchema = z.object({
   drillType: z.string().min(1),
+  // Catalog identity. When set, the POST handler resolves the Implement row
+  // and populates implementWeight/Unit/Original from it — the client can omit
+  // those. Required for logging custom implements (3/4 wire hammers, tires,
+  // plates, weighted balls). Legacy clients that send only implementWeight
+  // continue to work for the 4 traditional throw types.
+  implementId: z.string().nullable().optional(),
   implementWeight: z.number().nullable().optional(),
   implementWeightUnit: z.string().nullable().optional(),
   implementWeightOriginal: z.number().nullable().optional(),
   wireLength: z.string().nullable().optional(),
   throwCount: z.number().int().min(0).nullable().optional(),
   bestMark: z.number().nullable().optional(),
+  bestMarkUnit: z.string().nullable().optional(),
+  bestMarkOriginal: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
 
@@ -458,6 +466,11 @@ export const LiftingWorkoutCreateSchema = z.object({
 
 const LogSessionDrillSchema = z.object({
   drillType: z.string().min(1),
+  // Catalog identity. When set, the POST handler uses this directly instead
+  // of the weight-based fuzzy match (findCatalogMatchForWeight). Required for
+  // logging custom implements (3/4 wire hammers, tires, plates) where the
+  // weight alone can't disambiguate variants.
+  implementId: z.string().nullable().optional(),
   implementWeight: z.number().nullable().optional(),
   implementWeightUnit: z.string().nullable().optional(),
   implementWeightOriginal: z.number().nullable().optional(),

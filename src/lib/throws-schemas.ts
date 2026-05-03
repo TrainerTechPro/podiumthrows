@@ -15,9 +15,26 @@ import type { ImplementType, EventType } from "@prisma/client";
 
 const WireLengthEnum = z.enum(["FULL", "THREE_QUARTER", "HALF"]);
 
-/** Map catalog throwType (SHOT) to ThrowLog.event (SHOT_PUT). */
+/**
+ * Map catalog throwType (SHOT) to ThrowLog.event (SHOT_PUT).
+ * Throws on WEIGHT_THROW — those custom implements (tires, plates, weighted
+ * balls) aren't competition events and have no EventType. Coaches log them
+ * via the drill log surface, not the throw log. The /api/throws route
+ * surfaces the rejection as a clean 400.
+ */
 export function eventFromImplementType(t: ImplementType): EventType {
-  return t === "SHOT" ? "SHOT_PUT" : t;
+  switch (t) {
+    case "SHOT":
+      return "SHOT_PUT";
+    case "HAMMER":
+    case "DISCUS":
+    case "JAVELIN":
+      return t;
+    case "WEIGHT_THROW":
+      throw new Error(
+        "Weight-throw implements (tires, plates, etc.) aren't recordable in the throw log — log them as a drill instead."
+      );
+  }
 }
 
 const ThrowRoundEnum = z.enum(["PRELIM", "FINALS"]);

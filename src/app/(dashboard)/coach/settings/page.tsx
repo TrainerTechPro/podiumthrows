@@ -27,6 +27,10 @@ const CoachSecurityClient = dynamic(() => import("./security/page"), { ssr: fals
 const CoachAutoregulationClient = dynamic(() => import("./autoregulation/page"), {
   ssr: false,
 });
+const CoachImplementsTabContent = dynamic(
+  () => import("./_implements-tab").then((m) => ({ default: m.ImplementsTabContent })),
+  { ssr: false }
+);
 
 const ProfilePictureEditor = dynamic(() => import("@/components/profile-picture-editor"), {
   ssr: false,
@@ -75,6 +79,7 @@ type TabId =
   | "notifications"
   | "security"
   | "autoregulation"
+  | "implements"
   | "integrations"
   // Legacy IDs retained so existing render branches still match. Tabs
   // that aren't in the visible list (activity, preferences, invitations)
@@ -90,6 +95,7 @@ const VISIBLE_TABS: { id: TabId; label: string }[] = [
   { id: "notifications", label: "Notifications" },
   { id: "security", label: "Security" },
   { id: "autoregulation", label: "Autoregulation" },
+  { id: "implements", label: "Implements" },
   { id: "integrations", label: "Integrations" },
 ];
 
@@ -100,6 +106,7 @@ const VALID_TAB_IDS: readonly TabId[] = [
   "notifications",
   "security",
   "autoregulation",
+  "implements",
   "integrations",
 ];
 
@@ -1543,6 +1550,9 @@ export default function CoachSettingsPage() {
             <CoachAutoregulationClient />
           </div>
         )}
+
+        {/* Implements Tab — coach's per-roster custom implement catalog. */}
+        {activeTab === "implements" && <CoachImplementsTabContent />}
 
         {/* Integrations Tab — coaches don't have wearable connections of
             their own; the link routes to the athlete-side integrations

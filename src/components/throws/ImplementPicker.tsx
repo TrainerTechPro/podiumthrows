@@ -38,12 +38,21 @@ export interface ImplementPickerProps {
   /** Called with the catalog row when the user taps a tile. The picker
    *  closes itself afterwards via onClose. */
   onSelect: (impl: ImplementCatalogRow) => void;
-  /** Pre-narrow the catalog to one throw type (HAMMER/SHOT/DISCUS/JAVELIN). */
+  /** Pre-narrow the catalog to one throw type. For throws-log surfaces this
+   *  is one of the 4 traditional events; drill-log surfaces may also pass
+   *  WEIGHT_THROW when `mode="drills"`. */
   throwType?: ImplementType;
   /** Optional id of the currently selected implement (for the highlight ring). */
   selectedId?: string | null;
   /** Override the sheet title. Default: "Choose implement". */
   title?: string;
+  /**
+   * Surface this picker is mounted on:
+   *   "throws" — throw log: filters out WEIGHT_THROW customs (default)
+   *   "drills" — drill log: shows everything including WEIGHT_THROW (tires,
+   *              plates, weighted balls). Used by the log-session wizard.
+   */
+  mode?: "throws" | "drills";
 }
 
 export interface ImplementCatalogRow extends ImplementDisplay {
@@ -88,7 +97,19 @@ function toRow(
   };
 }
 
+/**
+ * Display order for the by-throw-type sections. WEIGHT_THROW only renders
+ * when `mode="drills"` — for throws-log surfaces both the order AND the
+ * server-side `?loggable=throws` filter exclude it.
+ */
 const THROW_TYPE_ORDER: ImplementType[] = ["HAMMER", "SHOT", "DISCUS", "JAVELIN"];
+const THROW_TYPE_ORDER_WITH_WEIGHT: ImplementType[] = [
+  "HAMMER",
+  "SHOT",
+  "DISCUS",
+  "JAVELIN",
+  "WEIGHT_THROW",
+];
 
 export function ImplementPicker({
   open,
@@ -99,7 +120,9 @@ export function ImplementPicker({
   throwType,
   selectedId,
   title = "Choose implement",
+  mode = "throws",
 }: ImplementPickerProps) {
+  const typeOrder = mode === "drills" ? THROW_TYPE_ORDER_WITH_WEIGHT : THROW_TYPE_ORDER;
   const [recent, setRecent] = useState<ImplementCatalogRow[]>([]);
   const [all, setAll] = useState<ImplementCatalogRow[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -113,7 +136,12 @@ export function ImplementPicker({
     setStatus("loading");
     setErrorMsg(null);
 
-    const url = athleteId ? `/api/athletes/${athleteId}/implements` : `/api/implements`;
+    // ?loggable=throws asks the server to drop WEIGHT_THROW customs (tires,
+    // plates, weighted balls). They aren't recordable as ThrowLog rows, so
+    // showing them in throws-log surfaces leads to a confusing 400. Drill-
+    // log surfaces (mode="drills") omit the flag and get the full set.
+    const qs = mode === "throws" ? "?loggable=throws" : "";
+    const url = athleteId ? `/api/athletes/${athleteId}/implements${qs}` : `/api/implements${qs}`;
     fetch(url, { credentials: "same-origin" })
       .then(async (res) => {
         const payload = (await res.json()) as AthletePayload | CatalogPayload;
@@ -169,11 +197,13 @@ export function ImplementPicker({
       list.push(row);
       groups.set(row.throwType, list);
     }
-    return THROW_TYPE_ORDER.filter((t) => groups.has(t)).map((t) => ({
-      throwType: t,
-      rows: groups.get(t)!,
-    }));
-  }, [filteredAll]);
+    return typeOrder
+      .filter((t) => groups.has(t))
+      .map((t) => ({
+        throwType: t,
+        rows: groups.get(t)!,
+      }));
+  }, [filteredAll, typeOrder]);
 
   const handleSelect = (row: ImplementCatalogRow) => {
     onSelect(row);
