@@ -24,13 +24,23 @@ import { logger } from "@/lib/logger";
 interface Implement {
   event: string;
   implementWeight: number;
-  label: string; // e.g. "Shot Put · 7.26kg"
+  label: string; // e.g. "Shot Put · 16 lb" or "Shot Put · 7.26kg"
+  /// Catalog displayLabel without the event prefix ("16 lb" / "7.26 kg" /
+  /// "18 lb · 3/4 wire"). Renders in the big header pill so an athlete who
+  /// throws 16 lb sees "16 lb", not "7.26kg". Null when the preset weight
+  /// has no catalog match (very rare).
+  displayLabel?: string | null;
 }
 
 interface RecentThrow {
   id: string; // may be temp id for optimistic entries
   event: string;
   implementWeight: number;
+  /// Catalog displayLabel ("16 lb", "7.26 kg") when the row resolves to a
+  /// catalog implement. Pre-catalog rows leave this null and the UI falls
+  /// back to the kg-format pattern. Not currently rendered (recent-throw
+  /// chip shows distance only) but plumbed through for future surfaces.
+  implementLabel?: string | null;
   distance: number | null;
   feeling: string | null;
   notes: string | null;
@@ -38,11 +48,23 @@ interface RecentThrow {
 }
 
 interface QuickLogData {
-  currentImplement: { event: string; implementWeight: number } | null;
+  currentImplement: {
+    event: string;
+    implementWeight: number;
+    displayLabel?: string | null;
+  } | null;
   recentThrows: RecentThrow[];
   throwCount: number;
-  availableImplements: { event: string; implementWeight: number }[];
+  availableImplements: {
+    event: string;
+    implementWeight: number;
+    displayLabel?: string | null;
+  }[];
   weightPresets?: Record<string, number[]>;
+  /// Per-event preset list with the catalog displayLabel resolved server-side.
+  /// Falls back to `${kg}kg` when null. Kept alongside the legacy `weightPresets`
+  /// field so older deploys of the client still parse the response.
+  weightPresetLabels?: Record<string, Array<{ kg: number; label: string | null }>>;
   compWeights?: Record<string, number>;
   sessionFocus: string | null;
 }
@@ -69,13 +91,17 @@ const DRAG_ELASTICITY = 0.15; // matches prior framer-motion dragElastic
 /* ─── Build implement list from raw data ─────────────────────────────────── */
 
 function buildImplementList(
-  available: { event: string; implementWeight: number }[],
-  current: { event: string; implementWeight: number } | null
+  available: { event: string; implementWeight: number; displayLabel?: string | null }[],
+  current: { event: string; implementWeight: number; displayLabel?: string | null } | null
 ): Implement[] {
+  const labelFor = (i: { event: string; implementWeight: number; displayLabel?: string | null }) =>
+    `${i.event} · ${i.displayLabel ?? `${i.implementWeight}kg`}`;
+
   const list: Implement[] = available.map((i) => ({
     event: i.event,
     implementWeight: i.implementWeight,
-    label: `${i.event} · ${i.implementWeight}kg`,
+    label: labelFor(i),
+    displayLabel: i.displayLabel ?? null,
   }));
 
   // If no available implements, create a default from current
@@ -83,13 +109,19 @@ function buildImplementList(
     list.push({
       event: current.event,
       implementWeight: current.implementWeight,
-      label: `${current.event} · ${current.implementWeight}kg`,
+      label: labelFor(current),
+      displayLabel: current.displayLabel ?? null,
     });
   }
 
   // Default fallback
   if (list.length === 0) {
-    list.push({ event: "Shot Put", implementWeight: 7.26, label: "Shot Put · 7.26kg" });
+    list.push({
+      event: "Shot Put",
+      implementWeight: 7.26,
+      label: "Shot Put · 7.26 kg",
+      displayLabel: "7.26 kg",
+    });
   }
 
   return list;
@@ -425,6 +457,12 @@ export function QuickLogClient({ userId }: { userId: string }) {
 
   // Weight presets for the weight picker
   const [weightPresets, setWeightPresets] = useState<Record<string, number[]>>({});
+  // Per-event preset list with catalog displayLabel resolved server-side.
+  // Used by the weight-picker pills + the changeWeight handler so the big
+  // header refreshes with the right label when the athlete picks a new weight.
+  const [weightPresetLabels, setWeightPresetLabels] = useState<
+    Record<string, Array<{ kg: number; label: string | null }>>
+  >({});
   const [compWeights, setCompWeights] = useState<Record<string, number>>({});
   const [weightPickerOpen, setWeightPickerOpen] = useState(false);
 
@@ -490,6 +528,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
         setRecentThrows(data.recentThrows ?? []);
         setSessionFocus(data.sessionFocus ?? null);
         if (data.weightPresets) setWeightPresets(data.weightPresets);
+        if (data.weightPresetLabels) setWeightPresetLabels(data.weightPresetLabels);
         if (data.compWeights) setCompWeights(data.compWeights);
 
         // Restore saved implement selection (event + weight)
@@ -609,17 +648,25 @@ export function QuickLogClient({ userId }: { userId: string }) {
     (newWeight: number) => {
       if (!currentImplement) return;
       haptic.light();
+      // Look up the catalog displayLabel for the newly-selected weight so
+      // the big header re-renders with "16 lb" / "7.26 kg" instead of the
+      // previous label going stale.
+      const newLabel =
+        weightPresetLabels[currentImplement.event]?.find((p) => Math.abs(p.kg - newWeight) < 0.01)
+          ?.label ?? null;
       // Update the current implement's weight in the list
       setImplements((prev) =>
         prev.map((impl, i) =>
-          i === implementIndex ? { ...impl, implementWeight: newWeight } : impl
+          i === implementIndex
+            ? { ...impl, implementWeight: newWeight, displayLabel: newLabel }
+            : impl
         )
       );
       // Persist updated selection
       localStorage.setItem(IMPLEMENT_KEY, `${currentImplement.event}|${newWeight}`);
       setWeightPickerOpen(false);
     },
-    [currentImplement, implementIndex]
+    [currentImplement, implementIndex, weightPresetLabels]
   );
 
   /* ── Log throw (immediate, no popover) ──────────────────────────────── */
@@ -1067,7 +1114,8 @@ export function QuickLogClient({ userId }: { userId: string }) {
                       onClick={() => setWeightPickerOpen((v) => !v)}
                       className="font-mono inline-flex items-center gap-1 text-primary-400 underline underline-offset-4 decoration-primary-400/30"
                     >
-                      {currentImplement?.implementWeight ?? "—"}kg
+                      {currentImplement?.displayLabel ??
+                        (currentImplement ? `${currentImplement.implementWeight}kg` : "—")}
                       <span className="text-[10px] no-underline">▾</span>
                     </button>
                   </span>
@@ -1079,6 +1127,12 @@ export function QuickLogClient({ userId }: { userId: string }) {
                       const isActive = Math.abs(w - currentImplement.implementWeight) < 0.01;
                       const isComp =
                         Math.abs(w - (compWeights[currentImplement.event] ?? 0)) < 0.01;
+                      // Catalog displayLabel for this preset, when known —
+                      // shows imperial implements as "16 lb" instead of "7.26kg".
+                      const presetLabel =
+                        weightPresetLabels[currentImplement.event]?.find(
+                          (p) => Math.abs(p.kg - w) < 0.01
+                        )?.label ?? null;
                       return (
                         <button
                           key={w}
@@ -1091,7 +1145,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
                               : "bg-surface-800 text-surface-300 active:bg-surface-700"
                           )}
                         >
-                          {w}kg
+                          {presetLabel ?? `${w}kg`}
                           {isComp && !isActive && (
                             <span className="ml-1 text-[9px] text-primary-400 font-sans">comp</span>
                           )}

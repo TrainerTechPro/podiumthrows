@@ -12,6 +12,8 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { COMPETITION_WEIGHTS, IMPLEMENT_PRESETS } from "@/lib/throws";
 import { recordThrow } from "@/lib/throws/pr";
+import { findCatalogMatchForWeight } from "@/lib/implements";
+import type { ImplementType } from "@prisma/client";
 import { updateThrowsStreak } from "@/lib/streak";
 import { emitPR } from "@/lib/team-activity";
 import { logger } from "@/lib/logger";
@@ -38,6 +40,35 @@ interface ImplementOption {
   event: string;
   implementWeight: number;
   label: string;
+  /// Catalog displayLabel ("16 lb", "7.26 kg", "18 lb · 3/4 wire") when the
+  /// preset weight resolves to a catalog row. Client renders this in
+  /// preference to the legacy `${kg}kg` label so imperial implements show
+  /// as the catalog names them. Null = no catalog match (legacy fallback).
+  displayLabel?: string | null;
+}
+
+/** EventType (SHOT_PUT) → ImplementType (SHOT). Returns null for unknowns. */
+function eventToImplementType(event: string): ImplementType | null {
+  if (event === "SHOT_PUT") return "SHOT";
+  if (event === "HAMMER" || event === "DISCUS" || event === "JAVELIN") return event;
+  return null;
+}
+
+/**
+ * Resolve a (event, kg) pair to the canonical catalog displayLabel.
+ * Returns null when there's no catalog row near that weight (very rare —
+ * the presets are calibrated to standard catalog weights). Defaults to
+ * the metric variant when both metric + imperial rows match the weight
+ * (e.g. 7.26 kg matches both "7.26 kg" and "16 lb"); coaches who want
+ * imperial labels in quick-log should add an athlete-level preference
+ * later — out of scope for this pass.
+ */
+async function resolveCatalogLabel(event: string, kg: number): Promise<string | null> {
+  const throwType = eventToImplementType(event);
+  if (!throwType) return null;
+  const match = await findCatalogMatchForWeight(kg, throwType, { unitSystem: "metric" });
+  if (match.kind === "exact" || match.kind === "tolerated") return match.implement.displayLabel;
+  return null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -89,16 +120,30 @@ function buildAvailableImplements(events: string[], gender: string): ImplementOp
   });
 }
 
+/** Attach catalog displayLabel to an implement option, in place. */
+async function enrichWithCatalogLabel(opt: ImplementOption): Promise<ImplementOption> {
+  if (opt.implementWeight <= 0) return opt;
+  const displayLabel = await resolveCatalogLabel(opt.event, opt.implementWeight);
+  return { ...opt, displayLabel };
+}
+
 /** Get the most recently used implement for an athlete, or fall back to competition weight. */
 async function getCurrentImplement(
   athleteId: string,
   primaryEvent: string,
   gender: string
 ): Promise<ImplementOption> {
+  // Pull the most recent throw — prefer its joined catalog implement when
+  // present so the picker label matches what the throw was actually logged
+  // against (e.g. "16 lb" instead of "7.26kg" when the athlete throws imperial).
   const recent = await prisma.throwLog.findFirst({
     where: { athleteId },
     orderBy: { date: "desc" },
-    select: { event: true, implementWeight: true },
+    select: {
+      event: true,
+      implementWeight: true,
+      implement: { select: { displayLabel: true } },
+    },
   });
 
   if (recent) {
@@ -106,6 +151,9 @@ async function getCurrentImplement(
       event: recent.event as string,
       implementWeight: recent.implementWeight,
       label: formatWeight(recent.implementWeight, recent.event as string),
+      displayLabel:
+        recent.implement?.displayLabel ??
+        (await resolveCatalogLabel(recent.event as string, recent.implementWeight)),
     };
   }
 
@@ -115,6 +163,7 @@ async function getCurrentImplement(
     event: primaryEvent,
     implementWeight,
     label: formatWeight(implementWeight, primaryEvent),
+    displayLabel: await resolveCatalogLabel(primaryEvent, implementWeight),
   };
 }
 
@@ -166,6 +215,9 @@ export async function GET() {
         distance: true,
         notes: true,
         date: true,
+        // Joined for canonical catalog label — falls back to "${kg}kg"
+        // client-side when the row predates the catalog backfill.
+        implement: { select: { displayLabel: true } },
       },
     });
 
@@ -175,6 +227,7 @@ export async function GET() {
         id: t.id,
         event: t.event as string,
         implementWeight: t.implementWeight,
+        implementLabel: t.implement?.displayLabel ?? null,
         distance: t.distance ?? null,
         feeling,
         notes: text,
@@ -191,13 +244,22 @@ export async function GET() {
     });
 
     const currentImplement = await getCurrentImplement(athlete.id, primaryEvent, gender);
-    const availableImplements = buildAvailableImplements(events, gender);
+    const availableImplements = await Promise.all(
+      buildAvailableImplements(events, gender).map(enrichWithCatalogLabel)
+    );
 
-    // Weight presets per event for the implement weight picker
+    // Weight presets per event for the implement weight picker. Each preset
+    // ships with its catalog displayLabel so the pill renders "16 lb" /
+    // "7.26 kg" instead of always "${kg}kg".
     const genderKey = gender === "FEMALE" ? "female" : "male";
     const weightPresets: Record<string, number[]> = {};
+    const weightPresetLabels: Record<string, Array<{ kg: number; label: string | null }>> = {};
     for (const ev of events) {
-      weightPresets[ev] = IMPLEMENT_PRESETS[ev]?.[genderKey] ?? [];
+      const kgList = IMPLEMENT_PRESETS[ev]?.[genderKey] ?? [];
+      weightPresets[ev] = kgList; // legacy field — kept for back-compat
+      weightPresetLabels[ev] = await Promise.all(
+        kgList.map(async (kg) => ({ kg, label: await resolveCatalogLabel(ev, kg) }))
+      );
     }
 
     // Competition weights per event for highlighting
@@ -217,6 +279,7 @@ export async function GET() {
         throwCount,
         availableImplements,
         weightPresets,
+        weightPresetLabels,
         compWeights,
         sessionFocus: todaySession?.focus ?? null,
       },
