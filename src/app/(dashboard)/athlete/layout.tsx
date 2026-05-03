@@ -6,6 +6,8 @@ import { getUnreadCount } from "@/lib/notifications";
 import { WhoopAutoSync } from "./_whoop-auto-sync";
 import { OuraAutoSync } from "./_oura-auto-sync";
 import { WhatsNewModal } from "@/components/feedback/WhatsNewModal";
+import { UnitPrefsProvider } from "@/lib/units/provider";
+import { parseUnitPrefs } from "@/lib/units/types";
 
 export default async function AthleteLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -21,6 +23,7 @@ export default async function AthleteLayout({ children }: { children: React.Reac
       lastName: true,
       avatarUrl: true,
       events: true,
+      displayUnits: true,
       user: { select: { email: true } },
       whoopConnection: { select: { lastSyncAt: true } },
       ouraConnection: { select: { lastSyncAt: true } },
@@ -47,12 +50,16 @@ export default async function AthleteLayout({ children }: { children: React.Reac
     trainingEnabled: isCoachTraining,
   };
 
+  const unitPrefs = parseUnitPrefs(athlete.displayUnits);
+
   return (
-    <DashboardLayout user={user} notificationCount={notificationCount}>
-      {hasWhoop && <WhoopAutoSync />}
-      {hasOura && <OuraAutoSync />}
-      {children}
-      <WhatsNewModal />
-    </DashboardLayout>
+    <UnitPrefsProvider initial={unitPrefs}>
+      <DashboardLayout user={user} notificationCount={notificationCount}>
+        {hasWhoop && <WhoopAutoSync />}
+        {hasOura && <OuraAutoSync />}
+        {children}
+        <WhatsNewModal />
+      </DashboardLayout>
+    </UnitPrefsProvider>
   );
 }

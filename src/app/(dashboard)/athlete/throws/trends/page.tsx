@@ -12,6 +12,8 @@ import {
 } from "@/lib/hooks/useEventChartSettings";
 import { formatImplementDisplay } from "@/lib/throws/display";
 import { ThrowsChipNav } from "../_chip-nav";
+import { useUnitPref } from "@/lib/units/provider";
+import { UnitToggle } from "@/components/units/UnitToggle";
 
 import { logger } from "@/lib/logger";
 const DistanceTrendChart = dynamic(
@@ -117,6 +119,11 @@ export default function ThrowAnalysisPage() {
   const [data, setData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Distance display unit drives the PR list, comp/practice avg row, and the
+  // per-implement breakdown table. Per-event charts each read the same hook
+  // independently for their tooltip + Y-axis formatting.
+  const { format: formatDist } = useUnitPref("distance");
 
   useEffect(() => {
     fetch("/api/athlete/throws/analysis")
@@ -282,7 +289,7 @@ export default function ThrowAnalysisPage() {
                         </p>
                       </div>
                       <span className="text-lg font-bold font-mono text-primary-600 dark:text-primary-300 whitespace-nowrap">
-                        {pr.distance.toFixed(2)}m
+                        {formatDist(pr.distance)}
                       </span>
                     </div>
                   </div>
@@ -323,7 +330,7 @@ export default function ThrowAnalysisPage() {
             {totalComp.avgDistance > 0 && (
               <div>
                 <p className="text-sm font-semibold text-primary-600 dark:text-primary-300">
-                  {totalComp.avgDistance.toFixed(2)}m avg
+                  {formatDist(totalComp.avgDistance)} avg
                 </p>
               </div>
             )}
@@ -351,7 +358,7 @@ export default function ThrowAnalysisPage() {
             {totalPract.avgDistance > 0 && (
               <div>
                 <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                  {totalPract.avgDistance.toFixed(2)}m avg
+                  {formatDist(totalPract.avgDistance)} avg
                 </p>
               </div>
             )}
@@ -402,11 +409,11 @@ export default function ThrowAnalysisPage() {
                           <p className="text-xs text-surface-700 dark:text-surface-300">
                             {row.throwCount} throw
                             {row.throwCount !== 1 ? "s" : ""} &middot; avg{" "}
-                            {row.avgDistance.toFixed(2)}m
+                            {formatDist(row.avgDistance)}
                           </p>
                         </div>
                         <span className="text-base font-bold font-mono text-orange-600 dark:text-orange-400 whitespace-nowrap">
-                          {row.bestDistance.toFixed(2)}m
+                          {formatDist(row.bestDistance)}
                         </span>
                       </div>
                     ))}
@@ -460,6 +467,11 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
   const compLabel = compLabelFor(event, gender);
   const compKg = compKgFor(event, gender);
 
+  // Distance display unit — chart Y-axis + tooltip render in this unit. Inline
+  // toggle next to the chart title lets the athlete flip without leaving the page.
+  const distancePref = useUnitPref("distance");
+  const distanceUnit = distancePref.unit;
+
   const { settings, setDateRange, toggleWeight, resetToComp } = useEventChartSettings(
     athleteId,
     event,
@@ -500,8 +512,11 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
     [dateFilteredTrends, settings.visibleWeights]
   );
 
-  // Aggregate: best distance per date per implement
+  // Aggregate: best distance per date per implement, then convert from canonical
+  // meters to the athlete's chosen display unit so the chart Y-axis + tooltips
+  // render in feet for imperial users without recharts knowing about units.
   const chartData = useMemo(() => {
+    const mToDisplay = (m: number) => (distanceUnit === "imperial" ? m / 0.3048 : m);
     const byDate = new Map<string, Record<string, number>>();
     for (const t of visibleTrends) {
       const existing = byDate.get(t.date) ?? {};
@@ -511,8 +526,12 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
     }
     return Array.from(byDate.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, values]) => ({ date: fmtDate(date), ...values }));
-  }, [visibleTrends]);
+      .map(([date, values]) => {
+        const converted: Record<string, number> = {};
+        for (const [k, v] of Object.entries(values)) converted[k] = mToDisplay(v);
+        return { date: fmtDate(date), ...converted };
+      });
+  }, [visibleTrends, distanceUnit]);
 
   const visibleImplementKeys = settings.visibleWeights.filter((w) =>
     allImplements.some((i) => i.label === w)
@@ -534,19 +553,22 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
             <p className="text-xs text-muted mt-0.5">Distance progression by implement</p>
           </div>
         </div>
-        {/* Date range picker */}
-        <select
-          value={settings.dateRange}
-          onChange={(e) => setDateRange(e.target.value as DateRangeKey)}
-          className="text-xs px-2 py-1 rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
-          aria-label="Date range"
-        >
-          {(Object.keys(DATE_RANGE_LABELS) as DateRangeKey[]).map((key) => (
-            <option key={key} value={key}>
-              {DATE_RANGE_LABELS[key]}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <UnitToggle type="distance" size="compact" />
+          {/* Date range picker */}
+          <select
+            value={settings.dateRange}
+            onChange={(e) => setDateRange(e.target.value as DateRangeKey)}
+            className="text-xs px-2 py-1 rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            aria-label="Date range"
+          >
+            {(Object.keys(DATE_RANGE_LABELS) as DateRangeKey[]).map((key) => (
+              <option key={key} value={key}>
+                {DATE_RANGE_LABELS[key]}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Weight toggle chips */}
@@ -582,6 +604,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
           implementKeys={visibleImplementKeys}
           implementKgMap={implementKgMap}
           compKg={compKg}
+          unit={distanceUnit}
         />
       ) : (
         <div className="py-10 text-center space-y-2">

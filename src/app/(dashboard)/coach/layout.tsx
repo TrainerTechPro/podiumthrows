@@ -6,6 +6,8 @@ import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getUnreadCount } from "@/lib/notifications";
 import { WhatsNewModal } from "@/components/feedback/WhatsNewModal";
 import { SidelineFAB } from "@/components/coach/SidelineFAB";
+import { UnitPrefsProvider } from "@/lib/units/provider";
+import { parseUnitPrefs } from "@/lib/units/types";
 
 export default async function CoachLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -15,11 +17,17 @@ export default async function CoachLayout({ children }: { children: React.ReactN
 
   if (!coach) redirect("/login");
 
-  // Fetch activeMode for the mode toggle
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { activeMode: true },
-  });
+  // Fetch activeMode + display-units for the mode toggle / unit prefs.
+  const [dbUser, coachPrefs] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { activeMode: true },
+    }),
+    prisma.coachProfile.findUnique({
+      where: { userId: session.userId },
+      select: { displayUnits: true },
+    }),
+  ]);
 
   const user: DashboardUser = {
     userId: session.userId,
@@ -34,11 +42,15 @@ export default async function CoachLayout({ children }: { children: React.ReactN
 
   const notificationCount = await getUnreadCount(coach.id, "COACH");
 
+  const unitPrefs = parseUnitPrefs(coachPrefs?.displayUnits);
+
   return (
-    <DashboardLayout user={user} notificationCount={notificationCount}>
-      {children}
-      <WhatsNewModal />
-      <SidelineFAB />
-    </DashboardLayout>
+    <UnitPrefsProvider initial={unitPrefs}>
+      <DashboardLayout user={user} notificationCount={notificationCount}>
+        {children}
+        <WhatsNewModal />
+        <SidelineFAB />
+      </DashboardLayout>
+    </UnitPrefsProvider>
   );
 }

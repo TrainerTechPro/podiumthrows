@@ -2,6 +2,7 @@
 
 import { Sheet } from "@/components/ui/Sheet";
 import type { HistoryThrow } from "@/lib/throws/history-types";
+import { useUnitPref } from "@/lib/units/provider";
 
 export interface HistoryDrillThrowsSheetProps {
   open: boolean;
@@ -43,6 +44,7 @@ export function HistoryDrillThrowsSheet({
   onPickThrow,
 }: HistoryDrillThrowsSheetProps) {
   const title = `${drillTypeLabel ?? "Free log"} · ${implementLabel}`;
+  const { format: formatDist } = useUnitPref("distance");
 
   return (
     <Sheet open={open} onClose={onClose} side="bottom" size="lg" title={title} ariaLabel={title}>
@@ -65,7 +67,7 @@ export function HistoryDrillThrowsSheet({
                   {formatTime(t.performedAt)}
                 </span>
                 <span className="font-mono tabular-nums text-base font-semibold text-[var(--foreground)] flex-1 text-right">
-                  {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
+                  {t.distance != null ? formatDist(t.distance) : "—"}
                 </span>
                 {t.isFoul && (
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-danger-500/15 text-danger-500 tracking-wider shrink-0">

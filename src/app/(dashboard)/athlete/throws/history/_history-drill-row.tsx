@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { HistoryDrill, HistoryThrow } from "@/lib/throws/history-types";
 import { EditThrowSheet, type EditableThrow } from "@/components/throws/EditThrowSheet";
 import { HistoryDrillThrowsSheet } from "./_history-drill-throws-sheet";
+import { useUnitPref } from "@/lib/units/provider";
 
 interface Props {
   drill: HistoryDrill;
@@ -28,11 +29,12 @@ function toEditable(t: HistoryThrow, athleteId: string): EditableThrow {
 export function HistoryDrillRow({ drill, athleteId, onDataChanged }: Props) {
   const [listOpen, setListOpen] = useState(false);
   const [editing, setEditing] = useState<HistoryThrow | null>(null);
+  const { format: formatDist } = useUnitPref("distance");
 
   const label = drill.drillTypeLabel
     ? `${drill.drillTypeLabel} · ${drill.implementLabel}`
     : `Free log · ${drill.implementLabel}`;
-  const best = drill.bestMark != null ? `${drill.bestMark.toFixed(2)}m` : "—";
+  const best = drill.bestMark != null ? formatDist(drill.bestMark) : "—";
 
   const bestThrow =
     drill.bestThrowLogId != null
