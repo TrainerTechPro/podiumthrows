@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { HistoryDay } from "@/lib/throws/history-types";
 import { HistoryDrillRow } from "./_history-drill-row";
+import { useUnitPref } from "@/lib/units/provider";
 
 // Inline event colors mirror EVENT_META used elsewhere in the codebase.
 // Hex literals are intentional here per the plan; no shared constant exists yet
@@ -31,7 +32,8 @@ interface Props {
 
 export function HistoryDayCard({ day, athleteId, onDataChanged }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const best = day.bestMarkOverall != null ? `${day.bestMarkOverall.toFixed(2)}m` : null;
+  const { format: formatDist } = useUnitPref("distance");
+  const best = day.bestMarkOverall != null ? formatDist(day.bestMarkOverall) : null;
 
   return (
     <div className={`card ${expanded ? "border-primary-500/30" : ""}`}>

@@ -302,6 +302,13 @@ model CoachProfile {
   /// { inApp: { PR_ALERT: bool, LOW_READINESS: bool, ... } }
   /// Missing keys default to TRUE (coach receives the notification).
   notificationPreferences Json?
+
+  /// Per-data-type display unit preferences for the coach view. Same shape
+  /// as AthleteProfile.displayUnits. Coaches use their own prefs even when
+  /// viewing an athlete's data — a US coach watching a European athlete
+  /// still wants to see distances in feet.
+  displayUnits            Json?
+
   enabledModules          String?          @default("[\"general\",\"throws\"]") @db.Text
   onboardingCompletedAt   DateTime? // null = not completed; timestamp = completed/dismissed
   trainingEnabled         Boolean          @default(false)
@@ -418,6 +425,12 @@ model AthleteProfile {
   // Client-side notification preferences.
   // Shape: { streakReminder: { enabled: bool, promptDismissed: bool } }
   notificationPreferences Json?
+
+  /// Per-data-type display unit preferences. Persists across sessions and
+  /// devices. Shape: { distance, bodyWeight, liftingWeight, height: "metric"|"imperial" }.
+  /// Missing keys default to "metric". Implement weights are NOT included —
+  /// they render via the catalog's per-row primaryUnit (see Implement model).
+  displayUnits Json?
 
   // Performance benchmarks (stored as JSON string)
   // e.g. { squat1RM, bench1RM, deadlift1RM, cleanAndJerk1RM, snatch1RM, overheadPress1RM, ... }

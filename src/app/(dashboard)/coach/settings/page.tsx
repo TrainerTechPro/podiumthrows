@@ -31,6 +31,10 @@ const CoachImplementsTabContent = dynamic(
   () => import("./_implements-tab").then((m) => ({ default: m.ImplementsTabContent })),
   { ssr: false }
 );
+const CoachUnitsPanel = dynamic(
+  () => import("@/components/settings/UnitsPanel").then((m) => ({ default: m.UnitsPanel })),
+  { ssr: false }
+);
 
 const ProfilePictureEditor = dynamic(() => import("@/components/profile-picture-editor"), {
   ssr: false,
@@ -690,6 +694,9 @@ export default function CoachSettingsPage() {
                 </button>
               </div>
             </form>
+
+            {/* Units Section — per-data-type metric/imperial display prefs */}
+            <CoachUnitsPanel />
 
             {/* Password Section */}
             <form onSubmit={handleChangePassword} className="card">

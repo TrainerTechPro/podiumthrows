@@ -15,6 +15,7 @@ import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 import { DeliveryPreferencesSection } from "@/components/delivery-preferences-section";
 import { NotificationPreferencesClient } from "./notifications/_notification-preferences-client";
+import { UnitsPanel } from "@/components/settings/UnitsPanel";
 import type { AthleteProfileFull } from "@/lib/data/athlete";
 import type { PushPreferences } from "@/lib/push/preferences";
 
@@ -142,6 +143,7 @@ export function AthleteSettingsTabs({
 
           <AthleteSettingsForm profile={profile} />
           <QuickActionsSettings role="ATHLETE" />
+          <UnitsPanel />
         </TabPanel>
 
         {/* ── Notifications ────────────────────────────────────────────── */}
