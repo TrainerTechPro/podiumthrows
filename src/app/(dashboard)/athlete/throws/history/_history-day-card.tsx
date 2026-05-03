@@ -32,7 +32,7 @@ interface Props {
 
 export function HistoryDayCard({ day, athleteId, onDataChanged }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const { format: formatDist } = useUnitPref("distance");
+  const { format: formatDist } = useUnitPref("throwDistance");
   const best = day.bestMarkOverall != null ? formatDist(day.bestMarkOverall) : null;
 
   return (

@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 import { Trash2, Flag, Pencil, Check, X } from "lucide-react";
 import {
   CM_TO_INCHES,
-  formatTestValueShort,
   type PerformanceTestAttemptDTO,
   type PerformanceTestTypeDTO,
 } from "@/lib/performance-tests-display";
+import { useTestValueFormatter } from "@/lib/units/test-format";
 
 const CM_PER_INCH = 2.54;
 
@@ -44,6 +44,7 @@ export function AttemptRow({
   onToggleFoul,
   onDelete,
 }: AttemptRowProps) {
+  const formatValue = useTestValueFormatter();
   // Edit input shows the value in the user's preferred unit (only meaningful
   // for cm-unit tests; sec/inputUnit="cm" tests behave unchanged).
   const editsInInches = testType.unit === "cm" && inputUnit === "in";
@@ -174,7 +175,7 @@ export function AttemptRow({
                 isFoul && "line-through"
               )}
             >
-              {formatTestValueShort(attempt.value, testType.unit)}
+              {formatValue(attempt.value, testType)}
             </span>
           )}
         </div>

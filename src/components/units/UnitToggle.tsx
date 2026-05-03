@@ -7,7 +7,7 @@
  * inactive pill flips the user's pref for that data type — the change is
  * reflected immediately and persisted via the provider's PATCH.
  *
- *   <UnitToggle type="distance" />   →  [ m ] [ ft ]
+ *   <UnitToggle type="throwDistance" />   →  [ m ] [ ft ]
  *
  * Designed to be visually quiet — small, monochrome until interacted with.
  * Lives next to the value it controls (chart title, PR card headline)

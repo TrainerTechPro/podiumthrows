@@ -15,10 +15,15 @@ const UnitChoiceEnum = z.enum(["metric", "imperial"]);
  * other's keys.
  */
 const PatchSchema = z.object({
-  distance: UnitChoiceEnum.optional(),
+  throwDistance: UnitChoiceEnum.optional(),
+  verticalJump: UnitChoiceEnum.optional(),
+  broadJump: UnitChoiceEnum.optional(),
   bodyWeight: UnitChoiceEnum.optional(),
   liftingWeight: UnitChoiceEnum.optional(),
   height: UnitChoiceEnum.optional(),
+  /// Legacy key from PR #46 — kept so an in-flight client (cached JS) can
+  /// still PATCH without erroring. Server normalizes to throwDistance below.
+  distance: UnitChoiceEnum.optional(),
 });
 
 /**
@@ -72,6 +77,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "No fields to update" }, { status: 400 });
     }
 
+    // Normalize legacy `distance` key (PR #46) → `throwDistance`. If the
+    // client sent both, throwDistance wins.
+    const { distance: legacyDistance, ...rest } = parsed;
+    const normalized: Record<string, "metric" | "imperial"> = { ...rest };
+    if (legacyDistance && !normalized.throwDistance) {
+      normalized.throwDistance = legacyDistance;
+    }
+
     if (session.role === "COACH") {
       const coach = await prisma.coachProfile.findUnique({
         where: { userId: session.userId },
@@ -80,7 +93,7 @@ export async function PATCH(request: NextRequest) {
       if (!coach) {
         return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
       }
-      const merged = { ...parseUnitPrefs(coach.displayUnits), ...parsed };
+      const merged = { ...parseUnitPrefs(coach.displayUnits), ...normalized };
       await prisma.coachProfile.update({
         where: { id: coach.id },
         data: { displayUnits: merged },
@@ -95,7 +108,7 @@ export async function PATCH(request: NextRequest) {
     if (!athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
-    const merged = { ...parseUnitPrefs(athlete.displayUnits), ...parsed };
+    const merged = { ...parseUnitPrefs(athlete.displayUnits), ...normalized };
     await prisma.athleteProfile.update({
       where: { id: athlete.id },
       data: { displayUnits: merged },

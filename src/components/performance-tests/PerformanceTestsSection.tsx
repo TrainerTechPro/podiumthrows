@@ -9,12 +9,13 @@ import { TestOverviewCard } from "./TestOverviewCard";
 import { TestTrendChart } from "./TestTrendChart";
 import { CoachTestCaptureSheet } from "./CoachTestCaptureSheet";
 import {
-  formatTestValueShort,
   recordedByDisplayName,
   type PerformanceTestSessionDTO,
   type PerformanceTestTrendPointDTO,
   type PerformanceTestTypeDTO,
 } from "@/lib/performance-tests-display";
+import { UnitToggle } from "@/components/units/UnitToggle";
+import { useTestValueFormatter } from "@/lib/units/test-format";
 
 export interface PerformanceTestsSectionProps {
   athleteId: string;
@@ -37,6 +38,9 @@ interface TrendBucket {
  */
 export function PerformanceTestsSection({ athleteId, athleteName }: PerformanceTestsSectionProps) {
   const toast = useToast();
+  // Per-test-type pref-aware formatter. Vertical jump cm↔in, broad jump
+  // cm↔ft+in, sprints always in seconds.
+  const formatValue = useTestValueFormatter();
   const [types, setTypes] = useState<PerformanceTestTypeDTO[]>([]);
   const [buckets, setBuckets] = useState<TrendBucket[]>([]);
   const [activeType, setActiveType] = useState<PerformanceTestTypeDTO | null>(null);
@@ -218,13 +222,18 @@ export function PerformanceTestsSection({ athleteId, athleteName }: PerformanceT
           </button>
         </header>
 
-        <div>
-          <h2 className="font-heading text-xl font-semibold text-[var(--foreground)]">
-            {activeType.name}
-          </h2>
-          <p className="text-xs text-muted mt-0.5">
-            {activeType.lowerIsBetter ? "Lower is better" : "Higher is better"} · {activeType.unit}
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-heading text-xl font-semibold text-[var(--foreground)]">
+              {activeType.name}
+            </h2>
+            <p className="text-xs text-muted mt-0.5">
+              {activeType.lowerIsBetter ? "Lower is better" : "Higher is better"} ·{" "}
+              {activeType.unit}
+            </p>
+          </div>
+          {activeType.key === "vertical_jump" && <UnitToggle type="verticalJump" size="compact" />}
+          {activeType.key === "broad_jump" && <UnitToggle type="broadJump" size="compact" />}
         </div>
 
         <TestTrendChart testType={activeType} points={trendPoints} />
@@ -306,16 +315,12 @@ export function PerformanceTestsSection({ athleteId, athleteName }: PerformanceT
                             className="hover:underline"
                             disabled={!peakAttempt}
                           >
-                            {s.peakValue != null
-                              ? formatTestValueShort(s.peakValue, activeType.unit)
-                              : "—"}
+                            {s.peakValue != null ? formatValue(s.peakValue, activeType) : "—"}
                           </button>
                         )}
                       </td>
                       <td className="py-2.5 pr-4 font-mono tabular-nums text-muted">
-                        {s.avgValue != null
-                          ? formatTestValueShort(s.avgValue, activeType.unit)
-                          : "—"}
+                        {s.avgValue != null ? formatValue(s.avgValue, activeType) : "—"}
                       </td>
                       <td className="py-2.5 pr-4 font-mono tabular-nums text-muted">
                         {s.attemptCount}

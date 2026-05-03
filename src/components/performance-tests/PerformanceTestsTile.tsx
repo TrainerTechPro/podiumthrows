@@ -6,10 +6,10 @@ import { logger } from "@/lib/logger";
 import { TestTypePickerSheet } from "./TestTypePickerSheet";
 import { TestIcon } from "./test-icon";
 import {
-  formatTestValueShort,
   type PerformanceTestSessionDTO,
   type PerformanceTestTypeDTO,
 } from "@/lib/performance-tests-display";
+import { useTestValueFormatter } from "@/lib/units/test-format";
 
 export interface PerformanceTestsTileProps {
   athleteId: string;
@@ -32,6 +32,7 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
   const [state, setState] = useState<TileState | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const formatValue = useTestValueFormatter();
 
   async function load() {
     try {
@@ -143,9 +144,7 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
             {testType.name}
           </div>
           <div className="font-mono tabular-nums text-2xl font-semibold text-[var(--foreground)] mt-1">
-            {current.peakValue != null
-              ? formatTestValueShort(current.peakValue, testType.unit)
-              : "—"}
+            {current.peakValue != null ? formatValue(current.peakValue, testType) : "—"}
           </div>
           {delta != null && TrendIcon && (
             <div

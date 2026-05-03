@@ -44,7 +44,7 @@ export function HistoryDrillThrowsSheet({
   onPickThrow,
 }: HistoryDrillThrowsSheetProps) {
   const title = `${drillTypeLabel ?? "Free log"} · ${implementLabel}`;
-  const { format: formatDist } = useUnitPref("distance");
+  const { format: formatDist } = useUnitPref("throwDistance");
 
   return (
     <Sheet open={open} onClose={onClose} side="bottom" size="lg" title={title} ariaLabel={title}>

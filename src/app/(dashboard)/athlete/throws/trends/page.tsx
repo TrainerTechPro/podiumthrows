@@ -123,7 +123,7 @@ export default function ThrowAnalysisPage() {
   // Distance display unit drives the PR list, comp/practice avg row, and the
   // per-implement breakdown table. Per-event charts each read the same hook
   // independently for their tooltip + Y-axis formatting.
-  const { format: formatDist } = useUnitPref("distance");
+  const { format: formatDist } = useUnitPref("throwDistance");
 
   useEffect(() => {
     fetch("/api/athlete/throws/analysis")
@@ -469,7 +469,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
 
   // Distance display unit — chart Y-axis + tooltip render in this unit. Inline
   // toggle next to the chart title lets the athlete flip without leaving the page.
-  const distancePref = useUnitPref("distance");
+  const distancePref = useUnitPref("throwDistance");
   const distanceUnit = distancePref.unit;
 
   const { settings, setDateRange, toggleWeight, resetToComp } = useEventChartSettings(
@@ -554,7 +554,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <UnitToggle type="distance" size="compact" />
+          <UnitToggle type="throwDistance" size="compact" />
           {/* Date range picker */}
           <select
             value={settings.dateRange}

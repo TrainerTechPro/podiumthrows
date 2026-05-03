@@ -23,7 +23,14 @@ import {
   type UnitDataType,
   type UnitPrefs,
 } from "./types";
-import { formatBodyWeight, formatDistance, formatHeight, formatLiftingWeight } from "./convert";
+import {
+  formatBodyWeight,
+  formatBroadJump,
+  formatHeight,
+  formatLiftingWeight,
+  formatThrowDistance,
+  formatVerticalJump,
+} from "./convert";
 
 const LS_KEY = "podium-display-units";
 
@@ -127,8 +134,12 @@ export function useUnitPref(type: UnitDataType): UseUnitPrefResult {
     (value: number | null | undefined): string => {
       if (value == null) return "—";
       switch (type) {
-        case "distance":
-          return formatDistance(value, unit);
+        case "throwDistance":
+          return formatThrowDistance(value, unit);
+        case "verticalJump":
+          return formatVerticalJump(value, unit);
+        case "broadJump":
+          return formatBroadJump(value, unit);
         case "bodyWeight":
           return formatBodyWeight(value, unit);
         case "liftingWeight":

@@ -48,8 +48,37 @@ export function cmToFtInString(cm: number): string {
 
 /* ─── Per-data-type formatters ─────────────────────────────────────────── */
 
-export function formatDistance(meters: number, unit: UnitChoice): string {
+/** Throw distance — meters or feet+inches. Stored in meters. */
+export function formatThrowDistance(meters: number, unit: UnitChoice): string {
   if (!Number.isFinite(meters)) return "—";
+  if (unit === "imperial") return metersToFtInString(meters);
+  return `${meters.toFixed(2)} m`;
+}
+
+/** Legacy alias — kept for any in-flight callers. New code should call
+ *  formatThrowDistance directly. */
+export const formatDistance = formatThrowDistance;
+
+/**
+ * Vertical jump — cm or inches. Stored in cm.
+ * Imperial = whole inches with a `"` glyph (e.g. `32"`) since vertical
+ * jumps fit cleanly in single-digit inches above 24"; ft+in is wrong scale.
+ */
+export function formatVerticalJump(cm: number, unit: UnitChoice): string {
+  if (!Number.isFinite(cm)) return "—";
+  if (unit === "imperial") return `${Math.round(cm * (1 / CM_PER_IN))}"`;
+  return `${cm.toFixed(1)} cm`;
+}
+
+/**
+ * Broad jump — meters or feet+inches. Stored in cm.
+ * Imperial = ft+in (typical broad jump 6–12 ft). Metric = decimal meters
+ * (matches throws — coaches read a "2.85 m" broad jump the same way they
+ * read a hammer throw).
+ */
+export function formatBroadJump(cm: number, unit: UnitChoice): string {
+  if (!Number.isFinite(cm)) return "—";
+  const meters = cm / 100;
   if (unit === "imperial") return metersToFtInString(meters);
   return `${meters.toFixed(2)} m`;
 }
@@ -74,24 +103,26 @@ export function formatHeight(cm: number, unit: UnitChoice): string {
   return `${Math.round(cm)} cm`;
 }
 
-/** Compact unit suffix only (for chart axis labels, etc.). */
+/** Compact unit suffix only (for chart axis labels, segmented toggles, etc.). */
 export function unitSuffix(
-  type: "distance" | "bodyWeight" | "liftingWeight" | "height",
+  type: "throwDistance" | "verticalJump" | "broadJump" | "bodyWeight" | "liftingWeight" | "height",
   unit: UnitChoice
 ): string {
-  if (type === "distance") return unit === "imperial" ? "ft" : "m";
+  if (type === "throwDistance" || type === "broadJump") return unit === "imperial" ? "ft" : "m";
+  if (type === "verticalJump") return unit === "imperial" ? "in" : "cm";
   if (type === "height") return unit === "imperial" ? "in" : "cm";
   return unit === "imperial" ? "lb" : "kg";
 }
 
 /** Numeric conversion for chart axis math (no formatting). */
 export function convertForAxis(
-  type: "distance" | "bodyWeight" | "liftingWeight" | "height",
+  type: "throwDistance" | "verticalJump" | "broadJump" | "bodyWeight" | "liftingWeight" | "height",
   canonical: number,
   unit: UnitChoice
 ): number {
   if (unit === "metric") return canonical;
-  if (type === "distance") return mToFt(canonical);
-  if (type === "height") return cmToIn(canonical);
+  if (type === "throwDistance") return mToFt(canonical);
+  if (type === "broadJump") return mToFt(canonical / 100); // canonical cm → ft
+  if (type === "verticalJump" || type === "height") return cmToIn(canonical);
   return kgToLb(canonical);
 }
