@@ -3,10 +3,10 @@
 import { MiniSparkline } from "@/components/charts/MiniSparkline";
 import { TestIcon } from "./test-icon";
 import {
-  formatTestValueShort,
   type PerformanceTestTrendPointDTO,
   type PerformanceTestTypeDTO,
 } from "@/lib/performance-tests-display";
+import { useTestValueFormatter } from "@/lib/units/test-format";
 import { ArrowRight } from "lucide-react";
 
 export interface TestOverviewCardProps {
@@ -35,6 +35,7 @@ function formatRelative(date: string): string {
  * view. No nested cards.
  */
 export function TestOverviewCard({ testType, points, onViewAll }: TestOverviewCardProps) {
+  const formatValue = useTestValueFormatter();
   const validPoints = points.filter((p) => p.peak != null) as Array<
     PerformanceTestTrendPointDTO & { peak: number }
   >;
@@ -78,7 +79,7 @@ export function TestOverviewCard({ testType, points, onViewAll }: TestOverviewCa
             All-time best
           </div>
           <div className="font-mono tabular-nums text-2xl font-semibold text-[var(--foreground)] mt-0.5">
-            {allTimePeak ? formatTestValueShort(allTimePeak.peak, testType.unit) : "—"}
+            {allTimePeak ? formatValue(allTimePeak.peak, testType) : "—"}
           </div>
           {allTimePeak && (
             <div className="text-[11px] text-muted mt-0.5">
@@ -96,15 +97,13 @@ export function TestOverviewCard({ testType, points, onViewAll }: TestOverviewCa
           <span className="text-muted">Last session</span>
           <span className="text-[var(--foreground)]">
             <span className="font-mono tabular-nums">
-              {lastSession.peak != null
-                ? formatTestValueShort(lastSession.peak, testType.unit)
-                : "—"}
+              {lastSession.peak != null ? formatValue(lastSession.peak, testType) : "—"}
             </span>
             {lastSession.avg != null && (
               <span className="text-muted">
                 {" · avg "}
                 <span className="font-mono tabular-nums">
-                  {formatTestValueShort(lastSession.avg, testType.unit)}
+                  {formatValue(lastSession.avg, testType)}
                 </span>
               </span>
             )}

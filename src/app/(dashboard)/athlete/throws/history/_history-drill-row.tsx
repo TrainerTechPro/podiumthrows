@@ -29,7 +29,7 @@ function toEditable(t: HistoryThrow, athleteId: string): EditableThrow {
 export function HistoryDrillRow({ drill, athleteId, onDataChanged }: Props) {
   const [listOpen, setListOpen] = useState(false);
   const [editing, setEditing] = useState<HistoryThrow | null>(null);
-  const { format: formatDist } = useUnitPref("distance");
+  const { format: formatDist } = useUnitPref("throwDistance");
 
   const label = drill.drillTypeLabel
     ? `${drill.drillTypeLabel} · ${drill.implementLabel}`
