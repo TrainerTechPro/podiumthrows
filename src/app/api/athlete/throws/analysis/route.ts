@@ -85,7 +85,9 @@ export async function GET() {
           orderBy: { createdAt: "asc" },
         }),
 
-        // ThrowLog — standalone throws (has isCompetition flag)
+        // ThrowLog — standalone throws (has isCompetition flag).
+        // Includes implement so the chart can render imperial implements by
+        // their canonical "18 lb" label instead of the "8.16kg" conversion.
         prisma.throwLog.findMany({
           where: { athleteId: athlete.id },
           select: {
@@ -95,6 +97,7 @@ export async function GET() {
             date: true,
             isPersonalBest: true,
             isCompetition: true,
+            implement: { select: { displayLabel: true, primaryUnit: true } },
           },
           orderBy: { date: "asc" },
         }),
@@ -113,7 +116,10 @@ export async function GET() {
           },
         }),
 
-        // ThrowsBlockLog — structured session throws
+        // ThrowsBlockLog — structured session throws.
+        // implementRef joins to the catalog so we display "18 lb" / "7.26 kg"
+        // canonically; the legacy `implement` text column stays as fallback
+        // for rows written before the catalog backfill ran.
         prisma.throwsBlockLog.findMany({
           where: {
             assignment: { athleteId: athlete.id },
@@ -122,6 +128,7 @@ export async function GET() {
             distance: true,
             implement: true,
             createdAt: true,
+            implementRef: { select: { displayLabel: true, primaryUnit: true } },
             assignment: {
               select: {
                 session: {
@@ -147,6 +154,7 @@ export async function GET() {
           select: {
             bestMark: true,
             implementWeight: true,
+            implement: { select: { displayLabel: true, primaryUnit: true } },
             session: { select: { event: true, date: true } },
           },
           orderBy: { createdAt: "asc" },
@@ -154,10 +162,18 @@ export async function GET() {
       ]);
 
     // ── Build distance trends ──────────────────────────────────────────────
+    //
+    // Label rule: when the row is catalog-linked (implement.displayLabel set),
+    // use that — it respects the implement's primaryUnit, so an athlete who
+    // throws 18 lb sees "18 lb", not "8.16kg". Falls back to the kg-format
+    // helper for legacy rows that haven't been catalog-backfilled.
 
     const distanceTrends: TrendPoint[] = [];
 
-    // From PracticeAttempt
+    const catalogOrKg = (catalogLabel: string | null | undefined, kg: number): string =>
+      catalogLabel ?? formatImplementKg(kg);
+
+    // From PracticeAttempt — text-only legacy field, no catalog FK yet.
     for (const pa of practiceAttempts) {
       if (pa.distance != null && pa.distance > 0) {
         const implementKg = parseImplementKg(pa.implement);
@@ -168,7 +184,7 @@ export async function GET() {
           distance: pa.distance,
           source: "practice",
           implementKg,
-          implementLabel: formatImplementKg(implementKg),
+          implementLabel: pa.implement?.trim() || formatImplementKg(implementKg),
         });
       }
     }
@@ -182,7 +198,7 @@ export async function GET() {
           distance: tl.distance,
           source: tl.isCompetition ? "competition" : "practice",
           implementKg: tl.implementWeight,
-          implementLabel: formatImplementKg(tl.implementWeight),
+          implementLabel: catalogOrKg(tl.implement?.displayLabel, tl.implementWeight),
         });
       }
     }
@@ -198,7 +214,7 @@ export async function GET() {
           distance: bl.distance,
           source: "session",
           implementKg,
-          implementLabel: formatImplementKg(implementKg),
+          implementLabel: catalogOrKg(bl.implementRef?.displayLabel, implementKg),
         });
       }
     }
@@ -215,7 +231,7 @@ export async function GET() {
         distance: dl.bestMark,
         source: "session",
         implementKg: dl.implementWeight,
-        implementLabel: formatImplementKg(dl.implementWeight),
+        implementLabel: catalogOrKg(dl.implement?.displayLabel, dl.implementWeight),
       });
     }
 
@@ -337,13 +353,21 @@ export async function GET() {
 
     for (const tl of throwLogs) {
       if (tl.distance != null && tl.distance > 0) {
-        addToImplMap(tl.event, `${tl.implementWeight}kg`, tl.distance);
+        addToImplMap(
+          tl.event,
+          tl.implement?.displayLabel ?? `${tl.implementWeight}kg`,
+          tl.distance
+        );
       }
     }
 
     for (const bl of throwsBlockLogs) {
       if (bl.distance != null && bl.distance > 0) {
-        addToImplMap(bl.assignment.session.event, bl.implement, bl.distance);
+        addToImplMap(
+          bl.assignment.session.event,
+          bl.implementRef?.displayLabel ?? bl.implement,
+          bl.distance
+        );
       }
     }
 
@@ -353,7 +377,11 @@ export async function GET() {
     for (const dl of athleteDrillLogs) {
       if (dl.bestMark == null || dl.bestMark <= 0) continue;
       if (dl.implementWeight == null || dl.implementWeight <= 0) continue;
-      addToImplMap(dl.session.event, `${dl.implementWeight}kg`, dl.bestMark);
+      addToImplMap(
+        dl.session.event,
+        dl.implement?.displayLabel ?? `${dl.implementWeight}kg`,
+        dl.bestMark
+      );
     }
 
     const implementDistribution = Array.from(implMap.entries()).map(([key, bucket]) => {
