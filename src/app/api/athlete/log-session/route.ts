@@ -127,6 +127,7 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
       improvementArea?: string;
       drills: {
         drillType: string;
+        implementId?: string | null;
         implementWeight?: number;
         implementWeightUnit?: string;
         implementWeightOriginal?: number;
@@ -146,18 +147,40 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
       );
     }
 
-    if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
+    // WEIGHT_THROW is allowed: AthleteThrowsSession.event is TEXT (not enum),
+    // and weight-throw sessions log work against custom non-traditional
+    // implements (tires, plates, weighted balls). PR detection and goal
+    // sync skip WEIGHT_THROW drills so they don't pollute event-keyed PRs.
+    if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN", "WEIGHT_THROW"].includes(event)) {
       return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
     }
 
-    // Resolve catalog implementId for each drill so new logs land
-    // catalog-keyed from day one. The matcher uses the per-drill unit hint;
-    // exact/tolerated → assign, ambiguous/none → leave null (the Fix UI
-    // will surface them).
+    // Resolve catalog identity for each drill in two passes:
+    //   1. If the client supplied implementId (custom implements + new client
+    //      flows), trust it directly and derive weight/unit from the catalog.
+    //   2. Otherwise fall back to the weight-based fuzzy matcher
+    //      (findCatalogMatchForWeight) for legacy clients that only post
+    //      kg+unit. Exact/tolerated → assign; ambiguous/none → leave null.
     const throwType = eventToImplementType(event);
+    const directIds = Array.from(
+      new Set(
+        (drills || [])
+          .map((d) => d.implementId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+      )
+    );
+    const directImpls = directIds.length
+      ? await prisma.implement.findMany({
+          where: { id: { in: directIds } },
+          select: { id: true, weightKg: true, weightLb: true, primaryUnit: true, throwType: true },
+        })
+      : [];
+    const directById = new Map(directImpls.map((i) => [i.id, i]));
+
     const drillsWithCatalog: Array<{
       drillType: string;
       implementId: string | null;
+      implementThrowType: string | null;
       implementWeight: number | null;
       implementWeightUnit: string;
       implementWeightOriginal: number | null;
@@ -170,21 +193,35 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
     }> = [];
     for (const d of drills || []) {
       let implementId: string | null = null;
-      if (throwType && d.implementWeight && d.implementWeight > 0) {
+      let implementThrowType: string | null = null;
+      let weightKg: number | null = d.implementWeight ?? null;
+      let weightUnit: string = d.implementWeightUnit ?? "kg";
+      let weightOriginal: number | null = d.implementWeightOriginal ?? null;
+
+      const direct = d.implementId ? (directById.get(d.implementId) ?? null) : null;
+      if (direct) {
+        implementId = direct.id;
+        implementThrowType = direct.throwType;
+        weightKg = direct.weightKg;
+        weightUnit = direct.primaryUnit === "lb" ? "lbs" : "kg";
+        weightOriginal = direct.primaryUnit === "lb" ? direct.weightLb : direct.weightKg;
+      } else if (throwType && d.implementWeight && d.implementWeight > 0) {
         const isLb = d.implementWeightUnit === "lbs" || d.implementWeightUnit === "lb";
         const match = await findCatalogMatchForWeight(d.implementWeight, throwType, {
           unitSystem: isLb ? "imperial" : "metric",
         });
         if (match.kind === "exact" || match.kind === "tolerated") {
           implementId = match.implement.id;
+          implementThrowType = match.implement.throwType;
         }
       }
       drillsWithCatalog.push({
         drillType: d.drillType,
         implementId,
-        implementWeight: d.implementWeight ?? null,
-        implementWeightUnit: d.implementWeightUnit ?? "kg",
-        implementWeightOriginal: d.implementWeightOriginal ?? null,
+        implementThrowType,
+        implementWeight: weightKg,
+        implementWeightUnit: weightUnit,
+        implementWeightOriginal: weightOriginal,
         wireLength: d.wireLength ?? null,
         throwCount: d.throwCount || 0,
         bestMark: d.bestMark ?? null,
@@ -210,7 +247,10 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
         mentalFocus: mentalFocus ?? null,
         bestPart: bestPart?.trim() || null,
         improvementArea: improvementArea?.trim() || null,
-        drillLogs: { create: drillsWithCatalog },
+        // implementThrowType is in-memory only — strip before Prisma insert.
+        drillLogs: {
+          create: drillsWithCatalog.map(({ implementThrowType: _t, ...rest }) => rest),
+        },
       },
       include: {
         drillLogs: true,
@@ -228,10 +268,19 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
       });
     }
 
-    // PR detection: check each drill with implementWeight + bestMark > 0
+    // PR detection: check each drill with implementWeight + bestMark > 0.
+    // Skip WEIGHT_THROW drills (tires, plates) — they aren't competition
+    // events and shouldn't attribute against the session's traditional event.
+    // The catalog-keyed AthleteImplementPR refresh above handles them.
     type PRResult = { event: string; implement: string; distance: number; previousBest?: number };
     const prs: PRResult[] = [];
+    const drillThrowTypeById = new Map(
+      drillsWithCatalog
+        .filter((d) => d.implementId)
+        .map((d) => [d.implementId!, d.implementThrowType])
+    );
     for (const dl of created.drillLogs) {
+      if (dl.implementId && drillThrowTypeById.get(dl.implementId) === "WEIGHT_THROW") continue;
       if (dl.implementWeight && dl.bestMark && dl.bestMark > 0) {
         const implementLabel = dl.implementWeightOriginal
           ? `${dl.implementWeightOriginal}${dl.implementWeightUnit ?? "kg"}`
@@ -263,12 +312,13 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
     // the next log).
     let goalCelebrations: MilestoneCelebration[] = [];
     try {
-      const result = await syncGoalsFromDrillLogs(
-        athlete.id,
-        event,
-        athlete.gender,
-        created.drillLogs
+      // WEIGHT_THROW drills don't share an EventType with the session, so the
+      // comp-weight comparison would either miss or falsely match. Filter
+      // them out before sync.
+      const goalEligible = created.drillLogs.filter(
+        (dl) => !dl.implementId || drillThrowTypeById.get(dl.implementId) !== "WEIGHT_THROW"
       );
+      const result = await syncGoalsFromDrillLogs(athlete.id, event, athlete.gender, goalEligible);
       goalCelebrations = result.celebrations;
     } catch (err) {
       logger.error("goal sync after self-logged session failed", {

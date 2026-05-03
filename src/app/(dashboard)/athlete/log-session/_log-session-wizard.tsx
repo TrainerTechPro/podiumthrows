@@ -55,6 +55,11 @@ const EVENTS = [
   { value: "DISCUS", label: "Discus", color: "#8b5cf6" },
   { value: "HAMMER", label: "Hammer", color: "#ef4444" },
   { value: "JAVELIN", label: "Javelin", color: "#22c55e" },
+  // Weight-throw sessions log work against custom non-traditional implements
+  // (tires, plates, weighted balls). Server allows the event string but
+  // doesn't attribute PRs against a traditional EventType — see
+  // /api/athlete/log-session WEIGHT_THROW guards.
+  { value: "WEIGHT_THROW", label: "Weight throw", color: "#a3a3a3" },
 ] as const;
 
 const FOCUS_OPTIONS = [
@@ -125,6 +130,7 @@ const DRILLS_BY_EVENT: Record<string, string[]> = {
     "Into the Ground",
     "Other",
   ],
+  WEIGHT_THROW: ["Full Throw", "Standing Throw", "Power Position", "Other"],
 };
 
 /* ─── Types ────────────────────────────────────────────────────────────── */
@@ -132,6 +138,10 @@ const DRILLS_BY_EVENT: Record<string, string[]> = {
 interface DrillEntry {
   id: string;
   drillType: string;
+  /** Catalog row id when picked via ImplementPicker. Sent to the server so
+   *  custom implements (3/4 wire hammers, tires, plates) resolve cleanly
+   *  without the weight-fuzzy match that can't disambiguate variants. */
+  implementId: string | null;
   implementWeight: string;
   implementUnit: "kg" | "lbs";
   wireLength: string;
@@ -329,6 +339,7 @@ export function LogSessionWizard({
               return {
                 id: d.id || crypto.randomUUID(),
                 drillType: d.drillType || "",
+                implementId: d.implementId ?? null,
                 implementWeight:
                   d.implementWeightOriginal != null
                     ? String(d.implementWeightOriginal)
@@ -396,6 +407,7 @@ export function LogSessionWizard({
       {
         id: crypto.randomUUID(),
         drillType: DEFAULT_DRILL_BY_EVENT[event] || "",
+        implementId: null,
         implementWeight: "",
         implementUnit: "kg",
         wireLength: "FULL",
@@ -484,6 +496,7 @@ export function LogSessionWizard({
             rawImpl != null && d.implementUnit === "lbs" ? rawImpl * LBS_TO_KG : rawImpl;
           return {
             drillType: d.drillType,
+            implementId: d.implementId,
             implementWeight: implWeight,
             implementWeightUnit: d.implementUnit,
             implementWeightOriginal: rawImpl,
@@ -1048,7 +1061,9 @@ function DrillCard({
       ? "SHOT"
       : event === "HAMMER" || event === "DISCUS" || event === "JAVELIN"
         ? event
-        : undefined;
+        : event === "WEIGHT_THROW"
+          ? "WEIGHT_THROW"
+          : undefined;
 
   return (
     <div className="card p-4 space-y-3">
@@ -1246,7 +1261,14 @@ function DrillCard({
         side="bottom"
         throwType={pickerThrowType}
         title="Pick implement"
+        // Drill log surface — show WEIGHT_THROW customs (tires, plates) too.
+        // Server-side throws-log filtering doesn't apply here.
+        mode="drills"
         onSelect={(row: ImplementCatalogRow) => {
+          // Persist catalog id so the server can resolve custom implements
+          // (3/4 wire variants, plates, tires) without weight-based fuzzy
+          // matching that can't disambiguate variants of the same weight.
+          onUpdate("implementId", row.id);
           // Catalog primaryUnit drives the form's unit toggle. Decimal
           // weight value comes from the canonical kg/lb on the catalog row.
           // Note: discus 600 g shows as 0.6 kg here — DrillEntry's

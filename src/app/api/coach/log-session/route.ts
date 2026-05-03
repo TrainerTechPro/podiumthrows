@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
       improvementArea?: string;
       drills: {
         drillType: string;
+        implementId?: string | null;
         implementWeight?: number;
         implementWeightUnit?: string;
         implementWeightOriginal?: number;
@@ -137,14 +138,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Invalid event type" }, { status: 400 });
     }
 
-    // Resolve catalog implementId per drill before insert. Same pattern as
-    // athlete log-session: exact/tolerated → assign, ambiguous/none → null.
+    // Resolve catalog identity per drill in two passes:
+    //   1. Direct implementId from the client (custom implements + new flows)
+    //   2. Weight-based fuzzy match (legacy clients)
     // CoachPR (legacy table) continues to track coach training PRs unchanged;
     // implementId here is for canonical labels + future catalog reads.
     const throwType = eventToImplementType(event);
+    const directIds = Array.from(
+      new Set(
+        (drills || [])
+          .map((d) => d.implementId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+      )
+    );
+    const directImpls = directIds.length
+      ? await prisma.implement.findMany({
+          where: { id: { in: directIds } },
+          select: { id: true, weightKg: true, weightLb: true, primaryUnit: true, throwType: true },
+        })
+      : [];
+    const directById = new Map(directImpls.map((i) => [i.id, i]));
+
     const drillsWithCatalog: Array<{
       drillType: string;
       implementId: string | null;
+      implementThrowType: string | null;
       implementWeight: number | null;
       implementWeightUnit: string;
       implementWeightOriginal: number | null;
@@ -157,21 +175,35 @@ export async function POST(request: NextRequest) {
     }> = [];
     for (const d of drills || []) {
       let implementId: string | null = null;
-      if (throwType && d.implementWeight && d.implementWeight > 0) {
+      let implementThrowType: string | null = null;
+      let weightKg: number | null = d.implementWeight ?? null;
+      let weightUnit: string = d.implementWeightUnit ?? "kg";
+      let weightOriginal: number | null = d.implementWeightOriginal ?? null;
+
+      const direct = d.implementId ? (directById.get(d.implementId) ?? null) : null;
+      if (direct) {
+        implementId = direct.id;
+        implementThrowType = direct.throwType;
+        weightKg = direct.weightKg;
+        weightUnit = direct.primaryUnit === "lb" ? "lbs" : "kg";
+        weightOriginal = direct.primaryUnit === "lb" ? direct.weightLb : direct.weightKg;
+      } else if (throwType && d.implementWeight && d.implementWeight > 0) {
         const isLb = d.implementWeightUnit === "lbs" || d.implementWeightUnit === "lb";
         const match = await findCatalogMatchForWeight(d.implementWeight, throwType, {
           unitSystem: isLb ? "imperial" : "metric",
         });
         if (match.kind === "exact" || match.kind === "tolerated") {
           implementId = match.implement.id;
+          implementThrowType = match.implement.throwType;
         }
       }
       drillsWithCatalog.push({
         drillType: d.drillType,
         implementId,
-        implementWeight: d.implementWeight ?? null,
-        implementWeightUnit: d.implementWeightUnit ?? "kg",
-        implementWeightOriginal: d.implementWeightOriginal ?? null,
+        implementThrowType,
+        implementWeight: weightKg,
+        implementWeightUnit: weightUnit,
+        implementWeightOriginal: weightOriginal,
         wireLength: d.wireLength ?? null,
         throwCount: d.throwCount || 0,
         bestMark: d.bestMark ?? null,
@@ -197,15 +229,26 @@ export async function POST(request: NextRequest) {
         mentalFocus: mentalFocus ?? null,
         bestPart: bestPart?.trim() || null,
         improvementArea: improvementArea?.trim() || null,
-        drillLogs: { create: drillsWithCatalog },
+        // implementThrowType is in-memory only — strip before Prisma insert.
+        drillLogs: {
+          create: drillsWithCatalog.map(({ implementThrowType: _t, ...rest }) => rest),
+        },
       },
       include: { drillLogs: true },
     });
 
-    // PR detection: check each drill with implementWeight + bestMark > 0
+    // PR detection: check each drill with implementWeight + bestMark > 0.
+    // Skip WEIGHT_THROW drills — they aren't competition events and shouldn't
+    // attribute against the session's traditional event PR.
     type PRResult = { event: string; implement: string; distance: number; previousBest?: number };
     const prs: PRResult[] = [];
+    const drillThrowTypeById = new Map(
+      drillsWithCatalog
+        .filter((d) => d.implementId)
+        .map((d) => [d.implementId!, d.implementThrowType])
+    );
     for (const dl of created.drillLogs) {
+      if (dl.implementId && drillThrowTypeById.get(dl.implementId) === "WEIGHT_THROW") continue;
       if (dl.implementWeight && dl.bestMark && dl.bestMark > 0) {
         const implementLabel = dl.implementWeightOriginal
           ? `${dl.implementWeightOriginal}${dl.implementWeightUnit ?? "kg"}`

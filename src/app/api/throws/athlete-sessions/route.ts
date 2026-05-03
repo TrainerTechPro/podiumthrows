@@ -8,6 +8,7 @@ import { parseBodyText, AthleteThrowsSessionCreateSchema } from "@/lib/api-schem
 import { withIdempotency } from "@/lib/idempotency";
 import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
 import { recordThrow } from "@/lib/throws/pr";
+import { recomputeManyPRs } from "@/lib/implements";
 import { EventType } from "@prisma/client";
 
 export type AthleteSessionPRResult = {
@@ -30,11 +31,16 @@ async function detectSessionPRs(
     implementWeightOriginal: number | null;
     implementWeightUnit: string | null;
     bestMark: number | null;
+    implement: { throwType: string } | null;
   }>
 ): Promise<AthleteSessionPRResult[]> {
   const prs: AthleteSessionPRResult[] = [];
   for (const dl of drillLogs) {
     if (!dl.implementWeight || !dl.bestMark || dl.bestMark <= 0) continue;
+    // WEIGHT_THROW drills (tires, plates, etc.) aren't competition events and
+    // don't attribute against the session's traditional event PR. The
+    // catalog-keyed AthleteImplementPR system handles them separately.
+    if (dl.implement?.throwType === "WEIGHT_THROW") continue;
     const implementLabel = dl.implementWeightOriginal
       ? `${dl.implementWeightOriginal}${dl.implementWeightUnit ?? "kg"}`
       : `${parseFloat(dl.implementWeight.toFixed(2))}kg`;
@@ -130,39 +136,76 @@ async function postHandler(
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
+    // Resolve implementId → catalog row for any drill that supplied one. The
+    // client can omit weight fields when implementId is set; we backfill from
+    // the catalog so labels stay consistent and customs (3/4 wire hammers,
+    // tires, plates) work without the client knowing the canonical kg value.
+    type IncomingDrill = {
+      drillType: string;
+      implementId?: string | null;
+      implementWeight?: number | null;
+      implementWeightUnit?: string | null;
+      implementWeightOriginal?: number | null;
+      wireLength?: string | null;
+      throwCount?: number | null;
+      bestMark?: number | null;
+      bestMarkUnit?: string | null;
+      bestMarkOriginal?: number | null;
+      notes?: string | null;
+    };
+    const incomingDrills = (drillLogs ?? []) as IncomingDrill[];
+
+    const implementIdsToResolve = Array.from(
+      new Set(incomingDrills.map((d) => d.implementId).filter((id): id is string => Boolean(id)))
+    );
+    const resolvedImplements = implementIdsToResolve.length
+      ? await prisma.implement.findMany({
+          where: { id: { in: implementIdsToResolve } },
+          select: { id: true, weightKg: true, weightLb: true, primaryUnit: true, throwType: true },
+        })
+      : [];
+    const implementsById = new Map(resolvedImplements.map((i) => [i.id, i]));
+
+    const drillCreates = incomingDrills.map((d) => {
+      const impl = d.implementId ? (implementsById.get(d.implementId) ?? null) : null;
+      // When the catalog row is known, derive weight/unit/original from it so
+      // the row is self-consistent regardless of what the client posted. The
+      // client-typed fields still win when there's no catalog row (legacy path).
+      const implementWeight = impl ? impl.weightKg : (d.implementWeight ?? null);
+      const implementWeightUnit = impl
+        ? impl.primaryUnit === "lb"
+          ? "lbs"
+          : "kg"
+        : (d.implementWeightUnit ?? "kg");
+      const implementWeightOriginal = impl
+        ? impl.primaryUnit === "lb"
+          ? impl.weightLb
+          : impl.weightKg
+        : (d.implementWeightOriginal ?? null);
+      return {
+        drillType: d.drillType,
+        implementId: impl?.id ?? null,
+        implementWeight,
+        implementWeightUnit,
+        implementWeightOriginal,
+        wireLength: d.wireLength ?? null,
+        throwCount: d.throwCount ?? 0,
+        bestMark: d.bestMark ?? null,
+        bestMarkUnit: d.bestMarkUnit ?? "meters",
+        bestMarkOriginal: d.bestMarkOriginal ?? null,
+        notes: d.notes ?? null,
+      };
+    });
+
     const session = await prisma.athleteThrowsSession.create({
       data: {
         athleteId,
         event: event as EventType,
         date,
         notes: notes || null,
-        drillLogs: drillLogs?.length
-          ? {
-              create: (
-                drillLogs as Array<{
-                  drillType: string;
-                  implementWeight?: number | null;
-                  implementWeightUnit?: string | null;
-                  implementWeightOriginal?: number | null;
-                  wireLength?: string | null;
-                  throwCount?: number;
-                  bestMark?: number | null;
-                  notes?: string | null;
-                }>
-              ).map((d) => ({
-                drillType: d.drillType,
-                implementWeight: d.implementWeight ?? null,
-                implementWeightUnit: d.implementWeightUnit ?? "kg",
-                implementWeightOriginal: d.implementWeightOriginal ?? null,
-                wireLength: d.wireLength ?? null,
-                throwCount: d.throwCount ?? 0,
-                bestMark: d.bestMark ?? null,
-                notes: d.notes ?? null,
-              })),
-            }
-          : undefined,
+        drillLogs: drillCreates.length ? { create: drillCreates } : undefined,
       },
-      include: { drillLogs: true },
+      include: { drillLogs: { include: { implement: true } } },
     });
 
     // PR detection across all drill logs with a best mark. Best-effort —
@@ -173,6 +216,24 @@ async function postHandler(
       prs = await detectSessionPRs(athleteId, event, date, session.drillLogs);
     } catch (err) {
       logger.error("PR detection after session create failed", {
+        context: "throws/athlete-sessions",
+        error: err,
+      });
+    }
+
+    // Catalog-keyed PR aggregate refresh for any drill rows with an
+    // implementId. Same best-effort posture — the session is durable
+    // even if the recompute later fails. Covers WEIGHT_THROW customs
+    // (which the legacy PR system above intentionally skips).
+    try {
+      const items = session.drillLogs
+        .filter((dl) => dl.implementId != null)
+        .map((dl) => ({ athleteId, implementId: dl.implementId! }));
+      if (items.length) {
+        await recomputeManyPRs(prisma, items);
+      }
+    } catch (err) {
+      logger.error("catalog PR recompute after session create failed", {
         context: "throws/athlete-sessions",
         error: err,
       });
@@ -189,12 +250,13 @@ async function postHandler(
       });
       if (athlete) {
         athleteCoachId = athlete.coachId;
-        const result = await syncGoalsFromDrillLogs(
-          athleteId,
-          event,
-          athlete.gender,
-          session.drillLogs
+        // Skip WEIGHT_THROW drills — goal sync compares against competition
+        // weights for the 4 traditional events; a 7.26kg tire would falsely
+        // match the hammer comp weight.
+        const goalEligible = session.drillLogs.filter(
+          (dl) => dl.implement?.throwType !== "WEIGHT_THROW"
         );
+        const result = await syncGoalsFromDrillLogs(athleteId, event, athlete.gender, goalEligible);
         goalCelebrations = result.celebrations;
       }
     } catch (err) {
