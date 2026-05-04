@@ -452,6 +452,12 @@ model AthleteProfile {
   // notableCompetitions, prePR: Record<EventType, number | null> }
   trainingHistory Json?
 
+  // Master Profile — Lifestyle (athlete-managed; sensitive — coach access
+  // is gated by the existing coach↔athlete relationship in requireCoachAthlete).
+  // Shape: { version: 1, sleepHours, schoolWorkHours, stressBaseline (1-10),
+  // nutritionSetup (free text), recoveryPractices: string[] }
+  lifestyle Json?
+
   // Master Profile — Strength Numbers (Section 4)
   strengthNumbers Json?
 

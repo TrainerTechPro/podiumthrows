@@ -1140,6 +1140,7 @@ export const AthleteProfileSelfPatchSchema = z.object({
   gradYear: z.number().int().min(1950).max(2050).nullable().optional(),
   competitionGoals: z.record(z.string(), z.unknown()).nullable().optional(),
   trainingHistory: z.record(z.string(), z.unknown()).nullable().optional(),
+  lifestyle: z.record(z.string(), z.unknown()).nullable().optional(),
   strengthNumbers: z.record(z.string(), z.unknown()).nullable().optional(),
   competitionPBs: z
     .array(

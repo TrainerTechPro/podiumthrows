@@ -20,6 +20,7 @@ export type ProfileData = {
   gradYear: number | null;
   competitionGoals: CompetitionGoalsMap | null;
   trainingHistory: TrainingHistoryData | null;
+  lifestyle: LifestyleData | null;
   strengthNumbers: StrengthNumbersData | null;
   technicalProfile: TechnicalProfileData | null;
   movementRestrictions: MovementRestrictionsData | null;
@@ -60,6 +61,32 @@ export type TrainingHistoryData = {
   notableCompetitions: string;
   prePR: Record<string, number | null>;
 };
+
+/* ─── Section: Lifestyle ────────────────────────────────────────────── */
+
+// Sensitive — coach reads must go through requireCoachAthlete relationship
+// check (no org-wide queries). `recoveryPractices` is a string[] of stable
+// keys from RECOVERY_PRACTICE_OPTIONS so vocabulary changes don't lose data
+// (unknown keys round-trip but render as "Other").
+export type LifestyleData = {
+  version: 1;
+  sleepHours: number | null;
+  schoolWorkHours: number | null;
+  stressBaseline: number | null;
+  nutritionSetup: string;
+  recoveryPractices: string[];
+};
+
+export const RECOVERY_PRACTICE_OPTIONS = [
+  { key: "MASSAGE", label: "Massage" },
+  { key: "FOAM_ROLLING", label: "Foam rolling" },
+  { key: "STRETCHING", label: "Stretching / mobility" },
+  { key: "SAUNA", label: "Sauna" },
+  { key: "COLD_PLUNGE", label: "Cold plunge / contrast" },
+  { key: "COMPRESSION", label: "Compression boots" },
+  { key: "CHIRO_PT", label: "Chiro / PT" },
+  { key: "MEDITATION", label: "Meditation / breathwork" },
+] as const;
 
 /* ─── Section 4: Strength Numbers ───────────────────────────────────── */
 
@@ -243,6 +270,27 @@ function isObject(v: unknown): v is Record<string, unknown> {
 export function safeCompetitionGoals(raw: unknown): CompetitionGoalsMap | null {
   if (!isObject(raw)) return null;
   return raw as CompetitionGoalsMap;
+}
+
+export function safeLifestyle(raw: unknown): LifestyleData | null {
+  if (!isObject(raw)) return null;
+  return {
+    version: 1,
+    sleepHours:
+      typeof raw.sleepHours === "number" && Number.isFinite(raw.sleepHours) ? raw.sleepHours : null,
+    schoolWorkHours:
+      typeof raw.schoolWorkHours === "number" && Number.isFinite(raw.schoolWorkHours)
+        ? raw.schoolWorkHours
+        : null,
+    stressBaseline:
+      typeof raw.stressBaseline === "number" && Number.isFinite(raw.stressBaseline)
+        ? raw.stressBaseline
+        : null,
+    nutritionSetup: typeof raw.nutritionSetup === "string" ? raw.nutritionSetup : "",
+    recoveryPractices: Array.isArray(raw.recoveryPractices)
+      ? raw.recoveryPractices.filter((s): s is string => typeof s === "string")
+      : [],
+  };
 }
 
 export function safeTrainingHistory(raw: unknown): TrainingHistoryData | null {

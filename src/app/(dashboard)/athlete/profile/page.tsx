@@ -24,6 +24,7 @@ import type {
 import {
   safeCompetitionGoals,
   safeTrainingHistory,
+  safeLifestyle,
   safeStrengthNumbers,
   safeTechnicalProfile,
   safeMovementRestrictions,
@@ -60,6 +61,7 @@ export default async function AthleteProfilePage() {
         gradYear: true,
         competitionGoals: true,
         trainingHistory: true,
+        lifestyle: true,
         strengthNumbers: true,
         technicalProfile: true,
         movementRestrictions: true,
@@ -113,6 +115,7 @@ export default async function AthleteProfilePage() {
     gradYear: profile.gradYear,
     competitionGoals: safeCompetitionGoals(profile.competitionGoals),
     trainingHistory: safeTrainingHistory(profile.trainingHistory),
+    lifestyle: safeLifestyle(profile.lifestyle),
     strengthNumbers: safeStrengthNumbers(profile.strengthNumbers),
     technicalProfile: safeTechnicalProfile(profile.technicalProfile),
     movementRestrictions: safeMovementRestrictions(profile.movementRestrictions),
