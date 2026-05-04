@@ -53,11 +53,25 @@ interface CheckinFlowProps {
   whoopData?: WhoopSnapshot | null;
   ouraData?: OuraSnapshot | null;
   previousScore?: number | null;
+  /**
+   * Master Profile lifestyle baselines. Used as a second-tier prefill —
+   * wearable data wins when present, then these baselines, then hardcoded
+   * defaults. Null when the athlete hasn't filled in lifestyle yet.
+   */
+  baselineSleepHours?: number | null;
+  baselineStress?: number | null;
 }
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
-export function CheckinFlow({ userId, whoopData, ouraData, previousScore }: CheckinFlowProps) {
+export function CheckinFlow({
+  userId,
+  whoopData,
+  ouraData,
+  previousScore,
+  baselineSleepHours,
+  baselineStress,
+}: CheckinFlowProps) {
   const router = useRouter();
   const toast = useToast();
   const showResumeToast = useDraftResumeToast();
@@ -89,10 +103,13 @@ export function CheckinFlow({ userId, whoopData, ouraData, previousScore }: Chec
     {
       data: {
         sleepQuality: prefillSleepQuality ?? 7,
-        sleepHours: prefillSleepHours ?? 8,
+        // Three-tier prefill: wearable data → lifestyle baseline → hardcoded.
+        // The check-in tracks today; once the athlete edits, their value wins
+        // on resume (see useDraftPersistence).
+        sleepHours: prefillSleepHours ?? baselineSleepHours ?? 8,
         soreness: 7,
         sorenessArea: [],
-        stressLevel: 5,
+        stressLevel: baselineStress ?? 5,
         energyMood: 7,
         hydration: "ADEQUATE",
         injuryStatus: "NONE",

@@ -15,6 +15,15 @@ import { ReadinessChart } from "./_readiness-chart";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
+// Reads a finite number from a JSON blob's top-level field. Returns null for
+// any non-object root or non-numeric value. Used to extract athlete lifestyle
+// baselines without pulling the full profile-types module into wellness.
+function readJsonNumber(json: unknown, key: string): number | null {
+  if (!json || typeof json !== "object" || Array.isArray(json)) return null;
+  const v = (json as Record<string, unknown>)[key];
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
     weekday: "short",
@@ -666,6 +675,12 @@ export default async function WellnessPage() {
     value: t.overallScore,
   }));
 
+  // Master Profile lifestyle baselines — used as second-tier prefill below
+  // wearable data and above hardcoded defaults. Null when the athlete hasn't
+  // filled in their lifestyle section yet.
+  const baselineSleepHours = readJsonNumber(athlete.lifestyle, "sleepHours");
+  const baselineStress = readJsonNumber(athlete.lifestyle, "stressBaseline");
+
   // Extract yesterday's average stress+energy score for comparison badge
   const previousScore = (() => {
     if (history.length === 0) return null;
@@ -725,6 +740,8 @@ export default async function WellnessPage() {
               : undefined
           }
           previousScore={previousScore}
+          baselineSleepHours={baselineSleepHours}
+          baselineStress={baselineStress}
         />
       )}
 
