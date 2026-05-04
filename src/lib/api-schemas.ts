@@ -857,6 +857,10 @@ export const EquipmentInventorySchema = z.object({
   hasFieldAccess: z.boolean().optional(),
   hasGym: z.boolean().optional(),
   gymEquipment: z.array(z.string()).optional(),
+  // Master Profile v2 (Phase A.2) — free text + access tier.
+  // Form-origin fields per CLAUDE.md §4 — accept null when cleared.
+  facility: z.string().max(200).nullable().optional(),
+  weightRoomAccess: z.enum(["FULL", "LIMITED", "NONE"]).nullable().optional(),
 });
 
 // ── Coach Preferences ─────────────────────────────────────────────────
@@ -1135,6 +1139,9 @@ export const AthleteProfileSelfPatchSchema = z.object({
   classStanding: z.string().nullable().optional(),
   gradYear: z.number().int().min(1950).max(2050).nullable().optional(),
   competitionGoals: z.record(z.string(), z.unknown()).nullable().optional(),
+  trainingHistory: z.record(z.string(), z.unknown()).nullable().optional(),
+  lifestyle: z.record(z.string(), z.unknown()).nullable().optional(),
+  bodyComposition: z.record(z.string(), z.unknown()).nullable().optional(),
   strengthNumbers: z.record(z.string(), z.unknown()).nullable().optional(),
   competitionPBs: z
     .array(

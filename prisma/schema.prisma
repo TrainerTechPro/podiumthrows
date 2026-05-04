@@ -447,6 +447,26 @@ model AthleteProfile {
   // Master Profile — Competition & Distance Bands (Section 2)
   competitionGoals Json?
 
+  // Master Profile — Training History (athlete-managed)
+  // Shape: { version: 1, yearsTraining, weeklyVolumeHours, priorCoaches,
+  // notableCompetitions, prePR: Record<EventType, number | null> }
+  trainingHistory Json?
+
+  // Master Profile — Lifestyle (athlete-managed; sensitive — coach access
+  // is gated by the existing coach↔athlete relationship in requireCoachAthlete).
+  // Shape: { version: 1, sleepHours, schoolWorkHours, stressBaseline (1-10),
+  // nutritionSetup (free text), recoveryPractices: string[] }
+  lifestyle Json?
+
+  // Master Profile — Body Composition (athlete-managed, sensitive).
+  // Carries body-fat % + tape-measure circumferences. Vertical jump + 30m
+  // sprint live in PerformanceTestSession (multi-attempt capture); standing
+  // LJ + triple jump live in strengthNumbers.tests; mobility booleans live
+  // in movementRestrictions. This column owns ONLY what nothing else does.
+  // Shape: { version: 1, measuredAt, bodyFatPct, chestCm, bicepsCm,
+  // thighCm, calfCm }
+  bodyComposition Json?
+
   // Master Profile — Strength Numbers (Section 4)
   strengthNumbers Json?
 
@@ -2763,6 +2783,14 @@ model EquipmentInventory {
 
   // Gym equipment: JSON {barbell, squat_rack, platform, dumbbells, cables, med_balls, boxes, bands}
   gymEquipment String? // JSON
+
+  // Where the athlete trains (free text — university, club, garage, etc.)
+  facility String?
+
+  // Weight-room access tier — coarser than the gymEquipment booleans:
+  // "FULL" (own keys / 24-hour), "LIMITED" (team hours / shared), "NONE" (no access).
+  // Complements `hasGym`: hasGym=false implies "NONE".
+  weightRoomAccess String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
