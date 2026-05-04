@@ -19,6 +19,7 @@ import type {
   ThrowsPRRecord,
   ThrowsInjuryRecord,
   ThrowsProfileSummary,
+  EquipmentData,
 } from "./_types";
 import {
   safeCompetitionGoals,
@@ -26,6 +27,7 @@ import {
   safeStrengthNumbers,
   safeTechnicalProfile,
   safeMovementRestrictions,
+  safeEquipment,
 } from "./_types";
 
 export default async function AthleteProfilePage() {
@@ -40,7 +42,7 @@ export default async function AthleteProfilePage() {
   if (!athlete) redirect("/login");
 
   // Parallel data fetching
-  const [profile, throwsPRs, injuries, throwsProfiles] = await Promise.all([
+  const [profile, throwsPRs, injuries, throwsProfiles, equipment] = await Promise.all([
     prisma.athleteProfile.findUnique({
       where: { id: athlete.id },
       select: {
@@ -87,6 +89,9 @@ export default async function AthleteProfilePage() {
         competitionPb: true,
         currentDistanceBand: true,
       },
+    }),
+    prisma.equipmentInventory.findUnique({
+      where: { athleteId: athlete.id },
     }),
   ]);
 
@@ -151,6 +156,8 @@ export default async function AthleteProfilePage() {
     currentDistanceBand: tp.currentDistanceBand,
   }));
 
+  const equipmentData: EquipmentData = safeEquipment(equipment);
+
   return (
     <div className="space-y-10">
       <ProfileTabs
@@ -158,6 +165,7 @@ export default async function AthleteProfilePage() {
         throwsPRs={serializedPRs}
         injuries={serializedInjuries}
         throwsProfiles={serializedProfiles}
+        equipment={equipmentData}
       />
 
       <MoreMenu />

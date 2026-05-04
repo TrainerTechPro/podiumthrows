@@ -2769,6 +2769,14 @@ model EquipmentInventory {
   // Gym equipment: JSON {barbell, squat_rack, platform, dumbbells, cables, med_balls, boxes, bands}
   gymEquipment String? // JSON
 
+  // Where the athlete trains (free text — university, club, garage, etc.)
+  facility String?
+
+  // Weight-room access tier — coarser than the gymEquipment booleans:
+  // "FULL" (own keys / 24-hour), "LIMITED" (team hours / shared), "NONE" (no access).
+  // Complements `hasGym`: hasGym=false implies "NONE".
+  weightRoomAccess String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

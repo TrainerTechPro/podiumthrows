@@ -857,6 +857,10 @@ export const EquipmentInventorySchema = z.object({
   hasFieldAccess: z.boolean().optional(),
   hasGym: z.boolean().optional(),
   gymEquipment: z.array(z.string()).optional(),
+  // Master Profile v2 (Phase A.2) — free text + access tier.
+  // Form-origin fields per CLAUDE.md §4 — accept null when cleared.
+  facility: z.string().max(200).nullable().optional(),
+  weightRoomAccess: z.enum(["FULL", "LIMITED", "NONE"]).nullable().optional(),
 });
 
 // ── Coach Preferences ─────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import {
   Target,
   ShieldAlert,
   History,
+  Wrench,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import type {
   ThrowsPRRecord,
   ThrowsInjuryRecord,
   ThrowsProfileSummary,
+  EquipmentData,
 } from "./_types";
 import { TabCore } from "./_tab-core";
 import { TabCompetition } from "./_tab-competition";
@@ -27,12 +29,14 @@ import { TabStrength } from "./_tab-strength";
 import { TabTechnical } from "./_tab-technical";
 import { TabInjury } from "./_tab-injury";
 import { TabTrainingHistory } from "./_tab-training-history";
+import { TabEquipment } from "./_tab-equipment";
 
 /* ─── Tab definitions ────────────────────────────────────────────────── */
 
 const TABS = [
   { id: "core", label: "Core Info", shortLabel: "Core", icon: User },
   { id: "history", label: "Training History", shortLabel: "History", icon: History },
+  { id: "equipment", label: "Equipment", shortLabel: "Equip", icon: Wrench },
   { id: "comp", label: "Competition", shortLabel: "Comp", icon: Trophy },
   { id: "impl", label: "Implements", shortLabel: "Impl", icon: Scale },
   { id: "strength", label: "Strength", shortLabel: "Strength", icon: Dumbbell },
@@ -50,9 +54,16 @@ interface ProfileTabsProps {
   throwsPRs: ThrowsPRRecord[];
   injuries: ThrowsInjuryRecord[];
   throwsProfiles: ThrowsProfileSummary[];
+  equipment: EquipmentData;
 }
 
-export function ProfileTabs({ profile, throwsPRs, injuries, throwsProfiles }: ProfileTabsProps) {
+export function ProfileTabs({
+  profile,
+  throwsPRs,
+  injuries,
+  throwsProfiles,
+  equipment,
+}: ProfileTabsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -86,6 +97,8 @@ export function ProfileTabs({ profile, throwsPRs, injuries, throwsProfiles }: Pr
           return <TabCore profile={profile} />;
         case "history":
           return <TabTrainingHistory profile={profile} />;
+        case "equipment":
+          return <TabEquipment profile={profile} equipment={equipment} />;
         case "comp":
           return <TabCompetition profile={profile} throwsProfiles={throwsProfiles} />;
         case "impl":
@@ -100,7 +113,7 @@ export function ProfileTabs({ profile, throwsPRs, injuries, throwsProfiles }: Pr
           return <TabInjury injuries={injuries} profile={profile} />;
       }
     },
-    [profile, throwsPRs, injuries, throwsProfiles]
+    [profile, throwsPRs, injuries, throwsProfiles, equipment]
   );
 
   return (
@@ -122,7 +135,7 @@ export function ProfileTabs({ profile, throwsPRs, injuries, throwsProfiles }: Pr
       {/* ── Desktop: horizontal tabs ──────────────────────────────────── */}
       <div className="hidden sm:block space-y-6">
         <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-1.5">
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-8 gap-1">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = active === tab.id;

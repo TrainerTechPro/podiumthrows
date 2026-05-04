@@ -1,6 +1,7 @@
 // Types shared across all profile tab components
 
 import type { EventType, Gender } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 /* ─── AthleteProfile data from server component ─────────────────────── */
 
@@ -104,6 +105,55 @@ export type MovementRestrictionsData = {
   deepSquat: boolean;
   singleLegStability: boolean;
   notes: string;
+};
+
+/* ─── Section: Equipment Access ─────────────────────────────────────── */
+
+// Mirrors the EquipmentInventory model — a relational table that already
+// exists and feeds the program engine. The Master Profile v2 plan called
+// this "NO HOME" but the table predated the plan; we extend it with
+// `facility` + `weightRoomAccess` rather than adding a duplicate JSON column.
+
+export type ImplementType = "shot" | "disc" | "hammer" | "jav" | "weight";
+
+export type ImplementEntry = {
+  weightKg: number;
+  type: ImplementType;
+};
+
+export type WeightRoomAccess = "FULL" | "LIMITED" | "NONE";
+
+export type EquipmentData = {
+  implements: ImplementEntry[];
+  hasCage: boolean;
+  hasRing: boolean;
+  hasFieldAccess: boolean;
+  hasGym: boolean;
+  // Round-tripped opaque — engine and onboard wizard write different shapes
+  // (string[] vs object). The profile tab does not edit this field.
+  gymEquipment: unknown;
+  facility: string | null;
+  weightRoomAccess: WeightRoomAccess | null;
+};
+
+// Maps the 4 standard EventType values to the legacy implement type code
+// the EquipmentInventory model + program engine already use.
+export const EVENT_TO_IMPLEMENT_TYPE: Record<string, ImplementType> = {
+  SHOT_PUT: "shot",
+  DISCUS: "disc",
+  HAMMER: "hammer",
+  JAVELIN: "jav",
+};
+
+// Common training weights per event type (kg). Athletes pick what they own;
+// custom weights live in the equipment-inventory wizard for now.
+export const STANDARD_IMPLEMENT_WEIGHTS: Record<ImplementType, number[]> = {
+  shot: [3, 4, 5, 6, 7.26, 8, 9, 10],
+  disc: [0.75, 1, 1.5, 1.6, 1.75, 2, 2.5],
+  hammer: [4, 5, 6, 7.26, 8, 9, 10, 11.34, 12, 16],
+  jav: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+  // weight throw — no preset; preserved on round-trip but not edited here.
+  weight: [],
 };
 
 /* ─── ThrowsPR (from Prisma) ────────────────────────────────────────── */
@@ -247,6 +297,81 @@ export function safeTechnicalProfile(raw: unknown): TechnicalProfileData | null 
       : [],
     cuesWork: Array.isArray(raw.cuesWork) ? (raw.cuesWork as TechnicalProfileData["cuesWork"]) : [],
     cuesFail: Array.isArray(raw.cuesFail) ? (raw.cuesFail as TechnicalProfileData["cuesFail"]) : [],
+  };
+}
+
+// `row` is a Prisma EquipmentInventory row or null. Implements/gymEquipment
+// are JSON-serialized strings on the row — parse leniently so corrupted rows
+// surface as defaults instead of crashing the page render.
+export function safeEquipment(
+  row: {
+    implements: string;
+    hasCage: boolean;
+    hasRing: boolean;
+    hasFieldAccess: boolean;
+    hasGym: boolean;
+    gymEquipment: string | null;
+    facility: string | null;
+    weightRoomAccess: string | null;
+  } | null
+): EquipmentData {
+  if (!row) {
+    return {
+      implements: [],
+      hasCage: true,
+      hasRing: true,
+      hasFieldAccess: true,
+      hasGym: true,
+      gymEquipment: null,
+      facility: null,
+      weightRoomAccess: null,
+    };
+  }
+
+  let implementsArr: ImplementEntry[] = [];
+  try {
+    const parsed = JSON.parse(row.implements || "[]");
+    if (Array.isArray(parsed)) {
+      implementsArr = parsed.filter(
+        (e): e is ImplementEntry =>
+          isObject(e) &&
+          typeof e.weightKg === "number" &&
+          Number.isFinite(e.weightKg) &&
+          typeof e.type === "string"
+      );
+    }
+  } catch (err) {
+    logger.warn("safeEquipment: implements JSON parse failed", {
+      context: "athlete/profile/types",
+      error: err,
+    });
+  }
+
+  let gymEquipment: unknown = null;
+  if (row.gymEquipment) {
+    try {
+      gymEquipment = JSON.parse(row.gymEquipment);
+    } catch (err) {
+      logger.warn("safeEquipment: gymEquipment JSON parse failed", {
+        context: "athlete/profile/types",
+        error: err,
+      });
+    }
+  }
+
+  const wra = row.weightRoomAccess;
+  const weightRoomAccess: WeightRoomAccess | null =
+    wra === "FULL" || wra === "LIMITED" || wra === "NONE" ? wra : null;
+
+  return {
+    implements: implementsArr,
+    hasCage: row.hasCage,
+    hasRing: row.hasRing,
+    hasFieldAccess: row.hasFieldAccess,
+    hasGym: row.hasGym,
+    gymEquipment,
+    facility: row.facility,
+    weightRoomAccess,
   };
 }
 

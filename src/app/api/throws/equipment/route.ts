@@ -10,10 +10,7 @@ export async function GET(_req: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const athleteProfile = await prisma.athleteProfile.findUnique({
@@ -24,7 +21,7 @@ export async function GET(_req: NextRequest) {
     if (!athleteProfile) {
       return NextResponse.json(
         { success: false, error: "No athlete profile found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -55,9 +52,7 @@ export async function GET(_req: NextRequest) {
       });
     }
     try {
-      gymEquipment = inventory.gymEquipment
-        ? JSON.parse(inventory.gymEquipment)
-        : null;
+      gymEquipment = inventory.gymEquipment ? JSON.parse(inventory.gymEquipment) : null;
     } catch (parseErr) {
       logger.warn("Failed to parse EquipmentInventory.gymEquipment JSON", {
         context: "throws/equipment",
@@ -79,6 +74,8 @@ export async function GET(_req: NextRequest) {
         hasFieldAccess: inventory.hasFieldAccess,
         hasGym: inventory.hasGym,
         gymEquipment,
+        facility: inventory.facility,
+        weightRoomAccess: inventory.weightRoomAccess,
       },
     });
   } catch (error) {
@@ -88,7 +85,7 @@ export async function GET(_req: NextRequest) {
     });
     return NextResponse.json(
       { success: false, error: "Failed to fetch equipment" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -99,10 +96,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const athleteProfile = await prisma.athleteProfile.findUnique({
@@ -113,7 +107,7 @@ export async function POST(req: NextRequest) {
     if (!athleteProfile) {
       return NextResponse.json(
         { success: false, error: "No athlete profile found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -126,6 +120,8 @@ export async function POST(req: NextRequest) {
       hasFieldAccess,
       hasGym,
       gymEquipment,
+      facility,
+      weightRoomAccess,
     } = parsed;
 
     const inventory = await prisma.equipmentInventory.upsert({
@@ -137,6 +133,8 @@ export async function POST(req: NextRequest) {
         hasFieldAccess: hasFieldAccess ?? true,
         hasGym: hasGym ?? true,
         gymEquipment: gymEquipment ? JSON.stringify(gymEquipment) : null,
+        ...(facility !== undefined && { facility: facility?.trim() || null }),
+        ...(weightRoomAccess !== undefined && { weightRoomAccess }),
       },
       create: {
         athleteId: athleteProfile.id,
@@ -146,6 +144,8 @@ export async function POST(req: NextRequest) {
         hasFieldAccess: hasFieldAccess ?? true,
         hasGym: hasGym ?? true,
         gymEquipment: gymEquipment ? JSON.stringify(gymEquipment) : null,
+        facility: facility?.trim() || null,
+        weightRoomAccess: weightRoomAccess ?? null,
       },
     });
 
@@ -160,6 +160,8 @@ export async function POST(req: NextRequest) {
         hasFieldAccess: inventory.hasFieldAccess,
         hasGym: inventory.hasGym,
         gymEquipment,
+        facility: inventory.facility,
+        weightRoomAccess: inventory.weightRoomAccess,
       },
     });
   } catch (error) {
@@ -169,7 +171,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(
       { success: false, error: "Failed to save equipment" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
