@@ -21,6 +21,7 @@ export type ProfileData = {
   competitionGoals: CompetitionGoalsMap | null;
   trainingHistory: TrainingHistoryData | null;
   lifestyle: LifestyleData | null;
+  bodyComposition: BodyCompositionData | null;
   strengthNumbers: StrengthNumbersData | null;
   technicalProfile: TechnicalProfileData | null;
   movementRestrictions: MovementRestrictionsData | null;
@@ -87,6 +88,22 @@ export const RECOVERY_PRACTICE_OPTIONS = [
   { key: "CHIRO_PT", label: "Chiro / PT" },
   { key: "MEDITATION", label: "Meditation / breathwork" },
 ] as const;
+
+/* ─── Section: Body Composition ─────────────────────────────────────── */
+
+// Tape-measure circumferences and body-fat % only. Power tests (vertical
+// jump, 30m sprint) live in PerformanceTestSession; standing LJ + triple
+// jump in strengthNumbers.tests; mobility in movementRestrictions.
+// Sensitive — coach reads gated by requireCoachAthlete.
+export type BodyCompositionData = {
+  version: 1;
+  measuredAt: string | null; // YYYY-MM-DD
+  bodyFatPct: number | null;
+  chestCm: number | null;
+  bicepsCm: number | null;
+  thighCm: number | null;
+  calfCm: number | null;
+};
 
 /* ─── Section 4: Strength Numbers ───────────────────────────────────── */
 
@@ -270,6 +287,21 @@ function isObject(v: unknown): v is Record<string, unknown> {
 export function safeCompetitionGoals(raw: unknown): CompetitionGoalsMap | null {
   if (!isObject(raw)) return null;
   return raw as CompetitionGoalsMap;
+}
+
+export function safeBodyComposition(raw: unknown): BodyCompositionData | null {
+  if (!isObject(raw)) return null;
+  const num = (v: unknown): number | null =>
+    typeof v === "number" && Number.isFinite(v) ? v : null;
+  return {
+    version: 1,
+    measuredAt: typeof raw.measuredAt === "string" ? raw.measuredAt : null,
+    bodyFatPct: num(raw.bodyFatPct),
+    chestCm: num(raw.chestCm),
+    bicepsCm: num(raw.bicepsCm),
+    thighCm: num(raw.thighCm),
+    calfCm: num(raw.calfCm),
+  };
 }
 
 export function safeLifestyle(raw: unknown): LifestyleData | null {

@@ -12,6 +12,7 @@ import {
   History,
   Wrench,
   HeartPulse,
+  Ruler,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import { TabInjury } from "./_tab-injury";
 import { TabTrainingHistory } from "./_tab-training-history";
 import { TabEquipment } from "./_tab-equipment";
 import { TabLifestyle } from "./_tab-lifestyle";
+import { TabBodyComposition } from "./_tab-body-composition";
 
 /* ─── Tab definitions ────────────────────────────────────────────────── */
 
@@ -40,6 +42,7 @@ const TABS = [
   { id: "history", label: "Training History", shortLabel: "History", icon: History },
   { id: "equipment", label: "Equipment", shortLabel: "Equip", icon: Wrench },
   { id: "lifestyle", label: "Lifestyle", shortLabel: "Lifestyle", icon: HeartPulse },
+  { id: "body", label: "Body", shortLabel: "Body", icon: Ruler },
   { id: "comp", label: "Competition", shortLabel: "Comp", icon: Trophy },
   { id: "impl", label: "Implements", shortLabel: "Impl", icon: Scale },
   { id: "strength", label: "Strength", shortLabel: "Strength", icon: Dumbbell },
@@ -104,6 +107,8 @@ export function ProfileTabs({
           return <TabEquipment profile={profile} equipment={equipment} />;
         case "lifestyle":
           return <TabLifestyle profile={profile} />;
+        case "body":
+          return <TabBodyComposition profile={profile} />;
         case "comp":
           return <TabCompetition profile={profile} throwsProfiles={throwsProfiles} />;
         case "impl":
@@ -140,7 +145,7 @@ export function ProfileTabs({
       {/* ── Desktop: horizontal tabs ──────────────────────────────────── */}
       <div className="hidden sm:block space-y-6">
         <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-1.5">
-          <div className="grid grid-cols-9 gap-1">
+          <div className="grid grid-cols-10 gap-1">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = active === tab.id;

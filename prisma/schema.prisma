@@ -458,6 +458,15 @@ model AthleteProfile {
   // nutritionSetup (free text), recoveryPractices: string[] }
   lifestyle Json?
 
+  // Master Profile — Body Composition (athlete-managed, sensitive).
+  // Carries body-fat % + tape-measure circumferences. Vertical jump + 30m
+  // sprint live in PerformanceTestSession (multi-attempt capture); standing
+  // LJ + triple jump live in strengthNumbers.tests; mobility booleans live
+  // in movementRestrictions. This column owns ONLY what nothing else does.
+  // Shape: { version: 1, measuredAt, bodyFatPct, chestCm, bicepsCm,
+  // thighCm, calfCm }
+  bodyComposition Json?
+
   // Master Profile — Strength Numbers (Section 4)
   strengthNumbers Json?
 
