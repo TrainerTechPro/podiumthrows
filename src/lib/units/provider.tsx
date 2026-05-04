@@ -16,6 +16,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { logger } from "@/lib/logger";
+import { useToast } from "@/components/ui/Toast";
+
+export const UNIT_PREF_ERROR_EVENT = "podium:unit-pref-error";
 import {
   DEFAULT_UNIT_PREFS,
   parseUnitPrefs,
@@ -82,7 +85,9 @@ export function UnitPrefsProvider({
   }, [initial]);
 
   const setUnit = useCallback((type: UnitDataType, unit: UnitChoice) => {
+    let prevSnapshot: UnitPrefs | null = null;
     setPrefs((prev) => {
+      prevSnapshot = prev;
       const next: UnitPrefs = { ...prev, [type]: unit };
       try {
         window.localStorage.setItem(LS_KEY, JSON.stringify(next));
@@ -91,21 +96,70 @@ export function UnitPrefsProvider({
         // Server PATCH below is the source of truth; cache is a perf nicety.
         logger.debug("UnitPrefsProvider: localStorage write skipped");
       }
-      // Fire-and-forget server PATCH. A failure here doesn't block the UI
-      // since localStorage already holds the new value for next mount.
-      void fetch("/api/me/display-units", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ [type]: unit }),
-      }).catch((err) => {
-        logger.error("display-units PATCH failed", { error: err });
-      });
       return next;
     });
+
+    // Server PATCH. On failure (CSRF mismatch, session expired, server error)
+    // roll back the optimistic update + emit a window event so the toast
+    // layer can surface it. .catch only catches network failures, so we
+    // also explicitly check res.ok for non-2xx HTTP responses.
+    (async () => {
+      try {
+        const res = await fetch("/api/me/display-units", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
+          body: JSON.stringify({ [type]: unit }),
+        });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => null);
+          throw new Error(payload?.error || `Save failed (${res.status})`);
+        }
+      } catch (err) {
+        logger.error("display-units PATCH failed", { error: err });
+        if (prevSnapshot) {
+          const snap = prevSnapshot;
+          setPrefs(snap);
+          try {
+            window.localStorage.setItem(LS_KEY, JSON.stringify(snap));
+          } catch {
+            logger.debug("UnitPrefsProvider: localStorage rollback skipped");
+          }
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent(UNIT_PREF_ERROR_EVENT, {
+              detail: { message: err instanceof Error ? err.message : "Save failed" },
+            })
+          );
+        }
+      }
+    })();
   }, []);
 
   const value = useMemo(() => ({ prefs, setUnit }), [prefs, setUnit]);
+
   return <UnitPrefsContext.Provider value={value}>{children}</UnitPrefsContext.Provider>;
+}
+
+/**
+ * Listen for save failures and surface them as toasts. Mount inside the
+ * ToastProvider tree (DashboardLayout already does this) so the user sees
+ * a clear "Couldn't save preference" message instead of silently reverted
+ * state.
+ */
+export function UnitPrefErrorToast() {
+  const { error: toastError } = useToast();
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ message: string }>).detail;
+      toastError(detail?.message ?? "Couldn't save preference — try again");
+    };
+    window.addEventListener(UNIT_PREF_ERROR_EVENT, handler);
+    return () => window.removeEventListener(UNIT_PREF_ERROR_EVENT, handler);
+  }, [toastError]);
+
+  return null;
 }
 
 /* ─── Hook ─────────────────────────────────────────────────────────────── */
