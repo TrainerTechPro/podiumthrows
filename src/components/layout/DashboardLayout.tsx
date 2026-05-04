@@ -15,6 +15,7 @@ import { KeyboardShortcutsModal } from "@/components/ui/KeyboardShortcutsModal";
 import { Breadcrumbs, BreadcrumbItem } from "@/components/ui/Breadcrumbs";
 import { Avatar } from "@/components/ui/Avatar";
 import { ToastProvider } from "@/components/ui/Toast";
+import { UnitPrefErrorToast } from "@/lib/units/provider";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { QuickActions } from "@/components/ui/QuickActions";
@@ -514,6 +515,7 @@ export function DashboardLayout(props: DashboardLayoutProps) {
 
   return (
     <ToastProvider>
+      <UnitPrefErrorToast />
       {isAthleteShell ? <AthleteShell {...props} /> : <CoachShell {...props} />}
     </ToastProvider>
   );
