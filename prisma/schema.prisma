@@ -447,6 +447,11 @@ model AthleteProfile {
   // Master Profile — Competition & Distance Bands (Section 2)
   competitionGoals Json?
 
+  // Master Profile — Training History (athlete-managed)
+  // Shape: { version: 1, yearsTraining, weeklyVolumeHours, priorCoaches,
+  // notableCompetitions, prePR: Record<EventType, number | null> }
+  trainingHistory Json?
+
   // Master Profile — Strength Numbers (Section 4)
   strengthNumbers Json?
 

@@ -18,6 +18,7 @@ export type ProfileData = {
   classStanding: string | null;
   gradYear: number | null;
   competitionGoals: CompetitionGoalsMap | null;
+  trainingHistory: TrainingHistoryData | null;
   strengthNumbers: StrengthNumbersData | null;
   technicalProfile: TechnicalProfileData | null;
   movementRestrictions: MovementRestrictionsData | null;
@@ -41,6 +42,23 @@ export type CompetitionGoalsEntry = {
 };
 
 export type CompetitionGoalsMap = Record<string, CompetitionGoalsEntry>;
+
+/* ─── Section: Training History ─────────────────────────────────────── */
+
+// `version` lets the shape evolve forward (e.g. v2 may break `prePR` into
+// per-implement rows). Parsers default missing/legacy rows to v1.
+// `prePR` is keyed by EventType ("SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN")
+// → distance in meters, with the competition implement implied by the event +
+// athlete gender. Pre-app PRs typically don't have catalog entries, so the
+// catalog-keyed AthleteImplementPR table is not the right home for this.
+export type TrainingHistoryData = {
+  version: 1;
+  yearsTraining: number | null;
+  weeklyVolumeHours: number | null;
+  priorCoaches: string;
+  notableCompetitions: string;
+  prePR: Record<string, number | null>;
+};
 
 /* ─── Section 4: Strength Numbers ───────────────────────────────────── */
 
@@ -175,6 +193,33 @@ function isObject(v: unknown): v is Record<string, unknown> {
 export function safeCompetitionGoals(raw: unknown): CompetitionGoalsMap | null {
   if (!isObject(raw)) return null;
   return raw as CompetitionGoalsMap;
+}
+
+export function safeTrainingHistory(raw: unknown): TrainingHistoryData | null {
+  if (!isObject(raw)) return null;
+  const prePRRaw = isObject(raw.prePR) ? raw.prePR : {};
+  const prePR: Record<string, number | null> = {};
+  for (const [key, value] of Object.entries(prePRRaw)) {
+    if (value == null) {
+      prePR[key] = null;
+    } else if (typeof value === "number" && Number.isFinite(value)) {
+      prePR[key] = value;
+    }
+  }
+  return {
+    version: 1,
+    yearsTraining:
+      typeof raw.yearsTraining === "number" && Number.isFinite(raw.yearsTraining)
+        ? raw.yearsTraining
+        : null,
+    weeklyVolumeHours:
+      typeof raw.weeklyVolumeHours === "number" && Number.isFinite(raw.weeklyVolumeHours)
+        ? raw.weeklyVolumeHours
+        : null,
+    priorCoaches: typeof raw.priorCoaches === "string" ? raw.priorCoaches : "",
+    notableCompetitions: typeof raw.notableCompetitions === "string" ? raw.notableCompetitions : "",
+    prePR,
+  };
 }
 
 export function safeStrengthNumbers(raw: unknown): StrengthNumbersData | null {

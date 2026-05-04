@@ -9,6 +9,7 @@ import {
   Dumbbell,
   Target,
   ShieldAlert,
+  History,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -25,11 +26,13 @@ import { TabImplements } from "./_tab-implements";
 import { TabStrength } from "./_tab-strength";
 import { TabTechnical } from "./_tab-technical";
 import { TabInjury } from "./_tab-injury";
+import { TabTrainingHistory } from "./_tab-training-history";
 
 /* ─── Tab definitions ────────────────────────────────────────────────── */
 
 const TABS = [
   { id: "core", label: "Core Info", shortLabel: "Core", icon: User },
+  { id: "history", label: "Training History", shortLabel: "History", icon: History },
   { id: "comp", label: "Competition", shortLabel: "Comp", icon: Trophy },
   { id: "impl", label: "Implements", shortLabel: "Impl", icon: Scale },
   { id: "strength", label: "Strength", shortLabel: "Strength", icon: Dumbbell },
@@ -81,6 +84,8 @@ export function ProfileTabs({ profile, throwsPRs, injuries, throwsProfiles }: Pr
       switch (id) {
         case "core":
           return <TabCore profile={profile} />;
+        case "history":
+          return <TabTrainingHistory profile={profile} />;
         case "comp":
           return <TabCompetition profile={profile} throwsProfiles={throwsProfiles} />;
         case "impl":
@@ -117,7 +122,7 @@ export function ProfileTabs({ profile, throwsPRs, injuries, throwsProfiles }: Pr
       {/* ── Desktop: horizontal tabs ──────────────────────────────────── */}
       <div className="hidden sm:block space-y-6">
         <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-1.5">
-          <div className="grid grid-cols-6 gap-1">
+          <div className="grid grid-cols-7 gap-1">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = active === tab.id;

@@ -78,6 +78,7 @@ export async function PATCH(req: NextRequest) {
       classStanding,
       gradYear,
       competitionGoals,
+      trainingHistory,
       strengthNumbers,
       competitionPBs,
       completeOnboarding,
@@ -103,6 +104,7 @@ export async function PATCH(req: NextRequest) {
     if (classStanding !== undefined) data.classStanding = classStanding;
     if (gradYear !== undefined) data.gradYear = gradYear;
     if (competitionGoals !== undefined) data.competitionGoals = competitionGoals;
+    if (trainingHistory !== undefined) data.trainingHistory = trainingHistory;
     if (strengthNumbers !== undefined) data.strengthNumbers = strengthNumbers;
 
     if (completeOnboarding === true) {
@@ -148,6 +150,7 @@ export async function PATCH(req: NextRequest) {
             classStanding: true,
             gradYear: true,
             competitionGoals: true,
+            trainingHistory: true,
             strengthNumbers: true,
           },
         })
@@ -166,6 +169,7 @@ export async function PATCH(req: NextRequest) {
             classStanding: true,
             gradYear: true,
             competitionGoals: true,
+            trainingHistory: true,
             strengthNumbers: true,
           },
         });

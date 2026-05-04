@@ -22,6 +22,7 @@ import type {
 } from "./_types";
 import {
   safeCompetitionGoals,
+  safeTrainingHistory,
   safeStrengthNumbers,
   safeTechnicalProfile,
   safeMovementRestrictions,
@@ -56,6 +57,7 @@ export default async function AthleteProfilePage() {
         classStanding: true,
         gradYear: true,
         competitionGoals: true,
+        trainingHistory: true,
         strengthNumbers: true,
         technicalProfile: true,
         movementRestrictions: true,
@@ -105,6 +107,7 @@ export default async function AthleteProfilePage() {
     classStanding: profile.classStanding,
     gradYear: profile.gradYear,
     competitionGoals: safeCompetitionGoals(profile.competitionGoals),
+    trainingHistory: safeTrainingHistory(profile.trainingHistory),
     strengthNumbers: safeStrengthNumbers(profile.strengthNumbers),
     technicalProfile: safeTechnicalProfile(profile.technicalProfile),
     movementRestrictions: safeMovementRestrictions(profile.movementRestrictions),
