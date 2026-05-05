@@ -172,9 +172,11 @@ export default function CoachSettingsPage() {
   const { fontSize, setFontSize, reducedMotion, setReducedMotion } = useAccessibility();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab: TabId = isValidTabId(searchParams?.get("tab"))
-    ? (searchParams!.get("tab") as TabId)
-    : "profile";
+  // Extract once so the type predicate's narrowing applies on the second
+  // reference — was using `searchParams!.get("tab") as TabId` which silently
+  // accepts anything if the URL drifts past the validator.
+  const tabFromUrl = searchParams?.get("tab");
+  const initialTab: TabId = isValidTabId(tabFromUrl) ? tabFromUrl : "profile";
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
 
   // Keep URL ↔ tab in sync. Profile is the default and gets a clean URL.
