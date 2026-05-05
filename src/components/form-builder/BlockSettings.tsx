@@ -4,6 +4,7 @@ import type { FormBlock, FormBuilderAction, ChoiceOption } from "@/lib/forms/typ
 import { BLOCK_REGISTRY, generateOptionId } from "@/lib/forms/block-registry";
 import { parseIntegerInput, parseNumericInput } from "@/lib/forms/parse-numeric";
 import { Input } from "@/components/ui/Input";
+import { Radio, RadioGroup } from "@/components/ui/Radio";
 
 interface BlockSettingsProps {
   block: FormBlock;
@@ -209,35 +210,37 @@ export function BlockSettings({ block, dispatch }: BlockSettingsProps) {
 
       {block.type === "distance" && (
         <div className="flex items-center gap-3">
-          <label className="text-xs text-muted">Unit:</label>
-          {(["meters", "feet"] as const).map((u) => (
-            <label key={u} className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input
-                type="radio"
-                checked={block.unit === u}
-                onChange={() => update({ unit: u } as Partial<FormBlock>)}
-                className="w-3.5 h-3.5 text-primary-500 focus:ring-primary-500/30"
-              />
-              {u}
-            </label>
-          ))}
+          <span className="text-xs text-muted">Unit:</span>
+          <RadioGroup
+            value={block.unit ?? "meters"}
+            onChange={(next) => update({ unit: next as "meters" | "feet" } as Partial<FormBlock>)}
+            aria-label="Unit"
+            className="!w-auto"
+          >
+            <div className="flex items-center gap-3">
+              <Radio value="meters" label="meters" />
+              <Radio value="feet" label="feet" />
+            </div>
+          </RadioGroup>
         </div>
       )}
 
       {block.type === "duration" && (
         <div className="flex items-center gap-3">
-          <label className="text-xs text-muted">Format:</label>
-          {(["mm:ss", "hh:mm:ss"] as const).map((f) => (
-            <label key={f} className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input
-                type="radio"
-                checked={block.format === f}
-                onChange={() => update({ format: f } as Partial<FormBlock>)}
-                className="w-3.5 h-3.5 text-primary-500 focus:ring-primary-500/30"
-              />
-              {f}
-            </label>
-          ))}
+          <span className="text-xs text-muted">Format:</span>
+          <RadioGroup
+            value={block.format ?? "mm:ss"}
+            onChange={(next) =>
+              update({ format: next as "mm:ss" | "hh:mm:ss" } as Partial<FormBlock>)
+            }
+            aria-label="Format"
+            className="!w-auto"
+          >
+            <div className="flex items-center gap-3">
+              <Radio value="mm:ss" label="mm:ss" />
+              <Radio value="hh:mm:ss" label="hh:mm:ss" />
+            </div>
+          </RadioGroup>
         </div>
       )}
 

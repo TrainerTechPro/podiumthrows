@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/toast";
 import { useAccessibility } from "@/components/accessibility-provider";
+import { Radio, RadioGroup } from "@/components/ui/Radio";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
@@ -1279,7 +1280,12 @@ export default function CoachSettingsPage() {
               <p className="text-sm text-surface-700 dark:text-surface-300 mb-5">
                 Choose which page opens when you first launch the app.
               </p>
-              <div className="space-y-2">
+              <RadioGroup
+                value={preferences.globalDefaultPage ?? "/coach"}
+                onChange={(next) => handleSavePreferences({ globalDefaultPage: next })}
+                aria-label="Default page"
+                className="space-y-2"
+              >
                 {[
                   {
                     href: "/coach",
@@ -1294,29 +1300,25 @@ export default function CoachSettingsPage() {
                   { href: "/coach/athletes", label: "Athletes", desc: "Your full roster" },
                   { href: "/coach/calendar", label: "Calendar", desc: "Scheduled sessions" },
                 ].map((page) => (
-                  <label
+                  <Radio
                     key={page.href}
-                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                    value={page.href}
+                    className={`flex items-start gap-3 p-3 rounded-xl transition-colors w-full ${
                       preferences.globalDefaultPage === page.href
                         ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
                         : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                     }`}
-                  >
-                    <input
-                      type="radio"
-                      name="globalDefault"
-                      value={page.href}
-                      checked={preferences.globalDefaultPage === page.href}
-                      onChange={() => handleSavePreferences({ globalDefaultPage: page.href })}
-                      className="mt-0.5"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-[var(--foreground)]">{page.label}</p>
-                      <p className="text-xs text-muted">{page.desc}</p>
-                    </div>
-                  </label>
+                    label={
+                      <span className="block">
+                        <span className="text-sm font-medium text-[var(--foreground)] block">
+                          {page.label}
+                        </span>
+                        <span className="text-xs text-muted block">{page.desc}</span>
+                      </span>
+                    }
+                  />
                 ))}
-              </div>
+              </RadioGroup>
             </div>
 
             {/* Per-Workspace Defaults */}
@@ -1329,41 +1331,36 @@ export default function CoachSettingsPage() {
                 {enabledModules.includes("throws") && (
                   <div>
                     <p className="label mb-3">Podium Throws</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <RadioGroup
+                      value={preferences.workspaceDefaults?.throws ?? "/coach/throws"}
+                      onChange={(next) =>
+                        handleSavePreferences({ workspaceDefaults: { throws: next } })
+                      }
+                      aria-label="Default throws page"
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-2 !space-y-0"
+                    >
                       {[
                         { href: "/coach/throws", label: "Throws Roster" },
                         { href: "/coach/throws/builder", label: "Session Builder" },
                         { href: "/coach/throws/practice", label: "Practice" },
                         { href: "/coach/throws/analyze", label: "Analysis" },
                       ].map((page) => (
-                        <label
+                        <Radio
                           key={page.href}
-                          className={`flex items-center gap-2.5 p-3 rounded-xl cursor-pointer transition-colors ${
+                          value={page.href}
+                          className={`flex items-center gap-2.5 p-3 rounded-xl transition-colors w-full ${
                             (preferences.workspaceDefaults?.throws ?? "/coach/throws") === page.href
                               ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
                               : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                           }`}
-                        >
-                          <input
-                            type="radio"
-                            name="throwsDefault"
-                            value={page.href}
-                            checked={
-                              (preferences.workspaceDefaults?.throws ?? "/coach/throws") ===
-                              page.href
-                            }
-                            onChange={() =>
-                              handleSavePreferences({
-                                workspaceDefaults: { throws: page.href },
-                              })
-                            }
-                          />
-                          <span className="text-sm font-medium text-[var(--foreground)]">
-                            {page.label}
-                          </span>
-                        </label>
+                          label={
+                            <span className="text-sm font-medium text-[var(--foreground)]">
+                              {page.label}
+                            </span>
+                          }
+                        />
                       ))}
-                    </div>
+                    </RadioGroup>
                   </div>
                 )}
               </div>
