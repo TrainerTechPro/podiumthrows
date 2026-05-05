@@ -5,10 +5,12 @@ import { requireCoachApi } from "@/lib/data/coach";
 import { parseBody } from "@/lib/api-schemas";
 import {
   runArchitectAnalysis,
+  type AvailableImplement,
   type EventType,
   type Gender,
   type TrainingPhase,
 } from "@/lib/bondarchuk/architect-engine";
+import { logger } from "@/lib/logger";
 
 const AnalyzeSchema = z.object({
   athleteId: z.string().min(1),
@@ -43,6 +45,9 @@ export async function POST(request: Request) {
           implement: { select: { throwType: true, displayLabel: true } },
         },
       },
+      // Drives equipment-aware block 1/2 weight progressions in the
+      // architect engine. Falls back to canonical when missing.
+      equipmentInventory: { select: { implements: true } },
     },
   });
 
@@ -82,6 +87,33 @@ export async function POST(request: Request) {
     }
   }
 
+  // Parse implements JSON from EquipmentInventory. Lenient — a corrupt
+  // row should not block the analysis; we just skip equipment-aware
+  // filtering and log so we know the row needs cleanup.
+  let availableImplements: AvailableImplement[] | undefined;
+  const rawImplements = athlete.equipmentInventory?.implements;
+  if (rawImplements) {
+    try {
+      const parsed = JSON.parse(rawImplements);
+      if (Array.isArray(parsed)) {
+        availableImplements = parsed.filter(
+          (e): e is AvailableImplement =>
+            e &&
+            typeof e === "object" &&
+            typeof e.weightKg === "number" &&
+            Number.isFinite(e.weightKg) &&
+            typeof e.type === "string"
+        );
+      }
+    } catch (err) {
+      logger.warn("architect/analyze: equipmentInventory.implements parse failed", {
+        context: "api",
+        metadata: { athleteId },
+        error: err,
+      });
+    }
+  }
+
   const analysis = runArchitectAnalysis({
     name: `${athlete.firstName} ${athlete.lastName}`,
     event: primaryEvent,
@@ -90,6 +122,7 @@ export async function POST(request: Request) {
     daysToChampionship,
     trainingPhase: trainingPhase as TrainingPhase,
     strengthNumbers,
+    availableImplements,
   });
 
   return NextResponse.json({ success: true, data: analysis });

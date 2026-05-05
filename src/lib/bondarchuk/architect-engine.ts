@@ -236,6 +236,89 @@ function getImplementSet(event: EventType, gender: Gender, band: string): Implem
   );
 }
 
+/* ─── Equipment-Aware Filtering ───────────────────────────────────── */
+
+export type AvailableImplement = { weightKg: number; type: string };
+
+const EVENT_TO_IMPLEMENT_TYPE: Record<EventType, string> = {
+  SHOT_PUT: "shot",
+  DISCUS: "disc",
+  HAMMER: "hammer",
+  JAVELIN: "jav",
+};
+
+// Canonical labels in IMPLEMENTS[] are formatted as "<num>kg" or "<num>g"
+// (javelin). Translate back to a kg comparison so we can intersect with the
+// athlete's owned weights from EquipmentInventory.
+function parseLabelKg(label: string): number | null {
+  const m = label.match(/^(\d+(?:\.\d+)?)\s*(kg|g)$/i);
+  if (!m) return null;
+  const value = parseFloat(m[1]);
+  if (!Number.isFinite(value)) return null;
+  return m[2].toLowerCase() === "g" ? value / 1000 : value;
+}
+
+function intersect(labels: string[], owned: Set<number>): string[] {
+  return labels.filter((label) => {
+    const kg = parseLabelKg(label);
+    if (kg == null) return true; // unparseable label — preserve rather than drop silently
+    // 10g tolerance covers both float-comparison drift and plate-rounding
+    // (e.g. 7.25kg in EquipmentInventory matching a "7.26kg" canonical label).
+    for (const ownedKg of owned) {
+      if (Math.abs(ownedKg - kg) <= 0.01) return true;
+    }
+    return false;
+  });
+}
+
+/**
+ * Narrows the canonical ImplementSet to weights the athlete actually owns,
+ * per their EquipmentInventory. Used to make the architect's block 1/2
+ * progressions data-driven rather than aspirational.
+ *
+ * Behavior:
+ *   - `available` undefined or empty → no filtering, returns canonical set.
+ *   - `available` provided but no entries match the event's implement type
+ *     → no filtering (athlete hasn't recorded this event's equipment yet).
+ *   - Filter narrows but heavy[] non-empty → returns narrowed set.
+ *   - Filter empties heavy[] (or light[]) AND canonical was non-empty →
+ *     falls back to canonical for that bucket and returns the missing
+ *     weights so the caller can surface a phase conflict. The session
+ *     should still print a defensible plan even when the athlete is
+ *     missing prescribed gear.
+ */
+export function filterImplementSet(
+  set: ImplementSet,
+  event: EventType,
+  available: AvailableImplement[] | undefined
+): { set: ImplementSet; missing: { heavy: string[]; light: string[] } } {
+  const noMissing = { heavy: [] as string[], light: [] as string[] };
+  if (!available || available.length === 0) return { set, missing: noMissing };
+
+  const targetType = EVENT_TO_IMPLEMENT_TYPE[event];
+  const owned = new Set<number>(
+    available.filter((i) => i.type === targetType).map((i) => i.weightKg)
+  );
+  if (owned.size === 0) return { set, missing: noMissing };
+
+  const narrowedHeavy = intersect(set.heavy, owned);
+  const narrowedLight = intersect(set.light, owned);
+
+  // Fall back to canonical when the filter empties a non-empty bucket —
+  // a missing-equipment warning is more useful than a session with no
+  // heavy progressions at all.
+  const heavy = narrowedHeavy.length === 0 && set.heavy.length > 0 ? set.heavy : narrowedHeavy;
+  const light = narrowedLight.length === 0 && set.light.length > 0 ? set.light : narrowedLight;
+
+  const missingHeavy = narrowedHeavy.length === 0 && set.heavy.length > 0 ? set.heavy : [];
+  const missingLight = narrowedLight.length === 0 && set.light.length > 0 ? set.light : [];
+
+  return {
+    set: { light, competition: set.competition, heavy },
+    missing: { heavy: missingHeavy, light: missingLight },
+  };
+}
+
 /* ─── Strength Benchmarks (by event + distance band) ──────────────── */
 
 type BenchmarkDef = { lift: string; key: string; standard: number; unit: string };
@@ -313,10 +396,27 @@ export type ArchitectInput = {
   daysToChampionship: number;
   trainingPhase: TrainingPhase;
   strengthNumbers: Record<string, number> | null;
+  /**
+   * Athlete's owned implements from EquipmentInventory.implements. When
+   * provided and at least one entry matches the event's implement type,
+   * the architect narrows block 1/2 progressions to the intersection.
+   * When omitted, the engine prescribes the canonical set (legacy
+   * behavior). See `filterImplementSet`.
+   */
+  availableImplements?: AvailableImplement[];
 };
 
 export function runArchitectAnalysis(input: ArchitectInput): ArchitectAnalysis {
-  const { name, event, gender, pr, daysToChampionship, trainingPhase, strengthNumbers } = input;
+  const {
+    name,
+    event,
+    gender,
+    pr,
+    daysToChampionship,
+    trainingPhase,
+    strengthNumbers,
+    availableImplements,
+  } = input;
 
   // 1. Distance band
   const distanceBand = getDistanceBand(event, gender, pr);
@@ -330,8 +430,25 @@ export function runArchitectAnalysis(input: ArchitectInput): ArchitectAnalysis {
   // 4. Method selection
   const method = selectMethod(daysToChampionship);
 
-  // 5. Session structure
-  const implementSet = getImplementSet(event, gender, distanceBand.label);
+  // 5. Session structure (narrowed to athlete's owned implements when known)
+  const canonicalSet = getImplementSet(event, gender, distanceBand.label);
+  const { set: implementSet, missing } = filterImplementSet(
+    canonicalSet,
+    event,
+    availableImplements
+  );
+  if (missing.heavy.length > 0) {
+    phaseConflicts.push({
+      type: "warning",
+      message: `Athlete's equipment inventory is missing the heavy implement(s) prescribed for this band (${missing.heavy.join(", ")}). Session falls back to canonical heavy weights — coach should source the gear or adjust the plan.`,
+    });
+  }
+  if (missing.light.length > 0) {
+    phaseConflicts.push({
+      type: "warning",
+      message: `Athlete's equipment inventory is missing the light implement(s) prescribed for this band (${missing.light.join(", ")}). Session falls back to canonical light weights.`,
+    });
+  }
   const sessionStructure = buildSessionStructure(
     event,
     trainingPhase,
