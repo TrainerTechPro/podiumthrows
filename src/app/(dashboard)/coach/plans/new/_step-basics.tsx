@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
 
 export type BasicsData = {
   name: string;
@@ -49,18 +50,13 @@ export function StepBasics({
         helper="Filters the exercise list to event-specific exercises."
       />
 
-      <div>
-        <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
-          Description <span className="text-muted font-normal">(optional)</span>
-        </label>
-        <textarea
-          rows={3}
-          placeholder="Session goals, focus areas, or notes for yourself..."
-          value={data.description}
-          onChange={(e) => onChange({ ...data, description: e.target.value })}
-          className="input w-full resize-none"
-        />
-      </div>
+      <Textarea
+        label="Description (optional)"
+        placeholder="Session goals, focus areas, or notes for yourself..."
+        value={data.description}
+        onChange={(next) => onChange({ ...data, description: next })}
+        rows={3}
+      />
     </div>
   );
 }
