@@ -993,7 +993,6 @@ export const CoachEditProfileSchema = z.object({
   turnDirection: z.enum(["LEFT", "RIGHT"]).nullable().optional(),
   strengthNumbers: z.record(z.string(), z.number().nullable()).nullable().optional(),
   technicalProfile: z.record(z.string(), z.unknown()).nullable().optional(),
-  injuryHistory: z.record(z.string(), z.unknown()).nullable().optional(),
   movementRestrictions: z.record(z.string(), z.unknown()).nullable().optional(),
   competitionPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),
   implementPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),

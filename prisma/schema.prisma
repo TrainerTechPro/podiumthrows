@@ -476,8 +476,9 @@ model AthleteProfile {
   // Master Profile — Movement Restrictions (Section 6, coach-managed)
   movementRestrictions Json?
 
-  // Master Profile — Injury History (coach-managed)
-  injuryHistory Json?
+  // Injury history lives in the ThrowsInjury relational table — see
+  // `throwsInjuries` relation below. The legacy injuryHistory JSON column
+  // was dropped 2026-05-04 (Phase B of athlete-master-profile-plan-v2).
 
   // Master Profile — Competition PRs (coach-managed)
   competitionPRs Json?
