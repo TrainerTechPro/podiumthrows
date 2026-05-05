@@ -24,6 +24,18 @@ const passwordSchema = z
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
   .regex(/\d/, "Password must contain at least one digit");
 
+/**
+ * Client-safe password validator. Returns the first error message, or null if
+ * the password meets all rules. Mirrors the server-side passwordSchema so the
+ * change-password form can surface the rule before submit instead of after a
+ * round-trip 400.
+ */
+export function validateNewPassword(pw: string): string | null {
+  const result = passwordSchema.safeParse(pw);
+  if (result.success) return null;
+  return result.error.issues[0]?.message ?? "Password is invalid";
+}
+
 // Login uses a relaxed password check — don't reject existing passwords that were set before complexity rules
 const loginPasswordSchema = z.string().min(1, "Password is required");
 

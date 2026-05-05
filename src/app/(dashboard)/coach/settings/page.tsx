@@ -9,6 +9,7 @@ import { useAccessibility } from "@/components/accessibility-provider";
 import { Radio, RadioGroup } from "@/components/ui/Radio";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { validateNewPassword } from "@/lib/api-schemas";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
@@ -312,7 +313,7 @@ export default function CoachSettingsPage() {
         toast(data.error || "Failed to save preferences", "error");
       }
     } catch {
-      toast("Network error", "error");
+      toast("Network error — please try again.", "error");
     } finally {
       setPrefSaving(false);
     }
@@ -394,8 +395,12 @@ export default function CoachSettingsPage() {
       setPwMessage({ type: "error", text: "Passwords do not match" });
       return;
     }
-    if (passwordForm.newPassword.length < 6) {
-      setPwMessage({ type: "error", text: "Password must be at least 6 characters" });
+    // Mirror server password rules so the user gets the specific complaint
+    // before submitting (was: client only enforced length ≥ 6, but server
+    // requires 8 chars + uppercase + digit).
+    const policyError = validateNewPassword(passwordForm.newPassword);
+    if (policyError) {
+      setPwMessage({ type: "error", text: policyError });
       return;
     }
     setPwSaving(true);
@@ -419,8 +424,8 @@ export default function CoachSettingsPage() {
         toast(data.error || "Failed to update password", "error");
       }
     } catch {
-      setPwMessage({ type: "error", text: "Network error" });
-      toast("Network error. Please try again.", "error");
+      setPwMessage({ type: "error", text: "Network error — please try again." });
+      toast("Network error — please try again.", "error");
     } finally {
       setPwSaving(false);
     }
@@ -450,7 +455,7 @@ export default function CoachSettingsPage() {
         toast(data.error || "Failed to send invitation", "error");
       }
     } catch {
-      setInviteMessage({ type: "error", text: "Network error" });
+      setInviteMessage({ type: "error", text: "Network error — please try again." });
       toast("Network error. Please try again.", "error");
     } finally {
       setInviteSending(false);
@@ -698,7 +703,7 @@ export default function CoachSettingsPage() {
                 )}
                 {!saved && <div />}
                 <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? "Saving..." : "Save Changes"}
+                  {saving ? "Saving…" : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -770,7 +775,7 @@ export default function CoachSettingsPage() {
                   disabled={pwSaving || !passwordForm.currentPassword || !passwordForm.newPassword}
                   className="btn-primary"
                 >
-                  {pwSaving ? "Updating..." : "Update Password"}
+                  {pwSaving ? "Updating…" : "Update Password"}
                 </button>
               </div>
             </form>
@@ -858,7 +863,7 @@ export default function CoachSettingsPage() {
                     disabled={portalLoading}
                     className="btn-primary"
                   >
-                    {portalLoading ? "Loading..." : "Manage Subscription"}
+                    {portalLoading ? "Loading…" : "Manage Subscription"}
                   </button>
                 )}
                 {subscription.plan !== "FREE" && (
@@ -1134,7 +1139,7 @@ export default function CoachSettingsPage() {
               </div>
               <div className="mt-4 flex justify-end">
                 <button type="submit" disabled={inviteSending} className="btn-primary">
-                  {inviteSending ? "Sending..." : "Send Invitation"}
+                  {inviteSending ? "Sending…" : "Send Invitation"}
                 </button>
               </div>
             </form>
