@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { NumberInput } from "@/components/ui/NumberInput";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { validateBlockStructure } from "@/lib/bondarchuk";
-import { parseIntegerInput } from "@/lib/forms/parse-numeric";
 
 export type BlockExerciseData = {
   exerciseId: string;
@@ -196,15 +196,14 @@ export function StepBlocks({
                 value={block.blockType}
                 onChange={(v) => updateBlock(idx, { blockType: v })}
               />
-              <Input
+              <NumberInput
                 label="Rest After (sec)"
-                type="number"
                 placeholder="120"
-                value={block.restSeconds ? block.restSeconds.toString() : ""}
-                onChange={(e) =>
-                  updateBlock(idx, { restSeconds: parseIntegerInput(e.target.value) ?? 0 })
-                }
+                value={block.restSeconds ?? null}
+                onChange={(next) => updateBlock(idx, { restSeconds: next ?? 0 })}
                 min={0}
+                step={1}
+                unit="sec"
               />
             </div>
 
