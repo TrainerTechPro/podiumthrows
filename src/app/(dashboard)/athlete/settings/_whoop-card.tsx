@@ -70,12 +70,13 @@ export function WhoopCard({
       const reason = params.get("reason") || "unknown";
       toastError("WHOOP Connection Failed", `Error: ${reason.replace(/_/g, " ")}`);
     }
-    // Clean up query params without a reload
+    // Clean up query params without a reload — preserve other params and hash
+    // (was previously passing `url.pathname` only, which stripped them all).
     if (params.has("whoop")) {
       const url = new URL(window.location.href);
       url.searchParams.delete("whoop");
       url.searchParams.delete("reason");
-      window.history.replaceState({}, "", url.pathname);
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
