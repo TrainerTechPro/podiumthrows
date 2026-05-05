@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { DateInput } from "@/components/ui/DateInput";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { AthletePickerItem } from "@/lib/data/coach";
@@ -174,7 +175,7 @@ export function AddMeetModal({
             onChange={(e) => setName(e.target.value)}
             autoFocus
           />
-          <Input label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <DateInput label="Date" value={date || null} onChange={(next) => setDate(next ?? "")} />
         </div>
 
         {/* Priority */}

@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import type { ProgrammedSessionWithDetails, SessionTier } from "@/lib/data/programming";
 import type { EventGroupItem } from "@/lib/data/event-groups";
 import { Button, Badge, Modal } from "@/components";
+import { DateInput } from "@/components/ui/DateInput";
 import { Input } from "@/components/ui/Input";
 import { Sheet } from "@/components/ui/Sheet";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
@@ -484,18 +485,12 @@ export function SessionSidebar({
 
           {/* Date (create mode only) */}
           {mode === "create" && (
-            <div className="w-full space-y-1.5">
-              <label htmlFor="session-date" className="label">
-                Date
-              </label>
-              <input
-                id="session-date"
-                type="date"
-                className="input"
-                value={scheduledDate}
-                onChange={(e) => setScheduledDate(e.target.value)}
-              />
-            </div>
+            <DateInput
+              id="session-date"
+              label="Date"
+              value={scheduledDate || null}
+              onChange={(next) => setScheduledDate(next ?? "")}
+            />
           )}
 
           {/* Group / athlete info (read-only context) */}

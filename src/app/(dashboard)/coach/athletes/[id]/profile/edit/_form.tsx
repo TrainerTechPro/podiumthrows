@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { DateInput } from "@/components/ui/DateInput";
 import { NumberInput } from "@/components/ui/NumberInput";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -185,12 +186,11 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
           </div>
           <div>
             <label className={labelCls}>Date of Birth</label>
-            <input
-              type="date"
-              className={inputCls}
-              value={dateOfBirth}
+            <DateInput
+              value={dateOfBirth || null}
+              onChange={(next) => setDateOfBirth(next ?? "")}
               disabled={isClaimed}
-              onChange={(e) => setDateOfBirth(e.target.value)}
+              inputClassName={inputCls}
             />
           </div>
           <div>
