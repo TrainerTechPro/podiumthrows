@@ -255,7 +255,11 @@ export function WhoopCard({
         {/* Sync mode toggle */}
         <div className="space-y-2">
           <p className="text-xs font-semibold text-muted uppercase tracking-wider">Sync Mode</p>
-          <div className="bg-[var(--muted-bg)] p-1 rounded-xl flex gap-1">
+          <div
+            role="radiogroup"
+            aria-label="Sync mode"
+            className="bg-[var(--muted-bg)] p-1 rounded-xl flex gap-1"
+          >
             {(
               [
                 { value: "AUTO", label: "Auto", desc: "Automatic daily check-ins" },
@@ -265,6 +269,8 @@ export function WhoopCard({
               <button
                 key={opt.value}
                 type="button"
+                role="radio"
+                aria-checked={syncMode === opt.value}
                 onClick={() => handleSyncModeChange(opt.value)}
                 className={cn(
                   "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200",

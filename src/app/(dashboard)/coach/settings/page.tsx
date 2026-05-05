@@ -1535,32 +1535,34 @@ export default function CoachSettingsPage() {
                   </div>
                 </div>
 
-                {/* Reduced Motion */}
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="label mb-0">Reduce animations</label>
-                      <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
-                        Minimizes motion for users who are sensitive to animations
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={reducedMotion}
-                      onClick={() => setReducedMotion(!reducedMotion)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
-                        reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
+                {/* Reduced Motion — whole row is clickable so tapping the
+                    label text also toggles the switch (was visual-only before). */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={reducedMotion}
+                  onClick={() => setReducedMotion(!reducedMotion)}
+                  className="w-full flex items-center justify-between text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded-md"
+                >
+                  <span>
+                    <span className="label mb-0 block">Reduce animations</span>
+                    <span className="text-sm text-surface-700 dark:text-surface-300 mt-0.5 block font-normal">
+                      Minimizes motion for users who are sensitive to animations
+                    </span>
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
+                      reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform mt-0.5 ${
+                        reducedMotion ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5"
                       }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform mt-0.5 ${
-                          reducedMotion ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
+                    />
+                  </span>
+                </button>
               </div>
             </div>
           </>
