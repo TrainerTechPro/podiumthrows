@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useToast } from "@/components/ui/Toast";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { UsersRound, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { logger } from "@/lib/logger";
@@ -629,11 +630,10 @@ export function TeamsClient() {
                       key={athlete.id}
                       className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors cursor-pointer"
                     >
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedAthleteIds.has(athlete.id)}
                         onChange={() => toggleAthleteSelection(athlete.id)}
-                        className="w-4 h-4 rounded border-surface-600 text-primary-500 focus:ring-primary-500/40 shrink-0"
+                        aria-label={`Select ${athlete.firstName} ${athlete.lastName}`}
                       />
                       <AvatarCircle
                         name={`${athlete.firstName} ${athlete.lastName}`}
