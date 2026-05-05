@@ -33,6 +33,8 @@ export interface NumberInputProps extends HtmlInputProps {
   showSteppers?: boolean;
   allowNegative?: boolean;
   className?: string;
+  /** Override classes on the inner <input>. Use for hero-display typography. */
+  inputClassName?: string;
   id?: string;
 }
 
@@ -60,6 +62,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
     disabled,
     id: externalId,
     className,
+    inputClassName,
     ...rest
   },
   ref
@@ -204,7 +207,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(functi
             !showSteppers && unit && "rounded-r-none",
             !showSteppers && leftIcon && "pl-10",
             error &&
-              "border-danger-500 dark:border-danger-500 focus-visible:ring-danger-500/50 focus-visible:border-danger-500"
+              "border-danger-500 dark:border-danger-500 focus-visible:ring-danger-500/50 focus-visible:border-danger-500",
+            inputClassName
           )}
         />
 

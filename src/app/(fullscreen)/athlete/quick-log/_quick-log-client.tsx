@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, Loader2, X } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
+import { NumberInput } from "@/components/ui/NumberInput";
 import { useOnlineStatus } from "@/lib/pwa/online-status";
 import {
   queueQuickLogThrow,
@@ -248,13 +249,13 @@ function DotIndicator({ count, current }: DotIndicatorProps) {
  * recover, the throw is already on the server.
  */
 export interface QuickEntryDraft {
-  distance: string;
+  distance: number | null;
   feeling: FeelingOption | null;
   notes: string;
 }
 
 const EMPTY_QUICK_ENTRY_DRAFT: QuickEntryDraft = {
-  distance: "",
+  distance: null,
   feeling: null,
   notes: "",
 };
@@ -274,7 +275,7 @@ function QuickEntrySheet({
   onClose,
   onSave,
 }: QuickEntrySheetProps) {
-  const [localDistance, setLocalDistance] = useState<string>("");
+  const [localDistance, setLocalDistance] = useState<number | null>(null);
   const [localFeeling, setLocalFeeling] = useState<FeelingOption | null>(null);
   const [localNotes, setLocalNotes] = useState<string>("");
 
@@ -284,7 +285,7 @@ function QuickEntrySheet({
   const notes = controlled ? controlled.value.notes : localNotes;
 
   const setDistance = useCallback(
-    (next: string) => {
+    (next: number | null) => {
       if (controlled) controlled.onChange({ ...controlled.value, distance: next });
       else setLocalDistance(next);
     },
@@ -310,20 +311,19 @@ function QuickEntrySheet({
   useEffect(() => {
     if (controlled) return;
     if (isOpen) {
-      setLocalDistance(editingThrow?.distance?.toFixed(2) ?? "");
+      setLocalDistance(editingThrow?.distance ?? null);
       setLocalFeeling((editingThrow?.feeling as FeelingOption | null) ?? null);
       setLocalNotes(editingThrow?.notes ?? "");
     } else {
-      setLocalDistance("");
+      setLocalDistance(null);
       setLocalFeeling(null);
       setLocalNotes("");
     }
   }, [isOpen, editingThrow, controlled]);
 
   const handleSave = useCallback(() => {
-    const dist = distance.trim() ? parseFloat(distance.trim()) : null;
     onSave({
-      distance: dist && !isNaN(dist) ? dist : null,
+      distance,
       feeling,
       notes: notes.trim(),
     });
@@ -348,21 +348,19 @@ function QuickEntrySheet({
             Distance (meters)
           </label>
           <div className="relative">
-            <input
+            <NumberInput
               id="ql-distance"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              max="100"
               value={distance}
-              onChange={(e) => setDistance(e.target.value)}
+              onChange={setDistance}
+              step={0.01}
+              min={0}
+              max={100}
               placeholder="—"
-              className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-lg font-mono text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60 pr-10"
+              inputClassName="w-full bg-surface-700 border-surface-600/60 rounded-xl px-4 py-3 text-lg font-mono text-[var(--foreground)] placeholder:text-surface-400 focus-visible:ring-primary-500/60 pr-10"
             />
-            {distance && (
+            {distance != null && (
               <button
-                onClick={() => setDistance("")}
+                onClick={() => setDistance(null)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-[var(--foreground)] p-1"
                 aria-label="Clear distance"
               >
@@ -449,7 +447,8 @@ export function QuickLogClient({ userId }: { userId: string }) {
   // browser doesn't lose the entry. Cleared on successful submit and on
   // explicit cancel.
   const [newThrowDraft, setNewThrowDraft, draftStatus] = useDraftPersistence<QuickEntryDraft>(
-    `${userId}:quick-log:compose`,
+    // v2 — distance shape changed from string to number | null (NumberInput migration)
+    `${userId}:quick-log:compose:v2`,
     EMPTY_QUICK_ENTRY_DRAFT
   );
   const showResumeToast = useDraftResumeToast();
@@ -1001,7 +1000,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
     if (resumeToastFiredRef.current) return;
     if (!hasDraft || !lastSavedAt) return;
     const hasContent =
-      newThrowDraft.distance.trim() !== "" ||
+      newThrowDraft.distance != null ||
       newThrowDraft.feeling !== null ||
       newThrowDraft.notes.trim() !== "";
     if (!hasContent) return;
