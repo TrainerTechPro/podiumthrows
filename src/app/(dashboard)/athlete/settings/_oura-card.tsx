@@ -68,12 +68,13 @@ export function OuraCard({
       const reason = params.get("reason") || "unknown";
       toastError("Oura Ring Connection Failed", `Error: ${reason.replace(/_/g, " ")}`);
     }
-    // Clean up query params without a reload
+    // Clean up query params without a reload — preserve other params and hash
+    // (was previously passing `url.pathname` only, which stripped them all).
     if (params.has("oura")) {
       const url = new URL(window.location.href);
       url.searchParams.delete("oura");
       url.searchParams.delete("reason");
-      window.history.replaceState({}, "", url.pathname);
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -293,6 +293,10 @@ export default function CoachSettingsPage() {
   }, [activeTab]);
 
   async function handleSavePreferences(patch: Partial<CoachPreferences>) {
+    // Guard against concurrent PUTs — rapidly clicking different landing-page
+    // radios used to fire overlapping requests; whichever resolved last won
+    // regardless of click order, leaving the user on the wrong default page.
+    if (prefSaving) return;
     setPrefSaving(true);
     try {
       const res = await fetch("/api/coach/preferences", {
@@ -332,6 +336,7 @@ export default function CoachSettingsPage() {
     if (data.success) {
       setProfile((p) => ({ ...p, avatarUrl: dataUrl }));
       toast("Profile picture updated");
+      router.refresh();
     } else {
       throw new Error(data.error || "Failed to upload picture");
     }
@@ -346,6 +351,7 @@ export default function CoachSettingsPage() {
     if (data.success) {
       setProfile((p) => ({ ...p, avatarUrl: "" }));
       toast("Profile picture removed");
+      router.refresh();
     } else {
       throw new Error(data.error || "Failed to remove picture");
     }
@@ -370,6 +376,7 @@ export default function CoachSettingsPage() {
       if (data.success) {
         setSaved(true);
         toast("Profile saved successfully");
+        router.refresh();
         setTimeout(() => setSaved(false), 3000);
       } else {
         toast(data.error || "Failed to save profile", "error");
@@ -770,7 +777,18 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Billing Tab */}
+        {/* Billing Tab — show shimmer skeleton while subscription is loading.
+            Previously the panel rendered nothing when subscription === null,
+            looking broken on slow networks or first paint after a tab switch. */}
+        {activeTab === "billing" && !subscription && (
+          <div className="animate-spring-up space-y-6">
+            <div className="card space-y-4">
+              <div className="h-6 w-32 rounded bg-[var(--muted-bg)] shimmer" />
+              <div className="h-4 w-48 rounded bg-[var(--muted-bg)] shimmer" />
+              <div className="h-10 w-40 rounded bg-[var(--muted-bg)] shimmer" />
+            </div>
+          </div>
+        )}
         {activeTab === "billing" && subscription && (
           <div className="animate-spring-up space-y-6">
             <div className="card">
@@ -1147,7 +1165,8 @@ export default function CoachSettingsPage() {
                     No invitations sent
                   </p>
                   <p className="text-xs text-muted max-w-full sm:max-w-[220px]">
-                    Invite athletes from the Athletes page to grow your roster.
+                    Use the form above to invite an athlete by email — they&apos;ll show up here
+                    once sent.
                   </p>
                 </div>
               ) : (
@@ -1417,6 +1436,7 @@ export default function CoachSettingsPage() {
                           "Training Mode enabled! Use the toggle in the header to switch.",
                           "success"
                         );
+                        router.refresh();
                       } else {
                         toast(data.error || "Failed to enable Training Mode", "error");
                       }
@@ -1478,67 +1498,73 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Feedback — always visible */}
-        <div className="mt-6">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
-            Feedback
-          </h2>
-          <SendFeedbackCard />
-        </div>
-
-        {/* Accessibility Section — always visible */}
-        <div className="card mt-6 mb-24 lg:mb-0">
-          <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Accessibility</h2>
-          <div className="space-y-6">
-            {/* Font Size */}
-            <div>
-              <label className="label">Font Size</label>
-              <div className="flex gap-2 flex-wrap">
-                {(["default", "large", "xl"] as const).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setFontSize(size)}
-                    className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      fontSize === size
-                        ? "bg-[rgba(212,168,67,0.12)] text-[var(--foreground)]"
-                        : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
-                    }`}
-                  >
-                    {size === "default" ? "Default" : size === "large" ? "Large" : "XL"}
-                  </button>
-                ))}
-              </div>
+        {/* Feedback + Accessibility — only on Profile tab. Previously rendered
+            unconditionally, which sandwiched them BETWEEN the active tab's
+            content and the page bottom — clicking Notifications meant your
+            notifications appeared under unrelated accessibility controls. */}
+        {activeTab === "profile" && (
+          <>
+            <div className="mt-6">
+              <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
+                Feedback
+              </h2>
+              <SendFeedbackCard />
             </div>
 
-            {/* Reduced Motion */}
-            <div>
-              <div className="flex items-center justify-between">
+            <div className="card mt-6">
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Accessibility</h2>
+              <div className="space-y-6">
+                {/* Font Size */}
                 <div>
-                  <label className="label mb-0">Reduce animations</label>
-                  <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
-                    Minimizes motion for users who are sensitive to animations
-                  </p>
+                  <label className="label">Font Size</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {(["default", "large", "xl"] as const).map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setFontSize(size)}
+                        className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          fontSize === size
+                            ? "bg-[rgba(212,168,67,0.12)] text-[var(--foreground)]"
+                            : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
+                        }`}
+                      >
+                        {size === "default" ? "Default" : size === "large" ? "Large" : "XL"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={reducedMotion}
-                  onClick={() => setReducedMotion(!reducedMotion)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
-                    reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform mt-0.5 ${
-                      reducedMotion ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5"
-                    }`}
-                  />
-                </button>
+
+                {/* Reduced Motion */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="label mb-0">Reduce animations</label>
+                      <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
+                        Minimizes motion for users who are sensitive to animations
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={reducedMotion}
+                      onClick={() => setReducedMotion(!reducedMotion)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
+                        reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform mt-0.5 ${
+                          reducedMotion ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* Notifications Tab — mounts the existing /coach/settings/notifications
             client component, which now lives only here. */}
