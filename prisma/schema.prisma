@@ -485,6 +485,12 @@ model AthleteProfile {
   // Master Profile — Implement PRs (coach-managed)
   implementPRs Json?
 
+  // Stamped once when the athlete-writable Master Profile sections all carry
+  // values (Core, Training History, Lifestyle, Strength Numbers). Powers the
+  // /athlete/dashboard "complete profile" nudge and a coach-side indicator
+  // on the athlete detail page. Athlete-pull, never coach-push.
+  masterProfileCompletedAt DateTime?
+
   // Core relations (existing PT models)
   trainingSessions         TrainingSession[]
   sessionLogs              SessionLog[]

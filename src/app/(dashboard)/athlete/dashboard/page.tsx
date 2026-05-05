@@ -12,11 +12,18 @@ export default async function AthleteDashboardPage() {
 
   const athlete = await prisma.athleteProfile.findUnique({
     where: { userId: session.userId },
-    select: { id: true, firstName: true },
+    select: { id: true, firstName: true, masterProfileCompletedAt: true },
   });
   if (!athlete) redirect("/login");
 
   const dto = await loadAthleteDashboard(athlete.id, athlete.firstName);
 
-  return <AthleteHomeClient initial={dto} hour={new Date().getHours()} athleteId={athlete.id} />;
+  return (
+    <AthleteHomeClient
+      initial={dto}
+      hour={new Date().getHours()}
+      athleteId={athlete.id}
+      masterProfileComplete={athlete.masterProfileCompletedAt != null}
+    />
+  );
 }
