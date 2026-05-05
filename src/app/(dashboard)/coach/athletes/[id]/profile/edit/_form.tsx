@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { NumberInput } from "@/components/ui/NumberInput";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 interface FormProps {
@@ -41,12 +42,6 @@ const LIFT_KEYS = [
   { key: "benchPress", label: "Bench Press" },
 ] as const;
 
-function parseNum(s: string): number | null {
-  if (s === "" || s == null) return null;
-  const n = parseFloat(s);
-  return Number.isFinite(n) ? n : null;
-}
-
 export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProps) {
   const router = useRouter();
   const { success: toastSuccess, error: toastError } = useToast();
@@ -57,32 +52,26 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
   const [gender, setGender] = useState(initial.gender);
   const [events, setEvents] = useState<string[]>(initial.events);
   const [dateOfBirth, setDateOfBirth] = useState(initial.dateOfBirth);
-  const [heightCm, setHeightCm] = useState(initial.heightCm?.toString() ?? "");
-  const [weightKg, setWeightKg] = useState(initial.weightKg?.toString() ?? "");
+  const [heightCm, setHeightCm] = useState<number | null>(initial.heightCm);
+  const [weightKg, setWeightKg] = useState<number | null>(initial.weightKg);
   const [classStanding, setClassStanding] = useState(initial.classStanding);
-  const [gradYear, setGradYear] = useState(initial.gradYear?.toString() ?? "");
+  const [gradYear, setGradYear] = useState<number | null>(initial.gradYear);
   const [turnDirection, setTurnDirection] = useState(initial.turnDirection);
 
   // Competition PRs (per event, in meters)
-  const [prs, setPrs] = useState<Record<string, string>>(
-    Object.fromEntries(
-      EVENTS.map((e) => [e, initial.competitionPRs[e]?.toString() ?? ""])
-    )
+  const [prs, setPrs] = useState<Record<string, number | null>>(
+    Object.fromEntries(EVENTS.map((e) => [e, initial.competitionPRs[e] ?? null]))
   );
 
   // Strength Numbers (per lift, in kg)
-  const [strength, setStrength] = useState<Record<string, string>>(
-    Object.fromEntries(
-      LIFT_KEYS.map((l) => [l.key, initial.strengthNumbers[l.key]?.toString() ?? ""])
-    )
+  const [strength, setStrength] = useState<Record<string, number | null>>(
+    Object.fromEntries(LIFT_KEYS.map((l) => [l.key, initial.strengthNumbers[l.key] ?? null]))
   );
 
   const [saving, setSaving] = useState(false);
 
   function toggleEvent(e: string) {
-    setEvents((prev) =>
-      prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]
-    );
+    setEvents((prev) => (prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]));
   }
 
   async function handleSave() {
@@ -96,12 +85,8 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const body: Record<string, any> = {
         // Coaching fields always editable
-        strengthNumbers: Object.fromEntries(
-          LIFT_KEYS.map((l) => [l.key, parseNum(strength[l.key])])
-        ),
-        competitionPRs: Object.fromEntries(
-          EVENTS.map((e) => [e, parseNum(prs[e])])
-        ),
+        strengthNumbers: { ...strength },
+        competitionPRs: { ...prs },
       };
 
       // Core info — only sent if unclaimed
@@ -110,13 +95,11 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
         body.lastName = lastName.trim();
         body.gender = gender;
         body.events = events;
-        body.dateOfBirth = dateOfBirth
-          ? new Date(dateOfBirth).toISOString()
-          : null;
-        body.heightCm = parseNum(heightCm);
-        body.weightKg = parseNum(weightKg);
+        body.dateOfBirth = dateOfBirth ? new Date(dateOfBirth).toISOString() : null;
+        body.heightCm = heightCm;
+        body.weightKg = weightKg;
         body.classStanding = classStanding || null;
-        body.gradYear = gradYear ? parseInt(gradYear, 10) : null;
+        body.gradYear = gradYear;
         body.turnDirection = turnDirection || null;
       }
 
@@ -144,8 +127,7 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
 
   const inputCls =
     "w-full px-3 py-2 rounded-lg bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed";
-  const labelCls =
-    "block text-xs font-semibold uppercase tracking-wider text-muted mb-1";
+  const labelCls = "block text-xs font-semibold uppercase tracking-wider text-muted mb-1";
 
   return (
     <div className="space-y-6">
@@ -213,22 +195,24 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
           </div>
           <div>
             <label className={labelCls}>Height (cm)</label>
-            <input
-              type="number"
-              className={inputCls}
+            <NumberInput
+              inputClassName={inputCls}
               value={heightCm}
               disabled={isClaimed}
-              onChange={(e) => setHeightCm(e.target.value)}
+              onChange={setHeightCm}
+              step={0.1}
+              min={0}
             />
           </div>
           <div>
             <label className={labelCls}>Weight (kg)</label>
-            <input
-              type="number"
-              className={inputCls}
+            <NumberInput
+              inputClassName={inputCls}
               value={weightKg}
               disabled={isClaimed}
-              onChange={(e) => setWeightKg(e.target.value)}
+              onChange={setWeightKg}
+              step={0.1}
+              min={0}
             />
           </div>
           <div>
@@ -243,12 +227,14 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
           </div>
           <div>
             <label className={labelCls}>Grad Year</label>
-            <input
-              type="number"
-              className={inputCls}
+            <NumberInput
+              inputClassName={inputCls}
               value={gradYear}
               disabled={isClaimed}
-              onChange={(e) => setGradYear(e.target.value)}
+              onChange={setGradYear}
+              step={1}
+              min={1900}
+              max={2100}
             />
           </div>
           <div>
@@ -300,21 +286,17 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
       {/* Section: Competition PRs */}
       <section className="card p-5 space-y-4">
         <h2 className="font-heading text-lg font-semibold">Competition PRs</h2>
-        <p className="text-xs text-[var(--muted)]">
-          Best distances for each event (meters)
-        </p>
+        <p className="text-xs text-[var(--muted)]">Best distances for each event (meters)</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {EVENTS.map((e) => (
             <div key={e}>
               <label className={labelCls}>{EVENT_LABELS[e]}</label>
-              <input
-                type="number"
-                step="0.01"
-                className={inputCls}
+              <NumberInput
+                inputClassName={inputCls}
                 value={prs[e]}
-                onChange={(ev) =>
-                  setPrs((p) => ({ ...p, [e]: ev.target.value }))
-                }
+                onChange={(next) => setPrs((p) => ({ ...p, [e]: next }))}
+                step={0.01}
+                min={0}
                 placeholder="e.g. 18.42"
               />
             </div>
@@ -330,14 +312,12 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
           {LIFT_KEYS.map(({ key, label }) => (
             <div key={key}>
               <label className={labelCls}>{label}</label>
-              <input
-                type="number"
-                step="0.5"
-                className={inputCls}
+              <NumberInput
+                inputClassName={inputCls}
                 value={strength[key]}
-                onChange={(ev) =>
-                  setStrength((p) => ({ ...p, [key]: ev.target.value }))
-                }
+                onChange={(next) => setStrength((p) => ({ ...p, [key]: next }))}
+                step={0.5}
+                min={0}
                 placeholder="kg"
               />
             </div>
