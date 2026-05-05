@@ -45,8 +45,8 @@ export async function PATCH(
   // Coaching fields — always editable by coach
   if (parsed.strengthNumbers !== undefined) updateData.strengthNumbers = parsed.strengthNumbers;
   if (parsed.technicalProfile !== undefined) updateData.technicalProfile = parsed.technicalProfile;
-  if (parsed.injuryHistory !== undefined) updateData.injuryHistory = parsed.injuryHistory;
-  if (parsed.movementRestrictions !== undefined) updateData.movementRestrictions = parsed.movementRestrictions;
+  if (parsed.movementRestrictions !== undefined)
+    updateData.movementRestrictions = parsed.movementRestrictions;
   if (parsed.competitionPRs !== undefined) updateData.competitionPRs = parsed.competitionPRs;
   if (parsed.implementPRs !== undefined) updateData.implementPRs = parsed.implementPRs;
 
