@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Sheet, type SheetSide } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
+import { useFilePicker } from "@/components/ui/useFilePicker";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { reportApiError } from "@/lib/form-errors";
@@ -137,7 +138,6 @@ export function FeedbackSheet({ open, onClose, side }: FeedbackSheetProps) {
   const [submitting, setSubmitting] = useState(false);
   const [bodyError, setBodyError] = useState<string | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -172,10 +172,6 @@ export function FeedbackSheet({ open, onClose, side }: FeedbackSheetProps) {
         toast.error("Screenshot must be an image");
         return;
       }
-      if (file.size > 15 * 1024 * 1024) {
-        toast.error("Image over 15MB — try a smaller crop");
-        return;
-      }
       const reader = new FileReader();
       reader.onload = async () => {
         if (typeof reader.result !== "string") return;
@@ -190,6 +186,13 @@ export function FeedbackSheet({ open, onClose, side }: FeedbackSheetProps) {
     },
     [toast]
   );
+
+  const filePicker = useFilePicker({
+    accept: "image/*",
+    maxSize: 15 * 1024 * 1024,
+    onFiles: (files) => handleFile(files[0]),
+    onRejected: () => toast.error("Image over 15MB — try a smaller crop"),
+  });
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent) => {
@@ -408,19 +411,13 @@ export function FeedbackSheet({ open, onClose, side }: FeedbackSheetProps) {
               </button>
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={filePicker.open}
                 className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-[var(--card-border)] text-xs text-muted hover:border-primary-500/40 hover:text-primary-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
               >
                 <ImageIcon size={14} strokeWidth={1.75} aria-hidden="true" />
                 Attach image
               </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-              />
+              {filePicker.input}
             </div>
           )}
 
