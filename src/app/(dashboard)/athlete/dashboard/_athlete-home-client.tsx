@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Trophy, CheckCircle2, Flame, Play, ChevronRight } from "lucide-react";
+import { Trophy, CheckCircle2, Flame, Play, ChevronRight, Sparkles } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { PerformanceTestsTile } from "@/components/performance-tests/PerformanceTestsTile";
@@ -21,6 +21,7 @@ interface Props {
   initial: AthleteDashboardDTO;
   hour: number;
   athleteId: string;
+  masterProfileComplete: boolean;
 }
 
 const EVENT_LABEL: Record<string, string> = {
@@ -37,7 +38,7 @@ const EVENT_LABEL: Record<string, string> = {
  * lives in the AthleteShell wrapper and triggers router.refresh(); we re-key the
  * subtree on the DTO timestamp so entrance animations replay after a refresh.
  */
-export function AthleteHomeClient({ initial, hour, athleteId }: Props) {
+export function AthleteHomeClient({ initial, hour, athleteId, masterProfileComplete }: Props) {
   const greeting = useMemo(() => timeGreeting(hour), [hour]);
 
   return (
@@ -49,6 +50,7 @@ export function AthleteHomeClient({ initial, hour, athleteId }: Props) {
         today={initial.today}
       />
       <MigrationBanner athleteId={athleteId} />
+      {!masterProfileComplete && <MasterProfileBanner />}
       {initial.today ? (
         <TodayHeroCard today={initial.today} />
       ) : (
@@ -578,6 +580,41 @@ function MomentRow({
             {meta}
           </div>
         ) : null}
+      </div>
+      <ChevronRight
+        className="h-[18px] w-[18px] shrink-0 text-[var(--muted)]"
+        strokeWidth={1.75}
+        aria-hidden="true"
+      />
+    </Link>
+  );
+}
+
+// ── Master profile nudge ────────────────────────────────────────────────────
+
+function MasterProfileBanner() {
+  return (
+    <Link
+      href="/athlete/profile"
+      className="card card-interactive mx-4 mt-2 flex items-center gap-3 px-4 py-3.5 motion-safe:animate-fade-slide-in"
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(255,200,0,0.05), transparent 70%), var(--card-bg)",
+      }}
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-500/10 text-primary-500">
+        <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-primary-500">
+          Build your profile
+        </div>
+        <div className="mt-0.5 truncate text-[14px] font-medium leading-[1.3] text-[var(--foreground)]">
+          Tell us about your training so the program can adapt to you.
+        </div>
+        <div className="mt-0.5 truncate font-mono text-[10.5px] tracking-[0.04em] text-[var(--muted)]">
+          ~5 MIN · YOU CAN COME BACK
+        </div>
       </div>
       <ChevronRight
         className="h-[18px] w-[18px] shrink-0 text-[var(--muted)]"

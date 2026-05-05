@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBody, AthleteProfileSelfPatchSchema } from "@/lib/api-schemas";
+import { isMasterProfileComplete } from "@/lib/athlete/master-profile-completion";
 import {
   COMPETITION_WEIGHTS,
   EVENT_CODE_MAP,
@@ -126,10 +127,12 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Get athlete ID for ThrowLog creation
+    // Get athlete ID + current completion stamp. The stamp is one-shot —
+    // once set, we never overwrite (so "completed at" stays meaningful even
+    // if the athlete later edits a single field back to null).
     const athlete = await prisma.athleteProfile.findUnique({
       where: { userId: session.userId },
-      select: { id: true, gender: true },
+      select: { id: true, gender: true, masterProfileCompletedAt: true },
     });
 
     if (!athlete) {
@@ -158,6 +161,7 @@ export async function PATCH(req: NextRequest) {
             lifestyle: true,
             bodyComposition: true,
             strengthNumbers: true,
+            masterProfileCompletedAt: true,
           },
         })
       : await prisma.athleteProfile.findUnique({
@@ -179,8 +183,26 @@ export async function PATCH(req: NextRequest) {
             lifestyle: true,
             bodyComposition: true,
             strengthNumbers: true,
+            masterProfileCompletedAt: true,
           },
         });
+
+    // One-shot stamp: only the athlete's own PATCH crosses the line. Coach-
+    // managed updates never trigger this — see Phase D plan ("athlete-pull,
+    // not coach-push").
+    if (
+      hasProfileUpdates &&
+      updated &&
+      athlete.masterProfileCompletedAt == null &&
+      isMasterProfileComplete(updated)
+    ) {
+      const stamped = await prisma.athleteProfile.update({
+        where: { id: updated.id },
+        data: { masterProfileCompletedAt: new Date() },
+        select: { masterProfileCompletedAt: true },
+      });
+      updated.masterProfileCompletedAt = stamped.masterProfileCompletedAt;
+    }
 
     // Create ThrowLog entries for competition PBs submitted during onboarding
     if (hasPBs && competitionPBs) {
