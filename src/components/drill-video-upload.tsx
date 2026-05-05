@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useFilePicker } from "@/components/ui/useFilePicker";
 
 export interface DrillVideoData {
   title: string;
@@ -48,7 +49,6 @@ export default function DrillVideoUpload({
   onUploadComplete,
   athleteId,
 }: DrillVideoUploadProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
@@ -75,14 +75,24 @@ export default function DrillVideoUpload({
   // Validate trim whenever it changes
   useEffect(() => {
     if (duration !== null && trimmedDuration > MAX_TRIM_SECONDS + 0.05) {
-      setTrimError(`Clip must be ${MAX_TRIM_SECONDS} seconds or less. Currently ${trimmedDuration.toFixed(1)}s — adjust the handles.`);
+      setTrimError(
+        `Clip must be ${MAX_TRIM_SECONDS} seconds or less. Currently ${trimmedDuration.toFixed(1)}s — adjust the handles.`
+      );
     } else {
       setTrimError("");
     }
   }, [trimStart, trimEnd, duration, trimmedDuration]);
 
   function handleFileSelect(selectedFile: File) {
-    const validTypes = ["video/mp4", "video/quicktime", "video/webm", "video/x-msvideo", "video/x-matroska", "video/x-m4v", "video/3gpp"];
+    const validTypes = [
+      "video/mp4",
+      "video/quicktime",
+      "video/webm",
+      "video/x-msvideo",
+      "video/x-matroska",
+      "video/x-m4v",
+      "video/3gpp",
+    ];
     const ext = selectedFile.name.split(".").pop()?.toLowerCase() || "";
     const validExts = ["mp4", "mov", "webm", "avi", "mkv", "m4v", "3gp", "hevc"];
     if (!validTypes.includes(selectedFile.type) && !validExts.includes(ext)) {
@@ -100,10 +110,10 @@ export default function DrillVideoUpload({
     setPreviewUrl(url);
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (f) handleFileSelect(f);
-  }
+  const filePicker = useFilePicker({
+    accept: "video/*",
+    onFiles: (files) => handleFileSelect(files[0]),
+  });
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
@@ -123,7 +133,10 @@ export default function DrillVideoUpload({
   }
 
   const startScrub = useCallback(
-    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>, handle: "start" | "end") => {
+    (
+      e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+      handle: "start" | "end"
+    ) => {
       e.preventDefault();
       if (!duration) return;
       setIsScrubbing(true);
@@ -172,7 +185,13 @@ export default function DrillVideoUpload({
       const video = videoRef.current;
       if (!video || !previewUrl) return reject(new Error("No video"));
 
-      const stream = (video as HTMLVideoElement & { captureStream?: () => MediaStream; mozCaptureStream?: () => MediaStream }).captureStream?.() ||
+      const stream =
+        (
+          video as HTMLVideoElement & {
+            captureStream?: () => MediaStream;
+            mozCaptureStream?: () => MediaStream;
+          }
+        ).captureStream?.() ||
         (video as HTMLVideoElement & { mozCaptureStream?: () => MediaStream }).mozCaptureStream?.();
 
       if (!stream) {
@@ -184,12 +203,14 @@ export default function DrillVideoUpload({
       const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
         ? "video/webm;codecs=vp9"
         : MediaRecorder.isTypeSupported("video/webm")
-        ? "video/webm"
-        : "";
+          ? "video/webm"
+          : "";
 
       const chunks: BlobPart[] = [];
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
       recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType || "video/webm" }));
       recorder.onerror = (e) => reject(e);
 
@@ -216,11 +237,26 @@ export default function DrillVideoUpload({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file) { setError("Please select a video file."); return; }
-    if (!title.trim()) { setError("Please enter a title."); return; }
-    if (!drillType) { setError("Please select a drill type."); return; }
-    if (!event) { setError("Please select an event."); return; }
-    if (trimExceedsMax) { setError(`Trim the clip to ${MAX_TRIM_SECONDS} seconds or less before uploading.`); return; }
+    if (!file) {
+      setError("Please select a video file.");
+      return;
+    }
+    if (!title.trim()) {
+      setError("Please enter a title.");
+      return;
+    }
+    if (!drillType) {
+      setError("Please select a drill type.");
+      return;
+    }
+    if (!event) {
+      setError("Please select an event.");
+      return;
+    }
+    if (trimExceedsMax) {
+      setError(`Trim the clip to ${MAX_TRIM_SECONDS} seconds or less before uploading.`);
+      return;
+    }
 
     setUploading(true);
     setError("");
@@ -298,15 +334,24 @@ export default function DrillVideoUpload({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upload Drill PR Video</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Max {MAX_TRIM_SECONDS} seconds · Trim required for longer clips</p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Upload Drill PR Video
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Max {MAX_TRIM_SECONDS} seconds · Trim required for longer clips
+            </p>
           </div>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-surface-800 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -315,10 +360,13 @@ export default function DrillVideoUpload({
           {/* File drop zone */}
           {!file ? (
             <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => filePicker.open()}
               className={`flex flex-col items-center justify-center gap-3 h-36 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
                 dragOver
                   ? "border-primary-400 bg-primary-50 dark:bg-primary-900/10"
@@ -326,13 +374,27 @@ export default function DrillVideoUpload({
               }`}
             >
               <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-surface-800 flex items-center justify-center">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.88v6.24a1 1 0 01-1.447.888L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                <svg
+                  className="w-6 h-6 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 10l4.553-2.069A1 1 0 0121 8.88v6.24a1 1 0 01-1.447.888L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Drop video here or click to browse</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">MP4, MOV, WebM — up to 500MB</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Drop video here or click to browse
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  MP4, MOV, WebM — up to 500MB
+                </p>
               </div>
             </div>
           ) : (
@@ -357,7 +419,13 @@ export default function DrillVideoUpload({
                     )}
                     <button
                       type="button"
-                      onClick={() => { setFile(null); setPreviewUrl(null); setDuration(null); setTrimStart(0); setTrimEnd(0); }}
+                      onClick={() => {
+                        setFile(null);
+                        setPreviewUrl(null);
+                        setDuration(null);
+                        setTrimStart(0);
+                        setTrimEnd(0);
+                      }}
                       className="px-2 py-0.5 rounded-md bg-red-500/80 hover:bg-red-600/90 text-white text-xs font-medium transition-colors"
                     >
                       Change
@@ -370,9 +438,13 @@ export default function DrillVideoUpload({
               {duration !== null && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Trim Clip</span>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      Trim Clip
+                    </span>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-mono font-medium ${trimExceedsMax ? "text-red-500" : "text-green-600 dark:text-green-400"}`}>
+                      <span
+                        className={`text-xs font-mono font-medium ${trimExceedsMax ? "text-red-500" : "text-green-600 dark:text-green-400"}`}
+                      >
                         {trimmedDuration.toFixed(1)}s
                       </span>
                       <span className="text-xs text-gray-400">/ {MAX_TRIM_SECONDS}s max</span>
@@ -422,8 +494,18 @@ export default function DrillVideoUpload({
 
                   {trimError && (
                     <div className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                      <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <svg
+                        className="w-4 h-4 text-red-500 shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
                       </svg>
                       <p className="text-xs text-red-600 dark:text-red-400">{trimError}</p>
                     </div>
@@ -449,19 +531,33 @@ export default function DrillVideoUpload({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Drill Type</label>
-              <select value={drillType} onChange={(e) => setDrillType(e.target.value)} className="input" required>
+              <select
+                value={drillType}
+                onChange={(e) => setDrillType(e.target.value)}
+                className="input"
+                required
+              >
                 <option value="">Select drill...</option>
                 {DRILL_TYPES.map((d) => (
-                  <option key={d.value} value={d.value}>{d.label}</option>
+                  <option key={d.value} value={d.value}>
+                    {d.label}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
               <label className="label">Event</label>
-              <select value={event} onChange={(e) => setEvent(e.target.value)} className="input" required>
+              <select
+                value={event}
+                onChange={(e) => setEvent(e.target.value)}
+                className="input"
+                required
+              >
                 <option value="">Select event...</option>
                 {EVENTS.map((ev) => (
-                  <option key={ev.value} value={ev.value}>{ev.label}</option>
+                  <option key={ev.value} value={ev.value}>
+                    {ev.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -521,13 +617,7 @@ export default function DrillVideoUpload({
         </form>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="video/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
+      {filePicker.input}
     </div>
   );
 }
