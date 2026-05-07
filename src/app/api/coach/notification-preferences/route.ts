@@ -38,7 +38,7 @@ export async function GET() {
     }
 
     const preferences = parseCoachPrefs(coach.notificationPreferences);
-    return NextResponse.json({ success: true, data: { preferences } });
+    return NextResponse.json({ success: true, data: preferences });
   } catch (err) {
     logger.error("GET /api/coach/notification-preferences", {
       context: "api",
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true, data: { preferences: merged } });
+    return NextResponse.json({ success: true, data: merged });
   } catch (err) {
     logger.error("POST /api/coach/notification-preferences", {
       context: "api",
