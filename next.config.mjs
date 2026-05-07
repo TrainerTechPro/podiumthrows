@@ -349,10 +349,12 @@ const nextConfig = {
       },
 
       // Throws Analyze merges into Video Analysis (sign-off H).
-      // /coach/throws/analyze list → video-analysis filtered by event=throws.
+      // The schema's EventType enum (SHOT_PUT|DISCUS|HAMMER|JAVELIN) is
+      // already throws-only, so no event filter is needed — passing
+      // ?event=throws would crash Prisma with "Expected EventType."
       {
         source: '/coach/throws/analyze',
-        destination: '/coach/video-analysis?event=throws',
+        destination: '/coach/video-analysis',
         permanent: true,
       },
       {
