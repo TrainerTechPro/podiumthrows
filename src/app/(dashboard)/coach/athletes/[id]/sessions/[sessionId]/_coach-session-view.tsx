@@ -33,6 +33,9 @@ import {
   type CoachLaneDTO,
   type CoachExerciseDTO,
 } from "@/lib/coach/session-detail";
+import { getExerciseViolations } from "@/lib/bondarchuk/movement-restrictions";
+import { MovementRestrictionBadge } from "@/components/coach/MovementRestrictionBadge";
+import type { MovementRestrictionsData } from "@/app/(dashboard)/athlete/profile/_types";
 import { CoachSessionMobile } from "./_coach-session-mobile";
 
 interface Props {
@@ -304,6 +307,7 @@ function CoachSessionDesktop({ initial }: Props) {
                 onDragOver={onLaneDragOver}
                 onDrop={(e) => onLaneDrop(e, lane.id)}
                 pending={pending}
+                restrictions={dto.athlete.movementRestrictions}
               />
             ))}
           </div>
@@ -579,6 +583,7 @@ function Lane({
   onDragOver,
   onDrop,
   pending,
+  restrictions,
 }: {
   lane: CoachLaneDTO;
   selectedExerciseId: string | null;
@@ -591,6 +596,7 @@ function Lane({
   onDragOver: (e: ReactDragEvent<HTMLDivElement>) => void;
   onDrop: (e: ReactDragEvent<HTMLDivElement>) => void;
   pending: Record<string, PendingExerciseEdit>;
+  restrictions: MovementRestrictionsData | null;
 }) {
   const isActive = lane.status === "active";
   const tagClass =
@@ -662,6 +668,7 @@ function Lane({
             onDragStart={(e) => onDragStart(e, ex, lane.id)}
             laneKind={lane.kind}
             isPending={pending[ex.id] != null}
+            restrictions={restrictions}
           />
         ))}
       </div>
@@ -678,6 +685,7 @@ function ExerciseLine({
   onDragStart,
   laneKind,
   isPending,
+  restrictions,
 }: {
   exercise: CoachExerciseDTO;
   isLast: boolean;
@@ -687,8 +695,10 @@ function ExerciseLine({
   onDragStart: (e: ReactDragEvent<HTMLDivElement>) => void;
   laneKind: CoachLaneDTO["kind"];
   isPending: boolean;
+  restrictions: MovementRestrictionsData | null;
 }) {
   const isThrowing = laneKind === "throwing";
+  const violations = isThrowing ? [] : getExerciseViolations(exercise.name, restrictions);
   return (
     <>
       <div
@@ -726,8 +736,11 @@ function ExerciseLine({
               laneActive={laneIsActive}
             />
           ) : (
-            <span className="font-heading text-[14px] font-semibold text-[var(--foreground)]">
-              {exercise.name}
+            <span className="inline-flex items-center gap-1.5">
+              <span className="font-heading text-[14px] font-semibold text-[var(--foreground)]">
+                {exercise.name}
+              </span>
+              <MovementRestrictionBadge violations={violations} />
             </span>
           )}
           <span className="font-mono text-[11px] tracking-[0.04em] text-[var(--muted)]">
