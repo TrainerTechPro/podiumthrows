@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "@/components/toast";
 import { useAccessibility } from "@/components/accessibility-provider";
+import { Radio, RadioGroup } from "@/components/ui/Radio";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
@@ -171,9 +172,11 @@ export default function CoachSettingsPage() {
   const { fontSize, setFontSize, reducedMotion, setReducedMotion } = useAccessibility();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab: TabId = isValidTabId(searchParams?.get("tab"))
-    ? (searchParams!.get("tab") as TabId)
-    : "profile";
+  // Extract once so the type predicate's narrowing applies on the second
+  // reference — was using `searchParams!.get("tab") as TabId` which silently
+  // accepts anything if the URL drifts past the validator.
+  const tabFromUrl = searchParams?.get("tab");
+  const initialTab: TabId = isValidTabId(tabFromUrl) ? tabFromUrl : "profile";
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
 
   // Keep URL ↔ tab in sync. Profile is the default and gets a clean URL.
@@ -292,6 +295,10 @@ export default function CoachSettingsPage() {
   }, [activeTab]);
 
   async function handleSavePreferences(patch: Partial<CoachPreferences>) {
+    // Guard against concurrent PUTs — rapidly clicking different landing-page
+    // radios used to fire overlapping requests; whichever resolved last won
+    // regardless of click order, leaving the user on the wrong default page.
+    if (prefSaving) return;
     setPrefSaving(true);
     try {
       const res = await fetch("/api/coach/preferences", {
@@ -331,6 +338,7 @@ export default function CoachSettingsPage() {
     if (data.success) {
       setProfile((p) => ({ ...p, avatarUrl: dataUrl }));
       toast("Profile picture updated");
+      router.refresh();
     } else {
       throw new Error(data.error || "Failed to upload picture");
     }
@@ -345,6 +353,7 @@ export default function CoachSettingsPage() {
     if (data.success) {
       setProfile((p) => ({ ...p, avatarUrl: "" }));
       toast("Profile picture removed");
+      router.refresh();
     } else {
       throw new Error(data.error || "Failed to remove picture");
     }
@@ -369,6 +378,7 @@ export default function CoachSettingsPage() {
       if (data.success) {
         setSaved(true);
         toast("Profile saved successfully");
+        router.refresh();
         setTimeout(() => setSaved(false), 3000);
       } else {
         toast(data.error || "Failed to save profile", "error");
@@ -769,7 +779,18 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Billing Tab */}
+        {/* Billing Tab — show shimmer skeleton while subscription is loading.
+            Previously the panel rendered nothing when subscription === null,
+            looking broken on slow networks or first paint after a tab switch. */}
+        {activeTab === "billing" && !subscription && (
+          <div className="animate-spring-up space-y-6">
+            <div className="card space-y-4">
+              <div className="h-6 w-32 rounded bg-[var(--muted-bg)] shimmer" />
+              <div className="h-4 w-48 rounded bg-[var(--muted-bg)] shimmer" />
+              <div className="h-10 w-40 rounded bg-[var(--muted-bg)] shimmer" />
+            </div>
+          </div>
+        )}
         {activeTab === "billing" && subscription && (
           <div className="animate-spring-up space-y-6">
             <div className="card">
@@ -1146,7 +1167,8 @@ export default function CoachSettingsPage() {
                     No invitations sent
                   </p>
                   <p className="text-xs text-muted max-w-full sm:max-w-[220px]">
-                    Invite athletes from the Athletes page to grow your roster.
+                    Use the form above to invite an athlete by email — they&apos;ll show up here
+                    once sent.
                   </p>
                 </div>
               ) : (
@@ -1279,7 +1301,12 @@ export default function CoachSettingsPage() {
               <p className="text-sm text-surface-700 dark:text-surface-300 mb-5">
                 Choose which page opens when you first launch the app.
               </p>
-              <div className="space-y-2">
+              <RadioGroup
+                value={preferences.globalDefaultPage ?? "/coach"}
+                onChange={(next) => handleSavePreferences({ globalDefaultPage: next })}
+                aria-label="Default page"
+                className="space-y-2"
+              >
                 {[
                   {
                     href: "/coach",
@@ -1294,29 +1321,25 @@ export default function CoachSettingsPage() {
                   { href: "/coach/athletes", label: "Athletes", desc: "Your full roster" },
                   { href: "/coach/calendar", label: "Calendar", desc: "Scheduled sessions" },
                 ].map((page) => (
-                  <label
+                  <Radio
                     key={page.href}
-                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                    value={page.href}
+                    className={`flex items-start gap-3 p-3 rounded-xl transition-colors w-full ${
                       preferences.globalDefaultPage === page.href
                         ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
                         : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                     }`}
-                  >
-                    <input
-                      type="radio"
-                      name="globalDefault"
-                      value={page.href}
-                      checked={preferences.globalDefaultPage === page.href}
-                      onChange={() => handleSavePreferences({ globalDefaultPage: page.href })}
-                      className="mt-0.5"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-[var(--foreground)]">{page.label}</p>
-                      <p className="text-xs text-muted">{page.desc}</p>
-                    </div>
-                  </label>
+                    label={
+                      <span className="block">
+                        <span className="text-sm font-medium text-[var(--foreground)] block">
+                          {page.label}
+                        </span>
+                        <span className="text-xs text-muted block">{page.desc}</span>
+                      </span>
+                    }
+                  />
                 ))}
-              </div>
+              </RadioGroup>
             </div>
 
             {/* Per-Workspace Defaults */}
@@ -1329,41 +1352,36 @@ export default function CoachSettingsPage() {
                 {enabledModules.includes("throws") && (
                   <div>
                     <p className="label mb-3">Podium Throws</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <RadioGroup
+                      value={preferences.workspaceDefaults?.throws ?? "/coach/throws"}
+                      onChange={(next) =>
+                        handleSavePreferences({ workspaceDefaults: { throws: next } })
+                      }
+                      aria-label="Default throws page"
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-2 !space-y-0"
+                    >
                       {[
                         { href: "/coach/throws", label: "Throws Roster" },
                         { href: "/coach/throws/builder", label: "Session Builder" },
                         { href: "/coach/throws/practice", label: "Practice" },
                         { href: "/coach/throws/analyze", label: "Analysis" },
                       ].map((page) => (
-                        <label
+                        <Radio
                           key={page.href}
-                          className={`flex items-center gap-2.5 p-3 rounded-xl cursor-pointer transition-colors ${
+                          value={page.href}
+                          className={`flex items-center gap-2.5 p-3 rounded-xl transition-colors w-full ${
                             (preferences.workspaceDefaults?.throws ?? "/coach/throws") === page.href
                               ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
                               : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                           }`}
-                        >
-                          <input
-                            type="radio"
-                            name="throwsDefault"
-                            value={page.href}
-                            checked={
-                              (preferences.workspaceDefaults?.throws ?? "/coach/throws") ===
-                              page.href
-                            }
-                            onChange={() =>
-                              handleSavePreferences({
-                                workspaceDefaults: { throws: page.href },
-                              })
-                            }
-                          />
-                          <span className="text-sm font-medium text-[var(--foreground)]">
-                            {page.label}
-                          </span>
-                        </label>
+                          label={
+                            <span className="text-sm font-medium text-[var(--foreground)]">
+                              {page.label}
+                            </span>
+                          }
+                        />
                       ))}
-                    </div>
+                    </RadioGroup>
                   </div>
                 )}
               </div>
@@ -1420,6 +1438,7 @@ export default function CoachSettingsPage() {
                           "Training Mode enabled! Use the toggle in the header to switch.",
                           "success"
                         );
+                        router.refresh();
                       } else {
                         toast(data.error || "Failed to enable Training Mode", "error");
                       }
@@ -1481,67 +1500,75 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Feedback — always visible */}
-        <div className="mt-6">
-          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
-            Feedback
-          </h2>
-          <SendFeedbackCard />
-        </div>
-
-        {/* Accessibility Section — always visible */}
-        <div className="card mt-6 mb-24 lg:mb-0">
-          <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Accessibility</h2>
-          <div className="space-y-6">
-            {/* Font Size */}
-            <div>
-              <label className="label">Font Size</label>
-              <div className="flex gap-2 flex-wrap">
-                {(["default", "large", "xl"] as const).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setFontSize(size)}
-                    className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      fontSize === size
-                        ? "bg-[rgba(212,168,67,0.12)] text-[var(--foreground)]"
-                        : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
-                    }`}
-                  >
-                    {size === "default" ? "Default" : size === "large" ? "Large" : "XL"}
-                  </button>
-                ))}
-              </div>
+        {/* Feedback + Accessibility — only on Profile tab. Previously rendered
+            unconditionally, which sandwiched them BETWEEN the active tab's
+            content and the page bottom — clicking Notifications meant your
+            notifications appeared under unrelated accessibility controls. */}
+        {activeTab === "profile" && (
+          <>
+            <div className="mt-6">
+              <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
+                Feedback
+              </h2>
+              <SendFeedbackCard />
             </div>
 
-            {/* Reduced Motion */}
-            <div>
-              <div className="flex items-center justify-between">
+            <div className="card mt-6">
+              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Accessibility</h2>
+              <div className="space-y-6">
+                {/* Font Size */}
                 <div>
-                  <label className="label mb-0">Reduce animations</label>
-                  <p className="text-sm text-surface-700 dark:text-surface-300 mt-0.5">
-                    Minimizes motion for users who are sensitive to animations
-                  </p>
+                  <label className="label">Font Size</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {(["default", "large", "xl"] as const).map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setFontSize(size)}
+                        className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          fontSize === size
+                            ? "bg-[rgba(212,168,67,0.12)] text-[var(--foreground)]"
+                            : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
+                        }`}
+                      >
+                        {size === "default" ? "Default" : size === "large" ? "Large" : "XL"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Reduced Motion — whole row is clickable so tapping the
+                    label text also toggles the switch (was visual-only before). */}
                 <button
                   type="button"
                   role="switch"
                   aria-checked={reducedMotion}
                   onClick={() => setReducedMotion(!reducedMotion)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
-                    reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
-                  }`}
+                  className="w-full flex items-center justify-between text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded-md"
                 >
+                  <span>
+                    <span className="label mb-0 block">Reduce animations</span>
+                    <span className="text-sm text-surface-700 dark:text-surface-300 mt-0.5 block font-normal">
+                      Minimizes motion for users who are sensitive to animations
+                    </span>
+                  </span>
                   <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform mt-0.5 ${
-                      reducedMotion ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5"
+                    aria-hidden="true"
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
+                      reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
                     }`}
-                  />
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform mt-0.5 ${
+                        reducedMotion ? "translate-x-5 ml-0.5" : "translate-x-0 ml-0.5"
+                      }`}
+                    />
+                  </span>
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* Notifications Tab — mounts the existing /coach/settings/notifications
             client component, which now lives only here. */}

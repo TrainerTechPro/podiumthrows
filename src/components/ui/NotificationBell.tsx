@@ -23,6 +23,7 @@ import { csrfHeaders } from "@/lib/csrf-client";
 import type { NotificationItem } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
 import { useToast } from "@/components/ui/Toast";
+import { SkeletonCircle, SkeletonLine } from "@/components/ui/Skeleton";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 
@@ -510,11 +511,11 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
             {loading ? (
               <div className="p-4 space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex gap-3 animate-pulse">
-                    <div className="w-11 h-11 rounded-full bg-surface-200 dark:bg-surface-800 shrink-0" />
+                  <div key={i} className="flex gap-3">
+                    <SkeletonCircle className="w-11 h-11" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-surface-200 dark:bg-surface-800 rounded w-3/4" />
-                      <div className="h-2.5 bg-surface-200 dark:bg-surface-800 rounded w-1/2" />
+                      <SkeletonLine className="h-3 w-3/4" />
+                      <SkeletonLine className="h-2.5 w-1/2" />
                     </div>
                   </div>
                 ))}

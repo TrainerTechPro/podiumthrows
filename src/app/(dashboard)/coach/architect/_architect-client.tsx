@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/ui/Toast";
 import {
   Cpu,
@@ -96,7 +97,7 @@ export function ArchitectClient({ athletes }: Props) {
     try {
       const res = await fetch("/api/coach/architect/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           athleteId: selectedAthleteId,
           daysToChampionship,

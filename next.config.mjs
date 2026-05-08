@@ -349,10 +349,12 @@ const nextConfig = {
       },
 
       // Throws Analyze merges into Video Analysis (sign-off H).
-      // /coach/throws/analyze list → video-analysis filtered by event=throws.
+      // The schema's EventType enum (SHOT_PUT|DISCUS|HAMMER|JAVELIN) is
+      // already throws-only, so no event filter is needed — passing
+      // ?event=throws would crash Prisma with "Expected EventType."
       {
         source: '/coach/throws/analyze',
-        destination: '/coach/video-analysis?event=throws',
+        destination: '/coach/video-analysis',
         permanent: true,
       },
       {
@@ -458,7 +460,11 @@ const nextConfig = {
               "font-src 'self' data:",
               // Stripe API, Cloudflare R2, Sentry ingest (matches both
               // o{id}.ingest.sentry.io and o{id}.ingest.us.sentry.io patterns).
-              "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
+              // storage.googleapis.com hosts the MediaPipe pose_landmarker
+              // model (~29MB) loaded by /coach/video-analysis/live; vendoring
+              // it would balloon the build artifact, and Google publishes the
+              // canonical model from this single host.
+              "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://storage.googleapis.com",
               "media-src 'self' blob: https://*.r2.dev",
               // Sentry Replay uses blob: workers for session replay recording
               "worker-src 'self' blob:",
@@ -471,7 +477,11 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
+          // camera=(self) for /coach/video-analysis/live (pose detection on
+          // the coach's own webcam). The page is the only camera consumer in
+          // the app today; a route-scoped header would be tighter but Next.js
+          // lacks a clean per-route override without middleware rewriting.
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
         ],
       },

@@ -255,6 +255,13 @@ model User {
 
   activeMode String @default("COACH")
 
+  /// Synthetic monitoring account flag. Set to true on the smoke@ sentinel
+  /// users created by scripts/upsert-smoke-accounts.ts. Cleanup paths
+  /// (seed.ts, future bulk-delete tooling) MUST exclude these — they're the
+  /// only authenticated probe targets in prod and recreating them requires
+  /// a manual one-shot. See deploy.sh §"Smoke test: authenticated".
+  isSmokeAccount Boolean @default(false)
+
   /// Slug of the most recent Release this user has acknowledged via the
   /// what's-new modal. Null = never seen any release.
   lastSeenReleaseSlug String?

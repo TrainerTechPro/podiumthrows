@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Lock, Globe } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { Textarea } from "@/components/ui/Textarea";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -77,16 +78,12 @@ export function AddNoteModal({ athleteId, athleteName, onClose }: AddNoteModalPr
     >
       <div className="space-y-5">
         {/* Content */}
-        <textarea
+        <Textarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={setContent}
           placeholder={`Notes about ${athleteName}...`}
           rows={5}
           autoFocus
-          className="w-full px-4 py-3 rounded-xl text-sm
-            bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)]
-            text-[var(--foreground)] placeholder:text-[var(--muted)]
-            focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
         />
 
         {/* Category */}
@@ -100,9 +97,10 @@ export function AddNoteModal({ athleteId, athleteName, onClose }: AddNoteModalPr
                 key={c.value}
                 onClick={() => setCategory(c.value)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
-                  ${category === c.value
-                    ? "bg-primary-500 text-black"
-                    : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)]"
+                  ${
+                    category === c.value
+                      ? "bg-primary-500 text-black"
+                      : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)]"
                   }`}
                 type="button"
               >
@@ -122,7 +120,12 @@ export function AddNoteModal({ athleteId, athleteName, onClose }: AddNoteModalPr
         >
           {isPrivate ? (
             <>
-              <Lock size={16} strokeWidth={1.75} className="text-[var(--muted)]" aria-hidden="true" />
+              <Lock
+                size={16}
+                strokeWidth={1.75}
+                className="text-[var(--muted)]"
+                aria-hidden="true"
+              />
               <span className="text-[var(--foreground)]">Private — coach only</span>
             </>
           ) : (

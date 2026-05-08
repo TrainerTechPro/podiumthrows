@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { useToast } from "@/components/ui/Toast";
 import { logger } from "@/lib/logger";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -28,6 +29,27 @@ interface AthleteSettings {
   lastName: string;
   mode: AutoregMode | null; // null = inherit from coach
   timescales: TimescaleConfig;
+}
+
+/**
+ * Shape returned by GET /api/coach/autoregulation-settings — kept here
+ * as a Partial because field-level absence is fine (we apply defaults).
+ * Lets us drop the loose `Record<string, unknown>` cast at the map
+ * boundary which silently turned undefined fields into the string
+ * "undefined" if upstream ever drifted.
+ */
+interface AutoregSettingsResponse {
+  coachSelf?: {
+    mode?: AutoregMode;
+    timescales?: Partial<TimescaleConfig>;
+  };
+  athletes?: Array<{
+    athleteId: string;
+    firstName: string;
+    lastName: string;
+    mode?: AutoregMode | null;
+    timescales?: Partial<TimescaleConfig>;
+  }>;
 }
 
 const DEFAULT_TIMESCALES: TimescaleConfig = {
@@ -60,6 +82,7 @@ const TIMESCALE_LABELS: { key: keyof TimescaleConfig; label: string }[] = [
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function AutoregulationSettingsPage() {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -97,7 +120,7 @@ export default function AutoregulationSettingsPage() {
         if (!res.ok) throw new Error("fetch failed");
         return res.json();
       })
-      .then((json) => {
+      .then((json: { data?: AutoregSettingsResponse }) => {
         const data = json?.data;
         if (!data) throw new Error("invalid response");
 
@@ -111,14 +134,14 @@ export default function AutoregulationSettingsPage() {
         setCoachSelf(cs);
         setCoachSelfInitial(structuredClone(cs));
 
-        const aths: AthleteSettings[] = (data.athletes ?? []).map((a: Record<string, unknown>) => ({
-          athleteId: a.athleteId as string,
-          firstName: a.firstName as string,
-          lastName: a.lastName as string,
-          mode: (a.mode as AutoregMode | null) ?? null,
+        const aths: AthleteSettings[] = (data.athletes ?? []).map((a) => ({
+          athleteId: a.athleteId,
+          firstName: a.firstName,
+          lastName: a.lastName,
+          mode: a.mode ?? null,
           timescales: {
             ...DEFAULT_TIMESCALES,
-            ...((a.timescales as Partial<TimescaleConfig>) ?? {}),
+            ...(a.timescales ?? {}),
           },
         }));
         setAthletes(aths);
@@ -154,12 +177,17 @@ export default function AutoregulationSettingsPage() {
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ targetType: "COACH_SELF", ...coachSelf }),
       });
-      if (!res.ok) throw new Error("save failed");
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || `Save failed (${res.status})`);
+      }
       setCoachSelfInitial(structuredClone(coachSelf));
       setCoachSaveStatus("saved");
+      toastSuccess("Autoregulation saved");
       setTimeout(() => setCoachSaveStatus(null), 2000);
-    } catch {
+    } catch (err) {
       setCoachSaveStatus("error");
+      toastError(err instanceof Error ? err.message : "Network error — please try again");
     } finally {
       setCoachSaving(false);
     }
@@ -181,25 +209,33 @@ export default function AutoregulationSettingsPage() {
           })),
         }),
       });
-      if (!res.ok) throw new Error("save failed");
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || `Save failed (${res.status})`);
+      }
       setAthletesInitial(structuredClone(athletes));
       setAthletesSaveStatus("saved");
+      toastSuccess("Athlete overrides saved");
       setTimeout(() => setAthletesSaveStatus(null), 2000);
-    } catch {
+    } catch (err) {
       setAthletesSaveStatus("error");
+      toastError(err instanceof Error ? err.message : "Network error — please try again");
     } finally {
       setAthletesSaving(false);
     }
   }
 
   async function resetAthleteToDefault(athleteId: string) {
-    // TODO: If backend doesn't support mode: null for deletion, send mode: 'INHERIT'
     try {
-      await fetch("/api/coach/autoregulation-settings", {
+      const res = await fetch("/api/coach/autoregulation-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ targetType: "ATHLETE", athleteId, mode: null }),
       });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || `Reset failed (${res.status})`);
+      }
       setAthletes((prev) =>
         prev.map((a) =>
           a.athleteId === athleteId
@@ -214,12 +250,13 @@ export default function AutoregulationSettingsPage() {
             : a
         )
       );
+      toastSuccess("Reset to coach default");
     } catch (err) {
-      // Silently fail — user can retry
-      logger.debug("Silently fail — user can retry", {
+      logger.error("autoregulation reset failed", {
         context: "src/app/(dashboard)/coach/settings/autoregulation/page.tsx",
-        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        error: err,
       });
+      toastError(err instanceof Error ? err.message : "Couldn't reset — please try again");
     }
   }
 

@@ -25,6 +25,9 @@ import type {
   CoachExerciseDTO,
   CoachStat,
 } from "@/lib/coach/session-detail";
+import { getExerciseViolations } from "@/lib/bondarchuk/movement-restrictions";
+import { MovementRestrictionBadge } from "@/components/coach/MovementRestrictionBadge";
+import type { MovementRestrictionsData } from "@/app/(dashboard)/athlete/profile/_types";
 
 interface Props {
   initial: CoachSessionDetailDTO;
@@ -79,6 +82,7 @@ export function CoachSessionMobile({ initial }: Props) {
               key={block.id}
               block={block}
               onOpenInspector={(id) => setInspectorExerciseId(id)}
+              restrictions={dto.athlete.movementRestrictions}
             />
           ))}
         </div>
@@ -160,10 +164,7 @@ function PageHeader({ athleteName, dateLabel }: { athleteName: string; dateLabel
 function IdentityRow({ athlete }: { athlete: CoachSessionDetailDTO["athlete"] }) {
   return (
     <div className="flex items-center gap-3 border-b border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3.5">
-      <div
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] border border-[var(--card-border)] font-heading text-[13px] font-bold text-[var(--foreground)]"
-        style={{ background: "linear-gradient(135deg, #d4d4d8, #a1a1a8)" }}
-      >
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] border border-[var(--card-border)] bg-gradient-to-br from-surface-300 to-surface-400 font-heading text-[13px] font-bold text-[var(--foreground)] dark:from-surface-700 dark:to-surface-800">
         {athlete.initials}
       </div>
       <div className="min-w-0 flex-1">
@@ -331,9 +332,11 @@ function SectionHeader({ dto }: { dto: CoachSessionDetailDTO }) {
 function BlockCard({
   block,
   onOpenInspector,
+  restrictions,
 }: {
   block: CoachLaneDTO;
   onOpenInspector: (exerciseId: string) => void;
+  restrictions: MovementRestrictionsData | null;
 }) {
   const isActive = block.status === "active";
   const isComplete = block.status === "complete";
@@ -348,9 +351,13 @@ function BlockCard({
     >
       <BlockHead block={block} isActive={isActive} isComplete={isComplete} />
       {isActive ? (
-        <ActiveBlockBody block={block} onOpenInspector={onOpenInspector} />
+        <ActiveBlockBody
+          block={block}
+          onOpenInspector={onOpenInspector}
+          restrictions={restrictions}
+        />
       ) : (
-        <LockedBlockBody block={block} />
+        <LockedBlockBody block={block} restrictions={restrictions} />
       )}
     </div>
   );
@@ -412,9 +419,11 @@ function BlockHead({
 function ActiveBlockBody({
   block,
   onOpenInspector,
+  restrictions,
 }: {
   block: CoachLaneDTO;
   onOpenInspector: (exerciseId: string) => void;
+  restrictions: MovementRestrictionsData | null;
 }) {
   const isThrowing = block.kind === "throwing";
 
@@ -456,10 +465,16 @@ function ActiveBlockBody({
   }
 
   // Strength active block — compact mini-pills, same as locked strength.
-  return <LockedBlockBody block={block} />;
+  return <LockedBlockBody block={block} restrictions={restrictions} />;
 }
 
-function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
+function LockedBlockBody({
+  block,
+  restrictions,
+}: {
+  block: CoachLaneDTO;
+  restrictions: MovementRestrictionsData | null;
+}) {
   const isThrowing = block.kind === "throwing";
 
   if (block.exercises.length === 0) {
@@ -474,7 +489,7 @@ function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
     return (
       <div className="flex flex-wrap gap-1.5 bg-surface-50 px-3.5 py-2.5 dark:bg-surface-900/60">
         {block.exercises.map((ex) => (
-          <ExerciseMiniPill key={ex.id} exercise={ex} kind="throwing" />
+          <ExerciseMiniPill key={ex.id} exercise={ex} kind="throwing" restrictions={null} />
         ))}
       </div>
     );
@@ -483,7 +498,7 @@ function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
   return (
     <div className="flex flex-wrap gap-1.5 bg-surface-50 px-3.5 py-2.5 dark:bg-surface-900/60">
       {block.exercises.map((ex) => (
-        <ExerciseMiniPill key={ex.id} exercise={ex} kind="strength" />
+        <ExerciseMiniPill key={ex.id} exercise={ex} kind="strength" restrictions={restrictions} />
       ))}
     </div>
   );
@@ -492,9 +507,11 @@ function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
 function ExerciseMiniPill({
   exercise,
   kind,
+  restrictions,
 }: {
   exercise: CoachExerciseDTO;
   kind: "throwing" | "strength";
+  restrictions: MovementRestrictionsData | null;
 }) {
   if (kind === "throwing" && exercise.implementKg != null) {
     return (
@@ -511,9 +528,12 @@ function ExerciseMiniPill({
     );
   }
 
+  const violations = getExerciseViolations(exercise.name, restrictions);
+
   return (
     <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-2 py-1 font-mono text-[11px] tracking-[0.02em] text-[var(--muted)]">
       <strong className="font-semibold text-[var(--foreground)]">{exercise.name}</strong>
+      <MovementRestrictionBadge violations={violations} />
       {exercise.sets && exercise.reps ? (
         <span>
           · {exercise.sets}×{exercise.reps}
@@ -559,8 +579,7 @@ function ImplementPill({ exercise, onClick }: { exercise: CoachExerciseDTO; onCl
     >
       {exercise.isHeaviestInBlock ? (
         <span
-          className="inline-block h-[5px] w-[5px] shrink-0 rounded-full"
-          style={{ background: "#FFC800", boxShadow: "0 0 6px rgba(255,200,0,0.45)" }}
+          className="inline-block h-[5px] w-[5px] shrink-0 rounded-full bg-primary-500 shadow-[0_0_6px_color-mix(in_srgb,var(--color-brand)_45%,transparent)]"
           aria-hidden="true"
         />
       ) : null}

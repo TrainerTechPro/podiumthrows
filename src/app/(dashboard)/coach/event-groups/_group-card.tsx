@@ -53,7 +53,7 @@ export function GroupCard({ group, onClick, selected }: GroupCardProps) {
       <div className="flex items-center gap-2.5">
         <span
           className="w-3 h-3 rounded-full shrink-0"
-          style={{ backgroundColor: group.color || "#f59e0b" }}
+          style={{ backgroundColor: group.color || "var(--color-brand)" }}
           aria-hidden="true"
         />
         <h3 className="font-heading font-semibold text-[var(--foreground)] truncate">

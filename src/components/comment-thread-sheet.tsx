@@ -20,6 +20,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Mic, Send, Trash2, ChevronDown } from "lucide-react";
 import { Sheet, type SheetSide } from "@/components/ui/Sheet";
+import { Textarea } from "@/components/ui/Textarea";
 import { VoiceRecorder, type VoiceRecorderResult } from "@/components/feedback/VoiceRecorder";
 import { CommentAudioPlayer } from "@/components/comment-audio-player";
 import { csrfHeaders } from "@/lib/csrf-client";
@@ -318,14 +319,17 @@ export function CommentThreadSheet({
               >
                 <Mic size={18} strokeWidth={1.75} aria-hidden="true" />
               </button>
-              <textarea
+              <Textarea
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={setText}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a reply..."
-                rows={1}
-                className="input flex-1 resize-none !py-2.5 text-sm min-h-[40px] max-h-[120px]"
+                autoResize
+                minRows={1}
+                maxRows={5}
                 disabled={sending}
+                className="flex-1"
+                inputClassName="!py-2.5 text-sm min-h-[40px]"
               />
               <button
                 type="button"

@@ -5,6 +5,7 @@ import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Button } from "@/components/ui/Button";
 import { InteractiveBodyMap } from "@/components/ui/InteractiveBodyMap";
+import { StepHeader } from "./_step-header";
 import type { StepProps } from "./types";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -38,21 +39,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Progress bar ───────────────────────────────────────────────── */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">
-            Step
-          </span>
-          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">2/5</span>
-        </div>
-        <div className="h-1.5 w-full rounded-full bg-[var(--muted-bg)] overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-500"
-            style={{ width: "40%" }}
-          />
-        </div>
-      </div>
+      <StepHeader current={2} total={5} />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
