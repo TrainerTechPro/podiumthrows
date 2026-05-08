@@ -404,6 +404,13 @@ export type ArchitectInput = {
    * behavior). See `filterImplementSet`.
    */
   availableImplements?: AvailableImplement[];
+  /**
+   * Master Profile lifestyle.stressBaseline (1-10 self-report). When ≥ 8,
+   * the engine pushes a phase-conflict warning so the coach sees that
+   * chronic stress is elevated before signing off on heavy programming.
+   * The prescription itself is unchanged — the human owns the call.
+   */
+  lifestyleStressBaseline?: number | null;
 };
 
 export function runArchitectAnalysis(input: ArchitectInput): ArchitectAnalysis {
@@ -416,6 +423,7 @@ export function runArchitectAnalysis(input: ArchitectInput): ArchitectAnalysis {
     trainingPhase,
     strengthNumbers,
     availableImplements,
+    lifestyleStressBaseline,
   } = input;
 
   // 1. Distance band
@@ -423,6 +431,8 @@ export function runArchitectAnalysis(input: ArchitectInput): ArchitectAnalysis {
 
   // 2. Phase conflicts
   const phaseConflicts = detectPhaseConflicts(daysToChampionship, trainingPhase);
+  const stressConflict = detectStressConflict(lifestyleStressBaseline);
+  if (stressConflict) phaseConflicts.push(stressConflict);
 
   // 3. Deficit analysis
   const deficitProfile = analyzeDeficits(event, gender, distanceBand.label, strengthNumbers);
@@ -466,6 +476,31 @@ export function runArchitectAnalysis(input: ArchitectInput): ArchitectAnalysis {
     method,
     sessionStructure,
     weeklyDistribution,
+  };
+}
+
+/* ─── Stress Conflict Detection (Master Profile C.2) ─────────────── */
+
+/**
+ * Threshold of 8/10 mirrors the wellness check-in's red-zone cutoff and
+ * matches a clinical "high stress" self-report. We surface a warning, not
+ * an error, and we never alter the prescription — coach decides whether
+ * to defer, deload, or proceed. Same pattern as equipment-inventory C.1.
+ */
+function detectStressConflict(stress: number | null | undefined): PhaseConflict | null {
+  if (stress == null || !Number.isFinite(stress)) return null;
+  if (stress < 8 || stress > 10) return null;
+
+  if (stress >= 9) {
+    return {
+      type: "warning",
+      message: `Athlete reports very high baseline stress (${stress}/10). Heavy implement loading carries elevated injury risk under chronic stress — consider deferring this session, reducing the heavy block, or holding the program until lifestyle stress baseline drops.`,
+    };
+  }
+
+  return {
+    type: "warning",
+    message: `Athlete reports high baseline stress (${stress}/10). Recovery between heavy blocks may need to extend; coach should check in before sign-off.`,
   };
 }
 
