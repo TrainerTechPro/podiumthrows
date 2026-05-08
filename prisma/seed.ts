@@ -69,9 +69,14 @@ async function main() {
   await prisma.workoutPlan.deleteMany();
   await prisma.exercise.deleteMany();
   await prisma.videoUpload.deleteMany();
-  await prisma.athleteProfile.deleteMany();
-  await prisma.coachProfile.deleteMany();
-  await prisma.user.deleteMany();
+  // Smoke accounts (User.isSmokeAccount = true) are the only authenticated
+  // probe targets in prod. Recreating them requires running
+  // scripts/upsert-smoke-accounts.ts manually, so cleanup must skip them.
+  // CoachProfile/AthleteProfile cascade from User; preserving the User row
+  // alone is not enough since seed.ts deletes them explicitly first.
+  await prisma.athleteProfile.deleteMany({ where: { user: { isSmokeAccount: false } } });
+  await prisma.coachProfile.deleteMany({ where: { user: { isSmokeAccount: false } } });
+  await prisma.user.deleteMany({ where: { isSmokeAccount: false } });
 
   console.log("  ✓ Cleared existing data\n");
 

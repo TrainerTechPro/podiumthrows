@@ -32,47 +32,57 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
   const [state, setState] = useState<TileState | null>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const formatValue = useTestValueFormatter();
-
-  async function load() {
-    try {
-      const res = await fetch(`/api/performance-tests/athletes/${athleteId}/sessions?limit=20`);
-      const payload = await res.json();
-      if (!res.ok || !payload.success) {
-        throw new Error(payload.error || "Failed to load tests");
-      }
-      const items = (payload.data?.items ?? []) as PerformanceTestSessionDTO[];
-      if (!items.length) {
-        setState(null);
-        return;
-      }
-      const latest = items[0];
-      const prior =
-        items.find((s) => s.id !== latest.id && s.testTypeId === latest.testTypeId) ?? null;
-      if (!latest.testType) {
-        setState(null);
-        return;
-      }
-      setState({
-        testType: latest.testType,
-        current: latest,
-        previous: prior,
-      });
-    } catch (err) {
-      logger.error("performance-tests: tile load failed", {
-        context: "performance-tests/tile",
-        error: err,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
+  const reload = () => setReloadKey((k) => k + 1);
 
   useEffect(() => {
+    const ctrl = new AbortController();
+    async function load() {
+      try {
+        const res = await fetch(`/api/performance-tests/athletes/${athleteId}/sessions?limit=20`, {
+          signal: ctrl.signal,
+        });
+        const payload = await res.json();
+        if (ctrl.signal.aborted) return;
+        if (!res.ok || !payload.success) {
+          throw new Error(payload.error || "Failed to load tests");
+        }
+        const items = (payload.data?.items ?? []) as PerformanceTestSessionDTO[];
+        if (!items.length) {
+          setState(null);
+          return;
+        }
+        const latest = items[0];
+        const prior =
+          items.find((s) => s.id !== latest.id && s.testTypeId === latest.testTypeId) ?? null;
+        if (!latest.testType) {
+          setState(null);
+          return;
+        }
+        setState({
+          testType: latest.testType,
+          current: latest,
+          previous: prior,
+        });
+      } catch (err) {
+        if (ctrl.signal.aborted) return;
+        // Network-level fetch failure during navigation (user left the page
+        // before response arrived). The browser cancels the request before
+        // React unmounts the component, so signal.aborted is still false.
+        // Not actionable — don't log to Sentry.
+        if (err instanceof TypeError) return;
+        logger.error("performance-tests: tile load failed", {
+          context: "performance-tests/tile",
+          error: err,
+        });
+      } finally {
+        if (!ctrl.signal.aborted) setLoading(false);
+      }
+    }
     void load();
-    // load is stable in this scope
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [athleteId]);
+    return () => ctrl.abort();
+  }, [athleteId, reloadKey]);
 
   if (loading) {
     return (
@@ -117,7 +127,7 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
           open={open}
           onClose={() => setOpen(false)}
           athleteId={athleteId}
-          onComplete={() => void load()}
+          onComplete={reload}
         />
       </>
     );
@@ -169,7 +179,7 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
         open={open}
         onClose={() => setOpen(false)}
         athleteId={athleteId}
-        onComplete={() => void load()}
+        onComplete={reload}
       />
     </>
   );

@@ -27,7 +27,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:studio": "prisma studio",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && bash scripts/copy-mediapipe-wasm.sh",
     "remotion:preview": "remotion studio",
     "remotion:render": "remotion render OnboardingDemo out/onboarding-demo.mp4",
     "prepare": "husky"

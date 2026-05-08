@@ -798,3 +798,69 @@
   .print-table thead { display: table-header-group; }
   .print-table tr { break-inside: avoid; page-break-inside: avoid; }
 }
+
+/* ─── Marketing — BondarchukProof section ───────────────────────────────────
+   Lifted out of the React component because inline <style> children cause
+   SSR/CSR text-content drift (React error #425) on every landing visit.
+   Class names stay global — there's only one consumer
+   (src/components/marketing/BondarchukProof.tsx).
+   ────────────────────────────────────────────────────────────────────── */
+.bondarchuk-section {
+  padding: 80px 20px;
+}
+
+@media (min-width: 640px) {
+  .bondarchuk-section {
+    padding: 120px 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bondarchuk-section {
+    padding: 180px 64px;
+  }
+}
+
+.bondarchuk-proof-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .bondarchuk-proof-grid {
+    grid-template-columns: auto 1fr;
+    gap: 100px;
+    align-items: center;
+  }
+}
+
+@media (max-width: 1023px) {
+  .bondarchuk-proof-grid > :first-child {
+    justify-content: center;
+  }
+}
+
+.bondarchuk-event-tag {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--landing-text-dim);
+  border: 1px solid var(--landing-border);
+  padding: 5px 12px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+  cursor: default;
+}
+
+.bondarchuk-event-tag:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bondarchuk-event-tag {
+    transition: none;
+  }
+}
