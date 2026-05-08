@@ -25,6 +25,9 @@ import type {
   CoachExerciseDTO,
   CoachStat,
 } from "@/lib/coach/session-detail";
+import { getExerciseViolations } from "@/lib/bondarchuk/movement-restrictions";
+import { MovementRestrictionBadge } from "@/components/coach/MovementRestrictionBadge";
+import type { MovementRestrictionsData } from "@/app/(dashboard)/athlete/profile/_types";
 
 interface Props {
   initial: CoachSessionDetailDTO;
@@ -79,6 +82,7 @@ export function CoachSessionMobile({ initial }: Props) {
               key={block.id}
               block={block}
               onOpenInspector={(id) => setInspectorExerciseId(id)}
+              restrictions={dto.athlete.movementRestrictions}
             />
           ))}
         </div>
@@ -328,9 +332,11 @@ function SectionHeader({ dto }: { dto: CoachSessionDetailDTO }) {
 function BlockCard({
   block,
   onOpenInspector,
+  restrictions,
 }: {
   block: CoachLaneDTO;
   onOpenInspector: (exerciseId: string) => void;
+  restrictions: MovementRestrictionsData | null;
 }) {
   const isActive = block.status === "active";
   const isComplete = block.status === "complete";
@@ -345,9 +351,13 @@ function BlockCard({
     >
       <BlockHead block={block} isActive={isActive} isComplete={isComplete} />
       {isActive ? (
-        <ActiveBlockBody block={block} onOpenInspector={onOpenInspector} />
+        <ActiveBlockBody
+          block={block}
+          onOpenInspector={onOpenInspector}
+          restrictions={restrictions}
+        />
       ) : (
-        <LockedBlockBody block={block} />
+        <LockedBlockBody block={block} restrictions={restrictions} />
       )}
     </div>
   );
@@ -409,9 +419,11 @@ function BlockHead({
 function ActiveBlockBody({
   block,
   onOpenInspector,
+  restrictions,
 }: {
   block: CoachLaneDTO;
   onOpenInspector: (exerciseId: string) => void;
+  restrictions: MovementRestrictionsData | null;
 }) {
   const isThrowing = block.kind === "throwing";
 
@@ -453,10 +465,16 @@ function ActiveBlockBody({
   }
 
   // Strength active block — compact mini-pills, same as locked strength.
-  return <LockedBlockBody block={block} />;
+  return <LockedBlockBody block={block} restrictions={restrictions} />;
 }
 
-function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
+function LockedBlockBody({
+  block,
+  restrictions,
+}: {
+  block: CoachLaneDTO;
+  restrictions: MovementRestrictionsData | null;
+}) {
   const isThrowing = block.kind === "throwing";
 
   if (block.exercises.length === 0) {
@@ -471,7 +489,7 @@ function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
     return (
       <div className="flex flex-wrap gap-1.5 bg-surface-50 px-3.5 py-2.5 dark:bg-surface-900/60">
         {block.exercises.map((ex) => (
-          <ExerciseMiniPill key={ex.id} exercise={ex} kind="throwing" />
+          <ExerciseMiniPill key={ex.id} exercise={ex} kind="throwing" restrictions={null} />
         ))}
       </div>
     );
@@ -480,7 +498,7 @@ function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
   return (
     <div className="flex flex-wrap gap-1.5 bg-surface-50 px-3.5 py-2.5 dark:bg-surface-900/60">
       {block.exercises.map((ex) => (
-        <ExerciseMiniPill key={ex.id} exercise={ex} kind="strength" />
+        <ExerciseMiniPill key={ex.id} exercise={ex} kind="strength" restrictions={restrictions} />
       ))}
     </div>
   );
@@ -489,9 +507,11 @@ function LockedBlockBody({ block }: { block: CoachLaneDTO }) {
 function ExerciseMiniPill({
   exercise,
   kind,
+  restrictions,
 }: {
   exercise: CoachExerciseDTO;
   kind: "throwing" | "strength";
+  restrictions: MovementRestrictionsData | null;
 }) {
   if (kind === "throwing" && exercise.implementKg != null) {
     return (
@@ -508,9 +528,12 @@ function ExerciseMiniPill({
     );
   }
 
+  const violations = getExerciseViolations(exercise.name, restrictions);
+
   return (
     <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-2 py-1 font-mono text-[11px] tracking-[0.02em] text-[var(--muted)]">
       <strong className="font-semibold text-[var(--foreground)]">{exercise.name}</strong>
+      <MovementRestrictionBadge violations={violations} />
       {exercise.sets && exercise.reps ? (
         <span>
           · {exercise.sets}×{exercise.reps}
