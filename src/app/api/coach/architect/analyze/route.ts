@@ -87,6 +87,18 @@ export async function POST(request: Request) {
     }
   }
 
+  // Parse lifestyle.stressBaseline (Master Profile, 1-10). Defensive — if
+  // the column is malformed or out of range, treat as absent. Engine
+  // ignores anything outside [8, 10] anyway, but we sanitize at the edge.
+  let lifestyleStressBaseline: number | null = null;
+  if (athlete.lifestyle && typeof athlete.lifestyle === "object") {
+    const raw = athlete.lifestyle as Record<string, unknown>;
+    const stress = raw.stressBaseline;
+    if (typeof stress === "number" && Number.isFinite(stress) && stress >= 1 && stress <= 10) {
+      lifestyleStressBaseline = stress;
+    }
+  }
+
   // Parse implements JSON from EquipmentInventory. Lenient — a corrupt
   // row should not block the analysis; we just skip equipment-aware
   // filtering and log so we know the row needs cleanup.
@@ -123,6 +135,7 @@ export async function POST(request: Request) {
     trainingPhase: trainingPhase as TrainingPhase,
     strengthNumbers,
     availableImplements,
+    lifestyleStressBaseline,
   });
 
   return NextResponse.json({ success: true, data: analysis });
