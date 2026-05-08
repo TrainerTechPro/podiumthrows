@@ -61,13 +61,20 @@ export default function LoginPage() {
     <div className="card p-8">
       <h2 className="text-display-sm text-center mb-6">Sign In</h2>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm">
-          {error}
-        </div>
-      )}
+      <div
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        className={
+          error
+            ? "mb-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm"
+            : "sr-only"
+        }
+      >
+        {error}
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
         <div>
           <label htmlFor="email" className="label">
             Email
@@ -111,6 +118,7 @@ export default function LoginPage() {
           {loading ? (
             <span className="flex items-center gap-2">
               <svg
+                aria-hidden="true"
                 className="animate-spin h-4 w-4"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"

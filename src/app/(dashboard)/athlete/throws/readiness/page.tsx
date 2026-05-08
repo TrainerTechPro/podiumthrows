@@ -152,13 +152,20 @@ export default function AthleteProfilePage() {
             const id = athletes[0].id;
             setAthleteId(id);
             loadProfile(id);
-            // Fetch Podium Throws enrollment (may 404 if not enrolled — that's fine)
+            // Fetch Podium Throws enrollment. 404 = not enrolled (common, no-op).
+            // 2xx with success:true = enrolled. Real network errors get logged.
             fetch(`/api/throws/podium-roster/${id}`)
-              .then((r) => r.json())
-              .then((d) => {
-                if (d.success) setPodiumProfile(d.data);
+              .then(async (r) => {
+                const d = await r.json();
+                if (r.ok && d.success) setPodiumProfile(d.data);
               })
-              .catch(() => {});
+              .catch((err) => {
+                if (err instanceof TypeError) return; // navigation race
+                logger.error("podium-roster fetch failed", {
+                  context: "athlete/throws/readiness",
+                  error: err,
+                });
+              });
           } else {
             setLoading(false);
           }

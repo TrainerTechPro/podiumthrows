@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { useToast } from "@/components/toast";
+import { Modal } from "@/components/ui/Modal";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 
 type Phase = "loading" | "disabled" | "setup-qr" | "setup-verify" | "backup-codes" | "enabled";
@@ -103,6 +104,10 @@ export default function SecuritySettingsPage() {
   }
 
   async function disableMfa() {
+    // Guard against double-click — disabling MFA consumes the entered TOTP
+    // code, so a second concurrent POST will fail authentication on the
+    // already-spent code and surface a confusing "Invalid code" error.
+    if (loading) return;
     setLoading(true);
     setError("");
     try {
@@ -327,68 +332,74 @@ export default function SecuritySettingsPage() {
         )}
       </div>
 
-      {/* Disable Modal */}
-      {showDisableModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          {/* Modal content panel — --surface-overlay per CLAUDE.md §Overlay Surfaces. */}
-          <div className="bg-[var(--surface-overlay)] rounded-2xl p-6 w-full max-w-md mx-4 space-y-4">
-            <h3 className="text-lg font-semibold font-display">
-              Disable Two-Factor Authentication
-            </h3>
-            <p className="text-sm text-muted">
-              Enter your password and a code from your authenticator app to disable MFA.
-            </p>
-
-            {error && (
-              <div className="p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="label">Password</label>
-              <PasswordInput
-                value={disablePassword}
-                onChange={(e) => setDisablePassword(e.target.value)}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-              />
+      {/* Disable Modal — uses the design-system Modal so focus trap, Escape
+          close, role=dialog, and aria-labelledby/describedby are all built in
+          per CLAUDE.md §Overlay surfaces. */}
+      <Modal
+        open={showDisableModal}
+        onClose={() => {
+          setShowDisableModal(false);
+          setDisablePassword("");
+          setDisableCode("");
+          setError("");
+        }}
+        title="Disable Two-Factor Authentication"
+        description="Enter your password and a code from your authenticator app to disable MFA."
+        size="md"
+        footer={
+          <div className="flex gap-2 w-full">
+            <button
+              onClick={() => {
+                setShowDisableModal(false);
+                setDisablePassword("");
+                setDisableCode("");
+                setError("");
+              }}
+              className="btn-secondary flex-1"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={disableMfa}
+              disabled={loading || !disablePassword || disableCode.length !== 6}
+              className="btn-primary flex-1 !bg-danger-600 hover:!bg-danger-700"
+              type="button"
+            >
+              {loading ? "Disabling..." : "Disable MFA"}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {error && (
+            <div className="p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm">
+              {error}
             </div>
-            <div>
-              <label className="label">Authenticator code</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={disableCode}
-                onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="input font-mono text-center tracking-widest"
-                placeholder="000000"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setShowDisableModal(false);
-                  setDisablePassword("");
-                  setDisableCode("");
-                  setError("");
-                }}
-                className="btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={disableMfa}
-                disabled={loading || !disablePassword || disableCode.length !== 6}
-                className="btn-primary flex-1 !bg-danger-600 hover:!bg-danger-700"
-              >
-                {loading ? "Disabling..." : "Disable MFA"}
-              </button>
-            </div>
+          )}
+          <div>
+            <label className="label">Password</label>
+            <PasswordInput
+              value={disablePassword}
+              onChange={(e) => setDisablePassword(e.target.value)}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+            />
+          </div>
+          <div>
+            <label className="label">Authenticator code</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={disableCode}
+              onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              className="input font-mono text-center tracking-widest"
+              placeholder="000000"
+            />
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

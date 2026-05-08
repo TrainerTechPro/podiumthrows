@@ -324,8 +324,9 @@ function GoalCard({ goal, onUpdateProgress, onAbandon }: GoalCardProps) {
             {goal.currentValue} / {goal.targetValue} {goal.unit}
           </span>
           <span
-            className="font-semibold tabular-nums"
-            style={{ color: goal.progressPct >= 100 ? "#10b981" : "#f59e0b" }}
+            className={`font-semibold tabular-nums ${
+              goal.progressPct >= 100 ? "text-success-500" : "text-primary-500"
+            }`}
           >
             {goal.progressPct}%
           </span>

@@ -46,20 +46,38 @@ function ProcessingVideoCard({ video }: { video: VideoCardData }) {
         <div className="flex flex-col items-center justify-center h-full gap-2">
           {isFailed ? (
             <>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-red-400"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="15" y1="9" x2="9" y2="15" />
                 <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
-              <span className="text-xs font-medium text-red-400">
-                Processing failed
-              </span>
+              <span className="text-xs font-medium text-red-400">Processing failed</span>
             </>
           ) : (
             <>
               {/* Animated processing spinner */}
               <div className="relative">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500 animate-pulse">
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-primary-500 animate-pulse"
+                >
                   <polygon points="23 7 16 12 23 17 23 7" />
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                 </svg>
@@ -69,7 +87,10 @@ function ProcessingVideoCard({ video }: { video: VideoCardData }) {
               </span>
               {/* Pulsing progress bar */}
               <div className="w-24 h-1 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-                <div className="h-full bg-primary-500/60 rounded-full animate-pulse" style={{ width: "60%" }} />
+                <div
+                  className="h-full bg-primary-500/60 rounded-full animate-pulse"
+                  style={{ width: "60%" }}
+                />
               </div>
             </>
           )}
@@ -83,15 +104,9 @@ function ProcessingVideoCard({ video }: { video: VideoCardData }) {
         </h3>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           {video.athleteName && (
-            <span className="text-xs text-muted truncate">
-              {video.athleteName}
-            </span>
+            <span className="text-xs text-muted truncate">{video.athleteName}</span>
           )}
-          {video.event && (
-            <Badge variant="primary">
-              {formatEventType(video.event)}
-            </Badge>
-          )}
+          {video.event && <Badge variant="primary">{formatEventType(video.event)}</Badge>}
           <Badge variant={isFailed ? "danger" : "neutral"}>
             {isFailed ? "Failed" : isUploading ? "Uploading" : "Processing"}
           </Badge>
@@ -115,7 +130,7 @@ function ReadyVideoCard({ video }: { video: VideoCardData }) {
   return (
     <Link
       href={`/coach/videos/${video.id}`}
-      className="card group overflow-hidden hover:shadow-md transition-shadow"
+      className="card card-interactive group overflow-hidden"
     >
       {/* Thumbnail */}
       <div className="relative aspect-video bg-surface-100 dark:bg-surface-800 overflow-hidden">
@@ -129,7 +144,16 @@ function ReadyVideoCard({ video }: { video: VideoCardData }) {
           />
         ) : (
           <div className="flex items-center justify-center h-full bg-gradient-to-br from-surface-800 to-surface-900 text-surface-600">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
@@ -146,7 +170,13 @@ function ReadyVideoCard({ video }: { video: VideoCardData }) {
         {/* Play overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
           <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-surface-900 ml-0.5">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="text-surface-900 ml-0.5"
+            >
               <polygon points="5 3 19 12 5 21" />
             </svg>
           </div>
@@ -160,15 +190,9 @@ function ReadyVideoCard({ video }: { video: VideoCardData }) {
         </h3>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           {video.athleteName && (
-            <span className="text-xs text-muted truncate">
-              {video.athleteName}
-            </span>
+            <span className="text-xs text-muted truncate">{video.athleteName}</span>
           )}
-          {video.event && (
-            <Badge variant="primary">
-              {formatEventType(video.event)}
-            </Badge>
-          )}
+          {video.event && <Badge variant="primary">{formatEventType(video.event)}</Badge>}
           {video.category && (
             <Badge variant="neutral">
               {video.category.charAt(0).toUpperCase() + video.category.slice(1)}
@@ -179,7 +203,16 @@ function ReadyVideoCard({ video }: { video: VideoCardData }) {
           <div className="flex items-center gap-3 text-sm text-surface-400">
             {video.annotationCount > 0 && (
               <span className="flex items-center gap-0.5">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M12 19l7-7 3 3-7 7-3-3z" />
                   <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
                 </svg>

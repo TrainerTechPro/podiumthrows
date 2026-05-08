@@ -6,6 +6,7 @@ import { Lock } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { DateInput } from "@/components/ui/DateInput";
 import { NumberInput } from "@/components/ui/NumberInput";
+import { Radio, RadioGroup } from "@/components/ui/Radio";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 interface FormProps {
@@ -163,27 +164,33 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
-          <div>
-            <label className={labelCls}>Gender</label>
+          <RadioGroup
+            value={gender}
+            onChange={setGender}
+            disabled={isClaimed}
+            label={<span className={labelCls.replace("block ", "")}>Gender</span>}
+          >
             <div className="flex gap-2">
               {(["MALE", "FEMALE", "OTHER"] as const).map((g) => (
-                <button
+                <Radio
                   key={g}
-                  type="button"
-                  disabled={isClaimed}
-                  onClick={() => setGender(g)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex-1 disabled:opacity-50 disabled:cursor-not-allowed
+                  value={g}
+                  hideVisual
+                  className={`px-3 py-2 rounded-lg transition-colors flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed
                     ${
                       gender === g
                         ? "bg-primary-500 text-black"
                         : "bg-surface-100 dark:bg-surface-800 text-[var(--foreground)]"
                     }`}
-                >
-                  {g.charAt(0) + g.slice(1).toLowerCase()}
-                </button>
+                  label={
+                    <span className="block text-center w-full text-sm font-medium">
+                      {g.charAt(0) + g.slice(1).toLowerCase()}
+                    </span>
+                  }
+                />
               ))}
             </div>
-          </div>
+          </RadioGroup>
           <div>
             <label className={labelCls}>Date of Birth</label>
             <DateInput

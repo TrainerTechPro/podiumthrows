@@ -4,6 +4,7 @@ import { PenLine, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
+import { StepHeader } from "./_step-header";
 import type { StepProps } from "./types";
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
@@ -11,21 +12,7 @@ import type { StepProps } from "./types";
 export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Progress bar ───────────────────────────────────────────────── */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">
-            Step
-          </span>
-          <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">5/5</span>
-        </div>
-        <div className="h-1.5 w-full rounded-full bg-[var(--muted-bg)] overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-500"
-            style={{ width: "100%" }}
-          />
-        </div>
-      </div>
+      <StepHeader current={5} total={5} />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">

@@ -70,12 +70,13 @@ export function WhoopCard({
       const reason = params.get("reason") || "unknown";
       toastError("WHOOP Connection Failed", `Error: ${reason.replace(/_/g, " ")}`);
     }
-    // Clean up query params without a reload
+    // Clean up query params without a reload — preserve other params and hash
+    // (was previously passing `url.pathname` only, which stripped them all).
     if (params.has("whoop")) {
       const url = new URL(window.location.href);
       url.searchParams.delete("whoop");
       url.searchParams.delete("reason");
-      window.history.replaceState({}, "", url.pathname);
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -254,7 +255,11 @@ export function WhoopCard({
         {/* Sync mode toggle */}
         <div className="space-y-2">
           <p className="text-xs font-semibold text-muted uppercase tracking-wider">Sync Mode</p>
-          <div className="bg-[var(--muted-bg)] p-1 rounded-xl flex gap-1">
+          <div
+            role="radiogroup"
+            aria-label="Sync mode"
+            className="bg-[var(--muted-bg)] p-1 rounded-xl flex gap-1"
+          >
             {(
               [
                 { value: "AUTO", label: "Auto", desc: "Automatic daily check-ins" },
@@ -264,6 +269,8 @@ export function WhoopCard({
               <button
                 key={opt.value}
                 type="button"
+                role="radio"
+                aria-checked={syncMode === opt.value}
                 onClick={() => handleSyncModeChange(opt.value)}
                 className={cn(
                   "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200",

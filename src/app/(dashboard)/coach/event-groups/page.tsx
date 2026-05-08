@@ -176,7 +176,7 @@ export default function EventGroupsPage() {
                   <span
                     className="w-3 h-3 rounded-full shrink-0"
                     style={{
-                      backgroundColor: selectedGroup.color || "#f59e0b",
+                      backgroundColor: selectedGroup.color || "var(--color-brand)",
                     }}
                     aria-hidden="true"
                   />

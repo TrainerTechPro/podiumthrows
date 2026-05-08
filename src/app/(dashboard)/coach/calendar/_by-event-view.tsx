@@ -89,7 +89,7 @@ export function ByEventView() {
               >
                 <span
                   className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: g.color || "#f59e0b" }}
+                  style={{ backgroundColor: g.color || "var(--color-brand)" }}
                   aria-hidden="true"
                 />
                 {g.name}

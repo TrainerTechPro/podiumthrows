@@ -6,6 +6,7 @@ import type { EventGroupItem } from "@/lib/data/event-groups";
 import { Button, Badge, Modal } from "@/components";
 import { DateInput } from "@/components/ui/DateInput";
 import { Input } from "@/components/ui/Input";
+import { Radio, RadioGroup } from "@/components/ui/Radio";
 import { Sheet } from "@/components/ui/Sheet";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
@@ -540,47 +541,45 @@ export function SessionSidebar({
       >
         <div className="space-y-5">
           {/* Tier radio */}
-          <fieldset className="space-y-2">
-            <legend className="label mb-1">Override for</legend>
-            <label
+          <RadioGroup
+            value={overrideTier}
+            onChange={(next) => setOverrideTier(next as "GROUP" | "INDIVIDUAL")}
+            label="Override for"
+            className="space-y-2"
+          >
+            <Radio
+              value="GROUP"
               className={cn(
-                "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors",
+                "flex items-center gap-3 p-3 rounded-xl border transition-colors w-full",
                 overrideTier === "GROUP"
                   ? "border-primary-500 bg-primary-500/5"
                   : "border-[var(--card-border)] hover:bg-surface-50 dark:hover:bg-surface-800/50"
               )}
-            >
-              <input
-                type="radio"
-                name="override-tier"
-                value="GROUP"
-                checked={overrideTier === "GROUP"}
-                onChange={() => setOverrideTier("GROUP")}
-                className="accent-primary-500"
-              />
-              <Users size={16} strokeWidth={1.75} aria-hidden="true" className="text-muted" />
-              <span className="text-sm font-medium text-[var(--foreground)]">A Group</span>
-            </label>
-            <label
+              label={
+                <span className="flex items-center gap-3">
+                  <Users size={16} strokeWidth={1.75} aria-hidden="true" className="text-muted" />
+                  <span className="text-sm font-medium text-[var(--foreground)]">A Group</span>
+                </span>
+              }
+            />
+            <Radio
+              value="INDIVIDUAL"
               className={cn(
-                "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors",
+                "flex items-center gap-3 p-3 rounded-xl border transition-colors w-full",
                 overrideTier === "INDIVIDUAL"
                   ? "border-primary-500 bg-primary-500/5"
                   : "border-[var(--card-border)] hover:bg-surface-50 dark:hover:bg-surface-800/50"
               )}
-            >
-              <input
-                type="radio"
-                name="override-tier"
-                value="INDIVIDUAL"
-                checked={overrideTier === "INDIVIDUAL"}
-                onChange={() => setOverrideTier("INDIVIDUAL")}
-                className="accent-primary-500"
-              />
-              <User size={16} strokeWidth={1.75} aria-hidden="true" className="text-muted" />
-              <span className="text-sm font-medium text-[var(--foreground)]">An Individual</span>
-            </label>
-          </fieldset>
+              label={
+                <span className="flex items-center gap-3">
+                  <User size={16} strokeWidth={1.75} aria-hidden="true" className="text-muted" />
+                  <span className="text-sm font-medium text-[var(--foreground)]">
+                    An Individual
+                  </span>
+                </span>
+              }
+            />
+          </RadioGroup>
 
           {/* Group selector */}
           {overrideTier === "GROUP" && (
