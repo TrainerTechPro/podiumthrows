@@ -105,7 +105,7 @@ export function Select<T extends string | number = string>({
     triggerRef.current?.focus();
   };
 
-  const handleClear = (e: React.MouseEvent) => {
+  const handleClear = (e: React.SyntheticEvent) => {
     e.stopPropagation();
     onChange("" as T);
   };
@@ -166,6 +166,12 @@ export function Select<T extends string | number = string>({
                 role="button"
                 tabIndex={0}
                 onClick={handleClear}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleClear(e);
+                  }
+                }}
                 className="text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 transition-colors p-0.5 rounded"
                 aria-label="Clear selection"
               >
