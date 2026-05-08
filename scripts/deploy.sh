@@ -292,13 +292,15 @@ if $PROD_MODE; then
       AUTH_FAILURES+=("coach login failed")
     else
       echo "  ✓ Coach logged in: $SMOKE_COACH_EMAIL"
+      # /coach/throws bare path 308s to /coach/dashboard; /coach/throws/profile
+      # is the canonical throws-detail surface for the smoke coach.
       for path in \
         "/coach/dashboard" \
         "/coach/athletes" \
         "/coach/calendar" \
         "/coach/library" \
         "/coach/settings" \
-        "/coach/throws" \
+        "/coach/throws/profile" \
         "/coach/video-analysis" \
         "/coach/settings?tab=notifications"; do
         auth_probe "$COACH_JAR" "$path"
@@ -312,11 +314,13 @@ if $PROD_MODE; then
       AUTH_FAILURES+=("athlete login failed")
     else
       echo "  ✓ Athlete logged in: $SMOKE_ATHLETE_EMAIL"
+      # /athlete/sessions hosts the Training Hub component; /athlete/throws/trends
+       # is the canonical trends path (/athlete/throws/analysis 308s here).
       for path in \
         "/athlete/dashboard" \
         "/athlete/log-session" \
-        "/athlete/training" \
-        "/athlete/trends" \
+        "/athlete/sessions" \
+        "/athlete/throws/trends" \
         "/athlete/settings"; do
         auth_probe "$ATHLETE_JAR" "$path"
       done
