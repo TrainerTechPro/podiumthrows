@@ -155,7 +155,7 @@ function ConnectionChip({ isOnline, pendingCount, isSyncing }: ConnectionChipPro
   }
 
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-700/60 border border-surface-600/40 text-xs text-[var(--muted)]">
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-700 border border-surface-600 text-xs text-[var(--muted)]">
       {isSyncing && isOnline && pendingCount > 0 ? (
         <Loader2 size={10} className="animate-spin text-warning-500" aria-hidden="true" />
       ) : (

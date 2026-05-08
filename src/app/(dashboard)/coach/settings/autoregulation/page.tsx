@@ -31,6 +31,27 @@ interface AthleteSettings {
   timescales: TimescaleConfig;
 }
 
+/**
+ * Shape returned by GET /api/coach/autoregulation-settings — kept here
+ * as a Partial because field-level absence is fine (we apply defaults).
+ * Lets us drop the loose `Record<string, unknown>` cast at the map
+ * boundary which silently turned undefined fields into the string
+ * "undefined" if upstream ever drifted.
+ */
+interface AutoregSettingsResponse {
+  coachSelf?: {
+    mode?: AutoregMode;
+    timescales?: Partial<TimescaleConfig>;
+  };
+  athletes?: Array<{
+    athleteId: string;
+    firstName: string;
+    lastName: string;
+    mode?: AutoregMode | null;
+    timescales?: Partial<TimescaleConfig>;
+  }>;
+}
+
 const DEFAULT_TIMESCALES: TimescaleConfig = {
   intraSession: true,
   sessionToSession: true,
@@ -99,7 +120,7 @@ export default function AutoregulationSettingsPage() {
         if (!res.ok) throw new Error("fetch failed");
         return res.json();
       })
-      .then((json) => {
+      .then((json: { data?: AutoregSettingsResponse }) => {
         const data = json?.data;
         if (!data) throw new Error("invalid response");
 
@@ -113,14 +134,14 @@ export default function AutoregulationSettingsPage() {
         setCoachSelf(cs);
         setCoachSelfInitial(structuredClone(cs));
 
-        const aths: AthleteSettings[] = (data.athletes ?? []).map((a: Record<string, unknown>) => ({
-          athleteId: a.athleteId as string,
-          firstName: a.firstName as string,
-          lastName: a.lastName as string,
-          mode: (a.mode as AutoregMode | null) ?? null,
+        const aths: AthleteSettings[] = (data.athletes ?? []).map((a) => ({
+          athleteId: a.athleteId,
+          firstName: a.firstName,
+          lastName: a.lastName,
+          mode: a.mode ?? null,
           timescales: {
             ...DEFAULT_TIMESCALES,
-            ...((a.timescales as Partial<TimescaleConfig>) ?? {}),
+            ...(a.timescales ?? {}),
           },
         }));
         setAthletes(aths);

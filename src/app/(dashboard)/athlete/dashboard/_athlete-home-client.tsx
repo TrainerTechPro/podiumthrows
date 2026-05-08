@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Trophy, CheckCircle2, Flame, Play, ChevronRight, Sparkles } from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
@@ -131,7 +131,8 @@ function ReadinessRing({ readiness }: { readiness: AthleteDashboardDTO["readines
   const circumference = 2 * Math.PI * 22; // r=22
   const targetOffset = circumference - (score / 5) * circumference;
   const [offset, setOffset] = useState(circumference);
-  const id = useRef(`ring-grad-${Math.random().toString(36).slice(2, 9)}`);
+  const reactId = useId();
+  const id = useRef(`ring-grad-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}`);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

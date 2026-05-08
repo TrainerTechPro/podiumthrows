@@ -159,11 +159,17 @@ export interface RadioProps extends Omit<
   value: string;
   /** Visible label. Omit + provide aria-label for "bare" mode. */
   label?: ReactNode;
+  /**
+   * Suppress the 18px radio circle. Use when the surrounding card/pill
+   * carries the selection state visually (border, background) and adding
+   * a circle inside would clutter compact layouts (e.g. gender pills).
+   */
+  hideVisual?: boolean;
   className?: string;
 }
 
 export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
-  { value, label, disabled, className, id: externalId, ...rest },
+  { value, label, disabled, hideVisual, className, id: externalId, ...rest },
   forwardedRef
 ) {
   const ctx = useContext(RadioCtx);
@@ -239,7 +245,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
     return (
       <span className={cn("relative inline-flex items-center", className)}>
         {inputEl}
-        {visual}
+        {!hideVisual && visual}
       </span>
     );
   }
@@ -253,11 +259,17 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
         className
       )}
     >
-      <span className="relative inline-flex items-center mt-0.5">
-        {inputEl}
-        {visual}
-      </span>
-      <span className="text-sm text-[var(--foreground)] leading-snug">{label}</span>
+      {hideVisual ? (
+        // Visual suppressed — input still rendered (sr-only) for keyboard
+        // and screen-reader semantics; surrounding pill/card carries selection.
+        inputEl
+      ) : (
+        <span className="relative inline-flex items-center mt-0.5">
+          {inputEl}
+          {visual}
+        </span>
+      )}
+      <span className="text-sm text-[var(--foreground)] leading-snug w-full">{label}</span>
     </label>
   );
 });

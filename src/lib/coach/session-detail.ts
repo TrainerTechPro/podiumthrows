@@ -13,6 +13,7 @@ import {
   type BlockInput,
   type BondarchukWarning,
 } from "@/lib/bondarchuk/session-validators";
+import type { MovementRestrictionsData } from "@/app/(dashboard)/athlete/profile/_types";
 
 export type CoachBlockKind = "throwing" | "strength" | "warmup" | "cooldown" | "other";
 
@@ -62,6 +63,13 @@ export type CoachAthleteHeader = {
   meta: string; // "DI HAMMER · SR · PR 64.82M · 4 YR"
   prMeters: number | null;
   yearsTraining: number | null;
+  /**
+   * Master Profile movement restrictions (Section 6, coach-managed).
+   * Used by the exercise renderer to badge exercises that violate the
+   * athlete's known capability gaps. `null` when the section is unset
+   * (treat as unrestricted — show no badges).
+   */
+  movementRestrictions: MovementRestrictionsData | null;
 };
 
 export type CoachPeriodization = {
@@ -114,6 +122,7 @@ export type LoadedAthlete = {
   classYear: string | null;
   yearsTraining: number | null;
   avatarUrl: string | null;
+  movementRestrictions: MovementRestrictionsData | null;
 };
 
 export type LoadedThrowLogForCoach = {
@@ -403,6 +412,7 @@ function buildAthleteHeader(loaded: LoadedSessionForCoach): CoachAthleteHeader {
     meta,
     prMeters: loaded.prDistance,
     yearsTraining: a.yearsTraining,
+    movementRestrictions: a.movementRestrictions,
   };
 }
 

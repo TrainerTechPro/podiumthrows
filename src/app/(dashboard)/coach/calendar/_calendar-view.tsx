@@ -44,14 +44,14 @@ interface CalendarViewProps {
   hideGroupPills?: boolean;
   /** When set, locks the view to this group id (used by By Event tab). */
   forcedGroupId?: string | null;
-  /** Customize the print href base — defaults to /coach/schedule/print for backwards-compat. */
+  /** Customize the print href base. Calendar absorbed schedule's URL space, so the print page now lives at /coach/calendar/print. */
   printHrefBase?: string;
 }
 
 export function CalendarView({
   hideGroupPills = false,
   forcedGroupId = null,
-  printHrefBase = "/coach/schedule/print",
+  printHrefBase = "/coach/calendar/print",
 }: CalendarViewProps = {}) {
   const [weekStart, setWeekStart] = useState<Date>(() => getMonday(new Date()));
   const [sessions, setSessions] = useState<ProgrammedSessionWithDetails[]>([]);
@@ -242,7 +242,7 @@ export function CalendarView({
                 <span className="flex items-center gap-1.5">
                   <span
                     className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: g.color || "#f59e0b" }}
+                    style={{ backgroundColor: g.color || "var(--color-brand)" }}
                     aria-hidden="true"
                   />
                   {g.name}

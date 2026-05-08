@@ -5,6 +5,7 @@ import {
   type LoadedSessionForCoach,
   type CoachSessionDetailDTO,
 } from "./session-detail";
+import { safeMovementRestrictions } from "@/app/(dashboard)/athlete/profile/_types";
 
 /**
  * Loads a session for the coach Session Detail screen and returns the derived
@@ -36,6 +37,7 @@ export async function loadCoachSessionDetail(args: {
           events: true,
           classStanding: true,
           avatarUrl: true,
+          movementRestrictions: true,
         },
       },
       plan: {
@@ -158,6 +160,7 @@ export async function loadCoachSessionDetail(args: {
       classYear: trainingSession.athlete.classStanding,
       yearsTraining: null,
       avatarUrl: trainingSession.athlete.avatarUrl,
+      movementRestrictions: safeMovementRestrictions(trainingSession.athlete.movementRestrictions),
     },
     plan: trainingSession.plan
       ? {

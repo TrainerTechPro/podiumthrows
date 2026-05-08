@@ -6,6 +6,10 @@
 .pnp.js
 .yarn/install-state.gz
 
+# Postinstall-synced from node_modules/@mediapipe/tasks-vision/wasm/
+# (see scripts/copy-mediapipe-wasm.sh) — ~21MB binary, kept out of git.
+/public/mediapipe/
+
 # git worktrees
 /.worktrees/
 

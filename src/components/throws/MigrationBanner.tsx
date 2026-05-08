@@ -45,24 +45,27 @@ export function MigrationBanner({
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/athletes/${athleteId}/migration-status`, { credentials: "same-origin" })
+    const ctrl = new AbortController();
+    fetch(`/api/athletes/${athleteId}/migration-status`, {
+      credentials: "same-origin",
+      signal: ctrl.signal,
+    })
       .then(async (res) => {
         const payload = (await res.json()) as MigrationStatusOk | MigrationStatusErr;
-        if (cancelled) return;
+        if (ctrl.signal.aborted) return;
         if (!res.ok || !payload.success) return;
         setCount(payload.data.totalUnassigned);
       })
       .catch((err) => {
-        if (cancelled) return;
+        if (ctrl.signal.aborted) return;
+        // Network-level fetch failure during navigation — see PerformanceTestsTile.
+        if (err instanceof TypeError) return;
         logger.error("MigrationBanner fetch failed", {
           context: "components/throws/MigrationBanner",
           error: err,
         });
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => ctrl.abort();
   }, [athleteId]);
 
   if (count == null || count === 0) return null;

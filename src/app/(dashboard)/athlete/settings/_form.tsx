@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn, localToday } from "@/lib/utils";
 import type { AthleteProfileFull } from "@/lib/data/athlete";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { Radio, RadioGroup } from "@/components/ui/Radio";
 
 import { logger } from "@/lib/logger";
 const EVENTS = [
@@ -122,26 +123,26 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
           </div>
         </div>
 
-        <div>
-          <p className="text-sm font-medium text-[var(--foreground)] mb-2">Gender</p>
+        <RadioGroup value={gender} onChange={setGender} label="Gender">
           <div className="flex gap-2">
             {GENDERS.map((g) => (
-              <button
+              <Radio
                 key={g.value}
-                type="button"
-                onClick={() => setGender(g.value)}
+                value={g.value}
+                hideVisual
                 className={cn(
-                  "flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors",
+                  "flex-1 py-2 px-3 rounded-lg border transition-colors justify-center",
                   gender === g.value
                     ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
                     : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
                 )}
-              >
-                {g.label}
-              </button>
+                label={
+                  <span className="block text-center w-full text-sm font-medium">{g.label}</span>
+                }
+              />
             ))}
           </div>
-        </div>
+        </RadioGroup>
 
         <div>
           <label htmlFor="dob" className="block text-sm font-medium text-[var(--foreground)] mb-1">

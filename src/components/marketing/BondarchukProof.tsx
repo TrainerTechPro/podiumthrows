@@ -149,8 +149,7 @@ export default function BondarchukProof() {
                   borderTop: "1px solid var(--landing-border)",
                 }}
               >
-                Dr. Anatoliy Bondarchuk,{" "}
-                <em>Transfer of Training in Sports</em>, Volume IV, pp.
+                Dr. Anatoliy Bondarchuk, <em>Transfer of Training in Sports</em>, Volume IV, pp.
                 114–117. Documented across all four throwing events.
               </div>
 
@@ -165,9 +164,7 @@ export default function BondarchukProof() {
               >
                 {EVENTS.map((event, i) => (
                   <ScrollReveal key={event} delay={0.15 + i * 0.06}>
-                    <span className="bondarchuk-event-tag font-heading">
-                      {event}
-                    </span>
+                    <span className="bondarchuk-event-tag font-heading">{event}</span>
                   </ScrollReveal>
                 ))}
               </div>
@@ -176,68 +173,9 @@ export default function BondarchukProof() {
         </div>
       </div>
 
-      {/* ── Scoped styles ─────────────────────────────────────────────── */}
-      <style>{`
-        .bondarchuk-section {
-          padding: 80px 20px;
-        }
-
-        @media (min-width: 640px) {
-          .bondarchuk-section {
-            padding: 120px 40px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .bondarchuk-section {
-            padding: 180px 64px;
-          }
-        }
-
-        .bondarchuk-proof-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 48px;
-          align-items: center;
-        }
-
-        @media (min-width: 1024px) {
-          .bondarchuk-proof-grid {
-            grid-template-columns: auto 1fr;
-            gap: 100px;
-            align-items: center;
-          }
-        }
-
-        @media (max-width: 1023px) {
-          .bondarchuk-proof-grid > :first-child {
-            justify-content: center;
-          }
-        }
-
-        .bondarchuk-event-tag {
-          display: inline-block;
-          font-size: 10px;
-          text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--landing-text-dim);
-          border: 1px solid var(--landing-border);
-          padding: 5px 12px;
-          transition: border-color 0.2s ease, color 0.2s ease;
-          cursor: default;
-        }
-
-        .bondarchuk-event-tag:hover {
-          border-color: #f59e0b;
-          color: #f59e0b;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .bondarchuk-event-tag {
-            transition: none;
-          }
-        }
-      `}</style>
+      {/* Class styles for .bondarchuk-section / -proof-grid / -event-tag
+          live in src/app/globals.css. Inline <style> children caused SSR/CSR
+          hydration drift (React error #425) on every landing visit. */}
     </section>
   );
 }

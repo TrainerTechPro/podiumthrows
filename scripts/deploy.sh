@@ -118,17 +118,41 @@ if [[ $DEPLOY_EXIT -ne 0 ]]; then
   exit $DEPLOY_EXIT
 fi
 
-# ── Step 8: Smoke test (prod only) ─────────────────────────────────
-# Catches platform-specific bundle failures (e.g. native binary mismatch)
-# that Vercel's build succeeds on but runtime requests 500 on. Prior
-# incident: 2026-04-13 Prisma engine mismatch (darwin-arm64 vs linux-arm64)
-# 500'd every Prisma-backed route for 2+ days before detection.
+# ── Step 8: Smoke tests (prod only) ────────────────────────────────
+# Three probes, all funnel into the same auto-rollback path on failure:
+#   1. Auth API — POST /api/auth/login with bad creds expects 401. Catches
+#      platform-specific bundle failures (e.g. native binary mismatch) that
+#      Vercel's build succeeds on but runtime 500s. Prior incident:
+#      2026-04-13 Prisma engine mismatch (darwin-arm64 vs linux-arm64) 500'd
+#      every Prisma-backed route for 2+ days before detection.
+#   2. Route smoke — public pages return 200 and a few protected routes
+#      still resolve to the right /login?redirect=… URL. Catches page-level
+#      regressions the auth probe is blind to. Prior incident: 2026-05-07
+#      /changelog and /terms 307'd unauthenticated visitors to /login (PR
+#      #70) — the auth probe was green throughout.
+#   3. Authenticated smoke — logs in as smoke+monitor@ (COACH) and
+#     smoke+athlete@ (ATHLETE) and GETs ~13 representative dashboard
+#     surfaces. Catches the "200 with broken envelope" class that PR #68
+#     fixed for /coach/settings/notifications — anything past the auth
+#     boundary that 500s, page-errors, or renders the Next.js error page
+#     trips the rollback. Skipped silently if SMOKE_PASSWORD is unset
+#     (per-machine convenience for fresh checkouts).
 if $PROD_MODE; then
   SMOKE_URL="https://www.podiumthrows.com"
   VERCEL_SCOPE="tonys-projects-9cce8202"
 
+  rollback_and_exit() {
+    echo ""
+    echo "── Auto-rollback ──"
+    npx vercel rollback --scope "$VERCEL_SCOPE" --yes 2>&1 | tail -5
+    echo ""
+    echo "❌ Deploy rolled back due to smoke test failure."
+    echo "   Check Vercel logs for the failing deployment and fix before redeploying."
+    exit 1
+  }
+
   echo ""
-  echo "── Smoke test (prod) ──"
+  echo "── Smoke test: auth API ──"
 
   CSRF=$(curl -sS -D - "$SMOKE_URL/login" -o /dev/null 2>&1 \
     | grep -i "set-cookie: csrf-token=" \
@@ -136,7 +160,7 @@ if $PROD_MODE; then
     | tr -d '\r\n')
 
   if [[ -z "$CSRF" ]]; then
-    echo "  ⚠ Could not fetch CSRF token from $SMOKE_URL/login — skipping smoke test"
+    echo "  ⚠ Could not fetch CSRF token from $SMOKE_URL/login — skipping auth probe"
   else
     STATUS=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 10 \
       -X POST "$SMOKE_URL/api/auth/login" \
@@ -149,21 +173,174 @@ if $PROD_MODE; then
     if [[ "$STATUS" == "401" ]]; then
       echo "  ✓ Login 401 for bad creds — Prisma/bcrypt/rate-limit paths all healthy"
     else
-      echo "  ❌ Smoke test FAILED (/api/auth/login returned $STATUS, expected 401)"
+      echo "  ❌ /api/auth/login returned $STATUS, expected 401"
+      rollback_and_exit
+    fi
+  fi
+
+  echo ""
+  echo "── Smoke test: routes ──"
+
+  ROUTE_FAILURES=()
+
+  # Public/marketing pages — must render directly, not 307 to /login.
+  # The 2026-05-07 regression slipped /changelog and /terms out of the
+  # middleware allowlist; both 307'd to /login until PR #70 restored them.
+  for path in "/" "/pricing" "/privacy" "/changelog" "/terms"; do
+    STATUS=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 10 "$SMOKE_URL$path" 2>/dev/null)
+    if [[ "$STATUS" == "200" ]]; then
+      echo "  ✓ 200 $path"
+    else
+      echo "  ❌ $path returned $STATUS (expected 200)"
+      ROUTE_FAILURES+=("$path: $STATUS, want 200")
+    fi
+  done
+
+  # Protected routes: follow the chain (next.config redirect → middleware
+  # auth redirect) and confirm we land on /login with the right ?redirect=.
+  # Doubles as a check that next.config redirects survived the deploy.
+  REDIRECT_CHECKS=(
+    "/coach/throws/analyze|/login?redirect=%2Fcoach%2Fvideo-analysis"
+    "/coach/schedule/print|/login?redirect=%2Fcoach%2Fcalendar%2Fprint"
+    "/coach/settings/notifications|/login?redirect=%2Fcoach%2Fsettings"
+  )
+  for entry in "${REDIRECT_CHECKS[@]}"; do
+    path="${entry%%|*}"
+    expected="${entry#*|}"
+    FINAL=$(curl -sSL -o /dev/null -w "%{url_effective}" --max-time 10 "$SMOKE_URL$path" 2>/dev/null)
+    if [[ "$FINAL" == *"$expected"* ]]; then
+      echo "  ✓ $path → …$expected"
+    else
+      echo "  ❌ $path resolved to $FINAL"
+      ROUTE_FAILURES+=("$path: $FINAL, want substring $expected")
+    fi
+  done
+
+  if (( ${#ROUTE_FAILURES[@]} > 0 )); then
+    echo ""
+    echo "  ${#ROUTE_FAILURES[@]} route smoke failure(s):"
+    for f in "${ROUTE_FAILURES[@]}"; do
+      echo "    - $f"
+    done
+    rollback_and_exit
+  fi
+
+  echo ""
+  echo "── Smoke test: authenticated ──"
+
+  if [[ -z "${SMOKE_PASSWORD:-}" ]]; then
+    echo "  ⚠ SMOKE_PASSWORD not set in env — skipping auth'd smoke"
+    echo "    (set SMOKE_PASSWORD + SMOKE_COACH_EMAIL + SMOKE_ATHLETE_EMAIL"
+    echo "     in Vercel Production env, then re-pull with vercel env pull)"
+  else
+    SMOKE_COACH_EMAIL="${SMOKE_COACH_EMAIL:-smoke+monitor@podiumthrows.com}"
+    SMOKE_ATHLETE_EMAIL="${SMOKE_ATHLETE_EMAIL:-smoke+athlete@podiumthrows.com}"
+    AUTH_FAILURES=()
+
+    # Returns 0 and prints the auth-token cookie value on success, or 1 on
+    # any login failure. Uses a per-call cookie jar so the two role probes
+    # don't cross-contaminate sessions.
+    auth_login() {
+      local email="$1" jar="$2"
+      curl -sS -c "$jar" "$SMOKE_URL/login" -o /dev/null --max-time 10 2>/dev/null
+      local csrf
+      csrf=$(grep -E '^[^#].*csrf-token' "$jar" | awk '{print $7}' | tail -1)
+      if [[ -z "$csrf" ]]; then
+        echo "no-csrf"
+        return 1
+      fi
+      local code
+      code=$(curl -sS -b "$jar" -c "$jar" -o /dev/null -w "%{http_code}" --max-time 10 \
+        -X POST "$SMOKE_URL/api/auth/login" \
+        -H "Content-Type: application/json" \
+        -H "x-csrf-token: $csrf" \
+        -d "{\"email\":\"$email\",\"password\":\"$SMOKE_PASSWORD\"}" \
+        2>/dev/null)
+      if [[ "$code" != "200" ]]; then
+        echo "login-$code"
+        return 1
+      fi
+      return 0
+    }
+
+    # GETs path with the auth cookie jar; appends to AUTH_FAILURES on any
+    # non-200 OR if the body contains a Next.js error-page sentinel. We
+    # can't see runtime React errors without a headless browser, but the
+    # error-page strings catch RSC/SSR throws and digest-tagged 500s.
+    auth_probe() {
+      local jar="$1" path="$2"
+      local body_file
+      body_file=$(mktemp)
+      local code
+      code=$(curl -sS -b "$jar" -o "$body_file" -w "%{http_code}" --max-time 10 \
+        "$SMOKE_URL$path" 2>/dev/null)
+      if [[ "$code" != "200" ]]; then
+        echo "  ❌ $path → $code"
+        AUTH_FAILURES+=("$path: $code")
+      elif grep -qiE "Application error|Something went wrong|__NEXT_DATA__.*\"err\"" "$body_file"; then
+        echo "  ❌ $path → 200 but rendered error page"
+        AUTH_FAILURES+=("$path: error-page sentinel matched")
+      else
+        echo "  ✓ 200 $path"
+      fi
+      rm -f "$body_file"
+    }
+
+    COACH_JAR=$(mktemp)
+    if ! auth_login "$SMOKE_COACH_EMAIL" "$COACH_JAR"; then
+      echo "  ❌ Coach login failed for $SMOKE_COACH_EMAIL"
+      AUTH_FAILURES+=("coach login failed")
+    else
+      echo "  ✓ Coach logged in: $SMOKE_COACH_EMAIL"
+      # /coach/throws bare path 308s to /coach/dashboard; /coach/throws/profile
+      # is the canonical throws-detail surface for the smoke coach.
+      for path in \
+        "/coach/dashboard" \
+        "/coach/athletes" \
+        "/coach/calendar" \
+        "/coach/library" \
+        "/coach/settings" \
+        "/coach/throws/profile" \
+        "/coach/video-analysis" \
+        "/coach/settings?tab=notifications"; do
+        auth_probe "$COACH_JAR" "$path"
+      done
+    fi
+    rm -f "$COACH_JAR"
+
+    ATHLETE_JAR=$(mktemp)
+    if ! auth_login "$SMOKE_ATHLETE_EMAIL" "$ATHLETE_JAR"; then
+      echo "  ❌ Athlete login failed for $SMOKE_ATHLETE_EMAIL"
+      AUTH_FAILURES+=("athlete login failed")
+    else
+      echo "  ✓ Athlete logged in: $SMOKE_ATHLETE_EMAIL"
+      # /athlete/sessions hosts the Training Hub component; /athlete/throws/trends
+       # is the canonical trends path (/athlete/throws/analysis 308s here).
+      for path in \
+        "/athlete/dashboard" \
+        "/athlete/log-session" \
+        "/athlete/sessions" \
+        "/athlete/throws/trends" \
+        "/athlete/settings"; do
+        auth_probe "$ATHLETE_JAR" "$path"
+      done
+    fi
+    rm -f "$ATHLETE_JAR"
+
+    if (( ${#AUTH_FAILURES[@]} > 0 )); then
       echo ""
-      echo "── Auto-rollback ──"
-      npx vercel rollback --scope "$VERCEL_SCOPE" --yes 2>&1 | tail -5
-      echo ""
-      echo "❌ Deploy rolled back due to smoke test failure."
-      echo "   Check Vercel logs for the failing deployment and fix before redeploying."
-      exit 1
+      echo "  ${#AUTH_FAILURES[@]} auth'd smoke failure(s):"
+      for f in "${AUTH_FAILURES[@]}"; do
+        echo "    - $f"
+      done
+      rollback_and_exit
     fi
   fi
 fi
 
 echo ""
 if $PROD_MODE; then
-  echo "✅ Production deploy complete — smoke test passed."
+  echo "✅ Production deploy complete — smoke tests passed."
 else
   echo "✅ Preview deploy complete — zero Vercel build minutes used."
 fi

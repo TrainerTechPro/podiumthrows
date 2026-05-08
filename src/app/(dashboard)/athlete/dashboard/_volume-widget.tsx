@@ -248,12 +248,8 @@ function VolumeWidgetSkeleton() {
         <div className="sm:col-span-2 space-y-2">
           <Skeleton className="h-3 w-24" />
           <div className="flex items-end gap-1.5 h-20">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                className="flex-1 rounded-t-md"
-                style={{ height: `${20 + Math.random() * 60}%` }}
-              />
+            {[35, 60, 45, 70, 50, 65, 40, 55].map((h, i) => (
+              <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${h}%` }} />
             ))}
           </div>
         </div>
