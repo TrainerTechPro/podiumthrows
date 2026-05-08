@@ -76,7 +76,7 @@ function MonthSection({
     <section aria-labelledby={headingId}>
       <h2
         id={headingId}
-        className="text-xs font-semibold uppercase tracking-[0.14em] text-muted mb-5 font-mono"
+        className="text-xs font-semibold uppercase tracking-[0.14em] text-muted mb-5"
       >
         <time dateTime={monthKey}>{monthLabel}</time>
       </h2>

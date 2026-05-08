@@ -1333,10 +1333,7 @@ export function ThrowsView({
               }, 0);
 
               return (
-                <div
-                  key={session.id}
-                  className="card !p-4 space-y-3 hover:shadow-md transition-shadow"
-                >
+                <div key={session.id} className="card !p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-[var(--foreground)] text-sm">

@@ -86,12 +86,12 @@ export default async function PricingPage() {
       <MarketingNav />
 
       {/* ── HEADER ── */}
-      <section className="pt-[66px] bg-surface-50 dark:bg-[#0a0a0a]" aria-label="Pricing header">
+      <section className="pt-[66px] bg-surface-50 dark:bg-surface-950" aria-label="Pricing header">
         <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-20 pb-6 text-center">
           <div className="inline-flex items-center gap-2 bg-primary-500/10 border border-primary-500/20 text-primary-500 dark:text-primary-400 text-xs font-semibold font-heading px-3.5 py-1.5 rounded-full mb-6 uppercase tracking-widest">
             Simple, Transparent Pricing
           </div>
-          <h1 className="font-heading font-bold text-display-lg text-surface-900 dark:text-white mb-4">
+          <h1 className="font-heading font-bold text-display-lg text-surface-900 dark:text-surface-50 mb-4">
             Start free. <span className="text-primary-500">Scale as you grow.</span>
           </h1>
           <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed max-w-xl mx-auto">
@@ -102,7 +102,7 @@ export default async function PricingPage() {
       </section>
 
       {/* ── PRICING CARDS (client — needs billing toggle) ── */}
-      <section className="py-4 pb-24 bg-surface-50 dark:bg-[#0a0a0a]" aria-label="Pricing plans">
+      <section className="py-4 pb-24 bg-surface-50 dark:bg-surface-950" aria-label="Pricing plans">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <PricingPageClient
             isAuthenticated={isAuthenticated}
@@ -132,10 +132,10 @@ export default async function PricingPage() {
       </div>
 
       {/* ── FEATURE MATRIX ── */}
-      <section className="py-24 bg-surface-50 dark:bg-[#0a0a0a]" aria-label="Feature comparison">
+      <section className="py-24 bg-surface-50 dark:bg-surface-950" aria-label="Feature comparison">
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-display-md text-surface-900 dark:text-white mb-3">
+            <h2 className="font-heading font-bold text-display-md text-surface-900 dark:text-surface-50 mb-3">
               Full feature comparison
             </h2>
             <p className="text-surface-600 dark:text-surface-400">
@@ -155,7 +155,7 @@ export default async function PricingPage() {
           <p className="font-heading font-semibold text-primary-600 dark:text-primary-400 text-sm uppercase tracking-widest mb-3">
             Why Coaches Choose Podium
           </p>
-          <h2 className="font-heading font-bold text-display-md text-surface-900 dark:text-white mb-4">
+          <h2 className="font-heading font-bold text-display-md text-surface-900 dark:text-surface-50 mb-4">
             The only platform that enforces
             <br className="hidden sm:block" />
             <span className="text-primary-500"> correct implement sequencing</span>
@@ -182,7 +182,7 @@ export default async function PricingPage() {
       >
         <div className="max-w-3xl mx-auto px-5 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="font-heading font-bold text-display-md text-surface-900 dark:text-white mb-3">
+            <h2 className="font-heading font-bold text-display-md text-surface-900 dark:text-surface-50 mb-3">
               Frequently asked questions
             </h2>
             <p className="text-surface-600 dark:text-surface-400">
@@ -192,7 +192,7 @@ export default async function PricingPage() {
           <FAQAccordion />
 
           <div className="mt-12 text-center p-8 bg-surface-50 dark:bg-surface-900/50 rounded-2xl border border-surface-200 dark:border-surface-800">
-            <p className="font-heading font-semibold text-surface-900 dark:text-white mb-2">
+            <p className="font-heading font-semibold text-surface-900 dark:text-surface-50 mb-2">
               Still have questions?
             </p>
             <p className="text-sm text-surface-600 dark:text-surface-400 mb-5">

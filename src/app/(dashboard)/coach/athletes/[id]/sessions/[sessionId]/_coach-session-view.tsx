@@ -384,10 +384,7 @@ function AthleteStrip({
   return (
     <section className="mb-5 overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)]">
       <div className="ident-row flex items-center gap-4 px-5 py-3.5">
-        <div
-          className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[var(--card-border)] font-heading text-base font-bold text-[var(--foreground)]"
-          style={{ background: "linear-gradient(135deg, #d4d4d8, #a1a1a8)" }}
-        >
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[var(--card-border)] bg-gradient-to-br from-surface-300 to-surface-400 font-heading text-base font-bold text-[var(--foreground)] dark:from-surface-700 dark:to-surface-800">
           {dto.athlete.initials}
         </div>
         <div className="who min-w-0 flex-1">

@@ -160,10 +160,7 @@ function PageHeader({ athleteName, dateLabel }: { athleteName: string; dateLabel
 function IdentityRow({ athlete }: { athlete: CoachSessionDetailDTO["athlete"] }) {
   return (
     <div className="flex items-center gap-3 border-b border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3.5">
-      <div
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] border border-[var(--card-border)] font-heading text-[13px] font-bold text-[var(--foreground)]"
-        style={{ background: "linear-gradient(135deg, #d4d4d8, #a1a1a8)" }}
-      >
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] border border-[var(--card-border)] bg-gradient-to-br from-surface-300 to-surface-400 font-heading text-[13px] font-bold text-[var(--foreground)] dark:from-surface-700 dark:to-surface-800">
         {athlete.initials}
       </div>
       <div className="min-w-0 flex-1">
@@ -559,8 +556,7 @@ function ImplementPill({ exercise, onClick }: { exercise: CoachExerciseDTO; onCl
     >
       {exercise.isHeaviestInBlock ? (
         <span
-          className="inline-block h-[5px] w-[5px] shrink-0 rounded-full"
-          style={{ background: "#FFC800", boxShadow: "0 0 6px rgba(255,200,0,0.45)" }}
+          className="inline-block h-[5px] w-[5px] shrink-0 rounded-full bg-primary-500 shadow-[0_0_6px_color-mix(in_srgb,var(--color-brand)_45%,transparent)]"
           aria-hidden="true"
         />
       ) : null}

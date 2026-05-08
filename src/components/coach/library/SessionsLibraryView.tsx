@@ -293,10 +293,7 @@ export function SessionsLibraryView({
             }, 0);
 
             return (
-              <div
-                key={session.id}
-                className="card !p-4 space-y-3 hover:shadow-md transition-shadow"
-              >
+              <div key={session.id} className="card !p-4 space-y-3">
                 <div>
                   <h3 className="font-semibold text-[var(--foreground)]">{session.name}</h3>
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
