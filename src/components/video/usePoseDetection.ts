@@ -220,9 +220,10 @@ export function usePoseDetection(): UsePoseDetectionReturn {
         FilesetResolverClass = vision.FilesetResolver;
       }
 
-      const fileset = await FilesetResolverClass.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm"
-      );
+      // Self-hosted under public/ — same-origin so CSP 'self' covers it.
+      // Bundle synced from node_modules at install time; see
+      // scripts/copy-mediapipe-wasm.sh.
+      const fileset = await FilesetResolverClass.forVisionTasks("/mediapipe/wasm");
 
       landmarkerRef.current = await PoseLandmarkerClass.createFromOptions(fileset, {
         baseOptions: {
