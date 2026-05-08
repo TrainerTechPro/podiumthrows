@@ -119,7 +119,7 @@ if [[ $DEPLOY_EXIT -ne 0 ]]; then
 fi
 
 # ── Step 8: Smoke tests (prod only) ────────────────────────────────
-# Two probes, both auto-rollback on failure:
+# Three probes, all funnel into the same auto-rollback path on failure:
 #   1. Auth API — POST /api/auth/login with bad creds expects 401. Catches
 #      platform-specific bundle failures (e.g. native binary mismatch) that
 #      Vercel's build succeeds on but runtime 500s. Prior incident:
@@ -130,6 +130,13 @@ fi
 #      regressions the auth probe is blind to. Prior incident: 2026-05-07
 #      /changelog and /terms 307'd unauthenticated visitors to /login (PR
 #      #70) — the auth probe was green throughout.
+#   3. Authenticated smoke — logs in as smoke+monitor@ (COACH) and
+#     smoke+athlete@ (ATHLETE) and GETs ~13 representative dashboard
+#     surfaces. Catches the "200 with broken envelope" class that PR #68
+#     fixed for /coach/settings/notifications — anything past the auth
+#     boundary that 500s, page-errors, or renders the Next.js error page
+#     trips the rollback. Skipped silently if SMOKE_PASSWORD is unset
+#     (per-machine convenience for fresh checkouts).
 if $PROD_MODE; then
   SMOKE_URL="https://www.podiumthrows.com"
   VERCEL_SCOPE="tonys-projects-9cce8202"
@@ -216,6 +223,114 @@ if $PROD_MODE; then
       echo "    - $f"
     done
     rollback_and_exit
+  fi
+
+  echo ""
+  echo "── Smoke test: authenticated ──"
+
+  if [[ -z "${SMOKE_PASSWORD:-}" ]]; then
+    echo "  ⚠ SMOKE_PASSWORD not set in env — skipping auth'd smoke"
+    echo "    (set SMOKE_PASSWORD + SMOKE_COACH_EMAIL + SMOKE_ATHLETE_EMAIL"
+    echo "     in Vercel Production env, then re-pull with vercel env pull)"
+  else
+    SMOKE_COACH_EMAIL="${SMOKE_COACH_EMAIL:-smoke+monitor@podiumthrows.com}"
+    SMOKE_ATHLETE_EMAIL="${SMOKE_ATHLETE_EMAIL:-smoke+athlete@podiumthrows.com}"
+    AUTH_FAILURES=()
+
+    # Returns 0 and prints the auth-token cookie value on success, or 1 on
+    # any login failure. Uses a per-call cookie jar so the two role probes
+    # don't cross-contaminate sessions.
+    auth_login() {
+      local email="$1" jar="$2"
+      curl -sS -c "$jar" "$SMOKE_URL/login" -o /dev/null --max-time 10 2>/dev/null
+      local csrf
+      csrf=$(grep -E '^[^#].*csrf-token' "$jar" | awk '{print $7}' | tail -1)
+      if [[ -z "$csrf" ]]; then
+        echo "no-csrf"
+        return 1
+      fi
+      local code
+      code=$(curl -sS -b "$jar" -c "$jar" -o /dev/null -w "%{http_code}" --max-time 10 \
+        -X POST "$SMOKE_URL/api/auth/login" \
+        -H "Content-Type: application/json" \
+        -H "x-csrf-token: $csrf" \
+        -d "{\"email\":\"$email\",\"password\":\"$SMOKE_PASSWORD\"}" \
+        2>/dev/null)
+      if [[ "$code" != "200" ]]; then
+        echo "login-$code"
+        return 1
+      fi
+      return 0
+    }
+
+    # GETs path with the auth cookie jar; appends to AUTH_FAILURES on any
+    # non-200 OR if the body contains a Next.js error-page sentinel. We
+    # can't see runtime React errors without a headless browser, but the
+    # error-page strings catch RSC/SSR throws and digest-tagged 500s.
+    auth_probe() {
+      local jar="$1" path="$2"
+      local body_file
+      body_file=$(mktemp)
+      local code
+      code=$(curl -sS -b "$jar" -o "$body_file" -w "%{http_code}" --max-time 10 \
+        "$SMOKE_URL$path" 2>/dev/null)
+      if [[ "$code" != "200" ]]; then
+        echo "  ❌ $path → $code"
+        AUTH_FAILURES+=("$path: $code")
+      elif grep -qiE "Application error|Something went wrong|__NEXT_DATA__.*\"err\"" "$body_file"; then
+        echo "  ❌ $path → 200 but rendered error page"
+        AUTH_FAILURES+=("$path: error-page sentinel matched")
+      else
+        echo "  ✓ 200 $path"
+      fi
+      rm -f "$body_file"
+    }
+
+    COACH_JAR=$(mktemp)
+    if ! auth_login "$SMOKE_COACH_EMAIL" "$COACH_JAR"; then
+      echo "  ❌ Coach login failed for $SMOKE_COACH_EMAIL"
+      AUTH_FAILURES+=("coach login failed")
+    else
+      echo "  ✓ Coach logged in: $SMOKE_COACH_EMAIL"
+      for path in \
+        "/coach/dashboard" \
+        "/coach/athletes" \
+        "/coach/calendar" \
+        "/coach/library" \
+        "/coach/settings" \
+        "/coach/throws" \
+        "/coach/video-analysis" \
+        "/coach/settings?tab=notifications"; do
+        auth_probe "$COACH_JAR" "$path"
+      done
+    fi
+    rm -f "$COACH_JAR"
+
+    ATHLETE_JAR=$(mktemp)
+    if ! auth_login "$SMOKE_ATHLETE_EMAIL" "$ATHLETE_JAR"; then
+      echo "  ❌ Athlete login failed for $SMOKE_ATHLETE_EMAIL"
+      AUTH_FAILURES+=("athlete login failed")
+    else
+      echo "  ✓ Athlete logged in: $SMOKE_ATHLETE_EMAIL"
+      for path in \
+        "/athlete/dashboard" \
+        "/athlete/log-session" \
+        "/athlete/training" \
+        "/athlete/trends" \
+        "/athlete/settings"; do
+        auth_probe "$ATHLETE_JAR" "$path"
+      done
+    fi
+    rm -f "$ATHLETE_JAR"
+
+    if (( ${#AUTH_FAILURES[@]} > 0 )); then
+      echo ""
+      echo "  ${#AUTH_FAILURES[@]} auth'd smoke failure(s):"
+      for f in "${AUTH_FAILURES[@]}"; do
+        echo "    - $f"
+      done
+      rollback_and_exit
+    fi
   fi
 fi
 
