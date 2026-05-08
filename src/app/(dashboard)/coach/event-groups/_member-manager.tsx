@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { EventGroupItem } from "@/lib/data/event-groups";
 import { Avatar, Badge, Button } from "@/components";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { csrfHeaders } from "@/lib/csrf-client";
 
@@ -203,11 +204,10 @@ export function MemberManager({ group, onUpdated }: MemberManagerProps) {
                 key={athlete.id}
                 className="flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isChecked}
                   onChange={() => toggleAthlete(athlete.id)}
-                  className="form-checkbox rounded border-surface-300 dark:border-surface-600 text-primary-500 focus:ring-primary-500/50"
+                  aria-label={`Select ${athlete.firstName} ${athlete.lastName}`}
                 />
                 <Avatar
                   name={`${athlete.firstName} ${athlete.lastName}`}

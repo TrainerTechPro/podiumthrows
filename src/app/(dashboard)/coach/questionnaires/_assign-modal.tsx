@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 type Props = {
@@ -46,14 +47,11 @@ export function AssignModal({
     setResult(null);
 
     try {
-      const res = await fetch(
-        `/api/coach/questionnaires/${questionnaireId}/assign`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({ athleteIds: Array.from(selected) }),
-        }
-      );
+      const res = await fetch(`/api/coach/questionnaires/${questionnaireId}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ athleteIds: Array.from(selected) }),
+      });
 
       if (res.ok) {
         const data = await res.json();
@@ -86,18 +84,12 @@ export function AssignModal({
       size="sm"
       footer={
         <div className="flex items-center justify-between w-full">
-          <span className="text-xs text-muted">
-            {selected.size} selected
-          </span>
+          <span className="text-xs text-muted">{selected.size} selected</span>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose} disabled={saving}>
               Cancel
             </Button>
-            <Button
-              onClick={handleAssign}
-              loading={saving}
-              disabled={selected.size === 0}
-            >
+            <Button onClick={handleAssign} loading={saving} disabled={selected.size === 0}>
               Assign
             </Button>
           </div>
@@ -112,9 +104,7 @@ export function AssignModal({
         )}
 
         {athletes.length === 0 ? (
-          <p className="text-sm text-muted py-4 text-center">
-            No athletes on your roster.
-          </p>
+          <p className="text-sm text-muted py-4 text-center">No athletes on your roster.</p>
         ) : (
           athletes.map((a) => {
             const isAssigned = alreadyAssigned.has(a.id);
@@ -127,24 +117,21 @@ export function AssignModal({
                   isAssigned
                     ? "opacity-50 cursor-not-allowed"
                     : isSelected
-                    ? "bg-primary-500/10 ring-1 ring-primary-500/20"
-                    : "hover:bg-surface-100 dark:hover:bg-surface-800"
+                      ? "bg-primary-500/10 ring-1 ring-primary-500/20"
+                      : "hover:bg-surface-100 dark:hover:bg-surface-800"
                 }`}
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isAssigned || isSelected}
                   disabled={isAssigned}
-                  onChange={() => !isAssigned && toggleAthlete(a.id)}
-                  className="w-4 h-4 rounded border-[var(--card-border)] text-primary-500 focus:ring-primary-500/30"
+                  onChange={() => toggleAthlete(a.id)}
+                  aria-label={`Select ${a.firstName} ${a.lastName}`}
                 />
                 <span className="text-sm text-[var(--foreground)]">
                   {a.firstName} {a.lastName}
                 </span>
                 {isAssigned && (
-                  <span className="text-[10px] text-muted ml-auto">
-                    Already assigned
-                  </span>
+                  <span className="text-[10px] text-muted ml-auto">Already assigned</span>
                 )}
               </label>
             );
