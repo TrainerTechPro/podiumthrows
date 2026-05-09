@@ -96,12 +96,17 @@ export function Modal({
       <div className="absolute inset-0 bg-black/70 animate-fade-in" aria-hidden="true" />
 
       {/* Panel — neomorphic: no border, depth via dual shadow. Keeps the
-          opaque --surface-overlay per dark-mode readability rule. */}
+          opaque --surface-overlay per dark-mode readability rule.
+
+          Cap height to viewport minus the overlay's p-4 padding so on
+          small phones (especially with the keyboard up) the body
+          scrolls inside the modal instead of pushing actions off screen. */}
       <div
         ref={panelRef}
         className={cn(
           "relative w-full bg-[var(--surface-overlay)] neo-raised",
-          "rounded-2xl animate-spring-up",
+          "rounded-2xl animate-spring-up flex flex-col",
+          "max-h-[calc(100vh-2rem)]",
           size === "full" && "overflow-hidden",
           sizeClasses[size],
           className
@@ -131,10 +136,9 @@ export function Modal({
           </div>
         )}
 
-        {/* Body */}
-        <div className={cn("px-6 py-5", size === "full" && "flex-1 overflow-y-auto")}>
-          {children}
-        </div>
+        {/* Body — scrolls when panel is height-capped (header + footer stay
+            pinned). flex-1 + min-h-0 lets the body shrink in the flex column. */}
+        <div className="px-6 py-5 flex-1 min-h-0 overflow-y-auto">{children}</div>
 
         {/* Footer */}
         {footer && (

@@ -543,7 +543,7 @@ export default function CoachSettingsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+              className={`flex-1 px-3 min-h-[44px] py-2.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
                   : "text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
