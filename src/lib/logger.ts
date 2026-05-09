@@ -72,7 +72,11 @@ function reportToErrorTracking(
     error?: unknown;
   }
 ) {
-  if (!process.env.SENTRY_DSN) return;
+  // Vercel prod has NEXT_PUBLIC_SENTRY_DSN set but not SENTRY_DSN — same
+  // fallback pattern as sentry.server.config.ts. Without this, logger.error()
+  // silently no-ops in prod and Sentry receives nothing (verified 2026-05-09:
+  // 24h of zero Sentry issues despite real Vercel error logs).
+  if (!process.env.SENTRY_DSN && !process.env.NEXT_PUBLIC_SENTRY_DSN) return;
 
   import("@sentry/nextjs")
     .then((Sentry) => {
