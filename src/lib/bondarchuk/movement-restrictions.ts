@@ -45,11 +45,19 @@ const ALL_CAPABILITIES: readonly MovementCapability[] = [
  *
  * Any exercise whose name matches one or more of a capability's patterns
  * is treated as requiring that capability.
+ *
+ * Snatch/clean exclusion: "Snatch Pull" / "Clean Pull" / "Snatch Grip"
+ * variants are pulling or grip-width modifiers — they finish below the
+ * catch and don't require overhead reception or a deep squat. The
+ * negative lookahead skips them. Calibrated against actual seed exercise
+ * names on 2026-05-09.
  */
+const SNATCH_CLEAN_EXCLUSION = String.raw`(?!\s+(pull|high pull|grip))`;
+
 const CAPABILITY_KEYWORDS: Record<MovementCapability, RegExp[]> = {
   fullOverhead: [
     /\boverhead\b/i,
-    /\bsnatch\b/i, // muscle/power/hang/full snatch — all overhead reception
+    new RegExp(String.raw`\bsnatch\b${SNATCH_CLEAN_EXCLUSION}`, "i"),
     /\bjerk\b/i, // push/split/squat jerk
     /\bpullover\b/i,
     /\bpush press\b/i, // explicit — "press" alone is ambiguous (bench press, leg press)
@@ -83,8 +91,8 @@ const CAPABILITY_KEYWORDS: Record<MovementCapability, RegExp[]> = {
     /\bair squat\b/i,
     /\bbulgarian\b/i, // bulgarian split squat — deep + single-leg
     /\bpistol\b/i,
-    /\bclean\b/i, // power/hang/squat clean — catch in deep position
-    /\bsnatch\b/i, // also requires deep catch
+    new RegExp(String.raw`\bclean\b${SNATCH_CLEAN_EXCLUSION}`, "i"), // power/hang clean catch is in the rack; clean pull doesn't catch at all
+    new RegExp(String.raw`\bsnatch\b${SNATCH_CLEAN_EXCLUSION}`, "i"),
     /\bthruster\b/i,
   ],
   singleLegStability: [
