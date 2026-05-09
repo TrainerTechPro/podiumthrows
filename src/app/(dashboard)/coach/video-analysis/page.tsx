@@ -26,6 +26,11 @@ const SUMMARY_LABELS: Record<string, string> = {
   blockLegKnee: "Block Knee",
 };
 
+// VideoAnalysis.event is a Prisma EventType enum; passing any other
+// string crashes the Server Component with PrismaClientValidationError.
+// Sentry caught real e2e traffic with `?event=throws` — guard at the boundary.
+const VALID_EVENT_VALUES = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
+
 export default async function VideoAnalysisPage({ searchParams }: { searchParams: SearchParams }) {
   let coach;
   try {
@@ -38,7 +43,12 @@ export default async function VideoAnalysisPage({ searchParams }: { searchParams
   // Build filter
   const where: Record<string, unknown> = { coachId: coach.id };
   if (searchParams.athleteId) where.athleteId = searchParams.athleteId;
-  if (searchParams.event) where.event = searchParams.event;
+  if (
+    searchParams.event &&
+    (VALID_EVENT_VALUES as readonly string[]).includes(searchParams.event)
+  ) {
+    where.event = searchParams.event;
+  }
 
   // Fetch analyses and athletes in parallel
   const [analyses, athletes] = await Promise.all([
