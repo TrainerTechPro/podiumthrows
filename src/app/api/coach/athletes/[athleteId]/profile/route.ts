@@ -48,7 +48,6 @@ export async function PATCH(
   if (parsed.movementRestrictions !== undefined)
     updateData.movementRestrictions = parsed.movementRestrictions;
   if (parsed.competitionPRs !== undefined) updateData.competitionPRs = parsed.competitionPRs;
-  if (parsed.implementPRs !== undefined) updateData.implementPRs = parsed.implementPRs;
 
   if (Object.keys(updateData).length === 0) {
     return NextResponse.json(

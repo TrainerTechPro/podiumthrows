@@ -487,11 +487,15 @@ model AthleteProfile {
   // `throwsInjuries` relation below. The legacy injuryHistory JSON column
   // was dropped 2026-05-04 (Phase B of athlete-master-profile-plan-v2).
 
-  // Master Profile — Competition PRs (coach-managed)
+  // Master Profile — Competition PRs (coach-managed). Powers the legacy-
+  // meet-result-promotion flow (POST /api/throws/competitions/[id]/promote-legacy).
+  // A future B.2-followup will rebuild that flow onto AthleteImplementPR
+  // and drop this column too.
   competitionPRs Json?
 
-  // Master Profile — Implement PRs (coach-managed)
-  implementPRs Json?
+  // The legacy `implementPRs` JSON column was dropped 2026-05-09 (Phase B.2
+  // of athlete-master-profile-plan-v2). AthleteImplementPR is the canonical
+  // source for per-implement PRs.
 
   // Stamped once when the athlete-writable Master Profile sections all carry
   // values (Core, Training History, Lifestyle, Strength Numbers). Powers the
