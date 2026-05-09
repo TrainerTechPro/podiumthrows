@@ -1007,7 +1007,6 @@ export const CoachEditProfileSchema = z.object({
   technicalProfile: z.record(z.string(), z.unknown()).nullable().optional(),
   movementRestrictions: z.record(z.string(), z.unknown()).nullable().optional(),
   competitionPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),
-  implementPRs: z.record(z.string(), z.number().nullable()).nullable().optional(),
 });
 
 // ── Session Complete + Log ──────────────────────────────────────────────
