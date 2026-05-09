@@ -79,7 +79,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
         setTimeout(() => setSuccess(false), 3000);
       } catch (err) {
         logger.error("settings save failed", { context: "athlete/settings/form", error: err });
-        setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
+        setError(err instanceof Error ? err.message : "Couldn't save — please try again.");
       }
     });
   }

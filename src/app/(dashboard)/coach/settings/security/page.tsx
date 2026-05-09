@@ -70,7 +70,7 @@ export default function SecuritySettingsPage() {
       setPhase("setup-qr");
       setLoading(false);
     } catch {
-      setError("Network error");
+      setError("Network error — please try again.");
       setLoading(false);
     }
   }
@@ -98,7 +98,7 @@ export default function SecuritySettingsPage() {
       setPhase("backup-codes");
       setLoading(false);
     } catch {
-      setError("Network error");
+      setError("Network error — please try again.");
       setLoading(false);
     }
   }
@@ -133,7 +133,7 @@ export default function SecuritySettingsPage() {
       setLoading(false);
       toast("Two-factor authentication disabled", "info");
     } catch {
-      setError("Network error");
+      setError("Network error — please try again.");
       setLoading(false);
     }
   }
@@ -366,7 +366,7 @@ export default function SecuritySettingsPage() {
               className="btn-primary flex-1 !bg-danger-600 hover:!bg-danger-700"
               type="button"
             >
-              {loading ? "Disabling..." : "Disable MFA"}
+              {loading ? "Disabling…" : "Disable MFA"}
             </button>
           </div>
         }
