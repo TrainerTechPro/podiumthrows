@@ -96,6 +96,82 @@ describe("getRequiredCapabilities", () => {
     expect(overheadCount).toBeLessThanOrEqual(1);
     expect(squatCount).toBeLessThanOrEqual(1);
   });
+
+  // Calibration against actual seed exercise names (Tony's local DB,
+  // 2026-05-09). These pin the keyword set's behavior on real data so
+  // future keyword changes that break a known-good classification fail
+  // loudly.
+  describe("seed-data calibration", () => {
+    it("Snatch Pull does NOT require overhead or deep squat", () => {
+      // The pull finishes below the catch — no overhead reception, no
+      // deep position. Bare \bsnatch\b would over-flag this.
+      const result = getRequiredCapabilities("Snatch Pull");
+      expect(result).not.toContain("fullOverhead");
+      expect(result).not.toContain("deepSquat");
+    });
+
+    it("Clean Pull does NOT require deep squat", () => {
+      const result = getRequiredCapabilities("Clean Pull");
+      expect(result).not.toContain("deepSquat");
+      expect(result).not.toContain("fullOverhead");
+    });
+
+    it("Snatch Grip Deadlift does not flag overhead/squat (grip-width modifier)", () => {
+      const result = getRequiredCapabilities("Snatch Grip Deadlift");
+      expect(result).not.toContain("fullOverhead");
+      expect(result).not.toContain("deepSquat");
+    });
+
+    it("Snatch High Pull does NOT flag overhead/squat", () => {
+      const result = getRequiredCapabilities("Snatch High Pull");
+      expect(result).not.toContain("fullOverhead");
+      expect(result).not.toContain("deepSquat");
+    });
+
+    it("Power Snatch (no pull/grip suffix) DOES flag both", () => {
+      // Sanity check that the exclusion only kicks in for pull/grip variants.
+      const result = getRequiredCapabilities("Power Snatch");
+      expect(result).toContain("fullOverhead");
+      expect(result).toContain("deepSquat");
+    });
+
+    it("Power Clean (no pull suffix) DOES flag deep squat", () => {
+      const result = getRequiredCapabilities("Power Clean");
+      expect(result).toContain("deepSquat");
+    });
+
+    it("Hang Snatch DOES flag overhead and deep squat", () => {
+      const result = getRequiredCapabilities("Hang Snatch");
+      expect(result).toContain("fullOverhead");
+      expect(result).toContain("deepSquat");
+    });
+
+    // Pin the rest of the local seed roster — these classifications were
+    // validated by hand on 2026-05-09. If a regex change breaks one,
+    // either the change is wrong OR the calibration needs an explicit
+    // re-evaluation.
+    it.each([
+      ["Back Squat", ["deepSquat"]],
+      ["Front Squat", ["deepSquat"]],
+      ["Bulgarian Split Squat", ["singleLegStability", "deepSquat"]],
+      ["Bench Press", []],
+      ["Hip Thrust", []],
+      ["Incline Dumbbell Press", []],
+      ["Plank Hold", []],
+      ["Romanian Deadlift", []],
+      ["Overhead Press", ["fullOverhead"]],
+      ["Overhead Shot Backward", ["fullOverhead"]],
+      ["Rotational Medicine Ball Throw", ["fullHipRotation"]],
+      ["Kettle Bell Rotational Throw", ["fullHipRotation"]],
+      ["Power Position Shot Put", ["fullHipRotation"]],
+      ["Standing Throw — Shot Put", ["fullHipRotation"]],
+      ["South African Drill — Discus", ["fullHipRotation"]],
+      ["Weighted Box Jump", []],
+    ])("seed exercise %s → %j", (name, expected) => {
+      const result = getRequiredCapabilities(name);
+      expect(result.sort()).toEqual([...expected].sort());
+    });
+  });
 });
 
 describe("getDisabledCapabilities", () => {
