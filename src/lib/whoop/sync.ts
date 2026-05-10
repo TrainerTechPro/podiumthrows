@@ -20,19 +20,32 @@ export async function syncWhoopData(connectionId: string): Promise<void> {
     fetchStrain(connectionId),
   ]);
 
-  const recovery = recoveryResult.status === "fulfilled"
-    ? recoveryResult.value
-    : { recoveryScore: null, hrvMs: null, restingHR: null, spo2: null, skinTempC: null };
-  const sleep = sleepResult.status === "fulfilled"
-    ? sleepResult.value
-    : { sleepPerformance: null, sleepDurationMs: null, sleepEfficiency: null, lightSleepMs: null, swsSleepMs: null, remSleepMs: null };
-  const strain = strainResult.status === "fulfilled"
-    ? strainResult.value
-    : { strain: null };
+  const recovery =
+    recoveryResult.status === "fulfilled"
+      ? recoveryResult.value
+      : { recoveryScore: null, hrvMs: null, restingHR: null, spo2: null, skinTempC: null };
+  const sleep =
+    sleepResult.status === "fulfilled"
+      ? sleepResult.value
+      : {
+          sleepPerformance: null,
+          sleepDurationMs: null,
+          sleepEfficiency: null,
+          lightSleepMs: null,
+          swsSleepMs: null,
+          remSleepMs: null,
+        };
+  const strain = strainResult.status === "fulfilled" ? strainResult.value : { strain: null };
 
   // If ALL three failed, throw so the caller knows
-  if (recoveryResult.status === "rejected" && sleepResult.status === "rejected" && strainResult.status === "rejected") {
-    throw new Error(`All WHOOP API calls failed: ${(recoveryResult as PromiseRejectedResult).reason?.message ?? "unknown"}`);
+  if (
+    recoveryResult.status === "rejected" &&
+    sleepResult.status === "rejected" &&
+    strainResult.status === "rejected"
+  ) {
+    throw new Error(
+      `All WHOOP API calls failed: ${(recoveryResult as PromiseRejectedResult).reason?.message ?? "unknown"}`
+    );
   }
 
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -84,10 +97,11 @@ export async function syncWhoopData(connectionId: string): Promise<void> {
     await getOrCreateAutoCheckIn(connection.athleteId, snapshot, connectionId);
   }
 
-  // Update lastSyncAt
+  // Update lastSyncAt and clear any prior error so the UI stops showing
+  // "sync failed Nm ago" once the connection recovers.
   await prisma.whoopConnection.update({
     where: { id: connectionId },
-    data: { lastSyncAt: new Date() },
+    data: { lastSyncAt: new Date(), lastSyncError: null, lastSyncErrorAt: null },
   });
 }
 
