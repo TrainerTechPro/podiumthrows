@@ -16,6 +16,12 @@
  * keys configured.
  */
 
+// web-push transitively imports node 'net' — bundling this into a client
+// chunk fails the build with "Module not found: Can't resolve 'net'" (see
+// PODIUM-THROWS-G, fixed by extracting streak-milestones.ts in #67). The
+// server-only marker makes that failure mode loud at the import site
+// instead of waiting for the bundler to discover it three modules deep.
+import "server-only";
 import webpush from "web-push";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
@@ -68,10 +74,7 @@ function ensureVapidConfigured(): boolean {
  * Send a push notification to every active subscription for a given user.
  * Returns the number of successful deliveries.
  */
-export async function sendPushToUser(
-  userId: string,
-  payload: PushPayload
-): Promise<number> {
+export async function sendPushToUser(userId: string, payload: PushPayload): Promise<number> {
   if (!ensureVapidConfigured()) return 0;
 
   const subs = await prisma.pushSubscription.findMany({
@@ -124,9 +127,7 @@ export async function sendPushToUser(
 
   // Purge subscriptions the browser has invalidated
   if (staleIds.length > 0) {
-    await prisma.pushSubscription
-      .deleteMany({ where: { id: { in: staleIds } } })
-      .catch(() => null);
+    await prisma.pushSubscription.deleteMany({ where: { id: { in: staleIds } } }).catch(() => null);
   }
 
   // Update lastUsedAt on surviving subscriptions in the background.
