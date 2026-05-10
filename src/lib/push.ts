@@ -47,7 +47,11 @@ function ensureVapidConfigured(): boolean {
 
   if (!publicKey || !privateKey || !subject) {
     if (!missingWarningLogged) {
-      logger.error(
+      // Warn (not error) — the per-file comment promises "logs a warning once"
+      // and the no-op return is by design for envs without VAPID. logger.error
+      // captures to Sentry (`src/lib/logger.ts:150`); a recurring config gap
+      // shouldn't escalate (PODIUM-THROWS-16: prod cron paged on every tick).
+      logger.warn(
         "VAPID keys not configured — Web Push is disabled. Set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT.",
         { context: "push" }
       );
@@ -68,10 +72,7 @@ function ensureVapidConfigured(): boolean {
  * Send a push notification to every active subscription for a given user.
  * Returns the number of successful deliveries.
  */
-export async function sendPushToUser(
-  userId: string,
-  payload: PushPayload
-): Promise<number> {
+export async function sendPushToUser(userId: string, payload: PushPayload): Promise<number> {
   if (!ensureVapidConfigured()) return 0;
 
   const subs = await prisma.pushSubscription.findMany({
@@ -124,9 +125,7 @@ export async function sendPushToUser(
 
   // Purge subscriptions the browser has invalidated
   if (staleIds.length > 0) {
-    await prisma.pushSubscription
-      .deleteMany({ where: { id: { in: staleIds } } })
-      .catch(() => null);
+    await prisma.pushSubscription.deleteMany({ where: { id: { in: staleIds } } }).catch(() => null);
   }
 
   // Update lastUsedAt on surviving subscriptions in the background.
