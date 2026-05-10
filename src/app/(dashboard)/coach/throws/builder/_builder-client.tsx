@@ -1364,7 +1364,10 @@ function WarmupCooldownEditor({
               key={i}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 "
             >
-              {drill}
+              {/* Drills are usually strings (builder writes strings), but the live-start
+                  flow stores objects { name, duration?, notes? }. Coerce to display name
+                  to avoid the same React-child crash that hit /coach/throws/:id (PODIUM-THROWS-S). */}
+              {typeof drill === "string" ? drill : ((drill as { name?: string }).name ?? "Drill")}
               <button
                 type="button"
                 onClick={() => removeDrill(i)}

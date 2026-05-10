@@ -292,18 +292,31 @@ function StrengthBlockPrescription({ config }: { config: Record<string, unknown>
 
 function WarmupCooldownDetail({ config }: { config: Record<string, unknown> }) {
   const duration = config.duration as number | undefined;
-  const drills = (config.drills as string[]) ?? [];
+  // Drills can be strings (legacy / coach-defined) or objects { name, duration?, notes? }
+  // (from athlete start-live flow). Rendering an object as {d} directly crashes React with
+  // "Objects are not valid as a React child" — caught in prod on Mobile Safari (PODIUM-THROWS-S).
+  const drills =
+    (config.drills as Array<string | { name: string; duration?: number; notes?: string }>) ?? [];
   return (
     <div className="space-y-1">
       {duration && <p className="text-sm text-muted">{duration} minutes</p>}
       {drills.length > 0 && (
         <ul className="text-sm text-muted space-y-0.5">
-          {drills.map((d, i) => (
-            <li key={i} className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-surface-300 dark:bg-surface-600 shrink-0" />
-              {d}
-            </li>
-          ))}
+          {drills.map((d, i) => {
+            const name = typeof d === "string" ? d : d.name;
+            const drillDuration = typeof d === "object" ? d.duration : undefined;
+            return (
+              <li key={i} className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-surface-300 dark:bg-surface-600 shrink-0" />
+                <span className="flex-1">{name}</span>
+                {drillDuration ? (
+                  <span className="tabular-nums text-xs text-muted opacity-70">
+                    {drillDuration}min
+                  </span>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
       {!duration && drills.length === 0 && <p className="text-sm text-muted">As needed</p>}

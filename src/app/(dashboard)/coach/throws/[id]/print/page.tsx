@@ -45,9 +45,18 @@ interface StrengthConfig {
   notes?: string;
 }
 
+interface WarmCoolDrillObject {
+  name: string;
+  duration?: number;
+  notes?: string;
+}
+
 interface WarmCoolConfig {
   duration?: number;
-  drills?: string[];
+  // Legacy plans store drills as bare strings; the athlete start-live flow
+  // writes them as { name, duration?, notes? } objects. Both shapes coexist
+  // and must render — see PODIUM-THROWS-S.
+  drills?: Array<string | WarmCoolDrillObject>;
   notes?: string;
 }
 
@@ -315,12 +324,21 @@ function WarmCoolBlockCard({ config }: { config: WarmCoolConfig | null }) {
       )}
       {drills.length > 0 && (
         <ul className="space-y-0.5">
-          {drills.map((d, i) => (
-            <li key={i} className="flex items-baseline gap-1.5">
-              <span className="text-muted print:text-gray-500">&middot;</span>
-              <span>{d}</span>
-            </li>
-          ))}
+          {drills.map((d, i) => {
+            const name = typeof d === "string" ? d : d.name;
+            const drillDuration = typeof d === "object" ? d.duration : undefined;
+            return (
+              <li key={i} className="flex items-baseline gap-1.5">
+                <span className="text-muted print:text-gray-500">&middot;</span>
+                <span className="flex-1">{name}</span>
+                {drillDuration ? (
+                  <span className="font-mono tabular-nums text-muted print:text-gray-700">
+                    {drillDuration}min
+                  </span>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
       {config?.notes && <p className="italic text-muted print:text-gray-700">{config.notes}</p>}
