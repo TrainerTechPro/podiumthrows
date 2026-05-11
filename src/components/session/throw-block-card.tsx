@@ -2,11 +2,7 @@
 
 import { useRef, useState, useEffect, type Dispatch } from "react";
 import { InlineRestTimer } from "./inline-rest-timer";
-import type {
-  ThrowBlock,
-  ThrowEntry,
-  SessionAction,
-} from "./use-session-reducer";
+import type { ThrowBlock, ThrowEntry, SessionAction } from "./use-session-reducer";
 import { CLASSIFICATION_COLORS } from "@/lib/throws/constants";
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -108,7 +104,9 @@ export function ThrowBlockCard({
   }
 
   const drillLabel = DRILL_LABELS[block.drillType] ?? block.drillType;
-  const categoryColor = CLASSIFICATION_COLORS[block.category] ?? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+  const categoryColor =
+    CLASSIFICATION_COLORS[block.category] ??
+    "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
 
   return (
     <div className="card animate-fade-in">
@@ -124,7 +122,7 @@ export function ThrowBlockCard({
         </div>
         {/* Best mark badge */}
         {bestMark !== null && bestMark > 0 && (
-          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 tabular-nums animate-scale-spring">
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 tabular-nums animate-fade-slide-in">
             Best: {bestMark}m
           </span>
         )}
@@ -132,7 +130,8 @@ export function ThrowBlockCard({
 
       {/* Drill + target info */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        {drillLabel} &middot; {block.sets * block.repsPerSet} throws &middot; {block.restSeconds}s rest
+        {drillLabel} &middot; {block.sets * block.repsPerSet} throws &middot; {block.restSeconds}s
+        rest
       </p>
 
       {block.notes && (
@@ -173,10 +172,7 @@ export function ThrowBlockCard({
               key={i}
               className="text-sm font-semibold tabular-nums px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
             >
-              {t.distance}m
-              {!t.synced && (
-                <span className="ml-1 text-xs text-gray-400">...</span>
-              )}
+              {t.distance}m{!t.synced && <span className="ml-1 text-xs text-gray-400">...</span>}
             </span>
           ))}
           {/* Empty slots */}
@@ -194,11 +190,7 @@ export function ThrowBlockCard({
 
       {/* Rest timer (shown after completing a set's reps) */}
       {restActive && restSeconds > 0 && (
-        <InlineRestTimer
-          seconds={restSeconds}
-          onComplete={handleRestComplete}
-          autoStart
-        />
+        <InlineRestTimer seconds={restSeconds} onComplete={handleRestComplete} autoStart />
       )}
 
       {/* Distance input + Log (hidden during rest and when block complete) */}

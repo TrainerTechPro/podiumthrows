@@ -957,7 +957,7 @@ function ThrowingInput({
               cursor: isPending || !distanceInput ? "not-allowed" : "pointer",
               transition: shouldReduceMotion
                 ? "opacity 0.15s"
-                : "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s",
+                : "transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s",
             }}
             onPointerDown={(e) => {
               if (!shouldReduceMotion) {
@@ -1200,7 +1200,7 @@ function StrengthInput({
               background: "linear-gradient(135deg, #818cf8, #6366f1)",
               opacity: isPending ? 0.5 : 1,
               cursor: isPending ? "not-allowed" : "pointer",
-              transition: "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s",
+              transition: "transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s",
             }}
             onPointerDown={(e) => {
               (e.currentTarget as HTMLElement).style.transform = "scale(0.93)";
@@ -1334,7 +1334,7 @@ function CompletionSummary({
           backgroundColor: "rgba(74,222,128,0.15)",
           color: "#4ade80",
           cursor: "pointer",
-          transition: "transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s",
+          transition: "transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.15s",
         }}
         onPointerDown={(e) => {
           (e.currentTarget as HTMLElement).style.transform = "scale(0.95)";

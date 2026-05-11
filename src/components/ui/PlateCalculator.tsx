@@ -556,7 +556,7 @@ function PlateRect({ x, y, width, height, color, reduceMotion }: PlateRectProps)
       style={{
         transition: reduceMotion
           ? "none"
-          : "x 280ms cubic-bezier(0.34, 1.3, 0.64, 1), y 280ms cubic-bezier(0.34, 1.3, 0.64, 1), height 280ms cubic-bezier(0.34, 1.3, 0.64, 1)",
+          : "x 280ms cubic-bezier(0.22, 1, 0.36, 1), y 280ms cubic-bezier(0.22, 1, 0.36, 1), height 280ms cubic-bezier(0.22, 1, 0.36, 1)",
         willChange: "x, y, height",
       }}
     />

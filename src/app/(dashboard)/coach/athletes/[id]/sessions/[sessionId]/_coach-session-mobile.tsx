@@ -609,7 +609,7 @@ function FAB({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Voice note"
-      className="fixed bottom-5 right-4 z-30 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--foreground)] text-[var(--background)] shadow-[0_8px_24px_-6px_rgba(15,15,20,0.4),0_4px_12px_-2px_rgba(15,15,20,0.2)] transition-transform duration-150 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.93] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+      className="fixed bottom-5 right-4 z-30 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--foreground)] text-[var(--background)] shadow-[0_8px_24px_-6px_rgba(15,15,20,0.4),0_4px_12px_-2px_rgba(15,15,20,0.2)] transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.93] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
       style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <Mic className="h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden="true" />
