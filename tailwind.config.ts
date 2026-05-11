@@ -136,19 +136,19 @@ const config: Config = {
           "100%": { opacity: "0", transform: "translateY(40px)" },
         },
         // Spring animations (from TrainingTracker)
+        // Ambient entry — smooth-out, no overshoot. See audit Prompt 3.
         "spring-in": {
           "0%": { transform: "translateX(40px) scale(0.98)", opacity: "0" },
-          "50%": { transform: "translateX(-4px) scale(1.01)", opacity: "0.8" },
-          "75%": { transform: "translateX(2px) scale(1)", opacity: "1" },
           "100%": { transform: "translateX(0) scale(1)", opacity: "1" },
         },
         "spring-up": {
           "0%": { transform: "translateY(20px) scale(0.98)", opacity: "0" },
-          "50%": { transform: "translateY(-3px) scale(1.01)", opacity: "0.8" },
-          "75%": { transform: "translateY(1px) scale(1)", opacity: "1" },
           "100%": { transform: "translateY(0) scale(1)", opacity: "1" },
         },
-        "scale-spring": {
+        // Reserved for milestone moments only (PR celebration, streak milestones).
+        // If you're tempted to use this for a regular entry animation, use
+        // `animate-spring-up` (now smooth) instead.
+        "milestone-pop": {
           "0%": { transform: "scale(0.85)", opacity: "0" },
           "50%": { transform: "scale(1.05)", opacity: "0.9" },
           "75%": { transform: "scale(0.98)", opacity: "1" },
@@ -156,12 +156,10 @@ const config: Config = {
         },
         "count-up-spring": {
           "0%": { transform: "translateY(12px) scale(0.9)", opacity: "0" },
-          "60%": { transform: "translateY(-2px) scale(1.02)", opacity: "1" },
           "100%": { transform: "translateY(0) scale(1)", opacity: "1" },
         },
         "bar-grow": {
           "0%": { transform: "scaleY(0)", transformOrigin: "bottom" },
-          "60%": { transform: "scaleY(1.03)", transformOrigin: "bottom" },
           "100%": { transform: "scaleY(1)", transformOrigin: "bottom" },
         },
         "shimmer-fast": {
@@ -212,12 +210,12 @@ const config: Config = {
         "slide-in-down": "slideInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
         "slide-out-up": "slideOutUp 0.25s ease-in",
         "slide-out-down": "slideOutDown 0.25s ease-in",
-        // Spring animations
-        "spring-in": "spring-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "spring-up": "spring-up 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "scale-spring": "scale-spring 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "count-up-spring": "count-up-spring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both",
-        "bar-grow": "bar-grow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        // Entry animations — smooth-out only. Bounce reserved for milestones.
+        "spring-in": "spring-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "spring-up": "spring-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "milestone-pop": "milestone-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "count-up-spring": "count-up-spring 0.6s cubic-bezier(0.22, 1, 0.36, 1) both",
+        "bar-grow": "bar-grow 0.5s cubic-bezier(0.22, 1, 0.36, 1) both",
         "shimmer-fast": "shimmer-fast 1.5s ease-in-out infinite",
         "chip-in": "chip-in 0.3s ease-out both",
         "progress-fill": "progress-fill 1s ease-out both",
@@ -229,7 +227,9 @@ const config: Config = {
         "glow-pulse": "glow-pulse 0.4s ease-out forwards",
       },
       transitionTimingFunction: {
-        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        // `spring` token removed — see audit Prompt 3. Use `smooth-out` for
+        // entry/exit. The bounce curve survives only inside `milestone-pop`
+        // keyframe for PR celebration + streak milestone surfaces.
         "smooth-out": "cubic-bezier(0.22, 1, 0.36, 1)",
       },
     },

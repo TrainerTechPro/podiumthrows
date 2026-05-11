@@ -294,7 +294,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
       <div className="px-5 pb-5 pt-4">
         <Link
           href={`/athlete/sessions/${today.sessionId}`}
-          className="grid h-14 w-full place-items-center rounded-2xl bg-primary-500 text-surface-950 font-heading text-[16px] font-bold tracking-[0.005em] shadow-[0_8px_24px_-8px_rgba(255,200,0,0.45)] transition-transform duration-150 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60"
+          className="grid h-14 w-full place-items-center rounded-2xl bg-primary-500 text-surface-950 font-heading text-[16px] font-bold tracking-[0.005em] shadow-[0_8px_24px_-8px_rgba(255,200,0,0.45)] transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60"
         >
           <span className="inline-flex items-center gap-2">
             <Play

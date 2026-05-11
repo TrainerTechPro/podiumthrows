@@ -13,9 +13,23 @@ import type { ReadinessData } from "@/lib/data/dashboard";
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 function scoreColor(score: number) {
-  if (score >= 8) return { ring: "#10b981", text: "text-emerald-600 dark:text-emerald-400", bg: "from-emerald-500/8 to-emerald-500/3 dark:from-emerald-500/12 dark:to-emerald-500/4" };
-  if (score >= 5) return { ring: "#f59e0b", text: "text-amber-600 dark:text-amber-400", bg: "from-amber-500/8 to-amber-500/3 dark:from-amber-500/12 dark:to-amber-500/4" };
-  return { ring: "#ef4444", text: "text-red-600 dark:text-red-400", bg: "from-red-500/8 to-red-500/3 dark:from-red-500/12 dark:to-red-500/4" };
+  if (score >= 8)
+    return {
+      ring: "#10b981",
+      text: "text-emerald-600 dark:text-emerald-400",
+      bg: "from-emerald-500/8 to-emerald-500/3 dark:from-emerald-500/12 dark:to-emerald-500/4",
+    };
+  if (score >= 5)
+    return {
+      ring: "#f59e0b",
+      text: "text-amber-600 dark:text-amber-400",
+      bg: "from-amber-500/8 to-amber-500/3 dark:from-amber-500/12 dark:to-amber-500/4",
+    };
+  return {
+    ring: "#ef4444",
+    text: "text-red-600 dark:text-red-400",
+    bg: "from-red-500/8 to-red-500/3 dark:from-red-500/12 dark:to-red-500/4",
+  };
 }
 
 function scoreLabel(score: number) {
@@ -37,13 +51,7 @@ const FACTORS = [
 /*  ANIMATED RING                                                              */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-function ReadinessRing({
-  score,
-  reducedMotion,
-}: {
-  score: number;
-  reducedMotion: boolean;
-}) {
+function ReadinessRing({ score, reducedMotion }: { score: number; reducedMotion: boolean }) {
   const size = 120;
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
@@ -82,15 +90,11 @@ function ReadinessRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           initial={
-            reducedMotion
-              ? { strokeDashoffset: dashOffset }
-              : { strokeDashoffset: circumference }
+            reducedMotion ? { strokeDashoffset: dashOffset } : { strokeDashoffset: circumference }
           }
           animate={{ strokeDashoffset: dashOffset }}
           transition={
-            reducedMotion
-              ? { duration: 0 }
-              : { type: "spring", damping: 20, stiffness: 100 }
+            reducedMotion ? { duration: 0 } : { type: "spring", damping: 20, stiffness: 100 }
           }
         />
       </svg>
@@ -101,10 +105,7 @@ function ReadinessRing({
           value={score}
           decimals={1}
           duration={reducedMotion ? 0 : 1200}
-          className={cn(
-            "text-3xl font-bold tabular-nums font-heading",
-            scoreColor(score).text
-          )}
+          className={cn("text-3xl font-bold tabular-nums font-heading", scoreColor(score).text)}
         />
         <span className="text-[10px] text-muted uppercase tracking-wider font-semibold mt-0.5">
           / 10
@@ -157,30 +158,16 @@ function FactorBar({
   }, [reducedMotion]);
 
   const pct = (value / 10) * 100;
-  const barColor =
-    pct >= 70
-      ? "bg-emerald-500"
-      : pct >= 40
-        ? "bg-amber-500"
-        : "bg-red-500";
+  const barColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500";
 
   return (
     <div ref={ref} className="space-y-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Icon
-            size={13}
-            strokeWidth={1.75}
-            className="text-muted"
-            aria-hidden="true"
-          />
-          <span className="text-xs font-medium text-[var(--foreground)]">
-            {label}
-          </span>
+          <Icon size={13} strokeWidth={1.75} className="text-muted" aria-hidden="true" />
+          <span className="text-xs font-medium text-[var(--foreground)]">{label}</span>
         </div>
-        <span className="text-xs tabular-nums text-muted font-medium">
-          {value}/10
-        </span>
+        <span className="text-xs tabular-nums text-muted font-medium">{value}/10</span>
       </div>
       <div className="h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
         <div
@@ -189,7 +176,7 @@ function FactorBar({
             width: visible ? `${Math.min(pct, 100)}%` : "0%",
             transition: reducedMotion
               ? "none"
-              : `width 600ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms`,
+              : `width 600ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms`,
           }}
         />
       </div>
@@ -210,21 +197,12 @@ function CheckedInView({ data }: { data: ReadinessData & { checkedIn: true; scor
   return (
     <Link
       href="/athlete/wellness"
-      className={cn(
-        "card card-interactive block overflow-hidden",
-        "bg-gradient-to-br",
-        colors.bg
-      )}
+      className={cn("card card-interactive block overflow-hidden", "bg-gradient-to-br", colors.bg)}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Heart
-            size={16}
-            strokeWidth={1.75}
-            className={colors.text}
-            aria-hidden="true"
-          />
+          <Heart size={16} strokeWidth={1.75} className={colors.text} aria-hidden="true" />
           <span className="text-sm font-semibold text-muted uppercase tracking-wider">
             Readiness
           </span>
@@ -242,9 +220,7 @@ function CheckedInView({ data }: { data: ReadinessData & { checkedIn: true; scor
           <p className={cn("text-base font-semibold font-heading", colors.text)}>
             {scoreLabel(score)}
           </p>
-          <p className="text-xs text-muted mt-1">
-            Checked in today
-          </p>
+          <p className="text-xs text-muted mt-1">Checked in today</p>
         </div>
       </div>
 
@@ -295,21 +271,14 @@ function NotCheckedInView() {
 
       <div className="relative flex flex-col items-center text-center px-5 py-8 gap-4">
         <div className="w-14 h-14 rounded-full bg-primary-500/15 dark:bg-primary-500/20 flex items-center justify-center">
-          <Heart
-            size={28}
-            strokeWidth={1.75}
-            className="text-primary-500"
-            aria-hidden="true"
-          />
+          <Heart size={28} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
         </div>
 
         <div>
           <p className="text-base font-semibold font-heading text-[var(--foreground)]">
             How are you feeling?
           </p>
-          <p className="text-sm text-muted mt-1">
-            Check in to unlock today&apos;s readiness score
-          </p>
+          <p className="text-sm text-muted mt-1">Check in to unlock today&apos;s readiness score</p>
         </div>
 
         <Link
@@ -349,11 +318,7 @@ function NotCheckedInView() {
 
 export function ReadinessHeroWidget({ data }: { data: ReadinessData }) {
   if (data.checkedIn && data.score != null) {
-    return (
-      <CheckedInView
-        data={data as ReadinessData & { checkedIn: true; score: number }}
-      />
-    );
+    return <CheckedInView data={data as ReadinessData & { checkedIn: true; score: number }} />;
   }
 
   return <NotCheckedInView />;
