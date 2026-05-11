@@ -25,7 +25,12 @@ function ReadinessRing({ score }: { score: number }) {
   const r = 36;
   const circ = 2 * Math.PI * r;
   const dash = circ * pct;
-  const color = score >= 8 ? "#10b981" : score >= 5 ? "#f59e0b" : "#ef4444";
+  const color =
+    score >= 8
+      ? "var(--color-status-success-fg)"
+      : score >= 5
+        ? "var(--color-status-warning-fg)"
+        : "var(--color-status-danger-fg)";
 
   return (
     <div className="relative w-24 h-24 shrink-0">

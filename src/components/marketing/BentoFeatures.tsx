@@ -77,9 +77,9 @@ const CARDS: CardData[] = [
 
 function ReadinessMockup() {
   const cells = [
-    { label: "Readiness", value: "8.2", valueStyle: { color: "#10b981" } },
+    { label: "Readiness", value: "8.2", valueStyle: { color: "var(--color-status-success-fg)" } },
     { label: "Sleep", value: "7.5h", valueStyle: {} },
-    { label: "Soreness", value: "3/10", valueStyle: { color: "#f59e0b" } },
+    { label: "Soreness", value: "3/10", valueStyle: { color: "var(--color-status-warning-fg)" } },
     { label: "Stress", value: "Low", valueStyle: {} },
   ];
 

@@ -23,22 +23,22 @@ interface SummaryStepProps {
 const CIRCUMFERENCE = 408; // 2 * π * 65 ≈ 408
 
 function scoreColor(v: number): string {
-  if (v >= 8) return "#10b981";
-  if (v >= 5) return "#f59e0b";
-  return "#ef4444";
+  if (v >= 8) return "var(--color-status-success-fg)";
+  if (v >= 5) return "var(--color-status-warning-fg)";
+  return "var(--color-status-danger-fg)";
 }
 
 function scoreLabel(v: number): { text: string; color: string } {
-  if (v >= 8) return { text: "Great", color: "#10b981" };
-  if (v >= 6) return { text: "Good to Go", color: "#10b981" };
-  if (v >= 4) return { text: "Take It Easy", color: "#f59e0b" };
-  return { text: "Rest Day", color: "#ef4444" };
+  if (v >= 8) return { text: "Great", color: "var(--color-status-success-fg)" };
+  if (v >= 6) return { text: "Good to Go", color: "var(--color-status-success-fg)" };
+  if (v >= 4) return { text: "Take It Easy", color: "var(--color-status-warning-fg)" };
+  return { text: "Rest Day", color: "var(--color-status-danger-fg)" };
 }
 
 function valueColor(v: number): string {
-  if (v >= 8) return "#10b981";
-  if (v >= 5) return "#f59e0b";
-  return "#ef4444";
+  if (v >= 8) return "var(--color-status-success-fg)";
+  if (v >= 5) return "var(--color-status-warning-fg)";
+  return "var(--color-status-danger-fg)";
 }
 
 /* ─── Breakdown items ───────────────────────────────────────────────────── */
