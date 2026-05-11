@@ -245,7 +245,7 @@ export function PricingCards({
             key={plan.id}
             className={`relative rounded-2xl p-8 flex flex-col gap-6 ${
               plan.highlight
-                ? "bg-primary-500 text-white shadow-glow-lg ring-2 ring-primary-400/30"
+                ? "bg-primary-500 text-white ring-2 ring-primary-400/40"
                 : "bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800"
             }`}
           >

@@ -67,6 +67,21 @@ const config: Config = {
           600: "#3d7ae6",
           700: "#366dcc",
         },
+        // Status tokens — theme-aware aliases for --color-status-*.
+        // Use `text-status-success-fg`, `bg-status-warning-bg`, etc. for
+        // anything that conveys success/warning/danger/info STATE (not brand,
+        // not decoration). Resolves to deep palette on light, vivid on dark
+        // with documented WCAG ratios. See globals.css §Status.
+        status: {
+          "success-fg": "var(--color-status-success-fg)",
+          "success-bg": "var(--color-status-success-bg)",
+          "warning-fg": "var(--color-status-warning-fg)",
+          "warning-bg": "var(--color-status-warning-bg)",
+          "danger-fg": "var(--color-status-danger-fg)",
+          "danger-bg": "var(--color-status-danger-bg)",
+          "info-fg": "var(--color-status-info-fg)",
+          "info-bg": "var(--color-status-info-bg)",
+        },
       },
       fontFamily: {
         heading: ["var(--font-chakra-petch)", "system-ui", "sans-serif"],
@@ -95,11 +110,15 @@ const config: Config = {
       boxShadow: {
         card: "0 1px 3px 0 rgb(0 0 0 / 0.3), 0 0 1px 0 rgb(255 200 0 / 0.05)",
         "card-hover": "0 4px 20px 0 rgb(0 0 0 / 0.4), 0 0 15px rgb(255 200 0 / 0.1)",
+        // Glow is reserved for milestone moments (PR celebration, streak
+        // milestone reveals). Use `shadow-warm-md` for brand CTAs that need
+        // elevation without the omnidirectional glow. See audit Prompt 9.
         glow: "0 0 20px rgb(255 200 0 / 0.2)",
         "glow-lg": "0 0 40px rgb(255 200 0 / 0.3)",
-        "glow-green": "0 0 20px rgb(0 255 136 / 0.2)",
-        "glow-red": "0 0 20px rgb(255 34 34 / 0.2)",
-        "glow-blue": "0 0 20px rgb(68 136 255 / 0.2)",
+        // Directional shadow with a hint of brand warmth — for elevated
+        // CTAs, sticky bars, and surfaces that need to feel "lifted" without
+        // radiating amber.
+        "warm-md": "0 4px 12px -2px rgb(255 200 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.3)",
       },
       keyframes: {
         // Existing animations

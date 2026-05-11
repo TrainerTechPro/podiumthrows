@@ -12,9 +12,9 @@ import type { StepProps } from "./types";
 
 /** Inverted coloring: low = green (good), high = red (bad) */
 function sorenessColor(v: number): string {
-  if (v <= 3) return "#10b981";
-  if (v <= 6) return "#f59e0b";
-  return "#ef4444";
+  if (v <= 3) return "var(--color-status-success-fg)";
+  if (v <= 6) return "var(--color-status-warning-fg)";
+  return "var(--color-status-danger-fg)";
 }
 
 function sorenessLabel(v: number): string {

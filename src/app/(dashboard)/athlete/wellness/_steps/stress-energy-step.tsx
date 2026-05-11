@@ -10,9 +10,9 @@ import type { StepProps } from "./types";
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
 
 function levelColor(v: number): string {
-  if (v >= 8) return "#10b981";
-  if (v >= 5) return "#f59e0b";
-  return "#ef4444";
+  if (v >= 8) return "var(--color-status-success-fg)";
+  if (v >= 5) return "var(--color-status-warning-fg)";
+  return "var(--color-status-danger-fg)";
 }
 
 function trackGradient(value: number, min: number, max: number): string {
