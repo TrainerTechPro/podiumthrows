@@ -179,7 +179,7 @@ export function SessionDetailView({ initial }: Props) {
           </div>
           <div className="h-1 overflow-hidden rounded-full bg-surface-200 dark:bg-surface-800">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary-500 to-amber-300 shadow-[0_0_10px_rgba(255,200,0,0.35)] transition-[width] duration-500 ease-out"
+              className="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-300 shadow-[0_0_10px_rgba(255,200,0,0.35)] transition-[width] duration-500 ease-out"
               style={{ width: `${progressPct}%` }}
               aria-valuenow={progressPct}
               aria-valuemin={0}
