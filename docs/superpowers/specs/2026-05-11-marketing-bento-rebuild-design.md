@@ -75,7 +75,10 @@ Two-column tile: stylized pose overlay frame + measurements panel.
     - Label (e.g. "Trunk lean") + mono value ("28°") right-aligned
     - 3px progress bar showing value position within target range
     - Italic dim subtitle "target 30–35°" (or "target 38–42° ✓" if within range)
-  - Color: amber for within-target, success-green for ideal, dim for neutral
+  - Color rule:
+    - **success-green** if value is inside target range (subtitle gets a trailing `✓`)
+    - **brand amber** if value is outside target range but close (worth a coach's attention)
+    - **dim/neutral text** for readings without a target comparison
 
 **Register:** complete analysis tool, not a tech demo. Throws-specific angles are what differentiate from generic pose-detection tooling.
 
@@ -157,4 +160,4 @@ None — all decisions captured. Ready for implementation plan.
 - Existing source: `src/components/marketing/BentoFeatures.tsx`
 - Reference for level of detail expected: `src/app/(dashboard)/athlete/dashboard/_athlete-home-client.tsx` (`TodayHeroCard`)
 - Token vocabulary: `src/app/globals.css` `--landing-*` block
-- Mockup HTML for each tile (preserved for reference): `.superpowers/brainstorm/8107-1778521720/content/tile-{a,b,c}-*.html`
+- Mockup HTML for each tile during brainstorm: `.superpowers/brainstorm/8107-1778521720/content/tile-{a,b,c}-*.html` — these are ephemeral session artifacts. **This spec is the source of truth.** Mockups may help when implementing for color/structure cross-check, but if they disagree with the spec, the spec wins.
