@@ -19,4 +19,7 @@ npm run typecheck
 echo "▸ lint"
 npm run lint
 
+echo "▸ hex-literal lint"
+./scripts/lint-hex-literals.sh
+
 echo "✓ pre-push checks passed"
