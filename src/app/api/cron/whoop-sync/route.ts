@@ -15,7 +15,10 @@ export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret) {
-    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "CRON_SECRET not configured" },
+      { status: 500 }
+    );
   }
   if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -40,7 +43,23 @@ export async function GET(req: NextRequest) {
         synced++;
       } catch (err) {
         failed++;
-        logger.error("WHOOP cron sync failed for connection", {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        // Persist the failure so the connection's UI can surface "sync failed
+        // 14m ago" without re-querying Sentry.
+        await prisma.whoopConnection
+          .update({
+            where: { id: connection.id },
+            data: { lastSyncError: message, lastSyncErrorAt: new Date() },
+          })
+          .catch(() => null);
+
+        // Auth-expired errors are user-actionable, not platform bugs — the
+        // user must reauth in Settings. Without this downgrade the cron
+        // escalates a Sentry issue every 15 min for as long as the connection
+        // is broken (PODIUM-THROWS-15: 100 events from one connection in 25h).
+        const isAuthExpired = message.includes("WHOOP authorization has expired");
+        const log = isAuthExpired ? logger.warn : logger.error;
+        log("WHOOP cron sync failed for connection", {
           context: "cron",
           metadata: { connectionId: connection.id },
           error: err,
