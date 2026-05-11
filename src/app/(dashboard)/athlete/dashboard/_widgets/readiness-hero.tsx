@@ -15,20 +15,20 @@ import type { ReadinessData } from "@/lib/data/dashboard";
 function scoreColor(score: number) {
   if (score >= 8)
     return {
-      ring: "#10b981",
-      text: "text-emerald-600 dark:text-emerald-400",
-      bg: "from-emerald-500/8 to-emerald-500/3 dark:from-emerald-500/12 dark:to-emerald-500/4",
+      ring: "var(--color-status-success-fg)",
+      text: "text-status-success-fg",
+      bg: "from-[var(--color-status-success-bg)] to-transparent",
     };
   if (score >= 5)
     return {
-      ring: "#f59e0b",
-      text: "text-amber-600 dark:text-amber-400",
-      bg: "from-amber-500/8 to-amber-500/3 dark:from-amber-500/12 dark:to-amber-500/4",
+      ring: "var(--color-status-warning-fg)",
+      text: "text-status-warning-fg",
+      bg: "from-[var(--color-status-warning-bg)] to-transparent",
     };
   return {
-    ring: "#ef4444",
-    text: "text-red-600 dark:text-red-400",
-    bg: "from-red-500/8 to-red-500/3 dark:from-red-500/12 dark:to-red-500/4",
+    ring: "var(--color-status-danger-fg)",
+    text: "text-status-danger-fg",
+    bg: "from-[var(--color-status-danger-bg)] to-transparent",
   };
 }
 
@@ -158,7 +158,8 @@ function FactorBar({
   }, [reducedMotion]);
 
   const pct = (value / 10) * 100;
-  const barColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500";
+  const barColor =
+    pct >= 70 ? "bg-status-success-fg" : pct >= 40 ? "bg-status-warning-fg" : "bg-status-danger-fg";
 
   return (
     <div ref={ref} className="space-y-1">

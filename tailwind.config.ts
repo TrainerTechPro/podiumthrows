@@ -67,6 +67,21 @@ const config: Config = {
           600: "#3d7ae6",
           700: "#366dcc",
         },
+        // Status tokens — theme-aware aliases for --color-status-*.
+        // Use `text-status-success-fg`, `bg-status-warning-bg`, etc. for
+        // anything that conveys success/warning/danger/info STATE (not brand,
+        // not decoration). Resolves to deep palette on light, vivid on dark
+        // with documented WCAG ratios. See globals.css §Status.
+        status: {
+          "success-fg": "var(--color-status-success-fg)",
+          "success-bg": "var(--color-status-success-bg)",
+          "warning-fg": "var(--color-status-warning-fg)",
+          "warning-bg": "var(--color-status-warning-bg)",
+          "danger-fg": "var(--color-status-danger-fg)",
+          "danger-bg": "var(--color-status-danger-bg)",
+          "info-fg": "var(--color-status-info-fg)",
+          "info-bg": "var(--color-status-info-bg)",
+        },
       },
       fontFamily: {
         heading: ["var(--font-chakra-petch)", "system-ui", "sans-serif"],
