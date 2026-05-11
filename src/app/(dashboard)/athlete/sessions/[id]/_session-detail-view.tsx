@@ -85,11 +85,11 @@ export function SessionDetailView({ initial }: Props) {
       {/* Hero — the shell's top bar already provides nav chrome, so the session
           identity (date + event + headline) lives directly inside the hero. */}
       <section className="px-6 pb-4 pt-7">
-        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">
+        <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
           {dateLabel}
           {dto.weekLabel ? ` · ${dto.weekLabel}` : ""}
         </div>
-        <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary-500/20 bg-primary-500/10 px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-primary-500">
+        <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary-500/20 bg-primary-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-500">
           <Target className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
           {dto.eventLabel}
         </span>
@@ -146,7 +146,7 @@ export function SessionDetailView({ initial }: Props) {
         )}
         {allDone ? (
           <div className="mx-4 mt-4 rounded-2xl border border-primary-500/30 bg-primary-500/5 px-5 py-6 text-center">
-            <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-primary-500">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-500">
               Session complete
             </div>
             <h2 className="font-heading text-lg font-semibold text-[var(--foreground)]">
@@ -170,7 +170,7 @@ export function SessionDetailView({ initial }: Props) {
       >
         <div className="pointer-events-auto">
           <div className="mb-2.5 flex items-center justify-between px-0.5">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Session Progress
             </span>
             <span className="font-mono text-[11px] font-medium tabular-nums text-[var(--foreground)]">
@@ -276,7 +276,9 @@ function ActiveBlockCard({
   if (block.invalidAscending) {
     return (
       <div className="mx-4 rounded-2xl border border-danger-500/40 bg-danger-500/5 p-5 text-sm text-danger-500">
-        <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.18em]">Block invalid</div>
+        <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em]">
+          Block invalid
+        </div>
         Implements in this block ascend in weight. The Bondarchuk sequencing rule requires heavy →
         light. Ask your coach to repair the block.
       </div>
@@ -370,7 +372,7 @@ function ActiveBlockCard({
 
       <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 pb-3.5 pt-4.5">
         <div>
-          <div className="mb-1 flex items-center gap-1.5 font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-primary-500">
+          <div className="mb-1 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary-500">
             <PulseDot />
             Block {block.order + 1} · Active
           </div>
@@ -395,7 +397,7 @@ function ActiveBlockCard({
               <Check className="h-5 w-5" strokeWidth={2.25} aria-hidden="true" />
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-success-500">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success-500">
                 Logged
               </div>
               <div className="font-heading text-base font-semibold text-[var(--foreground)]">
@@ -413,7 +415,7 @@ function ActiveBlockCard({
         </div>
       ) : (
         <div className="px-5 pb-5 pt-4.5">
-          <div className="mb-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">
+          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
             {counterLabel}
           </div>
 
