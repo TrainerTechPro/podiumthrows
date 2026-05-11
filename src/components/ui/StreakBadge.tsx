@@ -23,7 +23,7 @@ export function StreakBadge({ days, isActive = true, className }: StreakBadgePro
       className={cn(
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tabular-nums transition-shadow duration-300",
         isActive
-          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 shadow-glow animate-milestone-pop"
+          ? "bg-primary-500/15 text-primary-600 dark:text-primary-400 shadow-glow animate-milestone-pop"
           : "bg-surface-100 dark:bg-surface-800 text-surface-500",
         className
       )}
@@ -31,7 +31,7 @@ export function StreakBadge({ days, isActive = true, className }: StreakBadgePro
       <Flame
         size={14}
         strokeWidth={1.75}
-        className={cn("shrink-0", isActive && "animate-streak-flame text-amber-500")}
+        className={cn("shrink-0", isActive && "animate-streak-flame text-primary-500")}
         aria-hidden="true"
       />
       {days}-day streak

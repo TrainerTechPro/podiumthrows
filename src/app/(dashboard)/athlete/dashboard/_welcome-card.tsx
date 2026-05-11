@@ -95,7 +95,7 @@ export function WelcomeCard({ firstName, guide }: WelcomeCardProps) {
   return (
     <div className="card overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary-500 to-amber-500 px-6 py-5 sm:px-8">
+      <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-5 sm:px-8">
         <h2 className="text-lg sm:text-xl font-bold font-heading text-white">
           Great start, {firstName}! Here&apos;s what to do next.
         </h2>

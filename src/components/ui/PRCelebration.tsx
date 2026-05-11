@@ -127,30 +127,23 @@ export function PRCelebration({
             }}
           >
             <span style={{ fontSize: "3rem", lineHeight: 1 }}>{icon}</span>
-            <p className="text-xl font-bold text-[var(--foreground)] mt-1">
-              {title}
-            </p>
+            <p className="text-xl font-bold text-[var(--foreground)] mt-1">{title}</p>
             {subtitle ? (
-              <p className="text-3xl font-bold text-amber-500 tabular-nums">
-                {subtitle}
-              </p>
+              <p className="text-3xl font-bold text-primary-500 tabular-nums">{subtitle}</p>
             ) : (
               <>
                 {event && (
-                  <p className="text-sm font-medium text-amber-500">
-                    {formatEventType(event)}
-                  </p>
+                  <p className="text-sm font-medium text-primary-500">{formatEventType(event)}</p>
                 )}
                 {distance !== undefined && (
-                  <p className="text-3xl font-bold text-amber-500 tabular-nums">
-                    {distance.toFixed(2)}{unit}
+                  <p className="text-3xl font-bold text-primary-500 tabular-nums">
+                    {distance.toFixed(2)}
+                    {unit}
                   </p>
                 )}
               </>
             )}
-            <p className="text-xs text-muted mt-1">
-              Tap anywhere to continue
-            </p>
+            <p className="text-xs text-muted mt-1">Tap anywhere to continue</p>
           </div>
         </div>
       </div>

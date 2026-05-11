@@ -14,9 +14,7 @@ export function ScrollProgressBar() {
   const reducedMotion = useRef(false);
 
   useEffect(() => {
-    reducedMotion.current = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function update() {
       const docHeight = document.documentElement.scrollHeight;
@@ -69,8 +67,8 @@ export function ScrollProgressBar() {
         style={{
           height: "100%",
           width: `${progress * 100}%`,
-          background: "linear-gradient(90deg, #f59e0b, #fbbf24)",
-          boxShadow: "0 0 8px rgba(245, 158, 11, 0.4)",
+          background: "linear-gradient(90deg, #FFC800, #ffe866)",
+          boxShadow: "0 0 8px rgba(255, 200, 0, 0.4)",
           borderRadius: "0 2px 2px 0",
           transition: reducedMotion.current ? "none" : "width 100ms ease-out",
         }}
