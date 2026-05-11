@@ -453,8 +453,8 @@ If you need to add hex outside the allowlist, **first** check whether a token wo
 
 ### Loading states
 
-- `DashboardWidget` `loading={true}` → shimmer skeletons. `loading={false}` → fade-in slide-up.
-- Use `shimmer` CSS class for skeleton placeholders.
+- Use the `shimmer` CSS class for skeleton placeholders.
+- Pattern: render the skeleton's structural layout (matching the real content's shape) with `shimmer` rectangles in place of text/image. On data ready, swap to real content. Optionally fade in via `animate-fade-slide-in` if the transition feels abrupt.
 
 ### Scroll progress
 
