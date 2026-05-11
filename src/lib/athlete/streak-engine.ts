@@ -17,6 +17,12 @@
  * Pure helpers (no DB I/O) live at the top so the day-math is unit-testable.
  */
 
+// Pulls @/lib/team-activity which pulls @/lib/push which pulls web-push
+// (Node-only). PODIUM-THROWS-G crashed the build when a client component
+// imported this file. The fix-of-record extracted streak-milestones into
+// a client-safe constants file — this marker enforces the boundary so
+// future engine imports from a client crash here, not in webpack.
+import "server-only";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { getAthleteTimezone, getLocalDate, getLocalDayOfWeek } from "@/lib/dates";
