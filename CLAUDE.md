@@ -395,6 +395,23 @@ If you need to add hex outside the allowlist, **first** check whether a token wo
 - Numerics: `tabular-nums`.
 - **Never `font-mono` for prose, labels, or marketing.**
 
+#### Size tokens (use these, not `text-[Npx]`)
+
+| Token          | Resolves to   | Use for                                               |
+| -------------- | ------------- | ----------------------------------------------------- |
+| `text-display` | 32px          | hero headings                                         |
+| `text-title`   | 24px          | h2                                                    |
+| `text-section` | 20px          | section headings                                      |
+| `text-body-lg` | 17px          | lead body                                             |
+| `text-body`    | 15px          | default body                                          |
+| `text-caption` | 13px          | captions, secondary text                              |
+| `text-micro`   | fluid 11–12px | dense labels, overlines                               |
+| `text-nano`    | fluid 10–11px | status badges, pill labels only — **never body text** |
+
+**Floor is 10px.** Anything below is a WCAG 1.4.4 (Resize Text) violation.
+
+**Never use bracketed `text-[Npx]`** in app surfaces. Enforced by `npm run lint:text` (ratcheting baseline in `.text-size-baseline.txt`). Pre-push hook + CI run this check. Cleanup PRs ratchet the baseline down.
+
 ### Sheets
 
 - `<Sheet>` from `src/components/ui/Sheet.tsx` for any non-anchored edge-slide overlay.
