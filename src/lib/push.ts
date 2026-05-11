@@ -53,7 +53,11 @@ function ensureVapidConfigured(): boolean {
 
   if (!publicKey || !privateKey || !subject) {
     if (!missingWarningLogged) {
-      logger.error(
+      // Warn (not error) — the per-file comment promises "logs a warning once"
+      // and the no-op return is by design for envs without VAPID. logger.error
+      // captures to Sentry (`src/lib/logger.ts:150`); a recurring config gap
+      // shouldn't escalate (PODIUM-THROWS-16: prod cron paged on every tick).
+      logger.warn(
         "VAPID keys not configured — Web Push is disabled. Set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT.",
         { context: "push" }
       );
