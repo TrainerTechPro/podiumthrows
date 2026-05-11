@@ -16,6 +16,12 @@
  * keys configured.
  */
 
+// web-push transitively imports node 'net' — bundling this into a client
+// chunk fails the build with "Module not found: Can't resolve 'net'" (see
+// PODIUM-THROWS-G, fixed by extracting streak-milestones.ts in #67). The
+// server-only marker makes that failure mode loud at the import site
+// instead of waiting for the bundler to discover it three modules deep.
+import "server-only";
 import webpush from "web-push";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";

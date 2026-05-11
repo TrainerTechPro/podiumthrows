@@ -23,6 +23,10 @@
  * 7+ day streak.
  */
 
+// Re-exports sendPushToUser indirectly via emit calls, which transitively
+// pulls web-push (Node-only). Mark server-only so any future client
+// importer fails at the boundary, not three modules deep.
+import "server-only";
 import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
@@ -288,9 +292,6 @@ export async function emitGoalCompleted(
  * publishing, not an athlete whose data is being shared. athleteId is
  * null on COACH_POST rows.
  */
-export async function emitCoachPost(
-  coachId: string,
-  input: { body: string }
-): Promise<void> {
+export async function emitCoachPost(coachId: string, input: { body: string }): Promise<void> {
   await insertRow(coachId, null, "COACH_POST", { body: input.body });
 }
