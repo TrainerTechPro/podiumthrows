@@ -368,8 +368,23 @@ Any floating UI rendered above page content (modals, popovers, dropdowns, sheets
 - CSS custom props: `var(--card-bg)`, `var(--card-border)`, `var(--foreground)`, `var(--muted)`.
 - Brand: `text-primary-500`, `bg-primary-500`, or `text-brand`.
 - Surfaces: `bg-surface-100` → `bg-surface-950`.
-- Status: success (`#00FF88`), warning (`#FF8800`), danger (`#FF2222`), info (`#4488FF`).
-- **Never hardcode hex** — use tokens.
+- Status: `text-status-success-fg`, `bg-status-warning-bg`, etc. — theme-aware semantic tokens (added 2026-05-11, audit Prompt 5).
+- **Never hardcode hex in app surfaces.** Enforced by `npm run lint:hex` (ratcheting baseline in `.hex-baseline.txt`). Pre-push hook + CI run this check.
+
+#### Hex literal allowlist (when hex is legitimately required)
+
+| Location                                                          | Reason                                                                                        |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `tailwind.config.ts`                                              | Token definitions                                                                             |
+| `src/app/globals.css`                                             | Token definitions                                                                             |
+| `src/lib/design-tokens.ts`                                        | Canvas / SVG / inline-style constants — these contexts can't read CSS variables at paint time |
+| `src/lib/email*.ts`, `src/app/api/leads/*`, `src/app/api/recap/*` | Email HTML inline styles — email clients don't support CSS variables                          |
+| `src/app/api/og/*`                                                | OG image server-rendered HTML                                                                 |
+| `src/components/marketing/**`                                     | Always-dark editorial register — own design decision                                          |
+| `src/components/video-analysis/**`                                | Per-event domain colors (shot put / discus / hammer / javelin)                                |
+| `src/components/ui/PlateCalculator.tsx`                           | IPF plate colors (red 25kg, blue 20kg, etc. — real-world domain)                              |
+
+If you need to add hex outside the allowlist, **first** check whether a token would do. If no token fits, propose a new token before introducing hex.
 
 ### Typography
 
