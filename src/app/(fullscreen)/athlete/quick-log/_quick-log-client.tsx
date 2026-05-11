@@ -1207,7 +1207,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
               "relative rounded-full flex flex-col items-center justify-center",
               "w-[clamp(200px,55vw,260px)] h-[clamp(200px,55vw,260px)]",
               "bg-gradient-to-br from-primary-400 to-primary-600",
-              "shadow-glow-lg active:shadow-glow focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60",
+              "shadow-warm-md focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60",
               "cursor-pointer select-none transition-[transform,box-shadow] duration-200 ease-out",
               !prefersReducedMotion && "active:scale-95"
             )}

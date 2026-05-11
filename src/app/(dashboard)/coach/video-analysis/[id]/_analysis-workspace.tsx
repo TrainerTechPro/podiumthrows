@@ -613,7 +613,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
               onChange={(e) => handleSeek(parseFloat(e.target.value))}
               className="w-full h-2 rounded-full appearance-none bg-surface-200 dark:bg-surface-700 cursor-pointer
                 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-500 [&::-webkit-slider-thumb]:shadow-glow
+                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary-500
                 [&::-webkit-slider-thumb]:cursor-pointer"
             />
 
