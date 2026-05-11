@@ -220,7 +220,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
       <div className="px-5 pt-5">
         <div className="flex items-center justify-between">
           <span
-            className={`inline-flex items-center gap-1.5 font-mono text-[10px] font-medium uppercase tracking-[0.18em] ${
+            className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${
               status === "LOGGED" ? "text-success-500" : "text-primary-500"
             }`}
           >
@@ -240,7 +240,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
                 ? "IN PROGRESS"
                 : "PRESCRIBED"}
           </span>
-          <span className="font-mono text-[10px] font-medium tracking-[0.06em] text-[var(--muted)]">
+          <span className="text-[11px] font-medium tracking-[0.02em] text-[var(--muted)]">
             {today.durationLabel}
           </span>
         </div>
@@ -265,7 +265,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
                 : "border-[var(--card-border)] bg-surface-50 dark:bg-surface-900/60"
             }`}
           >
-            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--muted)]">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
               {b.label}
             </span>
             <span
@@ -283,7 +283,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
             key={`pad-${i}`}
             className="flex flex-col gap-0.5 rounded-xl border border-dashed border-[var(--card-border)] px-2.5 py-2 opacity-40"
           >
-            <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--muted)]">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
               —
             </span>
             <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">—</span>
@@ -319,7 +319,7 @@ function RestDayCard({ firstName }: { firstName: string }) {
   return (
     <section className="mx-4 mt-2 overflow-hidden rounded-3xl border border-[var(--card-border)] bg-[var(--card-bg)] motion-safe:animate-fade-slide-in">
       <div className="px-5 py-6">
-        <div className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
           Rest day
         </div>
         <h2 className="mt-2 font-heading text-[22px] font-semibold leading-[1.2] tracking-[-0.005em] text-[var(--foreground)]">
@@ -353,13 +353,13 @@ function SectionHeader({
   const showTrail = trailingHref && trailingLabel;
   return (
     <div className="mt-7 flex items-center justify-between px-5 pb-3">
-      <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+      <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
         {label}
       </h3>
       {showTrail && (
         <Link
           href={trailingHref}
-          className="inline-flex items-center gap-0.5 font-mono text-[11px] tracking-[0.04em] text-[var(--muted)] hover:text-[var(--foreground)]"
+          className="inline-flex items-center gap-0.5 text-[11px] font-medium tracking-[0.02em] text-[var(--muted)] hover:text-[var(--foreground)]"
         >
           {trailingLabel}
           <ChevronRight className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
