@@ -89,14 +89,25 @@ const config: Config = {
         mono: ["var(--font-ibm-plex-mono)", "ui-monospace", "monospace"],
       },
       fontSize: {
-        // Strict type scale (per design system)
+        // Strict type scale (per design system).
+        // Floor: 10px (0.625rem). Never go below — see audit Prompt 12.
         display: ["2rem", { lineHeight: "1.2", fontWeight: "800", letterSpacing: "-0.02em" }],
         title: ["1.5rem", { lineHeight: "1.25", fontWeight: "700", letterSpacing: "-0.015em" }],
         section: ["1.25rem", { lineHeight: "1.3", fontWeight: "600", letterSpacing: "-0.01em" }],
         "body-lg": ["1.0625rem", { lineHeight: "1.5", fontWeight: "400" }],
         body: ["0.9375rem", { lineHeight: "1.5", fontWeight: "400" }],
         caption: ["0.8125rem", { lineHeight: "1.4", fontWeight: "400" }],
-        micro: ["0.6875rem", { lineHeight: "1.3", fontWeight: "500", letterSpacing: "0.05em" }],
+        // Fluid micro-sizes — clamp to keep mobile readable.
+        // Use micro for dense labels (overlines, chip labels, secondary captions).
+        // Use nano for status badges and pill labels only — never body text.
+        micro: [
+          "clamp(0.6875rem, 1.6vw, 0.75rem)",
+          { lineHeight: "1.35", fontWeight: "500", letterSpacing: "0.04em" },
+        ],
+        nano: [
+          "clamp(0.625rem, 1.5vw, 0.6875rem)",
+          { lineHeight: "1.3", fontWeight: "600", letterSpacing: "0.06em" },
+        ],
         // Legacy display scale (keep for backward compatibility)
         "display-xl": ["3.5rem", { lineHeight: "1.1", fontWeight: "700" }],
         "display-lg": ["2.5rem", { lineHeight: "1.15", fontWeight: "700" }],

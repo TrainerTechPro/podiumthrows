@@ -36,5 +36,8 @@ jobs:
       - name: Hex-literal lint (ratcheting baseline)
         run: ./scripts/lint-hex-literals.sh
 
+      - name: Text-size lint (ratcheting baseline)
+        run: ./scripts/lint-text-sizes.sh
+
       - name: Test
         run: npm run test

@@ -22,4 +22,7 @@ npm run lint
 echo "▸ hex-literal lint"
 ./scripts/lint-hex-literals.sh
 
+echo "▸ text-size lint"
+./scripts/lint-text-sizes.sh
+
 echo "✓ pre-push checks passed"
