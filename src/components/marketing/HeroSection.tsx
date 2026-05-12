@@ -48,22 +48,18 @@ export default function HeroSection() {
       <div className="relative z-10 w-full max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 pt-36 sm:pt-40 lg:pt-44 pb-20 lg:pb-28">
         {/* ── Top: headline + CTAs ───────────────────────────────────── */}
         <div className="max-w-[860px] mx-auto text-center mb-14 sm:mb-20">
-          {/* Eyebrow — flanked rule */}
+          {/* Eyebrow */}
           <FadeUp delay={0.15}>
-            <div className="inline-flex items-center gap-3 mb-7 sm:mb-9">
-              <span aria-hidden="true" style={{ width: 24, height: 1, background: "#FFC800" }} />
-              <span
-                className="font-heading"
-                style={{
-                  fontSize: 11,
-                  letterSpacing: "0.28em",
-                  textTransform: "uppercase" as const,
-                  color: "#FFC800",
-                }}
-              >
-                For Throws Coaches
-              </span>
-              <span aria-hidden="true" style={{ width: 24, height: 1, background: "#FFC800" }} />
+            <div
+              className="font-heading mb-7 sm:mb-9"
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.32em",
+                textTransform: "uppercase" as const,
+                color: "var(--landing-text-muted)",
+              }}
+            >
+              For Throws Coaches
             </div>
           </FadeUp>
 
@@ -79,16 +75,7 @@ export default function HeroSection() {
           >
             <TextReveal delay={0.25}>The throws platform</TextReveal>
             <TextReveal delay={0.4}>
-              coaches{" "}
-              <span
-                style={{
-                  color: "#FFC800",
-                  textShadow: "0 0 60px rgba(255, 200, 0, 0.22)",
-                }}
-              >
-                actually
-              </span>{" "}
-              want.
+              coaches <span style={{ color: "#FFC800" }}>actually</span> want.
             </TextReveal>
           </h1>
 
@@ -120,7 +107,6 @@ export default function HeroSection() {
                   background: "#FFC800",
                   color: "#0a0a0a",
                   borderRadius: 8,
-                  boxShadow: "0 0 40px rgba(255, 200, 0, 0.22), 0 0 80px rgba(255, 200, 0, 0.08)",
                   letterSpacing: "0.02em",
                 }}
               >
@@ -148,14 +134,13 @@ export default function HeroSection() {
           {/* Trust meta */}
           <FadeUp delay={0.95}>
             <p
-              className="mt-5 font-mono tracking-[0.08em] sm:tracking-[0.14em]"
+              className="mt-5"
               style={{
-                fontSize: 11,
-                textTransform: "uppercase" as const,
-                color: "var(--landing-text-dim)",
+                fontSize: 13,
+                color: "var(--landing-text-muted)",
               }}
             >
-              No card · 3 athletes free · Cancel anytime
+              No credit card · 3 athletes free · Cancel anytime
             </p>
           </FadeUp>
         </div>
@@ -163,23 +148,6 @@ export default function HeroSection() {
         {/* ── Bottom: dashboard mockup ────────────────────────────────── */}
         <FadeUp delay={1.1}>
           <div className="relative max-w-[1180px] mx-auto w-full">
-            {/* Soft amber floor light under the mockup — gives it a stage,
-                not the Stripe-2020 generic orb. */}
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                left: "10%",
-                right: "10%",
-                bottom: "-12%",
-                height: "40%",
-                background:
-                  "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(255, 200, 0, 0.10), transparent 70%)",
-                filter: "blur(50px)",
-                pointerEvents: "none",
-                zIndex: 0,
-              }}
-            />
             {/* Mockup with a slight 3D rest pose */}
             {shouldReduce ? (
               <div className="relative">
@@ -204,12 +172,10 @@ export default function HeroSection() {
 
             {/* Caption — events covered */}
             <div
-              className="mt-6 text-center font-mono"
+              className="mt-6 text-center"
               style={{
-                fontSize: 11,
-                letterSpacing: "0.22em",
-                textTransform: "uppercase" as const,
-                color: "var(--landing-text-dim)",
+                fontSize: 13,
+                color: "var(--landing-text-muted)",
               }}
               aria-hidden="true"
             >

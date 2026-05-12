@@ -111,13 +111,11 @@ function FeatureCopy({ feature }: { feature: Feature }) {
         {feature.description}
       </p>
 
-      {/* Spec line — engineering register */}
+      {/* Spec line */}
       <div
-        className="font-mono"
         style={{
-          fontSize: 11,
-          lineHeight: 1.55,
-          letterSpacing: "0.02em",
+          fontSize: 13,
+          lineHeight: 1.6,
           color: "var(--landing-text-muted)",
           paddingTop: 16,
           borderTop: "1px solid var(--landing-border)",
@@ -127,7 +125,7 @@ function FeatureCopy({ feature }: { feature: Feature }) {
         {feature.spec}
       </div>
 
-      {/* Optional tag */}
+      {/* Optional tag — quieter, outline-only */}
       {feature.tag && (
         <span
           className="font-heading inline-flex self-start mt-5"
@@ -135,7 +133,7 @@ function FeatureCopy({ feature }: { feature: Feature }) {
             fontSize: 11,
             color: "#FFC800",
             padding: "5px 12px",
-            background: "var(--landing-amber-glow-strong)",
+            border: "1px solid rgba(255, 200, 0, 0.25)",
             borderRadius: 6,
             fontWeight: 600,
           }}
@@ -150,25 +148,7 @@ function FeatureCopy({ feature }: { feature: Feature }) {
 function FeatureMockup({ Mockup }: { Mockup: (typeof MOCKUPS)[number] }) {
   return (
     <div className="relative">
-      {/* Soft amber floor light under each mockup */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          left: "8%",
-          right: "8%",
-          bottom: "-8%",
-          height: "30%",
-          background:
-            "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(255, 200, 0, 0.07), transparent 70%)",
-          filter: "blur(40px)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-      <div style={{ position: "relative", zIndex: 1 }}>
-        <Mockup />
-      </div>
+      <Mockup />
     </div>
   );
 }

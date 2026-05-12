@@ -85,7 +85,7 @@ function FeatureItem({ text }: { text: string }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 8,
+        gap: 10,
         fontSize: 13,
         color: "var(--landing-text-secondary)",
         padding: "6px 0",
@@ -94,14 +94,14 @@ function FeatureItem({ text }: { text: string }) {
         lineHeight: 1.45,
       }}
     >
-      {/* Amber dot */}
+      {/* Neutral dot — amber is reserved for primary CTAs and the one stat */}
       <span
         aria-hidden="true"
         style={{
-          width: 4,
-          height: 4,
+          width: 3,
+          height: 3,
           borderRadius: "50%",
-          background: "#FFC800",
+          background: "var(--landing-text-muted)",
           flexShrink: 0,
         }}
       />
@@ -140,7 +140,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         overflow: "hidden",
         transform: tier.featured ? "translateY(-8px)" : "none",
         boxShadow: tier.featured
-          ? "var(--landing-neo-raised), 0 24px 64px rgba(0,0,0,0.35), 0 0 40px rgba(255, 200, 0,0.2)"
+          ? "var(--landing-neo-raised), 0 24px 64px rgba(0,0,0,0.35)"
           : "var(--landing-neo-raised)",
         transition: "0.4s cubic-bezier(0.16,1,0.3,1)",
         transitionProperty: "transform, box-shadow",
@@ -389,7 +389,7 @@ export default function PricingPreview() {
 
         .pricing-card--featured:hover {
           transform: translateY(-12px);
-          box-shadow: var(--landing-neo-raised-hover), 0 0 48px rgba(255, 200, 0,0.22);
+          box-shadow: var(--landing-neo-raised-hover);
         }
 
         /* CTA hover — brighten, no color change (matches hero / FinalCTA) */

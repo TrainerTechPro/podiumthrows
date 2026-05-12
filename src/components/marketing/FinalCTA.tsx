@@ -3,8 +3,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    FinalCTA
    ────────
-   Centered closing section with ambient amber glow from below, bold headline
-   with glowing amber accent, two action buttons, and mono trust meta row.
+   Centered closing section. Headline with amber accent on the loss, single
+   primary CTA (the page has already pitched Deficit Finder twice), and a
+   plain trust-meta row. No decorative glow.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import Link from "next/link";
@@ -23,60 +24,22 @@ export default function FinalCTA() {
       style={{
         textAlign: "center",
         position: "relative",
-        overflow: "hidden",
       }}
     >
-      {/* Bottom ambient glow */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          bottom: -50,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 900,
-          height: 500,
-          background:
-            "radial-gradient(ellipse at 50% 100%, var(--landing-amber-glow-strong) 0%, transparent 55%)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-
-      {/* Content */}
-      <div style={{ position: "relative", zIndex: 1 }}>
-        {/* Section label — centered, flanked rules */}
+      <div style={{ position: "relative" }}>
+        {/* Section label */}
         <ScrollReveal>
-          <div className="flex items-center justify-center" style={{ gap: 12, marginBottom: 28 }}>
-            <div
-              aria-hidden="true"
-              style={{
-                width: 24,
-                height: 1,
-                background: "#FFC800",
-                flexShrink: 0,
-              }}
-            />
-            <span
-              className="font-heading"
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.3em",
-                textTransform: "uppercase" as const,
-                color: "#FFC800",
-              }}
-            >
-              Ready?
-            </span>
-            <div
-              aria-hidden="true"
-              style={{
-                width: 24,
-                height: 1,
-                background: "#FFC800",
-                flexShrink: 0,
-              }}
-            />
+          <div
+            className="font-heading"
+            style={{
+              fontSize: 11,
+              letterSpacing: "0.32em",
+              textTransform: "uppercase" as const,
+              color: "var(--landing-text-muted)",
+              marginBottom: 28,
+            }}
+          >
+            Ready?
           </div>
         </ScrollReveal>
 
@@ -95,24 +58,13 @@ export default function FinalCTA() {
             }}
           >
             Every session with the wrong sequence is another day leaving{" "}
-            <span
-              className="final-cta-amber"
-              style={{
-                color: "#FFC800",
-                textShadow: "0 0 32px rgba(255, 200, 0,0.45), 0 0 64px rgba(255, 200, 0,0.2)",
-              }}
-            >
-              distance on the table.
-            </span>
+            <span style={{ color: "#FFC800" }}>distance on the table.</span>
           </h2>
         </ScrollReveal>
 
-        {/* Buttons */}
+        {/* Single CTA */}
         <ScrollReveal delay={0.14}>
-          <div
-            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center flex-wrap"
-            style={{ gap: 12 }}
-          >
+          <div className="flex justify-center">
             <Link
               href="/register"
               className="font-heading final-cta-btn-primary"
@@ -126,67 +78,25 @@ export default function FinalCTA() {
                 textDecoration: "none",
                 display: "inline-block",
                 letterSpacing: "0.02em",
-                boxShadow: "0 0 40px rgba(255, 200, 0, 0.22), 0 0 80px rgba(255, 200, 0, 0.08)",
-                transition: "filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
+                transition: "filter 0.2s ease, transform 0.2s ease",
               }}
             >
               Start Free Today
             </Link>
-
-            <Link
-              href="/deficit-finder"
-              className="font-heading final-cta-btn-ghost"
-              style={{
-                background: "transparent",
-                color: "var(--landing-text-secondary)",
-                fontWeight: 600,
-                fontSize: 14,
-                padding: "15px 28px",
-                borderRadius: 8,
-                textDecoration: "none",
-                display: "inline-block",
-                border: "1px solid var(--landing-border)",
-                letterSpacing: "0.02em",
-                transition: "border-color 0.2s ease, color 0.2s ease, transform 0.2s ease",
-              }}
-            >
-              Run the Deficit Finder →
-            </Link>
           </div>
         </ScrollReveal>
 
-        {/* Trust meta — mono engineering register */}
+        {/* Trust meta — plain body, no decorative dots */}
         <ScrollReveal delay={0.2}>
-          <div
-            className="flex justify-center items-center flex-wrap font-mono"
+          <p
             style={{
-              gap: 14,
-              marginTop: 28,
-              fontSize: 11,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase" as const,
-              color: "var(--landing-text-dim)",
+              marginTop: 24,
+              fontSize: 13,
+              color: "var(--landing-text-muted)",
             }}
           >
-            {TRUST_ITEMS.map((item, i) => (
-              <span key={item} className="flex items-center" style={{ gap: 14 }}>
-                {i > 0 && (
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      width: 3,
-                      height: 3,
-                      borderRadius: "50%",
-                      background: "#FFC800",
-                      display: "inline-block",
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-                {item}
-              </span>
-            ))}
-          </div>
+            {TRUST_ITEMS.join(" · ")}
+          </p>
         </ScrollReveal>
       </div>
 
@@ -211,28 +121,14 @@ export default function FinalCTA() {
         .final-cta-btn-primary:hover {
           filter: brightness(1.08);
           transform: translateY(-2px);
-          box-shadow:
-            0 12px 36px rgba(255, 200, 0, 0.35),
-            0 0 80px rgba(255, 200, 0, 0.18);
-        }
-
-        .final-cta-btn-ghost:hover {
-          border-color: rgba(255, 200, 0, 0.4);
-          color: #FFC800;
-          transform: translateY(-2px);
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .final-cta-btn-primary,
-          .final-cta-btn-ghost {
+          .final-cta-btn-primary {
             transition: none !important;
           }
-          .final-cta-btn-primary:hover,
-          .final-cta-btn-ghost:hover {
+          .final-cta-btn-primary:hover {
             transform: none !important;
-          }
-          .final-cta-amber {
-            text-shadow: none !important;
           }
         }
       `}</style>

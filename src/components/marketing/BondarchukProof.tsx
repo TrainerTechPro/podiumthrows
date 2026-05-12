@@ -3,9 +3,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    BondarchukProof
    ───────────────
-   "2–4m" stat section backed by Bondarchuk's research.
-   Left: giant animated stat with lamp glow effect.
-   Right: research quote, citation, and event tags.
+   "2–4m" stat section backed by Bondarchuk's research. Left: the stat.
+   Right: research quote, citation, and event tags. No decorative glow —
+   the research is the proof, the stat doesn't need a halo.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import ScrollReveal from "./ScrollReveal";
@@ -19,39 +19,12 @@ const EVENTS = ["Shot Put", "Discus", "Hammer", "Javelin"] as const;
 
 export default function BondarchukProof() {
   return (
-    <section
-      className="bondarchuk-section"
-      style={{
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* ── Lamp glow effect ──────────────────────────────────────────── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: -20,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 700,
-          height: 350,
-          background:
-            "conic-gradient(from 90deg at 50% -5%, transparent 0deg, var(--landing-amber-glow-strong) 60deg, transparent 120deg)",
-          filter: "blur(80px)",
-          opacity: 0.5,
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-
-      {/* ── Inner container ───────────────────────────────────────────── */}
+    <section className="bondarchuk-section" style={{ position: "relative" }}>
       <div
         style={{
           maxWidth: 1200,
           margin: "0 auto",
           position: "relative",
-          zIndex: 10,
         }}
       >
         <div className="bondarchuk-proof-grid">

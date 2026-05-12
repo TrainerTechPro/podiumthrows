@@ -62,7 +62,7 @@ function Step({ number, title, subtitle, isFirst }: StepProps) {
         />
       )}
 
-      {/* Number circle */}
+      {/* Number circle — quieter outline ring */}
       <div
         aria-hidden="true"
         className="font-heading"
@@ -70,8 +70,8 @@ function Step({ number, title, subtitle, isFirst }: StepProps) {
           width: 32,
           height: 32,
           borderRadius: "50%",
-          background: "var(--landing-amber-glow-strong)",
-          color: "#FFC800",
+          border: "1px solid var(--landing-border)",
+          color: "var(--landing-text-secondary)",
           fontWeight: 700,
           fontSize: 13,
           display: "grid",
@@ -133,26 +133,8 @@ export default function DeficitFinderCTA() {
           boxShadow: "var(--landing-neo-raised)",
         }}
       >
-        {/* Diagonal beam */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            top: -150,
-            right: -50,
-            width: 300,
-            height: 500,
-            background:
-              "linear-gradient(135deg, var(--landing-amber-glow-strong) 0%, transparent 60%)",
-            transform: "rotate(-25deg)",
-            filter: "blur(40px)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
-
         {/* Grid */}
-        <div className="deficit-grid" style={{ position: "relative", zIndex: 1 }}>
+        <div className="deficit-grid" style={{ position: "relative" }}>
           {/* ── Left side ──────────────────────────────────────────────── */}
           <div>
             {/* Section label */}
@@ -214,7 +196,7 @@ export default function DeficitFinderCTA() {
             <div style={{ marginTop: 28 }}>
               <Link
                 href="/deficit-finder"
-                className="font-heading"
+                className="font-heading deficit-cta-btn"
                 style={{
                   display: "inline-block",
                   background: "#FFC800",
@@ -224,18 +206,7 @@ export default function DeficitFinderCTA() {
                   padding: "14px 32px",
                   borderRadius: 10,
                   textDecoration: "none",
-                  transition: "background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = "#d97706";
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 8px 24px rgba(255, 200, 0,0.35)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = "#FFC800";
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "none";
+                  transition: "filter 0.2s ease, transform 0.2s ease",
                 }}
               >
                 Run the Deficit Finder
@@ -329,9 +300,17 @@ export default function DeficitFinderCTA() {
           }
         }
 
+        .deficit-cta-btn:hover {
+          filter: brightness(1.08);
+          transform: translateY(-1px);
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .deficit-grid a {
             transition: none !important;
+          }
+          .deficit-cta-btn:hover {
+            transform: none !important;
           }
         }
       `}</style>
