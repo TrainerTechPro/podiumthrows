@@ -148,10 +148,9 @@ export default function HeroSection() {
           {/* Trust meta */}
           <FadeUp delay={0.95}>
             <p
-              className="mt-5 font-mono"
+              className="mt-5 font-mono tracking-[0.08em] sm:tracking-[0.14em]"
               style={{
                 fontSize: 11,
-                letterSpacing: "0.14em",
                 textTransform: "uppercase" as const,
                 color: "var(--landing-text-dim)",
               }}
