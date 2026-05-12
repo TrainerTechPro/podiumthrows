@@ -1,83 +1,84 @@
 "use client";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   StickyFeatures
-   ──────────────
-   Scroll-linked features section. Left column has text blocks that scroll
-   while right column stays pinned with an IntersectionObserver-driven
-   mockup crossfade. On mobile: single column with inline mockups.
+   StickyFeatures (now Alternating rows)
+   ─────────────────────────────────────
+   Two feature blocks shown as alternating side-by-side rows. The file name
+   is kept for import stability — the sticky-pin scrolljack was removed in
+   favor of a calmer editorial rhythm: text + mockup, then mockup + text.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import SessionMockup from "./SessionMockup";
 import ProgrammingMockup from "./ProgrammingMockup";
 import ScrollReveal from "./ScrollReveal";
 
-// ─── Feature Data ────────────────────────────────────────────────────────────
+// ─── Feature data ────────────────────────────────────────────────────────────
 
-const FEATURES = [
+type Feature = {
+  number: string;
+  label: string;
+  title: string;
+  description: string;
+  spec: string;
+  tag?: string;
+};
+
+const FEATURES: readonly Feature[] = [
   {
     number: "01",
     label: "Session Builder",
     title: "Build sessions the way Bondarchuk intended.",
     description:
-      "Real-time implement sequencing validation. Drill progression from stand to full \u2014 with every implement tracked. If an athlete\u2019s session goes light\u2192heavy, Podium flags it before they touch the ring.",
-    tag: "\u2713 Bondarchuk-validated",
+      "Real-time implement sequencing validation. Drill progression from stand to full — every implement tracked. If a session goes light → heavy, Podium flags it before the athlete touches the ring.",
+    spec: "Enforces: descending sequences · session structure · 15–20% differentials",
+    tag: "✓ Bondarchuk-validated",
   },
   {
     number: "02",
     label: "Programming",
     title: "Periodize across your entire roster.",
     description:
-      "Build training blocks, assign programs by event group, and push updates to every athlete at once. See who\u2019s in what phase at a glance.",
-    tag: null,
+      "Build training blocks, assign programs by event group, and push updates to every athlete at once. See who's in what phase at a glance.",
+    spec: "Per-athlete blocks · event-group assignments · phase visibility",
   },
 ] as const;
 
-const MOCKUP_COMPONENTS = [SessionMockup, ProgrammingMockup];
+const MOCKUPS = [SessionMockup, ProgrammingMockup] as const;
 
-// ─── Feature Block ──────────────────────────────────────────────────────────
+// ─── Components ──────────────────────────────────────────────────────────────
 
-interface FeatureBlockProps {
-  feature: (typeof FEATURES)[number];
-  isLast: boolean;
-}
-
-function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
+function FeatureCopy({ feature }: { feature: Feature }) {
   return (
-    <div
-      className="flex flex-col justify-center"
-      style={{
-        minHeight: "70vh",
-        borderBottom: isLast ? "none" : "1px solid var(--landing-border)",
-      }}
-    >
-      {/* Number with extending line */}
-      <div className="flex items-center" style={{ gap: 12, marginBottom: 20 }}>
+    <div className="flex flex-col justify-center">
+      {/* Number + extending line */}
+      <div className="flex items-center mb-5" style={{ gap: 12 }}>
         <span
+          className="font-heading"
           style={{
-            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontSize: 11,
             color: "var(--landing-text-dim)",
+            letterSpacing: "0.04em",
             flexShrink: 0,
           }}
         >
           {feature.number}
         </span>
-        <span className="flex-1" style={{ height: 1, background: "var(--landing-border)" }} />
+        <span
+          className="flex-1"
+          style={{ height: 1, background: "var(--landing-border)" }}
+          aria-hidden="true"
+        />
       </div>
 
-      {/* Label */}
+      {/* Eyebrow */}
       <div
+        className="font-heading mb-4"
         style={{
-          fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
           fontSize: 11,
           fontWeight: 600,
-          textTransform: "uppercase",
+          textTransform: "uppercase" as const,
           letterSpacing: "0.28em",
           color: "#FFC800",
-          marginBottom: 14,
         }}
       >
         {feature.label}
@@ -85,15 +86,13 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
 
       {/* Title */}
       <h3
+        className="font-heading mb-5"
         style={{
-          fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
           fontWeight: 800,
-          fontSize: 34,
+          fontSize: "clamp(1.6rem, 2.6vw, 2.25rem)",
           lineHeight: 1.08,
           letterSpacing: "-0.035em",
           color: "var(--landing-text)",
-          margin: 0,
-          marginBottom: 18,
         }}
       >
         {feature.title}
@@ -103,29 +102,42 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
       <p
         style={{
           fontSize: 15,
-          lineHeight: 1.8,
+          lineHeight: 1.75,
           color: "var(--landing-text-secondary)",
-          maxWidth: 380,
-          margin: 0,
-          marginBottom: feature.tag ? 20 : 0,
+          maxWidth: 460,
+          marginBottom: 22,
         }}
       >
         {feature.description}
       </p>
 
+      {/* Spec line — engineering register */}
+      <div
+        className="font-mono"
+        style={{
+          fontSize: 11,
+          lineHeight: 1.55,
+          letterSpacing: "0.02em",
+          color: "var(--landing-text-muted)",
+          paddingTop: 16,
+          borderTop: "1px solid var(--landing-border)",
+          maxWidth: 460,
+        }}
+      >
+        {feature.spec}
+      </div>
+
       {/* Optional tag */}
       {feature.tag && (
         <span
-          className="inline-flex"
+          className="font-heading inline-flex self-start mt-5"
           style={{
             fontSize: 11,
             color: "#FFC800",
             padding: "5px 12px",
             background: "var(--landing-amber-glow-strong)",
             borderRadius: 6,
-            fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontWeight: 600,
-            alignSelf: "flex-start",
           }}
         >
           {feature.tag}
@@ -135,98 +147,71 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
   );
 }
 
-// ─── Main Component ─────────────────────────────────────────────────────────
+function FeatureMockup({ Mockup }: { Mockup: (typeof MOCKUPS)[number] }) {
+  return (
+    <div className="relative">
+      {/* Soft amber floor light under each mockup */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "8%",
+          right: "8%",
+          bottom: "-8%",
+          height: "30%",
+          background:
+            "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(255, 200, 0, 0.07), transparent 70%)",
+          filter: "blur(40px)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <Mockup />
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ──────────────────────────────────────────────────────────
 
 export default function StickyFeatures() {
-  const [activeFeature, setActiveFeature] = useState(0);
-  const prefersReducedMotion = useReducedMotion();
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // IntersectionObserver to track which feature block is in view
-  useEffect(() => {
-    const observers: IntersectionObserver[] = [];
-
-    sectionRefs.current.forEach((ref, index) => {
-      if (!ref) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setActiveFeature(index);
-            }
-          });
-        },
-        { threshold: 0.5 }
-      );
-
-      observer.observe(ref);
-      observers.push(observer);
-    });
-
-    return () => {
-      observers.forEach((observer) => observer.disconnect());
-    };
-  }, []);
-
-  const ActiveMockup = MOCKUP_COMPONENTS[activeFeature];
-
   return (
-    <section style={{ maxWidth: 1400, margin: "0 auto" }}>
-      {/* ── Desktop Layout ─────────────────────────────────────────── */}
-      <div
-        className="hidden lg:grid"
-        style={{ gridTemplateColumns: "1fr 1fr", minHeight: "240vh" }}
-      >
-        {/* Left column — scrolling text */}
-        <div style={{ padding: "180px 64px" }}>
-          {FEATURES.map((feature, i) => (
+    <section aria-label="Product features" style={{ maxWidth: 1280, margin: "0 auto" }}>
+      <div className="px-5 sm:px-8 lg:px-12 py-20 sm:py-28 lg:py-36">
+        {FEATURES.map((feature, i) => {
+          const Mockup = MOCKUPS[i];
+          const mockupOnRight = i % 2 === 0;
+          const gridCols = mockupOnRight
+            ? "grid-cols-1 lg:grid-cols-[5fr_7fr]"
+            : "grid-cols-1 lg:grid-cols-[7fr_5fr]";
+
+          return (
             <div
               key={feature.number}
-              ref={(el) => {
-                sectionRefs.current[i] = el;
-              }}
+              className={`grid ${gridCols} gap-10 lg:gap-16 xl:gap-20 items-center ${
+                i === 0 ? "" : "mt-24 sm:mt-32 lg:mt-40"
+              }`}
             >
-              <FeatureBlock feature={feature} isLast={i === FEATURES.length - 1} />
-            </div>
-          ))}
-        </div>
-
-        {/* Right column — sticky mockup */}
-        <div
-          className="lg:sticky lg:top-1/2 lg:-translate-y-1/2"
-          style={{
-            borderLeft: "1px solid var(--landing-border)",
-            padding: "48px 64px",
-            height: "fit-content",
-          }}
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeFeature}
-              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.02 }}
-              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.25 }}
-            >
-              <ActiveMockup />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* ── Mobile Layout ──────────────────────────────────────────── */}
-      <div className="lg:hidden" style={{ padding: "64px 24px" }}>
-        {FEATURES.map((feature, i) => {
-          const Mockup = MOCKUP_COMPONENTS[i];
-          return (
-            <div key={feature.number}>
-              <FeatureBlock feature={feature} isLast={i === FEATURES.length - 1} />
-              <ScrollReveal>
-                <div style={{ padding: "32px 0 48px" }}>
-                  <Mockup />
-                </div>
-              </ScrollReveal>
+              {mockupOnRight ? (
+                <>
+                  <ScrollReveal>
+                    <FeatureCopy feature={feature} />
+                  </ScrollReveal>
+                  <ScrollReveal delay={0.1}>
+                    <FeatureMockup Mockup={Mockup} />
+                  </ScrollReveal>
+                </>
+              ) : (
+                <>
+                  <ScrollReveal>
+                    <FeatureMockup Mockup={Mockup} />
+                  </ScrollReveal>
+                  <ScrollReveal delay={0.1}>
+                    <FeatureCopy feature={feature} />
+                  </ScrollReveal>
+                </>
+              )}
             </div>
           );
         })}
