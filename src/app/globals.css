@@ -848,20 +848,8 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--landing-text-dim);
+  color: var(--landing-text-muted);
   border: 1px solid var(--landing-border);
   padding: 5px 12px;
-  transition: border-color 0.2s ease, color 0.2s ease;
   cursor: default;
-}
-
-.bondarchuk-event-tag:hover {
-  border-color: #f59e0b;
-  color: #f59e0b;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bondarchuk-event-tag {
-    transition: none;
-  }
 }
