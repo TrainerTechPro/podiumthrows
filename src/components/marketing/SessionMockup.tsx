@@ -239,7 +239,10 @@ export default function SessionMockup() {
       aria-hidden="true"
     >
       {/* ── Header bar ──────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between" style={{ padding: "10px 14px" }}>
+      <div
+        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
+        style={{ padding: "10px 14px" }}
+      >
         {/* Title */}
         <span
           style={{
@@ -254,7 +257,7 @@ export default function SessionMockup() {
 
         {/* Segmented control */}
         <div
-          className="relative flex"
+          className="relative flex self-start sm:self-auto"
           style={{
             background: "var(--landing-bg)",
             border: "1px solid var(--landing-border)",

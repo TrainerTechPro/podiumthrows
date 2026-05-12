@@ -104,7 +104,10 @@ function SessionCardItem({ session }: { session: SessionCard }) {
 
 function DayCol({ col }: { col: DayColumn }) {
   return (
-    <div className="flex flex-col" style={{ gap: 4, flex: 1, minWidth: 0 }}>
+    <div
+      className="flex flex-col flex-shrink-0 sm:flex-shrink sm:flex-1 sm:min-w-0 sm:w-auto"
+      style={{ gap: 4, width: 116, scrollSnapAlign: "start" }}
+    >
       {/* Day header */}
       <div
         style={{
@@ -187,11 +190,13 @@ export default function ProgrammingMockup() {
 
       {/* ── Week grid ───────────────────────────────────────────────── */}
       <div
-        className="flex"
+        className="flex overflow-x-auto sm:overflow-visible custom-scrollbar"
         style={{
           gap: 6,
           padding: "0 14px 14px 14px",
           alignItems: "flex-start",
+          scrollSnapType: "x mandatory",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {WEEK_DAYS.map((col) => (
