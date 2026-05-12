@@ -369,6 +369,8 @@ Any floating UI rendered above page content (modals, popovers, dropdowns, sheets
 - Brand: `text-primary-500`, `bg-primary-500`, or `text-brand`.
 - Surfaces: `bg-surface-100` → `bg-surface-950`.
 - Status: `text-status-success-fg`, `bg-status-warning-bg`, etc. — theme-aware semantic tokens (added 2026-05-11, audit Prompt 5).
+- Legacy `text-success-500` / `bg-warning-500` / etc. resolve to the same theme-aware CSS vars (audit Prompt 13, 2026-05-12) — equivalent to `text-status-success-fg` etc. The `status-*` aliases are preferred for new code (explicit intent). The `-500` Tailwind palette shorthand keeps working as a compatibility layer.
+- `-50` / `-600` / `-700` shades of `success/warning/danger/info` remain fixed hex and are **deprecated for new code** — they aren't theme-aware. Use the explicit `status-*-fg` / `status-*-bg` aliases instead.
 - **Never hardcode hex in app surfaces.** Enforced by `npm run lint:hex` (ratcheting baseline in `.hex-baseline.txt`). Pre-push hook + CI run this check.
 
 #### Hex literal allowlist (when hex is legitimately required)

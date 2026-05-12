@@ -42,28 +42,33 @@ const config: Config = {
         },
         // Brand accent (same as primary-500)
         brand: "#FFC800",
-        // Semantic status colors
+        // Semantic status colors.
+        // -500 is the primary "use" shade and resolves through the theme-aware
+        // CSS vars defined in globals.css (deep on light, vivid on dark) — see
+        // audit Prompt 13. -50 / -600 / -700 remain fixed hex; they are
+        // deprecated for new code (no theme awareness). Prefer the explicit
+        // `status-*-fg` / `status-*-bg` aliases below for new work.
         success: {
           50: "#0a1a10",
-          500: "#00FF88",
+          500: "var(--color-status-success-fg)",
           600: "#00cc6d",
           700: "#009952",
         },
         warning: {
           50: "#1a1400",
-          500: "#FF8800",
+          500: "var(--color-status-warning-fg)",
           600: "#e67a00",
           700: "#cc6c00",
         },
         danger: {
           50: "#1a0808",
-          500: "#FF2222",
+          500: "var(--color-status-danger-fg)",
           600: "#e61e1e",
           700: "#cc1a1a",
         },
         info: {
           50: "#0a1020",
-          500: "#4488FF",
+          500: "var(--color-status-info-fg)",
           600: "#3d7ae6",
           700: "#366dcc",
         },

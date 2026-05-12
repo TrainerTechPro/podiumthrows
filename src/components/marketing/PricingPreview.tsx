@@ -3,8 +3,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    PricingPreview
    ──────────────
-   Three-tier pricing section: Free / Pro (featured, animated border) / Elite.
-   Pro card has a conic-gradient spinning border beam and floats above the others.
+   Three-tier pricing section: Free / Pro (featured, elevated) / Elite. Pro
+   is anchored with brand-amber border, CornerMarks, a "Most Popular" pill,
+   and an amber glow shadow; it sits 8px above the other two cards at rest.
    Mobile: stacks vertically with Pro reordered to top via CSS `order`.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -84,12 +85,13 @@ function FeatureItem({ text }: { text: string }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 7,
-        fontSize: 12,
+        gap: 8,
+        fontSize: 13,
         color: "var(--landing-text-secondary)",
         padding: "6px 0",
         listStyle: "none",
         margin: 0,
+        lineHeight: 1.45,
       }}
     >
       {/* Amber dot */}
@@ -162,7 +164,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
               fontWeight: 700,
               fontSize: 10,
               textTransform: "uppercase",
-              letterSpacing: "0.1em",
+              letterSpacing: "0.14em",
               padding: "4px 14px",
               borderRadius: 9999,
               whiteSpace: "nowrap",
@@ -176,15 +178,16 @@ function PricingCard({ tier }: { tier: PricingTier }) {
 
       {/* Content */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        {/* Tier label */}
+        {/* Tier label — mono engineering register */}
         <div
-          className="font-heading"
+          className="font-mono"
           style={{
-            fontSize: 12,
-            textTransform: "uppercase",
-            letterSpacing: "0.15em",
+            fontSize: 10,
+            textTransform: "uppercase" as const,
+            letterSpacing: "0.22em",
             color: "var(--landing-text-muted)",
-            marginBottom: 16,
+            fontWeight: 600,
+            marginBottom: 18,
           }}
         >
           {tier.tier}
@@ -196,18 +199,21 @@ function PricingCard({ tier }: { tier: PricingTier }) {
             className="font-heading"
             style={{
               fontWeight: 900,
-              fontSize: 42,
+              fontSize: tier.featured ? 52 : 44,
               color: "var(--landing-text)",
-              lineHeight: 1,
+              lineHeight: 0.95,
+              letterSpacing: "-0.04em",
             }}
           >
             {tier.price}
           </span>
           <span
+            className="font-mono"
             style={{
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 500,
               color: "var(--landing-text-dim)",
+              letterSpacing: "0.04em",
             }}
           >
             /mo
@@ -217,10 +223,10 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         {/* Description */}
         <p
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: "var(--landing-text-secondary)",
             lineHeight: 1.6,
-            margin: "10px 0 20px",
+            margin: "12px 0 22px",
           }}
         >
           {tier.description}
@@ -237,20 +243,21 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         {isMailto ? (
           <a
             href={tier.href}
-            className="font-heading"
+            className="font-heading pricing-cta"
             style={{
               ...ctaStyles,
               display: "block",
               width: "100%",
-              marginTop: 20,
-              padding: "12px 0",
+              marginTop: 24,
+              padding: "14px 0",
               textAlign: "center",
               fontWeight: 700,
-              fontSize: 13,
+              fontSize: 14,
+              letterSpacing: "0.02em",
               borderRadius: 8,
               textDecoration: "none",
               boxSizing: "border-box",
-              transition: "opacity 0.2s ease",
+              transition: "filter 0.2s ease, border-color 0.2s ease, color 0.2s ease",
             }}
           >
             {tier.cta}
@@ -258,20 +265,21 @@ function PricingCard({ tier }: { tier: PricingTier }) {
         ) : (
           <Link
             href={tier.href}
-            className="font-heading"
+            className="font-heading pricing-cta"
             style={{
               ...ctaStyles,
               display: "block",
               width: "100%",
-              marginTop: 20,
-              padding: "12px 0",
+              marginTop: 24,
+              padding: "14px 0",
               textAlign: "center",
               fontWeight: 700,
-              fontSize: 13,
+              fontSize: 14,
+              letterSpacing: "0.02em",
               borderRadius: 8,
               textDecoration: "none",
               boxSizing: "border-box",
-              transition: "opacity 0.2s ease",
+              transition: "filter 0.2s ease, border-color 0.2s ease, color 0.2s ease",
             }}
           >
             {tier.cta}
@@ -286,10 +294,10 @@ function PricingCard({ tier }: { tier: PricingTier }) {
 
 export default function PricingPreview() {
   return (
-    <section className="pricing-section" style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <section className="pricing-section" style={{ maxWidth: 1280, margin: "0 auto" }}>
       {/* ── Section header ──────────────────────────────────────────────── */}
       <ScrollReveal>
-        <div style={{ marginBottom: 56 }}>
+        <div style={{ marginBottom: 64, maxWidth: 720 }}>
           <MonoLabel>Pricing</MonoLabel>
 
           {/* Title */}
@@ -297,12 +305,13 @@ export default function PricingPreview() {
             className="font-heading"
             style={{
               fontWeight: 800,
-              fontSize: 36,
-              lineHeight: 1.1,
-              letterSpacing: "-0.035em",
+              fontSize: "clamp(2rem, 4vw, 3.25rem)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.04em",
               color: "var(--landing-text)",
               margin: 0,
-              marginBottom: 12,
+              marginTop: 14,
+              marginBottom: 16,
             }}
           >
             Start free. Scale when your roster does.
@@ -313,8 +322,8 @@ export default function PricingPreview() {
             style={{
               fontSize: 16,
               color: "var(--landing-text-secondary)",
-              lineHeight: 1.7,
-              maxWidth: 480,
+              lineHeight: 1.65,
+              maxWidth: 560,
               margin: 0,
             }}
           >
@@ -337,25 +346,25 @@ export default function PricingPreview() {
       {/* ── Scoped styles ────────────────────────────────────────────────── */}
       <style>{`
         .pricing-section {
-          padding: 64px 16px;
+          padding: 88px 20px;
         }
 
         @media (min-width: 640px) {
           .pricing-section {
-            padding: 80px 40px;
+            padding: 112px 40px;
           }
         }
 
         @media (min-width: 1024px) {
           .pricing-section {
-            padding: 120px 64px;
+            padding: 144px 64px;
           }
         }
 
         .pricing-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 14px;
+          gap: 16px;
           align-items: start;
         }
 
@@ -383,9 +392,17 @@ export default function PricingPreview() {
           box-shadow: var(--landing-neo-raised-hover), 0 0 48px rgba(255, 200, 0,0.22);
         }
 
+        /* CTA hover — brighten, no color change (matches hero / FinalCTA) */
+        .pricing-cta:hover {
+          filter: brightness(1.08);
+          border-color: rgba(255, 200, 0, 0.4);
+          color: var(--landing-text);
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .pricing-card,
-          .pricing-card--featured {
+          .pricing-card--featured,
+          .pricing-cta {
             transition: none;
           }
           .pricing-card:hover,
