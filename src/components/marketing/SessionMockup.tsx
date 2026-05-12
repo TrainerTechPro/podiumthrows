@@ -36,28 +36,37 @@ const TWO_A_DAY_GROUPS: BlockGroup[] = [
   {
     label: "THROWING BLOCK 1 — OVERWEIGHT 9KG",
     blocks: [
-      { type: "throwing", icon: "T1", name: "Standing Throw", detail: "12 throws · 9kg", weight: "9kg" },
+      {
+        type: "throwing",
+        icon: "T1",
+        name: "Standing Throw",
+        detail: "12 throws · 9kg",
+        weight: "9kg",
+      },
       { type: "throwing", icon: "T1", name: "Half Turn", detail: "10 throws · 9kg" },
     ],
   },
   {
     label: "STRENGTH BLOCK",
-    blocks: [
-      { type: "strength", icon: "S1", name: "Power Clean", detail: "4 × 3 @ 85%" },
-    ],
+    blocks: [{ type: "strength", icon: "S1", name: "Power Clean", detail: "4 × 3 @ 85%" }],
   },
   {
     label: "THROWING BLOCK 2 — COMPETITION 7.26KG",
     blocks: [
-      { type: "throwing", icon: "T2", name: "South African", detail: "10 throws · 7.26kg", weight: "↓ 7.26kg", weightArrow: true },
+      {
+        type: "throwing",
+        icon: "T2",
+        name: "South African",
+        detail: "10 throws · 7.26kg",
+        weight: "↓ 7.26kg",
+        weightArrow: true,
+      },
       { type: "throwing", icon: "T2", name: "Full Throw", detail: "15 throws · 7.26kg" },
     ],
   },
   {
     label: "STRENGTH BLOCK",
-    blocks: [
-      { type: "strength", icon: "S2", name: "Back Squat", detail: "3 × 5 @ 80%" },
-    ],
+    blocks: [{ type: "strength", icon: "S2", name: "Back Squat", detail: "3 × 5 @ 80%" }],
   },
 ];
 
@@ -65,7 +74,13 @@ const SINGLE_SESSION_GROUPS: BlockGroup[] = [
   {
     label: "THROWING BLOCK — COMPETITION 7.26KG",
     blocks: [
-      { type: "throwing", icon: "T1", name: "Standing Throw", detail: "10 throws · 7.26kg", weight: "7.26kg" },
+      {
+        type: "throwing",
+        icon: "T1",
+        name: "Standing Throw",
+        detail: "10 throws · 7.26kg",
+        weight: "7.26kg",
+      },
       { type: "throwing", icon: "T1", name: "Half Turn", detail: "8 throws · 7.26kg" },
       { type: "throwing", icon: "T1", name: "South African", detail: "8 throws · 7.26kg" },
       { type: "throwing", icon: "T1", name: "Full Throw", detail: "12 throws · 7.26kg" },
@@ -93,14 +108,11 @@ function GroupLabel({ label }: { label: string }) {
         fontWeight: 600,
         textTransform: "uppercase" as const,
         letterSpacing: "0.1em",
-        color: "#f59e0b",
+        color: "#FFC800",
       }}
     >
       <span className="flex-shrink-0 whitespace-nowrap">{label}</span>
-      <span
-        className="flex-1"
-        style={{ height: 1, background: "var(--landing-border)" }}
-      />
+      <span className="flex-1" style={{ height: 1, background: "var(--landing-border)" }} />
     </div>
   );
 }
@@ -118,7 +130,7 @@ function ExerciseRow({ block }: { block: ExerciseBlock }) {
         borderRadius: 8,
         padding: "11px 14px",
         borderLeft: isThrowing
-          ? "2px solid rgba(245,158,11,0.25)"
+          ? "2px solid rgba(255, 200, 0,0.25)"
           : "2px solid rgba(129,140,248,0.2)",
       }}
     >
@@ -129,13 +141,11 @@ function ExerciseRow({ block }: { block: ExerciseBlock }) {
           width: 30,
           height: 30,
           borderRadius: 7,
-          background: isThrowing
-            ? "var(--landing-amber-glow-strong)"
-            : "rgba(99,102,241,0.12)",
+          background: isThrowing ? "var(--landing-amber-glow-strong)" : "rgba(99,102,241,0.12)",
           fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
           fontWeight: 700,
           fontSize: 11,
-          color: isThrowing ? "#f59e0b" : "#818cf8",
+          color: isThrowing ? "#FFC800" : "#818cf8",
         }}
       >
         {block.icon}
@@ -201,9 +211,7 @@ export default function SessionMockup() {
   const groups = mode === "two" ? TWO_A_DAY_GROUPS : SINGLE_SESSION_GROUPS;
 
   const modeLabel =
-    mode === "two"
-      ? "Dual-session · Descending weight"
-      : "Single session · Drill progression";
+    mode === "two" ? "Dual-session · Descending weight" : "Single session · Drill progression";
 
   const sequenceText =
     mode === "two"
@@ -224,18 +232,14 @@ export default function SessionMockup() {
       style={{
         borderRadius: 14,
         border: "1px solid var(--landing-border)",
-        boxShadow:
-          "0 40px 100px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.02)",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.02)",
         overflow: "hidden",
         background: "var(--landing-surface)",
       }}
       aria-hidden="true"
     >
       {/* ── Header bar ──────────────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between"
-        style={{ padding: "10px 14px" }}
-      >
+      <div className="flex items-center justify-between" style={{ padding: "10px 14px" }}>
         {/* Title */}
         <span
           style={{
@@ -274,7 +278,7 @@ export default function SessionMockup() {
                   borderRadius: 6,
                   padding: "6px 12px",
                   background: "transparent",
-                  color: isActive ? "#f59e0b" : "var(--landing-text-muted)",
+                  color: isActive ? "#FFC800" : "var(--landing-text-muted)",
                   border: "none",
                   cursor: "pointer",
                   position: "relative",
@@ -307,10 +311,7 @@ export default function SessionMockup() {
       </div>
 
       {/* ── Status bar ──────────────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between"
-        style={{ padding: "0 14px 8px 14px" }}
-      >
+      <div className="flex items-center justify-between" style={{ padding: "0 14px 8px 14px" }}>
         <span
           style={{
             fontSize: 9,

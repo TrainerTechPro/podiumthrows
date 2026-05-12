@@ -3,113 +3,121 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    HeroDeviceMockup
    ────────────────
-   A purely visual, code-rendered browser chrome frame containing a miniature
-   Podium Throws coach dashboard. No images — all HTML/CSS/SVG. Uses
-   `var(--landing-*)` tokens for color.
+   Purpose-built hero dashboard. Pure HTML/CSS — no images, no real data.
+   Shows the actual product differentiator: descending-implement sequences
+   and a validation warning that rejects an ascending plan.
+
+   Used only by HeroSection. Sized for a 1200px-wide centerpiece slot.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const SIDEBAR_ITEMS = [
-  { label: "Dashboard", active: true },
-  { label: "Athletes", active: false },
-  { label: "Sessions", active: false },
-  { label: "Videos", active: false },
-  { label: "Programming", active: false },
-  { label: "Codex", active: false },
-];
+  { label: "Home", active: false },
+  { label: "Roster", active: false },
+  { label: "Sessions", active: true },
+  { label: "Calendar", active: false },
+  { label: "Library", active: false },
+  { label: "Settings", active: false },
+] as const;
 
-const STAT_CARDS = [
-  { label: "Athletes", value: "14", sub: null, subColor: "" },
-  { label: "This Week", value: "8", sub: "sessions", subColor: "" },
-  { label: "Avg Dist", value: "17.2m", sub: "+0.4m", subColor: "#22c55e" },
-  { label: "PRs", value: "3", sub: "this month", subColor: "#22c55e" },
-];
-
-const ATHLETES = [
-  { initials: "JM", name: "J. Martinez", event: "Shot Put", best: "18.42m", trend: "PR", trendType: "pr" as const },
-  { initials: "KW", name: "K. Williams", event: "Discus", best: "54.1m", trend: "+1.2m", trendType: "up" as const },
-  { initials: "TS", name: "T. Smith", event: "Hammer", best: "62.8m", trend: "Steady", trendType: "steady" as const },
-];
-
-// SVG chart points — rising trend
-const CHART_POINTS = "0,55 40,48 80,50 120,42 160,38 200,35 240,30 280,28 320,22 360,18 400,12";
-const CHART_AREA = `0,65 ${CHART_POINTS} 400,65`;
+// Status dot helper
+function Dot({ filled }: { filled: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        width: 7,
+        height: 7,
+        borderRadius: 999,
+        background: filled ? "#FFC800" : "transparent",
+        border: filled ? "none" : "1px solid var(--landing-border)",
+      }}
+    />
+  );
+}
 
 export default function HeroDeviceMockup() {
   return (
     <div
       className="w-full select-none"
       style={{
-        borderRadius: 14,
+        borderRadius: 16,
         border: "1px solid var(--landing-border)",
         boxShadow:
-          "0 80px 160px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03)",
+          "0 80px 160px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.04)",
         overflow: "hidden",
         background: "var(--landing-bg)",
       }}
       aria-hidden="true"
     >
-      {/* ── Browser chrome bar ──────────────────────────────────────── */}
+      {/* ── Browser chrome ─────────────────────────────────────────────── */}
       <div
-        className="flex items-center gap-2 px-3.5 py-2"
-        style={{ background: "var(--landing-surface)" }}
+        className="flex items-center gap-3 px-4 py-2.5"
+        style={{
+          background: "var(--landing-surface)",
+          borderBottom: "1px solid var(--landing-border)",
+        }}
       >
-        {/* Traffic lights */}
-        <div className="flex items-center gap-[6px] flex-shrink-0">
-          <span className="block rounded-full" style={{ width: 8, height: 8, background: "#ff5f57" }} />
-          <span className="block rounded-full" style={{ width: 8, height: 8, background: "#febc2e" }} />
-          <span className="block rounded-full" style={{ width: 8, height: 8, background: "#28c840" }} />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span
+            className="block rounded-full"
+            style={{ width: 11, height: 11, background: "#ff5f57" }}
+          />
+          <span
+            className="block rounded-full"
+            style={{ width: 11, height: 11, background: "#febc2e" }}
+          />
+          <span
+            className="block rounded-full"
+            style={{ width: 11, height: 11, background: "#28c840" }}
+          />
         </div>
-
-        {/* URL bar */}
         <div
-          className="flex-1 mx-2 rounded-md px-3 py-[3px] text-center"
+          className="flex-1 mx-3 rounded-md px-3 py-1 text-center font-mono"
           style={{
             background: "var(--landing-surface-2)",
-            fontSize: 10,
+            fontSize: 11,
             color: "var(--landing-text-muted)",
-            fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
             letterSpacing: "0.02em",
+            maxWidth: 360,
+            margin: "0 auto",
           }}
         >
-          podiumthrows.com/coach/dashboard
+          podiumthrows.com/coach/sessions
         </div>
+        <div style={{ width: 32 }} />
       </div>
 
-      {/* ── Main content area ───────────────────────────────────────── */}
-      <div className="flex" style={{ minHeight: 260 }}>
-        {/* Sidebar */}
+      {/* ── App body ───────────────────────────────────────────────────── */}
+      <div className="flex" style={{ minHeight: 480 }}>
+        {/* ── Sidebar ─────────────────────────────────────────────────── */}
         <div
-          className="flex-shrink-0 py-3 px-2.5 hidden sm:block"
+          className="hidden sm:flex flex-col flex-shrink-0 py-5 px-3"
           style={{
-            width: 120,
+            width: 180,
             background: "var(--landing-surface)",
             borderRight: "1px solid var(--landing-border)",
           }}
         >
-          {/* Sidebar header */}
-          <div className="flex items-center gap-1.5 px-1.5 mb-3">
+          {/* Logo */}
+          <div className="flex items-center gap-2 px-2 mb-7">
             <div
-              className="rounded flex items-center justify-center flex-shrink-0"
-              style={{ width: 14, height: 14, background: "#f59e0b" }}
+              className="rounded-md flex items-center justify-center flex-shrink-0"
+              style={{ width: 22, height: 22, background: "#FFC800" }}
             >
               <span
-                style={{
-                  fontSize: 8,
-                  fontWeight: 700,
-                  color: "#0a0a0a",
-                  lineHeight: 1,
-                  fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
-                }}
+                className="font-heading"
+                style={{ fontSize: 12, fontWeight: 900, color: "#0a0a0a", lineHeight: 1 }}
               >
                 P
               </span>
             </div>
             <span
+              className="font-heading"
               style={{
-                fontSize: 11,
+                fontSize: 14,
                 fontWeight: 700,
                 color: "var(--landing-text)",
-                fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
                 letterSpacing: "-0.02em",
               }}
             >
@@ -117,255 +125,347 @@ export default function HeroDeviceMockup() {
             </span>
           </div>
 
-          {/* Nav items */}
+          {/* Nav */}
           <div className="flex flex-col gap-0.5">
             {SIDEBAR_ITEMS.map((item) => (
               <div
                 key={item.label}
-                className="rounded px-2 py-[4px]"
+                className="rounded-md px-2.5 py-2"
                 style={{
-                  fontSize: 10,
-                  fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                  color: item.active ? "#f59e0b" : "var(--landing-text-muted)",
-                  fontWeight: item.active ? 600 : 400,
+                  fontSize: 12,
+                  fontWeight: item.active ? 600 : 500,
+                  color: item.active ? "#FFC800" : "var(--landing-text-muted)",
                   background: item.active ? "var(--landing-amber-glow-strong)" : "transparent",
-                  boxShadow: item.active ? "inset 0 0 12px rgba(245,158,11,0.08)" : "none",
+                  borderLeft: item.active ? "2px solid #FFC800" : "2px solid transparent",
+                  letterSpacing: "0.01em",
                 }}
               >
                 {item.label}
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Dashboard content */}
-        <div className="flex-1 p-3 sm:p-4 overflow-hidden" style={{ background: "var(--landing-bg)" }}>
-          {/* Stat cards row */}
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mb-3">
-            {STAT_CARDS.map((card) => (
-              <div
-                key={card.label}
-                className="rounded-md px-2 py-1.5 sm:py-2"
-                style={{
-                  background: "var(--landing-surface)",
-                  border: "1px solid var(--landing-border)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 8,
-                    color: "var(--landing-text-muted)",
-                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: 2,
-                  }}
-                >
-                  {card.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "var(--landing-text)",
-                    fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  {card.value}
-                </div>
-                {card.sub && (
-                  <div
-                    style={{
-                      fontSize: 8,
-                      color: card.subColor || "var(--landing-text-muted)",
-                      fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                      marginTop: 1,
-                    }}
-                  >
-                    {card.sub}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Performance chart */}
+          {/* Coach footer */}
           <div
-            className="rounded-md mb-3 px-2 py-2"
-            style={{
-              background: "var(--landing-surface)",
-              border: "1px solid var(--landing-border)",
-            }}
+            className="mt-auto pt-4 px-1 flex items-center gap-2"
+            style={{ borderTop: "1px solid var(--landing-border)" }}
           >
             <div
+              className="rounded-full flex items-center justify-center flex-shrink-0"
               style={{
-                fontSize: 8,
+                width: 24,
+                height: 24,
+                background: "var(--landing-surface-2)",
+                border: "1px solid var(--landing-border)",
+              }}
+            >
+              <span
+                className="font-mono"
+                style={{ fontSize: 9, color: "var(--landing-text-secondary)", fontWeight: 600 }}
+              >
+                MR
+              </span>
+            </div>
+            <div className="flex flex-col" style={{ lineHeight: 1.2 }}>
+              <span style={{ fontSize: 11, color: "var(--landing-text)", fontWeight: 600 }}>
+                M. Reyes
+              </span>
+              <span
+                className="font-mono"
+                style={{ fontSize: 9, color: "var(--landing-text-dim)", letterSpacing: "0.06em" }}
+              >
+                COACH · D1
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Main content ────────────────────────────────────────────── */}
+        <div className="flex-1 p-5 sm:p-6" style={{ background: "var(--landing-bg)" }}>
+          {/* Page header */}
+          <div className="flex items-end justify-between mb-5">
+            <div>
+              <div
+                className="font-mono"
+                style={{
+                  fontSize: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.2em",
+                  color: "var(--landing-text-dim)",
+                  marginBottom: 4,
+                }}
+              >
+                This week
+              </div>
+              <h3
+                className="font-heading"
+                style={{
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--landing-text)",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1,
+                }}
+              >
+                Nov 9 — Nov 15
+              </h3>
+            </div>
+            <div
+              className="rounded-md px-3 py-1.5 font-heading"
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                background: "#FFC800",
+                color: "#0a0a0a",
+                letterSpacing: "0.02em",
+              }}
+            >
+              + New session
+            </div>
+          </div>
+
+          {/* Day: Mon */}
+          <DayBlock day="MON" date="9 NOV">
+            <SessionRow
+              block="Block 1"
+              implements={["9kg", "8kg", "7.26kg"]}
+              caption="Heavy → competition"
+              dots={[true, true, true, true, true]}
+            />
+            <SessionRow
+              block="Block 2"
+              implements={["6kg"]}
+              caption="Light, no heavy same day"
+              dots={[true, true, true, true]}
+            />
+            <StrengthRow label="Strength" detail="Snatch 70% · 5×3 · Squat 80% · 4×4" />
+          </DayBlock>
+
+          {/* Day: Tue */}
+          <DayBlock day="TUE" date="10 NOV" muted>
+            <div
+              className="font-mono"
+              style={{
+                fontSize: 12,
                 color: "var(--landing-text-muted)",
-                fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                textTransform: "uppercase",
                 letterSpacing: "0.06em",
-                marginBottom: 4,
+                textTransform: "uppercase",
+                padding: "8px 0",
               }}
             >
-              Performance Trend
+              Rest
             </div>
-            <svg
-              viewBox="0 0 400 65"
-              className="w-full"
-              preserveAspectRatio="none"
-              style={{ display: "block" }}
-            >
-              <defs>
-                <linearGradient id="hero-chart-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
-                </linearGradient>
-              </defs>
-              {/* Fill area */}
-              <polygon
-                points={CHART_AREA}
-                fill="url(#hero-chart-fill)"
-              />
-              {/* Line */}
-              <polyline
-                points={CHART_POINTS}
-                fill="none"
-                stroke="#f59e0b"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-              {/* End dot */}
-              <circle cx="400" cy="12" r="3" fill="#f59e0b" />
-              <circle cx="400" cy="12" r="5" fill="#f59e0b" opacity="0.2" />
-            </svg>
-          </div>
+          </DayBlock>
 
-          {/* Athlete table */}
-          <div
-            className="rounded-md overflow-hidden"
-            style={{
-              background: "var(--landing-surface)",
-              border: "1px solid var(--landing-border)",
-            }}
-          >
-            {/* Header row */}
+          {/* Day: Wed — VALIDATION REJECTION (the differentiator) */}
+          <DayBlock day="WED" date="11 NOV" alert>
             <div
-              className="grid px-2 py-1.5"
               style={{
-                gridTemplateColumns: "1fr 0.7fr 0.5fr 0.5fr",
-                borderBottom: "1px solid var(--landing-border)",
+                background: "rgba(239, 68, 68, 0.07)",
+                border: "1px solid rgba(239, 68, 68, 0.25)",
+                borderRadius: 8,
+                padding: "12px 14px",
               }}
             >
-              {["ATHLETE", "EVENT", "BEST", "TREND"].map((h) => (
-                <div
-                  key={h}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span
+                  className="font-mono"
                   style={{
-                    fontSize: 7,
-                    fontWeight: 600,
-                    color: "var(--landing-text-dim)",
-                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: "#ef4444",
+                    letterSpacing: "0.16em",
                     textTransform: "uppercase",
-                    letterSpacing: "0.1em",
                   }}
                 >
-                  {h}
-                </div>
-              ))}
-            </div>
-
-            {/* Data rows */}
-            {ATHLETES.map((athlete, i) => (
-              <div
-                key={athlete.initials}
-                className="grid items-center px-2 py-1.5"
-                style={{
-                  gridTemplateColumns: "1fr 0.7fr 0.5fr 0.5fr",
-                  borderBottom: i < ATHLETES.length - 1 ? "1px solid var(--landing-border)" : "none",
-                }}
-              >
-                {/* Name + avatar */}
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{
-                      width: 16,
-                      height: 16,
-                      background: "var(--landing-surface-2)",
-                      border: "1px solid var(--landing-border)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 6,
-                        fontWeight: 600,
-                        color: "var(--landing-text-muted)",
-                        fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                      }}
-                    >
-                      {athlete.initials}
-                    </span>
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 500,
-                      color: "var(--landing-text)",
-                      fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                    }}
-                  >
-                    {athlete.name}
-                  </span>
-                </div>
-
-                {/* Event */}
-                <span
-                  style={{
-                    fontSize: 9,
-                    color: "var(--landing-text-secondary)",
-                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                  }}
-                >
-                  {athlete.event}
-                </span>
-
-                {/* Best */}
-                <span
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 600,
-                    color: "var(--landing-text)",
-                    fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {athlete.best}
-                </span>
-
-                {/* Trend badge */}
-                <span
-                  className="inline-flex items-center rounded-full px-1.5 py-0.5 self-center"
-                  style={{
-                    fontSize: 7,
-                    fontWeight: 600,
-                    fontFamily: "var(--font-ibm-plex-mono), system-ui, sans-serif",
-                    ...(athlete.trendType === "pr"
-                      ? { background: "rgba(34,197,94,0.15)", color: "#22c55e" }
-                      : athlete.trendType === "up"
-                        ? { background: "rgba(34,197,94,0.1)", color: "#4ade80" }
-                        : { background: "var(--landing-surface-2)", color: "var(--landing-text-muted)" }),
-                  }}
-                >
-                  {athlete.trendType === "pr" && "PR \u2191"}
-                  {athlete.trendType === "up" && athlete.trend}
-                  {athlete.trendType === "steady" && athlete.trend}
+                  ⚠ Sequence rejected
                 </span>
               </div>
-            ))}
-          </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "var(--landing-text)",
+                  lineHeight: 1.55,
+                  marginBottom: 6,
+                }}
+              >
+                You proposed{" "}
+                <span className="font-mono" style={{ color: "#ef4444", fontWeight: 600 }}>
+                  6kg → 8kg
+                </span>
+                . Ascending sequences caused a 2–4 m loss in every natural athlete Bondarchuk
+                studied.
+              </div>
+              <div
+                className="font-mono"
+                style={{
+                  fontSize: 11,
+                  color: "var(--landing-text-secondary)",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Suggested: <span style={{ color: "#FFC800", fontWeight: 600 }}>8kg → 6kg</span> or
+                move 6kg to its own day.
+              </div>
+            </div>
+          </DayBlock>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function DayBlock({
+  day,
+  date,
+  muted = false,
+  alert = false,
+  children,
+}: {
+  day: string;
+  date: string;
+  muted?: boolean;
+  alert?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="mb-3"
+      style={{
+        borderTop: "1px solid var(--landing-border)",
+        paddingTop: 14,
+      }}
+    >
+      <div className="flex items-baseline gap-3 mb-2.5">
+        <span
+          className="font-mono"
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: alert ? "#ef4444" : muted ? "var(--landing-text-dim)" : "var(--landing-text)",
+            letterSpacing: "0.18em",
+          }}
+        >
+          {day}
+        </span>
+        <span
+          className="font-mono"
+          style={{
+            fontSize: 10,
+            color: "var(--landing-text-dim)",
+            letterSpacing: "0.1em",
+          }}
+        >
+          {date}
+        </span>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function SessionRow({
+  block,
+  implements: imps,
+  caption,
+  dots,
+}: {
+  block: string;
+  implements: string[];
+  caption: string;
+  dots: boolean[];
+}) {
+  return (
+    <div
+      className="flex items-center gap-4 py-2"
+      style={{ borderBottom: "1px dashed var(--landing-border-light)" }}
+    >
+      <div style={{ width: 64 }}>
+        <span
+          className="font-mono"
+          style={{
+            fontSize: 10,
+            color: "var(--landing-text-muted)",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            fontWeight: 600,
+          }}
+        >
+          {block}
+        </span>
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          {imps.map((w, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "var(--landing-text)",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {w}
+              </span>
+              {i < imps.length - 1 && (
+                <span style={{ color: "#FFC800", fontSize: 12 }} aria-hidden="true">
+                  ▸
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+        <div
+          style={{
+            fontSize: 11,
+            color: "var(--landing-text-dim)",
+            lineHeight: 1.4,
+          }}
+        >
+          {caption}
+        </div>
+      </div>
+      <div className="flex items-center gap-1">
+        {dots.map((filled, i) => (
+          <Dot key={i} filled={filled} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StrengthRow({ label, detail }: { label: string; detail: string }) {
+  return (
+    <div className="flex items-center gap-4 py-2">
+      <div style={{ width: 64 }}>
+        <span
+          className="font-mono"
+          style={{
+            fontSize: 10,
+            color: "var(--landing-text-muted)",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            fontWeight: 600,
+          }}
+        >
+          {label}
+        </span>
+      </div>
+      <div className="flex-1">
+        <span
+          className="font-mono"
+          style={{
+            fontSize: 12,
+            color: "var(--landing-text-secondary)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {detail}
+        </span>
       </div>
     </div>
   );

@@ -16,18 +16,14 @@ export default function VideoMockup() {
       style={{
         borderRadius: 14,
         border: "1px solid var(--landing-border)",
-        boxShadow:
-          "0 40px 100px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.02)",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.02)",
         overflow: "hidden",
         background: "var(--landing-surface)",
       }}
       aria-hidden="true"
     >
       {/* ── Header bar ──────────────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between"
-        style={{ padding: "10px 14px" }}
-      >
+      <div className="flex items-center justify-between" style={{ padding: "10px 14px" }}>
         <span
           style={{
             fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
@@ -68,20 +64,17 @@ export default function VideoMockup() {
           }}
         >
           {/* Play button */}
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ zIndex: 2 }}
-          >
+          <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2 }}>
             <div
               style={{
                 width: 60,
                 height: 60,
                 borderRadius: "50%",
-                border: "2px solid rgba(245,158,11,0.4)",
+                border: "2px solid rgba(255, 200, 0,0.4)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "rgba(245,158,11,0.06)",
+                background: "rgba(255, 200, 0,0.06)",
               }}
             >
               {/* Play triangle via CSS border trick */}
@@ -91,7 +84,7 @@ export default function VideoMockup() {
                   height: 0,
                   borderTop: "10px solid transparent",
                   borderBottom: "10px solid transparent",
-                  borderLeft: "17px solid rgba(245,158,11,0.7)",
+                  borderLeft: "17px solid rgba(255, 200, 0,0.7)",
                   marginLeft: 4,
                 }}
               />
@@ -111,15 +104,10 @@ export default function VideoMockup() {
               cy="50"
               r="7"
               fill="none"
-              stroke="rgba(245,158,11,0.75)"
+              stroke="rgba(255, 200, 0,0.75)"
               strokeWidth="1.5"
             />
-            <circle
-              cx="120"
-              cy="50"
-              r="2"
-              fill="rgba(245,158,11,0.85)"
-            />
+            <circle cx="120" cy="50" r="2" fill="rgba(255, 200, 0,0.85)" />
 
             {/* Point B — ~70% from left, 75% from top → (280, 150) */}
             <circle
@@ -127,15 +115,10 @@ export default function VideoMockup() {
               cy="150"
               r="7"
               fill="none"
-              stroke="rgba(245,158,11,0.75)"
+              stroke="rgba(255, 200, 0,0.75)"
               strokeWidth="1.5"
             />
-            <circle
-              cx="280"
-              cy="150"
-              r="2"
-              fill="rgba(245,158,11,0.85)"
-            />
+            <circle cx="280" cy="150" r="2" fill="rgba(255, 200, 0,0.85)" />
 
             {/* Dashed line connecting A to B */}
             <line
@@ -143,7 +126,7 @@ export default function VideoMockup() {
               y1="50"
               x2="280"
               y2="150"
-              stroke="rgba(245,158,11,0.55)"
+              stroke="rgba(255, 200, 0,0.55)"
               strokeWidth="1.5"
               strokeDasharray="6,4"
             />
@@ -154,7 +137,7 @@ export default function VideoMockup() {
               y1="150"
               x2="300"
               y2="150"
-              stroke="rgba(245,158,11,0.3)"
+              stroke="rgba(255, 200, 0,0.3)"
               strokeWidth="1"
               strokeDasharray="4,3"
             />
@@ -163,7 +146,7 @@ export default function VideoMockup() {
             <path
               d="M 255,150 A 25,25 0 0,0 268,130"
               fill="none"
-              stroke="rgba(245,158,11,0.5)"
+              stroke="rgba(255, 200, 0,0.5)"
               strokeWidth="1"
             />
 
@@ -172,7 +155,7 @@ export default function VideoMockup() {
               x="300"
               y="148"
               fontSize="10"
-              fill="rgba(245,158,11,0.85)"
+              fill="rgba(255, 200, 0,0.85)"
               fontFamily="system-ui, sans-serif"
               fontWeight="600"
             >
@@ -195,7 +178,7 @@ export default function VideoMockup() {
           style={{
             width: 6,
             height: 6,
-            background: "#f59e0b",
+            background: "#FFC800",
             borderRadius: 1,
             flexShrink: 0,
           }}
@@ -218,7 +201,7 @@ export default function VideoMockup() {
               top: 0,
               height: "100%",
               width: "35%",
-              background: "#f59e0b",
+              background: "#FFC800",
               borderRadius: 9999,
             }}
           />
@@ -233,7 +216,7 @@ export default function VideoMockup() {
               height: 10,
               borderRadius: "50%",
               background: "#ffffff",
-              boxShadow: "0 0 0 2px rgba(245,158,11,0.5)",
+              boxShadow: "0 0 0 2px rgba(255, 200, 0,0.5)",
             }}
           />
         </div>
