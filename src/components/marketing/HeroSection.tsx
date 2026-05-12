@@ -3,18 +3,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    HeroSection
    ───────────
-   Full-width hero with animated text (left) and a 3D-perspective device
-   mockup (right). Floating gradient orbs + grid overlay for depth.
+   Dashboard-as-hero. Short, confident text + CTAs sit above. The product
+   mockup is the centerpiece — a full-width session calendar showing the
+   Bondarchuk descending-implement rule and a validation rejection.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-import { useRef } from "react";
 import Link from "next/link";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useReducedMotion,
-} from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import TextReveal from "@/components/marketing/TextReveal";
 import HeroDeviceMockup from "@/components/marketing/HeroDeviceMockup";
 
@@ -45,224 +40,184 @@ function FadeUp({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HeroSection() {
-  const sectionRef = useRef<HTMLElement>(null);
   const shouldReduce = useReducedMotion();
 
-  // Scroll-linked parallax for the device mockup
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
-
-  const scrollRotateX = useTransform(scrollYProgress, [0, 1], [3, 0]);
-  const scrollRotateY = useTransform(scrollYProgress, [0, 1], [-3, 0]);
-
   return (
-    <section
-      ref={sectionRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      aria-label="Hero"
-    >
-      {/* ── Background effects ─────────────────────────────────────────── */}
+    <section className="relative flex flex-col overflow-hidden" aria-label="Hero">
+      {/* ── Content ───────────────────────────────────────────────────── */}
+      <div className="relative z-10 w-full max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-12 pt-36 sm:pt-40 lg:pt-44 pb-20 lg:pb-28">
+        {/* ── Top: headline + CTAs ───────────────────────────────────── */}
+        <div className="max-w-[860px] mx-auto text-center mb-14 sm:mb-20">
+          {/* Eyebrow — flanked rule */}
+          <FadeUp delay={0.15}>
+            <div className="inline-flex items-center gap-3 mb-7 sm:mb-9">
+              <span aria-hidden="true" style={{ width: 24, height: 1, background: "#FFC800" }} />
+              <span
+                className="font-heading"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: "0.28em",
+                  textTransform: "uppercase" as const,
+                  color: "#FFC800",
+                }}
+              >
+                For Throws Coaches
+              </span>
+              <span aria-hidden="true" style={{ width: 24, height: 1, background: "#FFC800" }} />
+            </div>
+          </FadeUp>
 
-      {/* Static ambient gradient — no animation */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            background: "radial-gradient(ellipse 60% 50% at 30% 30%, rgba(245,158,11,0.05) 0%, transparent 70%)",
-          }}
-        />
-      </div>
+          {/* Headline */}
+          <h1
+            className="font-heading font-black mb-7"
+            style={{
+              fontSize: "clamp(2.6rem, 6.4vw, 5.4rem)",
+              lineHeight: 0.96,
+              letterSpacing: "-0.045em",
+              color: "var(--landing-text)",
+            }}
+          >
+            <TextReveal delay={0.25}>The throws platform</TextReveal>
+            <TextReveal delay={0.4}>
+              coaches{" "}
+              <span
+                style={{
+                  color: "#FFC800",
+                  textShadow: "0 0 60px rgba(255, 200, 0, 0.22)",
+                }}
+              >
+                actually
+              </span>{" "}
+              want.
+            </TextReveal>
+          </h1>
 
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px)
-          `,
-          backgroundSize: "100px 100px",
-          maskImage: "radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent)",
-          WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent)",
-        }}
-      />
-
-      {/* ── Content grid ───────────────────────────────────────────────── */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-5 sm:px-8 lg:px-12 pt-32 pb-24 sm:pt-36 sm:pb-28 lg:py-0">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-12 sm:gap-16 lg:gap-20 items-center">
-
-          {/* ── Left column: text ──────────────────────────────────────── */}
-          <div className="text-center lg:text-left">
-            {/* Eyebrow */}
-            <FadeUp delay={0.15}>
-              <div className="flex items-center gap-3 justify-center lg:justify-start mb-8 sm:mb-10">
-                <div
-                  className="flex-shrink-0"
-                  style={{
-                    width: 32,
-                    height: 2,
-                    background: "#f59e0b",
-                    borderRadius: 1,
-                  }}
-                  aria-hidden="true"
-                />
-                <span
-                  className="font-heading"
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: "0.28em",
-                    textTransform: "uppercase" as const,
-                    color: "#f59e0b",
-                  }}
-                >
-                  For Throws Coaches
-                </span>
-              </div>
-            </FadeUp>
-
-            {/* Title */}
-            <h1
-              className="font-heading font-black mb-6 sm:mb-8"
+          {/* Subtitle */}
+          <FadeUp delay={0.65}>
+            <p
+              className="mx-auto"
               style={{
-                fontSize: "clamp(3.2rem, 6.5vw, 5.8rem)",
-                lineHeight: 0.95,
-                letterSpacing: "-0.05em",
-                color: "var(--landing-text)",
+                fontSize: 18,
+                lineHeight: 1.65,
+                color: "var(--landing-text-secondary)",
+                maxWidth: 580,
               }}
             >
-              <TextReveal delay={0.25}>Stop coaching</TextReveal>
-              <TextReveal delay={0.38}>from a</TextReveal>
-              <TextReveal delay={0.5}>
-                <span
-                  className="text-primary-500"
-                  style={{ textShadow: "0 0 60px rgba(245,158,11,0.25)" }}
-                >
-                  spreadsheet.
-                </span>
-              </TextReveal>
-            </h1>
+              Session planning, video analysis, and PR tracking — encoded with Bondarchuk
+              methodology for shot put, discus, hammer, and javelin.
+            </p>
+          </FadeUp>
 
-            {/* Subtitle */}
-            <FadeUp delay={0.75}>
-              <p
-                className="mx-auto lg:mx-0"
+          {/* CTAs */}
+          <FadeUp delay={0.8}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-9">
+              <Link
+                href="/register"
+                className="font-heading font-bold text-center transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
                 style={{
-                  fontSize: 17,
-                  lineHeight: 1.8,
+                  fontSize: 14,
+                  padding: "15px 36px",
+                  background: "#FFC800",
+                  color: "#0a0a0a",
+                  borderRadius: 8,
+                  boxShadow: "0 0 40px rgba(255, 200, 0, 0.22), 0 0 80px rgba(255, 200, 0, 0.08)",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                Start Free
+              </Link>
+              <Link
+                href="/deficit-finder"
+                className="font-heading font-bold text-center transition-all duration-200 hover:brightness-125 active:scale-[0.97] inline-flex items-center justify-center gap-2"
+                style={{
+                  fontSize: 14,
+                  padding: "15px 28px",
+                  background: "transparent",
                   color: "var(--landing-text-secondary)",
-                  maxWidth: 440,
+                  borderRadius: 8,
+                  border: "1px solid var(--landing-border)",
+                  letterSpacing: "0.02em",
                 }}
               >
-                Session planning, video analysis, and performance tracking
-                built for the way throws coaches actually work.
-              </p>
-            </FadeUp>
+                Free Deficit Finder
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </FadeUp>
 
-            {/* Buttons */}
-            <FadeUp delay={0.9}>
-              <div className="flex flex-col sm:flex-row items-center lg:items-start gap-3 mt-8 sm:mt-10">
-                <Link
-                  href="/register"
-                  className="font-heading font-bold text-center transition-all duration-200 hover:brightness-110 active:scale-[0.97] w-full sm:w-auto"
-                  style={{
-                    fontSize: 14,
-                    padding: "14px 32px",
-                    background: "#f59e0b",
-                    color: "#0a0a0a",
-                    borderRadius: 10,
-                    boxShadow: "0 0 40px rgba(245,158,11,0.25), 0 0 80px rgba(245,158,11,0.1)",
-                  }}
-                >
-                  Start Free
-                </Link>
-                <Link
-                  href="/deficit-finder"
-                  className="font-heading font-bold text-center transition-all duration-200 hover:brightness-125 active:scale-[0.97] w-full sm:w-auto"
-                  style={{
-                    fontSize: 14,
-                    padding: "14px 32px",
-                    background: "transparent",
-                    color: "var(--landing-text-secondary)",
-                    borderRadius: 10,
-                    border: "1px solid var(--landing-border)",
-                  }}
-                >
-                  Free Deficit Finder &rarr;
-                </Link>
-              </div>
-            </FadeUp>
+          {/* Trust meta */}
+          <FadeUp delay={0.95}>
+            <p
+              className="mt-5 font-mono"
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase" as const,
+                color: "var(--landing-text-dim)",
+              }}
+            >
+              No card · 3 athletes free · Cancel anytime
+            </p>
+          </FadeUp>
+        </div>
 
-            {/* Trust meta */}
-            <FadeUp delay={1.05}>
-              <p
-                className="mt-6 flex items-center justify-center lg:justify-start gap-1 flex-wrap"
-                style={{
-                  fontSize: 12,
-                  color: "var(--landing-text-dim)",
-                }}
-              >
-                <span>No credit card</span>
-                <span style={{ color: "#f59e0b", opacity: 0.5 }} aria-hidden="true">&middot;</span>
-                <span>3 athletes free</span>
-                <span style={{ color: "#f59e0b", opacity: 0.5 }} aria-hidden="true">&middot;</span>
-                <span>Cancel anytime</span>
-              </p>
-            </FadeUp>
-          </div>
-
-          {/* ── Right column: device mockup ────────────────────────────── */}
-          <div
-            className="relative"
-            style={{ perspective: shouldReduce ? "none" : "1200px" }}
-          >
+        {/* ── Bottom: dashboard mockup ────────────────────────────────── */}
+        <FadeUp delay={1.1}>
+          <div className="relative max-w-[1180px] mx-auto w-full">
+            {/* Soft amber floor light under the mockup — gives it a stage,
+                not the Stripe-2020 generic orb. */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "10%",
+                right: "10%",
+                bottom: "-12%",
+                height: "40%",
+                background:
+                  "radial-gradient(ellipse 60% 100% at 50% 50%, rgba(255, 200, 0, 0.10), transparent 70%)",
+                filter: "blur(50px)",
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
+            />
+            {/* Mockup with a slight 3D rest pose */}
             {shouldReduce ? (
-              /* Static mockup for reduced-motion */
-              <div className="w-full">
+              <div className="relative">
                 <HeroDeviceMockup />
               </div>
             ) : (
               <motion.div
-                initial={{
-                  opacity: 0,
-                  y: 100,
-                  rotateX: 12,
-                  rotateY: -6,
-                  scale: 0.92,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  rotateX: 3,
-                  rotateY: -3,
-                  scale: 1,
-                }}
-                transition={{
-                  duration: 1.6,
-                  delay: 0.5,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                whileHover={{
-                  rotateX: 0,
-                  rotateY: 0,
-                  transition: { type: "spring", stiffness: 200, damping: 20 },
-                }}
+                initial={{ opacity: 0, y: 60, rotateX: 6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, rotateX: 1.5, scale: 1 }}
+                transition={{ duration: 1.4, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 style={{
-                  rotateX: scrollRotateX,
-                  rotateY: scrollRotateY,
+                  transformOrigin: "50% 100%",
                   transformStyle: "preserve-3d",
+                  perspective: 1400,
+                  position: "relative",
+                  zIndex: 1,
                 }}
               >
                 <HeroDeviceMockup />
               </motion.div>
             )}
-          </div>
 
-        </div>
+            {/* Caption — events covered */}
+            <div
+              className="mt-6 text-center font-mono"
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.22em",
+                textTransform: "uppercase" as const,
+                color: "var(--landing-text-dim)",
+              }}
+              aria-hidden="true"
+            >
+              Shot Put · Discus · Hammer · Javelin
+            </div>
+          </div>
+        </FadeUp>
       </div>
     </section>
   );

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import MarketingNav from "@/components/marketing/Nav";
 import HeroSection from "@/components/marketing/HeroSection";
 import DataStrip from "@/components/marketing/DataStrip";
-import DemoVideo from "@/components/marketing/DemoVideo";
 import BondarchukProof from "@/components/marketing/BondarchukProof";
 import StickyFeatures from "@/components/marketing/StickyFeatures";
 import BentoFeatures from "@/components/marketing/BentoFeatures";
@@ -78,8 +77,6 @@ export default function HomePage() {
         <MarketingNav />
         <HeroSection />
         <DataStrip />
-        <Divider />
-        <DemoVideo placement="landing_above_features" />
         <Divider />
         <StickyFeatures />
         <Divider />

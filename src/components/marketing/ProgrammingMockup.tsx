@@ -35,9 +35,7 @@ const WEEK_DAYS: DayColumn[] = [
   },
   {
     day: "Tue",
-    sessions: [
-      { type: "throws", name: "AM Throws", detail: "SP · 32 throws" },
-    ],
+    sessions: [{ type: "throws", name: "AM Throws", detail: "SP · 32 throws" }],
   },
   {
     day: "Wed",
@@ -53,9 +51,7 @@ const WEEK_DAYS: DayColumn[] = [
   },
   {
     day: "Fri",
-    sessions: [
-      { type: "throws", name: "AM Throws", detail: "DT · 28 throws" },
-    ],
+    sessions: [{ type: "throws", name: "AM Throws", detail: "DT · 28 throws" }],
   },
 ];
 
@@ -69,9 +65,7 @@ function SessionCardItem({ session }: { session: SessionCard }) {
       style={{
         background: "var(--landing-bg)",
         border: "1px solid var(--landing-border)",
-        borderLeft: isThrows
-          ? "2px solid rgba(245,158,11,0.6)"
-          : "2px solid rgba(99,102,241,0.5)",
+        borderLeft: isThrows ? "2px solid rgba(255, 200, 0,0.6)" : "2px solid rgba(99,102,241,0.5)",
         borderRadius: 6,
         padding: "7px 8px",
         width: "100%",
@@ -110,10 +104,7 @@ function SessionCardItem({ session }: { session: SessionCard }) {
 
 function DayCol({ col }: { col: DayColumn }) {
   return (
-    <div
-      className="flex flex-col"
-      style={{ gap: 4, flex: 1, minWidth: 0 }}
-    >
+    <div className="flex flex-col" style={{ gap: 4, flex: 1, minWidth: 0 }}>
       {/* Day header */}
       <div
         style={{
@@ -144,9 +135,7 @@ function DayCol({ col }: { col: DayColumn }) {
           Rest
         </div>
       ) : (
-        col.sessions.map((session, i) => (
-          <SessionCardItem key={i} session={session} />
-        ))
+        col.sessions.map((session, i) => <SessionCardItem key={i} session={session} />)
       )}
     </div>
   );
@@ -161,18 +150,14 @@ export default function ProgrammingMockup() {
       style={{
         borderRadius: 14,
         border: "1px solid var(--landing-border)",
-        boxShadow:
-          "0 40px 100px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.02)",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.02)",
         overflow: "hidden",
         background: "var(--landing-surface)",
       }}
       aria-hidden="true"
     >
       {/* ── Header bar ──────────────────────────────────────────────── */}
-      <div
-        className="flex items-center justify-between"
-        style={{ padding: "10px 14px" }}
-      >
+      <div className="flex items-center justify-between" style={{ padding: "10px 14px" }}>
         <span
           style={{
             fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
@@ -189,9 +174,9 @@ export default function ProgrammingMockup() {
             fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
             fontSize: 10,
             fontWeight: 700,
-            color: "#f59e0b",
+            color: "#FFC800",
             background: "var(--landing-amber-glow-strong)",
-            border: "1px solid rgba(245,158,11,0.2)",
+            border: "1px solid rgba(255, 200, 0,0.2)",
             borderRadius: 6,
             padding: "3px 8px",
           }}

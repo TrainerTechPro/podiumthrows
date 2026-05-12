@@ -178,6 +178,7 @@
     --landing-text-secondary: #92929a;
     --landing-text-muted: #44444e;
     --landing-text-dim: #2a2a34;
+    --landing-amber: #FFC800;
     --landing-amber-glow: rgba(255,200,0,0.07);
     --landing-amber-glow-strong: rgba(255,200,0,0.14);
     --landing-neo-highlight: rgba(255, 200, 0, 0.025);

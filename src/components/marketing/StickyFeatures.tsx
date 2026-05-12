@@ -54,10 +54,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
       }}
     >
       {/* Number with extending line */}
-      <div
-        className="flex items-center"
-        style={{ gap: 12, marginBottom: 20 }}
-      >
+      <div className="flex items-center" style={{ gap: 12, marginBottom: 20 }}>
         <span
           style={{
             fontFamily: "var(--font-chakra-petch), system-ui, sans-serif",
@@ -68,10 +65,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
         >
           {feature.number}
         </span>
-        <span
-          className="flex-1"
-          style={{ height: 1, background: "var(--landing-border)" }}
-        />
+        <span className="flex-1" style={{ height: 1, background: "var(--landing-border)" }} />
       </div>
 
       {/* Label */}
@@ -82,7 +76,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
           fontWeight: 600,
           textTransform: "uppercase",
           letterSpacing: "0.28em",
-          color: "#f59e0b",
+          color: "#FFC800",
           marginBottom: 14,
         }}
       >
@@ -125,7 +119,7 @@ function FeatureBlock({ feature, isLast }: FeatureBlockProps) {
           className="inline-flex"
           style={{
             fontSize: 11,
-            color: "#f59e0b",
+            color: "#FFC800",
             padding: "5px 12px",
             background: "var(--landing-amber-glow-strong)",
             borderRadius: 6,
@@ -178,15 +172,14 @@ export default function StickyFeatures() {
   const ActiveMockup = MOCKUP_COMPONENTS[activeFeature];
 
   return (
-    <section
-      style={{ maxWidth: 1400, margin: "0 auto" }}
-    >
+    <section style={{ maxWidth: 1400, margin: "0 auto" }}>
       {/* ── Desktop Layout ─────────────────────────────────────────── */}
-      <div className="hidden lg:grid" style={{ gridTemplateColumns: "1fr 1fr", minHeight: "240vh" }}>
+      <div
+        className="hidden lg:grid"
+        style={{ gridTemplateColumns: "1fr 1fr", minHeight: "240vh" }}
+      >
         {/* Left column — scrolling text */}
-        <div
-          style={{ padding: "180px 64px" }}
-        >
+        <div style={{ padding: "180px 64px" }}>
           {FEATURES.map((feature, i) => (
             <div
               key={feature.number}
@@ -194,10 +187,7 @@ export default function StickyFeatures() {
                 sectionRefs.current[i] = el;
               }}
             >
-              <FeatureBlock
-                feature={feature}
-                isLast={i === FEATURES.length - 1}
-              />
+              <FeatureBlock feature={feature} isLast={i === FEATURES.length - 1} />
             </div>
           ))}
         </div>
@@ -214,21 +204,9 @@ export default function StickyFeatures() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeFeature}
-              initial={
-                prefersReducedMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, scale: 1.02 }
-              }
-              animate={
-                prefersReducedMotion
-                  ? { opacity: 1 }
-                  : { opacity: 1, scale: 1 }
-              }
-              exit={
-                prefersReducedMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, scale: 0.98 }
-              }
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.02 }}
+              animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.25 }}
             >
               <ActiveMockup />
@@ -243,10 +221,7 @@ export default function StickyFeatures() {
           const Mockup = MOCKUP_COMPONENTS[i];
           return (
             <div key={feature.number}>
-              <FeatureBlock
-                feature={feature}
-                isLast={i === FEATURES.length - 1}
-              />
+              <FeatureBlock feature={feature} isLast={i === FEATURES.length - 1} />
               <ScrollReveal>
                 <div style={{ padding: "32px 0 48px" }}>
                   <Mockup />

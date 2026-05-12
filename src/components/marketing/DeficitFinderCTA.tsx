@@ -71,7 +71,7 @@ function Step({ number, title, subtitle, isFirst }: StepProps) {
           height: 32,
           borderRadius: "50%",
           background: "var(--landing-amber-glow-strong)",
-          color: "#f59e0b",
+          color: "#FFC800",
           fontWeight: 700,
           fontSize: 13,
           display: "grid",
@@ -162,7 +162,7 @@ export default function DeficitFinderCTA() {
                 style={{
                   width: 20,
                   height: 2,
-                  background: "#f59e0b",
+                  background: "#FFC800",
                   borderRadius: 1,
                   flexShrink: 0,
                 }}
@@ -173,7 +173,7 @@ export default function DeficitFinderCTA() {
                   fontSize: 11,
                   letterSpacing: "0.3em",
                   textTransform: "uppercase",
-                  color: "#f59e0b",
+                  color: "#FFC800",
                 }}
               >
                 Free Tool
@@ -217,7 +217,7 @@ export default function DeficitFinderCTA() {
                 className="font-heading"
                 style={{
                   display: "inline-block",
-                  background: "#f59e0b",
+                  background: "#FFC800",
                   color: "#0a0a0a",
                   fontWeight: 700,
                   fontSize: 14,
@@ -230,10 +230,10 @@ export default function DeficitFinderCTA() {
                   (e.currentTarget as HTMLElement).style.background = "#d97706";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 8px 24px rgba(245,158,11,0.35)";
+                    "0 8px 24px rgba(255, 200, 0,0.35)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = "#f59e0b";
+                  (e.currentTarget as HTMLElement).style.background = "#FFC800";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                   (e.currentTarget as HTMLElement).style.boxShadow = "none";
                 }}

@@ -8,7 +8,7 @@ export default function CornerMark({
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
 }) {
   const size = 12;
-  const color = "rgba(245, 158, 11, 0.3)";
+  const color = "rgba(255, 200, 0, 0.3)";
 
   const positionStyles: React.CSSProperties = {
     position: "absolute",

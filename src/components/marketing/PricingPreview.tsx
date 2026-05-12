@@ -99,7 +99,7 @@ function FeatureItem({ text }: { text: string }) {
           width: 4,
           height: 4,
           borderRadius: "50%",
-          background: "#f59e0b",
+          background: "#FFC800",
           flexShrink: 0,
         }}
       />
@@ -116,7 +116,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
   const ctaStyles: React.CSSProperties =
     tier.ctaVariant === "filled"
       ? {
-          background: "#f59e0b",
+          background: "#FFC800",
           color: "#0a0a0a",
           border: "none",
         }
@@ -131,14 +131,14 @@ function PricingCard({ tier }: { tier: PricingTier }) {
       className={`pricing-card${tier.featured ? " pricing-card--featured" : ""}`}
       style={{
         background: "var(--landing-surface)",
-        border: `1px solid ${tier.featured ? "#f59e0b" : "var(--landing-border)"}`,
+        border: `1px solid ${tier.featured ? "#FFC800" : "var(--landing-border)"}`,
         borderRadius: 16,
         padding: 32,
         position: "relative",
         overflow: "hidden",
         transform: tier.featured ? "translateY(-8px)" : "none",
         boxShadow: tier.featured
-          ? "var(--landing-neo-raised), 0 24px 64px rgba(0,0,0,0.35), 0 0 40px rgba(245,158,11,0.2)"
+          ? "var(--landing-neo-raised), 0 24px 64px rgba(0,0,0,0.35), 0 0 40px rgba(255, 200, 0,0.2)"
           : "var(--landing-neo-raised)",
         transition: "0.4s cubic-bezier(0.16,1,0.3,1)",
         transitionProperty: "transform, box-shadow",
@@ -157,7 +157,7 @@ function PricingCard({ tier }: { tier: PricingTier }) {
               top: -11,
               left: "50%",
               transform: "translateX(-50%)",
-              background: "#f59e0b",
+              background: "#FFC800",
               color: "#0a0a0a",
               fontWeight: 700,
               fontSize: 10,
@@ -380,7 +380,7 @@ export default function PricingPreview() {
 
         .pricing-card--featured:hover {
           transform: translateY(-12px);
-          box-shadow: var(--landing-neo-raised-hover), 0 0 48px rgba(245,158,11,0.22);
+          box-shadow: var(--landing-neo-raised-hover), 0 0 48px rgba(255, 200, 0,0.22);
         }
 
         @media (prefers-reduced-motion: reduce) {

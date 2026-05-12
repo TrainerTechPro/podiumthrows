@@ -76,7 +76,7 @@ export default function BondarchukProof() {
                   fontWeight: 900,
                   lineHeight: 0.75,
                   letterSpacing: "-0.07em",
-                  WebkitTextStroke: "1px rgba(245,158,11,0.1)",
+                  WebkitTextStroke: "1px rgba(255, 200, 0,0.1)",
                   color: "transparent",
                   zIndex: -1,
                   userSelect: "none",
@@ -95,7 +95,7 @@ export default function BondarchukProof() {
                     fontWeight: 900,
                     lineHeight: 0.75,
                     letterSpacing: "-0.07em",
-                    color: "#f59e0b",
+                    color: "#FFC800",
                     whiteSpace: "nowrap",
                     position: "relative",
                   }}
@@ -128,7 +128,7 @@ export default function BondarchukProof() {
                 {`"Every natural athlete lost `}
                 <strong
                   style={{
-                    color: "#f59e0b",
+                    color: "#FFC800",
                     fontStyle: "normal",
                     fontWeight: 700,
                   }}

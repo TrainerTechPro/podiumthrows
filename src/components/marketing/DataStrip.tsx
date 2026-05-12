@@ -1,101 +1,129 @@
 import ScrollReveal from "./ScrollReveal";
 
 /**
- * DataStrip — telemetry-style horizontal readout strip.
- * Key stats in a row with dividers, IBM Plex Mono for values.
+ * DataStrip — telemetry-style readout, asymmetric hierarchy.
+ * One hero number anchors the row; three supporting facts sit to the right.
  */
 
-const STATS = [
-  { label: "Implements", value: "4" },
-  { label: "Session Validation", value: "100%" },
-  { label: "Methodology", value: "Vol I–IV" },
-  { label: "Exercise Types", value: "5" },
+const SUPPORTING = [
+  { label: "Events", value: "4", detail: "Shot · Discus · Hammer · Javelin" },
+  { label: "Methodology", value: "Vol I–IV", detail: "Transfer of Training" },
+  { label: "Exercise Types", value: "5", detail: "CE · SDE · GPE · SPE · Comp" },
 ] as const;
 
 export default function DataStrip() {
   return (
     <section
       style={{
-        borderTop: "1px solid rgba(245, 158, 11, 0.12)",
-        borderBottom: "1px solid rgba(245, 158, 11, 0.12)",
-        background: "rgba(245, 158, 11, 0.02)",
+        borderTop: "1px solid rgba(255, 200, 0, 0.12)",
+        borderBottom: "1px solid rgba(255, 200, 0, 0.12)",
+        background: "rgba(255, 200, 0, 0.02)",
       }}
     >
       <div
         style={{
-          maxWidth: 1200,
+          maxWidth: 1280,
           margin: "0 auto",
-          padding: "40px 16px",
+          padding: "64px 20px",
         }}
       >
         <ScrollReveal>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              flexWrap: "wrap",
-              gap: 0,
-            }}
-          >
-            {STATS.map((stat, i) => (
+          <div className="grid grid-cols-1 lg:grid-cols-[5fr_7fr] gap-12 lg:gap-20 items-center">
+            {/* ── Hero stat ───────────────────────────────────────────── */}
+            <div className="text-center lg:text-left">
               <div
-                key={stat.label}
+                className="font-mono"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0,
+                  fontSize: 10,
+                  fontWeight: 500,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.22em",
+                  color: "var(--landing-text-muted)",
+                  marginBottom: 12,
                 }}
               >
-                {/* Stat cell */}
+                Session validation
+              </div>
+              <div
+                className="font-heading font-black"
+                style={{
+                  fontSize: "clamp(5rem, 11vw, 9rem)",
+                  fontWeight: 900,
+                  color: "#FFC800",
+                  lineHeight: 0.85,
+                  letterSpacing: "-0.05em",
+                }}
+              >
+                100%
+              </div>
+              <div
+                className="mx-auto lg:mx-0"
+                style={{
+                  marginTop: 14,
+                  fontSize: 14,
+                  lineHeight: 1.55,
+                  color: "var(--landing-text-secondary)",
+                  maxWidth: 360,
+                }}
+              >
+                of throwing sessions checked against the descending-implement rule. The engine
+                refuses ascending sequences.
+              </div>
+            </div>
+
+            {/* ── Supporting facts ────────────────────────────────────── */}
+            <div
+              className="grid grid-cols-1 sm:grid-cols-3 gap-px"
+              style={{ background: "var(--landing-border-light)" }}
+            >
+              {SUPPORTING.map((stat) => (
                 <div
+                  key={stat.label}
                   style={{
-                    textAlign: "center",
-                    padding: "0 32px",
+                    background: "var(--landing-bg)",
+                    padding: "20px 18px",
                   }}
                 >
-                  {/* Label */}
                   <div
-                    className="font-heading"
+                    className="font-mono"
                     style={{
                       fontSize: 10,
                       fontWeight: 500,
                       textTransform: "uppercase",
-                      letterSpacing: "0.1em",
+                      letterSpacing: "0.18em",
                       color: "var(--landing-text-muted)",
-                      marginBottom: 6,
+                      marginBottom: 10,
                     }}
                   >
                     {stat.label}
                   </div>
-                  {/* Value */}
                   <div
-                    className="font-mono"
+                    className="font-heading"
                     style={{
-                      fontSize: 32,
-                      fontWeight: 600,
+                      fontSize: 28,
+                      fontWeight: 700,
                       color: "var(--landing-text)",
                       lineHeight: 1,
                       letterSpacing: "-0.02em",
+                      marginBottom: 10,
                     }}
                   >
                     {stat.value}
                   </div>
-                </div>
-
-                {/* Divider (not after last) */}
-                {i < STATS.length - 1 && (
                   <div
-                    aria-hidden="true"
+                    className="font-mono"
                     style={{
-                      width: 1,
-                      height: 40,
-                      background: "rgba(245, 158, 11, 0.12)",
-                      flexShrink: 0,
+                      fontSize: 11,
+                      letterSpacing: "0.04em",
+                      color: "var(--landing-text-dim)",
+                      lineHeight: 1.5,
                     }}
-                  />
-                )}
-              </div>
-            ))}
+                  >
+                    {stat.detail}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </ScrollReveal>
       </div>

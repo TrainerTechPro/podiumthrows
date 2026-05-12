@@ -12,11 +12,7 @@ import ScrollReveal from "./ScrollReveal";
 
 // ─── Trust meta items ─────────────────────────────────────────────────────────
 
-const TRUST_ITEMS = [
-  "No credit card",
-  "Cancel anytime",
-  "Built on published research",
-] as const;
+const TRUST_ITEMS = ["No credit card", "Cancel anytime", "Built on published research"] as const;
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -51,16 +47,13 @@ export default function FinalCTA() {
       <div style={{ position: "relative", zIndex: 1 }}>
         {/* Section label — centered */}
         <ScrollReveal>
-          <div
-            className="flex items-center justify-center"
-            style={{ gap: 12, marginBottom: 28 }}
-          >
+          <div className="flex items-center justify-center" style={{ gap: 12, marginBottom: 28 }}>
             <div
               aria-hidden="true"
               style={{
                 width: 20,
                 height: 2,
-                background: "#f59e0b",
+                background: "#FFC800",
                 borderRadius: 1,
                 flexShrink: 0,
               }}
@@ -71,7 +64,7 @@ export default function FinalCTA() {
                 fontSize: 11,
                 letterSpacing: "0.3em",
                 textTransform: "uppercase",
-                color: "#f59e0b",
+                color: "#FFC800",
               }}
             >
               Ready?
@@ -81,7 +74,7 @@ export default function FinalCTA() {
               style={{
                 width: 20,
                 height: 2,
-                background: "#f59e0b",
+                background: "#FFC800",
                 borderRadius: 1,
                 flexShrink: 0,
               }}
@@ -107,9 +100,8 @@ export default function FinalCTA() {
             <span
               className="final-cta-amber"
               style={{
-                color: "#f59e0b",
-                textShadow:
-                  "0 0 32px rgba(245,158,11,0.45), 0 0 64px rgba(245,158,11,0.2)",
+                color: "#FFC800",
+                textShadow: "0 0 32px rgba(255, 200, 0,0.45), 0 0 64px rgba(255, 200, 0,0.2)",
               }}
             >
               distance on the table.
@@ -133,7 +125,7 @@ export default function FinalCTA() {
               href="/register"
               className="font-heading final-cta-btn-primary"
               style={{
-                background: "#f59e0b",
+                background: "#FFC800",
                 color: "#0a0a0a",
                 fontWeight: 700,
                 fontSize: 15,
@@ -141,8 +133,7 @@ export default function FinalCTA() {
                 borderRadius: 10,
                 textDecoration: "none",
                 display: "inline-block",
-                transition:
-                  "background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
+                transition: "background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease",
               }}
             >
               Start Free Today
@@ -161,8 +152,7 @@ export default function FinalCTA() {
                 textDecoration: "none",
                 display: "inline-block",
                 border: "1px solid var(--landing-border)",
-                transition:
-                  "border-color 0.2s ease, color 0.2s ease, transform 0.2s ease",
+                transition: "border-color 0.2s ease, color 0.2s ease, transform 0.2s ease",
               }}
             >
               Run the Deficit Finder →
@@ -200,7 +190,7 @@ export default function FinalCTA() {
                       width: 3,
                       height: 3,
                       borderRadius: "50%",
-                      background: "#f59e0b",
+                      background: "#FFC800",
                       display: "inline-block",
                       flexShrink: 0,
                     }}
@@ -234,12 +224,12 @@ export default function FinalCTA() {
         .final-cta-btn-primary:hover {
           background: #d97706;
           transform: translateY(-2px);
-          box-shadow: 0 12px 32px rgba(245,158,11,0.35);
+          box-shadow: 0 12px 32px rgba(255, 200, 0,0.35);
         }
 
         .final-cta-btn-ghost:hover {
-          border-color: rgba(245,158,11,0.4);
-          color: #f59e0b;
+          border-color: rgba(255, 200, 0,0.4);
+          color: #FFC800;
           transform: translateY(-2px);
         }
 
