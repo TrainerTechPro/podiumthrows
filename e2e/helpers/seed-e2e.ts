@@ -84,6 +84,40 @@ export function ensureThrowsAssignmentForAthlete1(): {
   };
 }
 
+export const E2E_TODAY_TRAINING_SESSION_ID = "e2e-today-training-session-1";
+
+/**
+ * Ensure athlete1 has a TrainingSession scheduled for today (status=SCHEDULED).
+ * This is what powers the Athlete Home "Today" hero card — see
+ * tasks/mvp-weekly-loop.md §2.
+ *
+ * Idempotent: re-running updates the scheduledDate forward to "now" so the
+ * "today" window in `loadAthleteDashboard()` continues to match it.
+ */
+export function ensureTodayTrainingSessionForAthlete1(): { trainingSessionId: string } {
+  const athleteRows = psqlQuery(
+    `SELECT ap.id FROM "AthleteProfile" ap JOIN "User" u ON ap."userId"=u.id WHERE u.email='athlete1@example.com' LIMIT 1`
+  );
+  if (athleteRows.length === 0) {
+    throw new Error("[e2e seed] athlete1@example.com not found — run npm run db:seed first");
+  }
+  const athleteId = athleteRows[0];
+
+  // Reuse the first existing WorkoutPlan so the relation is populated;
+  // the Today card pulls plan.name + plan.blocks for the prescription.
+  // If no plan exists, leave planId NULL — the page still renders.
+  const planRows = psqlQuery(`SELECT id FROM "WorkoutPlan" ORDER BY "createdAt" ASC LIMIT 1`);
+  const planClause = planRows.length > 0 ? `'${planRows[0]}'` : "NULL";
+
+  psqlExec(
+    `INSERT INTO "TrainingSession" (id, "planId", "athleteId", "scheduledDate", status, "createdAt", "updatedAt")
+     VALUES ('${E2E_TODAY_TRAINING_SESSION_ID}', ${planClause}, '${athleteId}', NOW(), 'SCHEDULED', NOW(), NOW())
+     ON CONFLICT (id) DO UPDATE SET "scheduledDate"=NOW(), status='SCHEDULED', "updatedAt"=NOW()`
+  );
+
+  return { trainingSessionId: E2E_TODAY_TRAINING_SESSION_ID };
+}
+
 /**
  * Return the ID of a COMPLETED TrainingSession belonging to athlete1.
  * Seed creates 10 sessions for athlete1 (8 COMPLETED), so this should always

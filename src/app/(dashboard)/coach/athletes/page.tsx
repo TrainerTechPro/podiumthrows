@@ -22,10 +22,12 @@ import { AthleteLogsList } from "../athlete-logs/_athlete-logs-client";
 
 type Tab = "roster" | "invitations" | "throws" | "self-logs";
 
+type RosterFilter = "missing-readiness" | "needs-review" | null;
+
 export default async function AthletesPage({
   searchParams,
 }: {
-  searchParams: { tab?: string; teamId?: string; moved?: string };
+  searchParams: { tab?: string; teamId?: string; moved?: string; filter?: string };
 }) {
   const { coach } = await requireCoachSession();
   const tab: Tab =
@@ -36,6 +38,12 @@ export default async function AthletesPage({
         : searchParams.tab === "self-logs"
           ? "self-logs"
           : "roster";
+  const rosterFilter: RosterFilter =
+    searchParams.filter === "missing-readiness"
+      ? "missing-readiness"
+      : searchParams.filter === "needs-review"
+        ? "needs-review"
+        : null;
 
   // Fetch teams for the filter dropdown
   const teams = await prisma.team.findMany({
@@ -105,8 +113,40 @@ export default async function AthletesPage({
 
   const planLimit = PLAN_LIMITS[coach.plan];
 
+  // Apply weekly-loop filter (drives the "This week" tile links on the
+  // coach dashboard — see tasks/mvp-weekly-loop.md).
+  let filteredRoster = roster;
+  if (rosterFilter === "missing-readiness") {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    filteredRoster = roster.filter((a) => {
+      if (!a.latestReadiness) return true;
+      return new Date(a.latestReadiness.date).getTime() < sevenDaysAgo.getTime();
+    });
+  } else if (rosterFilter === "needs-review") {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [recentCompletions, recentNotes] = await Promise.all([
+      prisma.throwsAssignment.findMany({
+        where: {
+          athlete: { coachId: coach.id },
+          completedAt: { gte: sevenDaysAgo },
+          status: { in: ["COMPLETED", "PARTIAL"] },
+        },
+        select: { athleteId: true },
+        distinct: ["athleteId"],
+      }),
+      prisma.coachNote.findMany({
+        where: { coachProfileId: coach.id, createdAt: { gte: sevenDaysAgo } },
+        select: { athleteProfileId: true },
+        distinct: ["athleteProfileId"],
+      }),
+    ]);
+    const completed = new Set(recentCompletions.map((c) => c.athleteId));
+    const reviewed = new Set(recentNotes.map((n) => n.athleteProfileId));
+    filteredRoster = roster.filter((a) => completed.has(a.id) && !reviewed.has(a.id));
+  }
+
   // Sort: lowest readiness first (needs attention), no check-in last
-  const sorted = [...roster].sort((a, b) => {
+  const sorted = [...filteredRoster].sort((a, b) => {
     const aScore = a.latestReadiness?.score ?? 999;
     const bScore = b.latestReadiness?.score ?? 999;
     if (aScore !== bScore) return aScore - bScore;
@@ -287,7 +327,28 @@ export default async function AthletesPage({
               </div>
             </div>
           )}
-          {needsAttention > 0 && (
+          {rosterFilter && (
+            <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 flex items-center justify-between gap-3 animate-fade-slide-in">
+              <p className="text-sm text-[var(--foreground)]">
+                <strong className="font-semibold">Filtered:</strong>{" "}
+                {rosterFilter === "missing-readiness"
+                  ? "Athletes with no readiness check-in in the last 7 days"
+                  : "Athletes who completed a session this week with no coach note"}{" "}
+                <span className="text-muted">
+                  · {sorted.length} {sorted.length === 1 ? "athlete" : "athletes"}
+                </span>
+              </p>
+              <Link
+                href={
+                  resolvedTeamId ? `/coach/athletes?teamId=${resolvedTeamId}` : "/coach/athletes"
+                }
+                className="text-xs font-medium text-primary-500 hover:underline shrink-0"
+              >
+                Clear filter ×
+              </Link>
+            </div>
+          )}
+          {!rosterFilter && needsAttention > 0 && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
               <AlertTriangle
                 className="w-4 h-4 text-red-500 shrink-0 mt-0.5"

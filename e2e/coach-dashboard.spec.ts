@@ -49,4 +49,47 @@ test.describe("Coach Dashboard", () => {
     await sidebar.getByRole("link", { name: "Builder", exact: true }).click();
     await expect(page).toHaveURL(/\/coach\/builder(\?|$|#)/);
   });
+
+  // ── MVP weekly loop ───────────────────────────────────────────────────
+  // The "This week" surface is the coach side of the weekly loop. Every
+  // tile must be present, and tiles with positive counts must link to a
+  // filtered surface. See tasks/mvp-weekly-loop.md.
+
+  test("coach dashboard surfaces 'This week' with five tiles", async ({ page }) => {
+    await page.goto("/coach/dashboard");
+    await expect(page.getByRole("heading", { name: "This week" })).toBeVisible();
+    for (const label of [
+      "Not started",
+      "Completed",
+      "PRs this week",
+      "Missing readiness",
+      "Needs review",
+    ]) {
+      // Tile label appears once inside the "This week" section.
+      await expect(page.getByText(label, { exact: true })).toBeVisible();
+    }
+  });
+
+  test("meta-bar 'athletes' count links to roster", async ({ page }) => {
+    await page.goto("/coach/dashboard");
+    await page
+      .getByRole("link", { name: /\d+ athletes? — open roster/ })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/coach\/athletes(\?|$|#)/);
+  });
+
+  test("calendar filter URL renders the from-dashboard banner", async ({ page }) => {
+    await page.goto("/coach/calendar?filter=not-started");
+    await expect(page.getByTestId("calendar-filter-banner")).toBeVisible();
+    await expect(page.getByText(/Assigned this week, not started/)).toBeVisible();
+  });
+
+  test("roster filter URL renders the active-filter banner", async ({ page }) => {
+    await page.goto("/coach/athletes?filter=missing-readiness");
+    await expect(page.getByText(/Filtered:/)).toBeVisible();
+    await expect(
+      page.getByText(/Athletes with no readiness check-in in the last 7 days/)
+    ).toBeVisible();
+  });
 });

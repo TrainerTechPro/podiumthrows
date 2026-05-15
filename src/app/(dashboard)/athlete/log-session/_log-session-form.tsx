@@ -778,7 +778,7 @@ export function LogSessionForm({
           Cancel
         </button>
         <h1 className="font-heading text-base font-semibold text-[var(--color-text-primary)]">
-          {isEditing ? "Edit session" : "Log session"}
+          {isEditing ? "Edit session" : "Quick log"}
         </h1>
         <input
           type="date"

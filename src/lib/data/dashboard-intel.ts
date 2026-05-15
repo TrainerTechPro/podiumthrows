@@ -785,3 +785,138 @@ export const getSeasonGains = cache(
     return result;
   }
 );
+
+/* ─── 7. getThisWeekSummary ────────────────────────────────────────────────
+   Powers the "This week" decision row on the coach dashboard. Five counts
+   the coach needs to scan in 2 seconds: who didn't start, who finished,
+   who set PRs, who is missing a readiness check-in, and who needs a
+   review note. Each count maps to a destination on the dashboard, and
+   the count itself is the verb. */
+
+export interface ThisWeekSummary {
+  /** Mon→Sun window the counts refer to, as YYYY-MM-DD strings. */
+  weekStart: string;
+  weekEnd: string;
+  /** Throws assignments scheduled this week that haven't been started. */
+  notStarted: number;
+  /** Throws assignments completed in this week (status=COMPLETED|PARTIAL). */
+  completed: number;
+  /** PRs achieved in the last 7 days (catalog + drill). */
+  prs: number;
+  /** Athletes with no readiness check-in in the last 7 days. */
+  missingReadiness: number;
+  /** Athletes who completed work in the last 7 days but have no coach note in 7 days. */
+  needsReview: number;
+}
+
+function weekBoundsMondayLocal(timezone: string): { startISO: string; endISO: string } {
+  const todayISOStr = getLocalDate(timezone);
+  const [y, m, d] = todayISOStr.split("-").map(Number);
+  // Use UTC math on the date itself — only weekday and arithmetic matter here.
+  const todayUtc = new Date(Date.UTC(y, m - 1, d));
+  const dow = todayUtc.getUTCDay(); // 0 = Sun
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const start = new Date(todayUtc);
+  start.setUTCDate(todayUtc.getUTCDate() + mondayOffset);
+  const end = new Date(start);
+  end.setUTCDate(start.getUTCDate() + 6);
+  const fmt = (d: Date) =>
+    `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  return { startISO: fmt(start), endISO: fmt(end) };
+}
+
+export const getThisWeekSummary = cache(async (coachId: string): Promise<ThisWeekSummary> => {
+  const tz = await getCoachTimezone(coachId);
+  const { startISO, endISO } = weekBoundsMondayLocal(tz);
+  const weekStartDt = combineLocalDateTime(startISO, "00:00", tz);
+  const weekEndDt = combineLocalDateTime(endISO, "23:59", tz);
+  const sevenDaysAgoDt = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgoISO = (() => {
+    const d = new Date(sevenDaysAgoDt);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  })();
+
+  const [
+    notStarted,
+    completed,
+    prCatalog,
+    prDrill,
+    rosterAthletes,
+    recentCheckins,
+    recentCompletions,
+    recentCoachNotes,
+  ] = await Promise.all([
+    prisma.throwsAssignment.count({
+      where: {
+        athlete: { coachId },
+        assignedDate: { gte: startISO, lte: endISO },
+        status: { in: ["ASSIGNED", "NOTIFIED"] },
+      },
+    }),
+    prisma.throwsAssignment.count({
+      where: {
+        athlete: { coachId },
+        completedAt: { gte: weekStartDt, lte: weekEndDt },
+        status: { in: ["COMPLETED", "PARTIAL"] },
+      },
+    }),
+    prisma.athleteImplementPR.count({
+      where: {
+        athlete: { coachId },
+        bestDistance: { not: null },
+        bestAchievedAt: { gte: sevenDaysAgoDt },
+      },
+    }),
+    prisma.throwsDrillPR.count({
+      where: {
+        athlete: { coachId },
+        achievedAt: { gte: sevenDaysAgoISO },
+      },
+    }),
+    prisma.athleteProfile.findMany({
+      where: { coachId },
+      select: { id: true },
+    }),
+    prisma.readinessCheckIn.findMany({
+      where: {
+        athlete: { coachId },
+        date: { gte: sevenDaysAgoDt },
+      },
+      select: { athleteId: true },
+      distinct: ["athleteId"],
+    }),
+    prisma.throwsAssignment.findMany({
+      where: {
+        athlete: { coachId },
+        completedAt: { gte: sevenDaysAgoDt },
+        status: { in: ["COMPLETED", "PARTIAL"] },
+      },
+      select: { athleteId: true },
+      distinct: ["athleteId"],
+    }),
+    prisma.coachNote.findMany({
+      where: {
+        coach: { id: coachId },
+        createdAt: { gte: sevenDaysAgoDt },
+      },
+      select: { athleteProfileId: true },
+      distinct: ["athleteProfileId"],
+    }),
+  ]);
+
+  const checkedIn = new Set(recentCheckins.map((c) => c.athleteId));
+  const missingReadiness = rosterAthletes.filter((a) => !checkedIn.has(a.id)).length;
+
+  const reviewedAthletes = new Set(recentCoachNotes.map((n) => n.athleteProfileId));
+  const needsReview = recentCompletions.filter((c) => !reviewedAthletes.has(c.athleteId)).length;
+
+  return {
+    weekStart: startISO,
+    weekEnd: endISO,
+    notStarted,
+    completed,
+    prs: prCatalog + prDrill,
+    missingReadiness,
+    needsReview,
+  };
+});

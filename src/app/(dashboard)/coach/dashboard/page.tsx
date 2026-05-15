@@ -35,6 +35,7 @@ import {
   getTeamDistanceDelta,
   getWeeklyVolumeBreakdown,
   getSeasonGains,
+  getThisWeekSummary,
 } from "@/lib/data/dashboard-intel";
 import { OnboardingChecklist } from "./_onboarding-checklist";
 import { CheckoutTrigger } from "./_checkout-trigger";
@@ -50,6 +51,7 @@ import { PeakingStatus } from "./_peaking-status";
 import { AdaptationProgress } from "./_adaptation-progress";
 import type { AdaptationRow } from "./_adaptation-progress";
 import { AnalyticsSection } from "./_analytics-section";
+import { ThisWeek } from "./_this-week";
 
 import { logger } from "@/lib/logger";
 /* ─── Coach Dashboard — editorial, scientific, back-office ────────────────────
@@ -109,7 +111,7 @@ function SectionHeader({
   return (
     <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
       <div className="flex items-baseline gap-2.5 min-w-0">
-        <h2 className="font-heading text-body-lg font-semibold text-[var(--color-text-primary)] tracking-tight">
+        <h2 className="font-heading text-[17px] font-semibold text-[var(--color-text-primary)] tracking-tight">
           {title}
         </h2>
         {context && (
@@ -351,7 +353,7 @@ function ReadinessSparkline({
   if (segments.length === 0) {
     return (
       <div
-        className="h-[18px] w-[72px] flex items-center text-nano"
+        className="h-[18px] w-[72px] flex items-center text-[10px]"
         style={{ color: "var(--color-text-secondary)" }}
         aria-hidden="true"
       >
@@ -430,7 +432,7 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
                   <span className="text-sm font-semibold tabular-nums" style={{ color: strokeVar }}>
                     {entry.latestScore !== null ? entry.latestScore.toFixed(1) : "—"}
                   </span>
-                  <span className="text-nano text-[var(--color-text-secondary)]">
+                  <span className="text-[10px] text-[var(--color-text-secondary)]">
                     / {entry.maxScore}
                   </span>
                 </div>
@@ -454,8 +456,6 @@ function MetaBar({
   sessionsToday,
   complianceRate,
   throwsThisWeek,
-  prsThisWeek,
-  lowReadiness,
   attendance,
 }: {
   today: string;
@@ -463,21 +463,27 @@ function MetaBar({
   sessionsToday: number;
   complianceRate: number | null;
   throwsThisWeek: number;
-  prsThisWeek: number;
-  lowReadiness: number;
   attendance: {
     rate: number;
     totalPractices: number;
     flaggedCount: number;
   } | null;
 }) {
+  // Editorial-grade link: looks like the surrounding text, underlines on hover.
+  // Every linked number lands on a filtered surface — see tasks/mvp-weekly-loop.md.
+  const linkCls =
+    "hover:underline underline-offset-2 decoration-[var(--color-text-secondary)] focus-visible:outline-none focus-visible:underline";
   return (
     <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1.5 text-sm text-[var(--color-text-secondary)]">
       <span className="text-[var(--color-text-primary)] font-medium">{today}</span>
 
       <Dot />
 
-      <Link href="/coach/athletes" className="hover:underline underline-offset-4">
+      <Link
+        href="/coach/athletes"
+        className={linkCls}
+        aria-label={`${totalAthletes} athletes — open roster`}
+      >
         <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
           {totalAthletes}
         </span>{" "}
@@ -487,7 +493,11 @@ function MetaBar({
       {sessionsToday > 0 && (
         <>
           <Dot />
-          <Link href="/coach/calendar" className="hover:underline underline-offset-4">
+          <Link
+            href="/coach/calendar"
+            className={linkCls}
+            aria-label={`${sessionsToday} sessions today — open calendar`}
+          >
             <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
               {sessionsToday}
             </span>{" "}
@@ -499,7 +509,7 @@ function MetaBar({
       {complianceRate !== null && (
         <>
           <Dot />
-          <Link href="/coach/athletes" className="hover:underline underline-offset-4">
+          <span>
             <span
               className="font-semibold tabular-nums"
               style={{
@@ -514,14 +524,18 @@ function MetaBar({
               {complianceRate}%
             </span>{" "}
             compliance · 30d
-          </Link>
+          </span>
         </>
       )}
 
       {throwsThisWeek > 0 && (
         <>
           <Dot />
-          <Link href="/coach/throws" className="hover:underline underline-offset-4">
+          <Link
+            href="/coach/athletes?tab=throws"
+            className={linkCls}
+            aria-label={`${throwsThisWeek} throws this week — open team throws view`}
+          >
             <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
               {throwsThisWeek}
             </span>{" "}
@@ -533,7 +547,11 @@ function MetaBar({
       {attendance !== null && attendance.totalPractices > 0 && (
         <>
           <Dot />
-          <Link href="/coach/athletes" className="hover:underline underline-offset-4">
+          <Link
+            href="/coach/calendar"
+            className={linkCls}
+            aria-label={`${attendance.rate}% attendance this week — open calendar`}
+          >
             <span
               className="font-semibold tabular-nums"
               style={{
@@ -548,33 +566,6 @@ function MetaBar({
               {attendance.rate}%
             </span>{" "}
             attendance · this week
-          </Link>
-        </>
-      )}
-
-      {/* Signals — always at the end so they catch the eye last */}
-      {prsThisWeek > 0 && (
-        <>
-          <Dot />
-          <Link
-            href="/coach/throws"
-            style={{ color: "var(--color-brand-strong)" }}
-            className="font-semibold hover:underline underline-offset-4"
-          >
-            {prsThisWeek} PR{prsThisWeek === 1 ? "" : "s"} this week
-          </Link>
-        </>
-      )}
-
-      {lowReadiness > 0 && (
-        <>
-          <Dot />
-          <Link
-            href="/coach/athletes"
-            style={{ color: "var(--color-status-warning-fg)" }}
-            className="font-semibold hover:underline underline-offset-4"
-          >
-            {lowReadiness} low readiness
           </Link>
         </>
       )}
@@ -668,6 +659,7 @@ export default async function CoachDashboardPage() {
     weeklyVolumeResult,
     seasonGainsResult,
     teamAttendanceResult,
+    thisWeekResult,
   ] = await withTiming("coach-dashboard-data", () =>
     Promise.allSettled([
       cachedGetCoachStats(coach.id),
@@ -683,6 +675,7 @@ export default async function CoachDashboardPage() {
       getWeeklyVolumeBreakdown(coach.id),
       getSeasonGains(coach.id, analyticsPeriod),
       getTeamAttendanceStats(coach.id, 7),
+      getThisWeekSummary(coach.id),
     ])
   );
 
@@ -727,6 +720,18 @@ export default async function CoachDashboardPage() {
   const seasonGains = seasonGainsResult.status === "fulfilled" ? seasonGainsResult.value : [];
   const teamAttendance =
     teamAttendanceResult.status === "fulfilled" ? teamAttendanceResult.value : null;
+  const thisWeek =
+    thisWeekResult.status === "fulfilled"
+      ? thisWeekResult.value
+      : {
+          weekStart: "",
+          weekEnd: "",
+          notStarted: 0,
+          completed: 0,
+          prs: 0,
+          missingReadiness: 0,
+          needsReview: 0,
+        };
 
   // Adaptation progress — Training Block + Advanced depth only
   const adaptationRows: AdaptationRow[] = [];
@@ -824,7 +829,7 @@ export default async function CoachDashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
               Command
             </p>
-            <h1 className="font-heading text-display leading-[1.05] font-semibold text-[var(--color-text-primary)]">
+            <h1 className="font-heading text-[32px] leading-[1.05] font-semibold text-[var(--color-text-primary)]">
               Your program, today.
             </h1>
           </div>
@@ -837,8 +842,6 @@ export default async function CoachDashboardPage() {
           sessionsToday={stats.sessionsToday}
           complianceRate={stats.complianceRate}
           throwsThisWeek={stats.throwsThisWeek}
-          prsThisWeek={stats.prsThisWeek}
-          lowReadiness={stats.lowReadiness}
           attendance={
             teamAttendance
               ? {
@@ -853,6 +856,9 @@ export default async function CoachDashboardPage() {
 
       {/* ── Triage: injuries ─────────────────────────────────────────── */}
       <InjuryAlert injured={injuredAthletes} />
+
+      {/* ── This week: the weekly loop decision surface ─────────────── */}
+      <ThisWeek summary={thisWeek} />
 
       {/* ── Coaching actions ─────────────────────────────────────────── */}
       <ActionCards actions={coachingActions} depth={depth} />

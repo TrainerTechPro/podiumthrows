@@ -303,6 +303,13 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
       <div className="px-5 pb-5 pt-4">
         <Link
           href={`/athlete/sessions/${today.sessionId}`}
+          aria-label={
+            status === "LOGGED"
+              ? `Review session — ${today.title}`
+              : status === "IN_PROGRESS"
+                ? `Resume session — ${today.title}`
+                : `Start session — ${today.title}`
+          }
           className="grid h-14 w-full place-items-center rounded-2xl bg-primary-500 text-surface-950 font-heading text-body font-bold tracking-[0.005em] shadow-[0_8px_24px_-8px_rgba(255,200,0,0.45)] transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60"
         >
           <span className="inline-flex items-center gap-2">
@@ -339,9 +346,10 @@ function RestDayCard({ firstName }: { firstName: string }) {
         </p>
         <Link
           href="/athlete/log-session"
+          aria-label="Quick log — log an off-program session"
           className="mt-4 inline-flex h-11 items-center justify-center rounded-xl border border-[var(--card-border)] bg-surface-50 px-5 text-body font-medium text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:bg-surface-900 dark:hover:bg-surface-800"
         >
-          Log something
+          Quick log
         </Link>
       </div>
     </section>
