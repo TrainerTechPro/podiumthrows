@@ -187,7 +187,7 @@ function UnitToggle({
           aria-checked={value === u}
           onClick={() => onChange(u)}
           className={cn(
-            "px-3 h-10 rounded-lg text-sm font-medium transition-colors uppercase",
+            "px-3 h-11 rounded-lg text-sm font-medium transition-colors uppercase",
             value === u
               ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
               : "text-muted hover:text-[var(--foreground)]"

@@ -152,7 +152,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
             onClick={() => adjustHours(-0.5)}
             disabled={data.sleepHours <= 1}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center",
+              "w-11 h-11 rounded-xl flex items-center justify-center",
               "bg-[var(--card-bg)] border border-[var(--card-border)]",
               "transition-colors hover:border-primary-500/40",
               "disabled:opacity-30 disabled:cursor-not-allowed"
@@ -176,7 +176,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
             onClick={() => adjustHours(0.5)}
             disabled={data.sleepHours >= 14}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center",
+              "w-11 h-11 rounded-xl flex items-center justify-center",
               "bg-[var(--card-bg)] border border-[var(--card-border)]",
               "transition-colors hover:border-primary-500/40",
               "disabled:opacity-30 disabled:cursor-not-allowed"

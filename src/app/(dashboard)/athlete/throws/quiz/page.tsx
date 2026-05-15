@@ -42,7 +42,12 @@ export default function AthleteTypingQuizPage() {
           }
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        logger.debug("athlete fetch failed", {
+          context: "athlete/throws/quiz/page.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
+      })
       .finally(() => setLoadingAthlete(false));
   }, []);
 
@@ -321,7 +326,7 @@ export default function AthleteTypingQuizPage() {
           <button
             onClick={handleBack}
             disabled={isFirstQuestion}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-4 min-h-[44px] text-sm font-medium text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -336,7 +341,7 @@ export default function AthleteTypingQuizPage() {
           <button
             onClick={handleNext}
             disabled={!pendingScore || saving}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary-500 hover:opacity-90 text-white text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="flex items-center gap-1.5 px-5 min-h-[44px] rounded-xl bg-primary-500 hover:opacity-90 text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? "Saving..." : isLastQuestion ? "Submit" : "Next"}
             {!saving && !isLastQuestion && (

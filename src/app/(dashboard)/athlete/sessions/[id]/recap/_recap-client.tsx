@@ -280,7 +280,7 @@ export function RecapClient({
           <Link
             href="/athlete/dashboard"
             aria-label="Exit recap"
-            className="btn btn-ghost h-10 w-10 p-0 flex items-center justify-center rounded-full"
+            className="btn btn-ghost h-11 w-11 p-0 flex items-center justify-center rounded-full"
           >
             <X className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
           </Link>

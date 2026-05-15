@@ -131,7 +131,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
                 value={g.value}
                 hideVisual
                 className={cn(
-                  "flex-1 py-2 px-3 rounded-lg border transition-colors justify-center",
+                  "flex-1 min-h-[44px] px-3 rounded-lg border transition-colors justify-center",
                   gender === g.value
                     ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
                     : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
