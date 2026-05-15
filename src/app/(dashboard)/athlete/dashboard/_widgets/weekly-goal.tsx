@@ -95,7 +95,7 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
                   {data.progressPct}%
                 </p>
                 {daysRemaining != null && (
-                  <p className="text-[10px] text-muted">
+                  <p className="text-nano text-muted">
                     {daysRemaining === 0 ? "Last day" : `${daysRemaining}d left`}
                   </p>
                 )}

@@ -155,7 +155,7 @@ export function Step4FirstLog({
             onChange={(e) => onChange({ firstThrowRpe: parseInt(e.target.value, 10) })}
             className="w-full accent-primary-500 h-2"
           />
-          <div className="flex justify-between text-[10px] text-muted">
+          <div className="flex justify-between text-nano text-muted">
             <span>Easy</span>
             <span>All out</span>
           </div>

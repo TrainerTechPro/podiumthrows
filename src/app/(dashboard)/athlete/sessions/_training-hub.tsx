@@ -85,7 +85,7 @@ function NextSessionCard({
         <span className="text-lg font-bold tabular-nums text-primary-500 leading-none">
           {daysUntil}
         </span>
-        <span className="text-[9px] font-semibold text-primary-500/70 uppercase">
+        <span className="text-nano font-semibold text-primary-500/70 uppercase">
           {daysUntil === 1 ? "day" : "days"}
         </span>
       </div>

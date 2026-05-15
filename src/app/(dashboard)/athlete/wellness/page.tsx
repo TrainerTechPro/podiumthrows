@@ -215,7 +215,7 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
               <p className="text-lg font-bold font-heading tabular-nums text-[var(--foreground)]">
                 {v.value}
               </p>
-              <p className="text-[10px] text-muted uppercase tracking-wider">{v.label}</p>
+              <p className="text-nano text-muted uppercase tracking-wider">{v.label}</p>
             </div>
           );
         })}
@@ -292,7 +292,7 @@ function TodayResultCard({
               </>
             )}
           </span>
-          <span className="text-[10px] text-muted">Auto-synced</span>
+          <span className="text-nano text-muted">Auto-synced</span>
         </div>
       )}
 
@@ -301,7 +301,7 @@ function TodayResultCard({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Readiness */}
           <div className={cn("card px-5 py-4 border", scoreBg(checkIn.overallScore))}>
-            <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
+            <p className="text-nano font-semibold text-muted uppercase tracking-wider mb-1">
               Readiness
             </p>
             <div className="flex items-baseline gap-2">
@@ -329,7 +329,7 @@ function TodayResultCard({
           {/* Sleep */}
           {ouraSleep != null && (
             <div className="card px-5 py-4">
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
+              <p className="text-nano font-semibold text-muted uppercase tracking-wider mb-1">
                 Sleep
               </p>
               <div className="flex items-baseline gap-2">
@@ -356,7 +356,7 @@ function TodayResultCard({
           {/* Activity */}
           {ouraActivity != null && (
             <div className="card px-5 py-4">
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">
+              <p className="text-nano font-semibold text-muted uppercase tracking-wider mb-1">
                 Activity
               </p>
               <div className="flex items-baseline gap-2">
@@ -410,7 +410,7 @@ function TodayResultCard({
           </div>
 
           <div className="text-right space-y-1.5 shrink-0">
-            <p className="text-[10px] text-muted uppercase tracking-wide">Hydration</p>
+            <p className="text-nano text-muted uppercase tracking-wide">Hydration</p>
             <span
               className={cn(
                 "inline-block text-xs font-semibold px-2 py-0.5 rounded-full",
@@ -477,7 +477,7 @@ function TodayResultCard({
             Factor Breakdown
           </h3>
           {isDevice && (
-            <span className="text-[10px] text-muted italic">
+            <span className="text-nano text-muted italic">
               Soreness, Stress, Energy are self-reported defaults
             </span>
           )}
@@ -506,7 +506,7 @@ function TodayResultCard({
                     <span
                       key={`${area.slug}-${area.side ?? "center"}`}
                       className={cn(
-                        "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                        "text-nano font-medium px-2 py-0.5 rounded-full border",
                         area.severity === 3
                           ? "bg-red-500/12 text-red-400 border-red-500/20"
                           : area.severity === 2
@@ -519,7 +519,7 @@ function TodayResultCard({
                   ))}
                 </div>
               ) : f.hint ? (
-                <p className="text-[10px] text-muted capitalize">{f.hint}</p>
+                <p className="text-nano text-muted capitalize">{f.hint}</p>
               ) : null}
             </div>
           ))}
@@ -599,13 +599,13 @@ function CheckInCard({ c }: { c: CheckIn }) {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 ml-5">
         <div>
-          <p className="text-[10px] text-muted uppercase tracking-wide">Sleep</p>
+          <p className="text-nano text-muted uppercase tracking-wide">Sleep</p>
           <p className="text-xs text-[var(--foreground)] font-medium">
             {c.sleepQuality}/10 · {c.sleepHours}h
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-muted uppercase tracking-wide">Soreness</p>
+          <p className="text-nano text-muted uppercase tracking-wide">Soreness</p>
           <p className="text-xs text-[var(--foreground)] font-medium">{c.soreness}/10</p>
           {isStructured && areas.length > 0 ? (
             <div className="flex flex-wrap gap-1 mt-0.5">
@@ -613,7 +613,7 @@ function CheckInCard({ c }: { c: CheckIn }) {
                 <span
                   key={`${area.slug}-${area.side ?? "center"}`}
                   className={cn(
-                    "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                    "text-nano font-medium px-2 py-0.5 rounded-full border",
                     area.severity === 3
                       ? "bg-red-500/12 text-red-400 border-red-500/20"
                       : area.severity === 2
@@ -626,15 +626,15 @@ function CheckInCard({ c }: { c: CheckIn }) {
               ))}
             </div>
           ) : legacyText ? (
-            <p className="text-[10px] text-muted capitalize">{legacyText.replace(/_/g, " ")}</p>
+            <p className="text-nano text-muted capitalize">{legacyText.replace(/_/g, " ")}</p>
           ) : null}
         </div>
         <div>
-          <p className="text-[10px] text-muted uppercase tracking-wide">Stress</p>
+          <p className="text-nano text-muted uppercase tracking-wide">Stress</p>
           <p className="text-xs text-[var(--foreground)] font-medium">{c.stressLevel}/10</p>
         </div>
         <div>
-          <p className="text-[10px] text-muted uppercase tracking-wide">Energy</p>
+          <p className="text-nano text-muted uppercase tracking-wide">Energy</p>
           <p className="text-xs text-[var(--foreground)] font-medium">{c.energyMood}/10</p>
         </div>
       </div>

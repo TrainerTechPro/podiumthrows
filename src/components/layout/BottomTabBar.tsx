@@ -152,7 +152,7 @@ export function BottomTabBar() {
             )}
             <span
               className={cn(
-                "text-[10px] leading-none tracking-wide",
+                "text-nano leading-none tracking-wide",
                 tab.primary && "mt-1",
                 active ? "font-semibold" : "font-medium"
               )}

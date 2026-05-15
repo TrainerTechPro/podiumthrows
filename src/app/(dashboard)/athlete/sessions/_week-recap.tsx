@@ -10,9 +10,7 @@ export function WeekRecapCard({ recap }: { recap: WeekRecap }) {
           <Trophy size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">
-            Week Complete
-          </h3>
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">Week Complete</h3>
           <p className="text-xs text-muted">
             You completed{" "}
             <span className="font-semibold text-primary-500">
@@ -28,7 +26,7 @@ export function WeekRecapCard({ recap }: { recap: WeekRecap }) {
           <div className="text-center">
             <div className="flex items-center justify-center gap-1 text-muted mb-1">
               <Target size={12} strokeWidth={1.75} aria-hidden="true" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Throws</span>
+              <span className="text-nano font-semibold uppercase tracking-wider">Throws</span>
             </div>
             <p className="text-lg font-bold tabular-nums text-[var(--foreground)]">
               <AnimatedNumber value={recap.totalThrows} decimals={0} />
@@ -40,7 +38,7 @@ export function WeekRecapCard({ recap }: { recap: WeekRecap }) {
           <div className="text-center">
             <div className="flex items-center justify-center gap-1 text-muted mb-1">
               <Gauge size={12} strokeWidth={1.75} aria-hidden="true" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Avg RPE</span>
+              <span className="text-nano font-semibold uppercase tracking-wider">Avg RPE</span>
             </div>
             <p className="text-lg font-bold tabular-nums text-[var(--foreground)]">
               <AnimatedNumber value={recap.avgRpe} decimals={1} />
@@ -52,7 +50,7 @@ export function WeekRecapCard({ recap }: { recap: WeekRecap }) {
           <div className="text-center">
             <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
               <Trophy size={12} strokeWidth={1.75} aria-hidden="true" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">PRs</span>
+              <span className="text-nano font-semibold uppercase tracking-wider">PRs</span>
             </div>
             <p className="text-lg font-bold tabular-nums text-amber-500">
               <AnimatedNumber value={recap.prsHit} decimals={0} />

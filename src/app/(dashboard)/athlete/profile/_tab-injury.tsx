@@ -92,7 +92,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                       </h4>
                       <span
                         className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase",
+                          "px-2 py-0.5 rounded-full text-nano font-semibold uppercase",
                           injury.severity === "severe"
                             ? "bg-red-500/10 text-red-700 dark:text-red-400"
                             : "bg-amber-500/10 text-amber-700 dark:text-amber-400"
@@ -110,22 +110,22 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     {/* Training impact flags */}
                     <div className="flex flex-wrap gap-1.5">
                       {injury.throwsBanned && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-700 dark:text-red-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-red-500/10 text-red-700 dark:text-red-400">
                           No throwing
                         </span>
                       )}
                       {injury.heavyBanned && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-700 dark:text-red-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-red-500/10 text-red-700 dark:text-red-400">
                           No heavy implements
                         </span>
                       )}
                       {injury.strengthBanned && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-700 dark:text-red-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-red-500/10 text-red-700 dark:text-red-400">
                           No strength work
                         </span>
                       )}
                       {injury.modifiedLoad && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400">
                           Modified load only
                         </span>
                       )}
@@ -159,7 +159,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted">{formatDate(injury.injuryDate)}</span>
                       {injury.recovered && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                        <span className="px-2 py-0.5 rounded-full text-nano font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
                           Recovered
                         </span>
                       )}

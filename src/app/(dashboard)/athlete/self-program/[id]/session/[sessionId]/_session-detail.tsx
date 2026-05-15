@@ -612,7 +612,7 @@ export function SessionDetail({
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="font-medium text-sm">{t.implement}</span>
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
+                          className={`text-nano px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
                         >
                           {classInfo.label}
                         </span>
@@ -664,7 +664,7 @@ export function SessionDetail({
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-sm font-medium">{s.exerciseName}</span>
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
+                          className={`text-nano px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
                         >
                           {classInfo.label}
                         </span>

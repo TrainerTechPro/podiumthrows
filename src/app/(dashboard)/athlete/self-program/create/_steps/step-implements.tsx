@@ -112,7 +112,12 @@ export function StepImplements({ form, update, errors, existingImplements }: Ste
                     }`}
                   >
                     {isSelected && (
-                      <Check size={14} strokeWidth={2.5} className="text-white" aria-hidden="true" />
+                      <Check
+                        size={14}
+                        strokeWidth={2.5}
+                        className="text-white"
+                        aria-hidden="true"
+                      />
                     )}
                   </div>
 
@@ -126,12 +131,12 @@ export function StepImplements({ form, update, errors, existingImplements }: Ste
                         {impl.weightKg} kg
                       </span>
                       {impl.isCompetition && (
-                        <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-[10px] font-semibold uppercase rounded">
+                        <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-nano font-semibold uppercase rounded">
                           Comp
                         </span>
                       )}
                       {isFromInventory && (
-                        <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 text-[10px] font-semibold uppercase rounded">
+                        <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 text-nano font-semibold uppercase rounded">
                           Owned
                         </span>
                       )}

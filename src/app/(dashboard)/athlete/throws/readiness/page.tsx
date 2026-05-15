@@ -95,7 +95,7 @@ function ScoreArc({
         <p className="text-xs font-bold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
           {label}
         </p>
-        <p className="text-[10px] text-surface-700 dark:text-surface-300">{sublabel}</p>
+        <p className="text-nano text-surface-700 dark:text-surface-300">{sublabel}</p>
       </div>
     </div>
   );
@@ -474,14 +474,14 @@ export default function AthleteProfilePage() {
                       Podium Throws
                     </h3>
                     <span
-                      className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold text-white flex-shrink-0"
+                      className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-micro font-semibold text-white flex-shrink-0"
                       style={{ backgroundColor: eventColor }}
                     >
                       {eventLabel}
                       <span className="opacity-80">{pp.gender === "M" ? "♂" : "♀"}</span>
                     </span>
                     {pp.competitionPb && (
-                      <span className="text-[11px] font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
+                      <span className="text-micro font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
                         {pp.competitionPb.toFixed(2)}m
                         {pp.currentDistanceBand && (
                           <span className="font-sans ml-1 text-muted">
@@ -509,7 +509,7 @@ export default function AthleteProfilePage() {
                           {DEFICIT_TYPE_LABELS[deficitType]}
                         </span>
                       </div>
-                      <p className="text-[11px] text-surface-700 dark:text-surface-300 leading-relaxed">
+                      <p className="text-micro text-surface-700 dark:text-surface-300 leading-relaxed">
                         {DEFICIT_TRAINING_RECS[deficitType]}
                       </p>
                     </div>
@@ -557,7 +557,7 @@ export default function AthleteProfilePage() {
               <div className="pt-2 border-t border-[var(--card-border)] space-y-3">
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300">
+                    <label className="text-nano font-semibold text-surface-700 dark:text-surface-300">
                       Event
                     </label>
                     <select
@@ -573,7 +573,7 @@ export default function AthleteProfilePage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300">
+                    <label className="text-nano font-semibold text-surface-700 dark:text-surface-300">
                       Implement
                     </label>
                     <input
@@ -585,7 +585,7 @@ export default function AthleteProfilePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-surface-700 dark:text-surface-300">
+                    <label className="text-nano font-semibold text-surface-700 dark:text-surface-300">
                       Distance (m)
                     </label>
                     <input
@@ -646,7 +646,7 @@ export default function AthleteProfilePage() {
                     >
                       <span className="block text-sm font-bold">{s.value}</span>
                       <span
-                        className={`block text-[9px] leading-tight mt-0.5 ${checkInData.selfFeeling === s.value ? "text-white/80" : "text-muted"}`}
+                        className={`block text-nano leading-tight mt-0.5 ${checkInData.selfFeeling === s.value ? "text-white/80" : "text-muted"}`}
                       >
                         {s.label}
                       </span>
@@ -654,7 +654,7 @@ export default function AthleteProfilePage() {
                   ))}
                 </div>
                 {feelingMeta && (
-                  <p className="text-[10px] text-surface-700 dark:text-surface-300">
+                  <p className="text-nano text-surface-700 dark:text-surface-300">
                     {feelingMeta.desc} — Expected: {feelingMeta.perfExpect}
                   </p>
                 )}
@@ -694,7 +694,7 @@ export default function AthleteProfilePage() {
                       >
                         <span className="block text-sm font-bold">{sq.value}</span>
                         <span
-                          className={`block text-[9px] leading-tight mt-0.5 ${checkInData.sleepQuality === sq.value ? "text-white/80" : "text-muted"}`}
+                          className={`block text-nano leading-tight mt-0.5 ${checkInData.sleepQuality === sq.value ? "text-white/80" : "text-muted"}`}
                         >
                           {sq.label}
                         </span>
@@ -718,7 +718,7 @@ export default function AthleteProfilePage() {
                   }
                   className="w-full accent-primary-500"
                 />
-                <div className="flex justify-between text-[10px] text-muted">
+                <div className="flex justify-between text-nano text-muted">
                   <span>Exhausted</span>
                   <span className="font-bold text-surface-700 dark:text-surface-300">
                     {checkInData.energy} —{" "}
@@ -737,7 +737,7 @@ export default function AthleteProfilePage() {
                     const val = checkInData.soreness[zone.key] || 0;
                     return (
                       <div key={zone.key} className="space-y-1">
-                        <label className="text-[10px] text-surface-700 dark:text-surface-300">
+                        <label className="text-nano text-surface-700 dark:text-surface-300">
                           {zone.label}
                         </label>
                         <input
@@ -756,7 +756,7 @@ export default function AthleteProfilePage() {
                           }
                           className="w-full accent-primary-500"
                         />
-                        <span className="text-[10px] font-mono text-surface-700 dark:text-surface-300">
+                        <span className="text-nano font-mono text-surface-700 dark:text-surface-300">
                           {val} —{" "}
                           <span className="font-sans text-surface-700 dark:text-surface-300">
                             {SORENESS_LABELS[val] || ""}

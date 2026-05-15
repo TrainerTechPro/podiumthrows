@@ -237,7 +237,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
         </h2>
         <StaggeredList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Event</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Event</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {formatEventName(config.event)}
             </p>
@@ -245,7 +245,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Schedule</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Schedule</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {config.daysPerWeek} days/week
             </p>
@@ -255,30 +255,28 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Goal</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Goal</p>
             <p className="text-sm font-bold font-heading text-primary-500 tabular-nums">
               <AnimatedNumber value={config.goalDistance} decimals={2} />m
             </p>
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-              Current PR
-            </p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Current PR</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)] tabular-nums">
               <AnimatedNumber value={config.currentPR} decimals={2} />m
             </p>
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Mode</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Mode</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {config.generationMode === "AUTOPILOT" ? "Autopilot" : "Guided"}
             </p>
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">
               Generations
             </p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)] tabular-nums">

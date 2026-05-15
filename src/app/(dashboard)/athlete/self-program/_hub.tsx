@@ -501,7 +501,7 @@ function ActiveView({
                 {nextSession.status === "IN_PROGRESS" ? "Continue Workout" : "Next Session"}
               </h2>
               {nextSession.status === "IN_PROGRESS" && (
-                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">
+                <span className="flex items-center gap-1 text-nano font-semibold text-emerald-500 uppercase tracking-wider">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Live
                 </span>
@@ -588,7 +588,7 @@ function ActiveView({
                   >
                     <p
                       className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider",
+                        "text-nano font-bold uppercase tracking-wider",
                         isCurrent ? colors.text : "text-muted"
                       )}
                     >

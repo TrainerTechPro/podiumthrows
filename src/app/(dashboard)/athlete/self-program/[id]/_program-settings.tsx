@@ -238,19 +238,19 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
         <div className="card p-5 space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Event</p>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">Event</p>
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 {formatEventName(config.event)}
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Gender</p>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">Gender</p>
               <p className="text-sm font-semibold text-[var(--foreground)] capitalize">
                 {config.gender.toLowerCase()}
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">
                 Competition Level
               </p>
               <p className="text-sm font-semibold text-[var(--foreground)]">
@@ -258,7 +258,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">
                 Current PR
               </p>
               <p className="text-sm font-semibold text-[var(--foreground)] tabular-nums">
@@ -266,7 +266,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">
                 Years Experience
               </p>
               <p className="text-sm font-semibold text-[var(--foreground)] tabular-nums">

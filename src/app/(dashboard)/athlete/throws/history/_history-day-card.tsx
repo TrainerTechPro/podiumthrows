@@ -56,7 +56,7 @@ export function HistoryDayCard({ day, athleteId, onDataChanged }: Props) {
             {day.events.map((ev) => (
               <span
                 key={ev}
-                className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white tracking-wide"
+                className="text-nano font-bold px-1.5 py-0.5 rounded text-white tracking-wide"
                 style={{ backgroundColor: EVENT_COLORS[ev] || "#666" }}
               >
                 {EVENT_LABELS[ev] || ev}

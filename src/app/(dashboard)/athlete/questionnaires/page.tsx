@@ -16,7 +16,10 @@ const TYPE_LABELS: Record<string, string> = {
   CUSTOM: "Custom",
 };
 
-const TYPE_BADGE_VARIANT: Record<string, "primary" | "success" | "warning" | "info" | "neutral" | "danger"> = {
+const TYPE_BADGE_VARIANT: Record<
+  string,
+  "primary" | "success" | "warning" | "info" | "neutral" | "danger"
+> = {
   ONBOARDING: "info",
   ASSESSMENT: "warning",
   CHECK_IN: "primary",
@@ -61,9 +64,7 @@ export default async function AthleteQuestionnairesPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">
-        My Forms
-      </h1>
+      <h1 className="text-2xl font-bold font-heading text-[var(--foreground)]">My Forms</h1>
 
       {questionnaires.length === 0 ? (
         <EmptyState
@@ -93,7 +94,16 @@ export default async function AthleteQuestionnairesPage() {
           {dueToday.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
@@ -128,30 +138,23 @@ export default async function AthleteQuestionnairesPage() {
                 Completed ({completed.length})
               </h2>
               <StaggeredList className="space-y-3">
-              {completed.map((q) => (
-                <div
-                  key={q.assignmentId}
-                  className="card p-4 flex items-center gap-4 opacity-70"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <h3 className="font-medium text-[var(--foreground)] truncate">
-                        {q.title}
-                      </h3>
-                      <Badge variant={TYPE_BADGE_VARIANT[q.type] ?? "neutral"}>
-                        {TYPE_LABELS[q.type] ?? q.type}
-                      </Badge>
-                      <Badge variant="success">Completed</Badge>
+                {completed.map((q) => (
+                  <div key={q.assignmentId} className="card p-4 flex items-center gap-4 opacity-70">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <h3 className="font-medium text-[var(--foreground)] truncate">{q.title}</h3>
+                        <Badge variant={TYPE_BADGE_VARIANT[q.type] ?? "neutral"}>
+                          {TYPE_LABELS[q.type] ?? q.type}
+                        </Badge>
+                        <Badge variant="success">Completed</Badge>
+                      </div>
+                      <p className="text-nano text-muted">
+                        Completed{" "}
+                        {q.completedAt ? new Date(q.completedAt).toLocaleDateString() : ""}
+                      </p>
                     </div>
-                    <p className="text-[10px] text-muted">
-                      Completed{" "}
-                      {q.completedAt
-                        ? new Date(q.completedAt).toLocaleDateString()
-                        : ""}
-                    </p>
                   </div>
-                </div>
-              ))}
+                ))}
               </StaggeredList>
             </div>
           )}
@@ -163,7 +166,15 @@ export default async function AthleteQuestionnairesPage() {
 
 /* ─── Pending Card ─────────────────────────────────────────────────────────── */
 
-function PendingCard({ q }: { q: ReturnType<typeof import("@/lib/data/athlete")["getAthleteAssignedQuestionnaires"]> extends Promise<(infer T)[]> ? T : never }) {
+function PendingCard({
+  q,
+}: {
+  q: ReturnType<
+    (typeof import("@/lib/data/athlete"))["getAthleteAssignedQuestionnaires"]
+  > extends Promise<(infer T)[]>
+    ? T
+    : never;
+}) {
   const itemCount = q.blockCount > 0 ? q.blockCount : q.questionCount;
   const overdue = isOverdue(q.dueDate);
 
@@ -180,25 +191,14 @@ function PendingCard({ q }: { q: ReturnType<typeof import("@/lib/data/athlete")[
           <Badge variant={TYPE_BADGE_VARIANT[q.type] ?? "neutral"}>
             {TYPE_LABELS[q.type] ?? q.type}
           </Badge>
-          {q.hasDraft && (
-            <Badge variant="warning">Draft Saved</Badge>
-          )}
-          {overdue && (
-            <Badge variant="danger">Overdue</Badge>
-          )}
+          {q.hasDraft && <Badge variant="warning">Draft Saved</Badge>}
+          {overdue && <Badge variant="danger">Overdue</Badge>}
         </div>
-        {q.description && (
-          <p className="text-xs text-muted truncate">
-            {q.description}
-          </p>
-        )}
-        <p className="text-[10px] text-muted mt-1">
+        {q.description && <p className="text-xs text-muted truncate">{q.description}</p>}
+        <p className="text-nano text-muted mt-1">
           {itemCount} {q.blockCount > 0 ? "field" : "question"}
-          {itemCount !== 1 ? "s" : ""} · Assigned{" "}
-          {new Date(q.assignedAt).toLocaleDateString()}
-          {q.dueDate && (
-            <> · Due {new Date(q.dueDate).toLocaleDateString()}</>
-          )}
+          {itemCount !== 1 ? "s" : ""} · Assigned {new Date(q.assignedAt).toLocaleDateString()}
+          {q.dueDate && <> · Due {new Date(q.dueDate).toLocaleDateString()}</>}
         </p>
       </div>
 

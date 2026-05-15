@@ -232,7 +232,7 @@ function Stat({
 }) {
   return (
     <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-3">
-      <dt className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
+      <dt className="flex items-center gap-1.5 text-nano font-semibold uppercase tracking-wider text-muted">
         {icon}
         {label}
       </dt>

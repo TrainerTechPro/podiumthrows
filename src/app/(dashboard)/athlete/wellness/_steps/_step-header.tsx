@@ -10,8 +10,8 @@ export function StepHeader({ current, total }: StepHeaderProps) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-muted tracking-wider uppercase">Step</span>
-        <span className="text-[11px] font-bold text-[var(--foreground)] tabular-nums">
+        <span className="text-micro font-semibold text-muted tracking-wider uppercase">Step</span>
+        <span className="text-micro font-bold text-[var(--foreground)] tabular-nums">
           {current}/{total}
         </span>
       </div>

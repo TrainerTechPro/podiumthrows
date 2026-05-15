@@ -70,7 +70,7 @@ export function HistoryDrillThrowsSheet({
                   {t.distance != null ? formatDist(t.distance) : "—"}
                 </span>
                 {t.isFoul && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-danger-500/15 text-danger-500 tracking-wider shrink-0">
+                  <span className="text-nano font-bold px-1.5 py-0.5 rounded bg-danger-500/15 text-danger-500 tracking-wider shrink-0">
                     FOUL
                   </span>
                 )}

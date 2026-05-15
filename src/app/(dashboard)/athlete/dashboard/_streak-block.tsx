@@ -243,7 +243,7 @@ function FreezeButton({
           ? `Take a rest day — ${available} freeze available`
           : "No freezes available — refills Sunday"
       }
-      className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-[var(--color-border-default)] text-[11px] font-semibold tabular-nums transition-[transform,background-color] duration-100 active:scale-90 disabled:opacity-60 disabled:active:scale-100"
+      className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-[var(--color-border-default)] text-micro font-semibold tabular-nums transition-[transform,background-color] duration-100 active:scale-90 disabled:opacity-60 disabled:active:scale-100"
       style={{
         color: dim ? "var(--color-text-secondary)" : "var(--color-brand-strong)",
         backgroundColor: dim ? "transparent" : "var(--color-brand-subtle)",
@@ -322,7 +322,7 @@ function StreakDetailBody({
             History unavailable right now.
           </p>
         )}
-        <div className="mt-2 flex items-center gap-3 text-[10px] text-[var(--color-text-secondary)]">
+        <div className="mt-2 flex items-center gap-3 text-nano text-[var(--color-text-secondary)]">
           <Legend color="var(--color-brand)" label="Active" />
           <Legend
             color="var(--color-brand-subtle)"
@@ -351,7 +351,7 @@ function StreakDetailBody({
 function Stat({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
   return (
     <div className="rounded-xl bg-[var(--color-bg-surface-sunken)] p-3 text-center">
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-text-secondary)]">
+      <div className="text-nano uppercase tracking-wider text-[var(--color-text-secondary)]">
         {label}
       </div>
       <div className="mt-1 font-heading font-bold text-2xl text-[var(--color-text-primary)] tabular-nums">

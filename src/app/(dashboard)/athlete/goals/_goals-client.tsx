@@ -169,14 +169,14 @@ function ActiveGoalCard({ goal, onUpdateProgress, onAbandon }: ActiveGoalCardPro
           animate
         />
         {remaining > 0 && (
-          <p className="text-[11px] text-muted">
+          <p className="text-micro text-muted">
             <span className="font-mono tabular-nums">{formatNumber(remaining)}</span> {goal.unit} to
             go
           </p>
         )}
       </div>
 
-      <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-[11px]">
+      <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-micro">
         <div className="flex items-center gap-2">
           {goal.deadline ? (
             <span className={days.tone}>
@@ -218,7 +218,7 @@ function AchievedGoalCard({ goal }: { goal: DecoratedGoal }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-[var(--foreground)] truncate">{goal.title}</div>
-        <div className="text-[11px] text-muted font-mono tabular-nums">
+        <div className="text-micro text-muted font-mono tabular-nums">
           {formatNumber(goal.currentValue)} {goal.unit}
           {goal.event && <span className="ml-1.5 text-muted">· {formatEventType(goal.event)}</span>}
         </div>

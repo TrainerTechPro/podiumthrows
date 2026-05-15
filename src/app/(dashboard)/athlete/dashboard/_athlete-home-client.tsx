@@ -89,7 +89,7 @@ function Hero({
   return (
     <section className="px-6 pb-2 pt-2">
       <div className="flex items-start justify-between gap-3">
-        <h1 className="font-heading text-[26px] font-semibold leading-[1.15] tracking-[-0.012em] text-[var(--foreground)]">
+        <h1 className="font-heading text-title font-semibold leading-[1.15] tracking-[-0.012em] text-[var(--foreground)]">
           {greeting}, <span className="text-[var(--muted)]">{athlete.firstName}.</span>
         </h1>
         <ReadinessRing readiness={readiness} />
@@ -193,7 +193,7 @@ function ReadinessRing({ readiness }: { readiness: AthleteDashboardDTO["readines
           style={{ transition: "stroke-dashoffset 600ms ease-out" }}
         />
       </svg>
-      <span className="absolute font-mono text-[14px] font-semibold tabular-nums text-[var(--foreground)]">
+      <span className="absolute font-mono text-body font-semibold tabular-nums text-[var(--foreground)]">
         {readiness?.score ?? "—"}
       </span>
     </Link>
@@ -220,7 +220,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
       <div className="px-5 pt-5">
         <div className="flex items-center justify-between">
           <span
-            className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+            className={`inline-flex items-center gap-1.5 text-nano font-semibold uppercase tracking-[0.18em] ${
               status === "LOGGED" ? "text-success-500" : "text-primary-500"
             }`}
           >
@@ -240,7 +240,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
                 ? "IN PROGRESS"
                 : "PRESCRIBED"}
           </span>
-          <span className="text-[11px] font-medium tracking-[0.02em] text-[var(--muted)]">
+          <span className="text-micro font-medium tracking-[0.02em] text-[var(--muted)]">
             {today.durationLabel}
           </span>
         </div>
@@ -249,7 +249,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
           href={`/athlete/sessions/${today.sessionId}`}
           className="mt-3 block focus-visible:outline-none"
         >
-          <h2 className="font-heading text-[26px] font-semibold leading-[1.18] tracking-[-0.01em] text-[var(--foreground)]">
+          <h2 className="font-heading text-title font-semibold leading-[1.18] tracking-[-0.01em] text-[var(--foreground)]">
             {today.title}
           </h2>
         </Link>
@@ -265,11 +265,11 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
                 : "border-[var(--card-border)] bg-surface-50 dark:bg-surface-900/60"
             }`}
           >
-            <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+            <span className="text-nano font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
               {b.label}
             </span>
             <span
-              className={`font-mono text-[11px] font-semibold tabular-nums ${
+              className={`font-mono text-micro font-semibold tabular-nums ${
                 b.isHeavy ? "text-primary-500" : "text-[var(--foreground)]"
               }`}
             >
@@ -283,10 +283,10 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
             key={`pad-${i}`}
             className="flex flex-col gap-0.5 rounded-xl border border-dashed border-[var(--card-border)] px-2.5 py-2 opacity-40"
           >
-            <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+            <span className="text-nano font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
               —
             </span>
-            <span className="font-mono text-[11px] tabular-nums text-[var(--muted)]">—</span>
+            <span className="font-mono text-micro tabular-nums text-[var(--muted)]">—</span>
           </div>
         ))}
       </div>
@@ -294,7 +294,7 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
       <div className="px-5 pb-5 pt-4">
         <Link
           href={`/athlete/sessions/${today.sessionId}`}
-          className="grid h-14 w-full place-items-center rounded-2xl bg-primary-500 text-surface-950 font-heading text-[16px] font-bold tracking-[0.005em] shadow-[0_8px_24px_-8px_rgba(255,200,0,0.45)] transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60"
+          className="grid h-14 w-full place-items-center rounded-2xl bg-primary-500 text-surface-950 font-heading text-body font-bold tracking-[0.005em] shadow-[0_8px_24px_-8px_rgba(255,200,0,0.45)] transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60"
         >
           <span className="inline-flex items-center gap-2">
             <Play
@@ -319,10 +319,10 @@ function RestDayCard({ firstName }: { firstName: string }) {
   return (
     <section className="mx-4 mt-2 overflow-hidden rounded-3xl border border-[var(--card-border)] bg-[var(--card-bg)] motion-safe:animate-fade-slide-in">
       <div className="px-5 py-6">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+        <div className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
           Rest day
         </div>
-        <h2 className="mt-2 font-heading text-[22px] font-semibold leading-[1.2] tracking-[-0.005em] text-[var(--foreground)]">
+        <h2 className="mt-2 font-heading text-section font-semibold leading-[1.2] tracking-[-0.005em] text-[var(--foreground)]">
           No session today, {firstName}.
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
@@ -330,7 +330,7 @@ function RestDayCard({ firstName }: { firstName: string }) {
         </p>
         <Link
           href="/athlete/log-session"
-          className="mt-4 inline-flex h-11 items-center justify-center rounded-xl border border-[var(--card-border)] bg-surface-50 px-5 text-[14px] font-medium text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:bg-surface-900 dark:hover:bg-surface-800"
+          className="mt-4 inline-flex h-11 items-center justify-center rounded-xl border border-[var(--card-border)] bg-surface-50 px-5 text-body font-medium text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:bg-surface-900 dark:hover:bg-surface-800"
         >
           Log something
         </Link>
@@ -353,13 +353,13 @@ function SectionHeader({
   const showTrail = trailingHref && trailingLabel;
   return (
     <div className="mt-7 flex items-center justify-between px-5 pb-3">
-      <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
+      <h3 className="text-nano font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
         {label}
       </h3>
       {showTrail && (
         <Link
           href={trailingHref}
-          className="inline-flex items-center gap-0.5 text-[11px] font-medium tracking-[0.02em] text-[var(--muted)] hover:text-[var(--foreground)]"
+          className="inline-flex items-center gap-0.5 text-micro font-medium tracking-[0.02em] text-[var(--muted)] hover:text-[var(--foreground)]"
         >
           {trailingLabel}
           <ChevronRight className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
@@ -402,13 +402,13 @@ function DayCard({ day }: { day: WeekDayDTO }) {
       className={`flex aspect-[1/1.35] flex-col items-center justify-between rounded-xl border px-1.5 pb-2 pt-2.5 ${baseClass}`}
     >
       <span
-        className={`font-mono text-[9px] font-medium tracking-[0.1em] ${
+        className={`font-mono text-nano font-medium tracking-[0.1em] ${
           isToday ? "text-surface-950/80" : "text-[var(--muted)]"
         }`}
       >
         {day.dow}
       </span>
-      <span className="font-heading text-[16px] font-semibold leading-none">{day.dayNumber}</span>
+      <span className="font-heading text-body font-semibold leading-none">{day.dayNumber}</span>
       <DayDot state={day.state} />
     </Wrapper>
   );
@@ -570,10 +570,10 @@ function MomentRow({
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
+        <div className="font-mono text-nano font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
           {head}
         </div>
-        <div className="mt-0.5 truncate text-[14px] font-medium leading-[1.3] text-[var(--foreground)]">
+        <div className="mt-0.5 truncate text-body font-medium leading-[1.3] text-[var(--foreground)]">
           {body}
         </div>
         {meta ? (
@@ -607,10 +607,10 @@ function MasterProfileBanner() {
         <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="font-mono text-[9px] font-medium uppercase tracking-[0.18em] text-primary-500">
+        <div className="font-mono text-nano font-medium uppercase tracking-[0.18em] text-primary-500">
           Build your profile
         </div>
-        <div className="mt-0.5 truncate text-[14px] font-medium leading-[1.3] text-[var(--foreground)]">
+        <div className="mt-0.5 truncate text-body font-medium leading-[1.3] text-[var(--foreground)]">
           Tell us about your training so the program can adapt to you.
         </div>
         <div className="mt-0.5 truncate font-mono text-[10.5px] tracking-[0.04em] text-[var(--muted)]">

@@ -149,7 +149,7 @@ function TimelineNode({
                 {title}
               </p>
               {subtitle && !isExpanded && (
-                <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                <p className="text-micro mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
                   {subtitle}
                 </p>
               )}
@@ -165,7 +165,7 @@ function TimelineNode({
           </div>
           {/* Summary line for completed nodes */}
           {isCompleted && summaryLine && (
-            <p className="text-[11px] mt-1 font-mono tabular-nums" style={{ color: "#00FF8888" }}>
+            <p className="text-micro mt-1 font-mono tabular-nums" style={{ color: "#00FF8888" }}>
               {summaryLine}
             </p>
           )}
@@ -197,7 +197,7 @@ function BlockGroupLabel({ label, color }: { label: string; color: string }) {
     <div className="flex items-center gap-3 pl-10 py-3">
       <div style={{ width: 16, height: 1, backgroundColor: `${color}44` }} />
       <span
-        className="text-[10px] font-semibold uppercase"
+        className="text-nano font-semibold uppercase"
         style={{ letterSpacing: "0.2em", color: `${color}88` }}
       >
         {label}
@@ -548,13 +548,13 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
             >
               {data.sessionName}
             </h1>
-            <p className="text-[10px] text-white/30 tabular-nums">
+            <p className="text-nano text-white/30 tabular-nums">
               {completedBlocks}/{data.blocks.length} blocks · {formatElapsed(elapsed)}
             </p>
           </div>
 
           <div className="flex items-center gap-2 min-w-[60px] justify-end">
-            <span className="text-[9px] tracking-widest font-semibold text-emerald-500/60">
+            <span className="text-nano tracking-widest font-semibold text-emerald-500/60">
               ● LIVE
             </span>
           </div>

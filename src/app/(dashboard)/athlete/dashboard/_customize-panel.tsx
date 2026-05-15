@@ -323,7 +323,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
                         </span>
                       </div>
                       <p className="text-xs text-muted">{PRESET_DESCRIPTIONS[presetId]}</p>
-                      <p className="text-[10px] text-muted mt-1">
+                      <p className="text-nano text-muted mt-1">
                         {PRESETS[presetId].widgets.length} widgets
                       </p>
                     </button>

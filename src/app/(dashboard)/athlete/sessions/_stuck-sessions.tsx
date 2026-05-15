@@ -102,7 +102,7 @@ export function StuckSessions({ sessions }: { sessions: StuckSession[] }) {
           />
           In progress
         </h2>
-        <span className="text-[11px] text-muted tabular-nums">{sessions.length}</span>
+        <span className="text-micro text-muted tabular-nums">{sessions.length}</span>
       </div>
 
       <div className="card divide-y divide-[var(--card-border)] overflow-hidden">

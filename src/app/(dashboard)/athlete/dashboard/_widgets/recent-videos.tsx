@@ -18,13 +18,8 @@ export function RecentVideosWidget({ videos }: { videos: VideoItem[] }) {
     <div className="card px-4 py-4 sm:px-5 shadow-sm md:hover:shadow-md md:transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Recent Videos
-        </h3>
-        <Link
-          href="/athlete/videos"
-          className="text-xs text-primary-500 hover:underline"
-        >
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Recent Videos</h3>
+        <Link href="/athlete/videos" className="text-xs text-primary-500 hover:underline">
           View all &gt;
         </Link>
       </div>
@@ -40,9 +35,7 @@ export function RecentVideosWidget({ videos }: { videos: VideoItem[] }) {
             />
           </div>
           <div className="max-w-[220px]">
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              No videos shared yet
-            </p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">No videos shared yet</p>
             <p className="text-xs text-muted mt-1">
               Videos from your coach or self-uploads will appear here.
             </p>
@@ -92,9 +85,7 @@ export function RecentVideosWidget({ videos }: { videos: VideoItem[] }) {
               <p className="text-xs font-medium text-[var(--foreground)] mt-1.5 truncate">
                 {video.title ?? "Untitled Video"}
               </p>
-              <p className="text-[10px] text-muted">
-                {formatDate(video.createdAt)}
-              </p>
+              <p className="text-nano text-muted">{formatDate(video.createdAt)}</p>
             </Link>
           ))}
         </div>
