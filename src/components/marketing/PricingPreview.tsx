@@ -178,13 +178,13 @@ function PricingCard({ tier }: { tier: PricingTier }) {
 
       {/* Content */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        {/* Tier label — mono engineering register */}
+        {/* Tier label */}
         <div
-          className="font-mono"
+          className="font-heading"
           style={{
-            fontSize: 10,
+            fontSize: 11,
             textTransform: "uppercase" as const,
-            letterSpacing: "0.22em",
+            letterSpacing: "0.28em",
             color: "var(--landing-text-muted)",
             fontWeight: 600,
             marginBottom: 18,
@@ -208,12 +208,10 @@ function PricingCard({ tier }: { tier: PricingTier }) {
             {tier.price}
           </span>
           <span
-            className="font-mono"
             style={{
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 500,
               color: "var(--landing-text-dim)",
-              letterSpacing: "0.04em",
             }}
           >
             /mo

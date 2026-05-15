@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { LogSessionWizard } from "../../athlete/log-session/_log-session-wizard";
+import { LogSessionForm } from "../../athlete/log-session/_log-session-form";
 
 export default async function CoachLogSessionPage({
   searchParams,
@@ -20,7 +20,7 @@ export default async function CoachLogSessionPage({
 
   return (
     <div className="py-6 px-4">
-      <LogSessionWizard
+      <LogSessionForm
         apiEndpoint="/api/coach/log-session"
         sessionsPath="/athlete/sessions"
         allowedEvents={coach?.events ?? []}

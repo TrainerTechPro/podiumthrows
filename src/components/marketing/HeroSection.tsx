@@ -63,7 +63,8 @@ export default function HeroSection() {
             </div>
           </FadeUp>
 
-          {/* Headline */}
+          {/* Headline — re-anchored to the research finding (the only
+              uncontestable claim on the page). */}
           <h1
             className="font-heading font-black mb-7"
             style={{
@@ -73,9 +74,9 @@ export default function HeroSection() {
               color: "var(--landing-text)",
             }}
           >
-            <TextReveal delay={0.25}>The throws platform</TextReveal>
+            <TextReveal delay={0.25}>Ascending implements cost</TextReveal>
             <TextReveal delay={0.4}>
-              coaches <span style={{ color: "#FFC800" }}>actually</span> want.
+              <span style={{ color: "#FFC800" }}>2–4 meters.</span> Every time.
             </TextReveal>
           </h1>
 
@@ -87,11 +88,11 @@ export default function HeroSection() {
                 fontSize: 18,
                 lineHeight: 1.65,
                 color: "var(--landing-text-secondary)",
-                maxWidth: 580,
+                maxWidth: 620,
               }}
             >
-              Session planning, video analysis, and PR tracking — encoded with Bondarchuk
-              methodology for shot put, discus, hammer, and javelin.
+              Podium is the only coaching platform that enforces Bondarchuk implement sequencing —
+              so every session your athletes touch is set up to transfer, not regress.
             </p>
           </FadeUp>
 

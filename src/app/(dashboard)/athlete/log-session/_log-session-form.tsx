@@ -195,7 +195,7 @@ type WarningResult = { type: string; message: string; severity: string };
 
 /* ─── Main ─────────────────────────────────────────────────────────────── */
 
-export function LogSessionWizard({
+export function LogSessionForm({
   userId,
   athleteId,
   apiEndpoint = "/api/athlete/log-session",
