@@ -132,7 +132,7 @@ const PLANS: Plan[] = [
     description: "For active collegiate programs",
     athletes: "Up to 25 athletes",
     highlight: true,
-    cta: "Start Pro Trial",
+    cta: "Get Pro",
     ctaHref: "/register?plan=pro",
     features: [
       { label: "25 athletes", included: true },

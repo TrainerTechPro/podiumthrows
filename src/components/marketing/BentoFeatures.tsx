@@ -22,11 +22,13 @@ import { MoreInProductStrip } from "./MoreInProductStrip";
 export default function BentoFeatures() {
   return (
     <section
+      id="features"
       aria-label="Product feature highlights"
       style={{
         maxWidth: 1280,
         margin: "0 auto",
         padding: "96px 20px",
+        scrollMarginTop: 80,
       }}
     >
       {/* ── Section header ─────────────────────────────────────────────── */}

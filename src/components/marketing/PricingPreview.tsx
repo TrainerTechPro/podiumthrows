@@ -55,7 +55,7 @@ const TIERS: PricingTier[] = [
       "Advanced analytics",
       "Priority support",
     ],
-    cta: "Start Pro Trial",
+    cta: "Get Pro",
     href: "/register",
     featured: true,
     ctaVariant: "filled",

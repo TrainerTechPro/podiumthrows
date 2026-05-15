@@ -7,6 +7,19 @@ export const revalidate = 86400; // ISR: regenerate daily
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Podium Throws",
+  description:
+    "How Podium Throws collects, uses, and protects coach and athlete data. Cookies, third-party services, retention, and your rights.",
+  alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "Privacy Policy — Podium Throws",
+    description: "How Podium Throws collects, uses, and protects coach and athlete data.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy — Podium Throws",
+    description: "How Podium Throws handles coach and athlete data.",
+  },
 };
 
 export default function PrivacyPolicyPage() {
