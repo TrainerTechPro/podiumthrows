@@ -202,8 +202,15 @@ if $PROD_MODE; then
   # Protected routes: follow the chain (next.config redirect → middleware
   # auth redirect) and confirm we land on /login with the right ?redirect=.
   # Doubles as a check that next.config redirects survived the deploy.
+  #
+  # /coach/throws/analyze chain: next.config 308 → /coach/video-analysis,
+  # then middleware sees video-analysis is FLAG_GATED (PR #124) and
+  # short-circuits to /coach/dashboard before the unauth /login bounce.
+  # Final destination is /login?redirect=%2Fcoach%2Fdashboard. The probe
+  # still validates the next.config redirect fires — the chain wouldn't
+  # reach the flag-gate at all if the 308 was broken.
   REDIRECT_CHECKS=(
-    "/coach/throws/analyze|/login?redirect=%2Fcoach%2Fvideo-analysis"
+    "/coach/throws/analyze|/login?redirect=%2Fcoach%2Fdashboard"
     "/coach/schedule/print|/login?redirect=%2Fcoach%2Fcalendar%2Fprint"
     "/coach/settings/notifications|/login?redirect=%2Fcoach%2Fsettings"
   )
