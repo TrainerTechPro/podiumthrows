@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useConfirm } from "@/components";
+import { useToast } from "@/components/toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 
 /* ─── Types ───────────────────────────────────────────────────────────────── */
@@ -48,6 +50,8 @@ function isExpired(expiresAt: string, status: string) {
 export function InvitationsClient({ initialInvitations }: Props) {
   const [invitations, setInvitations] = useState<InvitationRow[]>(initialInvitations);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const { confirm, Dialog: ConfirmDialogPortal } = useConfirm();
+  const { toast } = useToast();
 
   const pending = invitations.filter(
     (i) => i.status === "PENDING" && !isExpired(i.expiresAt, i.status)
@@ -56,28 +60,31 @@ export function InvitationsClient({ initialInvitations }: Props) {
     (i) => i.status !== "PENDING" || isExpired(i.expiresAt, i.status)
   );
 
-  async function revokeInvitation(inv: InvitationRow) {
-    if (
-      !confirm(
-        `Revoke invitation${inv.email ? ` to ${inv.email}` : ""}? The link will no longer work.`
-      )
-    )
-      return;
-    setRevokingId(inv.id);
-    try {
-      const res = await fetch(`/api/invitations/${inv.id}`, {
-        method: "PATCH",
-        headers: csrfHeaders(),
-      });
-      if (!res.ok) throw new Error("Failed to revoke");
-      setInvitations((prev) =>
-        prev.map((i) => (i.id === inv.id ? { ...i, status: "REVOKED" } : i))
-      );
-    } catch {
-      alert("Failed to revoke invitation. Please try again.");
-    } finally {
-      setRevokingId(null);
-    }
+  function revokeInvitation(inv: InvitationRow) {
+    confirm({
+      title: `Revoke invitation${inv.email ? ` to ${inv.email}` : ""}?`,
+      description: "The link will no longer work.",
+      confirmLabel: "Revoke",
+      variant: "danger",
+      onConfirm: async () => {
+        setRevokingId(inv.id);
+        try {
+          const res = await fetch(`/api/invitations/${inv.id}`, {
+            method: "PATCH",
+            headers: csrfHeaders(),
+          });
+          if (!res.ok) throw new Error("Failed to revoke");
+          setInvitations((prev) =>
+            prev.map((i) => (i.id === inv.id ? { ...i, status: "REVOKED" } : i))
+          );
+          toast("Invitation revoked", "success");
+        } catch {
+          toast("Failed to revoke invitation. Please try again.", "error");
+        } finally {
+          setRevokingId(null);
+        }
+      },
+    });
   }
 
   if (invitations.length === 0) {
@@ -265,6 +272,8 @@ export function InvitationsClient({ initialInvitations }: Props) {
           </div>
         </section>
       )}
+
+      <ConfirmDialogPortal />
     </div>
   );
 }

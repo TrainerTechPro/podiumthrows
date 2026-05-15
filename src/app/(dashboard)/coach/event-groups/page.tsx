@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { EventGroupItem } from "@/lib/data/event-groups";
-import { Button, EmptyState, StaggeredList } from "@/components";
+import { Button, EmptyState, StaggeredList, useConfirm } from "@/components";
+import { useToast } from "@/components/toast";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import { GroupCard } from "./_group-card";
 import { GroupModal } from "./_group-modal";
@@ -19,6 +20,8 @@ export default function EventGroupsPage() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<EventGroupItem | null>(null);
+  const { confirm, Dialog: ConfirmDialogPortal } = useConfirm();
+  const { toast } = useToast();
 
   /* ─── Fetch groups ─────────────────────────────────────────────────── */
   const fetchGroups = useCallback(async () => {
@@ -58,31 +61,36 @@ export default function EventGroupsPage() {
     }
   }, [groups, selectedGroupId]);
 
-  const handleDeleteClick = useCallback(async () => {
+  const handleDeleteClick = useCallback(() => {
     if (!selectedGroupId) return;
     const group = groups.find((g) => g.id === selectedGroupId);
     if (!group) return;
 
-    const confirmed = window.confirm(
-      `Delete "${group.name}"? This will remove the group and unlink all members. This action cannot be undone.`
-    );
-    if (!confirmed) return;
-
-    try {
-      const res = await fetch(`/api/coach/event-groups/${selectedGroupId}`, {
-        method: "DELETE",
-        headers: csrfHeaders(),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "Failed to delete group");
-      }
-      setSelectedGroupId(null);
-      fetchGroups();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete group");
-    }
-  }, [selectedGroupId, groups, fetchGroups]);
+    confirm({
+      title: `Delete "${group.name}"?`,
+      description:
+        "This will remove the group and unlink all members. This action cannot be undone.",
+      confirmLabel: "Delete group",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/coach/event-groups/${selectedGroupId}`, {
+            method: "DELETE",
+            headers: csrfHeaders(),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            throw new Error(data?.error ?? "Failed to delete group");
+          }
+          setSelectedGroupId(null);
+          fetchGroups();
+          toast("Group deleted", "success");
+        } catch (err) {
+          toast(err instanceof Error ? err.message : "Failed to delete group", "error");
+        }
+      },
+    });
+  }, [selectedGroupId, groups, fetchGroups, confirm, toast]);
 
   const handleModalSaved = useCallback(() => {
     fetchGroups();
@@ -227,6 +235,9 @@ export default function EventGroupsPage() {
         group={editingGroup}
         onSaved={handleModalSaved}
       />
+
+      {/* Themed confirm dialog (for destructive ops) */}
+      <ConfirmDialogPortal />
     </div>
   );
 }

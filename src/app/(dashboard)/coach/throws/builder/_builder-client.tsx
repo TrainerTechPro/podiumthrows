@@ -1235,7 +1235,7 @@ function StrengthBlockEditor({
                 type="number"
                 className="exercise-input"
                 min="1"
-                value={ex.sets || ""}
+                value={ex.sets == null ? "" : ex.sets}
                 onChange={(e) => updateExercise(i, "sets", parseIntegerInput(e.target.value) ?? 0)}
               />
             </div>
@@ -1249,7 +1249,7 @@ function StrengthBlockEditor({
                 type="number"
                 className="exercise-input"
                 min="1"
-                value={ex.reps || ""}
+                value={ex.reps == null ? "" : ex.reps}
                 onChange={(e) => updateExercise(i, "reps", parseIntegerInput(e.target.value) ?? 0)}
               />
             </div>
@@ -1264,7 +1264,7 @@ function StrengthBlockEditor({
                 className="exercise-input"
                 min="0"
                 max="100"
-                value={ex.percentage || ""}
+                value={ex.percentage == null ? "" : ex.percentage}
                 onChange={(e) =>
                   updateExercise(i, "percentage", parseIntegerInput(e.target.value) ?? 0)
                 }

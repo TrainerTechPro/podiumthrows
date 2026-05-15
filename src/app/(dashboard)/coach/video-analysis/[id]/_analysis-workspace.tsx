@@ -141,7 +141,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
   const lastSavedJson = useRef(JSON.stringify(positions));
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>();
   const isSavingRef = useRef(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const isDirty = JSON.stringify(positions) !== lastSavedJson.current;
 
   // Frame step size
@@ -310,13 +310,19 @@ export function AnalysisWorkspace({ analysis }: Props) {
       lastSavedJson.current = json;
       setSaveStatus("saved");
       return true;
-    } catch {
-      setSaveStatus("idle");
+    } catch (err) {
+      // Don't swallow — surface to the coach so they don't lose frame work.
+      setSaveStatus("error");
+      showError(
+        err instanceof Error && err.message
+          ? `Auto-save failed: ${err.message}`
+          : "Auto-save failed. Your most recent edits are not saved yet — click Save to retry."
+      );
       return false;
     } finally {
       isSavingRef.current = false;
     }
-  }, [analysis.id, fps]);
+  }, [analysis.id, fps, showError]);
 
   // Auto-save: debounced 30s after positions change
   useEffect(() => {
