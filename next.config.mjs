@@ -61,6 +61,18 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // ── MVP surface cut (2026-05-15) ───────────────────────────────────
+      // Subtraction pass per tasks/product-audit-roadmap-2026-05-15.md.
+      // Hidden modules with no flow dependency and no need for admin access
+      // redirect here. Routes that admins / dev still need (architect,
+      // questionnaires, video-analysis, sideline, self-program) are gated
+      // by `src/lib/flags.ts` + middleware FLAG_GATED_ROUTES instead — that
+      // path keeps a flag flip enough to restore access without redeploying.
+      { source: '/athlete/insights',    destination: '/athlete/dashboard',   permanent: false },
+      { source: '/athlete/codex',       destination: '/athlete/dashboard',   permanent: false },
+      { source: '/athlete/tools',       destination: '/athlete/settings',    permanent: false },
+      { source: '/athlete/team',        destination: '/athlete/dashboard',   permanent: false },
+
       // ── PR 1: route-consolidation 307s ─────────────────────────────────
       // Non-permanent on purpose. These are cleanup of in-tree page-level
       // `redirect()` stubs and near-dead surfaces — unlike the 308s below

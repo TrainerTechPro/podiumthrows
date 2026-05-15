@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma";
 import { SelfProgramHub } from "./_hub";
 
 export default async function SelfProgramPage() {
+  // Middleware gates /athlete/self-program via FLAG_GATED_ROUTES (selfProgram).
+  // Disabled → redirect to /athlete/dashboard.
   const session = await getSession();
   if (!session || !(await canActAsAthlete(session))) redirect("/login");
 

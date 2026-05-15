@@ -64,6 +64,10 @@ function SessionRow({ session }: { session: SidelineSessionItem }) {
 }
 
 export default async function CoachSidelinePage() {
+  // Middleware gates /coach/sideline via FLAG_GATED_ROUTES (coachSideline).
+  // Disabled → redirect to /coach/dashboard. The middleware also gates the
+  // phone-UA dashboard → sideline auto-redirect by the same flag to avoid
+  // loops.
   const { coach } = await requireCoachSession();
   const data = await getSidelineData(coach.id);
   const teamLabel = coach.organization?.trim() || `${coach.firstName}'s squad`;

@@ -1,15 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  PenLine,
-  Heart,
-  Video,
-  Calendar,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { PenLine, Heart, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components";
 import { TodayWorkoutWidget } from "../dashboard/_widgets/today-workout";
@@ -24,26 +16,14 @@ import type { TrainingHubData } from "@/lib/data/training-hub";
 
 /* ─── Quick Action Pills ─────────────────────────────────────────────────── */
 
-function QuickActions({
-  readinessCheckedIn,
-  pendingQuestionnaires,
-}: {
-  readinessCheckedIn: boolean;
-  pendingQuestionnaires: number;
-}) {
+// MVP cut (2026-05-15): pendingQuestionnaires used to drive a chip; drill
+// videos + questionnaires both hidden from primary nav per audit. Callers
+// still pass it (server data shape unchanged) — we drop it from the props
+// type so TypeScript flags any new use.
+function QuickActions({ readinessCheckedIn }: { readinessCheckedIn: boolean }) {
   const actions = [
     { label: "Log Session", href: "/athlete/log-session", icon: PenLine },
     ...(!readinessCheckedIn ? [{ label: "Check-in", href: "/athlete/wellness", icon: Heart }] : []),
-    { label: "Drill Videos", href: "/athlete/drill-videos", icon: Video },
-    ...(pendingQuestionnaires > 0
-      ? [
-          {
-            label: `Questionnaires (${pendingQuestionnaires})`,
-            href: "/athlete/questionnaires",
-            icon: Calendar,
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -188,10 +168,7 @@ export function TrainingHub({ data }: { data: TrainingHubData }) {
         <WeekStrip days={data.weekDays} />
 
         {/* Quick actions */}
-        <QuickActions
-          readinessCheckedIn={data.readinessCheckedInToday}
-          pendingQuestionnaires={data.pendingQuestionnaires}
-        />
+        <QuickActions readinessCheckedIn={data.readinessCheckedInToday} />
 
         {/* Recent completions */}
         <RecentCompletions sessions={data.recentCompletions} />
@@ -227,10 +204,7 @@ export function TrainingHub({ data }: { data: TrainingHubData }) {
         <FreestyleCTA variant="hero" />
 
         {/* Quick actions */}
-        <QuickActions
-          readinessCheckedIn={data.readinessCheckedInToday}
-          pendingQuestionnaires={data.pendingQuestionnaires}
-        />
+        <QuickActions readinessCheckedIn={data.readinessCheckedInToday} />
 
         {/* Recent completions */}
         <RecentCompletions sessions={data.recentCompletions} />

@@ -38,7 +38,9 @@ type Surface = { role: "coach" | "athlete"; path: string; slug: string };
 const SURFACES: Surface[] = [
   { role: "athlete", path: "/athlete/dashboard", slug: "athlete-dashboard" },
   { role: "athlete", path: "/athlete/log-session", slug: "athlete-log-session" },
-  { role: "athlete", path: "/athlete/self-program", slug: "athlete-self-program" },
+  // MVP cut (2026-05-15): /athlete/self-program is flag-gated post-MVP — the
+  // middleware redirects to /athlete/dashboard while `selfProgram` is off.
+  // { role: "athlete", path: "/athlete/self-program", slug: "athlete-self-program" },
   { role: "athlete", path: "/athlete/throws", slug: "athlete-throws" },
   { role: "athlete", path: "/athlete/profile", slug: "athlete-profile" },
   { role: "coach", path: "/coach/dashboard", slug: "coach-dashboard" },

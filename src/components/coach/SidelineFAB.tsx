@@ -5,6 +5,9 @@ import { usePathname } from "next/navigation";
 import { Smartphone } from "lucide-react";
 import { setCoachMobileView } from "@/app/(dashboard)/coach/sideline/_actions";
 
+// Flag-gating happens at coach/layout.tsx — if `coachSideline` is off, the
+// FAB simply isn't mounted. This component assumes the flag is on.
+
 const COOKIE_NAME = "coach_mobile_view";
 
 function readCookie(name: string): string | null {

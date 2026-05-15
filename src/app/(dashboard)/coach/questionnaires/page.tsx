@@ -75,6 +75,9 @@ const TYPE_BADGE_VARIANT: Record<
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 
 export default async function QuestionnairesPage() {
+  // Middleware gates /coach/questionnaires via FLAG_GATED_ROUTES
+  // (questionnaireBuilder flag). When disabled the route redirects
+  // to /coach/dashboard before reaching this handler.
   const { coach } = await requireCoachSession();
   const questionnaires = await getCoachQuestionnaires(coach.id);
 

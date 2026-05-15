@@ -77,13 +77,17 @@ const TABS: Tab[] = [
     href: "/athlete/profile",
     label: "Me",
     icon: UserCircle,
+    // MVP cut (2026-05-15): /athlete/team now redirects to /athlete/dashboard.
+    // /athlete/wellness stays under Me (it's the readiness check-in).
+    // /athlete/availability + /athlete/integrations are deep-link-only —
+    // they still resolve when reached from coach calendar or wearable
+    // banners, so Me highlights for context.
     matchPaths: [
       "/athlete/profile",
       "/athlete/settings",
       "/athlete/notifications",
       "/athlete/wellness",
       "/athlete/availability",
-      "/athlete/team",
       "/athlete/integrations",
     ],
   },
