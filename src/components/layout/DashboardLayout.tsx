@@ -361,7 +361,9 @@ function CoachShell({
       : baseSections;
 
   return (
-    <div className="flex h-screen bg-[var(--background)] overflow-hidden">
+    // h-[100dvh] works on both desktop and mobile-on-sideline browsers
+    // without the iOS Safari 100vh URL-bar crop.
+    <div className="flex h-[100dvh] bg-[var(--background)] overflow-hidden">
       <SkipLink />
       <Sidebar
         sections={sections}
@@ -462,7 +464,9 @@ function AthleteShell({ user, children, className, notificationCount }: Dashboar
   return (
     <div
       className={cn(
-        "athlete-shell flex flex-col h-screen bg-[var(--background)] overflow-hidden",
+        // h-[100dvh] avoids the iOS Safari URL-bar cropping that h-screen
+        // (100vh) suffers; the bottom-tab bar otherwise gets clipped.
+        "athlete-shell flex flex-col h-[100dvh] bg-[var(--background)] overflow-hidden",
         focusMode && "athlete-shell-focus"
       )}
     >

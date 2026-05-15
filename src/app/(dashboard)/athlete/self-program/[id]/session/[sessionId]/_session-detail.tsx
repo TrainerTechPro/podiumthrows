@@ -622,11 +622,11 @@ export function SessionDetail({
                       </p>
                     </div>
                     <div className="text-right">
+                      {/* Throws display total count only — the per-set
+                          breakdown isn't how coaches/athletes think about
+                          throwing volume (per CLAUDE.md domain rule). */}
                       <div className="text-sm font-semibold tabular-nums">
                         {t.sets * t.repsPerSet} throws
-                      </div>
-                      <div className="text-xs text-muted tabular-nums">
-                        {t.sets} &times; {t.repsPerSet}
                       </div>
                     </div>
                   </div>
