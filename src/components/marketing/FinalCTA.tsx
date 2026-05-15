@@ -100,38 +100,8 @@ export default function FinalCTA() {
         </ScrollReveal>
       </div>
 
-      {/* Scoped styles */}
-      <style>{`
-        .final-cta-section {
-          padding: 88px 20px;
-        }
-
-        @media (min-width: 640px) {
-          .final-cta-section {
-            padding: 120px 40px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .final-cta-section {
-            padding: 144px 64px;
-          }
-        }
-
-        .final-cta-btn-primary:hover {
-          filter: brightness(1.08);
-          transform: translateY(-2px);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .final-cta-btn-primary {
-            transition: none !important;
-          }
-          .final-cta-btn-primary:hover {
-            transform: none !important;
-          }
-        }
-      `}</style>
+      {/* Class styles for .final-cta-section / .final-cta-btn-primary live
+          in src/app/globals.css to avoid SSR/CSR hydration drift (React #425). */}
     </section>
   );
 }

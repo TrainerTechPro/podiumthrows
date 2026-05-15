@@ -246,74 +246,8 @@ export default function DeficitFinderCTA() {
         </div>
       </div>
 
-      {/* Scoped styles */}
-      <style>{`
-        .deficit-section {
-          padding: 32px 16px 80px;
-        }
-
-        @media (min-width: 640px) {
-          .deficit-section {
-            padding: 40px 40px 120px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .deficit-section {
-            padding: 40px 64px 140px;
-          }
-        }
-
-        .deficit-card {
-          padding: 32px 24px;
-        }
-
-        @media (min-width: 640px) {
-          .deficit-card {
-            padding: 48px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .deficit-card {
-            padding: 72px;
-          }
-        }
-
-        .deficit-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 48px;
-          align-items: center;
-        }
-
-        @media (min-width: 1024px) {
-          .deficit-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 72px;
-          }
-        }
-
-        @media (max-width: 767px) {
-          .deficit-grid {
-            /* outer card padding already reduced via media query below */
-          }
-        }
-
-        .deficit-cta-btn:hover {
-          filter: brightness(1.08);
-          transform: translateY(-1px);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .deficit-grid a {
-            transition: none !important;
-          }
-          .deficit-cta-btn:hover {
-            transform: none !important;
-          }
-        }
-      `}</style>
+      {/* Class styles for .deficit-section / .deficit-card / .deficit-grid live
+          in src/app/globals.css to avoid SSR/CSR hydration drift (React #425). */}
     </section>
   );
 }
