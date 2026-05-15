@@ -292,15 +292,16 @@ if $PROD_MODE; then
       AUTH_FAILURES+=("coach login failed")
     else
       echo "  ✓ Coach logged in: $SMOKE_COACH_EMAIL"
-      # /coach/throws bare path 308s to /coach/dashboard; /coach/throws/profile
-      # is the canonical throws-detail surface for the smoke coach.
+      # /coach/throws bare path 308s to /coach/dashboard; the former
+      # /coach/throws/profile probe was retired with PR #125 — its jobs
+      # were absorbed by /coach/athletes/[id] (already covered by the
+      # /coach/athletes probe below).
       for path in \
         "/coach/dashboard" \
         "/coach/athletes" \
         "/coach/calendar" \
         "/coach/library" \
         "/coach/settings" \
-        "/coach/throws/profile" \
         "/coach/video-analysis" \
         "/coach/settings?tab=notifications"; do
         auth_probe "$COACH_JAR" "$path"
