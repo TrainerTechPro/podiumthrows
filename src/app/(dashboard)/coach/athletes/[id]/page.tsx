@@ -417,7 +417,7 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
           />
         </div>
         {/* Threshold tick row */}
-        <div className="relative h-3 text-[10px] text-muted tabular-nums" aria-hidden="true">
+        <div className="relative h-3 text-nano text-muted tabular-nums" aria-hidden="true">
           <span className="absolute left-0">0.0</span>
           <span className="absolute" style={{ left: "32%", transform: "translateX(-50%)" }}>
             0.8
@@ -430,7 +430,7 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
           </span>
           <span className="absolute right-0">2.5</span>
         </div>
-        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium text-center">
+        <div className="text-nano text-emerald-600 dark:text-emerald-400 font-medium text-center">
           0.8 – 1.3 optimal
         </div>
       </div>
