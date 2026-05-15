@@ -11,6 +11,7 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Button } from "@/components/ui/Button";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
+import { useConfirm } from "@/components";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -99,6 +100,7 @@ function formatCompetitionLevel(level: string): string {
 export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
   const router = useRouter();
   const toast = useToast();
+  const { confirm, Dialog: ConfirmDialogPortal } = useConfirm();
 
   // Local form state
   const [form, setForm] = useState({
@@ -214,12 +216,13 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
   };
 
   const handleDesktopRegenerate = () => {
-    const confirmed = window.confirm(
-      "This will replace your current program. Completed sessions are preserved in your history. Continue?"
-    );
-    if (confirmed) {
-      regenerate();
-    }
+    confirm({
+      title: "Regenerate program?",
+      description:
+        "This will replace your current program. Completed sessions are preserved in your history.",
+      confirmLabel: "Regenerate",
+      onConfirm: () => regenerate(),
+    });
   };
 
   return (
@@ -539,6 +542,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
           </Button>
         </div>
       </section>
+      <ConfirmDialogPortal />
     </div>
   );
 }

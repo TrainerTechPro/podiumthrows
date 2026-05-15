@@ -1165,6 +1165,18 @@ function StrengthBlockEditor({
   config: StrengthBlockConfig;
   onUpdate: (update: Partial<StrengthBlockConfig>) => void;
 }) {
+  // Stamp any exercises loaded without a stable _id (saved sessions pre-
+  // dating this fix). Runs once on mount.
+  useEffect(() => {
+    const needsIds = config.exercises.some((ex) => !ex._id);
+    if (!needsIds) return;
+    const stamped = config.exercises.map((ex) =>
+      ex._id ? ex : { ...ex, _id: crypto.randomUUID() }
+    );
+    onUpdate({ exercises: stamped });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const updateExercise = (idx: number, field: string, value: string | number) => {
     const updated = config.exercises.map((ex, i) => (i === idx ? { ...ex, [field]: value } : ex));
     onUpdate({ exercises: updated });
@@ -1184,7 +1196,14 @@ function StrengthBlockEditor({
     onUpdate({
       exercises: [
         ...config.exercises,
-        { name: "", sets: 3, reps: 5, percentage: 75, classification: "SP" },
+        {
+          _id: crypto.randomUUID(),
+          name: "",
+          sets: 3,
+          reps: 5,
+          percentage: 75,
+          classification: "SP",
+        },
       ],
     });
   };
@@ -1196,7 +1215,7 @@ function StrengthBlockEditor({
   return (
     <div className="space-y-3">
       {config.exercises.map((ex, i) => (
-        <div key={i} className="space-y-2">
+        <div key={ex._id ?? `idx-${i}`} className="space-y-2">
           <div className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-4">
               {i === 0 && (
