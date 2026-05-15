@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Mail, Trophy, AlertTriangle, LogOut } from "lucide-react";
+import { Mail, Trophy, AlertTriangle } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { hashInvitationToken } from "@/lib/invitation-token";
+import { LogoutButton } from "./_logout-button";
 
 export const metadata = { title: "Claim your profile — Podium Throws" };
 
@@ -92,7 +93,15 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
           </span>
         </div>
 
-        {state.kind === "valid" && <ValidCard state={state} token={token} session={session} />}
+        {state.kind === "valid" && (
+          <ValidCard
+            state={state}
+            token={token}
+            session={
+              session ? { userId: session.userId, role: session.role, email: session.email } : null
+            }
+          />
+        )}
 
         {state.kind === "expired" && <ExpiredCard coachName={state.coachName} />}
 
@@ -119,7 +128,7 @@ function ValidCard({
     expiresAt: Date;
   };
   token: string;
-  session: { role: string; email: string } | null;
+  session: { userId: string; role: string; email: string } | null;
 }) {
   return (
     <div className="card p-6 sm:p-8 space-y-5">
@@ -169,7 +178,11 @@ function ValidCard({
   );
 }
 
-function LoggedInWarning({ session }: { session: { role: string; email: string } }) {
+function LoggedInWarning({
+  session,
+}: {
+  session: { userId: string; role: string; email: string };
+}) {
   return (
     <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3">
       <div className="flex items-start gap-2">
@@ -185,10 +198,7 @@ function LoggedInWarning({ session }: { session: { role: string; email: string }
           </p>
         </div>
       </div>
-      <Link href="/api/auth/logout" className="btn-secondary w-full justify-center text-sm gap-2">
-        <LogOut className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
-        Log out
-      </Link>
+      <LogoutButton userId={session.userId} />
     </div>
   );
 }

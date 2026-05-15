@@ -152,3 +152,19 @@ export function useUnreadFor(field: TargetField, id: string | null | undefined):
   if (!id) return 0;
   return byTarget[field][id] ?? 0;
 }
+
+/**
+ * Reset the in-memory cache. Call on logout / login so a router.push to
+ * /login (which doesn't full-reload) doesn't leave the next user briefly
+ * looking at the prior user's unread badges.
+ */
+export function resetCommentUnreadStore(): void {
+  state = {
+    total: 0,
+    byTarget: EMPTY_BY_TARGET,
+    loading: false,
+    lastFetched: 0,
+  };
+  inFlight = null;
+  notify();
+}

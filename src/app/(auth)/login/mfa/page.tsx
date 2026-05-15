@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { clearAllClientStateForUser } from "@/lib/client-state-cleanup";
 
 export default function MfaLoginPage() {
   const router = useRouter();
@@ -47,10 +48,7 @@ export default function MfaLoginPage() {
     }
   }
 
-  function handleKeyDown(
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) {
+  function handleKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Backspace" && !digits[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -58,10 +56,7 @@ export default function MfaLoginPage() {
 
   function handlePaste(e: React.ClipboardEvent) {
     e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6);
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length === 6) {
       const newDigits = pasted.split("");
       setDigits(newDigits);
@@ -89,6 +84,12 @@ export default function MfaLoginPage() {
         inputRefs.current[0]?.focus();
         setLoading(false);
         return;
+      }
+
+      // Defensive cleanup — see login page comment.
+      const newUserId = data.data?.user?.id;
+      if (typeof newUserId === "string" && newUserId) {
+        await clearAllClientStateForUser(newUserId);
       }
 
       router.push(redirect || data.data?.redirectTo || "/coach/dashboard");
@@ -120,6 +121,12 @@ export default function MfaLoginPage() {
         return;
       }
 
+      // Defensive cleanup — see login page comment.
+      const newUserId = data.data?.user?.id;
+      if (typeof newUserId === "string" && newUserId) {
+        await clearAllClientStateForUser(newUserId);
+      }
+
       router.push(redirect || data.data?.redirectTo || "/coach/dashboard");
     } catch {
       setError("Network error. Please try again.");
@@ -129,9 +136,7 @@ export default function MfaLoginPage() {
 
   return (
     <div className="card p-8 max-w-md mx-auto">
-      <h2 className="text-display-sm text-center mb-2">
-        Two-Factor Authentication
-      </h2>
+      <h2 className="text-display-sm text-center mb-2">Two-Factor Authentication</h2>
       <p className="text-muted text-center text-sm mb-6">
         {backupMode
           ? "Enter one of your backup codes"
@@ -217,10 +222,7 @@ export default function MfaLoginPage() {
         </>
       )}
 
-      <Link
-        href="/login"
-        className="text-sm text-muted hover:text-foreground block text-center"
-      >
+      <Link href="/login" className="text-sm text-muted hover:text-foreground block text-center">
         Back to login
       </Link>
     </div>
