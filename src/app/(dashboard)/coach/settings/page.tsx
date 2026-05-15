@@ -720,10 +720,10 @@ export default function CoachSettingsPage() {
               </h2>
               {pwMessage && (
                 <div
-                  className={`mb-4 p-3 rounded-lg text-sm ${
+                  className={`mb-4 p-3 rounded-lg text-sm border ${
                     pwMessage.type === "error"
-                      ? "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-                      : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                      ? "bg-status-danger-bg text-status-danger-fg border-status-danger-fg/20"
+                      : "bg-status-success-bg text-status-success-fg border-status-success-fg/20"
                   }`}
                   role="alert"
                 >
@@ -1258,9 +1258,9 @@ export default function CoachSettingsPage() {
                       key={act.id}
                       className="flex items-start gap-3 p-3 rounded-lg bg-[var(--muted-bg)]"
                     >
-                      <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-full bg-status-warning-bg flex items-center justify-center shrink-0 mt-0.5">
                         <svg
-                          className="w-4 h-4 text-amber-600 dark:text-amber-400"
+                          className="w-4 h-4 text-status-warning-fg"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"

@@ -17,15 +17,14 @@ export default function CoachError({ error, reset }: ErrorProps) {
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="max-w-md w-full text-center space-y-5">
-
         {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-2xl bg-danger-500/10 flex items-center justify-center mx-auto text-danger-500">
           <svg
             width="28"
             height="28"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#ef4444"
+            stroke="currentColor"
             strokeWidth="1.75"
             strokeLinecap="round"
             strokeLinejoin="round"

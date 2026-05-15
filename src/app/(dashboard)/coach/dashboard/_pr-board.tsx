@@ -28,15 +28,9 @@ export function PRBoard({ prs }: PRBoardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Award
-            className="h-5 w-5 text-amber-500"
-            strokeWidth={1.75}
-            aria-hidden="true"
-          />
+          <Award className="h-5 w-5 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
           <div>
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">
-              Recent PRs
-            </h3>
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">Recent PRs</h3>
             <p className="text-[10px] text-surface-400">last 14 days</p>
           </div>
         </div>
@@ -54,35 +48,23 @@ export function PRBoard({ prs }: PRBoardProps) {
           <Link
             key={`${pr.athleteId}-${pr.event}-${pr.date}-${i}`}
             href={`/coach/athletes/${pr.athleteId}`}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 card-interactive"
-            )}
+            className={cn("flex items-center gap-3 rounded-lg px-3 py-2 card-interactive")}
           >
-            <Avatar
-              name={pr.athleteName}
-              src={pr.avatarUrl}
-              size="xs"
-            />
+            <Avatar name={pr.athleteName} src={pr.avatarUrl} size="xs" />
 
             <span className="text-sm font-medium text-[var(--foreground)] w-36 truncate">
               {pr.athleteName}
             </span>
 
-            <span className="text-xs text-muted w-28 truncate">
-              {formatEventName(pr.event)}
-            </span>
+            <span className="text-xs text-muted w-28 truncate">{formatEventName(pr.event)}</span>
 
-            <span className="text-xs text-surface-400 w-16 truncate">
-              {pr.implement}
-            </span>
+            <span className="text-xs text-surface-400 w-16 truncate">{pr.implement}</span>
 
-            <span className="text-sm font-bold tabular-nums text-amber-500 w-20 text-right">
+            <span className="text-sm font-bold tabular-nums text-amber-500 w-24 text-right">
               {pr.distance.toFixed(2)}m
             </span>
 
-            <span className="text-xs text-surface-400 w-16 text-right">
-              {formatDate(pr.date)}
-            </span>
+            <span className="text-xs text-surface-400 w-16 text-right">{formatDate(pr.date)}</span>
 
             {pr.source && (
               <Badge
@@ -106,11 +88,7 @@ export function PRBoard({ prs }: PRBoardProps) {
               "flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 card-interactive"
             )}
           >
-            <Avatar
-              name={pr.athleteName}
-              src={pr.avatarUrl}
-              size="sm"
-            />
+            <Avatar name={pr.athleteName} src={pr.avatarUrl} size="sm" />
 
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-[var(--foreground)] truncate">
@@ -125,9 +103,7 @@ export function PRBoard({ prs }: PRBoardProps) {
               <p className="text-sm font-bold tabular-nums text-amber-500">
                 {pr.distance.toFixed(2)}m
               </p>
-              <p className="text-[10px] text-surface-400">
-                {formatDate(pr.date)}
-              </p>
+              <p className="text-[10px] text-surface-400">{formatDate(pr.date)}</p>
             </div>
           </Link>
         ))}
