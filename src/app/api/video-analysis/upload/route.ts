@@ -3,12 +3,7 @@ import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { requireCoachApi } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
-import {
-  isR2Configured,
-  uploadSingleFile,
-  getPublicUrl,
-  saveFileLocally,
-} from "@/lib/r2";
+import { isR2Configured, uploadSingleFile, getPublicUrl, saveFileLocally } from "@/lib/r2";
 import { EventType } from "@prisma/client";
 
 export const maxDuration = 120;
@@ -25,6 +20,8 @@ export async function POST(request: NextRequest) {
     const title = formData.get("title") as string | null;
     const description = (formData.get("description") as string | null)?.trim() || null;
     const thumbnailBlob = formData.get("thumbnail") as File | null;
+    const sessionIdRaw = (formData.get("sessionId") as string | null)?.trim() || null;
+    const throwLogIdRaw = (formData.get("throwLogId") as string | null)?.trim() || null;
 
     // Validate required fields
     if (!videoBlob || !athleteId || !event || !title) {
@@ -51,7 +48,10 @@ export async function POST(request: NextRequest) {
 
     // Validate file size (200MB max)
     if (videoBlob.size > 200 * 1024 * 1024) {
-      return NextResponse.json({ success: false, error: "File too large (max 200MB)" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "File too large (max 200MB)" },
+        { status: 400 }
+      );
     }
 
     // Verify athlete belongs to coach
@@ -61,6 +61,42 @@ export async function POST(request: NextRequest) {
     });
     if (!athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
+    }
+
+    // Validate optional training-data anchors. We reject mismatches (e.g. a
+    // session belonging to a different athlete) rather than silently null
+    // them — wrong attribution is worse than missing attribution.
+    let sessionId: string | null = null;
+    if (sessionIdRaw) {
+      const session = await prisma.trainingSession.findFirst({
+        where: { id: sessionIdRaw, athleteId },
+        select: { id: true },
+      });
+      if (!session) {
+        return NextResponse.json(
+          { success: false, error: "Session not found for this athlete" },
+          { status: 400 }
+        );
+      }
+      sessionId = session.id;
+    }
+
+    let throwLogId: string | null = null;
+    if (throwLogIdRaw) {
+      const throwLog = await prisma.throwLog.findFirst({
+        where: { id: throwLogIdRaw, athleteId },
+        select: { id: true, sessionId: true },
+      });
+      if (!throwLog) {
+        return NextResponse.json(
+          { success: false, error: "Throw not found for this athlete" },
+          { status: 400 }
+        );
+      }
+      throwLogId = throwLog.id;
+      // If a throw is selected but no explicit session was, inherit the
+      // throw's session — the two should not contradict.
+      if (!sessionId && throwLog.sessionId) sessionId = throwLog.sessionId;
     }
 
     // Upload video
@@ -100,6 +136,8 @@ export async function POST(request: NextRequest) {
         videoUrl,
         thumbnailUrl,
         status: "UPLOADED",
+        sessionId,
+        throwLogId,
       },
       include: {
         athlete: {
@@ -115,6 +153,9 @@ export async function POST(request: NextRequest) {
     }
     logger.error("POST /api/video-analysis/upload", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ success: false, error: `Upload failed: ${message}` }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: `Upload failed: ${message}` },
+      { status: 500 }
+    );
   }
 }

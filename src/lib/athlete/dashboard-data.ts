@@ -28,6 +28,8 @@ export type TodayCardDTO = {
   durationLabel: string; // "85 MIN"
   /** Up to 4 block pips — heavy block flagged for gold tint. */
   blocks: TodayBlockPipDTO[];
+  /** One sentence explaining the intent of today's session — surfaces the "why". */
+  whyToday: string | null;
 };
 
 export type TodayBlockPipDTO = {
@@ -301,7 +303,37 @@ function buildTodayCard(s: TodaySessionRow): TodayCardDTO {
     prescription: tokenizePrescription(plan?.description ?? null, blocks),
     durationLabel: `${durationMinutes} MIN`,
     blocks: pips,
+    whyToday: buildWhyToday(blocks, heaviestKg),
   };
+}
+
+/**
+ * Single-sentence "why" derived from the day's structure. Reads the session
+ * shape — heavy block presence, strength complement, comp-weight ratio — and
+ * names the intent. Surfaces the engine's reasoning even when the engine
+ * didn't persist a rationale string (legacy plans, manual builds).
+ *
+ * The engine emits its own rationale at generation time (see select-exercises
+ * / select-implements). When that is persisted, prefer it; this fallback is
+ * for the existing data set.
+ */
+function buildWhyToday(blocks: TodaySessionBlockRow[], heaviestKg: number): string | null {
+  if (blocks.length === 0) return null;
+  const throwingBlocks = blocks.filter((b) => b.blockType.toLowerCase() === "throwing");
+  const strengthBlocks = blocks.filter((b) => b.blockType.toLowerCase() === "strength");
+
+  if (throwingBlocks.length === 0 && strengthBlocks.length > 0) {
+    return "Strength-only day — recovery from throwing, reinforce the support work.";
+  }
+  if (throwingBlocks.length === 0) return null;
+
+  if (heaviestKg > 0 && throwingBlocks.length >= 2) {
+    return `Heavy-implement focus (${formatKg(heaviestKg)}) descending into comp weight, with strength between blocks for activation transfer.`;
+  }
+  if (heaviestKg > 0) {
+    return `Heaviest implement ${formatKg(heaviestKg)} thrown first — descending order drives adaptation without bleeding into speed.`;
+  }
+  return "Throwing session — descend implement weight; log every throw to feed the engine.";
 }
 
 function compactBlockSummary(b: {

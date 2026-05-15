@@ -37,10 +37,7 @@ export interface ToolsPageProps {
   profileBodyStats?: ProfileBodyStats;
 }
 
-export default function ToolsPage({
-  isCoach = false,
-  profileBodyStats,
-}: ToolsPageProps) {
+export default function ToolsPage({ isCoach = false, profileBodyStats }: ToolsPageProps) {
   const [activeTab, setActiveTab] = useState("strength");
 
   const profileLink = isCoach ? "/coach/settings" : "/athlete/profile";
@@ -48,13 +45,17 @@ export default function ToolsPage({
   return (
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
-        {/* Header */}
+        {/* Header — product-framed per coach vs athlete (same math, different
+            register). The shared calculators are legitimately interchangeable;
+            the surface around them must not be. */}
         <div className="mb-6">
           <h1 className="font-heading text-display text-gray-900 dark:text-gray-50">
-            Tools
+            {isCoach ? "Program math" : "Tools"}
           </h1>
           <p className="text-body text-gray-500 dark:text-gray-400 mt-1">
-            Strength and body composition tools for throws athletes
+            {isCoach
+              ? "1RM, plate math, and body-composition calculators for program decisions."
+              : "Strength and body composition tools, ringside-ready."}
           </p>
         </div>
 
@@ -87,10 +88,7 @@ export default function ToolsPage({
         {/* Tab content */}
         {activeTab === "strength" && <StrengthTab />}
         {activeTab === "bodystats" && (
-          <BodyStatsTab
-            profileBodyStats={profileBodyStats}
-            profileLink={profileLink}
-          />
+          <BodyStatsTab profileBodyStats={profileBodyStats} profileLink={profileLink} />
         )}
       </div>
     </div>

@@ -253,6 +253,15 @@ function TodayHeroCard({ today }: { today: TodayCardDTO }) {
             {today.title}
           </h2>
         </Link>
+
+        {today.whyToday && (
+          <p className="mt-2 text-caption leading-[1.55] text-[var(--muted)]">
+            <span className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+              Why ·{" "}
+            </span>
+            {today.whyToday}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-4 gap-1.5 px-5 pt-4">

@@ -2,17 +2,10 @@
 // Distributes throw volume across available implements per phase config.
 // Intersects IMPLEMENT_TABLES with athlete's EquipmentInventory.
 
-import {
-  COMPETITION_WEIGHTS,
-  getImplementsForLevel,
-} from "../constants";
+import { COMPETITION_WEIGHTS, getImplementsForLevel } from "../constants";
 import type { EventCode, GenderCode, TrainingPhase } from "../constants";
 import { PHASE_IMPLEMENT_DIST } from "../constants";
-import type {
-  ImplementEntry,
-  ImplementDistribution,
-  ImplementAllocation,
-} from "./types";
+import type { ImplementEntry, ImplementDistribution, ImplementAllocation } from "./types";
 
 interface SelectImplementsParams {
   eventCode: EventCode;
@@ -28,17 +21,8 @@ interface SelectImplementsParams {
  * Only assigns to implements the athlete actually owns.
  * Falls back gracefully when athlete doesn't own a category.
  */
-export function selectImplements(
-  params: SelectImplementsParams,
-): ImplementDistribution {
-  const {
-    eventCode,
-    genderCode,
-    competitionPr,
-    phase,
-    availableImplements,
-    totalThrows,
-  } = params;
+export function selectImplements(params: SelectImplementsParams): ImplementDistribution {
+  const { eventCode, genderCode, competitionPr, phase, availableImplements, totalThrows } = params;
 
   const compWeightKg = COMPETITION_WEIGHTS[eventCode][genderCode];
   const _levelData = getImplementsForLevel(eventCode, genderCode, competitionPr);
@@ -57,9 +41,7 @@ export function selectImplements(
     .filter((i) => i.weightKg < compWeightKg)
     .sort((a, b) => b.weightKg - a.weightKg); // heaviest light first
 
-  const compOwned = availableImplements.filter(
-    (i) => i.weightKg === compWeightKg,
-  );
+  const compOwned = availableImplements.filter((i) => i.weightKg === compWeightKg);
 
   const heavyOwned = availableImplements
     .filter((i) => i.weightKg > compWeightKg)
@@ -92,16 +74,21 @@ export function selectImplements(
   const lightAllocations: ImplementAllocation[] = distributeAcross(
     lightOwned,
     lightThrows,
+    "light",
+    compWeightKg
   );
   const heavyAllocations: ImplementAllocation[] = distributeAcross(
     heavyOwned,
     heavyThrows,
+    "heavy",
+    compWeightKg
   );
 
   const compAllocation: ImplementAllocation = {
     weightKg: compWeightKg,
     label: `${compWeightKg}kg`,
     throwsCount: compThrows,
+    rationale: `Competition weight (${compPct}% of session) — drives transfer to meet performance.`,
   };
 
   return {
@@ -115,6 +102,8 @@ export function selectImplements(
 function distributeAcross(
   implements_: ImplementEntry[],
   totalThrows: number,
+  category: "light" | "heavy",
+  compWeightKg: number
 ): ImplementAllocation[] {
   if (implements_.length === 0 || totalThrows === 0) return [];
 
@@ -124,10 +113,16 @@ function distributeAcross(
   return implements_.map((impl) => {
     const extra = remainder > 0 ? 1 : 0;
     remainder -= extra;
+    const deltaPct = Math.round(((impl.weightKg - compWeightKg) / compWeightKg) * 100);
+    const rationale =
+      category === "heavy"
+        ? `Heavy implement (+${deltaPct}% vs comp) — overload for TET/SAF adaptation. Always thrown before lighter implements.`
+        : `Light implement (${deltaPct}% vs comp) — sequenced after heavier work for speed transfer.`;
     return {
       weightKg: impl.weightKg,
       label: `${impl.weightKg}kg`,
       throwsCount: perImpl + extra,
+      rationale,
     };
   });
 }
@@ -135,9 +130,6 @@ function distributeAcross(
 /**
  * Get the competition implement weight for an event/gender.
  */
-export function getCompetitionWeight(
-  eventCode: EventCode,
-  genderCode: GenderCode,
-): number {
+export function getCompetitionWeight(eventCode: EventCode, genderCode: GenderCode): number {
   return COMPETITION_WEIGHTS[eventCode][genderCode];
 }

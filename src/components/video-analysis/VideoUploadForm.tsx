@@ -13,8 +13,21 @@ type Athlete = {
   lastName: string;
 };
 
+export type SessionOption = {
+  id: string;
+  label: string;
+  status: string;
+};
+
 type Props = {
   athletes: Athlete[];
+  /**
+   * Recent sessions keyed by athlete id. When an athlete is selected, the
+   * picker filters down to that athlete's sessions. Anchoring a video to its
+   * session is what makes this product throws-native rather than a generic
+   * video tool.
+   */
+  sessionsByAthlete?: Record<string, SessionOption[]>;
 };
 
 const EVENT_OPTIONS = [
@@ -68,7 +81,7 @@ function generateThumbnail(file: File): Promise<Blob | null> {
 
 /* ─── Component ────────────────────────────────────────────────────────────── */
 
-export function VideoUploadForm({ athletes }: Props) {
+export function VideoUploadForm({ athletes, sessionsByAthlete = {} }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,6 +90,8 @@ export function VideoUploadForm({ athletes }: Props) {
   const [event, setEvent] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const sessionOptions = athleteId ? (sessionsByAthlete[athleteId] ?? []) : [];
 
   // File state
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -172,6 +187,7 @@ export function VideoUploadForm({ athletes }: Props) {
     formData.append("event", event);
     formData.append("title", title.trim());
     if (description.trim()) formData.append("description", description.trim());
+    if (sessionId) formData.append("sessionId", sessionId);
     if (thumbnailBlob) formData.append("thumbnail", thumbnailBlob, "thumbnail.jpg");
 
     // Use XHR for real upload progress tracking
@@ -226,7 +242,10 @@ export function VideoUploadForm({ athletes }: Props) {
           <label className="label">Athlete *</label>
           <select
             value={athleteId}
-            onChange={(e) => setAthleteId(e.target.value)}
+            onChange={(e) => {
+              setAthleteId(e.target.value);
+              setSessionId("");
+            }}
             className="input mt-1"
             disabled={uploading}
           >
@@ -255,6 +274,31 @@ export function VideoUploadForm({ athletes }: Props) {
           </select>
         </div>
       </div>
+
+      {/* Session anchor — optional, narrows by selected athlete */}
+      {athleteId && sessionOptions.length > 0 && (
+        <div>
+          <label className="label">
+            Link to session{" "}
+            <span className="text-caption font-normal text-muted">
+              · ties the video to the work it captures
+            </span>
+          </label>
+          <select
+            value={sessionId}
+            onChange={(e) => setSessionId(e.target.value)}
+            className="input mt-1"
+            disabled={uploading}
+          >
+            <option value="">No session anchor</option>
+            {sessionOptions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Title & Description */}
       <div>

@@ -17,10 +17,10 @@ import type {
 
 /** How many exercises per classification to target in a complex */
 const COMPLEX_TARGETS: Record<Classification, { min: number; max: number }> = {
-  CE: { min: 1, max: 2 },  // 1 exercise, up to 3 implements (heavy/comp/light)
-  SD: { min: 1, max: 1 },  // 1 SDE per program (closely mimics competition movement)
-  SP: { min: 2, max: 3 },  // 2 SPE exercises (same muscles, different pattern)
-  GP: { min: 4, max: 4 },  // 4 GPE, one per movement plane (Bondarchuk methodology)
+  CE: { min: 1, max: 2 }, // 1 exercise, up to 3 implements (heavy/comp/light)
+  SD: { min: 1, max: 1 }, // 1 SDE per program (closely mimics competition movement)
+  SP: { min: 2, max: 3 }, // 2 SPE exercises (same muscles, different pattern)
+  GP: { min: 4, max: 4 }, // 4 GPE, one per movement plane (Bondarchuk methodology)
 };
 
 /** Deficit bias multipliers — when a deficit exists, boost that category */
@@ -53,7 +53,7 @@ const TRANSFER_BIAS: Record<string, "heavy" | "light" | "balanced"> = {
  */
 export function selectExercises(
   params: ExerciseSelectionParams,
-  phase: TrainingPhase,
+  phase: TrainingPhase
 ): ExerciseComplexEntry[] {
   const {
     eventCode,
@@ -74,6 +74,8 @@ export function selectExercises(
     name: "Full Throw (Competition)",
     classification: "CE",
     drillType: "FULL_THROW",
+    rationale:
+      "Competition Exercise — full throws at competition weight. The non-negotiable transfer movement; everything else supports this.",
     ...getPhaseSetReps("CE", phase),
   });
 
@@ -95,7 +97,7 @@ export function selectExercises(
     previousSet,
     availableImplements,
     transferType,
-    personalCorrelations,
+    personalCorrelations
   );
 
   // Pick top SD exercises
@@ -109,6 +111,7 @@ export function selectExercises(
       correlationR: ex.correlationR,
       implementKg: ex.implementKg,
       drillType: inferDrillType(ex.name),
+      rationale: buildSdRationale(ex, deficitPrimary, previousSet),
       ...getPhaseSetReps("SD", phase),
     });
   }
@@ -122,7 +125,7 @@ export function selectExercises(
     previousSet,
     availableImplements,
     undefined,
-    personalCorrelations,
+    personalCorrelations
   );
 
   const spTarget = COMPLEX_TARGETS.SP;
@@ -133,6 +136,7 @@ export function selectExercises(
       name: ex.name,
       classification: "SP",
       correlationR: ex.correlationR,
+      rationale: buildSpRationale(ex, deficitPrimary),
       ...getPhaseSetReps("SP", phase),
     });
   }
@@ -144,6 +148,7 @@ export function selectExercises(
     complex.push({
       name: ex.name,
       classification: "GP",
+      rationale: buildGpRationale(ex.plane),
       ...getPhaseSetReps("GP", phase),
     });
   }
@@ -161,14 +166,19 @@ interface ScoredExercise {
 }
 
 function scoreExercises(
-  exercises: { exercise: string; type: ExerciseType; correlation: number; absCorrelation: number }[],
+  exercises: {
+    exercise: string;
+    type: ExerciseType;
+    correlation: number;
+    absCorrelation: number;
+  }[],
   classification: Classification,
   deficitBoost: Record<Classification, number>,
   secondaryBoost: Record<Classification, number>,
   previousExercises: Set<string>,
   availableImplements: ImplementEntry[],
   transferType?: string,
-  personalCorrelations?: PersonalCorrelation[],
+  personalCorrelations?: PersonalCorrelation[]
 ): ScoredExercise[] {
   const ownedWeights = new Set(availableImplements.map((i) => i.weightKg));
   const transferBias = TRANSFER_BIAS[transferType ?? "balanced"] ?? "balanced";
@@ -189,7 +199,7 @@ function scoreExercises(
     let effectiveCorrelation = ex.absCorrelation;
     if (personalCorrelations) {
       const personal = personalCorrelations.find(
-        (p) => p.exercise.toLowerCase() === ex.exercise.toLowerCase(),
+        (p) => p.exercise.toLowerCase() === ex.exercise.toLowerCase()
       );
       if (personal) effectiveCorrelation = Math.abs(personal.blendedR);
     }
@@ -197,7 +207,7 @@ function scoreExercises(
 
     // Apply deficit boost
     score *= deficitBoost[classification];
-    score *= (1 + (secondaryBoost[classification] - 1) * 0.5);
+    score *= 1 + (secondaryBoost[classification] - 1) * 0.5;
 
     // Freshness bonus: exercises NOT in previous complex get a boost
     if (!previousExercises.has(ex.exercise.toLowerCase())) {
@@ -245,11 +255,9 @@ const GP_PLANE_ORDER: MovementPlane[] = ["TRANSVERSE", "FRONTAL", "POSTERIOR", "
 function selectGpExercises(
   _deficitPrimary?: string,
   _deficitSecondary?: string,
-  previousExercises?: Set<string>,
-): { name: string; id: string }[] {
-  const gpDb = STRENGTH_DB.filter(
-    (e) => e.classification === "GP" && e.movementPlane != null,
-  );
+  previousExercises?: Set<string>
+): { name: string; id: string; plane: MovementPlane }[] {
+  const gpDb = STRENGTH_DB.filter((e) => e.classification === "GP" && e.movementPlane != null);
 
   // Group by movement plane
   const byPlane = new Map<MovementPlane, typeof gpDb>();
@@ -259,21 +267,19 @@ function selectGpExercises(
     byPlane.get(plane)!.push(ex);
   }
 
-  const selected: { name: string; id: string }[] = [];
+  const selected: { name: string; id: string; plane: MovementPlane }[] = [];
 
   for (const plane of GP_PLANE_ORDER) {
     const candidates = byPlane.get(plane);
     if (!candidates || candidates.length === 0) continue;
 
     // Prefer exercises not in the previous complex
-    const fresh = candidates.filter(
-      (e) => !previousExercises?.has(e.name.toLowerCase()),
-    );
+    const fresh = candidates.filter((e) => !previousExercises?.has(e.name.toLowerCase()));
     const pool = fresh.length > 0 ? fresh : candidates;
 
     // Pick one from the pool (rotate through for variety)
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    selected.push({ name: pick.name, id: pick.id });
+    selected.push({ name: pick.name, id: pick.id, plane });
   }
 
   return selected;
@@ -303,14 +309,54 @@ function inferDrillType(exerciseName: string): string {
   return "FULL_THROW";
 }
 
+// ── Rationale Builders ──────────────────────────────────────────────
+// One-sentence "why this exercise" strings surfaced in product UI.
+// Keep them legible to a coach — name the mechanism (transfer, correlation, plane)
+// rather than the math.
+
+const PLANE_LABEL: Record<MovementPlane, string> = {
+  TRANSVERSE: "rotational (transverse plane)",
+  FRONTAL: "lateral (frontal plane)",
+  POSTERIOR: "posterior chain",
+  SAGITTAL: "vertical (sagittal plane)",
+};
+
+function buildSdRationale(
+  ex: ScoredExercise,
+  deficitPrimary: string | undefined,
+  previousSet: Set<string>
+): string {
+  const r = ex.correlationR.toFixed(2);
+  const fresh = !previousSet.has(ex.name.toLowerCase());
+  const deficitNote =
+    deficitPrimary === "heavy_implement" || deficitPrimary === "light_implement"
+      ? " Selected to address implement deficit."
+      : "";
+  const freshNote = fresh ? " New for this block — keeps the stimulus from staling." : "";
+  return `Special Developmental — r=${r} with competition result.${deficitNote}${freshNote}`;
+}
+
+function buildSpRationale(ex: ScoredExercise, deficitPrimary: string | undefined): string {
+  const r = ex.correlationR.toFixed(2);
+  const deficitNote = deficitPrimary === "strength" ? " Reinforces strength deficit." : "";
+  return `Special Preparatory — same muscle groups, different pattern (r=${r}).${deficitNote}`;
+}
+
+function buildGpRationale(plane: MovementPlane): string {
+  return `General Preparatory — ${PLANE_LABEL[plane]} stimulus. One per plane per Bondarchuk methodology.`;
+}
+
 /**
  * Get phase-appropriate sets and reps ranges for a classification.
  */
 function getPhaseSetReps(
   classification: Classification,
-  phase: TrainingPhase,
+  phase: TrainingPhase
 ): { setsMin: number; setsMax: number; repsMin: number; repsMax: number } {
-  const configs: Record<TrainingPhase, Record<Classification, { setsMin: number; setsMax: number; repsMin: number; repsMax: number }>> = {
+  const configs: Record<
+    TrainingPhase,
+    Record<Classification, { setsMin: number; setsMax: number; repsMin: number; repsMax: number }>
+  > = {
     ACCUMULATION: {
       CE: { setsMin: 3, setsMax: 5, repsMin: 3, repsMax: 6 },
       SD: { setsMin: 3, setsMax: 5, repsMin: 3, repsMax: 6 },
@@ -336,10 +382,10 @@ function getPhaseSetReps(
       GP: { setsMin: 1, setsMax: 2, repsMin: 3, repsMax: 5 },
     },
     CLEANSE: {
-      CE: { setsMin: 1, setsMax: 2, repsMin: 4, repsMax: 5 },  // Circuit-style: 4-5 throws per set
+      CE: { setsMin: 1, setsMax: 2, repsMin: 4, repsMax: 5 }, // Circuit-style: 4-5 throws per set
       SD: { setsMin: 1, setsMax: 1, repsMin: 4, repsMax: 5 },
       SP: { setsMin: 1, setsMax: 2, repsMin: 4, repsMax: 5 },
-      GP: { setsMin: 0, setsMax: 0, repsMin: 0, repsMax: 0 },  // No GPE in cleanse
+      GP: { setsMin: 0, setsMax: 0, repsMin: 0, repsMax: 0 }, // No GPE in cleanse
     },
   };
 
