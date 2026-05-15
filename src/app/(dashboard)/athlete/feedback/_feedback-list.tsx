@@ -189,7 +189,10 @@ function FeedbackRow({
   const isUnread = item.readAt === null;
 
   return (
-    <div className={`card p-4 ${isUnread ? "border-l-4 border-l-primary-500" : ""}`.trim()}>
+    <div
+      id={item.id}
+      className={`card scroll-mt-20 p-4 ${isUnread ? "border-l-4 border-l-primary-500" : ""}`.trim()}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
-import { clearAllUserDrafts } from "@/lib/draft-persistence";
+import { clearAllClientStateForUser } from "@/lib/client-state-cleanup";
 import { Sun, Moon, Menu, X, LogOut, Search, Settings, Megaphone, Dumbbell } from "lucide-react";
 import { Sidebar, COACH_NAV_SECTIONS, NavSection } from "@/components/ui/Sidebar";
 import { SkipLink } from "@/components/ui/SkipLink";
@@ -30,7 +30,7 @@ import { logger } from "@/lib/logger";
 
 export interface DashboardUser {
   /** Underlying User.id from the JWT session — used to scope per-user
-   *  IndexedDB draft cleanup on logout (see clearAllUserDrafts). */
+   *  client-state cleanup on logout (see clearAllClientStateForUser). */
   userId: string;
   name: string;
   email: string;
@@ -134,10 +134,12 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
   }
 
   async function handleLogout() {
-    // Clear this user's IndexedDB drafts BEFORE the network call so a logout
-    // that times out or 5xxs still leaves no PII on the device for the next
-    // sign-in. clearAllUserDrafts swallows IDB errors internally.
-    await clearAllUserDrafts(user.userId);
+    // Clear per-user client state BEFORE the network call so a logout that
+    // times out or 5xxs still leaves no PII on the device for the next
+    // sign-in. Covers IDB drafts, PWA queues, and per-user localStorage.
+    // Why: IDB queues replay under whoever is signed in — without this,
+    // user A's offline throws get re-POSTed under user B's session.
+    await clearAllClientStateForUser(user.userId);
 
     try {
       await fetch("/api/auth/logout", { method: "POST", headers: csrfHeaders() });

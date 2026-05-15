@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { clearAllClientStateForUser } from "@/lib/client-state-cleanup";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 
 type Role = "COACH" | "ATHLETE";
@@ -145,6 +146,13 @@ export default function RegisterPage() {
         return;
       }
 
+      // Defensive cleanup so a freshly-registered account on a shared
+      // device doesn't inherit prior-user PWA queues or localStorage prefs.
+      const newUserId = data.data?.user?.id;
+      if (typeof newUserId === "string" && newUserId) {
+        await clearAllClientStateForUser(newUserId);
+      }
+
       router.push(
         data.data?.redirectTo || (role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard")
       );
@@ -195,6 +203,12 @@ export default function RegisterPage() {
       const data = await res.json();
       if (!res.ok || !data?.success) {
         throw new Error(data?.error || "Failed to claim account");
+      }
+      // Defensive cleanup so a claimed athlete inherits no prior-user
+      // PWA queues / localStorage from whoever previously used the device.
+      const newUserId = data.data?.userId;
+      if (typeof newUserId === "string" && newUserId) {
+        await clearAllClientStateForUser(newUserId);
       }
       const target = data.data?.redirectTo ?? "/athlete/onboarding";
       router.push(target);

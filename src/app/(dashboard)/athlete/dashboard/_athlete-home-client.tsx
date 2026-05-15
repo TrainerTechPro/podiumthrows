@@ -458,7 +458,11 @@ function RecentMoments({ recent }: { recent: AthleteDashboardDTO["recent"] }) {
     );
   }
 
-  return <div className="space-y-2.5 px-4">{items}</div>;
+  return (
+    <div id="streak-strip" className="scroll-mt-20 space-y-2.5 px-4">
+      {items}
+    </div>
+  );
 }
 
 function PRRow({ pr }: { pr: LastPRDTO }) {

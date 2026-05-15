@@ -1812,13 +1812,16 @@ export default async function AthleteProfilePage({
         <GoalsTab goals={goals} />
       </section>
 
-      <div className="border-t border-[var(--card-border)] pt-8 mt-8">
+      <section
+        id="insights"
+        className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8"
+      >
         <CoachInsightsSection
           athleteId={athlete.id}
           athleteName={athleteName}
           initialInsights={insights}
         />
-      </div>
+      </section>
     </div>
   );
 }

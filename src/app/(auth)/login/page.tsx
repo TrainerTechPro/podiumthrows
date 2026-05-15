@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { clearAllClientStateForUser } from "@/lib/client-state-cleanup";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export default function LoginPage() {
@@ -41,6 +42,14 @@ export default function LoginPage() {
         setError(data?.error || "Login failed");
         setLoading(false);
         return;
+      }
+
+      // Defensive cleanup: wipe any prior-user PWA queues / localStorage so
+      // the new sign-in starts from a clean slate. Covers the case where
+      // the previous user closed the browser without logging out.
+      const newUserId = data.data?.user?.id;
+      if (typeof newUserId === "string" && newUserId) {
+        await clearAllClientStateForUser(newUserId);
       }
 
       // MFA required — redirect to MFA verification page

@@ -132,9 +132,7 @@ export function getNotificationHref(n: NotificationItem, role: "COACH" | "ATHLET
     case "COMPETITION_LOGGED": {
       const cid = asString(meta.competitionId);
       if (role === "ATHLETE") return cid ? `/athlete/competitions/${cid}` : "/athlete/competitions";
-      return cid && athleteId
-        ? `/coach/athletes/${athleteId}?tab=competitions&competition=${cid}`
-        : coachAthleteHref;
+      return cid ? `/coach/competitions/${cid}` : coachAthleteHref;
     }
 
     case "STREAK_BROKEN":
@@ -147,7 +145,7 @@ export function getNotificationHref(n: NotificationItem, role: "COACH" | "ATHLET
       return role === "ATHLETE"
         ? "/athlete/insights"
         : athleteId
-          ? `/coach/athletes/${athleteId}/insights`
+          ? `/coach/athletes/${athleteId}#insights`
           : "/coach/athletes";
 
     /* ── Coach-targeted ─────────────────────────────────────────── */
@@ -169,10 +167,8 @@ export function getNotificationHref(n: NotificationItem, role: "COACH" | "ATHLET
 
     case "QUESTIONNAIRE_COMPLETE": {
       const qid = asString(meta.questionnaireId);
-      const responseId = asString(meta.responseId);
       if (role === "COACH") {
-        if (qid && responseId) return `/coach/questionnaires/${qid}/responses/${responseId}`;
-        if (qid) return `/coach/questionnaires/${qid}`;
+        if (qid) return `/coach/questionnaires/${qid}/responses`;
         return "/coach/questionnaires";
       }
       return qid ? `/athlete/questionnaires/${qid}` : "/athlete/questionnaires";
@@ -183,7 +179,7 @@ export function getNotificationHref(n: NotificationItem, role: "COACH" | "ATHLET
 
     case "PROGRAM_CHECKPOINT":
     case "COMPLEX_ROTATED":
-      return athleteId ? `/coach/athletes/${athleteId}?tab=programming` : coachAthleteHref;
+      return athleteId ? `/coach/athletes/${athleteId}?tab=training` : coachAthleteHref;
 
     case "PROGRAMMING_REQUESTED":
       return athleteId ? `/coach/calendar?athlete=${athleteId}` : "/coach/calendar";
