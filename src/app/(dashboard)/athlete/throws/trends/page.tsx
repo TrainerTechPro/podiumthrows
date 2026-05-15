@@ -274,13 +274,13 @@ export default function ThrowAnalysisPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-nano font-bold text-white"
                             style={{ backgroundColor: meta?.color ?? "#666" }}
                           >
                             {meta?.label ?? pr.event}
                           </span>
                           <span className="text-xs text-muted font-mono">{pr.implement}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
+                          <span className="text-nano px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
                             {pr.source === "COMPETITION" ? "Competition" : "Training"}
                           </span>
                         </div>
@@ -580,7 +580,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
             <button
               key={label}
               onClick={() => toggleWeight(label)}
-              className={`text-[11px] font-mono font-semibold px-2 py-1 rounded-md border transition-colors ${
+              className={`text-micro font-mono font-semibold px-2 py-1 rounded-md border transition-colors ${
                 isVisible
                   ? isComp
                     ? "bg-primary-500 border-primary-500 text-white"

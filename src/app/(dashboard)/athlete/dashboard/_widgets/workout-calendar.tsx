@@ -43,10 +43,7 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
     year: "numeric",
   });
 
-  const { firstDay, daysInMonth } = useMemo(
-    () => getMonthGrid(year, month),
-    [year, month]
-  );
+  const { firstDay, daysInMonth } = useMemo(() => getMonthGrid(year, month), [year, month]);
 
   // Build a lookup: "YYYY-MM-DD" -> CalendarDay
   const dayMap = useMemo(() => {
@@ -74,16 +71,14 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
       <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-3">
         Workout Calendar
       </h3>
-      <p className="text-sm font-medium text-[var(--foreground)] text-center mb-3">
-        {monthName}
-      </p>
+      <p className="text-sm font-medium text-[var(--foreground)] text-center mb-3">{monthName}</p>
 
       {/* Day-of-week header */}
       <div className="grid grid-cols-7 gap-0 mb-1">
         {DAY_LABELS.map((label, i) => (
           <div
             key={`${scopeId}-dh-${i}`}
-            className="text-center text-[10px] font-medium text-muted uppercase"
+            className="text-center text-nano font-medium text-muted uppercase"
           >
             {label}
           </div>
@@ -107,16 +102,11 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
           const hasScheduled = entry?.hasScheduled ?? false;
 
           return (
-            <div
-              key={dateStr}
-              className="flex flex-col items-center justify-center h-10"
-            >
+            <div key={dateStr} className="flex flex-col items-center justify-center h-10">
               <span
                 className={cn(
                   "text-xs tabular-nums leading-none w-6 h-6 flex items-center justify-center rounded-full",
-                  isToday
-                    ? "bg-primary-500 text-white font-bold"
-                    : "text-[var(--foreground)]"
+                  isToday ? "bg-primary-500 text-white font-bold" : "text-[var(--foreground)]"
                 )}
               >
                 {dayNum}
@@ -148,11 +138,11 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
       <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-[var(--card-border)]">
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="text-[10px] text-muted">Completed</span>
+          <span className="text-nano text-muted">Completed</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
-          <span className="text-[10px] text-muted">Scheduled</span>
+          <span className="text-nano text-muted">Scheduled</span>
         </div>
       </div>
     </div>

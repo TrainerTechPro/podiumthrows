@@ -23,7 +23,7 @@ export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Notes
           </h2>
-          <p className="text-[13px] text-muted leading-snug">
+          <p className="text-caption text-muted leading-snug">
             Anything your coach should know? (Optional)
           </p>
         </div>

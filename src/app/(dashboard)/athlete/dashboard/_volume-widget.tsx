@@ -151,7 +151,7 @@ export function VolumeWidget() {
                 <div key={w.week} className="flex-1 flex flex-col items-center gap-1">
                   <span
                     className={cn(
-                      "text-[10px] tabular-nums font-medium",
+                      "text-nano tabular-nums font-medium",
                       isCurrentWeek ? "text-primary-600 dark:text-primary-400" : "text-muted"
                     )}
                   >
@@ -167,7 +167,7 @@ export function VolumeWidget() {
                       animationDelay: `${i * 60}ms`,
                     }}
                   />
-                  <span className="text-[9px] text-muted truncate max-w-full">
+                  <span className="text-nano text-muted truncate max-w-full">
                     {w.week.split(" ")[0]}
                   </span>
                 </div>
@@ -211,7 +211,7 @@ export function VolumeWidget() {
               <span className="text-xs text-muted">day{data.streaks.current !== 1 ? "s" : ""}</span>
             </div>
             {data.streaks.longest > data.streaks.current && (
-              <p className="text-[10px] text-muted mt-0.5">Best: {data.streaks.longest}d</p>
+              <p className="text-nano text-muted mt-0.5">Best: {data.streaks.longest}d</p>
             )}
           </div>
         </div>

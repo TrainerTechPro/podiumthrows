@@ -388,7 +388,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
               {" 🔥"}
             </p>
             {delta != null && delta > 0 && (
-              <p className="text-[11px] text-emerald-500 font-mono tabular-nums mt-0.5">
+              <p className="text-micro text-emerald-500 font-mono tabular-nums mt-0.5">
                 +{delta.toFixed(2)}m from previous best
               </p>
             )}

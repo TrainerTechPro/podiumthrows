@@ -104,7 +104,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
   return (
     <div className="flex flex-col items-center gap-6">
       {/* ── Title ──────────────────────────────────────────────────────── */}
-      <p className="text-[13px] font-medium" style={{ color: "#52525b" }}>
+      <p className="text-caption font-medium" style={{ color: "#52525b" }}>
         Your Readiness Score
       </p>
 
@@ -165,10 +165,10 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
               key={item.label}
               className="rounded-[10px] p-[10px] border bg-[var(--card-bg)] border-[var(--card-border)]"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wider leading-tight mb-1 text-muted">
+              <p className="text-nano font-semibold uppercase tracking-wider leading-tight mb-1 text-muted">
                 {item.label}
               </p>
-              <p className="text-[20px] font-bold font-heading leading-tight" style={{ color: c }}>
+              <p className="text-section font-bold font-heading leading-tight" style={{ color: c }}>
                 {item.value}
               </p>
               {/* Mini progress bar */}

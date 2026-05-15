@@ -16,18 +16,21 @@ import {
 /*  WORKOUT OVERVIEW (all blocks at a glance)                              */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
-export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; blockStates: Map<string, BlockState> }) {
+export function WorkoutOverview({
+  data,
+  blockStates,
+}: {
+  data: WorkoutData;
+  blockStates: Map<string, BlockState>;
+}) {
   return (
     <div className="space-y-6 pb-8">
       {/* Session title */}
       <div className="text-center pt-2">
-        <h2
-          className="text-lg font-heading font-bold tracking-wider"
-          style={{ color: "#FFC800" }}
-        >
+        <h2 className="text-lg font-heading font-bold tracking-wider" style={{ color: "#FFC800" }}>
           {data.sessionName}
         </h2>
-        <p className="text-[10px] uppercase tracking-widest mt-1" style={{ color: "#ffffff33" }}>
+        <p className="text-nano uppercase tracking-widest mt-1" style={{ color: "#ffffff33" }}>
           {data.sessionType.replace(/_/g, " ")} · {data.event.replace(/_/g, " ")}
         </p>
       </div>
@@ -38,20 +41,26 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
           <span className="text-xl font-bold tabular-nums" style={{ color: "#FFC800" }}>
             {data.blocks.length}
           </span>
-          <p className="text-[9px] uppercase tracking-widest" style={{ color: "#ffffff44" }}>
+          <p className="text-nano uppercase tracking-widest" style={{ color: "#ffffff44" }}>
             Blocks
           </p>
         </div>
         <div className="text-center">
           {(() => {
-            const loggedThrows = Array.from(blockStates.values())
-              .reduce((sum, s) => sum + s.throws.filter((t) => t.distance !== null && t.distance > 0).length, 0);
+            const loggedThrows = Array.from(blockStates.values()).reduce(
+              (sum, s) =>
+                sum + s.throws.filter((t) => t.distance !== null && t.distance > 0).length,
+              0
+            );
             const totalThrows = data.blocks
               .filter((b) => b.blockType === "THROWING")
               .reduce((sum, b) => sum + getThrowCount(parseConfig(b.config)), 0);
             return (
               <>
-                <span className="text-xl font-bold tabular-nums" style={{ color: loggedThrows > 0 ? "#00FF88" : "#FFC800" }}>
+                <span
+                  className="text-xl font-bold tabular-nums"
+                  style={{ color: loggedThrows > 0 ? "#00FF88" : "#FFC800" }}
+                >
                   {loggedThrows}
                 </span>
                 <span className="text-sm font-medium tabular-nums" style={{ color: "#ffffff33" }}>
@@ -60,7 +69,7 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
               </>
             );
           })()}
-          <p className="text-[9px] uppercase tracking-widest" style={{ color: "#ffffff44" }}>
+          <p className="text-nano uppercase tracking-widest" style={{ color: "#ffffff44" }}>
             Throws Logged
           </p>
         </div>
@@ -68,7 +77,7 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
           <span className="text-xl font-bold tabular-nums" style={{ color: "#FFC800" }}>
             {Array.from(blockStates.values()).reduce((sum, s) => sum + s.sets.length, 0)}
           </span>
-          <p className="text-[9px] uppercase tracking-widest" style={{ color: "#ffffff44" }}>
+          <p className="text-nano uppercase tracking-widest" style={{ color: "#ffffff44" }}>
             Sets
           </p>
         </div>
@@ -80,7 +89,9 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
         const accent = getBlockAccent(block);
         const bt = block.blockType.toUpperCase();
         const state = blockStates.get(block.id);
-        const loggedCount = state ? state.throws.length + state.sets.length + state.warmupChecked.size : 0;
+        const loggedCount = state
+          ? state.throws.length + state.sets.length + state.warmupChecked.size
+          : 0;
         const hasProgress = loggedCount > 0;
 
         return (
@@ -89,14 +100,12 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
             <div className="flex items-center gap-2">
               <div className="w-1 h-4 rounded-sm" style={{ background: accent }} />
               <span
-                className="text-[10px] font-bold uppercase tracking-widest"
+                className="text-nano font-bold uppercase tracking-widest"
                 style={{ color: accent }}
               >
-                {bt === "THROWING"
-                  ? getExerciseName(block)
-                  : bt}
+                {bt === "THROWING" ? getExerciseName(block) : bt}
               </span>
-              <span className="text-[9px] text-white/30 ml-auto flex items-center gap-1.5">
+              <span className="text-nano text-white/30 ml-auto flex items-center gap-1.5">
                 {hasProgress && (
                   <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent }} />
                 )}
@@ -125,17 +134,23 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
                             {name}
                           </span>
                           {dur && (
-                            <span className="text-[10px] tabular-nums" style={{ color: `${accent}44` }}>
+                            <span
+                              className="text-nano tabular-nums"
+                              style={{ color: `${accent}44` }}
+                            >
                               {dur}min
                             </span>
                           )}
                         </div>
                       );
-                    },
+                    }
                   )}
                   {(cfg.totalDuration ?? cfg.duration) && (
                     <div className="flex justify-end pt-1">
-                      <span className="text-xs font-semibold tabular-nums" style={{ color: `${accent}88` }}>
+                      <span
+                        className="text-xs font-semibold tabular-nums"
+                        style={{ color: `${accent}88` }}
+                      >
                         {String(cfg.totalDuration ?? cfg.duration)} min total
                       </span>
                     </div>
@@ -148,7 +163,7 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
                       {getImplement(cfg) || `${getImplementKg(cfg)}kg`}
                     </span>
                     <span
-                      className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded"
+                      className="ml-2 text-nano font-bold px-1.5 py-0.5 rounded"
                       style={{ backgroundColor: `${accent}22`, color: accent }}
                     >
                       {(cfg.classification as string) ?? ""}
@@ -162,7 +177,7 @@ export function WorkoutOverview({ data, blockStates }: { data: WorkoutData; bloc
                       throws
                     </span>
                     {getRestSeconds(cfg) > 0 && (
-                      <p className="text-[10px] tabular-nums" style={{ color: "#ffffff33" }}>
+                      <p className="text-nano tabular-nums" style={{ color: "#ffffff33" }}>
                         {getRestSeconds(cfg)}s rest
                       </p>
                     )}

@@ -287,7 +287,7 @@ function CoachTopBar({
       >
         <Search size={16} strokeWidth={1.75} aria-hidden="true" />
         <span className="text-surface-400">Search</span>
-        <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+        <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-nano font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
           ⌘K
         </kbd>
       </button>

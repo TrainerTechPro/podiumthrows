@@ -26,10 +26,8 @@ export function WeekStrip({ days }: { days: WeekDay[] }) {
           >
             <span
               className={cn(
-                "text-[10px] font-semibold uppercase tracking-wide",
-                day.isToday
-                  ? "text-primary-600 dark:text-primary-400"
-                  : "text-muted"
+                "text-nano font-semibold uppercase tracking-wide",
+                day.isToday ? "text-primary-600 dark:text-primary-400" : "text-muted"
               )}
             >
               {day.dayLabel}
@@ -37,20 +35,13 @@ export function WeekStrip({ days }: { days: WeekDay[] }) {
             <span
               className={cn(
                 "text-sm font-bold tabular-nums",
-                day.isToday
-                  ? "text-primary-600 dark:text-primary-400"
-                  : "text-[var(--foreground)]"
+                day.isToday ? "text-primary-600 dark:text-primary-400" : "text-[var(--foreground)]"
               )}
             >
               {day.dayNum}
             </span>
             {day.sessionType !== "rest" && (
-              <div
-                className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  DOT_COLORS[day.sessionType]
-                )}
-              />
+              <div className={cn("w-1.5 h-1.5 rounded-full", DOT_COLORS[day.sessionType])} />
             )}
           </div>
         ))}

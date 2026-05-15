@@ -205,12 +205,12 @@ function FeedbackRow({
             <p className="text-sm font-semibold text-[var(--foreground)] truncate">
               {item.coachName}
             </p>
-            <p className="text-[11px] text-muted">{formatRelative(item.createdAt)}</p>
+            <p className="text-micro text-muted">{formatRelative(item.createdAt)}</p>
           </div>
         </div>
         <Link
           href={item.target.href}
-          className="text-[11px] text-primary-500 hover:underline shrink-0"
+          className="text-micro text-primary-500 hover:underline shrink-0"
         >
           {item.target.label} &gt;
         </Link>
@@ -289,7 +289,7 @@ function FeedbackRow({
         </button>
         <div className="flex-1" />
         {!isUnread && (
-          <span className="text-[10px] text-muted inline-flex items-center gap-1">
+          <span className="text-nano text-muted inline-flex items-center gap-1">
             <Check className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
             Read
           </span>

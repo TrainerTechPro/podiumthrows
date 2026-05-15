@@ -912,7 +912,7 @@ export function LogSessionWizard({
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
                 Session RPE
               </span>
-              <span className="text-[11px] text-[var(--color-text-secondary)] tabular-nums">
+              <span className="text-micro text-[var(--color-text-secondary)] tabular-nums">
                 {sessionRpe != null ? `${sessionRpe} / 10` : "—"}
               </span>
             </div>
@@ -987,7 +987,7 @@ export function LogSessionWizard({
             </button>
           </div>
           {!canSave && !submitting && (
-            <p className="mt-2 text-center text-[11px] text-[var(--color-text-secondary)] sm:hidden">
+            <p className="mt-2 text-center text-micro text-[var(--color-text-secondary)] sm:hidden">
               {!event
                 ? "Pick an event to get started"
                 : !hasValidDrill
@@ -1019,9 +1019,7 @@ function Section({
           {title}
         </h2>
         {optional && (
-          <span className="text-[10px] text-[var(--color-text-secondary)] opacity-60">
-            optional
-          </span>
+          <span className="text-nano text-[var(--color-text-secondary)] opacity-60">optional</span>
         )}
       </div>
       {children}
@@ -1068,7 +1066,7 @@ function DrillCard({
   return (
     <div className="card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+        <span className="text-micro font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
           Drill {index}
         </span>
         <button
@@ -1187,7 +1185,7 @@ function DrillCard({
                   type="button"
                   onClick={() => onUpdate("wireLength", wl.value)}
                   className={
-                    "px-2.5 py-1.5 min-h-[36px] text-[11px] font-bold rounded-lg transition-colors " +
+                    "px-2.5 py-1.5 min-h-[36px] text-micro font-bold rounded-lg transition-colors " +
                     (selected
                       ? "bg-[var(--color-brand-subtle)] text-[var(--color-brand-strong)]"
                       : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
@@ -1221,7 +1219,7 @@ function DrillCard({
                     aria-checked={selected}
                     onClick={() => onUpdate("distanceUnit", unit)}
                     className={
-                      "px-2 py-1 text-[10px] font-medium tracking-wide transition-colors " +
+                      "px-2 py-1 text-nano font-medium tracking-wide transition-colors " +
                       (selected
                         ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
                         : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")

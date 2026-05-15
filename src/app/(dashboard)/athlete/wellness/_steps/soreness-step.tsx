@@ -50,7 +50,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Soreness
           </h2>
-          <p className="text-[13px] text-muted leading-snug">Rate overall and tap sore areas</p>
+          <p className="text-caption text-muted leading-snug">Rate overall and tap sore areas</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
             </span>
             <NumberFlow
               value={data.soreness}
-              className="text-[32px] font-extrabold font-heading leading-none tabular-nums"
+              className="text-display font-extrabold font-heading leading-none tabular-nums"
               style={{ color }}
             />
           </div>
@@ -99,7 +99,7 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
           />
         </div>
 
-        <div className="flex justify-between text-[11px] text-muted px-1">
+        <div className="flex justify-between text-micro text-muted px-1">
           <span>No soreness</span>
           <span>Extremely sore</span>
         </div>

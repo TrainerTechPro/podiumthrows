@@ -554,7 +554,7 @@ function HeroStat({
 }) {
   return (
     <div>
-      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted">
+      <p className="text-nano sm:text-xs font-semibold uppercase tracking-wider text-muted">
         {label}
       </p>
       <p

@@ -62,7 +62,7 @@ export function StressEnergyStep({
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Stress &amp; Energy
           </h2>
-          <p className="text-[13px] text-muted leading-snug">How are you feeling today?</p>
+          <p className="text-caption text-muted leading-snug">How are you feeling today?</p>
         </div>
       </div>
 
@@ -83,13 +83,13 @@ export function StressEnergyStep({
             >
               Stress Level
             </label>
-            <p className="text-[10px] text-muted mt-0.5">
+            <p className="text-nano text-muted mt-0.5">
               1 = overwhelmed &middot; 10 = totally relaxed
             </p>
           </div>
           <NumberFlow
             value={data.stressLevel}
-            className="text-[28px] font-extrabold font-heading leading-none"
+            className="text-title font-extrabold font-heading leading-none"
             style={{ color: stressColor }}
           />
         </div>
@@ -117,7 +117,7 @@ export function StressEnergyStep({
           />
         </div>
 
-        <div className="flex justify-between text-[10px] text-muted">
+        <div className="flex justify-between text-nano text-muted">
           <span>Overwhelmed</span>
           <span>Totally relaxed</span>
         </div>
@@ -130,11 +130,11 @@ export function StressEnergyStep({
             <label htmlFor="energy-mood" className="text-sm font-semibold text-[var(--foreground)]">
               Energy / Mood
             </label>
-            <p className="text-[10px] text-muted mt-0.5">1 = exhausted &middot; 10 = fired up</p>
+            <p className="text-nano text-muted mt-0.5">1 = exhausted &middot; 10 = fired up</p>
           </div>
           <NumberFlow
             value={data.energyMood}
-            className="text-[28px] font-extrabold font-heading leading-none"
+            className="text-title font-extrabold font-heading leading-none"
             style={{ color: energyColor }}
           />
         </div>
@@ -162,7 +162,7 @@ export function StressEnergyStep({
           />
         </div>
 
-        <div className="flex justify-between text-[10px] text-muted">
+        <div className="flex justify-between text-nano text-muted">
           <span>Exhausted</span>
           <span>Fired up</span>
         </div>

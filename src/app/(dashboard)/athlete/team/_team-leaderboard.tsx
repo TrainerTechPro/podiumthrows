@@ -205,14 +205,14 @@ export function TeamLeaderboard() {
                   <p className="text-sm font-semibold text-[var(--foreground)] truncate">
                     {entry.firstName} {entry.lastName.charAt(0)}.
                     {entry.isViewer && (
-                      <span className="ml-1 text-[10px] text-primary-500 font-bold">YOU</span>
+                      <span className="ml-1 text-nano text-primary-500 font-bold">YOU</span>
                     )}
                   </p>
                   <p className="font-mono tabular-nums text-2xl font-bold text-amber-500 mt-1">
                     {entry.distance.toFixed(2)}
                     <span className="text-sm">m</span>
                   </p>
-                  <p className="text-[11px] text-muted mt-0.5">{entry.implement}</p>
+                  <p className="text-micro text-muted mt-0.5">{entry.implement}</p>
                 </div>
               );
             })}
@@ -236,10 +236,10 @@ export function TeamLeaderboard() {
                     <p className="text-sm font-semibold text-[var(--foreground)] truncate">
                       {entry.firstName} {entry.lastName.charAt(0)}.
                       {entry.isViewer && (
-                        <span className="ml-1 text-[10px] text-primary-500 font-bold">YOU</span>
+                        <span className="ml-1 text-nano text-primary-500 font-bold">YOU</span>
                       )}
                     </p>
-                    <p className="text-[11px] text-muted">{entry.implement}</p>
+                    <p className="text-micro text-muted">{entry.implement}</p>
                   </div>
                   <span className="font-mono tabular-nums text-sm font-bold text-[var(--foreground)]">
                     {entry.distance.toFixed(2)}

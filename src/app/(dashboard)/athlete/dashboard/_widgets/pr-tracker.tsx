@@ -66,7 +66,7 @@ export function PRTrackerWidget({ data }: { data: PRTrackerData }) {
                 <p className="text-xs font-bold text-[var(--foreground)] leading-tight">
                   {formatEventName(row.event)}
                 </p>
-                <p className="text-[11px] font-mono text-muted tabular-nums">
+                <p className="text-micro font-mono text-muted tabular-nums">
                   {row.implementWeight}kg
                 </p>
               </div>
@@ -77,12 +77,12 @@ export function PRTrackerWidget({ data }: { data: PRTrackerData }) {
                   <AnimatedNumber value={row.distance} decimals={2} />
                   <span className="text-xs font-normal text-muted ml-0.5">m</span>
                 </p>
-                <p className="text-[11px] text-muted mt-0.5">{formatRelativeDate(row.date)}</p>
+                <p className="text-micro text-muted mt-0.5">{formatRelativeDate(row.date)}</p>
               </div>
 
               {/* Next target */}
               <div className="text-right shrink-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted flex items-center gap-1 justify-end">
+                <p className="text-nano font-semibold uppercase tracking-wider text-muted flex items-center gap-1 justify-end">
                   <Target className="h-2.5 w-2.5" strokeWidth={1.75} aria-hidden="true" />
                   Next
                 </p>

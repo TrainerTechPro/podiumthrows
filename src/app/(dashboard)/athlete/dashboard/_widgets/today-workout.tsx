@@ -89,8 +89,8 @@ function SupersetBadge({ group }: { group: string }) {
   return (
     <span
       className={cn(
-        "shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold leading-none",
-        color,
+        "shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-nano font-bold leading-none",
+        color
       )}
       title={`Superset ${group}`}
     >
@@ -156,7 +156,7 @@ function SessionTimeline({
             <div
               className={cn(
                 "absolute left-[-32px] w-6 h-6 rounded-lg flex items-center justify-center",
-                dotClasses(item.type),
+                dotClasses(item.type)
               )}
             >
               <DotIcon type={item.type} />
@@ -164,12 +164,8 @@ function SessionTimeline({
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                {item.name}
-              </p>
-              {item.detail && (
-                <p className="text-xs text-muted truncate">{item.detail}</p>
-              )}
+              <p className="text-sm font-medium text-[var(--foreground)] truncate">{item.name}</p>
+              {item.detail && <p className="text-xs text-muted truncate">{item.detail}</p>}
             </div>
 
             {/* Superset badge */}
@@ -197,26 +193,17 @@ function SessionContent({ session }: { session: TodaySession }) {
 
   return (
     <div className="space-y-4">
-      <SessionTimeline
-        items={session.items}
-        totalItemCount={session.totalItemCount}
-      />
+      <SessionTimeline items={session.items} totalItemCount={session.totalItemCount} />
 
       <Link href={session.href} className="block">
         <Button
           variant="primary"
           className="w-full"
           leftIcon={
-            !isCompleted ? (
-              <Play size={16} strokeWidth={1.75} aria-hidden="true" />
-            ) : undefined
+            !isCompleted ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined
           }
         >
-          {isCompleted
-            ? "View Results"
-            : isInProgress
-              ? "Continue Workout"
-              : "Start Workout"}
+          {isCompleted ? "View Results" : isInProgress ? "Continue Workout" : "Start Workout"}
         </Button>
       </Link>
     </div>
@@ -240,9 +227,7 @@ function RestDayState() {
           />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">
-            No Sessions Scheduled
-          </h3>
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">No Sessions Scheduled</h3>
           <p className="text-xs text-muted mt-1 max-w-[240px] leading-relaxed">
             Head to your Training page to request programming or log a session.
           </p>
@@ -308,9 +293,7 @@ function MultiSessionView({ sessions }: { sessions: TodaySession[] }) {
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
           Today&apos;s Workouts
         </h3>
-        <span className="text-xs text-muted tabular-nums">
-          {sessions.length} sessions
-        </span>
+        <span className="text-xs text-muted tabular-nums">{sessions.length} sessions</span>
       </div>
 
       {/* Tabbed sessions */}

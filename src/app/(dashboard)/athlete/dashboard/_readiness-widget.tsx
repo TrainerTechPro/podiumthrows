@@ -60,7 +60,7 @@ function ReadinessRing({ score }: { score: number }) {
         <span className="text-2xl font-bold tabular-nums font-heading" style={{ color }}>
           {score.toFixed(1)}
         </span>
-        <span className="text-[10px] text-muted uppercase tracking-wide">Readiness</span>
+        <span className="text-nano text-muted uppercase tracking-wide">Readiness</span>
       </div>
     </div>
   );
@@ -177,8 +177,8 @@ export function ReadinessWidget({ data }: { data: ReadinessData | null }) {
         <div className="overflow-hidden">
           <div className="pt-3 mt-3 border-t border-[var(--card-border)] space-y-1.5">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-muted">Self-reported 1–10</span>
-              <span className="text-[10px] text-muted">1 = poor · 10 = excellent</span>
+              <span className="text-nano text-muted">Self-reported 1–10</span>
+              <span className="text-nano text-muted">1 = poor · 10 = excellent</span>
             </div>
             <BreakdownBar label="Sleep" value={data.sleepQuality} />
             <BreakdownBar label="Soreness" value={data.soreness} />

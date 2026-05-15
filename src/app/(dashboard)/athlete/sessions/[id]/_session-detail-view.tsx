@@ -85,15 +85,15 @@ export function SessionDetailView({ initial }: Props) {
       {/* Hero — the shell's top bar already provides nav chrome, so the session
           identity (date + event + headline) lives directly inside the hero. */}
       <section className="px-6 pb-4 pt-7">
-        <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+        <div className="mb-3 text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
           {dateLabel}
           {dto.weekLabel ? ` · ${dto.weekLabel}` : ""}
         </div>
-        <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary-500/20 bg-primary-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-500">
+        <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary-500/20 bg-primary-500/10 px-2.5 py-1 text-nano font-semibold uppercase tracking-[0.14em] text-primary-500">
           <Target className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
           {dto.eventLabel}
         </span>
-        <h1 className="mb-2.5 font-heading text-[28px] font-semibold leading-[1.18] tracking-[-0.01em] text-[var(--foreground)]">
+        <h1 className="mb-2.5 font-heading text-title font-semibold leading-[1.18] tracking-[-0.01em] text-[var(--foreground)]">
           {dto.headline}
         </h1>
         <p className="text-sm leading-[1.55] text-[var(--muted)]">
@@ -146,7 +146,7 @@ export function SessionDetailView({ initial }: Props) {
         )}
         {allDone ? (
           <div className="mx-4 mt-4 rounded-2xl border border-primary-500/30 bg-primary-500/5 px-5 py-6 text-center">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-500">
+            <div className="mb-1 text-nano font-semibold uppercase tracking-[0.18em] text-primary-500">
               Session complete
             </div>
             <h2 className="font-heading text-lg font-semibold text-[var(--foreground)]">
@@ -170,10 +170,10 @@ export function SessionDetailView({ initial }: Props) {
       >
         <div className="pointer-events-auto">
           <div className="mb-2.5 flex items-center justify-between px-0.5">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+            <span className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
               Session Progress
             </span>
-            <span className="font-mono text-[11px] font-medium tabular-nums text-[var(--foreground)]">
+            <span className="font-mono text-micro font-medium tabular-nums text-[var(--foreground)]">
               {dto.completedBlocks} of {dto.totalBlocks} blocks
             </span>
           </div>
@@ -207,7 +207,7 @@ export function SessionDetailView({ initial }: Props) {
 
 function ImplementChip({ value }: { value: string }) {
   return (
-    <span className="mx-0.5 inline-block rounded-md border border-[var(--card-border)] bg-white/[0.03] px-1.5 py-px font-mono text-[13px] font-medium text-[var(--foreground)]">
+    <span className="mx-0.5 inline-block rounded-md border border-[var(--card-border)] bg-white/[0.03] px-1.5 py-px font-mono text-caption font-medium text-[var(--foreground)]">
       {value}
     </span>
   );
@@ -276,7 +276,7 @@ function ActiveBlockCard({
   if (block.invalidAscending) {
     return (
       <div className="mx-4 rounded-2xl border border-danger-500/40 bg-danger-500/5 p-5 text-sm text-danger-500">
-        <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em]">
+        <div className="mb-1 text-nano font-semibold uppercase tracking-[0.18em]">
           Block invalid
         </div>
         Implements in this block ascend in weight. The Bondarchuk sequencing rule requires heavy →
@@ -372,11 +372,11 @@ function ActiveBlockCard({
 
       <div className="flex items-center justify-between border-b border-[var(--card-border)] px-5 pb-3.5 pt-4.5">
         <div>
-          <div className="mb-1 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary-500">
+          <div className="mb-1 flex items-center gap-1.5 text-nano font-semibold uppercase tracking-[0.18em] text-primary-500">
             <PulseDot />
             Block {block.order + 1} · Active
           </div>
-          <div className="font-heading text-[17px] font-semibold tracking-[0.005em] text-[var(--foreground)]">
+          <div className="font-heading text-body-lg font-semibold tracking-[0.005em] text-[var(--foreground)]">
             {block.name}
           </div>
         </div>
@@ -397,7 +397,7 @@ function ActiveBlockCard({
               <Check className="h-5 w-5" strokeWidth={2.25} aria-hidden="true" />
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success-500">
+              <div className="text-nano font-semibold uppercase tracking-[0.18em] text-success-500">
                 Logged
               </div>
               <div className="font-heading text-base font-semibold text-[var(--foreground)]">
@@ -415,7 +415,7 @@ function ActiveBlockCard({
         </div>
       ) : (
         <div className="px-5 pb-5 pt-4.5">
-          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+          <div className="mb-0.5 text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
             {counterLabel}
           </div>
 
@@ -430,10 +430,10 @@ function ActiveBlockCard({
             <span className="font-mono text-[60px] font-semibold leading-none tabular-nums tracking-[-0.025em] text-[var(--foreground)]">
               <NumberFlow value={distanceNumber ?? 0} decimals={2} duration={350} />
             </span>
-            <span className="font-mono text-[22px] font-medium text-[var(--muted)]">m</span>
+            <span className="font-mono text-section font-medium text-[var(--muted)]">m</span>
             {delta != null ? (
               <span
-                className={`ml-auto inline-flex items-center gap-1 rounded-lg border px-2 py-1 font-mono text-[11px] tabular-nums ${
+                className={`ml-auto inline-flex items-center gap-1 rounded-lg border px-2 py-1 font-mono text-micro tabular-nums ${
                   delta >= 0
                     ? "border-success-500/25 bg-success-500/10 text-success-500"
                     : "border-danger-500/25 bg-danger-500/10 text-danger-500"
@@ -504,14 +504,14 @@ function ImplementWeightChip({
 }) {
   if (chip.isCurrent) {
     return (
-      <span className="rounded-[10px] bg-primary-500 px-2.5 py-1.5 font-mono text-[11px] font-semibold tabular-nums text-surface-950 shadow-[0_0_16px_rgba(255,200,0,0.3)]">
+      <span className="rounded-[10px] bg-primary-500 px-2.5 py-1.5 font-mono text-micro font-semibold tabular-nums text-surface-950 shadow-[0_0_16px_rgba(255,200,0,0.3)]">
         {formatKg(chip.weightKg)}
       </span>
     );
   }
   return (
     <span
-      className={`rounded-[10px] border border-[var(--card-border)] px-2.5 py-1.5 font-mono text-[11px] font-medium tabular-nums ${
+      className={`rounded-[10px] border border-[var(--card-border)] px-2.5 py-1.5 font-mono text-micro font-medium tabular-nums ${
         chip.done
           ? "bg-surface-100 text-[var(--muted)] line-through dark:bg-surface-800"
           : "bg-surface-100 text-[var(--muted)] dark:bg-surface-800"
@@ -537,7 +537,7 @@ function RpeRow({ value, onChange }: { value: RpeInput; onChange: (v: number) =>
 
   return (
     <div className="flex items-center gap-3.5 rounded-2xl border border-[var(--card-border)] bg-surface-50 px-4 py-3.5 dark:bg-surface-900">
-      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">
+      <span className="font-mono text-nano uppercase tracking-[0.18em] text-[var(--muted)]">
         RPE
       </span>
       <div className="relative flex-1">
@@ -568,7 +568,7 @@ function RpeRow({ value, onChange }: { value: RpeInput; onChange: (v: number) =>
         value={value ?? 0}
         decimals={0}
         duration={200}
-        className={`min-w-[28px] text-right font-mono text-[22px] font-semibold tabular-nums ${tone}`}
+        className={`min-w-[28px] text-right font-mono text-section font-semibold tabular-nums ${tone}`}
       />
     </div>
   );
@@ -589,27 +589,27 @@ function ThrowsHistory({
   if (grouped.length === 0) return null;
   return (
     <div className="border-t border-[var(--card-border)] bg-white/[0.012] px-5 py-4">
-      <div className="mb-2.5 font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+      <div className="mb-2.5 font-mono text-nano uppercase tracking-[0.2em] text-[var(--muted)]">
         Previous throws · {highlightImplementKg != null ? formatKg(highlightImplementKg) : "all"}
       </div>
       <ul className="divide-y divide-[var(--card-border)]">
         {grouped.map((t) => (
           <li key={t.id} className="flex items-center justify-between py-2.5 last:pb-0 first:pt-0">
-            <div className="flex items-center gap-3 font-mono text-[13px]">
+            <div className="flex items-center gap-3 font-mono text-caption">
               <CheckCircle2 className="h-4 w-4 text-success-500" aria-hidden="true" />
-              <span className="min-w-[16px] text-[11px] text-[var(--muted)] tabular-nums">
+              <span className="min-w-[16px] text-micro text-[var(--muted)] tabular-nums">
                 {String(t.number).padStart(2, "0")}
               </span>
               <span className="font-medium tabular-nums text-[var(--foreground)]">
                 {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
               </span>
               {t.isPersonalBest ? (
-                <span className="ml-1 inline-flex items-center gap-1 rounded-md bg-primary-500/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-primary-500">
+                <span className="ml-1 inline-flex items-center gap-1 rounded-md bg-primary-500/15 px-1.5 py-px text-nano font-semibold uppercase tracking-wider text-primary-500">
                   <Flame className="h-3 w-3" aria-hidden="true" /> PR
                 </span>
               ) : null}
             </div>
-            <span className="font-mono text-[11px] tracking-[0.04em] text-[var(--muted)]">
+            <span className="font-mono text-micro tracking-[0.04em] text-[var(--muted)]">
               {t.rpe != null ? `RPE ${t.rpe}` : ""}
             </span>
           </li>
@@ -651,7 +651,7 @@ function LockedBlockPill({ block }: { block: SessionBlock }) {
           <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
         </div>
         <div>
-          <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--muted)]">
+          <div className="font-mono text-nano uppercase tracking-[0.18em] text-[var(--muted)]">
             {block.badge}
           </div>
           <div className="mt-0.5 font-heading text-sm font-semibold tracking-[0.005em] text-[var(--foreground)]">
@@ -661,7 +661,7 @@ function LockedBlockPill({ block }: { block: SessionBlock }) {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+      <div className="flex items-center gap-1.5 font-mono text-nano uppercase tracking-[0.14em] text-[var(--muted)]">
         {isComplete ? (
           <>
             <CheckCircle2 className="h-3 w-3" aria-hidden="true" />

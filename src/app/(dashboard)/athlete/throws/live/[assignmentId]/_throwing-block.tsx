@@ -193,7 +193,7 @@ export function ThrowingBlockView({
       {/* ── Hero Throw Counter ── */}
       <div className="text-center pt-2">
         <p
-          className="text-[8px] uppercase font-semibold mb-1"
+          className="text-nano uppercase font-semibold mb-1"
           style={{ letterSpacing: "4px", color: `${accent}44` }}
         >
           THROW
@@ -272,7 +272,7 @@ export function ThrowingBlockView({
             style={{ backgroundColor: `${accent}11`, border: `1px solid ${accent}22` }}
           >
             <span
-              className="text-[9px] uppercase font-semibold"
+              className="text-nano uppercase font-semibold"
               style={{ color: `${accent}88`, letterSpacing: "2px" }}
             >
               Best
@@ -323,7 +323,7 @@ export function ThrowingBlockView({
               }}
             >
               <span
-                className="text-[10px] uppercase font-bold"
+                className="text-nano uppercase font-bold"
                 style={{ letterSpacing: "3px", color: `${accent}cc` }}
               >
                 TAP TO LOG THROW #{current + 1}
@@ -339,7 +339,7 @@ export function ThrowingBlockView({
               }}
             >
               <label
-                className="text-[9px] uppercase font-semibold block"
+                className="text-nano uppercase font-semibold block"
                 style={{ letterSpacing: "2px", color: `${accent}88` }}
               >
                 Distance (m) — Throw #{current + 1}
@@ -419,7 +419,7 @@ export function ThrowingBlockView({
                   aria-hidden="true"
                 />
                 <span
-                  className="text-[10px] font-bold uppercase"
+                  className="text-nano font-bold uppercase"
                   style={{ letterSpacing: "2px", color: videoFile ? accent : `${accent}66` }}
                 >
                   {videoFile ? "Video Attached ✓" : "Add Video"}
@@ -434,7 +434,7 @@ export function ThrowingBlockView({
       {current < target && !showRest && (
         <button
           onClick={skipThrow}
-          className="w-full min-h-[44px] py-3 text-[10px] uppercase font-bold transition-colors"
+          className="w-full min-h-[44px] py-3 text-nano uppercase font-bold transition-colors"
           style={{
             letterSpacing: "3px",
             color: `${accent}88`,

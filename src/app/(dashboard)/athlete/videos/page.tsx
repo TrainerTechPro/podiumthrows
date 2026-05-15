@@ -87,7 +87,7 @@ export default async function AthleteVideosPage() {
                 )}
 
                 {video.durationSec && (
-                  <span className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded">
+                  <span className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-nano font-mono tabular-nums px-1.5 py-0.5 rounded">
                     {formatTimestamp(video.durationSec)}
                   </span>
                 )}
@@ -119,7 +119,7 @@ export default async function AthleteVideosPage() {
                   )}
                   {video.event && <Badge variant="primary">{formatEventType(video.event)}</Badge>}
                 </div>
-                <div className="flex items-center gap-3 mt-2 text-[10px] text-surface-400">
+                <div className="flex items-center gap-3 mt-2 text-nano text-surface-400">
                   {video.annotationCount > 0 && (
                     <span className="flex items-center gap-0.5">
                       <svg
