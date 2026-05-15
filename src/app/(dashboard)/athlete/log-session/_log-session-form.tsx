@@ -623,6 +623,11 @@ export function LogSessionForm({
           });
         }
       } else {
+        // No PR — but the save still succeeded. Match the "PR path"
+        // 2-channel feedback (haptic + toast) so a successful save never
+        // feels mute, per CLAUDE.md §Save buttons need two feedback
+        // channels.
+        haptic.success();
         toast.success(isEditing ? "Session updated" : "Session saved");
       }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
