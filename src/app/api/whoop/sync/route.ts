@@ -79,7 +79,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    logger.error("POST /api/whoop/sync", { context: "api", error: err, metadata: { message } });
+    const isExpectedReauth = isReauthError(message);
+
+    // Expected reauth errors aren't actionable engineering issues — the user
+    // needs to reconnect WHOOP. Log at info instead of error so it doesn't
+    // get captured as a Sentry exception. Fixes PODIUM-THROWS-17.
+    if (isExpectedReauth) {
+      logger.info("POST /api/whoop/sync: reauth required", {
+        context: "api",
+        metadata: { message },
+      });
+    } else {
+      logger.error("POST /api/whoop/sync", {
+        context: "api",
+        error: err,
+        metadata: { message },
+      });
+    }
 
     // Persist the failure so the dashboard banner + integrations page can
     // surface it without round-tripping. We look up by athleteId again
@@ -108,7 +124,7 @@ export async function POST(request: Request) {
       });
     }
 
-    if (isReauthError(message)) {
+    if (isExpectedReauth) {
       return NextResponse.json(
         {
           success: false,

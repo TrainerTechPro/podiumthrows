@@ -43,6 +43,16 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
         const res = await fetch(`/api/performance-tests/athletes/${athleteId}/sessions?limit=20`, {
           signal: ctrl.signal,
         });
+
+        // 401 during a brief session gap (sign-out, token refresh, etc.) is
+        // expected — render the empty/auth state instead of logging an error.
+        // Fixes PODIUM-THROWS-18.
+        if (res.status === 401) {
+          if (ctrl.signal.aborted) return;
+          setState(null);
+          return;
+        }
+
         const payload = await res.json();
         if (ctrl.signal.aborted) return;
         if (!res.ok || !payload.success) {
