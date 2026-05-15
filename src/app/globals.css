@@ -552,6 +552,20 @@
   .athlete-shell .input {
     clip-path: none;
     border-radius: 0.625rem; /* rounded-lg — comfortable thumb hit */
+    /* iOS Safari zooms inputs whose font-size < 16px on focus. The
+       global .input is text-sm (14px) — bumping athlete inputs to 16px
+       prevents the focus-zoom dance on every form on iPhone. Visual
+       compactness preserved via line-height. */
+    font-size: 16px;
+    line-height: 1.375;
+  }
+
+  /* Same protection for native date/time inputs inside the athlete shell. */
+  .athlete-shell input[type="date"],
+  .athlete-shell input[type="time"],
+  .athlete-shell input[type="datetime-local"],
+  .athlete-shell input[type="number"] {
+    font-size: 16px;
   }
 
   .athlete-shell .card {

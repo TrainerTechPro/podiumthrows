@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Check, ChevronRight } from "lucide-react";
 import { useToast } from "@/components/toast";
+import { useConfirm } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { WorkoutData, LoggedThrow, LoggedSet, BlockState } from "./_types";
 import {
@@ -212,6 +213,7 @@ function BlockGroupLabel({ label, color }: { label: string; color: string }) {
 export function LiveWorkout({ data }: { data: WorkoutData }) {
   const router = useRouter();
   const { toast } = useToast();
+  const { confirm, Dialog: ConfirmDialog } = useConfirm();
   const elapsed = useElapsedTime(data.startedAt ?? new Date().toISOString());
 
   // Which block is expanded (null = none, show completion at bottom)
@@ -293,17 +295,25 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
+    // Trap back-button: push a sentinel so the first "back" lands here,
+    // then route the leave decision through the styled ConfirmDialog. A
+    // ref tracks "user confirmed leave" so the eventual programmatic
+    // history.back() doesn't re-trigger the trap.
+    let allowLeave = false;
     window.history.pushState(null, "", window.location.href);
     const handlePopState = () => {
-      if (
-        confirm(
-          "Leave workout? Your logged throws are saved, but the session won't be marked complete."
-        )
-      ) {
-        window.history.back();
-      } else {
-        window.history.pushState(null, "", window.location.href);
-      }
+      if (allowLeave) return;
+      window.history.pushState(null, "", window.location.href);
+      confirm({
+        title: "Leave workout?",
+        description: "Your logged throws are saved, but the session won't be marked complete.",
+        confirmLabel: "Leave",
+        variant: "danger",
+        onConfirm: () => {
+          allowLeave = true;
+          window.history.back();
+        },
+      });
     };
     window.addEventListener("popstate", handlePopState);
 
@@ -311,6 +321,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Handlers ──────────────────────────────────────────────────────
@@ -450,9 +461,15 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
   }
 
   const handleEndSession = useCallback(() => {
-    if (confirm("End session early? Your logged throws are saved.")) {
-      endEarly();
-    }
+    confirm({
+      title: "End session early?",
+      description: "Your logged throws are saved.",
+      confirmLabel: "End session",
+      variant: "danger",
+      onConfirm: () => {
+        endEarly();
+      },
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -759,6 +776,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
           }
         }
       `}</style>
+      <ConfirmDialog />
     </div>
   );
 }

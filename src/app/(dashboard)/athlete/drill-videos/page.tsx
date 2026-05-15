@@ -383,13 +383,20 @@ export default function AthleteDrillVideosPage() {
                     }
                     onBlur={() => setTimeout(() => setConfirmDeleteId(null), 200)}
                     disabled={deletingId === video.id}
-                    className={`shrink-0 transition-colors p-2 rounded-lg ${
+                    className={`shrink-0 transition-colors rounded-lg flex items-center gap-1.5 ${
                       confirmDeleteId === video.id
-                        ? "text-red-500 bg-red-500/10"
-                        : "text-muted hover:text-red-500 dark:hover:text-red-400"
+                        ? "text-red-500 bg-red-500/10 px-2.5 py-1.5"
+                        : "text-muted hover:text-red-500 dark:hover:text-red-400 p-2"
                     }`}
-                    title={confirmDeleteId === video.id ? "Tap again to confirm" : "Delete video"}
+                    aria-label={
+                      confirmDeleteId === video.id
+                        ? `Tap again to delete ${video.title}`
+                        : `Delete ${video.title}`
+                    }
                   >
+                    {confirmDeleteId === video.id && (
+                      <span className="text-xs font-semibold">Tap to confirm</span>
+                    )}
                     {deletingId === video.id ? (
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle

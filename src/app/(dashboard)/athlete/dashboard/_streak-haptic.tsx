@@ -27,7 +27,12 @@ export function StreakHaptic({ streak }: { streak: number }) {
       const raw = window.localStorage.getItem(KEY);
       prior = raw === null ? null : Number.parseInt(raw, 10);
       if (prior !== null && !Number.isFinite(prior)) prior = null;
-    } catch {
+    } catch (err) {
+      // Safari private mode / quota — fall through to no-prior behavior.
+      logger.debug("streak haptic: localStorage read failed", {
+        context: "ui",
+        metadata: { reason: err instanceof Error ? err.message : "unknown" },
+      });
       prior = null;
     }
 
