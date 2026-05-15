@@ -10,6 +10,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect");
+  const resetSuccess = searchParams.get("reset") === "success";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,21 +37,29 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Login failed");
+      if (!res.ok || !data?.success) {
+        setError(data?.error || "Login failed");
         setLoading(false);
         return;
       }
 
       // MFA required — redirect to MFA verification page
       if (data.data?.requiresMfa) {
-        const params = new URLSearchParams({ token: data.data.mfaSessionToken });
+        const mfaToken = data.data.mfaSessionToken;
+        if (!mfaToken) {
+          setError(
+            "Multi-factor authentication is required but the server didn't return a session token. Try signing in again."
+          );
+          setLoading(false);
+          return;
+        }
+        const params = new URLSearchParams({ token: mfaToken });
         if (redirect) params.set("redirect", redirect);
         router.push(`/login/mfa?${params.toString()}`);
         return;
       }
 
-      router.push(redirect || data.data.redirectTo);
+      router.push(redirect || data.data?.redirectTo || "/dashboard");
     } catch {
       setError("Network error. Please try again.");
       setLoading(false);
@@ -60,6 +69,16 @@ export default function LoginPage() {
   return (
     <div className="card p-8">
       <h2 className="text-display-sm text-center mb-6">Sign In</h2>
+
+      {resetSuccess && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-4 p-3 rounded-xl bg-success-50 dark:bg-success-500/10 border border-success-500/20 text-success-700 dark:text-success-400 text-sm"
+        >
+          Password updated. Sign in with your new password.
+        </div>
+      )}
 
       <div
         role="alert"
