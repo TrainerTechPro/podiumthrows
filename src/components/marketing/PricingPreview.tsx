@@ -343,74 +343,8 @@ export default function PricingPreview() {
         ))}
       </div>
 
-      {/* ── Scoped styles ────────────────────────────────────────────────── */}
-      <style>{`
-        .pricing-section {
-          padding: 88px 20px;
-        }
-
-        @media (min-width: 640px) {
-          .pricing-section {
-            padding: 112px 40px;
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .pricing-section {
-            padding: 144px 64px;
-          }
-        }
-
-        .pricing-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 16px;
-          align-items: start;
-        }
-
-        @media (min-width: 768px) {
-          .pricing-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        /* Mobile: Pro appears first */
-        @media (max-width: 767px) {
-          .pricing-pro-wrapper {
-            order: -1;
-          }
-        }
-
-        /* Hover lift */
-        .pricing-card:hover {
-          transform: translateY(-4px);
-          box-shadow: var(--landing-neo-raised-hover);
-        }
-
-        .pricing-card--featured:hover {
-          transform: translateY(-12px);
-          box-shadow: var(--landing-neo-raised-hover);
-        }
-
-        /* CTA hover — brighten, no color change (matches hero / FinalCTA) */
-        .pricing-cta:hover {
-          filter: brightness(1.08);
-          border-color: rgba(255, 200, 0, 0.4);
-          color: var(--landing-text);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .pricing-card,
-          .pricing-card--featured,
-          .pricing-cta {
-            transition: none;
-          }
-          .pricing-card:hover,
-          .pricing-card--featured:hover {
-            transform: none;
-          }
-        }
-      `}</style>
+      {/* Class styles for .pricing-section / .pricing-grid / .pricing-card live
+          in src/app/globals.css to avoid SSR/CSR hydration drift (React #425). */}
     </section>
   );
 }

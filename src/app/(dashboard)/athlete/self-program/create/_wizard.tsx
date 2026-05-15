@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { reportApiError } from "@/lib/form-errors";
 import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components";
 import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
 import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
 import { useDraftPersistence } from "@/lib/draft-persistence";
@@ -225,6 +226,7 @@ export function SelfProgramWizard({
   const router = useRouter();
   const toast = useToast();
   const { success, celebration } = toast;
+  const { confirm, Dialog: ConfirmDialogPortal } = useConfirm();
   const showResumeToast = useDraftResumeToast();
   const outboxStatus = useOutboxStatus();
   const resumeToastFiredRef = useRef(false);
@@ -583,7 +585,15 @@ export function SelfProgramWizard({
         });
       }
 
-      let res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
+      // After the create/PUT block above, configId is guaranteed non-null.
+      // Narrow for TS + defensive in case a future caller skips the create step.
+      if (!configId) {
+        setErrors({ generate: "Could not resolve program config — refresh and try again." });
+        return;
+      }
+      const resolvedConfigId = configId;
+
+      const res = await fetch(`/api/athlete/self-program/${resolvedConfigId}/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -592,59 +602,88 @@ export function SelfProgramWizard({
         },
       });
 
-      // Handle 409 conflict — another active program exists
+      // Handle 409 conflict — another active program exists. Open a themed
+      // dialog instead of window.confirm; the rest of the flow continues from
+      // the dialog's onConfirm callback.
       if (res.status === 409) {
         const err = await res.json();
         const conflictingId = err.conflictingId;
         if (conflictingId) {
-          const replace = window.confirm(
-            "You already have an active training program. Do you want to replace it with this new one?"
-          );
-          if (!replace) {
-            setGenerating(false);
-            return;
-          }
-          // Deactivate the old config
-          await fetch(`/api/athlete/self-program/${conflictingId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
-            body: JSON.stringify({ isActive: false }),
-          });
-          // Retry generation. Same idempotency key — the conflict was on an
-          // OLD program; the generate request itself hasn't changed.
-          res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Idempotency-Key": idempotencyKeyRef.current,
-              ...csrfHeaders(),
+          setGenerating(false); // unlock the UI while the user decides
+          confirm({
+            title: "Replace existing program?",
+            description:
+              "You already have an active training program. Replacing it will deactivate the old one — completed sessions are preserved in your history.",
+            confirmLabel: "Replace",
+            onConfirm: () => {
+              void replaceAndRetry(resolvedConfigId, conflictingId);
             },
           });
+          return;
         }
       }
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        const info = reportApiError({ res, payload: err }, toast, {
-          onRetry: handleGenerate,
-          titleOverride: "Generation Failed",
-        });
-        setErrors({ generate: info.message });
-        return;
-      }
-
-      const result = await res.json();
-      const programData = result.data || result;
-      celebration("Program Generated!", {
-        description: "Your Bondarchuk-based training program is ready",
-        highlight: `${programData.totalWeeks} weeks`,
-      });
-      success("Program created successfully");
-      // Drop the client-side draft now that the program is live on the server.
-      await draftStatus.clearDraft();
-      router.push(`/athlete/self-program/${configId}`);
+      await finalizeGenerateResponse(res, resolvedConfigId);
     } catch (err) {
       logger.error("program generation failed", {
+        context: "athlete/self-program/create/wizard",
+        error: err,
+      });
+      const info = reportApiError({ err }, toast, { onRetry: handleGenerate });
+      setErrors({ generate: info.message });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  // ── Helpers extracted from handleGenerate so the 409 dialog can re-enter
+  //    the flow after the user confirms replacement.
+
+  async function finalizeGenerateResponse(res: Response, configId: string) {
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      const info = reportApiError({ res, payload: err }, toast, {
+        onRetry: handleGenerate,
+        titleOverride: "Generation Failed",
+      });
+      setErrors({ generate: info.message });
+      return;
+    }
+
+    const result = await res.json();
+    const programData = result.data || result;
+    celebration("Program Generated!", {
+      description: "Your Bondarchuk-based training program is ready",
+      highlight: `${programData.totalWeeks} weeks`,
+    });
+    success("Program created successfully");
+    // Drop the client-side draft now that the program is live on the server.
+    await draftStatus.clearDraft();
+    router.push(`/athlete/self-program/${configId}`);
+  }
+
+  async function replaceAndRetry(configId: string, conflictingId: string) {
+    setGenerating(true);
+    try {
+      // Deactivate the conflicting program
+      await fetch(`/api/athlete/self-program/${conflictingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ isActive: false }),
+      });
+      // Retry generate. Same idempotency key — the conflict was on an OLD
+      // program; the generate request itself hasn't changed.
+      const res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": idempotencyKeyRef.current,
+          ...csrfHeaders(),
+        },
+      });
+      await finalizeGenerateResponse(res, configId);
+    } catch (err) {
+      logger.error("program replace + regenerate failed", {
         context: "athlete/self-program/create/wizard",
         error: err,
       });
@@ -811,6 +850,7 @@ export function SelfProgramWizard({
           </Button>
         )}
       </div>
+      <ConfirmDialogPortal />
     </div>
   );
 }
