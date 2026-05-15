@@ -889,7 +889,7 @@ export function LogSessionForm({
         </Section>
 
         <Section title="How did it feel?" optional>
-          <div className="grid grid-cols-5 gap-1.5 mb-4">
+          <div className="grid grid-cols-5 gap-2 mb-4">
             {FEELING_OPTIONS.map((f) => {
               const selected = sessionFeeling === f.value;
               return (
@@ -921,7 +921,7 @@ export function LogSessionForm({
                 {sessionRpe != null ? `${sessionRpe} / 10` : "—"}
               </span>
             </div>
-            <div className="grid grid-cols-10 gap-1">
+            <div className="grid grid-cols-10 gap-1.5">
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
                 const selected = sessionRpe === n;
                 return (
@@ -931,7 +931,7 @@ export function LogSessionForm({
                     onClick={() => setSessionRpe(selected ? null : n)}
                     aria-pressed={selected}
                     className={
-                      "min-h-[40px] rounded-md text-xs font-semibold transition-colors tabular-nums " +
+                      "min-h-[44px] rounded-md text-xs font-semibold transition-colors tabular-nums " +
                       (selected
                         ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
                         : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
@@ -1087,7 +1087,7 @@ function DrillCard({
       {/* Drill type */}
       <div>
         {showPastChips ? (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {pastDrills.map((dt) => {
               const selected = drill.drillType === dt;
               return (
@@ -1096,7 +1096,7 @@ function DrillCard({
                   type="button"
                   onClick={() => onUpdate("drillType", dt)}
                   className={
-                    "px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg transition-colors " +
+                    "px-3 py-2 min-h-[44px] text-xs font-semibold rounded-lg transition-colors " +
                     (selected
                       ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
                       : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
@@ -1109,7 +1109,7 @@ function DrillCard({
             <button
               type="button"
               onClick={onToggleShowAll}
-              className="px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg border border-dashed border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
+              className="px-3 py-2 min-h-[44px] text-xs font-semibold rounded-lg border border-dashed border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
             >
               More…
             </button>
@@ -1181,7 +1181,7 @@ function DrillCard({
       {event === "HAMMER" && (
         <div>
           <label className="label">Wire</label>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {WIRE_LENGTH_OPTIONS.map((wl) => {
               const selected = drill.wireLength === wl.value;
               return (
@@ -1190,7 +1190,7 @@ function DrillCard({
                   type="button"
                   onClick={() => onUpdate("wireLength", wl.value)}
                   className={
-                    "px-2.5 py-1.5 min-h-[36px] text-micro font-bold rounded-lg transition-colors " +
+                    "px-3 py-2 min-h-[44px] text-micro font-bold rounded-lg transition-colors " +
                     (selected
                       ? "bg-[var(--color-brand-subtle)] text-[var(--color-brand-strong)]"
                       : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")

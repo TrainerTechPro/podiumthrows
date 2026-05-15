@@ -72,7 +72,10 @@ export default async function WhoopPage() {
             Recovery, sleep, and strain from your WHOOP strap
           </p>
         </div>
-        <Link href="/athlete/settings" className="text-xs text-primary-500 hover:underline">
+        <Link
+          href="/athlete/settings"
+          className="inline-flex items-center px-3 min-h-[44px] text-xs font-medium text-primary-500 hover:underline shrink-0"
+        >
           Settings
         </Link>
       </div>

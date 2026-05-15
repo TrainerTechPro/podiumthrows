@@ -560,11 +560,23 @@
     line-height: 1.375;
   }
 
-  /* Same protection for native date/time inputs inside the athlete shell. */
+  /* iOS Safari zooms ANY input/textarea/select whose font-size < 16px on
+     focus — not only `.input`-classed ones. Many athlete forms style raw
+     fields ad-hoc with `text-sm` (14px) or `text-xs` (12px); every one
+     would trigger the focus-zoom dance. One shell-scoped rule fixes the
+     lot without forcing every author to remember the rule. */
   .athlete-shell input[type="date"],
   .athlete-shell input[type="time"],
   .athlete-shell input[type="datetime-local"],
-  .athlete-shell input[type="number"] {
+  .athlete-shell input[type="number"],
+  .athlete-shell input[type="text"],
+  .athlete-shell input[type="email"],
+  .athlete-shell input[type="tel"],
+  .athlete-shell input[type="search"],
+  .athlete-shell input[type="url"],
+  .athlete-shell input[type="password"],
+  .athlete-shell textarea,
+  .athlete-shell select {
     font-size: 16px;
   }
 

@@ -249,7 +249,7 @@ export function GoalWizardSheet({ open, onClose, onCreated, preset }: GoalWizard
                   key={ev}
                   type="button"
                   onClick={() => setEvent(ev)}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  className={`px-3 min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
                     event === ev
                       ? "bg-primary-500/10 text-primary-600 dark:text-primary-400 ring-1 ring-primary-500/30"
                       : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-primary-500/50"

@@ -72,7 +72,7 @@ export function ThrowsChipNav() {
             href={chip.href}
             aria-current={active ? "page" : undefined}
             className={
-              "shrink-0 inline-flex items-center px-3.5 rounded-full text-xs font-semibold transition-colors min-h-[32px] " +
+              "shrink-0 inline-flex items-center px-4 rounded-full text-xs font-semibold transition-colors min-h-[44px] " +
               (active
                 ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
                 : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")

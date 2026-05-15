@@ -737,7 +737,7 @@ export function SelfProgramWizard({
                   if (i < step) setStep(i);
                 }}
                 disabled={i > step}
-                className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold transition-all flex-shrink-0 ${
+                className={`flex items-center justify-center w-11 h-11 rounded-full text-sm font-semibold transition-all flex-shrink-0 ${
                   i === step
                     ? "bg-primary-500 text-black shadow-md"
                     : i < step
@@ -746,7 +746,7 @@ export function SelfProgramWizard({
                 }`}
                 aria-label={`Step ${i + 1}: ${s.label}`}
               >
-                {i < step ? <Check size={16} strokeWidth={2.5} aria-hidden="true" /> : i + 1}
+                {i < step ? <Check size={18} strokeWidth={2.5} aria-hidden="true" /> : i + 1}
               </button>
               {/* Connecting line */}
               {i < activeSteps.length - 1 && (
@@ -829,8 +829,13 @@ export function SelfProgramWizard({
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between mt-6">
+      {/* Sticky nav — the wizard steps are long; pinning Back/Continue to
+          the viewport bottom keeps the primary action thumb-reachable
+          regardless of how far the athlete has scrolled into the form. */}
+      <div
+        className="sticky bottom-0 -mx-4 sm:-mx-6 mt-6 px-4 sm:px-6 py-3 bg-[var(--surface-overlay)] border-t border-[var(--card-border)] flex items-center justify-between gap-3"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <Button
           variant="secondary"
           onClick={prevStep}

@@ -563,7 +563,7 @@ export default function AthleteProfilePage() {
                     <select
                       value={prForm.event}
                       onChange={(e) => setPrForm({ ...prForm, event: e.target.value })}
-                      className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
+                      className="w-full px-3 min-h-[44px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
                     >
                       {(Object.keys(EVENTS) as ThrowEvent[]).map((e) => (
                         <option key={e} value={e}>
@@ -581,7 +581,7 @@ export default function AthleteProfilePage() {
                       value={prForm.implement}
                       onChange={(e) => setPrForm({ ...prForm, implement: e.target.value })}
                       placeholder="e.g. 7.26kg"
-                      className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
+                      className="w-full px-3 min-h-[44px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -596,7 +596,7 @@ export default function AthleteProfilePage() {
                       value={prForm.distance}
                       onChange={(e) => setPrForm({ ...prForm, distance: e.target.value })}
                       placeholder="0.00"
-                      className="w-full px-2 py-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
+                      className="w-full px-3 min-h-[44px] rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs text-[var(--foreground)]"
                     />
                   </div>
                 </div>
@@ -604,7 +604,7 @@ export default function AthleteProfilePage() {
                 <button
                   onClick={handleRecordPR}
                   disabled={savingPR || !prForm.implement || !prForm.distance}
-                  className="btn-primary text-xs px-4 py-1.5"
+                  className="btn-primary text-xs px-4 min-h-[44px]"
                 >
                   {savingPR ? "Saving..." : "Save PR"}
                 </button>
@@ -642,7 +642,7 @@ export default function AthleteProfilePage() {
                     <button
                       key={s.value}
                       onClick={() => setCheckInData({ ...checkInData, selfFeeling: s.value })}
-                      className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${checkInData.selfFeeling === s.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
+                      className={`flex-1 min-h-[56px] py-2 px-1 rounded-lg text-center transition-all border ${checkInData.selfFeeling === s.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
                     >
                       <span className="block text-sm font-bold">{s.value}</span>
                       <span
@@ -685,12 +685,12 @@ export default function AthleteProfilePage() {
                   <label className="text-xs font-semibold text-surface-700 dark:text-surface-300">
                     Sleep Quality
                   </label>
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     {SLEEP_QUALITY_SCALE.map((sq) => (
                       <button
                         key={sq.value}
                         onClick={() => setCheckInData({ ...checkInData, sleepQuality: sq.value })}
-                        className={`flex-1 py-2 px-1 rounded-lg text-center transition-all border ${checkInData.sleepQuality === sq.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
+                        className={`flex-1 min-h-[56px] py-2 px-1 rounded-lg text-center transition-all border ${checkInData.sleepQuality === sq.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
                       >
                         <span className="block text-sm font-bold">{sq.value}</span>
                         <span

@@ -149,7 +149,42 @@ function StrengthPrescriptionCard({ items }: { items: StrengthPrescriptionItem[]
         Strength Prescription
       </h2>
       <div className="card px-4 py-3">
-        <div className="overflow-x-auto">
+        {/* Mobile: stacked cards (no horizontal scroll on a 5-col prescription) */}
+        <ul className="sm:hidden divide-y divide-[var(--card-border)]">
+          {items.map((item, i) => (
+            <li key={i} className="py-3 first:pt-0 last:pb-0">
+              <p className="font-medium text-[var(--foreground)]">{item.exerciseName}</p>
+              {item.classification && (
+                <p className="text-xs text-muted mt-0.5">{item.classification}</p>
+              )}
+              <div className="mt-2 grid grid-cols-4 gap-2 font-mono text-xs tabular-nums">
+                <div>
+                  <span className="block text-nano uppercase tracking-wider text-muted">Sets</span>
+                  <span className="text-[var(--foreground)]">{item.sets}</span>
+                </div>
+                <div>
+                  <span className="block text-nano uppercase tracking-wider text-muted">Reps</span>
+                  <span className="text-muted">{item.reps}</span>
+                </div>
+                <div>
+                  <span className="block text-nano uppercase tracking-wider text-muted">Load</span>
+                  <span className="text-muted">
+                    {item.loadKg != null ? `${item.loadKg}kg` : "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-nano uppercase tracking-wider text-muted">%</span>
+                  <span className="text-muted">
+                    {item.intensityPercent != null ? `${item.intensityPercent}%` : "—"}
+                  </span>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: dense table preserved */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">

@@ -182,10 +182,16 @@ function DrillCard({
           <button
             type="button"
             onClick={onRemove}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-red-500 transition-colors ml-2"
+            className="w-11 h-11 rounded-lg flex items-center justify-center text-muted hover:text-red-500 transition-colors ml-2 shrink-0"
             aria-label="Remove drill"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -442,7 +448,12 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
       .then((d) => {
         if (d.success) setPastDrills(d.data);
       })
-      .catch(() => {});
+      .catch((err) => {
+        logger.debug("past-drills fetch failed", {
+          context: "athlete/throws/log/_throws-log-client.tsx",
+          metadata: { reason: err instanceof Error ? err.message : "unknown" },
+        });
+      });
   }, [selectedEvent]);
 
   function resetForm() {

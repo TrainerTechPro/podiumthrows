@@ -559,7 +559,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
           <select
             value={settings.dateRange}
             onChange={(e) => setDateRange(e.target.value as DateRangeKey)}
-            className="text-xs px-2 py-1 rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="text-xs px-3 min-h-[44px] rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
             aria-label="Date range"
           >
             {(Object.keys(DATE_RANGE_LABELS) as DateRangeKey[]).map((key) => (
@@ -572,7 +572,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
       </div>
 
       {/* Weight toggle chips */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {allImplements.map(({ label, kg }) => {
           const isVisible = visibleSet.has(label);
           const isComp = compKg != null && Math.abs(kg - compKg) < 0.01;
@@ -580,7 +580,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
             <button
               key={label}
               onClick={() => toggleWeight(label)}
-              className={`text-micro font-mono font-semibold px-2 py-1 rounded-md border transition-colors ${
+              className={`text-micro font-mono font-semibold px-3 min-h-[44px] rounded-md border transition-colors ${
                 isVisible
                   ? isComp
                     ? "bg-primary-500 border-primary-500 text-white"

@@ -273,7 +273,7 @@ export function OuraCard({
                 aria-checked={syncMode === opt.value}
                 onClick={() => handleSyncModeChange(opt.value)}
                 className={cn(
-                  "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200",
+                  "flex-1 min-h-[44px] px-3 rounded-lg text-sm font-medium transition-all duration-200",
                   syncMode === opt.value
                     ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-card"
                     : "text-muted hover:text-[var(--foreground)]"

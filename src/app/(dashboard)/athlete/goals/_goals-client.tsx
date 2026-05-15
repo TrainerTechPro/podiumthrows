@@ -195,7 +195,7 @@ function ActiveGoalCard({ goal, onUpdateProgress, onAbandon }: ActiveGoalCardPro
           <InlineProgressEditor goal={goal} onSave={onUpdateProgress} />
           <button
             onClick={() => onAbandon(goal.id)}
-            className="text-xs text-muted hover:text-danger-500 transition-colors"
+            className="inline-flex items-center px-3 min-h-[44px] text-xs text-muted hover:text-danger-500 transition-colors"
           >
             Abandon
           </button>

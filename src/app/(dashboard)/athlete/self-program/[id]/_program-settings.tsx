@@ -353,7 +353,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                   type="button"
                   onClick={() => toggleDay(day.value)}
                   className={cn(
-                    "py-2.5 rounded-lg text-xs font-semibold transition-all",
+                    "min-h-[44px] rounded-lg text-xs font-semibold transition-all",
                     isSelected
                       ? "bg-primary-500 text-white shadow-sm"
                       : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700"

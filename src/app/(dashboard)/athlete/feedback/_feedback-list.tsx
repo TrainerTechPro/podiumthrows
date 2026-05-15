@@ -282,7 +282,7 @@ function FeedbackRow({
         <button
           type="button"
           onClick={() => setShowReply((v) => !v)}
-          className="h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+          className="min-h-[44px] px-3 rounded-full inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
         >
           <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           {item.replyText ? item.replyText : "Reply"}

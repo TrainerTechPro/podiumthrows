@@ -444,7 +444,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
                         key={n}
                         type="button"
                         onClick={() => setAnswer(q.id, n)}
-                        className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                        className={`min-w-[44px] min-h-[44px] px-3 rounded-lg text-sm font-medium transition-colors ${
                           selected
                             ? "bg-primary-500 text-white ring-2 ring-primary-500/30"
                             : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-primary-500/50"
@@ -468,7 +468,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
                       key={j}
                       type="button"
                       onClick={() => setAnswer(q.id, opt)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                      className={`w-full text-left px-3 py-3 min-h-[44px] rounded-lg text-sm transition-colors flex items-center gap-2 ${
                         selected
                           ? "bg-primary-500/10 text-primary-600 dark:text-primary-400 ring-1 ring-primary-500/30"
                           : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-primary-500/50"
@@ -499,7 +499,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
                       key={j}
                       type="button"
                       onClick={() => toggleMultiChoice(q.id, opt)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                      className={`w-full text-left px-3 py-3 min-h-[44px] rounded-lg text-sm transition-colors flex items-center gap-2 ${
                         checked
                           ? "bg-primary-500/10 text-primary-600 dark:text-primary-400 ring-1 ring-primary-500/30"
                           : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-primary-500/50"
@@ -544,7 +544,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
                       key={opt}
                       type="button"
                       onClick={() => setAnswer(q.id, opt)}
-                      className={`px-6 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-6 py-3 min-h-[44px] rounded-lg text-sm font-medium transition-colors ${
                         selected
                           ? opt === "Yes"
                             ? "bg-green-500/15 text-green-600 dark:text-green-400 ring-1 ring-green-500/30"
@@ -567,8 +567,14 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-2">
+      {/* Sticky footer — long questionnaires would otherwise force the
+          athlete to scroll past every section to find Submit. Anchored to
+          the viewport with safe-area padding so it sits above the iOS
+          home-indicator and any nested keyboard. */}
+      <div
+        className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-[var(--surface-overlay)] border-t border-[var(--card-border)] flex items-center justify-between gap-3"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <Button variant="ghost" onClick={() => router.push("/athlete/questionnaires")}>
           ← Back
         </Button>

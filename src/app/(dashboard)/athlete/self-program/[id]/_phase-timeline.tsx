@@ -345,7 +345,7 @@ export function PhaseTimeline({
                     type="button"
                     onClick={() => toggleWeek(week.weekNumber)}
                     className={cn(
-                      "flex items-center gap-2.5 w-full py-2 px-2 rounded-lg text-left transition-colors",
+                      "flex items-center gap-2.5 w-full min-h-[44px] py-2 px-2 rounded-lg text-left transition-colors",
                       selectedWeek === week.weekNumber
                         ? "bg-surface-100 dark:bg-surface-800"
                         : "hover:bg-surface-50 dark:hover:bg-surface-800/50"
@@ -400,7 +400,7 @@ export function PhaseTimeline({
                 }
               }}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
+                "flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
                 "bg-surface-100 dark:bg-surface-800/50 hover:bg-surface-200 dark:hover:bg-surface-700"
               )}
             >

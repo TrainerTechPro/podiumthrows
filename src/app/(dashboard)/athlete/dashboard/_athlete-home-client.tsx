@@ -94,7 +94,7 @@ function Hero({
         </h1>
         <ReadinessRing readiness={readiness} />
       </div>
-      <p className="mt-3 text-[14.5px] leading-[1.55] text-[var(--muted)]">
+      <p className="mt-3 text-body leading-[1.55] text-[var(--muted)]">
         {today ? (
           renderPrescription(today.prescription)
         ) : (
@@ -112,7 +112,7 @@ function renderPrescription(tokens: PrescriptionToken[]) {
         tok.kind === "implement" ? (
           <span
             key={i}
-            className="mx-0.5 inline-block rounded-md border border-[var(--card-border)] bg-white/[0.03] px-1.5 py-px font-mono text-[12.5px] font-medium text-[var(--foreground)]"
+            className="mx-0.5 inline-block rounded-md border border-[var(--card-border)] bg-white/[0.03] px-1.5 py-px font-mono text-caption font-medium text-[var(--foreground)]"
           >
             {tok.value}
           </span>
@@ -577,7 +577,7 @@ function MomentRow({
           {body}
         </div>
         {meta ? (
-          <div className="mt-0.5 truncate font-mono text-[10.5px] tracking-[0.04em] text-[var(--muted)]">
+          <div className="mt-0.5 truncate font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
             {meta}
           </div>
         ) : null}
@@ -613,7 +613,7 @@ function MasterProfileBanner() {
         <div className="mt-0.5 truncate text-body font-medium leading-[1.3] text-[var(--foreground)]">
           Tell us about your training so the program can adapt to you.
         </div>
-        <div className="mt-0.5 truncate font-mono text-[10.5px] tracking-[0.04em] text-[var(--muted)]">
+        <div className="mt-0.5 truncate font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
           ~5 MIN · YOU CAN COME BACK
         </div>
       </div>
