@@ -106,6 +106,7 @@ export default function LoginPage() {
             className="input"
             placeholder="coach@example.com"
             autoComplete="email"
+            autoFocus
             required
           />
         </div>

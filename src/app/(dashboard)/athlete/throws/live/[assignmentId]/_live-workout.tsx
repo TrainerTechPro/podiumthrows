@@ -521,7 +521,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
   // ── Render ───────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a0a0c] relative">
+    <div className="flex flex-col min-h-screen bg-[var(--landing-surface)] relative">
       {/* Scanline overlay */}
       <div
         className="pointer-events-none fixed inset-0 z-50 mix-blend-overlay opacity-[0.03]"
@@ -532,7 +532,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
       />
 
       {/* ── Sticky Header ── */}
-      <div className="sticky top-0 z-10 px-5 pt-14 pb-3 bg-[#0a0a0c]">
+      <div className="sticky top-0 z-10 px-5 pt-14 pb-3 bg-[var(--landing-surface)]">
         <div className="flex items-center justify-between">
           <button
             onClick={handleEndSession}

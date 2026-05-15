@@ -117,6 +117,7 @@ export default function ForgotPasswordPage() {
             className="input"
             placeholder="coach@example.com"
             autoComplete="email"
+            autoFocus
             required
           />
         </div>

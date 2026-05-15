@@ -107,6 +107,7 @@ export default function ResetPasswordPage() {
             placeholder="Minimum 8 characters"
             autoComplete="new-password"
             minLength={8}
+            autoFocus
             required
           />
         </div>
