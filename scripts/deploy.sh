@@ -103,13 +103,16 @@ if ! $PROD_MODE; then
 fi
 
 # ── Step 7: Deploy ─────────────────────────────────────────────────
+# --archive=tgz: the project exceeds Vercel CLI's 15000-file upload cap
+# (node_modules + generated assets push us past 23k). tgz packs the
+# upload before transit. Cloud-build side unpacks unchanged.
 echo ""
 if $PROD_MODE; then
   echo "── Deploying to Vercel (cloud build) ──"
-  npx vercel deploy --prod
+  npx vercel deploy --prod --archive=tgz
 else
   echo "── Deploying to Vercel (prebuilt) ──"
-  npx vercel deploy --prebuilt
+  npx vercel deploy --prebuilt --archive=tgz
 fi
 DEPLOY_EXIT=$?
 
