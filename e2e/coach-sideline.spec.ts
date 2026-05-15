@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+// MVP surface cut (2026-05-15): /coach/sideline is flag-gated behind
+// `coachSideline` (default off). The middleware also gates the phone-UA
+// dashboard → sideline auto-redirect by the same flag. All describes below
+// use .skip until sideline is reintroduced — re-enable by removing .skip
+// once the flag flips back on.
+
 /**
  * Coach sideline mobile flow.
  *
@@ -23,7 +29,7 @@ const PHONE_UA =
 const IPAD_UA =
   "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
-test.describe("Coach sideline — phone UA", () => {
+test.describe.skip("Coach sideline — phone UA", () => {
   test.use({ userAgent: PHONE_UA, viewport: { width: 390, height: 844 } });
 
   test("phone UA on /coach/dashboard redirects to /coach/sideline", async ({ page }) => {
@@ -72,7 +78,7 @@ test.describe("Coach sideline — phone UA", () => {
   });
 });
 
-test.describe("Coach sideline — desktop UA", () => {
+test.describe.skip("Coach sideline — desktop UA", () => {
   // Default Chromium UA is desktop — no override needed.
 
   test("desktop UA on /coach/dashboard does NOT redirect", async ({ page }) => {
@@ -90,7 +96,7 @@ test.describe("Coach sideline — desktop UA", () => {
   });
 });
 
-test.describe("Coach sideline — iPad UA boundary", () => {
+test.describe.skip("Coach sideline — iPad UA boundary", () => {
   // PHONE_UA_RE excludes iPad on purpose (see CLAUDE.md §Dual Product Identity:
   // "not iPad-on-the-bench"). Locking the boundary so a future "fix" widening
   // the regex can't silently change the redirect contract.

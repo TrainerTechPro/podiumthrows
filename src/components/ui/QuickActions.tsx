@@ -8,16 +8,11 @@ import {
   Plus,
   Heart,
   Target,
-  Wrench,
   Play,
   Settings,
-  Radio,
   ClipboardList,
   Layers,
-  ScanLine,
-  BookOpen,
   Trophy,
-  Video,
   User,
   Users,
   FileText,
@@ -49,6 +44,10 @@ interface QuickActionsPrefs {
 
 /* ─── Action Definitions ─────────────────────────────────────────────────── */
 
+// MVP cut (2026-05-15): tools, codex, my-videos, pose analysis, live practice
+// dropped from the catalog per tasks/product-audit-roadmap-2026-05-15.md.
+// Routes either redirect or are flag-gated — surfacing them in the FAB
+// would point at dead nav.
 const ATHLETE_ACTIONS: QuickActionDef[] = [
   {
     id: "start-session",
@@ -71,22 +70,7 @@ const ATHLETE_ACTIONS: QuickActionDef[] = [
     href: "/athlete/throws/log",
     color: "text-primary-500",
   },
-  { id: "tools", label: "Tools", icon: Wrench, href: "/athlete/tools", color: "text-blue-500" },
-  {
-    id: "codex",
-    label: "Throws Codex",
-    icon: BookOpen,
-    href: "/athlete/codex",
-    color: "text-purple-500",
-  },
   { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-amber-500" },
-  {
-    id: "videos",
-    label: "My Videos",
-    icon: Video,
-    href: "/athlete/videos",
-    color: "text-cyan-500",
-  },
   {
     id: "profile",
     label: "Profile",
@@ -97,13 +81,6 @@ const ATHLETE_ACTIONS: QuickActionDef[] = [
 ];
 
 const COACH_ACTIONS: QuickActionDef[] = [
-  {
-    id: "practice",
-    label: "Live Practice",
-    icon: Radio,
-    href: "/coach/throws/practice",
-    color: "text-emerald-500",
-  },
   {
     id: "log-session",
     label: "Log Session",
@@ -118,13 +95,6 @@ const COACH_ACTIONS: QuickActionDef[] = [
     href: "/coach/throws/builder",
     color: "text-blue-500",
   },
-  {
-    id: "video-analysis",
-    label: "Pose Analysis",
-    icon: ScanLine,
-    href: "/coach/video-analysis",
-    color: "text-purple-500",
-  },
   { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-500" },
   {
     id: "programs",
@@ -133,7 +103,6 @@ const COACH_ACTIONS: QuickActionDef[] = [
     href: "/coach/plans",
     color: "text-amber-500",
   },
-  { id: "tools", label: "Tools", icon: Wrench, href: "/coach/tools", color: "text-indigo-500" },
   {
     id: "wellness",
     label: "Team Wellness",
@@ -143,8 +112,8 @@ const COACH_ACTIONS: QuickActionDef[] = [
   },
 ];
 
-const ATHLETE_DEFAULTS = ["start-session", "wellness", "log-throw", "tools"];
-const COACH_DEFAULTS = ["practice", "log-session", "builder", "video-analysis"];
+const ATHLETE_DEFAULTS = ["start-session", "wellness", "log-throw", "profile"];
+const COACH_DEFAULTS = ["log-session", "builder", "roster", "programs"];
 const STORAGE_KEY = "podium-quick-actions";
 const MAX_ITEMS = 6;
 

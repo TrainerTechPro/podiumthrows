@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { MessageSquare, Mic } from "lucide-react";
 
 /* ─── Coach notes for this meet ───────────────────────────────────────────
@@ -101,10 +100,7 @@ export function MeetCoachNotes({ comments, athleteNote }: MeetCoachNotesProps) {
 
       {comments.length === 0 && (
         <p className="text-xs text-muted">
-          Your coach hasn&apos;t commented on these throws yet. They show up here when they do.{" "}
-          <Link href="/athlete/team" className="text-primary-500 hover:underline">
-            Open team
-          </Link>
+          Your coach hasn&apos;t commented on these throws yet. They show up here when they do.
         </p>
       )}
     </section>
