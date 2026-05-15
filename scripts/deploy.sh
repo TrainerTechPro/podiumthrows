@@ -306,13 +306,20 @@ if $PROD_MODE; then
       # /coach/throws/profile probe was retired with PR #125 — its jobs
       # were absorbed by /coach/athletes/[id] (already covered by the
       # /coach/athletes probe below).
+      #
+      # FLAG_GATED routes (src/middleware.ts) are intentionally NOT probed
+      # here. When their flag is off middleware 307s to /coach/dashboard,
+      # tripping the auth_probe 200-expectation as a false positive even
+      # though the deploy itself is healthy. The /coach/* gates today are:
+      # video-analysis, videos, architect, sideline, throws/practice,
+      # questionnaires. If you need coverage of one, gate the probe on
+      # the flag's state — don't just add the URL back.
       for path in \
         "/coach/dashboard" \
         "/coach/athletes" \
         "/coach/calendar" \
         "/coach/library" \
         "/coach/settings" \
-        "/coach/video-analysis" \
         "/coach/settings?tab=notifications"; do
         auth_probe "$COACH_JAR" "$path"
       done
@@ -325,13 +332,14 @@ if $PROD_MODE; then
       AUTH_FAILURES+=("athlete login failed")
     else
       echo "  ✓ Athlete logged in: $SMOKE_ATHLETE_EMAIL"
-      # /athlete/sessions hosts the Training Hub component; /athlete/throws/trends
-       # is the canonical trends path (/athlete/throws/analysis 308s here).
+      # /athlete/sessions hosts the Training Hub component. /athlete/throws/trends
+      # is FLAG_GATED (throwsAnalysis) so it's deliberately omitted — see the
+      # comment in the coach block for the rationale. /athlete/* gates today
+      # also include self-program, oura, whoop, questionnaires.
       for path in \
         "/athlete/dashboard" \
         "/athlete/log-session" \
         "/athlete/sessions" \
-        "/athlete/throws/trends" \
         "/athlete/settings"; do
         auth_probe "$ATHLETE_JAR" "$path"
       done
