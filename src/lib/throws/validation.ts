@@ -28,6 +28,13 @@ export interface ThrowingBlockConfig {
 }
 
 export interface StrengthExercise {
+  /**
+   * Stable, client-only React key. Minted at add-time in the builder so
+   * input state survives reorder/delete (without this, React keys default
+   * to array index, and shifting indices swap DOM state across rows).
+   * Stripped before persistence — never authoritative.
+   */
+  _id?: string;
   name: string;
   sets: number;
   reps: number;
