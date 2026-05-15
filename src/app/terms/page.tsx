@@ -7,6 +7,20 @@ export const revalidate = 86400; // ISR: regenerate daily
 
 export const metadata: Metadata = {
   title: "Terms of Service — Podium Throws",
+  description:
+    "The terms governing your use of Podium Throws — accounts, subscriptions, content ownership, acceptable use, and limitation of liability.",
+  alternates: { canonical: "/terms" },
+  openGraph: {
+    title: "Terms of Service — Podium Throws",
+    description:
+      "The terms governing your use of Podium Throws — accounts, subscriptions, and content ownership.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms of Service — Podium Throws",
+    description: "The terms governing your use of Podium Throws.",
+  },
 };
 
 export default function TermsOfServicePage() {

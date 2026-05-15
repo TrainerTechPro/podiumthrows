@@ -142,7 +142,7 @@ export default function MarketingNav() {
                   href="/register"
                   className="bg-white text-surface-950 text-center text-[14px] py-2.5 rounded-lg font-heading font-bold hover:bg-surface-100 transition-colors"
                 >
-                  Start Free Trial
+                  Start Free
                 </Link>
               </div>
             </div>

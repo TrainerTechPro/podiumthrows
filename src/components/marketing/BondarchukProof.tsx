@@ -19,7 +19,11 @@ const EVENTS = ["Shot Put", "Discus", "Hammer", "Javelin"] as const;
 
 export default function BondarchukProof() {
   return (
-    <section className="bondarchuk-section" style={{ position: "relative" }}>
+    <section
+      id="methodology"
+      className="bondarchuk-section"
+      style={{ position: "relative", scrollMarginTop: 80 }}
+    >
       <div
         style={{
           maxWidth: 1200,

@@ -7,23 +7,15 @@ const FOOTER_COLS = [
       { href: "/#features", label: "Features" },
       { href: "/#methodology", label: "Bondarchuk Methodology" },
       { href: "/pricing", label: "Pricing" },
-      { href: "/register", label: "Start Free Trial" },
-    ],
-  },
-  {
-    heading: "Events",
-    links: [
-      { href: "/#shot-put", label: "Shot Put" },
-      { href: "/#discus", label: "Discus" },
-      { href: "/#hammer", label: "Hammer Throw" },
-      { href: "/#javelin", label: "Javelin" },
+      { href: "/changelog", label: "Changelog" },
     ],
   },
   {
     heading: "Company",
     links: [
       { href: "/login", label: "Sign In" },
-      { href: "/register", label: "Get Started" },
+      { href: "/register", label: "Start Free" },
+      { href: "/deficit-finder", label: "Deficit Finder" },
     ],
   },
   {
@@ -40,11 +32,14 @@ export default function MarketingFooter() {
     <footer className="bg-[var(--landing-bg)] text-[var(--landing-text-dim)] border-t border-[var(--landing-border)]">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 sm:pt-16 pb-8">
         {/* Top grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-10 mb-10 sm:mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8 sm:gap-10 mb-10 sm:mb-16">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 group mb-5">
-              <div className="w-5 h-5 bg-primary-500 rounded flex-shrink-0 grid place-items-center" style={{ borderRadius: 4 }}>
+              <div
+                className="w-5 h-5 bg-primary-500 rounded flex-shrink-0 grid place-items-center"
+                style={{ borderRadius: 4 }}
+              >
                 <span className="font-heading font-bold text-[10px] text-surface-950">P</span>
               </div>
               <span className="font-heading font-bold text-base text-white group-hover:text-primary-400 transition-colors">

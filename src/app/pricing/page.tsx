@@ -8,10 +8,14 @@ import prisma from "@/lib/prisma";
 
 export const revalidate = 3600; // ISR: regenerate every hour
 
+const OG_PRICING =
+  "/api/og?title=Pricing&description=Free%2C%20Pro%2C%20and%20Elite%20plans%20for%20throws%20coaches";
+
 export const metadata: Metadata = {
   title: "Pricing — Podium Throws",
   description:
     "Simple, transparent pricing for throws coaches. Free plan available. Pro at $20/month for 25 athletes. Elite at $50/month for unlimited athletes.",
+  alternates: { canonical: "/pricing" },
   openGraph: {
     title: "Pricing — Podium Throws",
     description:
@@ -19,7 +23,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-pricing.png",
+        url: OG_PRICING,
         width: 1200,
         height: 630,
         alt: "Podium Throws Pricing",
@@ -30,6 +34,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Pricing — Podium Throws",
     description: "Free, Pro ($20/mo), and Elite ($50/mo) plans for throws coaches.",
+    images: [OG_PRICING],
   },
 };
 
@@ -119,7 +124,7 @@ export default async function PricingPage() {
             {[
               "Free plan — no credit card",
               "Cancel anytime",
-              "14-day money-back guarantee",
+              "Switch plans in one click",
               "Data export always available",
             ].map((item) => (
               <div key={item} className="flex flex-col items-center gap-2">
