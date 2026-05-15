@@ -111,6 +111,18 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
   async function handleEnroll(e: React.FormEvent) {
     e.preventDefault();
     if (!enrollForm.athleteId || enrollForm.events.length === 0 || !enrollForm.gender) return;
+
+    // Pre-validate competitionPb so we never POST NaN to the API.
+    let competitionPbMeters: number | undefined;
+    if (enrollForm.competitionPb) {
+      const parsed = parseFloat(enrollForm.competitionPb);
+      if (!Number.isFinite(parsed)) {
+        setSaveError("Competition PB must be a number.");
+        return;
+      }
+      competitionPbMeters = enrollDistUnit === "feet" ? parsed * 0.3048 : parsed;
+    }
+
     setSaving(true);
     setSaveError("");
     try {
@@ -121,15 +133,11 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
           athleteId: enrollForm.athleteId,
           events: enrollForm.events,
           gender: enrollForm.gender,
-          competitionPb: enrollForm.competitionPb
-            ? enrollDistUnit === "feet"
-              ? parseFloat(enrollForm.competitionPb) * 0.3048
-              : parseFloat(enrollForm.competitionPb)
-            : undefined,
+          competitionPb: competitionPbMeters,
         }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         closeEnroll();
         refetch();
       } else {
@@ -146,14 +154,20 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
     setRemovingId(athleteId);
     setRemoveError("");
     try {
-      await fetch(`/api/throws/podium-roster/${athleteId}`, {
+      const res = await fetch(`/api/throws/podium-roster/${athleteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ status: "inactive" }),
       });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to remove athlete");
+      }
       refetch();
-    } catch {
-      setRemoveError("Failed to remove athlete. Please try again.");
+    } catch (err) {
+      setRemoveError(
+        err instanceof Error ? err.message : "Failed to remove athlete. Please try again."
+      );
     } finally {
       setRemovingId(null);
       setConfirmRemoveId(null);
