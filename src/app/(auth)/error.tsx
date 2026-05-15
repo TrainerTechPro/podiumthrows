@@ -17,13 +17,13 @@ export default function AuthError({ error, reset }: ErrorProps) {
   return (
     <div className="card p-8 text-center space-y-5">
       {/* Icon */}
-      <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto">
+      <div className="w-14 h-14 rounded-2xl bg-danger-500/10 flex items-center justify-center mx-auto text-danger-500">
         <svg
           width="24"
           height="24"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#ef4444"
+          stroke="currentColor"
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"

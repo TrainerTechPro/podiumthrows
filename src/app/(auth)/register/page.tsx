@@ -130,8 +130,17 @@ export default function RegisterPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Registration failed");
+      if (!res.ok || !data?.success) {
+        // Map known duplicate-email errors to a generic message to avoid
+        // user enumeration. The API may return "User with this email already
+        // exists" or similar variants.
+        const raw = (data?.error || "Registration failed").toString();
+        const isDuplicate = /already\s*(exists|registered|in\s*use)|duplicate|in\s*use/i.test(raw);
+        setError(
+          isDuplicate
+            ? "We couldn't create that account. If you already have one, try signing in or resetting your password."
+            : raw
+        );
         setLoading(false);
         return;
       }
@@ -173,7 +182,7 @@ export default function RegisterPage() {
     try {
       const res = await fetch("/api/auth/register-claim", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({
           token: inviteToken,
           email: claimEmail,
@@ -184,8 +193,10 @@ export default function RegisterPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      const target = data?.data?.redirectTo ?? "/athlete/onboarding";
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to claim account");
+      }
+      const target = data.data?.redirectTo ?? "/athlete/onboarding";
       router.push(target);
     } catch (err: unknown) {
       setClaimError(err instanceof Error ? err.message : "Failed to claim account");
@@ -334,13 +345,20 @@ export default function RegisterPage() {
           <h2 className="text-display-sm">Set Up Your Login</h2>
         </div>
 
-        {claimError && (
-          <div className="mb-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm">
-            {claimError}
-          </div>
-        )}
+        <div
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          className={
+            claimError
+              ? "mb-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm"
+              : "sr-only"
+          }
+        >
+          {claimError}
+        </div>
 
-        <form onSubmit={handleClaim} className="space-y-4">
+        <form onSubmit={handleClaim} className="space-y-4" aria-busy={claimLoading}>
           <div>
             <label htmlFor="claimEmail" className="label">
               Email
@@ -507,13 +525,20 @@ export default function RegisterPage() {
         </h2>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm">
-          {error}
-        </div>
-      )}
+      <div
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        className={
+          error
+            ? "mb-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-500/10 border border-danger-500/20 text-danger-600 dark:text-danger-500 text-sm"
+            : "sr-only"
+        }
+      >
+        {error}
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="firstName" className="label">
@@ -526,6 +551,7 @@ export default function RegisterPage() {
               onChange={(e) => setFirstName(e.target.value)}
               className="input"
               placeholder="Marcus"
+              autoComplete="given-name"
               required
             />
           </div>
@@ -540,6 +566,7 @@ export default function RegisterPage() {
               onChange={(e) => setLastName(e.target.value)}
               className="input"
               placeholder="Petrov"
+              autoComplete="family-name"
               required
             />
           </div>
