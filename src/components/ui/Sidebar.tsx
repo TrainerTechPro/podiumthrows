@@ -292,9 +292,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/goals",
           "/coach/athlete-logs",
           "/coach/hub",
-          "/coach/throws/profile",
           "/coach/throws/assessment",
-          "/coach/throws/invite",
         ],
         children: [
           {

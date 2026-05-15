@@ -398,17 +398,40 @@ const nextConfig = {
         permanent: true,
       },
 
-      // INTENTIONALLY NOT REDIRECTED:
-      // - /coach/throws/profile           — 3334-line client component using
-      //                                     useSearchParams; inline extraction
-      //                                     into /coach/athletes/[id]/profile
-      //                                     deferred to a follow-up commit.
-      //                                     The /coach/athletes/[id]/profile
-      //                                     redirect-shell points HERE for now.
-      // - /coach/throws/profile/typing    — small, awaits profile extraction.
-      // - /coach/throws/invite            — keeps working until the throw-profile
-      //                                     invite CTA is wired into
-      //                                     /coach/athletes/invitations.
+      // Throws Profile retired (MVP surface cut). Jobs were already covered
+      // by canonical /coach/athletes/[id] (Overview / Training / Throws /
+      // Performance / Readiness / Wellness / Goals scroll sections) plus
+      // AssessmentWizard at /coach/athletes/[id]/assessments. Athlete-id
+      // forms preserve scope; bare hits fall back to the roster.
+      {
+        source: '/coach/throws/profile',
+        has: [{ type: 'query', key: 'athleteId', value: '(?<athleteId>.+)' }],
+        destination: '/coach/athletes/:athleteId',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/profile',
+        destination: '/coach/athletes',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/profile/typing',
+        has: [{ type: 'query', key: 'athleteId', value: '(?<athleteId>.+)' }],
+        destination: '/coach/athletes/:athleteId/assessments',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/profile/typing',
+        destination: '/coach/athletes',
+        permanent: true,
+      },
+      // Invite was a thin duplicate of /coach/athletes/invitations (same API,
+      // smaller surface area). Single canonical home for invite admin.
+      {
+        source: '/coach/throws/invite',
+        destination: '/coach/athletes/invitations',
+        permanent: true,
+      },
 
       // Canonical session + throws URLs per role. Each legacy URL maps to
       // exactly one model (TrainingSession or ThrowsAssignment) with

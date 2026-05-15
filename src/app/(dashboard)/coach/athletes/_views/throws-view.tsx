@@ -292,9 +292,7 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
           confirmRemoveId={confirmRemoveId}
           onAskRemove={setConfirmRemoveId}
           onRemove={handleRemove}
-          onNavigateProfile={(athleteId) =>
-            router.push(`/coach/throws/profile?athleteId=${athleteId}`)
-          }
+          onNavigateProfile={(athleteId) => router.push(`/coach/athletes/${athleteId}`)}
         />
       )}
 
@@ -443,7 +441,7 @@ function PodiumTab(p: PodiumTabProps) {
           )}
           {p.unenrolledAthletes.length === 0 && p.allAthletesEmpty && (
             <Link
-              href="/coach/throws/invite"
+              href="/coach/athletes/invitations"
               className="btn-primary text-sm px-4 py-2 inline-block"
             >
               Invite Athletes
@@ -825,7 +823,7 @@ function AllTab(p: AllTabProps) {
       <div className="card text-center py-10">
         <p className="text-sm text-muted">No athletes on your roster yet.</p>
         <Link
-          href="/coach/throws/invite"
+          href="/coach/athletes/invitations"
           className="btn-primary text-sm px-4 py-2 mt-3 inline-block"
         >
           Invite Athlete
@@ -952,10 +950,10 @@ function AllTab(p: AllTabProps) {
                 </button>
               )}
               <Link
-                href={`/coach/throws/profile?athleteId=${athlete.id}`}
+                href={`/coach/athletes/${athlete.id}`}
                 className="btn-secondary text-xs px-3 py-1.5 whitespace-nowrap"
               >
-                Throws Profile
+                Open profile
               </Link>
               {!enrolled && (
                 <button

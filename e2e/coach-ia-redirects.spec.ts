@@ -65,8 +65,10 @@ const REDIRECTS: RedirectCase[] = [
   { source: "/coach/tools", destination: "/coach/settings?tab=integrations" },
   { source: "/coach/integrations", destination: "/coach/settings?tab=integrations" },
 
-  // Throws Analyze + Video merges into Video Analysis.
-  { source: "/coach/throws/analyze", destination: "/coach/video-analysis?event=throws" },
+  // Throws Analyze + Video merges into Video Analysis. The schema's EventType
+  // enum is already throws-only, so no event filter is appended on redirect
+  // (see comment in next.config.mjs — passing ?event=throws crashes Prisma).
+  { source: "/coach/throws/analyze", destination: "/coach/video-analysis" },
   { source: "/coach/throws/analyze/history", destination: "/coach/video-analysis?tab=history" },
   { source: "/coach/videos", destination: "/coach/video-analysis" },
   { source: "/coach/videos/upload", destination: "/coach/video-analysis/upload" },
@@ -132,29 +134,68 @@ test.describe("PR 6 parametrized redirects", () => {
 });
 
 /**
- * Documented non-redirects — surfaces that were considered for redirect
- * but intentionally left live, with reasons. If any of these gain a
- * redirect later, the assertion here flips and the spec catches it.
+ * Throws Profile retirement (MVP surface cut).
+ *
+ * `/coach/throws/profile` was the largest remaining coach-IA survivor: a
+ * 3334-line client component aggregating jobs that the canonical
+ * `/coach/athletes/[id]` scroll page (Overview / Training / Throws /
+ * Performance / Readiness / Wellness / Goals + AssessmentWizard at
+ * /assessments) already covers. Same for /typing (replaced by
+ * AssessmentWizard) and /invite (duplicate of /coach/athletes/invitations).
+ *
+ * Bare hits land on the roster; `?athleteId=` forms preserve scope and
+ * land on the athlete's canonical detail page.
  */
-test.describe("PR 6 intentional non-redirects", () => {
-  test("/coach/throws/profile stays live (3334-line component, extraction deferred)", async ({
-    request,
-  }) => {
-    const response = await request.get("/coach/throws/profile", {
-      maxRedirects: 0,
-    });
-    // Auth-gated; expect either 200 (rendered) or 307 to /login (unauth) — but
-    // NOT 308 (which would mean a redirect from the IA migration accidentally
-    // landed). Anything but 308 means the route is still serving content.
-    expect(response.status(), "must not be a 308 IA-migration redirect").not.toBe(308);
+test.describe("Throws Profile retirement (308)", () => {
+  test("/coach/throws/profile → /coach/athletes (no athleteId)", async ({ request }) => {
+    const response = await request.get("/coach/throws/profile", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    const location = response.headers()["location"];
+    expect(location).toBeTruthy();
+    expect(location.endsWith("/coach/athletes")).toBe(true);
   });
 
-  test("/coach/throws/invite stays live (throw-profile invite CTA migration deferred)", async ({
-    request,
-  }) => {
-    const response = await request.get("/coach/throws/invite", {
+  test("/coach/throws/profile?athleteId=X → /coach/athletes/X", async ({ request }) => {
+    const sampleId = "sample-athlete-id-abc123";
+    const response = await request.get(`/coach/throws/profile?athleteId=${sampleId}`, {
       maxRedirects: 0,
     });
-    expect(response.status(), "must not be a 308 IA-migration redirect").not.toBe(308);
+    expect(response.status()).toBe(308);
+    const location = response.headers()["location"];
+    expect(location).toBeTruthy();
+    // Next.js auto-forwards query params on top of consumed named groups, so
+    // the location ends with `?athleteId=...`. Assert on the pathname only.
+    const pathname = new URL(location, "http://localhost").pathname;
+    expect(pathname).toBe(`/coach/athletes/${sampleId}`);
+  });
+
+  test("/coach/throws/profile/typing → /coach/athletes (no athleteId)", async ({ request }) => {
+    const response = await request.get("/coach/throws/profile/typing", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    const location = response.headers()["location"];
+    expect(location).toBeTruthy();
+    expect(location.endsWith("/coach/athletes")).toBe(true);
+  });
+
+  test("/coach/throws/profile/typing?athleteId=X → /coach/athletes/X/assessments", async ({
+    request,
+  }) => {
+    const sampleId = "sample-athlete-id-abc123";
+    const response = await request.get(`/coach/throws/profile/typing?athleteId=${sampleId}`, {
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(308);
+    const location = response.headers()["location"];
+    expect(location).toBeTruthy();
+    const pathname = new URL(location, "http://localhost").pathname;
+    expect(pathname).toBe(`/coach/athletes/${sampleId}/assessments`);
+  });
+
+  test("/coach/throws/invite → /coach/athletes/invitations", async ({ request }) => {
+    const response = await request.get("/coach/throws/invite", { maxRedirects: 0 });
+    expect(response.status()).toBe(308);
+    const location = response.headers()["location"];
+    expect(location).toBeTruthy();
+    expect(location.endsWith("/coach/athletes/invitations")).toBe(true);
   });
 });
