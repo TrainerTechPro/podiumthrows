@@ -11,6 +11,7 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Button } from "@/components/ui/Button";
 import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/ui/Toast";
+import { useConfirm } from "@/components";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -99,6 +100,7 @@ function formatCompetitionLevel(level: string): string {
 export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
   const router = useRouter();
   const toast = useToast();
+  const { confirm, Dialog: ConfirmDialogPortal } = useConfirm();
 
   // Local form state
   const [form, setForm] = useState({
@@ -214,12 +216,13 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
   };
 
   const handleDesktopRegenerate = () => {
-    const confirmed = window.confirm(
-      "This will replace your current program. Completed sessions are preserved in your history. Continue?"
-    );
-    if (confirmed) {
-      regenerate();
-    }
+    confirm({
+      title: "Regenerate program?",
+      description:
+        "This will replace your current program. Completed sessions are preserved in your history.",
+      confirmLabel: "Regenerate",
+      onConfirm: () => regenerate(),
+    });
   };
 
   return (
@@ -235,19 +238,19 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
         <div className="card p-5 space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Event</p>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">Event</p>
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 {formatEventName(config.event)}
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Gender</p>
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">Gender</p>
               <p className="text-sm font-semibold text-[var(--foreground)] capitalize">
                 {config.gender.toLowerCase()}
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">
                 Competition Level
               </p>
               <p className="text-sm font-semibold text-[var(--foreground)]">
@@ -255,7 +258,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">
                 Current PR
               </p>
               <p className="text-sm font-semibold text-[var(--foreground)] tabular-nums">
@@ -263,7 +266,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+              <p className="text-micro font-medium uppercase tracking-wider text-muted">
                 Years Experience
               </p>
               <p className="text-sm font-semibold text-[var(--foreground)] tabular-nums">
@@ -350,7 +353,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                   type="button"
                   onClick={() => toggleDay(day.value)}
                   className={cn(
-                    "py-2.5 rounded-lg text-xs font-semibold transition-all",
+                    "min-h-[44px] rounded-lg text-xs font-semibold transition-all",
                     isSelected
                       ? "bg-primary-500 text-white shadow-sm"
                       : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700"
@@ -539,6 +542,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
           </Button>
         </div>
       </section>
+      <ConfirmDialogPortal />
     </div>
   );
 }

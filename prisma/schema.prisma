@@ -771,9 +771,11 @@ model TrainingSession {
   // Shape: { legs: 1|2|3, energy: 1|2|3, focus: 1|2|3, submittedAt: ISO string }
   wellnessCheckin Json?
 
-  logs       SessionLog[]
-  throwLogs  ThrowLog[]
-  voiceNotes VoiceNote[]
+  logs            SessionLog[]
+  throwLogs       ThrowLog[]
+  voiceNotes      VoiceNote[]
+  videos          VideoUpload[]
+  videoAnalyses   VideoAnalysis[] @relation("SessionVideoAnalysis")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -848,6 +850,10 @@ model ThrowLog {
   isFoul         Boolean            @default(false)
   foulType       FoulType?
   isPass         Boolean            @default(false)
+
+  // Reverse relations — a video clip / coach analysis can attach to a specific throw.
+  videos        VideoUpload[]
+  videoAnalyses VideoAnalysis[] @relation("ThrowLogVideoAnalysis")
 
   @@index([athleteId])
   @@index([athleteId, event])
@@ -1207,6 +1213,14 @@ model VideoUpload {
   fps             Float?  @default(60) // Detected or assumed FPS
   gopInterval     Int? // Group of Pictures size (15 after transcode)
 
+  // Training-data link (spec: video must connect to the work it captures).
+  // Nullable so legacy uploads stay valid. SetNull on delete — the video
+  // outlives the session/throw, but loses its anchor.
+  sessionId  String?
+  session    TrainingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  throwLogId String?
+  throwLog   ThrowLog?        @relation(fields: [throwLogId], references: [id], onDelete: SetNull)
+
   frameAnnotations FrameAnnotation[]
 
   createdAt DateTime @default(now())
@@ -1218,6 +1232,8 @@ model VideoUpload {
   @@index([category])
   @@index([createdAt])
   @@index([coachId, createdAt])
+  @@index([sessionId])
+  @@index([throwLogId])
 }
 
 /// AI-generated frame annotation (pose landmarks, joint angles) stored per timestamp.
@@ -2299,12 +2315,21 @@ model VideoAnalysis {
   annotations  Json? // Saved pose landmarks + angles per frame { frames: [{ timestamp, landmarks, angles }] }
   keyPositions Json? // Coach-marked key positions { positions: [{ timestamp, label, angles, notes }] }
 
+  // Training-data link (spec: video must connect to the work it captures).
+  // Both nullable so legacy uploads stay valid. SetNull on delete.
+  sessionId  String?
+  session    TrainingSession? @relation("SessionVideoAnalysis", fields: [sessionId], references: [id], onDelete: SetNull)
+  throwLogId String?
+  throwLog   ThrowLog?        @relation("ThrowLogVideoAnalysis", fields: [throwLogId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([athleteId])
   @@index([coachId])
   @@index([coachId, createdAt])
+  @@index([sessionId])
+  @@index([throwLogId])
 }
 
 // ─── VIDEO ANALYSIS PLATFORM ────────────────────────────────────────────────

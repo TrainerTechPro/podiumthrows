@@ -61,6 +61,18 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // ── MVP surface cut (2026-05-15) ───────────────────────────────────
+      // Subtraction pass per tasks/product-audit-roadmap-2026-05-15.md.
+      // Hidden modules with no flow dependency and no need for admin access
+      // redirect here. Routes that admins / dev still need (architect,
+      // questionnaires, video-analysis, sideline, self-program) are gated
+      // by `src/lib/flags.ts` + middleware FLAG_GATED_ROUTES instead — that
+      // path keeps a flag flip enough to restore access without redeploying.
+      { source: '/athlete/insights',    destination: '/athlete/dashboard',   permanent: false },
+      { source: '/athlete/codex',       destination: '/athlete/dashboard',   permanent: false },
+      { source: '/athlete/tools',       destination: '/athlete/settings',    permanent: false },
+      { source: '/athlete/team',        destination: '/athlete/dashboard',   permanent: false },
+
       // ── PR 1: route-consolidation 307s ─────────────────────────────────
       // Non-permanent on purpose. These are cleanup of in-tree page-level
       // `redirect()` stubs and near-dead surfaces — unlike the 308s below
@@ -386,17 +398,40 @@ const nextConfig = {
         permanent: true,
       },
 
-      // INTENTIONALLY NOT REDIRECTED:
-      // - /coach/throws/profile           — 3334-line client component using
-      //                                     useSearchParams; inline extraction
-      //                                     into /coach/athletes/[id]/profile
-      //                                     deferred to a follow-up commit.
-      //                                     The /coach/athletes/[id]/profile
-      //                                     redirect-shell points HERE for now.
-      // - /coach/throws/profile/typing    — small, awaits profile extraction.
-      // - /coach/throws/invite            — keeps working until the throw-profile
-      //                                     invite CTA is wired into
-      //                                     /coach/athletes/invitations.
+      // Throws Profile retired (MVP surface cut). Jobs were already covered
+      // by canonical /coach/athletes/[id] (Overview / Training / Throws /
+      // Performance / Readiness / Wellness / Goals scroll sections) plus
+      // AssessmentWizard at /coach/athletes/[id]/assessments. Athlete-id
+      // forms preserve scope; bare hits fall back to the roster.
+      {
+        source: '/coach/throws/profile',
+        has: [{ type: 'query', key: 'athleteId', value: '(?<athleteId>.+)' }],
+        destination: '/coach/athletes/:athleteId',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/profile',
+        destination: '/coach/athletes',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/profile/typing',
+        has: [{ type: 'query', key: 'athleteId', value: '(?<athleteId>.+)' }],
+        destination: '/coach/athletes/:athleteId/assessments',
+        permanent: true,
+      },
+      {
+        source: '/coach/throws/profile/typing',
+        destination: '/coach/athletes',
+        permanent: true,
+      },
+      // Invite was a thin duplicate of /coach/athletes/invitations (same API,
+      // smaller surface area). Single canonical home for invite admin.
+      {
+        source: '/coach/throws/invite',
+        destination: '/coach/athletes/invitations',
+        permanent: true,
+      },
 
       // Canonical session + throws URLs per role. Each legacy URL maps to
       // exactly one model (TrainingSession or ThrowsAssignment) with

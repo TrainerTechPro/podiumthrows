@@ -59,7 +59,7 @@ export function ByEventView() {
         <div>
           <p className="font-semibold text-[var(--foreground)] text-sm">No event groups yet</p>
           <p className="text-xs text-muted mt-1 max-w-sm mx-auto">
-            Create event groups (Shot Put, Discus, Hammer, Javelin) to slice your week by event.
+            Split your roster by event so you can program shot put without discus noise in the way.
           </p>
         </div>
         <a href="/coach/event-groups" className="btn-primary inline-flex text-sm px-4 py-2 mx-auto">

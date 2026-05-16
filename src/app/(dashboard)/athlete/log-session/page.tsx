@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { LogSessionWizard } from "./_log-session-wizard";
+import { LogSessionForm } from "./_log-session-form";
 import { LogSessionTypeSwitcher } from "./_log-session-type-switcher";
 
 export default async function AthleteLogSessionPage() {
@@ -26,7 +26,7 @@ export default async function AthleteLogSessionPage() {
   return (
     <div className="py-6 px-4 space-y-3">
       <LogSessionTypeSwitcher athleteId={athlete.id} />
-      <LogSessionWizard
+      <LogSessionForm
         userId={session.userId}
         athleteId={athlete.id}
         allowedEvents={athlete.events ?? []}

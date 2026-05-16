@@ -205,12 +205,12 @@ function FeedbackRow({
             <p className="text-sm font-semibold text-[var(--foreground)] truncate">
               {item.coachName}
             </p>
-            <p className="text-[11px] text-muted">{formatRelative(item.createdAt)}</p>
+            <p className="text-micro text-muted">{formatRelative(item.createdAt)}</p>
           </div>
         </div>
         <Link
           href={item.target.href}
-          className="text-[11px] text-primary-500 hover:underline shrink-0"
+          className="text-micro text-primary-500 hover:underline shrink-0"
         >
           {item.target.label} &gt;
         </Link>
@@ -282,14 +282,14 @@ function FeedbackRow({
         <button
           type="button"
           onClick={() => setShowReply((v) => !v)}
-          className="h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+          className="min-h-[44px] px-3 rounded-full inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
         >
           <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           {item.replyText ? item.replyText : "Reply"}
         </button>
         <div className="flex-1" />
         {!isUnread && (
-          <span className="text-[10px] text-muted inline-flex items-center gap-1">
+          <span className="text-nano text-muted inline-flex items-center gap-1">
             <Check className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
             Read
           </span>

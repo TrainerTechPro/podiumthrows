@@ -53,7 +53,7 @@ function TrendArrow({
 
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-[9px] font-medium ${
+      className={`inline-flex items-center gap-0.5 text-nano font-medium ${
         isGood ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
       }`}
     >
@@ -322,15 +322,13 @@ function VitalsStrip({
         const colorClass = c.colorFn ? c.colorFn(c.value) : "text-[var(--foreground)]";
         return (
           <div key={c.label} className="card p-2 sm:p-3 text-center space-y-0.5">
-            <p className="text-[9px] uppercase tracking-wider text-muted font-semibold">
-              {c.label}
-            </p>
+            <p className="text-nano uppercase tracking-wider text-muted font-semibold">{c.label}</p>
             <div className={`font-bold tabular-nums ${colorClass}`}>
               {c.value !== null ? (
                 <>
                   {c.prefix && <span className="text-xs">{c.prefix}</span>}
                   <AnimatedNumber value={c.value} decimals={c.decimals} className="text-lg" />
-                  <span className="text-[10px] text-muted ml-0.5">{c.suffix}</span>
+                  <span className="text-nano text-muted ml-0.5">{c.suffix}</span>
                 </>
               ) : (
                 <span className="text-lg text-surface-400">--</span>

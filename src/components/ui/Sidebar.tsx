@@ -20,10 +20,8 @@ import {
   ChevronRight,
   Trophy,
   Clock,
-  Sparkles,
   Library,
   Wrench,
-  ClipboardList,
   Megaphone,
 } from "lucide-react";
 
@@ -294,9 +292,7 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
           "/coach/goals",
           "/coach/athlete-logs",
           "/coach/hub",
-          "/coach/throws/profile",
           "/coach/throws/assessment",
-          "/coach/throws/invite",
         ],
         children: [
           {
@@ -392,22 +388,12 @@ export const COACH_NAV_SECTIONS: NavSection[] = [
         ],
       },
 
-      // ── Questionnaires ──
-      {
-        label: "Questionnaires",
-        href: "/coach/questionnaires",
-        icon: <ClipboardList {...iconSize} />,
-        matchPaths: ["/coach/questionnaires"],
-      },
-
-      // ── Video Analysis ──
-      // Absorbs /coach/videos and /coach/throws/analyze (per Q5 decision).
-      {
-        label: "Video Analysis",
-        href: "/coach/video-analysis",
-        icon: <BarChart3 {...iconSize} />,
-        matchPaths: ["/coach/video-analysis", "/coach/videos", "/coach/throws/analyze"],
-      },
+      // ── MVP cut (2026-05-15) ───────────────────────────────────────────
+      // Questionnaires + Video Analysis are flag-gated post-MVP per
+      // tasks/product-audit-roadmap-2026-05-15.md. Routes remain at
+      // /coach/questionnaires + /coach/video-analysis behind feature
+      // flags; reachable for admins/dev with NEXT_PUBLIC_FEATURE_*
+      // env vars on, otherwise the page redirects to /coach/dashboard.
     ],
   },
   {
@@ -491,25 +477,17 @@ export const ATHLETE_NAV_SECTIONS: NavSection[] = [
           },
         ],
       },
-      {
-        label: "Team",
-        href: "/athlete/team",
-        icon: <Users {...iconSize} />,
-        matchPaths: ["/athlete/team"],
-      },
-      {
-        label: "Availability",
-        href: "/athlete/availability",
-        icon: <Calendar {...iconSize} />,
-        matchPaths: ["/athlete/availability"],
-      },
-      // Competitions + PRs moved into the Throws group above.
+      // MVP cut (2026-05-15): Team, Availability, Insights removed from
+      // athlete primary nav per audit. Team + Insights redirect to
+      // /athlete/dashboard in next.config.mjs. Availability remains as
+      // a deep-linkable surface (coach calendar references it) but isn't
+      // a daily destination.
+      // Competitions + PRs live inside the Throws group above.
     ],
   },
   {
-    title: "Insights",
+    title: "Readiness",
     items: [
-      { label: "Insights", href: "/athlete/insights", icon: <Sparkles {...iconSize} /> },
       { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
     ],
   },

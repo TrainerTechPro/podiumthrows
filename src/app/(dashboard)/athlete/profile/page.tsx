@@ -1,16 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import {
-  Target,
-  Sparkles,
-  BookOpen,
-  Video,
-  FileText,
-  ClipboardList,
-  Trophy,
-  MessageCircle,
-  ChevronRight,
-} from "lucide-react";
+import { Settings, MessageCircle, ChevronRight } from "lucide-react";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { ProfileTabs } from "./_profile-tabs";
@@ -180,76 +170,25 @@ export default async function AthleteProfilePage() {
 }
 
 /* ─── More Menu ───────────────────────────────────────────────────────────
-   The athlete bottom tab bar has 5 slots — home, training, log, trends, me.
-   Pages that don't fit any of those land here. Grouped by purpose so the
-   list scans: Program (goals/questionnaires/assessments), Reference
-   (drill library/videos), Records (achievements), plus a feedback link.
-
-   Icons are Lucide + amber brand-subtle circles; rows are 44pt minimum
-   tap targets with a chevron affordance. No card chrome — plain rows,
-   editorial rhythm with the ProfileTabs above. */
+   MVP cut (2026-05-15): Me contains profile + settings as primary actions
+   only. Goals/questionnaires/assessments/insights/codex/drill-videos/
+   coach-videos/achievements removed — those routes either redirect, are
+   flag-gated, or are linked contextually elsewhere (e.g. PRs surface in
+   Throws via the chip nav). See tasks/product-audit-roadmap-2026-05-15.md. */
 
 interface MenuLink {
   href: string;
   label: string;
   description: string;
-  icon: typeof Target;
+  icon: typeof Settings;
 }
 
-const PROGRAM_LINKS: MenuLink[] = [
+const PRIMARY_LINKS: MenuLink[] = [
   {
-    href: "/athlete/goals",
-    label: "Goals",
-    description: "Set targets, track progress",
-    icon: Target,
-  },
-  {
-    href: "/athlete/questionnaires",
-    label: "Questionnaires",
-    description: "Forms your coach has sent",
-    icon: ClipboardList,
-  },
-  {
-    href: "/athlete/assessments",
-    label: "Assessments",
-    description: "Self-assessments & check-ins",
-    icon: FileText,
-  },
-];
-
-const REFERENCE_LINKS: MenuLink[] = [
-  {
-    href: "/athlete/insights",
-    label: "Insights",
-    description: "Trends in readiness & load",
-    icon: Sparkles,
-  },
-  {
-    href: "/athlete/codex",
-    label: "Technique codex",
-    description: "Drill and cue reference",
-    icon: BookOpen,
-  },
-  {
-    href: "/athlete/drill-videos",
-    label: "My drill videos",
-    description: "Your recorded throws",
-    icon: Video,
-  },
-  {
-    href: "/athlete/videos",
-    label: "Coach videos",
-    description: "Clips your coach shared",
-    icon: Video,
-  },
-];
-
-const RECORDS_LINKS: MenuLink[] = [
-  {
-    href: "/athlete/achievements",
-    label: "Achievements",
-    description: "Badges and milestones",
-    icon: Trophy,
+    href: "/athlete/settings",
+    label: "Settings",
+    description: "Notifications, security, theme",
+    icon: Settings,
   },
 ];
 
@@ -304,9 +243,7 @@ function MenuSection({ title, links }: { title: string; links: MenuLink[] }) {
 function MoreMenu() {
   return (
     <div className="space-y-6">
-      <MenuSection title="Program" links={PROGRAM_LINKS} />
-      <MenuSection title="Reference" links={REFERENCE_LINKS} />
-      <MenuSection title="Records" links={RECORDS_LINKS} />
+      <MenuSection title="Account" links={PRIMARY_LINKS} />
 
       <div className="pt-2">
         <Link

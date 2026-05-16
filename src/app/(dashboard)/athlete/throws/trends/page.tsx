@@ -274,13 +274,13 @@ export default function ThrowAnalysisPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-nano font-bold text-white"
                             style={{ backgroundColor: meta?.color ?? "#666" }}
                           >
                             {meta?.label ?? pr.event}
                           </span>
                           <span className="text-xs text-muted font-mono">{pr.implement}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
+                          <span className="text-nano px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
                             {pr.source === "COMPETITION" ? "Competition" : "Training"}
                           </span>
                         </div>
@@ -559,7 +559,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
           <select
             value={settings.dateRange}
             onChange={(e) => setDateRange(e.target.value as DateRangeKey)}
-            className="text-xs px-2 py-1 rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="text-xs px-3 min-h-[44px] rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
             aria-label="Date range"
           >
             {(Object.keys(DATE_RANGE_LABELS) as DateRangeKey[]).map((key) => (
@@ -572,7 +572,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
       </div>
 
       {/* Weight toggle chips */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {allImplements.map(({ label, kg }) => {
           const isVisible = visibleSet.has(label);
           const isComp = compKg != null && Math.abs(kg - compKg) < 0.01;
@@ -580,7 +580,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
             <button
               key={label}
               onClick={() => toggleWeight(label)}
-              className={`text-[11px] font-mono font-semibold px-2 py-1 rounded-md border transition-colors ${
+              className={`text-micro font-mono font-semibold px-3 min-h-[44px] rounded-md border transition-colors ${
                 isVisible
                   ? isComp
                     ? "bg-primary-500 border-primary-500 text-white"

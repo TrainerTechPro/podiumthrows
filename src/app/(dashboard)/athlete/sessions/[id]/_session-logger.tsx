@@ -460,7 +460,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
         timelineNodes.push(
           <div key={`label-${block.id}`} className="relative flex items-center pl-12 py-3">
             <span
-              className="text-[10px] font-bold tracking-[0.2em] uppercase"
+              className="text-nano font-bold tracking-[0.2em] uppercase"
               style={{
                 color: isThrowingLabel ? "#f59e0b" : "#818cf8",
               }}
@@ -468,7 +468,7 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
               {label}
             </span>
             {block.notes && (
-              <span className="ml-3 text-[10px] italic" style={{ color: "var(--muted)" }}>
+              <span className="ml-3 text-nano italic" style={{ color: "var(--muted)" }}>
                 {block.notes}
               </span>
             )}
@@ -1007,7 +1007,7 @@ function ThrowingInput({
                   {t.distance.toFixed(2)}m
                   {isBest && (
                     <span
-                      className="text-[10px] ml-1.5 font-bold uppercase"
+                      className="text-nano ml-1.5 font-bold uppercase"
                       style={{ color: "#f59e0b" }}
                     >
                       BEST
@@ -1123,7 +1123,7 @@ function StrengthInput({
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label
-                className="text-[10px] uppercase tracking-wider block mb-1"
+                className="text-nano uppercase tracking-wider block mb-1"
                 style={{ color: "var(--muted)" }}
               >
                 Weight
@@ -1145,7 +1145,7 @@ function StrengthInput({
             </div>
             <div>
               <label
-                className="text-[10px] uppercase tracking-wider block mb-1"
+                className="text-nano uppercase tracking-wider block mb-1"
                 style={{ color: "var(--muted)" }}
               >
                 Reps
@@ -1167,7 +1167,7 @@ function StrengthInput({
             </div>
             <div>
               <label
-                className="text-[10px] uppercase tracking-wider block mb-1"
+                className="text-nano uppercase tracking-wider block mb-1"
                 style={{ color: "var(--muted)" }}
               >
                 RPE
@@ -1383,7 +1383,7 @@ function StatPill({
         backgroundColor: highlight ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.04)",
       }}
     >
-      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: "var(--muted)" }}>
+      <p className="text-nano uppercase tracking-wider mb-0.5" style={{ color: "var(--muted)" }}>
         {label}
       </p>
       <p

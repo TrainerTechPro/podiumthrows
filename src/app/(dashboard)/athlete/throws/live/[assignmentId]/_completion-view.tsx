@@ -7,12 +7,7 @@ import { SlideToConfirm } from "@/components/ui/SlideToConfirm";
 import { useToast } from "@/components/toast";
 import { csrfHeaders } from "@/lib/csrf-client";
 import type { BlockState } from "./_types";
-import {
-  formatElapsed,
-  FEELING_OPTIONS,
-  CHAMFER,
-  CHAMFER_LG,
-} from "./_utils";
+import { formatElapsed, FEELING_OPTIONS, CHAMFER, CHAMFER_LG } from "./_utils";
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 /*  COMPLETION SCREEN                                                     */
@@ -40,9 +35,7 @@ export function CompletionScreen({
   const allThrows = [...blockStates.values()].flatMap((s) => s.throws);
   const markedThrows = allThrows.filter((t) => t.distance !== null);
   const bestMark =
-    markedThrows.length > 0
-      ? Math.max(...markedThrows.map((t) => t.distance as number))
-      : 0;
+    markedThrows.length > 0 ? Math.max(...markedThrows.map((t) => t.distance as number)) : 0;
   const totalThrowCount = allThrows.length;
   const markedCount = markedThrows.length;
 
@@ -82,7 +75,7 @@ export function CompletionScreen({
       {/* ── Hero Text ── */}
       <div className="text-center pt-4 pb-2 space-y-2">
         <p
-          className="text-[8px] uppercase font-semibold"
+          className="text-nano uppercase font-semibold"
           style={{ letterSpacing: "4px", color: "#00FF8888" }}
         >
           Session Complete
@@ -110,7 +103,7 @@ export function CompletionScreen({
           }}
         >
           <p
-            className="text-[8px] uppercase font-semibold mb-1"
+            className="text-nano uppercase font-semibold mb-1"
             style={{ letterSpacing: "2px", color: "#555" }}
           >
             Total Throws
@@ -133,7 +126,7 @@ export function CompletionScreen({
           }}
         >
           <p
-            className="text-[8px] uppercase font-semibold mb-1"
+            className="text-nano uppercase font-semibold mb-1"
             style={{ letterSpacing: "2px", color: "#555" }}
           >
             Marked
@@ -156,7 +149,7 @@ export function CompletionScreen({
           }}
         >
           <p
-            className="text-[8px] uppercase font-semibold mb-1"
+            className="text-nano uppercase font-semibold mb-1"
             style={{ letterSpacing: "2px", color: "#555" }}
           >
             Best Mark
@@ -166,14 +159,17 @@ export function CompletionScreen({
               className="text-xl font-heading font-bold tabular-nums"
               style={{ color: "#FFC800" }}
             >
-              <AnimatedNumber value={bestMark} decimals={2} className="text-xl font-heading font-bold tabular-nums" />
-              <span className="text-sm font-semibold ml-0.5" style={{ color: "#FFC80088" }}>m</span>
+              <AnimatedNumber
+                value={bestMark}
+                decimals={2}
+                className="text-xl font-heading font-bold tabular-nums"
+              />
+              <span className="text-sm font-semibold ml-0.5" style={{ color: "#FFC80088" }}>
+                m
+              </span>
             </span>
           ) : (
-            <span
-              className="text-xl font-heading font-bold"
-              style={{ color: "#FFC80044" }}
-            >
+            <span className="text-xl font-heading font-bold" style={{ color: "#FFC80044" }}>
               —
             </span>
           )}
@@ -189,15 +185,12 @@ export function CompletionScreen({
           }}
         >
           <p
-            className="text-[8px] uppercase font-semibold mb-1"
+            className="text-nano uppercase font-semibold mb-1"
             style={{ letterSpacing: "2px", color: "#555" }}
           >
             Duration
           </p>
-          <p
-            className="text-xl font-heading font-bold tabular-nums"
-            style={{ color: "#FFC800" }}
-          >
+          <p className="text-xl font-heading font-bold tabular-nums" style={{ color: "#FFC800" }}>
             {formatElapsed(elapsed)}
           </p>
         </div>
@@ -214,17 +207,16 @@ export function CompletionScreen({
           }}
         >
           <p
-            className="text-[8px] uppercase font-semibold mb-1"
+            className="text-nano uppercase font-semibold mb-1"
             style={{ letterSpacing: "2px", color: "#555" }}
           >
             Strength Volume
           </p>
-          <p
-            className="text-xl font-heading font-bold tabular-nums"
-            style={{ color: "#FFC800" }}
-          >
+          <p className="text-xl font-heading font-bold tabular-nums" style={{ color: "#FFC800" }}>
             {totalVolume.toLocaleString()}
-            <span className="text-sm font-semibold ml-0.5" style={{ color: "#FFC80088" }}>kg</span>
+            <span className="text-sm font-semibold ml-0.5" style={{ color: "#FFC80088" }}>
+              kg
+            </span>
           </p>
         </div>
       )}
@@ -232,11 +224,10 @@ export function CompletionScreen({
       {/* ── RPE Slider ── */}
       <div className="space-y-2">
         <label
-          className="text-[9px] uppercase font-semibold block"
+          className="text-nano uppercase font-semibold block"
           style={{ letterSpacing: "3px", color: "#888" }}
         >
-          Session RPE —{" "}
-          <span style={{ color: "#FFC800" }}>{rpe ?? "—"}</span>
+          Session RPE — <span style={{ color: "#FFC800" }}>{rpe ?? "—"}</span>
         </label>
         <input
           type="range"
@@ -248,16 +239,17 @@ export function CompletionScreen({
           className="w-full h-2 appearance-none cursor-pointer"
           style={{
             accentColor: "#FFC800",
-            background: rpe != null
-              ? `linear-gradient(to right, #FFC800 ${(rpe - 1) * 11.1}%, #1a1a1e ${(rpe - 1) * 11.1}%)`
-              : "#1a1a1e",
+            background:
+              rpe != null
+                ? `linear-gradient(to right, #FFC800 ${(rpe - 1) * 11.1}%, #1a1a1e ${(rpe - 1) * 11.1}%)`
+                : "#1a1a1e",
           }}
         />
         <div className="flex justify-between">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
             <span
               key={v}
-              className="text-[9px] font-semibold tabular-nums"
+              className="text-nano font-semibold tabular-nums"
               style={{ color: v === rpe ? "#FFC800" : "#444" }}
             >
               {v}
@@ -269,7 +261,7 @@ export function CompletionScreen({
       {/* ── Feeling Selector ── */}
       <div className="space-y-2">
         <label
-          className="text-[9px] uppercase font-semibold block"
+          className="text-nano uppercase font-semibold block"
           style={{ letterSpacing: "3px", color: "#888" }}
         >
           How did you feel?
@@ -281,15 +273,14 @@ export function CompletionScreen({
               onClick={() => setFeeling(opt.value)}
               className="flex-1 py-2 text-xs font-medium transition-all min-h-[52px] flex flex-col items-center gap-0.5"
               style={{
-                backgroundColor:
-                  feeling === opt.value ? "#FFC80008" : "#08080a",
+                backgroundColor: feeling === opt.value ? "#FFC80008" : "#08080a",
                 border: `1px solid ${feeling === opt.value ? "#FFC800" : "#1a1a1e"}`,
                 color: feeling === opt.value ? "#FFC800" : "#666",
                 clipPath: CHAMFER,
               }}
             >
               <span className="text-base leading-tight">{opt.emoji}</span>
-              <span className="text-[9px] uppercase font-semibold" style={{ letterSpacing: "1px" }}>
+              <span className="text-nano uppercase font-semibold" style={{ letterSpacing: "1px" }}>
                 {opt.label}
               </span>
             </button>
@@ -300,7 +291,7 @@ export function CompletionScreen({
       {/* ── Notes ── */}
       <div className="space-y-2">
         <label
-          className="text-[9px] uppercase font-semibold block"
+          className="text-nano uppercase font-semibold block"
           style={{ letterSpacing: "3px", color: "#888" }}
         >
           Notes (optional)
@@ -332,7 +323,7 @@ export function CompletionScreen({
         <button
           onClick={submit}
           disabled={submitting}
-          className="w-full min-h-[52px] font-bold text-[11px] uppercase disabled:opacity-40 transition-opacity"
+          className="w-full min-h-[52px] font-bold text-micro uppercase disabled:opacity-40 transition-opacity"
           style={{
             letterSpacing: "3px",
             backgroundColor: "#FFC800",

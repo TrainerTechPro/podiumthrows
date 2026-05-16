@@ -10,6 +10,7 @@ import { StaggeredList } from "@/components/ui/StaggeredList";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { Tabs, TabList, TabTrigger, TabPanel } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
+import { useConfirm } from "@/components";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { ProgramSettings } from "./_program-settings";
 import { PhaseTimeline } from "./_phase-timeline";
@@ -74,6 +75,7 @@ function formatEventName(event: string): string {
 export function ProgramDetail({ config, program }: ProgramDetailProps) {
   const router = useRouter();
   const { success, error: showError } = useToast();
+  const { confirm, Dialog: ConfirmDialogPortal } = useConfirm();
   const [generating, setGenerating] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
 
@@ -119,12 +121,17 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
     return progress >= 0.8;
   }, [currentPhase, program.startDate]);
 
-  const handleRegenerate = async () => {
-    const confirmed = window.confirm(
-      "This will replace your current program with a fresh one. Completed sessions are preserved in your history. Continue?"
-    );
-    if (!confirmed) return;
+  const handleRegenerate = () => {
+    confirm({
+      title: "Regenerate program?",
+      description:
+        "This will replace your current program with a fresh one. Completed sessions are preserved in your history.",
+      confirmLabel: "Regenerate",
+      onConfirm: () => doRegenerate(),
+    });
+  };
 
+  const doRegenerate = async () => {
     setRegenerating(true);
     try {
       const res = await fetch(`/api/athlete/self-program/${config.id}/generate`, {
@@ -230,7 +237,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
         </h2>
         <StaggeredList className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Event</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Event</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {formatEventName(config.event)}
             </p>
@@ -238,7 +245,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Schedule</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Schedule</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {config.daysPerWeek} days/week
             </p>
@@ -248,30 +255,28 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Goal</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Goal</p>
             <p className="text-sm font-bold font-heading text-primary-500 tabular-nums">
               <AnimatedNumber value={config.goalDistance} decimals={2} />m
             </p>
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-              Current PR
-            </p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Current PR</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)] tabular-nums">
               <AnimatedNumber value={config.currentPR} decimals={2} />m
             </p>
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Mode</p>
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">Mode</p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)]">
               {config.generationMode === "AUTOPILOT" ? "Autopilot" : "Guided"}
             </p>
           </div>
 
           <div className="card p-4 space-y-1">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+            <p className="text-micro font-medium uppercase tracking-wider text-muted">
               Generations
             </p>
             <p className="text-sm font-bold font-heading text-[var(--foreground)] tabular-nums">
@@ -378,6 +383,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
           <ProgramSettings config={config} />
         </TabPanel>
       </Tabs>
+      <ConfirmDialogPortal />
     </div>
   );
 }

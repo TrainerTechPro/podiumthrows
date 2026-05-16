@@ -148,10 +148,22 @@ export function NotificationPreferencesClient({ initialPreferences }: Props) {
             const enabled = prefs[key];
             const busy = savingKey === key;
 
+            // The whole row is the tap target — toggle alone is only 24px
+            // tall (standard iOS switch chrome), so a row-sized button gives
+            // a fat-finger hit area without inflating the visual.
             return (
-              <div
+              <button
                 key={key}
-                className="flex items-center gap-3 py-3 border-b border-[var(--card-border)] last:border-b-0"
+                type="button"
+                role="switch"
+                aria-checked={enabled}
+                aria-label={title}
+                disabled={busy}
+                onClick={() => toggle(key)}
+                className={[
+                  "w-full flex items-center gap-3 py-3 text-left border-b border-[var(--card-border)] last:border-b-0",
+                  busy ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+                ].join(" ")}
               >
                 {/* Icon */}
                 <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center text-base shrink-0">
@@ -164,29 +176,23 @@ export function NotificationPreferencesClient({ initialPreferences }: Props) {
                   <p className="text-xs text-muted">{description}</p>
                 </div>
 
-                {/* Toggle */}
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={enabled}
-                  aria-label={title}
-                  disabled={busy}
-                  onClick={() => toggle(key)}
+                {/* Toggle visual — decorative; the button itself owns the
+                    interaction so the visual stays the canonical 24×44 size. */}
+                <span
                   className={[
                     "relative h-6 w-11 rounded-full shrink-0 transition-colors",
                     enabled ? "bg-primary-500" : "bg-surface-200 dark:bg-surface-700",
-                    busy ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
                   ].join(" ")}
+                  aria-hidden="true"
                 >
                   <span
                     className={[
                       "absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
                       enabled ? "translate-x-5" : "translate-x-0",
                     ].join(" ")}
-                    aria-hidden="true"
                   />
-                </button>
-              </div>
+                </span>
+              </button>
             );
           })}
         </div>

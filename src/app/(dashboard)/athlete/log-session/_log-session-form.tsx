@@ -195,7 +195,7 @@ type WarningResult = { type: string; message: string; severity: string };
 
 /* ─── Main ─────────────────────────────────────────────────────────────── */
 
-export function LogSessionWizard({
+export function LogSessionForm({
   userId,
   athleteId,
   apiEndpoint = "/api/athlete/log-session",
@@ -623,6 +623,11 @@ export function LogSessionWizard({
           });
         }
       } else {
+        // No PR — but the save still succeeded. Match the "PR path"
+        // 2-channel feedback (haptic + toast) so a successful save never
+        // feels mute, per CLAUDE.md §Save buttons need two feedback
+        // channels.
+        haptic.success();
         toast.success(isEditing ? "Session updated" : "Session saved");
       }
       if (data.warnings?.length) setResponseWarnings(data.warnings);
@@ -884,7 +889,7 @@ export function LogSessionWizard({
         </Section>
 
         <Section title="How did it feel?" optional>
-          <div className="grid grid-cols-5 gap-1.5 mb-4">
+          <div className="grid grid-cols-5 gap-2 mb-4">
             {FEELING_OPTIONS.map((f) => {
               const selected = sessionFeeling === f.value;
               return (
@@ -912,11 +917,11 @@ export function LogSessionWizard({
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
                 Session RPE
               </span>
-              <span className="text-[11px] text-[var(--color-text-secondary)] tabular-nums">
+              <span className="text-micro text-[var(--color-text-secondary)] tabular-nums">
                 {sessionRpe != null ? `${sessionRpe} / 10` : "—"}
               </span>
             </div>
-            <div className="grid grid-cols-10 gap-1">
+            <div className="grid grid-cols-10 gap-1.5">
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
                 const selected = sessionRpe === n;
                 return (
@@ -926,7 +931,7 @@ export function LogSessionWizard({
                     onClick={() => setSessionRpe(selected ? null : n)}
                     aria-pressed={selected}
                     className={
-                      "min-h-[40px] rounded-md text-xs font-semibold transition-colors tabular-nums " +
+                      "min-h-[44px] rounded-md text-xs font-semibold transition-colors tabular-nums " +
                       (selected
                         ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
                         : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
@@ -987,7 +992,7 @@ export function LogSessionWizard({
             </button>
           </div>
           {!canSave && !submitting && (
-            <p className="mt-2 text-center text-[11px] text-[var(--color-text-secondary)] sm:hidden">
+            <p className="mt-2 text-center text-micro text-[var(--color-text-secondary)] sm:hidden">
               {!event
                 ? "Pick an event to get started"
                 : !hasValidDrill
@@ -1019,9 +1024,7 @@ function Section({
           {title}
         </h2>
         {optional && (
-          <span className="text-[10px] text-[var(--color-text-secondary)] opacity-60">
-            optional
-          </span>
+          <span className="text-nano text-[var(--color-text-secondary)] opacity-60">optional</span>
         )}
       </div>
       {children}
@@ -1068,7 +1071,7 @@ function DrillCard({
   return (
     <div className="card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+        <span className="text-micro font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
           Drill {index}
         </span>
         <button
@@ -1084,7 +1087,7 @@ function DrillCard({
       {/* Drill type */}
       <div>
         {showPastChips ? (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {pastDrills.map((dt) => {
               const selected = drill.drillType === dt;
               return (
@@ -1093,7 +1096,7 @@ function DrillCard({
                   type="button"
                   onClick={() => onUpdate("drillType", dt)}
                   className={
-                    "px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg transition-colors " +
+                    "px-3 py-2 min-h-[44px] text-xs font-semibold rounded-lg transition-colors " +
                     (selected
                       ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
                       : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
@@ -1106,7 +1109,7 @@ function DrillCard({
             <button
               type="button"
               onClick={onToggleShowAll}
-              className="px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg border border-dashed border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
+              className="px-3 py-2 min-h-[44px] text-xs font-semibold rounded-lg border border-dashed border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-[var(--color-brand-strong)] hover:border-[var(--color-brand)] transition-colors"
             >
               More…
             </button>
@@ -1178,7 +1181,7 @@ function DrillCard({
       {event === "HAMMER" && (
         <div>
           <label className="label">Wire</label>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {WIRE_LENGTH_OPTIONS.map((wl) => {
               const selected = drill.wireLength === wl.value;
               return (
@@ -1187,7 +1190,7 @@ function DrillCard({
                   type="button"
                   onClick={() => onUpdate("wireLength", wl.value)}
                   className={
-                    "px-2.5 py-1.5 min-h-[36px] text-[11px] font-bold rounded-lg transition-colors " +
+                    "px-3 py-2 min-h-[44px] text-micro font-bold rounded-lg transition-colors " +
                     (selected
                       ? "bg-[var(--color-brand-subtle)] text-[var(--color-brand-strong)]"
                       : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
@@ -1221,7 +1224,7 @@ function DrillCard({
                     aria-checked={selected}
                     onClick={() => onUpdate("distanceUnit", unit)}
                     className={
-                      "px-2 py-1 text-[10px] font-medium tracking-wide transition-colors " +
+                      "px-2 py-1 text-nano font-medium tracking-wide transition-colors " +
                       (selected
                         ? "bg-[var(--color-brand)] text-[var(--color-text-on-brand)]"
                         : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")

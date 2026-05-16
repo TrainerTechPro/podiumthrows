@@ -80,7 +80,7 @@ interface WeekData {
 
 function computeWeekData(
   phases: ProgramPhase[],
-  programStartDate: string,
+  programStartDate: string
 ): { weeks: WeekData[]; currentWeek: number } {
   const allWeeks: WeekData[] = [];
 
@@ -120,48 +120,26 @@ function getPhaseProgress(phase: ProgramPhase, currentWeek: number): number {
   if (phase.status === "COMPLETED") return 100;
   if (currentWeek < phase.startWeek) return 0;
   if (currentWeek > phase.endWeek) return 100;
-  return Math.min(
-    100,
-    ((currentWeek - phase.startWeek + 0.5) / phase.durationWeeks) * 100,
-  );
+  return Math.min(100, ((currentWeek - phase.startWeek + 0.5) / phase.durationWeeks) * 100);
 }
 
 /* ─── Diamond Visual ─────────────────────────────────────────────── */
 
 function DiamondIcon({ weekData }: { weekData: WeekData }) {
   const tc = getTimelineColor(weekData.phase.phase);
-  const base =
-    "w-3 h-3 rotate-45 shrink-0 transition-all duration-200 inline-block";
+  const base = "w-3 h-3 rotate-45 shrink-0 transition-all duration-200 inline-block";
 
   switch (weekData.status) {
     case "completed":
       return <span className={cn(base, tc.diamond)} />;
     case "current":
       return (
-        <span
-          className={cn(
-            base,
-            tc.diamond,
-            "ring-2",
-            tc.glow,
-            "motion-safe:animate-pulse",
-          )}
-        />
+        <span className={cn(base, tc.diamond, "ring-2", tc.glow, "motion-safe:animate-pulse")} />
       );
     case "skipped":
-      return (
-        <span className={cn(base, "bg-surface-400 dark:bg-surface-600")} />
-      );
+      return <span className={cn(base, "bg-surface-400 dark:bg-surface-600")} />;
     default:
-      return (
-        <span
-          className={cn(
-            base,
-            "bg-transparent border-[1.5px]",
-            tc.diamondBorder,
-          )}
-        />
-      );
+      return <span className={cn(base, "bg-transparent border-[1.5px]", tc.diamondBorder)} />;
   }
 }
 
@@ -178,13 +156,11 @@ export function PhaseTimeline({
 }) {
   const { weeks, currentWeek } = useMemo(
     () => computeWeekData(phases, programStartDate),
-    [phases, programStartDate],
+    [phases, programStartDate]
   );
 
   // Default: current week is pre-expanded
-  const [selectedWeek, setSelectedWeek] = useState<number | null>(
-    currentWeek || null,
-  );
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(currentWeek || null);
 
   // Auto-scroll current week into view on mount (especially on mobile)
   useEffect(() => {
@@ -212,8 +188,7 @@ export function PhaseTimeline({
     phaseWeeks.set(week.phase.id, arr);
   }
 
-  const toggleWeek = (wn: number) =>
-    setSelectedWeek((prev) => (prev === wn ? null : wn));
+  const toggleWeek = (wn: number) => setSelectedWeek((prev) => (prev === wn ? null : wn));
 
   const selectedData = selectedWeek
     ? (weeks.find((w) => w.weekNumber === selectedWeek) ?? null)
@@ -235,27 +210,23 @@ export function PhaseTimeline({
               >
                 <span
                   className={cn(
-                    "text-[10px] font-semibold uppercase tracking-wider truncate",
-                    tc.label,
+                    "text-nano font-semibold uppercase tracking-wider truncate",
+                    tc.label
                   )}
                 >
                   {phase.phase}
                 </span>
                 <span
                   className={cn(
-                    "text-[9px] font-semibold px-1 py-0.5 rounded shrink-0",
+                    "text-nano font-semibold px-1 py-0.5 rounded shrink-0",
                     phase.status === "COMPLETED"
                       ? "bg-emerald-500/10 text-emerald-400"
                       : phase.status === "ACTIVE"
                         ? "bg-amber-500/10 text-amber-400"
-                        : "bg-surface-100 dark:bg-surface-800 text-muted",
+                        : "bg-surface-100 dark:bg-surface-800 text-muted"
                   )}
                 >
-                  {phase.status === "COMPLETED"
-                    ? "✓"
-                    : phase.status === "ACTIVE"
-                      ? "●"
-                      : "○"}
+                  {phase.status === "COMPLETED" ? "✓" : phase.status === "ACTIVE" ? "●" : "○"}
                 </span>
               </div>
             );
@@ -274,7 +245,7 @@ export function PhaseTimeline({
                   "relative overflow-hidden",
                   tc.barBg,
                   i === 0 && "rounded-l-full",
-                  i === phases.length - 1 && "rounded-r-full",
+                  i === phases.length - 1 && "rounded-r-full"
                 )}
                 style={{ flex: phase.durationWeeks }}
               >
@@ -283,9 +254,7 @@ export function PhaseTimeline({
                     "absolute inset-y-0 left-0 transition-all duration-700",
                     tc.barFill,
                     i === 0 && "rounded-l-full",
-                    progress >= 100 &&
-                      i === phases.length - 1 &&
-                      "rounded-r-full",
+                    progress >= 100 && i === phases.length - 1 && "rounded-r-full"
                   )}
                   style={{ width: `${progress}%` }}
                 />
@@ -312,19 +281,17 @@ export function PhaseTimeline({
                     onClick={() => toggleWeek(week.weekNumber)}
                     className={cn(
                       "flex flex-col items-center gap-1 py-1 cursor-pointer transition-transform duration-200",
-                      selectedWeek === week.weekNumber
-                        ? "scale-125"
-                        : "hover:scale-110",
+                      selectedWeek === week.weekNumber ? "scale-125" : "hover:scale-110"
                     )}
                     aria-label={`Week ${week.weekNumber}${week.status === "current" ? " (current)" : ""}`}
                   >
                     <DiamondIcon weekData={week} />
                     <span
                       className={cn(
-                        "text-[9px] tabular-nums",
+                        "text-nano tabular-nums",
                         selectedWeek === week.weekNumber
                           ? "text-[var(--foreground)] font-bold"
-                          : "text-muted",
+                          : "text-muted"
                       )}
                     >
                       {week.weekNumber}
@@ -348,31 +315,21 @@ export function PhaseTimeline({
             <div key={phase.id}>
               {/* Phase header */}
               <div className="flex items-center gap-2 py-2">
-                <span
-                  className={cn(
-                    "w-2.5 h-2.5 rounded-full shrink-0",
-                    colors.dot,
-                  )}
-                />
-                <span
-                  className={cn(
-                    "text-xs font-semibold uppercase tracking-wider",
-                    tc.label,
-                  )}
-                >
+                <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", colors.dot)} />
+                <span className={cn("text-xs font-semibold uppercase tracking-wider", tc.label)}>
                   {phase.phase}
                 </span>
-                <span className="text-[10px] text-muted tabular-nums">
+                <span className="text-nano text-muted tabular-nums">
                   Wk {phase.startWeek}–{phase.endWeek}
                 </span>
                 <span
                   className={cn(
-                    "text-[9px] font-semibold px-1.5 py-0.5 rounded ml-auto",
+                    "text-nano font-semibold px-1.5 py-0.5 rounded ml-auto",
                     phase.status === "COMPLETED"
                       ? "bg-emerald-500/10 text-emerald-400"
                       : phase.status === "ACTIVE"
                         ? "bg-amber-500/10 text-amber-400"
-                        : "bg-surface-100 dark:bg-surface-800 text-muted",
+                        : "bg-surface-100 dark:bg-surface-800 text-muted"
                   )}
                 >
                   {phase.status}
@@ -388,10 +345,10 @@ export function PhaseTimeline({
                     type="button"
                     onClick={() => toggleWeek(week.weekNumber)}
                     className={cn(
-                      "flex items-center gap-2.5 w-full py-2 px-2 rounded-lg text-left transition-colors",
+                      "flex items-center gap-2.5 w-full min-h-[44px] py-2 px-2 rounded-lg text-left transition-colors",
                       selectedWeek === week.weekNumber
                         ? "bg-surface-100 dark:bg-surface-800"
-                        : "hover:bg-surface-50 dark:hover:bg-surface-800/50",
+                        : "hover:bg-surface-50 dark:hover:bg-surface-800/50"
                     )}
                   >
                     <DiamondIcon weekData={week} />
@@ -402,15 +359,13 @@ export function PhaseTimeline({
                           ? cn("font-bold", tc.label)
                           : week.status === "completed"
                             ? "text-[var(--foreground)]"
-                            : "text-muted",
+                            : "text-muted"
                       )}
                     >
                       Week {week.weekNumber}
                     </span>
                     {week.status === "current" && (
-                      <span className="text-[9px] text-muted ml-auto">
-                        ← current
-                      </span>
+                      <span className="text-nano text-muted ml-auto">← current</span>
                     )}
                   </button>
                 ))}
@@ -431,44 +386,31 @@ export function PhaseTimeline({
               onClick={() => {
                 const pw = phaseWeeks.get(phase.id) ?? [];
                 const target =
-                  pw.find(
-                    (w) =>
-                      w.status !== "completed" && w.status !== "skipped",
-                  ) ?? pw[0];
+                  pw.find((w) => w.status !== "completed" && w.status !== "skipped") ?? pw[0];
                 if (target) {
                   setSelectedWeek(target.weekNumber);
                   // Scroll diamond into view
                   setTimeout(() => {
-                    document
-                      .getElementById(
-                        `timeline-week-${target.weekNumber}`,
-                      )
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "nearest",
-                        inline: "center",
-                      });
+                    document.getElementById(`timeline-week-${target.weekNumber}`)?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "nearest",
+                      inline: "center",
+                    });
                   }, 50);
                 }
               }}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
-                "bg-surface-100 dark:bg-surface-800/50 hover:bg-surface-200 dark:hover:bg-surface-700",
+                "flex items-center gap-1.5 px-3 min-h-[44px] rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
+                "bg-surface-100 dark:bg-surface-800/50 hover:bg-surface-200 dark:hover:bg-surface-700"
               )}
             >
-              <span
-                className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)}
-              />
+              <span className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)} />
               <span className="text-[var(--foreground)]">
                 {PHASE_ABBREV[phase.phase] ?? phase.phase}
               </span>
               <span className="text-muted">{phase.durationWeeks}wk</span>
               <span>
-                {phase.status === "COMPLETED"
-                  ? "✓"
-                  : phase.status === "ACTIVE"
-                    ? "◐"
-                    : "○"}
+                {phase.status === "COMPLETED" ? "✓" : phase.status === "ACTIVE" ? "◐" : "○"}
               </span>
             </button>
           );

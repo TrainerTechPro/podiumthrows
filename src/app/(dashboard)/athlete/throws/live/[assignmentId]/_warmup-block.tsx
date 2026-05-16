@@ -2,12 +2,7 @@
 
 import { Check } from "lucide-react";
 import type { BlockData, BlockState } from "./_types";
-import {
-  parseConfig,
-  getBlockAccent,
-  CHAMFER,
-  CHAMFER_LG,
-} from "./_utils";
+import { parseConfig, getBlockAccent, CHAMFER, CHAMFER_LG } from "./_utils";
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 /*  WARMUP/COOLDOWN BLOCK VIEW                                            */
@@ -29,9 +24,10 @@ export function WarmupCooldownView({
   const accent = getBlockAccent(block);
   const cfg = parseConfig(block.config);
   // Drills can be strings (legacy) or objects { name, duration, notes } (from start-live)
-  const rawDrills = (cfg.drills as Array<string | { name: string; duration?: number; notes?: string }>) ?? [];
+  const rawDrills =
+    (cfg.drills as Array<string | { name: string; duration?: number; notes?: string }>) ?? [];
   const drills = rawDrills.map((d) =>
-    typeof d === "string" ? { name: d, duration: undefined as number | undefined } : d,
+    typeof d === "string" ? { name: d, duration: undefined as number | undefined } : d
   );
   const duration = (cfg.duration ?? cfg.totalDuration) as number | undefined;
 
@@ -41,7 +37,7 @@ export function WarmupCooldownView({
       {duration && (
         <div className="text-center">
           <p
-            className="text-[8px] uppercase font-semibold mb-0.5"
+            className="text-nano uppercase font-semibold mb-0.5"
             style={{ letterSpacing: "4px", color: `${accent}44` }}
           >
             Duration
@@ -52,10 +48,7 @@ export function WarmupCooldownView({
           >
             {duration}
           </span>
-          <span
-            className="ml-1 text-sm font-semibold"
-            style={{ color: `${accent}66` }}
-          >
+          <span className="ml-1 text-sm font-semibold" style={{ color: `${accent}66` }}>
             min
           </span>
         </div>
@@ -65,7 +58,7 @@ export function WarmupCooldownView({
       {drills.length > 0 ? (
         <div className="space-y-2">
           <p
-            className="text-[9px] uppercase font-semibold"
+            className="text-nano uppercase font-semibold"
             style={{ letterSpacing: "3px", color: `${accent}55` }}
           >
             {block.blockType === "WARMUP" ? "Warm-Up Drills" : "Cool-Down Drills"}
@@ -93,7 +86,12 @@ export function WarmupCooldownView({
                   }}
                 >
                   {checked && (
-                    <Check size={11} strokeWidth={2.5} style={{ color: "#000" }} aria-hidden="true" />
+                    <Check
+                      size={11}
+                      strokeWidth={2.5}
+                      style={{ color: "#000" }}
+                      aria-hidden="true"
+                    />
                   )}
                 </div>
                 {/* Drill text */}
@@ -108,10 +106,7 @@ export function WarmupCooldownView({
                     {drill.name}
                   </span>
                   {drill.duration && (
-                    <span
-                      className="text-[10px] tabular-nums"
-                      style={{ color: `${accent}44` }}
-                    >
+                    <span className="text-nano tabular-nums" style={{ color: `${accent}44` }}>
                       {drill.duration}min
                     </span>
                   )}
@@ -132,7 +127,7 @@ export function WarmupCooldownView({
                 }}
               >
                 <span
-                  className="text-[9px] uppercase font-bold"
+                  className="text-nano uppercase font-bold"
                   style={{ letterSpacing: "2px", color: `${accent}77` }}
                 >
                   {state.warmupChecked.size} / {drills.length}

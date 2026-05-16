@@ -156,7 +156,7 @@ export function ProfileTabs({
                   onClick={() => handleSwitch(tab.id)}
                   aria-pressed={isActive}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-lg py-2.5 px-1 text-xs font-medium transition-colors",
+                    "flex flex-col items-center gap-1 rounded-lg min-h-[48px] py-2 px-1 text-xs font-medium transition-colors",
                     isActive
                       ? "bg-primary-500/15 text-primary-600 dark:text-primary-400"
                       : "text-muted hover:text-[var(--foreground)] hover:bg-[var(--muted-bg)]/50"

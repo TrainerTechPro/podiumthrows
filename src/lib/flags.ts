@@ -14,6 +14,9 @@ export type FeatureFlag = {
 export type FlagKey =
   | "selfProgram"
   | "videoAnnotator"
+  | "videoAnalysis"
+  | "aiArchitect"
+  | "coachSideline"
   | "throwsAnalysis"
   | "ouraIntegration"
   | "whoopIntegration"
@@ -25,15 +28,23 @@ export type FlagKey =
 
 export type FlagMap = Record<FlagKey, FeatureFlag>;
 
-// Default flags — used when Edge Config is unavailable (local dev)
+// Default flags — used when Edge Config is unavailable (local dev).
+//
+// MVP cut (2026-05-15): the non-MVP modules per
+// tasks/product-audit-roadmap-2026-05-15.md default to `enabled: false`.
+// Routes still resolve when an admin / dev flips the flag on via Edge
+// Config or env override. Middleware FLAG_GATED_ROUTES enforces the gate.
 const DEFAULT_FLAGS: FlagMap = {
-  selfProgram: { enabled: true, tiers: ["pro", "elite"] },
-  videoAnnotator: { enabled: true, tiers: ["elite"] },
+  selfProgram: { enabled: false, tiers: ["pro", "elite"] },
+  videoAnnotator: { enabled: false, tiers: ["elite"] },
+  videoAnalysis: { enabled: false, tiers: ["elite"] },
+  aiArchitect: { enabled: false, tiers: ["elite"] },
+  coachSideline: { enabled: false, tiers: [] },
   throwsAnalysis: { enabled: true, tiers: ["pro", "elite"] },
   ouraIntegration: { enabled: true, tiers: ["elite"] },
   whoopIntegration: { enabled: true, tiers: ["elite"] },
   weeklyDigest: { enabled: true, tiers: ["pro", "elite"] },
-  questionnaireBuilder: { enabled: true, tiers: ["pro", "elite"] },
+  questionnaireBuilder: { enabled: false, tiers: ["pro", "elite"] },
   competitionTracking: { enabled: true, tiers: ["pro", "elite"] },
   practiceMode: { enabled: true, tiers: [] },
   teamManagement: { enabled: true, tiers: ["elite"] },

@@ -560,11 +560,23 @@
     line-height: 1.375;
   }
 
-  /* Same protection for native date/time inputs inside the athlete shell. */
+  /* iOS Safari zooms ANY input/textarea/select whose font-size < 16px on
+     focus — not only `.input`-classed ones. Many athlete forms style raw
+     fields ad-hoc with `text-sm` (14px) or `text-xs` (12px); every one
+     would trigger the focus-zoom dance. One shell-scoped rule fixes the
+     lot without forcing every author to remember the rule. */
   .athlete-shell input[type="date"],
   .athlete-shell input[type="time"],
   .athlete-shell input[type="datetime-local"],
-  .athlete-shell input[type="number"] {
+  .athlete-shell input[type="number"],
+  .athlete-shell input[type="text"],
+  .athlete-shell input[type="email"],
+  .athlete-shell input[type="tel"],
+  .athlete-shell input[type="search"],
+  .athlete-shell input[type="url"],
+  .athlete-shell input[type="password"],
+  .athlete-shell textarea,
+  .athlete-shell select {
     font-size: 16px;
   }
 
@@ -866,4 +878,140 @@
   border: 1px solid var(--landing-border);
   padding: 5px 12px;
   cursor: default;
+}
+
+/* ── Marketing: FinalCTA ─────────────────────────────────────────────────
+   Lifted out of an inline <style> child to avoid the SSR/CSR hydration
+   drift class that hit BondarchukProof (React #425 on every visit). */
+.final-cta-section {
+  padding: 88px 20px;
+}
+@media (min-width: 640px) {
+  .final-cta-section {
+    padding: 120px 40px;
+  }
+}
+@media (min-width: 1024px) {
+  .final-cta-section {
+    padding: 144px 64px;
+  }
+}
+.final-cta-btn-primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .final-cta-btn-primary {
+    transition: none !important;
+  }
+  .final-cta-btn-primary:hover {
+    transform: none !important;
+  }
+}
+
+/* ── Marketing: PricingPreview ──────────────────────────────────────────── */
+.pricing-section {
+  padding: 88px 20px;
+}
+@media (min-width: 640px) {
+  .pricing-section {
+    padding: 112px 40px;
+  }
+}
+@media (min-width: 1024px) {
+  .pricing-section {
+    padding: 144px 64px;
+  }
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .pricing-pro-wrapper {
+    order: -1;
+  }
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--landing-neo-raised-hover);
+}
+.pricing-card--featured:hover {
+  transform: translateY(-12px);
+  box-shadow: var(--landing-neo-raised-hover);
+}
+.pricing-cta:hover {
+  filter: brightness(1.08);
+  border-color: rgba(255, 200, 0, 0.4);
+  color: var(--landing-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pricing-card,
+  .pricing-card--featured,
+  .pricing-cta {
+    transition: none;
+  }
+  .pricing-card:hover,
+  .pricing-card--featured:hover {
+    transform: none;
+  }
+}
+
+/* ── Marketing: DeficitFinderCTA ────────────────────────────────────────── */
+.deficit-section {
+  padding: 32px 16px 80px;
+}
+@media (min-width: 640px) {
+  .deficit-section {
+    padding: 40px 40px 120px;
+  }
+}
+@media (min-width: 1024px) {
+  .deficit-section {
+    padding: 40px 64px 140px;
+  }
+}
+.deficit-card {
+  padding: 32px 24px;
+}
+@media (min-width: 640px) {
+  .deficit-card {
+    padding: 48px;
+  }
+}
+@media (min-width: 1024px) {
+  .deficit-card {
+    padding: 72px;
+  }
+}
+.deficit-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .deficit-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+  }
+}
+.deficit-cta-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .deficit-grid a {
+    transition: none !important;
+  }
+  .deficit-cta-btn:hover {
+    transform: none !important;
+  }
 }

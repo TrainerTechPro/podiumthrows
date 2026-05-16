@@ -22,6 +22,7 @@ import { QuickActions } from "@/components/ui/QuickActions";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { CoachFeedbackInboxIcon } from "@/components/feedback/CoachFeedbackInboxIcon";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
+import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 import { useDetectTimezone } from "@/hooks/useDetectTimezone";
 import Link from "next/link";
 import { logger } from "@/lib/logger";
@@ -287,7 +288,7 @@ function CoachTopBar({
       >
         <Search size={16} strokeWidth={1.75} aria-hidden="true" />
         <span className="text-surface-400">Search</span>
-        <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+        <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-nano font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
           ⌘K
         </kbd>
       </button>
@@ -419,17 +420,23 @@ function AthleteTopBar({
   notificationCount?: number;
 }) {
   return (
-    <header
-      className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--color-border-default)] px-4 min-h-[3.5rem] flex items-center gap-3 shrink-0"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-    >
-      <LogoMark size={34} />
+    <>
+      <header
+        className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--color-border-default)] px-4 min-h-[3.5rem] flex items-center gap-3 shrink-0"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
+        <LogoMark size={34} />
 
-      <div className="flex-1" />
+        <div className="flex-1" />
 
-      <NotificationBell initialCount={notificationCount ?? 0} role={user.role} />
-      <UserMenu user={user} settingsHref="/athlete/settings" />
-    </header>
+        <NotificationBell initialCount={notificationCount ?? 0} role={user.role} />
+        <UserMenu user={user} settingsHref="/athlete/settings" />
+      </header>
+      {/* Surfaces a small "you're offline" pill below the top bar when
+          navigator.onLine flips false. Trends/dashboard otherwise show
+          stale data with no indicator. */}
+      <OfflineIndicator />
+    </>
   );
 }
 

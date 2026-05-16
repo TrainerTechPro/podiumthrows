@@ -32,6 +32,8 @@ const SUMMARY_LABELS: Record<string, string> = {
 const VALID_EVENT_VALUES = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const;
 
 export default async function VideoAnalysisPage({ searchParams }: { searchParams: SearchParams }) {
+  // Middleware gates /coach/video-analysis via FLAG_GATED_ROUTES
+  // (videoAnalysis flag). Disabled → redirect to /coach/dashboard.
   let coach;
   try {
     const session = await requireCoachSession();

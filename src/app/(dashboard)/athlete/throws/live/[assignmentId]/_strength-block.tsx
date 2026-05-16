@@ -93,7 +93,7 @@ export function StrengthBlockView({
       {/* ── Mini Hero: Set Counter ── */}
       <div className="text-center pt-1">
         <p
-          className="text-[8px] uppercase font-semibold mb-1"
+          className="text-nano uppercase font-semibold mb-1"
           style={{ letterSpacing: "4px", color: `${accent}44` }}
         >
           SET
@@ -130,7 +130,7 @@ export function StrengthBlockView({
           }}
         >
           <p
-            className="text-[9px] uppercase font-semibold"
+            className="text-nano uppercase font-semibold"
             style={{ letterSpacing: "3px", color: `${accent}66` }}
           >
             Prescribed
@@ -159,7 +159,7 @@ export function StrengthBlockView({
         }}
       >
         <p
-          className="text-[9px] uppercase font-semibold"
+          className="text-nano uppercase font-semibold"
           style={{ letterSpacing: "3px", color: `${accent}66` }}
         >
           Log Set {state.sets.length + 1}
@@ -167,7 +167,7 @@ export function StrengthBlockView({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label
-              className="text-[9px] uppercase font-semibold mb-1.5 block"
+              className="text-nano uppercase font-semibold mb-1.5 block"
               style={{ letterSpacing: "2px", color: `${accent}66` }}
             >
               Weight (kg)
@@ -191,7 +191,7 @@ export function StrengthBlockView({
           </div>
           <div>
             <label
-              className="text-[9px] uppercase font-semibold mb-1.5 block"
+              className="text-nano uppercase font-semibold mb-1.5 block"
               style={{ letterSpacing: "2px", color: `${accent}66` }}
             >
               Reps
@@ -218,7 +218,7 @@ export function StrengthBlockView({
         {/* RPE selector */}
         <div>
           <label
-            className="text-[9px] uppercase font-semibold mb-2 block"
+            className="text-nano uppercase font-semibold mb-2 block"
             style={{ letterSpacing: "2px", color: `${accent}66` }}
           >
             RPE {rpe !== null && <span style={{ color: accent }}>— {rpe}</span>}
@@ -247,7 +247,7 @@ export function StrengthBlockView({
         <button
           onClick={logSet}
           disabled={!reps || logging}
-          className="w-full min-h-[52px] font-bold text-[11px] uppercase disabled:opacity-40 transition-opacity"
+          className="w-full min-h-[52px] font-bold text-micro uppercase disabled:opacity-40 transition-opacity"
           style={{
             letterSpacing: "3px",
             backgroundColor: accent,
@@ -282,7 +282,7 @@ export function StrengthBlockView({
       {state.sets.length > 0 && (
         <div className="space-y-1.5">
           <p
-            className="text-[9px] uppercase font-semibold"
+            className="text-nano uppercase font-semibold"
             style={{ letterSpacing: "3px", color: `${accent}55` }}
           >
             Completed Sets

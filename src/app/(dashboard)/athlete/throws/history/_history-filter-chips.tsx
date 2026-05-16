@@ -44,7 +44,7 @@ export function HistoryFilterChips({ filter, onOpen, onClear, hasAnyActive }: Pr
 
   return (
     <div
-      className="relative flex gap-2 overflow-x-auto pb-1"
+      className="relative flex gap-2 overflow-x-auto -mx-4 px-4 pb-1"
       style={{
         scrollbarWidth: "none",
         maskImage: "linear-gradient(to right, black calc(100% - 24px), transparent)",
@@ -67,7 +67,7 @@ export function HistoryFilterChips({ filter, onOpen, onClear, hasAnyActive }: Pr
         <button
           type="button"
           onClick={onClear}
-          className="flex-shrink-0 px-3 py-2.5 rounded-full text-xs text-muted hover:text-[var(--foreground)] transition-colors"
+          className="flex-shrink-0 inline-flex items-center px-3 min-h-[44px] rounded-full text-xs text-muted hover:text-[var(--foreground)] transition-colors"
         >
           Clear
         </button>
@@ -91,7 +91,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-2.5 rounded-full border text-xs font-medium transition-colors ${
+      className={`flex-shrink-0 inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full border text-xs font-medium transition-colors ${
         active
           ? "bg-primary-500/15 border-primary-500/40 text-primary-500"
           : "bg-surface-100 dark:bg-surface-800 border-[var(--card-border)] text-surface-700 dark:text-surface-300 hover:border-[var(--card-border)]"

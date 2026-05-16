@@ -111,6 +111,19 @@ export const BRAND = {
 
 export const CHART_DEFAULT_COLOR = "#FFC800"; // cyber gold
 
+/* ── Wellness-factor series colors ────────────────────────────────────────
+   These live here (not Tailwind classes) because chart series colors
+   feed into SVG `stroke` / `fill` attributes that can't reference CSS
+   custom properties cross-browser without quirks. Keep semantic intent in
+   the keys — components reference WELLNESS_FACTOR_COLORS.sleep, not raw
+   hex. */
+export const WELLNESS_FACTOR_COLORS = {
+  sleep: "#3b82f6", // calm blue — rest factor
+  soreness: "#f59e0b", // warm amber — fatigue indicator
+  stress: "#8b5cf6", // cool violet — mental load
+  energy: "#10b981", // grounded green — vitality
+} as const;
+
 /* ── Fallback Colors (for unknown/missing values) ── */
 
 export const FALLBACK_GRAY = "#9ca3af"; // surface-400 equivalent

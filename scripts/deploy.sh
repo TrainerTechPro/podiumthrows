@@ -103,13 +103,16 @@ if ! $PROD_MODE; then
 fi
 
 # ── Step 7: Deploy ─────────────────────────────────────────────────
+# --archive=tgz: the project exceeds Vercel CLI's 15000-file upload cap
+# (node_modules + generated assets push us past 23k). tgz packs the
+# upload before transit. Cloud-build side unpacks unchanged.
 echo ""
 if $PROD_MODE; then
   echo "── Deploying to Vercel (cloud build) ──"
-  npx vercel deploy --prod
+  npx vercel deploy --prod --archive=tgz
 else
   echo "── Deploying to Vercel (prebuilt) ──"
-  npx vercel deploy --prebuilt
+  npx vercel deploy --prebuilt --archive=tgz
 fi
 DEPLOY_EXIT=$?
 
@@ -199,8 +202,15 @@ if $PROD_MODE; then
   # Protected routes: follow the chain (next.config redirect → middleware
   # auth redirect) and confirm we land on /login with the right ?redirect=.
   # Doubles as a check that next.config redirects survived the deploy.
+  #
+  # /coach/throws/analyze chain: next.config 308 → /coach/video-analysis,
+  # then middleware sees video-analysis is FLAG_GATED (PR #124) and
+  # short-circuits to /coach/dashboard before the unauth /login bounce.
+  # Final destination is /login?redirect=%2Fcoach%2Fdashboard. The probe
+  # still validates the next.config redirect fires — the chain wouldn't
+  # reach the flag-gate at all if the 308 was broken.
   REDIRECT_CHECKS=(
-    "/coach/throws/analyze|/login?redirect=%2Fcoach%2Fvideo-analysis"
+    "/coach/throws/analyze|/login?redirect=%2Fcoach%2Fdashboard"
     "/coach/schedule/print|/login?redirect=%2Fcoach%2Fcalendar%2Fprint"
     "/coach/settings/notifications|/login?redirect=%2Fcoach%2Fsettings"
   )
@@ -292,16 +302,24 @@ if $PROD_MODE; then
       AUTH_FAILURES+=("coach login failed")
     else
       echo "  ✓ Coach logged in: $SMOKE_COACH_EMAIL"
-      # /coach/throws bare path 308s to /coach/dashboard; /coach/throws/profile
-      # is the canonical throws-detail surface for the smoke coach.
+      # /coach/throws bare path 308s to /coach/dashboard; the former
+      # /coach/throws/profile probe was retired with PR #125 — its jobs
+      # were absorbed by /coach/athletes/[id] (already covered by the
+      # /coach/athletes probe below).
+      #
+      # FLAG_GATED routes (src/middleware.ts) are intentionally NOT probed
+      # here. When their flag is off middleware 307s to /coach/dashboard,
+      # tripping the auth_probe 200-expectation as a false positive even
+      # though the deploy itself is healthy. The /coach/* gates today are:
+      # video-analysis, videos, architect, sideline, throws/practice,
+      # questionnaires. If you need coverage of one, gate the probe on
+      # the flag's state — don't just add the URL back.
       for path in \
         "/coach/dashboard" \
         "/coach/athletes" \
         "/coach/calendar" \
         "/coach/library" \
         "/coach/settings" \
-        "/coach/throws/profile" \
-        "/coach/video-analysis" \
         "/coach/settings?tab=notifications"; do
         auth_probe "$COACH_JAR" "$path"
       done
@@ -314,13 +332,14 @@ if $PROD_MODE; then
       AUTH_FAILURES+=("athlete login failed")
     else
       echo "  ✓ Athlete logged in: $SMOKE_ATHLETE_EMAIL"
-      # /athlete/sessions hosts the Training Hub component; /athlete/throws/trends
-       # is the canonical trends path (/athlete/throws/analysis 308s here).
+      # /athlete/sessions hosts the Training Hub component. /athlete/throws/trends
+      # is FLAG_GATED (throwsAnalysis) so it's deliberately omitted — see the
+      # comment in the coach block for the rationale. /athlete/* gates today
+      # also include self-program, oura, whoop, questionnaires.
       for path in \
         "/athlete/dashboard" \
         "/athlete/log-session" \
         "/athlete/sessions" \
-        "/athlete/throws/trends" \
         "/athlete/settings"; do
         auth_probe "$ATHLETE_JAR" "$path"
       done

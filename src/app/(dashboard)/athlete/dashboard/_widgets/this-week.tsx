@@ -42,12 +42,7 @@ function StatTile({
   deltaUnit: string;
 }) {
   const d = formatDelta(delta, deltaDecimals, deltaUnit);
-  const Icon =
-    d.direction === "up"
-      ? TrendingUp
-      : d.direction === "down"
-        ? TrendingDown
-        : Minus;
+  const Icon = d.direction === "up" ? TrendingUp : d.direction === "down" ? TrendingDown : Minus;
   const colorClass =
     d.direction === "up"
       ? "text-emerald-500"
@@ -57,18 +52,14 @@ function StatTile({
 
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-        {label}
-      </p>
+      <p className="text-micro font-semibold uppercase tracking-wider text-muted">{label}</p>
       <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-[var(--foreground)]">
         {value == null ? (
           <span className="text-muted">—</span>
         ) : (
           <>
             <AnimatedNumber value={value} decimals={decimals} />
-            {suffix && (
-              <span className="text-sm font-normal text-muted">{suffix}</span>
-            )}
+            {suffix && <span className="text-sm font-normal text-muted">{suffix}</span>}
           </>
         )}
       </p>
@@ -92,9 +83,7 @@ export function ThisWeekWidget({ data }: { data: ThisWeekData }) {
           <Calendar className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           This Week
         </h3>
-        <span className="text-[10px] text-muted uppercase tracking-wider">
-          vs last
-        </span>
+        <span className="text-nano text-muted uppercase tracking-wider">vs last</span>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

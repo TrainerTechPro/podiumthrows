@@ -399,7 +399,10 @@ export default function AutoregulationSettingsPage() {
           </div>
 
           {athletes.length === 0 ? (
-            <p className="text-sm text-muted py-2">No athletes on active programs.</p>
+            <p className="text-sm text-muted py-2">
+              No athletes on active programs — autoreg overrides activate once you assign someone a
+              program.
+            </p>
           ) : (
             <div className="space-y-4">
               {athletes.map((athlete) => {

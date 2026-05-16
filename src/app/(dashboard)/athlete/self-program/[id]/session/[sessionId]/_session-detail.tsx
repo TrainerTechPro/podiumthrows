@@ -394,7 +394,7 @@ export function SessionDetail({
             {prevSessionId ? (
               <Link
                 href={`/athlete/self-program/${configId}/session/${prevSessionId}`}
-                className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                 aria-label="Previous session"
               >
                 <ChevronLeft size={18} strokeWidth={1.75} aria-hidden="true" />
@@ -402,7 +402,7 @@ export function SessionDetail({
             ) : (
               <button
                 disabled
-                className="p-2 opacity-30 cursor-default"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] opacity-30 cursor-default"
                 aria-label="No previous session"
                 aria-disabled="true"
               >
@@ -412,7 +412,7 @@ export function SessionDetail({
             {nextSessionId ? (
               <Link
                 href={`/athlete/self-program/${configId}/session/${nextSessionId}`}
-                className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
                 aria-label="Next session"
               >
                 <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
@@ -420,7 +420,7 @@ export function SessionDetail({
             ) : (
               <button
                 disabled
-                className="p-2 opacity-30 cursor-default"
+                className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] opacity-30 cursor-default"
                 aria-label="No next session"
                 aria-disabled="true"
               >
@@ -612,7 +612,7 @@ export function SessionDetail({
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="font-medium text-sm">{t.implement}</span>
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
+                          className={`text-nano px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
                         >
                           {classInfo.label}
                         </span>
@@ -664,7 +664,7 @@ export function SessionDetail({
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-sm font-medium">{s.exerciseName}</span>
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
+                          className={`text-nano px-1.5 py-0.5 rounded font-semibold ${classInfo.color}`}
                         >
                           {classInfo.label}
                         </span>

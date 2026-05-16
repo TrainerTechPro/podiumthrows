@@ -81,12 +81,27 @@ export function getPhaseColor(phase: string) {
 /* ─── Status Helpers ─────────────────────────────────────────────── */
 
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  PLANNED: { bg: "bg-surface-100 dark:bg-surface-800", text: "text-surface-600 dark:text-surface-400" },
-  SCHEDULED: { bg: "bg-surface-100 dark:bg-surface-800", text: "text-surface-600 dark:text-surface-400" },
-  IN_PROGRESS: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-700 dark:text-amber-300" },
+  PLANNED: {
+    bg: "bg-surface-100 dark:bg-surface-800",
+    text: "text-surface-600 dark:text-surface-400",
+  },
+  SCHEDULED: {
+    bg: "bg-surface-100 dark:bg-surface-800",
+    text: "text-surface-600 dark:text-surface-400",
+  },
+  IN_PROGRESS: {
+    bg: "bg-amber-50 dark:bg-amber-500/10",
+    text: "text-amber-700 dark:text-amber-300",
+  },
   ACTIVE: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-700 dark:text-amber-300" },
-  COMPLETED: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-300" },
-  SKIPPED: { bg: "bg-surface-100 dark:bg-surface-800", text: "text-surface-500 dark:text-surface-500" },
+  COMPLETED: {
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    text: "text-emerald-700 dark:text-emerald-300",
+  },
+  SKIPPED: {
+    bg: "bg-surface-100 dark:bg-surface-800",
+    text: "text-surface-500 dark:text-surface-500",
+  },
 };
 
 function getStatusStyle(status: string) {
@@ -122,13 +137,7 @@ function formatDate(dateStr: string): string {
 
 /* ─── Session Card ───────────────────────────────────────────────── */
 
-export function SessionCard({
-  session,
-  configId,
-}: {
-  session: ProgramSession;
-  configId: string;
-}) {
+export function SessionCard({ session, configId }: { session: ProgramSession; configId: string }) {
   const statusStyle = getStatusStyle(session.status);
   const dayName = DAY_NAMES[session.dayOfWeek] ?? `Day ${session.dayOfWeek}`;
 
@@ -140,17 +149,15 @@ export function SessionCard({
       {/* Day + type */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-[var(--foreground)]">
-            {dayName}
-          </span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-surface-100 dark:bg-surface-800 text-muted uppercase">
+          <span className="text-sm font-semibold text-[var(--foreground)]">{dayName}</span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-nano font-semibold bg-surface-100 dark:bg-surface-800 text-muted uppercase">
             {formatSessionType(session.sessionType)}
           </span>
           <span
             className={cn(
-              "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold",
+              "inline-flex items-center px-2 py-0.5 rounded-md text-nano font-semibold",
               statusStyle.bg,
-              statusStyle.text,
+              statusStyle.text
             )}
           >
             {session.status}
@@ -158,7 +165,7 @@ export function SessionCard({
         </div>
         <p className="text-xs text-muted truncate">{session.focusLabel}</p>
         {session.scheduledDate && (
-          <p className="text-[11px] text-muted flex items-center gap-1">
+          <p className="text-micro text-muted flex items-center gap-1">
             <CalendarDays size={12} strokeWidth={1.75} aria-hidden="true" />
             {formatDate(session.scheduledDate)}
           </p>
@@ -170,7 +177,7 @@ export function SessionCard({
         <p className="text-lg font-bold font-heading text-[var(--foreground)] tabular-nums">
           <NumberFlow value={session.totalThrowsTarget} />
         </p>
-        <p className="text-[10px] text-muted uppercase tracking-wider">throws</p>
+        <p className="text-nano text-muted uppercase tracking-wider">throws</p>
       </div>
 
       {/* Duration */}
@@ -211,14 +218,12 @@ export function WeekExpansion({
     <div className="space-y-3 animate-fade-slide-in">
       {/* Week header */}
       <div className="flex items-center gap-3">
-        <h3 className="text-sm font-bold text-[var(--foreground)]">
-          Week {weekNumber}
-        </h3>
+        <h3 className="text-sm font-bold text-[var(--foreground)]">Week {weekNumber}</h3>
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold",
+            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-nano font-semibold",
             colors.bg,
-            colors.text,
+            colors.text
           )}
         >
           <span className={cn("w-1.5 h-1.5 rounded-full", colors.dot)} />
@@ -227,30 +232,18 @@ export function WeekExpansion({
       </div>
 
       {/* Phase exercise distribution */}
-      <div className="flex flex-wrap gap-3 text-[11px] text-muted">
+      <div className="flex flex-wrap gap-3 text-micro text-muted">
         <span>
-          CE{" "}
-          <strong className={colors.text}>
-            {Math.round(phase.cePercent)}%
-          </strong>
+          CE <strong className={colors.text}>{Math.round(phase.cePercent)}%</strong>
         </span>
         <span>
-          SDE{" "}
-          <strong className={colors.text}>
-            {Math.round(phase.sdPercent)}%
-          </strong>
+          SDE <strong className={colors.text}>{Math.round(phase.sdPercent)}%</strong>
         </span>
         <span>
-          SPE{" "}
-          <strong className={colors.text}>
-            {Math.round(phase.spPercent)}%
-          </strong>
+          SPE <strong className={colors.text}>{Math.round(phase.spPercent)}%</strong>
         </span>
         <span>
-          GPE{" "}
-          <strong className={colors.text}>
-            {Math.round(phase.gpPercent)}%
-          </strong>
+          GPE <strong className={colors.text}>{Math.round(phase.gpPercent)}%</strong>
         </span>
       </div>
 
@@ -262,9 +255,7 @@ export function WeekExpansion({
       </StaggeredList>
 
       {sessions.length === 0 && (
-        <p className="text-sm text-muted text-center py-4">
-          No sessions scheduled for this week.
-        </p>
+        <p className="text-sm text-muted text-center py-4">No sessions scheduled for this week.</p>
       )}
     </div>
   );

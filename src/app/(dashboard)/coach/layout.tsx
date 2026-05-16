@@ -6,6 +6,7 @@ import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getUnreadCount } from "@/lib/notifications";
 import { WhatsNewModal } from "@/components/feedback/WhatsNewModal";
 import { SidelineFAB } from "@/components/coach/SidelineFAB";
+import { isFeatureEnabledAnyTier } from "@/lib/flags";
 import { UnitPrefsProvider } from "@/lib/units/provider";
 import { parseUnitPrefs } from "@/lib/units/types";
 
@@ -44,12 +45,17 @@ export default async function CoachLayout({ children }: { children: React.ReactN
 
   const unitPrefs = parseUnitPrefs(coachPrefs?.displayUnits);
 
+  // MVP cut (2026-05-15): sideline is flag-gated. The FAB only renders when
+  // the flag is on so it never points at a route the middleware would
+  // immediately redirect away from.
+  const sidelineEnabled = await isFeatureEnabledAnyTier("coachSideline");
+
   return (
     <UnitPrefsProvider initial={unitPrefs}>
       <DashboardLayout user={user} notificationCount={notificationCount}>
         {children}
         <WhatsNewModal />
-        <SidelineFAB />
+        {sidelineEnabled && <SidelineFAB />}
       </DashboardLayout>
     </UnitPrefsProvider>
   );

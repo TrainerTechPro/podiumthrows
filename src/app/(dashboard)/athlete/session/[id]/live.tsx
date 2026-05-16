@@ -41,41 +41,84 @@ function ExerciseLogTable({ logs }: { logs: LogItem[] }) {
     return <p className="text-sm text-muted py-4 text-center">No exercise logs recorded.</p>;
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
-            <th className="pb-2 pr-4 font-medium">Exercise</th>
-            <th className="pb-2 pr-4 font-medium text-right">Sets</th>
-            <th className="pb-2 pr-4 font-medium text-right">Reps</th>
-            <th className="pb-2 pr-4 font-medium text-right">Weight</th>
-            <th className="pb-2 pr-4 font-medium text-right">Distance</th>
-            <th className="pb-2 font-medium text-right">RPE</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[var(--card-border)]">
-          {logs.map((log) => (
-            <tr key={log.id}>
-              <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
-                {log.exerciseName}
-                {log.notes && <p className="text-xs text-muted font-normal mt-0.5">{log.notes}</p>}
-              </td>
-              <td className="py-2.5 pr-4 text-right tabular-nums">{log.sets}</td>
-              <td className="py-2.5 pr-4 text-right tabular-nums text-muted">{log.reps ?? "—"}</td>
-              <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                {log.weight != null ? `${log.weight}kg` : "—"}
-              </td>
-              <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
-              </td>
-              <td className="py-2.5 text-right tabular-nums text-muted">
-                {log.rpe != null ? log.rpe.toFixed(1) : "—"}
-              </td>
+    <>
+      {/* Mobile: stacked rows (6-col table overflows on phone) */}
+      <ul className="sm:hidden divide-y divide-[var(--card-border)]">
+        {logs.map((log) => (
+          <li key={log.id} className="py-3 first:pt-0 last:pb-0">
+            <p className="font-medium text-[var(--foreground)]">{log.exerciseName}</p>
+            {log.notes && <p className="text-xs text-muted mt-0.5">{log.notes}</p>}
+            <div className="mt-2 grid grid-cols-3 gap-2 font-mono text-xs tabular-nums">
+              <div>
+                <span className="block text-nano uppercase tracking-wider text-muted">
+                  Sets×Reps
+                </span>
+                <span className="text-[var(--foreground)]">
+                  {log.sets}×{log.reps ?? "—"}
+                </span>
+              </div>
+              <div>
+                <span className="block text-nano uppercase tracking-wider text-muted">Weight</span>
+                <span className="text-muted">{log.weight != null ? `${log.weight}kg` : "—"}</span>
+              </div>
+              <div>
+                <span className="block text-nano uppercase tracking-wider text-muted">RPE</span>
+                <span className="text-muted">{log.rpe != null ? log.rpe.toFixed(1) : "—"}</span>
+              </div>
+              {log.distance != null && (
+                <div className="col-span-3">
+                  <span className="block text-nano uppercase tracking-wider text-muted">
+                    Distance
+                  </span>
+                  <span className="text-muted">{log.distance.toFixed(2)}m</span>
+                </div>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: dense table */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
+              <th className="pb-2 pr-4 font-medium">Exercise</th>
+              <th className="pb-2 pr-4 font-medium text-right">Sets</th>
+              <th className="pb-2 pr-4 font-medium text-right">Reps</th>
+              <th className="pb-2 pr-4 font-medium text-right">Weight</th>
+              <th className="pb-2 pr-4 font-medium text-right">Distance</th>
+              <th className="pb-2 font-medium text-right">RPE</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-[var(--card-border)]">
+            {logs.map((log) => (
+              <tr key={log.id}>
+                <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
+                  {log.exerciseName}
+                  {log.notes && (
+                    <p className="text-xs text-muted font-normal mt-0.5">{log.notes}</p>
+                  )}
+                </td>
+                <td className="py-2.5 pr-4 text-right tabular-nums">{log.sets}</td>
+                <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
+                  {log.reps ?? "—"}
+                </td>
+                <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
+                  {log.weight != null ? `${log.weight}kg` : "—"}
+                </td>
+                <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
+                  {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
+                </td>
+                <td className="py-2.5 text-right tabular-nums text-muted">
+                  {log.rpe != null ? log.rpe.toFixed(1) : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -84,37 +127,67 @@ function ThrowLogTable({ throws }: { throws: ThrowItem[] }) {
     return <p className="text-sm text-muted py-4 text-center">No throws recorded.</p>;
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
-            <th className="pb-2 pr-4 font-medium">Event</th>
-            <th className="pb-2 pr-4 font-medium text-right">Implement</th>
-            <th className="pb-2 pr-4 font-medium text-right">Distance</th>
-            <th className="pb-2 font-medium"></th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[var(--card-border)]">
-          {throws.map((t) => (
-            <tr key={t.id}>
-              <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
-                {formatEventName(t.event)}
-                {t.notes && <p className="text-xs text-muted font-normal mt-0.5">{t.notes}</p>}
-              </td>
-              <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                {formatImplementWeight(t.implementWeight)}
-              </td>
-              <td className="py-2.5 pr-4 text-right tabular-nums font-semibold text-[var(--foreground)]">
-                {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
-              </td>
-              <td className="py-2.5 text-right">
-                {t.isPersonalBest && <Badge variant="warning">PR</Badge>}
-              </td>
+    <>
+      {/* Mobile: stacked rows */}
+      <ul className="sm:hidden divide-y divide-[var(--card-border)]">
+        {throws.map((t) => (
+          <li key={t.id} className="py-3 first:pt-0 last:pb-0">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-[var(--foreground)]">{formatEventName(t.event)}</p>
+                {t.notes && <p className="text-xs text-muted mt-0.5 truncate">{t.notes}</p>}
+                <p className="text-xs text-muted mt-0.5 font-mono tabular-nums">
+                  {formatImplementWeight(t.implementWeight)}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-mono text-base font-semibold tabular-nums text-[var(--foreground)]">
+                  {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
+                </p>
+                {t.isPersonalBest && (
+                  <span className="inline-block mt-1">
+                    <Badge variant="warning">PR</Badge>
+                  </span>
+                )}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: table */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
+              <th className="pb-2 pr-4 font-medium">Event</th>
+              <th className="pb-2 pr-4 font-medium text-right">Implement</th>
+              <th className="pb-2 pr-4 font-medium text-right">Distance</th>
+              <th className="pb-2 font-medium"></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-[var(--card-border)]">
+            {throws.map((t) => (
+              <tr key={t.id}>
+                <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
+                  {formatEventName(t.event)}
+                  {t.notes && <p className="text-xs text-muted font-normal mt-0.5">{t.notes}</p>}
+                </td>
+                <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
+                  {formatImplementWeight(t.implementWeight)}
+                </td>
+                <td className="py-2.5 pr-4 text-right tabular-nums font-semibold text-[var(--foreground)]">
+                  {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
+                </td>
+                <td className="py-2.5 text-right">
+                  {t.isPersonalBest && <Badge variant="warning">PR</Badge>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

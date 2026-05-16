@@ -38,6 +38,9 @@ function isPhoneUA(ua: string | null): boolean {
 const FLAG_GATED_ROUTES: { prefix: string; flag: FlagKey }[] = [
   { prefix: "/athlete/self-program", flag: "selfProgram" },
   { prefix: "/coach/videos", flag: "videoAnnotator" },
+  { prefix: "/coach/video-analysis", flag: "videoAnalysis" },
+  { prefix: "/coach/architect", flag: "aiArchitect" },
+  { prefix: "/coach/sideline", flag: "coachSideline" },
   { prefix: "/athlete/throws/trends", flag: "throwsAnalysis" },
   { prefix: "/athlete/oura", flag: "ouraIntegration" },
   { prefix: "/athlete/whoop", flag: "whoopIntegration" },
@@ -154,7 +157,13 @@ export async function middleware(request: NextRequest) {
   ) {
     const view = request.cookies.get("coach_mobile_view")?.value;
     if (view !== "full") {
-      response = NextResponse.redirect(new URL("/coach/sideline", request.url));
+      // MVP cut (2026-05-15): only redirect if the coachSideline flag is on.
+      // Without this guard the FLAG_GATED_ROUTES check below would send the
+      // request right back to /coach/dashboard — a redirect loop.
+      const flags = await getFlags();
+      if (flags.coachSideline?.enabled) {
+        response = NextResponse.redirect(new URL("/coach/sideline", request.url));
+      }
     }
   }
 

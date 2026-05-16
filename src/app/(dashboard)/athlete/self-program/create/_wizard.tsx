@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { reportApiError } from "@/lib/form-errors";
 import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components";
 import { SaveStatusChip } from "@/components/ui/SaveStatusChip";
 import { useDraftResumeToast } from "@/components/ui/DraftResumeToast";
 import { useDraftPersistence } from "@/lib/draft-persistence";
@@ -225,6 +226,7 @@ export function SelfProgramWizard({
   const router = useRouter();
   const toast = useToast();
   const { success, celebration } = toast;
+  const { confirm, Dialog: ConfirmDialogPortal } = useConfirm();
   const showResumeToast = useDraftResumeToast();
   const outboxStatus = useOutboxStatus();
   const resumeToastFiredRef = useRef(false);
@@ -583,7 +585,15 @@ export function SelfProgramWizard({
         });
       }
 
-      let res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
+      // After the create/PUT block above, configId is guaranteed non-null.
+      // Narrow for TS + defensive in case a future caller skips the create step.
+      if (!configId) {
+        setErrors({ generate: "Could not resolve program config — refresh and try again." });
+        return;
+      }
+      const resolvedConfigId = configId;
+
+      const res = await fetch(`/api/athlete/self-program/${resolvedConfigId}/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -592,59 +602,88 @@ export function SelfProgramWizard({
         },
       });
 
-      // Handle 409 conflict — another active program exists
+      // Handle 409 conflict — another active program exists. Open a themed
+      // dialog instead of window.confirm; the rest of the flow continues from
+      // the dialog's onConfirm callback.
       if (res.status === 409) {
         const err = await res.json();
         const conflictingId = err.conflictingId;
         if (conflictingId) {
-          const replace = window.confirm(
-            "You already have an active training program. Do you want to replace it with this new one?"
-          );
-          if (!replace) {
-            setGenerating(false);
-            return;
-          }
-          // Deactivate the old config
-          await fetch(`/api/athlete/self-program/${conflictingId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", ...csrfHeaders() },
-            body: JSON.stringify({ isActive: false }),
-          });
-          // Retry generation. Same idempotency key — the conflict was on an
-          // OLD program; the generate request itself hasn't changed.
-          res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Idempotency-Key": idempotencyKeyRef.current,
-              ...csrfHeaders(),
+          setGenerating(false); // unlock the UI while the user decides
+          confirm({
+            title: "Replace existing program?",
+            description:
+              "You already have an active training program. Replacing it will deactivate the old one — completed sessions are preserved in your history.",
+            confirmLabel: "Replace",
+            onConfirm: () => {
+              void replaceAndRetry(resolvedConfigId, conflictingId);
             },
           });
+          return;
         }
       }
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        const info = reportApiError({ res, payload: err }, toast, {
-          onRetry: handleGenerate,
-          titleOverride: "Generation Failed",
-        });
-        setErrors({ generate: info.message });
-        return;
-      }
-
-      const result = await res.json();
-      const programData = result.data || result;
-      celebration("Program Generated!", {
-        description: "Your Bondarchuk-based training program is ready",
-        highlight: `${programData.totalWeeks} weeks`,
-      });
-      success("Program created successfully");
-      // Drop the client-side draft now that the program is live on the server.
-      await draftStatus.clearDraft();
-      router.push(`/athlete/self-program/${configId}`);
+      await finalizeGenerateResponse(res, resolvedConfigId);
     } catch (err) {
       logger.error("program generation failed", {
+        context: "athlete/self-program/create/wizard",
+        error: err,
+      });
+      const info = reportApiError({ err }, toast, { onRetry: handleGenerate });
+      setErrors({ generate: info.message });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  // ── Helpers extracted from handleGenerate so the 409 dialog can re-enter
+  //    the flow after the user confirms replacement.
+
+  async function finalizeGenerateResponse(res: Response, configId: string) {
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      const info = reportApiError({ res, payload: err }, toast, {
+        onRetry: handleGenerate,
+        titleOverride: "Generation Failed",
+      });
+      setErrors({ generate: info.message });
+      return;
+    }
+
+    const result = await res.json();
+    const programData = result.data || result;
+    celebration("Program Generated!", {
+      description: "Your Bondarchuk-based training program is ready",
+      highlight: `${programData.totalWeeks} weeks`,
+    });
+    success("Program created successfully");
+    // Drop the client-side draft now that the program is live on the server.
+    await draftStatus.clearDraft();
+    router.push(`/athlete/self-program/${configId}`);
+  }
+
+  async function replaceAndRetry(configId: string, conflictingId: string) {
+    setGenerating(true);
+    try {
+      // Deactivate the conflicting program
+      await fetch(`/api/athlete/self-program/${conflictingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({ isActive: false }),
+      });
+      // Retry generate. Same idempotency key — the conflict was on an OLD
+      // program; the generate request itself hasn't changed.
+      const res = await fetch(`/api/athlete/self-program/${configId}/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Idempotency-Key": idempotencyKeyRef.current,
+          ...csrfHeaders(),
+        },
+      });
+      await finalizeGenerateResponse(res, configId);
+    } catch (err) {
+      logger.error("program replace + regenerate failed", {
         context: "athlete/self-program/create/wizard",
         error: err,
       });
@@ -698,7 +737,7 @@ export function SelfProgramWizard({
                   if (i < step) setStep(i);
                 }}
                 disabled={i > step}
-                className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold transition-all flex-shrink-0 ${
+                className={`flex items-center justify-center w-11 h-11 rounded-full text-sm font-semibold transition-all flex-shrink-0 ${
                   i === step
                     ? "bg-primary-500 text-black shadow-md"
                     : i < step
@@ -707,7 +746,7 @@ export function SelfProgramWizard({
                 }`}
                 aria-label={`Step ${i + 1}: ${s.label}`}
               >
-                {i < step ? <Check size={16} strokeWidth={2.5} aria-hidden="true" /> : i + 1}
+                {i < step ? <Check size={18} strokeWidth={2.5} aria-hidden="true" /> : i + 1}
               </button>
               {/* Connecting line */}
               {i < activeSteps.length - 1 && (
@@ -790,8 +829,13 @@ export function SelfProgramWizard({
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between mt-6">
+      {/* Sticky nav — the wizard steps are long; pinning Back/Continue to
+          the viewport bottom keeps the primary action thumb-reachable
+          regardless of how far the athlete has scrolled into the form. */}
+      <div
+        className="sticky bottom-0 -mx-4 sm:-mx-6 mt-6 px-4 sm:px-6 py-3 bg-[var(--surface-overlay)] border-t border-[var(--card-border)] flex items-center justify-between gap-3"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <Button
           variant="secondary"
           onClick={prevStep}
@@ -811,6 +855,7 @@ export function SelfProgramWizard({
           </Button>
         )}
       </div>
+      <ConfirmDialogPortal />
     </div>
   );
 }

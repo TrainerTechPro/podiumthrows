@@ -124,10 +124,10 @@ export function TeamStreaks() {
               <p className="text-sm font-semibold text-[var(--foreground)] truncate">
                 {entry.firstName} {entry.lastName.charAt(0)}.
                 {entry.isViewer && (
-                  <span className="ml-1 text-[10px] text-primary-500 font-bold">YOU</span>
+                  <span className="ml-1 text-nano text-primary-500 font-bold">YOU</span>
                 )}
               </p>
-              <p className="text-[11px] text-muted tabular-nums">Best: {entry.longestStreak}d</p>
+              <p className="text-micro text-muted tabular-nums">Best: {entry.longestStreak}d</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <Flame className={`h-4 w-4 ${tone}`} strokeWidth={1.75} aria-hidden="true" />

@@ -30,8 +30,7 @@ export default async function CoachWellnessPage() {
   const withScores = athletes.filter((a) => a.latestScore !== null);
   const teamAvg =
     withScores.length > 0
-      ? withScores.reduce((sum, a) => sum + a.latestScore!, 0) /
-        withScores.length
+      ? withScores.reduce((sum, a) => sum + a.latestScore!, 0) / withScores.length
       : 0;
   const teamAvgRounded = Math.round(teamAvg * 10) / 10;
 
@@ -39,11 +38,7 @@ export default async function CoachWellnessPage() {
   const withTrends = athletes.filter((a) => a.trend !== null);
   const teamTrend =
     withTrends.length > 0
-      ? Math.round(
-          (withTrends.reduce((sum, a) => sum + a.trend!, 0) /
-            withTrends.length) *
-            10
-        ) / 10
+      ? Math.round((withTrends.reduce((sum, a) => sum + a.trend!, 0) / withTrends.length) * 10) / 10
       : null;
 
   const tier = teamAvgRounded > 0 ? scoreTier(teamAvgRounded) : scoreTier(5);
@@ -52,9 +47,7 @@ export default async function CoachWellnessPage() {
     <div className="space-y-4 animate-spring-up">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">
-          Team Readiness
-        </h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">Team Readiness</h1>
         <p className="text-sm text-muted">
           Monitor readiness, recovery, and wellness trends across your roster.
         </p>
@@ -68,7 +61,9 @@ export default async function CoachWellnessPage() {
           </span>
           <div className="flex items-center gap-1.5 text-xs text-muted">
             <Users size={14} strokeWidth={1.75} aria-hidden="true" />
-            <span>{athletes.length} athlete{athletes.length !== 1 ? "s" : ""}</span>
+            <span>
+              {athletes.length} athlete{athletes.length !== 1 ? "s" : ""}
+            </span>
           </div>
         </div>
 
@@ -76,11 +71,7 @@ export default async function CoachWellnessPage() {
           <>
             <div className="flex items-baseline gap-3">
               <span className={`text-3xl font-bold tabular-nums ${tier.color}`}>
-                <AnimatedNumber
-                  value={teamAvgRounded}
-                  decimals={1}
-                  duration={1200}
-                />
+                <AnimatedNumber value={teamAvgRounded} decimals={1} duration={1200} />
               </span>
               <span className="text-sm text-muted">avg</span>
 
@@ -91,8 +82,8 @@ export default async function CoachWellnessPage() {
                     teamTrend > 0
                       ? "text-emerald-500"
                       : teamTrend < 0
-                      ? "text-red-500"
-                      : "text-muted"
+                        ? "text-red-500"
+                        : "text-muted"
                   }`}
                 >
                   {teamTrend > 0 ? (
@@ -113,13 +104,12 @@ export default async function CoachWellnessPage() {
               variant={tier.variant}
               size="sm"
               showLabel
-              label={`${Math.round(teamAvgRounded * 10)}%`}
+              label={`${teamAvgRounded.toFixed(1)}/10`}
             />
           </>
         ) : (
           <p className="text-sm text-muted py-4 text-center">
-            No readiness data yet. Athletes can submit daily check-ins from
-            their dashboard.
+            No readiness data yet. Athletes can submit daily check-ins from their dashboard.
           </p>
         )}
       </div>

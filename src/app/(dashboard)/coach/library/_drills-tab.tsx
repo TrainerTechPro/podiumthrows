@@ -124,7 +124,7 @@ export function DrillsTab({
       ) : drillVideos.length === 0 ? (
         <EmptyState
           title="No drill videos yet"
-          description="Drill videos appear here once you upload demonstration footage on individual drills."
+          description="Attach demo footage to a drill in the Drills tab and it'll surface here."
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

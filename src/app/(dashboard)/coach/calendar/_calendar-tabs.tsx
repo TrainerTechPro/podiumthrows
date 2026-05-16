@@ -83,7 +83,7 @@ export function CalendarTabsClient(props: CalendarTabsProps) {
             variant="underline"
             icon={<Users size={16} strokeWidth={1.75} aria-hidden="true" />}
           >
-            By Athlete
+            Roster
           </TabTrigger>
           <TabTrigger
             id="by-event"
@@ -104,7 +104,7 @@ export function CalendarTabsClient(props: CalendarTabsProps) {
             variant="underline"
             icon={<Radio size={16} strokeWidth={1.75} aria-hidden="true" />}
           >
-            Live
+            Live Practice
           </TabTrigger>
         </TabList>
 

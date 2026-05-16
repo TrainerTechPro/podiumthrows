@@ -274,17 +274,17 @@ export function OnboardingWizard({
             type="button"
             onClick={handleBack}
             aria-label="Back"
-            className="h-9 w-9 -ml-2 inline-flex items-center justify-center rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            className="h-11 w-11 -ml-2 inline-flex items-center justify-center rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
           >
-            <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
+            <ArrowLeft size={20} strokeWidth={1.75} aria-hidden="true" />
           </button>
         ) : (
-          <span className="h-9 w-9 -ml-2" aria-hidden="true" />
+          <span className="h-11 w-11 -ml-2" aria-hidden="true" />
         )}
         <div className="flex-1">
           <OnboardingProgress total={state.visibleSteps.length} current={state.currentIndex} />
         </div>
-        <span className="h-9 w-9" aria-hidden="true" />
+        <span className="h-11 w-11" aria-hidden="true" />
       </header>
 
       <main className="flex-1 py-6">
@@ -374,7 +374,7 @@ export function OnboardingWizard({
               type="button"
               onClick={handleSkipStep}
               disabled={state.submitting}
-              className="w-full h-10 text-sm font-medium text-muted hover:text-[var(--foreground)] transition-colors disabled:opacity-40"
+              className="w-full h-11 text-sm font-medium text-muted hover:text-[var(--foreground)] transition-colors disabled:opacity-40"
             >
               {secondaryLabel}
             </button>

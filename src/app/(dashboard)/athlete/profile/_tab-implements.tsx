@@ -208,7 +208,7 @@ export function TabImplements({ throwsPRs, events, gender }: TabImplementsProps)
                         <span className="flex items-center gap-2">
                           {formatImplementDisplay(pr.weightKg, event, gender, { showComp: false })}
                           {pr.isComp && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-primary-500/15 text-primary-600 dark:text-primary-400">
+                            <span className="px-1.5 py-0.5 rounded text-nano font-bold uppercase bg-primary-500/15 text-primary-600 dark:text-primary-400">
                               Comp
                             </span>
                           )}
@@ -245,7 +245,7 @@ export function TabImplements({ throwsPRs, events, gender }: TabImplementsProps)
                     <span className="flex items-center gap-2 font-medium text-[var(--foreground)]">
                       {pr.implement}
                       {pr.isComp && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-primary-500/15 text-primary-600 dark:text-primary-400">
+                        <span className="px-1.5 py-0.5 rounded text-nano font-bold uppercase bg-primary-500/15 text-primary-600 dark:text-primary-400">
                           Comp
                         </span>
                       )}

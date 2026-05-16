@@ -4,11 +4,12 @@ import { Prisma } from "@prisma/client";
 import type { AthleteInsight } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { formatImplementWeight } from "@/lib/throws";
-import { Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
+import { Badge, ProgressBar, ScrollProgressBar } from "@/components";
 import { ArrowLeft, Flame } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { parseSorenessArea } from "@/lib/readiness/parse-soreness";
 import { LineChart, type LineChartDataPoint } from "@/components/charts/LineChart";
+import { WELLNESS_FACTOR_COLORS } from "@/lib/design-tokens";
 import {
   requireCoachSession,
   getAthleteFull,
@@ -141,7 +142,7 @@ function AthleteHeader({
             <span className="text-xs text-muted">No events assigned</span>
           )}
           {athlete.currentStreak > 0 && (
-            <Badge variant="warning">🔥 {athlete.currentStreak}d streak</Badge>
+            <Badge variant="warning">{athlete.currentStreak}d streak</Badge>
           )}
         </div>
       </div>
@@ -205,11 +206,7 @@ function DecisionHero({
           {/* Readiness */}
           <div className="text-center">
             <p className={cn("text-3xl font-bold font-heading tabular-nums", readinessColor)}>
-              {readinessScore !== null ? (
-                <AnimatedNumber value={readinessScore} decimals={1} />
-              ) : (
-                "—"
-              )}
+              {readinessScore !== null ? readinessScore.toFixed(1) : "—"}
             </p>
             <p className="text-[11px] text-muted mt-0.5">Readiness</p>
           </div>
@@ -217,7 +214,7 @@ function DecisionHero({
           {/* ACWR */}
           <div className="text-center">
             <p className={cn("text-3xl font-bold font-heading tabular-nums", acwrColor)}>
-              {acwrRatio !== null ? <AnimatedNumber value={acwrRatio} decimals={2} /> : "—"}
+              {acwrRatio !== null ? acwrRatio.toFixed(2) : "—"}
             </p>
             <p className="text-[11px] text-muted mt-0.5">{acwrLabel}</p>
           </div>
@@ -304,7 +301,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
           <div className="flex items-center gap-4">
             <div className={cn("rounded-xl border px-4 py-2.5 text-center", rateBg)}>
               <p className={cn("text-3xl font-bold tabular-nums font-heading", rateColor)}>
-                <AnimatedNumber value={stats.rate} />%
+                {stats.rate.toFixed(0)}%
               </p>
               <p className="text-[11px] text-muted mt-0.5">Attendance rate</p>
             </div>
@@ -319,7 +316,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
                 />
                 <div>
                   <p className="text-xl font-bold tabular-nums font-heading text-[var(--foreground)]">
-                    <AnimatedNumber value={stats.currentStreak} />
+                    {stats.currentStreak}
                   </p>
                   <p className="text-[11px] text-muted">practice streak</p>
                 </div>
@@ -334,9 +331,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
                 key={label}
                 className="rounded-xl bg-surface-50 dark:bg-surface-800/50 px-3 py-2.5 text-center"
               >
-                <p className={cn("text-lg font-bold tabular-nums font-heading", color)}>
-                  <AnimatedNumber value={value} />
-                </p>
+                <p className={cn("text-lg font-bold tabular-nums font-heading", color)}>{value}</p>
                 <p className="text-[11px] text-muted mt-0.5">{label}</p>
               </div>
             ))}
@@ -382,7 +377,7 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
 
       <div className="flex items-end gap-4">
         <p className={cn("text-4xl font-bold tabular-nums font-heading", ratioColor)}>
-          <AnimatedNumber value={ratio} decimals={2} />
+          {ratio.toFixed(2)}
         </p>
         <div className="pb-1 space-y-0.5">
           <p className="text-xs text-muted">
@@ -398,31 +393,39 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
         </div>
       </div>
 
-      {/* Zone bar */}
+      {/* Zone bar — widths now match the documented thresholds exactly:
+            0.0–0.8 under-trained (32%), 0.8–1.3 optimal (20%),
+            1.3–1.5 elevated (8%), 1.5–2.5 high risk (40%).
+          Tick labels below mark each threshold so the coach can read the
+          pointer's position without translating percentages. */}
       <div className="space-y-1.5">
         <div className="relative h-2.5 rounded-full overflow-hidden flex">
-          {/* Danger low */}
           <div className="h-full bg-red-200 dark:bg-red-900/50" style={{ width: "32%" }} />
-          {/* Warning low */}
-          <div className="h-full bg-amber-200 dark:bg-amber-900/50" style={{ width: "4%" }} />
-          {/* Optimal */}
           <div className="h-full bg-emerald-200 dark:bg-emerald-900/50" style={{ width: "20%" }} />
-          {/* Warning high */}
           <div className="h-full bg-amber-200 dark:bg-amber-900/50" style={{ width: "8%" }} />
-          {/* Danger high */}
-          <div className="h-full bg-red-200 dark:bg-red-900/50" style={{ width: "36%" }} />
-          {/* Pointer */}
+          <div className="h-full bg-red-200 dark:bg-red-900/50" style={{ width: "40%" }} />
           <div
             className="absolute top-0 bottom-0 w-0.5 bg-[var(--foreground)] rounded-full"
             style={{ left: `${pointerPct}%` }}
+            aria-hidden="true"
           />
         </div>
-        <div className="flex justify-between text-[10px] text-muted">
-          <span>0.0</span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-            0.8 – 1.3 optimal
+        {/* Threshold tick row */}
+        <div className="relative h-3 text-nano text-muted tabular-nums" aria-hidden="true">
+          <span className="absolute left-0">0.0</span>
+          <span className="absolute" style={{ left: "32%", transform: "translateX(-50%)" }}>
+            0.8
           </span>
-          <span>2.5</span>
+          <span className="absolute" style={{ left: "52%", transform: "translateX(-50%)" }}>
+            1.3
+          </span>
+          <span className="absolute" style={{ left: "60%", transform: "translateX(-50%)" }}>
+            1.5
+          </span>
+          <span className="absolute right-0">2.5</span>
+        </div>
+        <div className="text-nano text-emerald-600 dark:text-emerald-400 font-medium text-center">
+          0.8 – 1.3 optimal
         </div>
       </div>
     </div>
@@ -889,7 +892,7 @@ function ThrowsTab({
             <div key={event} className="card px-4 py-3 space-y-0.5">
               <p className="text-xs text-muted">{formatEventName(event)}</p>
               <p className="text-xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                <AnimatedNumber value={best} decimals={2} />m
+                {best.toFixed(2)}m
               </p>
               <p className="text-[11px] text-muted">
                 Best · {count} {count === 1 ? "throw" : "throws"}
@@ -1103,6 +1106,7 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           yMax={10}
           color="#f59e0b"
           showArea
+          formatY={(v) => `${v}/10`}
           emptyMessage="No check-ins in the last 30 days"
         />
       </div>
@@ -1178,11 +1182,14 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
                             key={`${area.slug}-${area.side ?? "center"}`}
                             className={cn(
                               "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                              // Severity 3 = danger / 2 = warning / 1 = info
+                              // Yellow doesn't exist as a semantic level — info
+                              // is the closest "noted but low severity" register.
                               area.severity === 3
-                                ? "bg-red-500/12 text-red-400 border-red-500/20"
+                                ? "bg-status-danger-bg text-status-danger-fg border-status-danger-fg/20"
                                 : area.severity === 2
-                                  ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
-                                  : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                                  ? "bg-status-warning-bg text-status-warning-fg border-status-warning-fg/20"
+                                  : "bg-status-info-bg text-status-info-fg border-status-info-fg/20"
                             )}
                           >
                             {area.region}
@@ -1245,10 +1252,10 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           <div className="grid sm:grid-cols-2 gap-4">
             {(
               [
-                { label: "Sleep Quality", data: sleepData, color: "#3b82f6" },
-                { label: "Soreness", data: sorenessData, color: "#f59e0b" },
-                { label: "Stress Level", data: stressData, color: "#8b5cf6" },
-                { label: "Energy & Mood", data: energyData, color: "#10b981" },
+                { label: "Sleep Quality", data: sleepData, color: WELLNESS_FACTOR_COLORS.sleep },
+                { label: "Soreness", data: sorenessData, color: WELLNESS_FACTOR_COLORS.soreness },
+                { label: "Stress Level", data: stressData, color: WELLNESS_FACTOR_COLORS.stress },
+                { label: "Energy & Mood", data: energyData, color: WELLNESS_FACTOR_COLORS.energy },
               ] as const
             ).map(({ label, data, color }) => (
               <div key={label} className="card p-4 space-y-1">
@@ -1398,14 +1405,7 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
             <div key={label} className="card px-4 py-3 space-y-0.5">
               <p className="text-xs text-muted">{label}</p>
               <p className={cn("text-2xl font-bold font-heading tabular-nums", color)}>
-                {!isNaN(numericPart) ? (
-                  <>
-                    <AnimatedNumber value={numericPart} decimals={1} />
-                    {suffix}
-                  </>
-                ) : (
-                  value
-                )}
+                {!isNaN(numericPart) ? `${numericPart.toFixed(1)}${suffix}` : value}
               </p>
               <p className="text-[11px] text-muted">{note ?? "30-day avg"}</p>
             </div>
@@ -1423,9 +1423,9 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
               </h3>
               <div className="flex gap-4">
                 {[
-                  { label: "Sleep", color: "#3b82f6" },
-                  { label: "Energy", color: "#10b981" },
-                  { label: "Composure", color: "#8b5cf6" },
+                  { label: "Sleep", color: WELLNESS_FACTOR_COLORS.sleep },
+                  { label: "Energy", color: WELLNESS_FACTOR_COLORS.energy },
+                  { label: "Composure", color: WELLNESS_FACTOR_COLORS.stress },
                 ].map((l) => (
                   <span key={l.label} className="flex items-center gap-1.5 text-xs text-muted">
                     <span
@@ -1439,9 +1439,9 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
             </div>
             <LineChart
               series={[
-                { data: sleepData, color: "#3b82f6", label: "Sleep Quality" },
-                { data: energyData, color: "#10b981", label: "Energy & Mood" },
-                { data: composureData, color: "#8b5cf6", label: "Composure" },
+                { data: sleepData, color: WELLNESS_FACTOR_COLORS.sleep, label: "Sleep Quality" },
+                { data: energyData, color: WELLNESS_FACTOR_COLORS.energy, label: "Energy & Mood" },
+                { data: composureData, color: WELLNESS_FACTOR_COLORS.stress, label: "Composure" },
               ]}
               height={220}
               yMin={0}

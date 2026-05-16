@@ -255,6 +255,11 @@ export interface ExerciseComplexEntry {
   setsMax: number;
   repsMin: number;
   repsMax: number;
+  /**
+   * One-sentence "why this exercise" derived at selection time.
+   * Surfaces the engine's reasoning so generated work doesn't feel black-box.
+   */
+  rationale?: string;
 }
 
 // ── Throw Prescription ──────────────────────────────────────────────
@@ -270,8 +275,8 @@ export interface ThrowPrescription {
   notes?: string;
 
   // Gap 2: PAP contrast interleaving
-  papRestSeconds?: number;  // PAP-specific rest before this block
-  contrastGroup?: number;   // group ID for UI display
+  papRestSeconds?: number; // PAP-specific rest before this block
+  contrastGroup?: number; // group ID for UI display
 }
 
 // ── Strength Prescription ───────────────────────────────────────────
@@ -319,6 +324,8 @@ export interface ImplementAllocation {
   weightKg: number;
   label: string;
   throwsCount: number;
+  /** Why this implement weight is in the program (category, % of comp, redistribution note). */
+  rationale?: string;
 }
 
 // ── Volume Targets ──────────────────────────────────────────────────

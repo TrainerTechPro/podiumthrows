@@ -58,7 +58,7 @@ function MetricCell({ label, value, unit }: { label: string; value: number | nul
         {value}
         <span className="text-xs font-normal text-muted ml-0.5">{unit}</span>
       </p>
-      <p className="text-[10px] text-muted uppercase tracking-wide mt-0.5">{label}</p>
+      <p className="text-nano text-muted uppercase tracking-wide mt-0.5">{label}</p>
     </div>
   );
 }
@@ -122,7 +122,7 @@ function DeltaChip({
 }) {
   if (delta === null || baselineDate === null) {
     return (
-      <span className="inline-flex items-center text-[10px] font-mono text-muted/60 px-1.5 py-0.5">
+      <span className="inline-flex items-center text-nano font-mono text-muted/60 px-1.5 py-0.5">
         no 90d baseline
       </span>
     );
@@ -135,7 +135,7 @@ function DeltaChip({
         : "text-muted bg-surface-100 dark:bg-surface-800/60";
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[10px] font-mono font-semibold tabular-nums px-1.5 py-0.5 rounded-md ${tone}`}
+      className={`inline-flex items-center gap-1 text-nano font-mono font-semibold tabular-nums px-1.5 py-0.5 rounded-md ${tone}`}
       title={`Baseline: ${baselineDate}`}
     >
       {formatDelta(delta, unit)}
@@ -160,7 +160,7 @@ function SnapshotTile({
   if (value === null) return null;
   return (
     <div className="card px-4 py-3 flex flex-col gap-2 min-w-0">
-      <p className="text-[10px] text-muted uppercase tracking-wider truncate">{label}</p>
+      <p className="text-nano text-muted uppercase tracking-wider truncate">{label}</p>
       <div className="flex items-baseline gap-1">
         <span className="text-2xl font-bold font-heading tabular-nums text-[var(--foreground)]">
           {value}
@@ -266,12 +266,12 @@ export default async function AthleteAssessmentsPage() {
       <div className="flex items-center gap-4">
         <Link
           href="/athlete/dashboard"
-          className="w-9 h-9 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors shrink-0"
+          className="w-11 h-11 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors shrink-0"
           aria-label="Back to dashboard"
         >
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"

@@ -64,7 +64,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
             onChange={(e) => setRpe(parseFloat(e.target.value))}
             className="w-full accent-primary-500"
           />
-          <div className="flex justify-between text-[10px] text-muted mt-1">
+          <div className="flex justify-between text-nano text-muted mt-1">
             <span>Easy (1)</span>
             <span>Moderate (5)</span>
             <span>Max (10)</span>

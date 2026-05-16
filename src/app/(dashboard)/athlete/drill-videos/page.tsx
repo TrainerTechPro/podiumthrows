@@ -240,7 +240,7 @@ export default function AthleteDrillVideosPage() {
           <select
             value={filterEvent}
             onChange={(e) => setFilterEvent(e.target.value)}
-            className="input text-sm py-1.5 w-auto"
+            className="input text-sm min-h-[44px] w-auto"
           >
             <option value="">All Events</option>
             {Object.entries(EVENT_LABELS).map(([v, l]) => (
@@ -252,7 +252,7 @@ export default function AthleteDrillVideosPage() {
           <select
             value={filterDrill}
             onChange={(e) => setFilterDrill(e.target.value)}
-            className="input text-sm py-1.5 w-auto"
+            className="input text-sm min-h-[44px] w-auto"
           >
             <option value="">All Drill Types</option>
             {Object.entries(DRILL_TYPE_LABELS).map(([v, l]) => (
@@ -267,7 +267,7 @@ export default function AthleteDrillVideosPage() {
                 setFilterEvent("");
                 setFilterDrill("");
               }}
-              className="text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
+              className="inline-flex items-center px-3 min-h-[44px] text-sm text-surface-700 dark:text-surface-300 hover:text-[var(--foreground)]"
             >
               Clear filters
             </button>
@@ -383,10 +383,10 @@ export default function AthleteDrillVideosPage() {
                     }
                     onBlur={() => setTimeout(() => setConfirmDeleteId(null), 200)}
                     disabled={deletingId === video.id}
-                    className={`shrink-0 transition-colors rounded-lg flex items-center gap-1.5 ${
+                    className={`shrink-0 transition-colors rounded-lg flex items-center justify-center gap-1.5 min-w-[44px] min-h-[44px] ${
                       confirmDeleteId === video.id
-                        ? "text-red-500 bg-red-500/10 px-2.5 py-1.5"
-                        : "text-muted hover:text-red-500 dark:hover:text-red-400 p-2"
+                        ? "text-red-500 bg-red-500/10 px-3"
+                        : "text-muted hover:text-red-500 dark:hover:text-red-400"
                     }`}
                     aria-label={
                       confirmDeleteId === video.id

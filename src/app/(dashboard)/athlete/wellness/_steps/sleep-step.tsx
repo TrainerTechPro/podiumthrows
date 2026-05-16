@@ -83,7 +83,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Sleep
           </h2>
-          <p className="text-[13px] text-muted leading-snug">How did you sleep last night?</p>
+          <p className="text-caption text-muted leading-snug">How did you sleep last night?</p>
         </div>
       </div>
 
@@ -108,7 +108,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
           </label>
           <NumberFlow
             value={data.sleepQuality}
-            className="text-[28px] font-extrabold font-heading leading-none"
+            className="text-title font-extrabold font-heading leading-none"
             style={{ color }}
           />
         </div>
@@ -136,7 +136,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
           />
         </div>
 
-        <div className="flex justify-between text-[10px] text-muted">
+        <div className="flex justify-between text-nano text-muted">
           <span>Terrible</span>
           <span>Excellent</span>
         </div>
@@ -152,7 +152,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
             onClick={() => adjustHours(-0.5)}
             disabled={data.sleepHours <= 1}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center",
+              "w-11 h-11 rounded-xl flex items-center justify-center",
               "bg-[var(--card-bg)] border border-[var(--card-border)]",
               "transition-colors hover:border-primary-500/40",
               "disabled:opacity-30 disabled:cursor-not-allowed"
@@ -176,7 +176,7 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
             onClick={() => adjustHours(0.5)}
             disabled={data.sleepHours >= 14}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center",
+              "w-11 h-11 rounded-xl flex items-center justify-center",
               "bg-[var(--card-bg)] border border-[var(--card-border)]",
               "transition-colors hover:border-primary-500/40",
               "disabled:opacity-30 disabled:cursor-not-allowed"

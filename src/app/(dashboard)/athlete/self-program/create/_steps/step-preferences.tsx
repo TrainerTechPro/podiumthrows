@@ -133,14 +133,19 @@ function ExerciseSearchSelect({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[var(--foreground)] truncate">{ex.name}</p>
-                  <p className="text-[10px] text-muted">
+                  <p className="text-nano text-muted">
                     {CATEGORY_LABELS[ex.category] || ex.category}
                     {ex.event && ` \u00B7 ${ex.event.replace("_", " ")}`}
                     {ex.implementWeight && ` \u00B7 ${ex.implementWeight}kg`}
                   </p>
                 </div>
                 {!isSelected && (
-                  <Plus size={14} strokeWidth={1.75} className="text-muted flex-shrink-0" aria-hidden="true" />
+                  <Plus
+                    size={14}
+                    strokeWidth={1.75}
+                    className="text-muted flex-shrink-0"
+                    aria-hidden="true"
+                  />
                 )}
               </button>
             );
@@ -151,7 +156,12 @@ function ExerciseSearchSelect({
   );
 }
 
-export function StepPreferences({ form, update, errors: _errors, exercises }: StepPreferencesProps) {
+export function StepPreferences({
+  form,
+  update,
+  errors: _errors,
+  exercises,
+}: StepPreferencesProps) {
   return (
     <div className="space-y-6 p-1">
       <div>
@@ -159,8 +169,8 @@ export function StepPreferences({ form, update, errors: _errors, exercises }: St
           Exercise Preferences
         </h2>
         <p className="text-body text-surface-700 dark:text-surface-300">
-          Customize which exercises the program includes. The engine will use these as
-          constraints when building your sessions.
+          Customize which exercises the program includes. The engine will use these as constraints
+          when building your sessions.
         </p>
       </div>
 

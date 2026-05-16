@@ -88,7 +88,7 @@ export function Step3PR({
               <button
                 type="button"
                 onClick={() => onChange({ prDate: today })}
-                className="px-3 py-2.5 rounded-xl text-sm font-medium text-primary-500 hover:bg-primary-500/10 active:scale-[0.97] transition-all duration-150"
+                className="px-4 min-h-[44px] rounded-xl text-sm font-medium text-primary-500 hover:bg-primary-500/10 active:scale-[0.97] transition-all duration-150"
               >
                 Today
               </button>
@@ -155,7 +155,7 @@ function UnitField({
               aria-checked={unit === u}
               onClick={() => onUnitChange(u)}
               className={cn(
-                "px-3 h-10 rounded-lg text-sm font-medium transition-colors uppercase",
+                "px-3 h-11 rounded-lg text-sm font-medium transition-colors uppercase",
                 unit === u
                   ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
                   : "text-muted hover:text-[var(--foreground)]"

@@ -107,7 +107,7 @@ function ReadinessRing({ score, reducedMotion }: { score: number; reducedMotion:
           duration={reducedMotion ? 0 : 1200}
           className={cn("text-3xl font-bold tabular-nums font-heading", scoreColor(score).text)}
         />
-        <span className="text-[10px] text-muted uppercase tracking-wider font-semibold mt-0.5">
+        <span className="text-nano text-muted uppercase tracking-wider font-semibold mt-0.5">
           / 10
         </span>
       </div>

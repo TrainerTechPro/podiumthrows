@@ -161,7 +161,7 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">
             Quick Checks
           </h2>
-          <p className="text-[13px] text-muted leading-snug">Tap to select</p>
+          <p className="text-caption text-muted leading-snug">Tap to select</p>
         </div>
       </div>
 

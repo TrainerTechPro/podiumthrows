@@ -95,7 +95,7 @@ function BadgeCard({
             {badge.earnedAt ? formatEarnedDate(badge.earnedAt) : "Earned"}
           </Badge>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[10px] text-muted/80 font-mono tabular-nums">
+          <span className="inline-flex items-center gap-1 text-nano text-muted/80 font-mono tabular-nums">
             <Lock size={10} strokeWidth={1.75} aria-hidden="true" className="opacity-60" />
             {badge.progressLabel}
           </span>
@@ -165,7 +165,7 @@ function BadgeDetailSheet({
 
         {/* Criteria */}
         <div className="space-y-1.5">
-          <p className="text-[10px] uppercase tracking-wider text-muted font-semibold">
+          <p className="text-nano uppercase tracking-wider text-muted font-semibold">
             How to earn it
           </p>
           <p className="text-sm text-[var(--foreground)] leading-relaxed">{badge.criteria}</p>
@@ -175,7 +175,7 @@ function BadgeDetailSheet({
         {!earned && (
           <div className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-[10px] uppercase tracking-wider text-muted font-semibold">
+              <p className="text-nano uppercase tracking-wider text-muted font-semibold">
                 Your progress
               </p>
               <p className="text-xs font-mono tabular-nums text-[var(--foreground)]">
@@ -200,7 +200,7 @@ function BadgeDetailSheet({
 
         {/* Tip */}
         <div className="rounded-xl bg-surface-50 dark:bg-surface-900/60 border border-[var(--card-border)] px-4 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-1">
+          <p className="text-nano uppercase tracking-wider text-muted font-semibold mb-1">
             {earned ? "Why it matters" : "Tip"}
           </p>
           <p className="text-sm text-[var(--foreground)] leading-relaxed">{badge.tip}</p>
