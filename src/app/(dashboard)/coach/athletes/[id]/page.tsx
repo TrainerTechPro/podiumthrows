@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import type { AthleteInsight } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { formatImplementWeight } from "@/lib/throws";
-import { Badge, ProgressBar, AnimatedNumber, ScrollProgressBar } from "@/components";
+import { Badge, ProgressBar, ScrollProgressBar } from "@/components";
 import { ArrowLeft, Flame } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { parseSorenessArea } from "@/lib/readiness/parse-soreness";
@@ -142,7 +142,7 @@ function AthleteHeader({
             <span className="text-xs text-muted">No events assigned</span>
           )}
           {athlete.currentStreak > 0 && (
-            <Badge variant="warning">🔥 {athlete.currentStreak}d streak</Badge>
+            <Badge variant="warning">{athlete.currentStreak}d streak</Badge>
           )}
         </div>
       </div>
@@ -206,11 +206,7 @@ function DecisionHero({
           {/* Readiness */}
           <div className="text-center">
             <p className={cn("text-3xl font-bold font-heading tabular-nums", readinessColor)}>
-              {readinessScore !== null ? (
-                <AnimatedNumber value={readinessScore} decimals={1} />
-              ) : (
-                "—"
-              )}
+              {readinessScore !== null ? readinessScore.toFixed(1) : "—"}
             </p>
             <p className="text-[11px] text-muted mt-0.5">Readiness</p>
           </div>
@@ -218,7 +214,7 @@ function DecisionHero({
           {/* ACWR */}
           <div className="text-center">
             <p className={cn("text-3xl font-bold font-heading tabular-nums", acwrColor)}>
-              {acwrRatio !== null ? <AnimatedNumber value={acwrRatio} decimals={2} /> : "—"}
+              {acwrRatio !== null ? acwrRatio.toFixed(2) : "—"}
             </p>
             <p className="text-[11px] text-muted mt-0.5">{acwrLabel}</p>
           </div>
@@ -305,7 +301,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
           <div className="flex items-center gap-4">
             <div className={cn("rounded-xl border px-4 py-2.5 text-center", rateBg)}>
               <p className={cn("text-3xl font-bold tabular-nums font-heading", rateColor)}>
-                <AnimatedNumber value={stats.rate} />%
+                {stats.rate.toFixed(0)}%
               </p>
               <p className="text-[11px] text-muted mt-0.5">Attendance rate</p>
             </div>
@@ -320,7 +316,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
                 />
                 <div>
                   <p className="text-xl font-bold tabular-nums font-heading text-[var(--foreground)]">
-                    <AnimatedNumber value={stats.currentStreak} />
+                    {stats.currentStreak}
                   </p>
                   <p className="text-[11px] text-muted">practice streak</p>
                 </div>
@@ -335,9 +331,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
                 key={label}
                 className="rounded-xl bg-surface-50 dark:bg-surface-800/50 px-3 py-2.5 text-center"
               >
-                <p className={cn("text-lg font-bold tabular-nums font-heading", color)}>
-                  <AnimatedNumber value={value} />
-                </p>
+                <p className={cn("text-lg font-bold tabular-nums font-heading", color)}>{value}</p>
                 <p className="text-[11px] text-muted mt-0.5">{label}</p>
               </div>
             ))}
@@ -383,7 +377,7 @@ function ACWRGauge({ acwr }: { acwr: NonNullable<AthleteACWR> }) {
 
       <div className="flex items-end gap-4">
         <p className={cn("text-4xl font-bold tabular-nums font-heading", ratioColor)}>
-          <AnimatedNumber value={ratio} decimals={2} />
+          {ratio.toFixed(2)}
         </p>
         <div className="pb-1 space-y-0.5">
           <p className="text-xs text-muted">
@@ -898,7 +892,7 @@ function ThrowsTab({
             <div key={event} className="card px-4 py-3 space-y-0.5">
               <p className="text-xs text-muted">{formatEventName(event)}</p>
               <p className="text-xl font-bold font-heading text-[var(--foreground)] tabular-nums">
-                <AnimatedNumber value={best} decimals={2} />m
+                {best.toFixed(2)}m
               </p>
               <p className="text-[11px] text-muted">
                 Best · {count} {count === 1 ? "throw" : "throws"}
@@ -1411,14 +1405,7 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
             <div key={label} className="card px-4 py-3 space-y-0.5">
               <p className="text-xs text-muted">{label}</p>
               <p className={cn("text-2xl font-bold font-heading tabular-nums", color)}>
-                {!isNaN(numericPart) ? (
-                  <>
-                    <AnimatedNumber value={numericPart} decimals={1} />
-                    {suffix}
-                  </>
-                ) : (
-                  value
-                )}
+                {!isNaN(numericPart) ? `${numericPart.toFixed(1)}${suffix}` : value}
               </p>
               <p className="text-[11px] text-muted">{note ?? "30-day avg"}</p>
             </div>

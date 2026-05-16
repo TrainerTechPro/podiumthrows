@@ -477,29 +477,29 @@ function MetaBar({
 
       <Dot />
 
-      <span>
+      <Link href="/coach/athletes" className="hover:underline underline-offset-4">
         <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
           {totalAthletes}
         </span>{" "}
         athlete{totalAthletes === 1 ? "" : "s"}
-      </span>
+      </Link>
 
       {sessionsToday > 0 && (
         <>
           <Dot />
-          <span>
+          <Link href="/coach/calendar" className="hover:underline underline-offset-4">
             <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
               {sessionsToday}
             </span>{" "}
             session{sessionsToday === 1 ? "" : "s"} today
-          </span>
+          </Link>
         </>
       )}
 
       {complianceRate !== null && (
         <>
           <Dot />
-          <span>
+          <Link href="/coach/athletes" className="hover:underline underline-offset-4">
             <span
               className="font-semibold tabular-nums"
               style={{
@@ -514,26 +514,26 @@ function MetaBar({
               {complianceRate}%
             </span>{" "}
             compliance · 30d
-          </span>
+          </Link>
         </>
       )}
 
       {throwsThisWeek > 0 && (
         <>
           <Dot />
-          <span>
+          <Link href="/coach/throws" className="hover:underline underline-offset-4">
             <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
               {throwsThisWeek}
             </span>{" "}
             throws this week
-          </span>
+          </Link>
         </>
       )}
 
       {attendance !== null && attendance.totalPractices > 0 && (
         <>
           <Dot />
-          <span>
+          <Link href="/coach/athletes" className="hover:underline underline-offset-4">
             <span
               className="font-semibold tabular-nums"
               style={{
@@ -548,7 +548,7 @@ function MetaBar({
               {attendance.rate}%
             </span>{" "}
             attendance · this week
-          </span>
+          </Link>
         </>
       )}
 
@@ -556,18 +556,26 @@ function MetaBar({
       {prsThisWeek > 0 && (
         <>
           <Dot />
-          <span style={{ color: "var(--color-brand-strong)" }} className="font-semibold">
+          <Link
+            href="/coach/throws"
+            style={{ color: "var(--color-brand-strong)" }}
+            className="font-semibold hover:underline underline-offset-4"
+          >
             {prsThisWeek} PR{prsThisWeek === 1 ? "" : "s"} this week
-          </span>
+          </Link>
         </>
       )}
 
       {lowReadiness > 0 && (
         <>
           <Dot />
-          <span style={{ color: "var(--color-status-warning-fg)" }} className="font-semibold">
+          <Link
+            href="/coach/athletes"
+            style={{ color: "var(--color-status-warning-fg)" }}
+            className="font-semibold hover:underline underline-offset-4"
+          >
             {lowReadiness} low readiness
-          </span>
+          </Link>
         </>
       )}
     </div>

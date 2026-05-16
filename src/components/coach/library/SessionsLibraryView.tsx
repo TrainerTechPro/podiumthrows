@@ -277,7 +277,9 @@ export function SessionsLibraryView({
       {filtered.length === 0 ? (
         <div className="card text-center py-12">
           <p className="text-muted">
-            {sessions.length === 0 ? "No sessions created yet." : "No sessions match your filters."}
+            {sessions.length === 0
+              ? "No throws sessions saved — build one in the Session tab."
+              : "No sessions match your filters."}
           </p>
         </div>
       ) : (
