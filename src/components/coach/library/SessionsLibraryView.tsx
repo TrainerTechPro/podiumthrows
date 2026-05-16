@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { StaggeredList } from "@/components/ui/StaggeredList";
+import { Modal } from "@/components/ui/Modal";
 import {
   EVENTS,
   TRAINING_PHASES,
@@ -348,103 +349,89 @@ export function SessionsLibraryView({
         </StaggeredList>
       )}
 
-      {assignSessionId && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setAssignSessionId(null)}
-        >
-          <div
-            className="bg-[var(--surface-overlay)] rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-5 border-b border-[var(--card-border)]">
-              <h2 className="text-lg font-bold text-[var(--foreground)]">Assign Session</h2>
-              <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
-                {sessions.find((s) => s.id === assignSessionId)?.name}
-              </p>
-            </div>
-
-            <div className="p-5 space-y-4 overflow-y-auto" style={{ maxHeight: "50vh" }}>
-              <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={assignDate}
-                  onChange={(e) => setAssignDate(e.target.value)}
-                  className="input w-full"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-[var(--foreground)]">Athletes</label>
-                  <button
-                    onClick={selectAllAthletes}
-                    className="text-xs text-primary-500 hover:text-primary-600 transition-colors"
-                  >
-                    {selectedAthletes.size === athletes.length ? "Deselect all" : "Select all"}
-                  </button>
-                </div>
-                {athletes.length === 0 ? (
-                  <p className="text-sm text-muted text-center py-4">No athletes on roster</p>
-                ) : (
-                  <div className="space-y-1">
-                    {athletes.map((a) => (
-                      <label
-                        key={a.id}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                          selectedAthletes.has(a.id)
-                            ? "bg-primary-500/10"
-                            : "hover:bg-[var(--muted-bg)]"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedAthletes.has(a.id)}
-                          onChange={() => toggleAthlete(a.id)}
-                          className="w-4 h-4 accent-primary-500 rounded"
-                        />
-                        <span className="text-sm text-[var(--foreground)] flex-1">
-                          {a.firstName} {a.lastName}
-                        </span>
-                        <AssessmentStatusBadge assessmentDate={latestAssessments[a.id] ?? null} />
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="p-5 border-t border-[var(--card-border)] space-y-3">
-              {assignError && (
-                <p className="text-sm text-red-600 dark:text-red-400">{assignError}</p>
-              )}
-              {assignSuccess && (
-                <p className="text-sm text-green-600 dark:text-green-400">{assignSuccess}</p>
-              )}
-              <div className="flex gap-3">
-                <button
-                  onClick={handleAssign}
-                  disabled={assigning || selectedAthletes.size === 0 || !!assignSuccess}
-                  className="btn-primary flex-1"
-                >
-                  {assigning
-                    ? "Assigning..."
-                    : `Assign to ${selectedAthletes.size} athlete${selectedAthletes.size !== 1 ? "s" : ""}`}
-                </button>
-                <button
-                  onClick={() => setAssignSessionId(null)}
-                  className="px-4 py-2 rounded-lg text-sm text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
+      <Modal
+        open={!!assignSessionId}
+        onClose={() => setAssignSessionId(null)}
+        title="Assign session"
+        description={sessions.find((s) => s.id === assignSessionId)?.name}
+        size="md"
+        footer={
+          <div className="space-y-3 w-full">
+            {assignError && <p className="text-sm text-red-600 dark:text-red-400">{assignError}</p>}
+            {assignSuccess && (
+              <p className="text-sm text-green-600 dark:text-green-400">{assignSuccess}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={handleAssign}
+                disabled={assigning || selectedAthletes.size === 0 || !!assignSuccess}
+                className="btn-primary flex-1"
+              >
+                {assigning
+                  ? "Assigning..."
+                  : `Assign to ${selectedAthletes.size} athlete${selectedAthletes.size !== 1 ? "s" : ""}`}
+              </button>
+              <button
+                onClick={() => setAssignSessionId(null)}
+                className="px-4 py-2 rounded-lg text-sm text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)] transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Date</label>
+            <input
+              type="date"
+              value={assignDate}
+              onChange={(e) => setAssignDate(e.target.value)}
+              className="input w-full"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-[var(--foreground)]">Athletes</label>
+              <button
+                onClick={selectAllAthletes}
+                className="text-xs text-primary-500 hover:text-primary-600 transition-colors"
+              >
+                {selectedAthletes.size === athletes.length ? "Deselect all" : "Select all"}
+              </button>
+            </div>
+            {athletes.length === 0 ? (
+              <p className="text-sm text-muted text-center py-4">No athletes on roster</p>
+            ) : (
+              <div className="space-y-1">
+                {athletes.map((a) => (
+                  <label
+                    key={a.id}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedAthletes.has(a.id)
+                        ? "bg-primary-500/10"
+                        : "hover:bg-[var(--muted-bg)]"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedAthletes.has(a.id)}
+                      onChange={() => toggleAthlete(a.id)}
+                      className="w-4 h-4 accent-primary-500 rounded"
+                    />
+                    <span className="text-sm text-[var(--foreground)] flex-1">
+                      {a.firstName} {a.lastName}
+                    </span>
+                    <AssessmentStatusBadge assessmentDate={latestAssessments[a.id] ?? null} />
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </Modal>
 
       <AssessmentOverrideDialog
         open={blockedAthletes.length > 0}

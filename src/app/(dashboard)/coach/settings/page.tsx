@@ -15,7 +15,7 @@ import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
 import { ExportDataButton } from "@/components/settings/ExportDataButton";
 import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
-import { ChevronRight, Zap } from "lucide-react";
+import { Camera, Check, ChevronRight, Zap } from "lucide-react";
 
 // Sub-page client components — lazy-loaded so the initial profile-tab paint
 // doesn't pull in their bundles. Each is the same component the standalone
@@ -590,25 +590,11 @@ export default function CoachSettingsPage() {
                       className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       title="Edit profile photo"
                     >
-                      <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
+                      <Camera
+                        className="h-5 w-5 text-white"
+                        aria-hidden="true"
+                        strokeWidth={1.75}
+                      />
                     </button>
                   </div>
                   <div className="flex flex-col gap-1.5">
@@ -692,14 +678,7 @@ export default function CoachSettingsPage() {
               <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--card-border)]">
                 {saved && (
                   <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check className="h-4 w-4" aria-hidden="true" strokeWidth={1.75} />
                     Saved
                   </span>
                 )}
@@ -882,51 +861,27 @@ export default function CoachSettingsPage() {
               {subscription.plan === "FREE" && (
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Up to 3 athletes
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Session logging &amp; throw tracking
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Readiness check-ins
                   </li>
                 </ul>
@@ -934,67 +889,35 @@ export default function CoachSettingsPage() {
               {subscription.plan === "PRO" && (
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Up to 25 athletes
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Program builder
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     ACWR analytics
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Athlete progress exports
                   </li>
                 </ul>
@@ -1002,67 +925,35 @@ export default function CoachSettingsPage() {
               {subscription.plan === "ELITE" && (
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Unlimited athletes
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Everything in Pro
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Video annotation (coming soon)
                   </li>
                   <li className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-green-500 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Check
+                      className="h-4 w-4 text-green-500 shrink-0"
+                      aria-hidden="true"
+                      strokeWidth={1.75}
+                    />
                     Priority support
                   </li>
                 </ul>
