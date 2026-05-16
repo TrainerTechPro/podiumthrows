@@ -251,14 +251,14 @@ export async function GET(req: NextRequest) {
         id: s.id,
         title: s.name,
         subtitle: `${eventLabel(s.event)} · ${formatCategory(s.sessionType)}`,
-        href: `/coach/sessions`,
+        href: `/coach/throws/${s.id}`,
         category: "session" as const,
       })),
       ...pT.items.map((p) => ({
         id: p.id,
         title: p.name,
         subtitle: eventLabel(p.event),
-        href: `/coach/plans`,
+        href: `/coach/plans/${p.id}`,
         category: "program" as const,
       })),
       ...prT.items.map((pr) => ({
@@ -274,7 +274,7 @@ export async function GET(req: NextRequest) {
         subtitle: [eventLabel(d.event), formatCategory(d.category), d.difficulty]
           .filter(Boolean)
           .join(" · "),
-        href: `/coach/drills`,
+        href: `/coach/throws/drills?focus=${d.id}`,
         category: "drill" as const,
       })),
       ...eT.items.map((e) => ({
