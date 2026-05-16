@@ -28,8 +28,11 @@ function formatEventName(event: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-const CATEGORY_LABELS: Record<string, { label: string; variant: "danger" | "warning" | "neutral" | "success" }> = {
-  CE:  { label: "CE",  variant: "danger"  },
+const CATEGORY_LABELS: Record<
+  string,
+  { label: string; variant: "danger" | "warning" | "neutral" | "success" }
+> = {
+  CE: { label: "CE", variant: "danger" },
   SDE: { label: "SDE", variant: "warning" },
   SPE: { label: "SPE", variant: "neutral" },
   GPE: { label: "GPE", variant: "success" },
@@ -59,7 +62,7 @@ function getBandsForFilter(event: ThrowEvent, gender: Gender): string[] {
 /** Color tier for correlation: green >= 0.75, amber >= 0.60, blue < 0.60 */
 function correlationTierClasses(absR: number): { dot: string; text: string } {
   if (absR >= 0.75) return { dot: "bg-emerald-500", text: "text-emerald-500" };
-  if (absR >= 0.60) return { dot: "bg-amber-500", text: "text-amber-500" };
+  if (absR >= 0.6) return { dot: "bg-amber-500", text: "text-amber-500" };
   return { dot: "bg-blue-500", text: "text-blue-500" };
 }
 
@@ -89,9 +92,7 @@ function NameCell({ row }: { row: ExerciseItem }) {
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-2">
-        <p className="text-sm font-semibold text-[var(--foreground)] truncate">
-          {row.name}
-        </p>
+        <p className="text-sm font-semibold text-[var(--foreground)] truncate">{row.name}</p>
         {row.isGlobal && (
           <span title="System exercise">
             <svg
@@ -112,9 +113,7 @@ function NameCell({ row }: { row: ExerciseItem }) {
           </span>
         )}
       </div>
-      {row.description && (
-        <p className="text-xs text-muted truncate mt-0.5">{row.description}</p>
-      )}
+      {row.description && <p className="text-xs text-muted truncate mt-0.5">{row.description}</p>}
     </div>
   );
 }
@@ -132,14 +131,16 @@ function EventCell({ row }: { row: ExerciseItem }) {
 
 function EquipmentCell({ row }: { row: ExerciseItem }) {
   if (!row.equipment) return <span className="text-muted text-sm">—</span>;
-  return (
-    <span className="text-sm capitalize">{row.equipment}</span>
-  );
+  return <span className="text-sm capitalize">{row.equipment}</span>;
 }
 
 function WeightCell({ row }: { row: ExerciseItem }) {
   if (row.implementWeight == null) return <span className="text-muted text-sm">—</span>;
-  return <span className="text-sm tabular-nums font-medium">{formatImplementWeight(row.implementWeight)}</span>;
+  return (
+    <span className="text-sm tabular-nums font-medium">
+      {formatImplementWeight(row.implementWeight)}
+    </span>
+  );
 }
 
 function CorrelationCell({
@@ -157,10 +158,7 @@ function CorrelationCell({
 
   return (
     <div className="flex items-center gap-1.5 justify-end">
-      <span
-        className={`w-2 h-2 rounded-full shrink-0 ${tier.dot}`}
-        aria-hidden="true"
-      />
+      <span className={`w-2 h-2 rounded-full shrink-0 ${tier.dot}`} aria-hidden="true" />
       <span
         className={`text-sm tabular-nums font-semibold ${tier.text} ${
           isHighCorrelation ? "drop-shadow-[0_0_4px_rgba(16,185,129,0.4)]" : ""
@@ -186,7 +184,10 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
   // Correlation filter state
   const [filterEvent, setFilterEvent] = useState<ThrowEvent>("SHOT_PUT");
   const [filterGender, setFilterGender] = useState<Gender>("MALE");
-  const availableBands = useMemo(() => getBandsForFilter(filterEvent, filterGender), [filterEvent, filterGender]);
+  const availableBands = useMemo(
+    () => getBandsForFilter(filterEvent, filterGender),
+    [filterEvent, filterGender]
+  );
   const [filterBand, setFilterBand] = useState<string>(() => {
     const bands = getBandsForFilter("SHOT_PUT", "MALE");
     return bands.length > 0 ? bands[Math.floor(bands.length / 2)] : "";
@@ -195,20 +196,23 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
   // Reset band when event/gender changes if current band isn't available
   const effectiveBand = useMemo(() => {
     if (availableBands.includes(filterBand)) return filterBand;
-    const mid = availableBands.length > 0 ? availableBands[Math.floor(availableBands.length / 2)] : "";
+    const mid =
+      availableBands.length > 0 ? availableBands[Math.floor(availableBands.length / 2)] : "";
     return mid;
   }, [availableBands, filterBand]);
 
   // Build correlation lookup map
   const correlationMap = useMemo(
-    () => (effectiveBand ? buildCorrelationMap(filterEvent, filterGender, effectiveBand) : new Map<string, { correlation: number; absCorrelation: number; type: string }>()),
+    () =>
+      effectiveBand
+        ? buildCorrelationMap(filterEvent, filterGender, effectiveBand)
+        : new Map<string, { correlation: number; absCorrelation: number; type: string }>(),
     [filterEvent, filterGender, effectiveBand]
   );
 
   // Filter by category tab
-  const filtered = activeCategory === "All"
-    ? exercises
-    : exercises.filter((e) => e.category === activeCategory);
+  const filtered =
+    activeCategory === "All" ? exercises : exercises.filter((e) => e.category === activeCategory);
 
   function handleEdit(exercise: ExerciseItem) {
     setEditingExercise(exercise);
@@ -229,7 +233,10 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/coach/exercises/${deleteTarget.id}`, { method: "DELETE", headers: csrfHeaders() });
+      const res = await fetch(`/api/coach/exercises/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toastError("Delete failed", data.error ?? "Failed to delete exercise.");
@@ -296,13 +303,19 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
           {row.isOwn && !row.isGlobal && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); handleEdit(row); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(row);
+                }}
                 className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-medium"
               >
                 Edit
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); setDeleteTarget(row); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteTarget(row);
+                }}
                 className="text-sm text-red-600 dark:text-red-400 hover:underline font-medium"
               >
                 Delete
@@ -319,7 +332,12 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
     <>
       {/* Correlation Context Filter Bar */}
       <div className="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-surface-100 dark:bg-surface-800/50 border border-[var(--card-border)]">
-        <TrendingUp size={16} strokeWidth={1.75} className="text-primary-500 shrink-0" aria-hidden="true" />
+        <TrendingUp
+          size={16}
+          strokeWidth={1.75}
+          className="text-primary-500 shrink-0"
+          aria-hidden="true"
+        />
         <span className="text-xs font-semibold text-muted uppercase tracking-wider shrink-0">
           Correlations
         </span>
@@ -331,7 +349,9 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
           aria-label="Event filter"
         >
           {EVENT_FILTER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
 
@@ -342,7 +362,9 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
           aria-label="Gender filter"
         >
           {GENDER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
 
@@ -353,7 +375,9 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
           aria-label="Distance band filter"
         >
           {availableBands.map((band) => (
-            <option key={band} value={band}>{band}m</option>
+            <option key={band} value={band}>
+              {band}m
+            </option>
           ))}
         </select>
 
@@ -365,7 +389,8 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
       {/* Category Tabs */}
       <div className="flex items-center gap-1 bg-surface-100 dark:bg-surface-800/50 rounded-xl p-1 w-fit">
         {CATEGORIES.map((cat) => {
-          const count = cat === "All" ? exercises.length : exercises.filter((e) => e.category === cat).length;
+          const count =
+            cat === "All" ? exercises.length : exercises.filter((e) => e.category === cat).length;
           return (
             <button
               key={cat}
@@ -391,11 +416,11 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
         searchable
         searchPlaceholder="Search exercises..."
         pageSize={25}
-        emptyTitle="No exercises found"
+        emptyTitle="No exercises in your library"
         emptyDescription={
           activeCategory !== "All"
-            ? `No ${activeCategory} exercises. Try a different category or add a custom one.`
-            : "Add custom exercises to get started."
+            ? `No ${activeCategory} exercises — switch category or add a custom one.`
+            : "Add one or import the catalog to get started."
         }
         actions={
           <Button variant="primary" size="sm" onClick={handleAdd}>
