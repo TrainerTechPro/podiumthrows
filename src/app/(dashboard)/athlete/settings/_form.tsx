@@ -6,6 +6,8 @@ import { cn, localToday } from "@/lib/utils";
 import type { AthleteProfileFull } from "@/lib/data/athlete";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { Radio, RadioGroup } from "@/components/ui/Radio";
+import { useToast } from "@/components/ui/Toast";
+import { haptic } from "@/lib/haptic";
 
 import { logger } from "@/lib/logger";
 const EVENTS = [
@@ -23,6 +25,7 @@ const GENDERS = [
 
 export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }) {
   const router = useRouter();
+  const toast = useToast();
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,18 +71,24 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
           }),
         });
 
-        if (!res.ok) {
-          const data = await res.json();
-          setError(data.error ?? "Failed to save.");
+        const payload = await res.json().catch(() => null);
+        if (!res.ok || !payload?.success) {
+          setError(payload?.error ?? "Failed to save.");
+          toast.error("Couldn't save", payload?.error ?? "Please try again.");
           return;
         }
 
+        // Two feedback channels per CLAUDE.md: toast + visual confirmation.
+        haptic.success();
+        toast.success("Profile saved");
         setSuccess(true);
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       } catch (err) {
         logger.error("settings save failed", { context: "athlete/settings/form", error: err });
-        setError(err instanceof Error ? err.message : "Couldn't save — please try again.");
+        const message = err instanceof Error ? err.message : "Couldn't save — please try again.";
+        setError(message);
+        toast.error("Network error", message);
       }
     });
   }

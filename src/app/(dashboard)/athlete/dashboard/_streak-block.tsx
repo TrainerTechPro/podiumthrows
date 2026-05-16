@@ -243,17 +243,21 @@ function FreezeButton({
           ? `Take a rest day — ${available} freeze available`
           : "No freezes available — refills Sunday"
       }
-      className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-[var(--color-border-default)] text-micro font-semibold tabular-nums transition-[transform,background-color] duration-100 active:scale-90 disabled:opacity-60 disabled:active:scale-100"
-      style={{
-        color: dim ? "var(--color-text-secondary)" : "var(--color-brand-strong)",
-        backgroundColor: dim ? "transparent" : "var(--color-brand-subtle)",
-      }}
+      className="inline-flex items-center justify-center w-11 h-11 -my-2 rounded-full transition-transform duration-100 active:scale-90 disabled:opacity-60 disabled:active:scale-100"
     >
-      {mutating ? (
-        <Loader2 size={12} strokeWidth={2.25} aria-hidden="true" className="animate-spin" />
-      ) : (
-        <Snowflake size={12} strokeWidth={2.25} aria-hidden="true" />
-      )}
+      <span
+        className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-[var(--color-border-default)] text-micro font-semibold tabular-nums transition-colors"
+        style={{
+          color: dim ? "var(--color-text-secondary)" : "var(--color-brand-strong)",
+          backgroundColor: dim ? "transparent" : "var(--color-brand-subtle)",
+        }}
+      >
+        {mutating ? (
+          <Loader2 size={12} strokeWidth={2.25} aria-hidden="true" className="animate-spin" />
+        ) : (
+          <Snowflake size={12} strokeWidth={2.25} aria-hidden="true" />
+        )}
+      </span>
     </button>
   );
 }

@@ -844,7 +844,7 @@ export function LogSessionForm({
                   onClick={() => setFocus(selected ? "" : f)}
                   aria-pressed={selected}
                   className={
-                    "px-3.5 rounded-lg text-xs font-semibold transition-colors min-h-[36px] " +
+                    "px-3.5 rounded-lg text-xs font-semibold transition-colors min-h-[44px] " +
                     (selected
                       ? "bg-[var(--color-brand-subtle)] text-[var(--color-brand-strong)]"
                       : "bg-[var(--color-bg-surface-sunken)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]")
