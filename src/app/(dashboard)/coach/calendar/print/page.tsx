@@ -180,7 +180,9 @@ export default async function PrintProgramPage({
 
       {/* Days */}
       {days.length === 0 ? (
-        <p className="text-sm text-muted py-8 text-center">No sessions programmed for this week.</p>
+        <p className="text-sm text-muted py-8 text-center">
+          No sessions programmed this week — schedule one in the calendar before printing.
+        </p>
       ) : (
         <div className="space-y-5 print:space-y-4">
           {days.map((day) => (

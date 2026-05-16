@@ -101,25 +101,20 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
       {drills.length === 0 ? (
         <div className="card p-12 text-center">
           <p className="text-sm text-muted">
-            No drills match your filters. Try adjusting or add a custom drill.
+            No drills match — clear filters or add a drill in the Builder.
           </p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {drills.map((drill) => (
-            <div
-              key={drill.id}
-              className="card p-4 space-y-3 flex flex-col"
-            >
+            <div key={drill.id} className="card p-4 space-y-3 flex flex-col">
               {/* Header */}
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-[var(--foreground)] leading-tight">
                     {drill.name}
                   </p>
-                  {drill.isGlobal && (
-                    <span className="text-[10px] text-muted">Built-in</span>
-                  )}
+                  {drill.isGlobal && <span className="text-[10px] text-muted">Built-in</span>}
                 </div>
                 {drill.isOwn && (
                   <div className="flex gap-1 shrink-0">
@@ -144,14 +139,8 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
 
               {/* Badges */}
               <div className="flex flex-wrap gap-1">
-                <Badge variant="neutral">
-                  {CATEGORY_LABELS[drill.category] ?? drill.category}
-                </Badge>
-                {drill.event && (
-                  <Badge variant="info">
-                    {formatEventName(drill.event)}
-                  </Badge>
-                )}
+                <Badge variant="neutral">{CATEGORY_LABELS[drill.category] ?? drill.category}</Badge>
+                {drill.event && <Badge variant="info">{formatEventName(drill.event)}</Badge>}
                 {drill.difficulty && (
                   <Badge variant={DIFFICULTY_COLORS[drill.difficulty] ?? "neutral"}>
                     {drill.difficulty.charAt(0).toUpperCase() + drill.difficulty.slice(1)}
@@ -164,9 +153,7 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
 
               {/* Description */}
               {drill.description && (
-                <p className="text-xs text-muted line-clamp-2 flex-1">
-                  {drill.description}
-                </p>
+                <p className="text-xs text-muted line-clamp-2 flex-1">{drill.description}</p>
               )}
 
               {/* Cues */}
@@ -177,15 +164,16 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
                   </p>
                   <ul className="space-y-0.5">
                     {drill.cues.slice(0, 3).map((cue, i) => (
-                      <li key={i} className="text-xs text-[var(--foreground)] flex items-start gap-1">
+                      <li
+                        key={i}
+                        className="text-xs text-[var(--foreground)] flex items-start gap-1"
+                      >
                         <span className="text-primary-500 shrink-0">•</span>
                         <span className="line-clamp-1">{cue}</span>
                       </li>
                     ))}
                     {drill.cues.length > 3 && (
-                      <li className="text-[10px] text-muted">
-                        +{drill.cues.length - 3} more
-                      </li>
+                      <li className="text-[10px] text-muted">+{drill.cues.length - 3} more</li>
                     )}
                   </ul>
                 </div>

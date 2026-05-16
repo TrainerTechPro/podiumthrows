@@ -183,10 +183,11 @@ export function LiveSessionsView() {
           </div>
           <div>
             <p className="font-semibold text-[var(--foreground)] text-sm">
-              No practice sessions yet
+              No live practice running
             </p>
             <p className="text-xs text-muted mt-1 max-w-xs mx-auto">
-              Start a live session to log attempts, distances, drill types, and notes in real time.
+              Start one to log attempts in real time as athletes throw — distances, drills, and
+              notes captured live.
             </p>
           </div>
           <button
@@ -196,7 +197,7 @@ export function LiveSessionsView() {
             }}
             className="btn-primary text-sm px-5 py-2 mx-auto"
           >
-            Start Your First Session
+            Open live practice
           </button>
         </div>
       )}
