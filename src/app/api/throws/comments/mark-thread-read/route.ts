@@ -13,6 +13,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { isTargetField, verifyCommentAccess } from "@/lib/comments/access";
+import { parseBody, MarkThreadReadSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,14 +22,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { targetField, targetId } = body as Record<string, unknown>;
+    const parsed = await parseBody(req, MarkThreadReadSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { targetField, targetId } = parsed;
 
-    if (!isTargetField(targetField) || typeof targetId !== "string") {
-      return NextResponse.json(
-        { success: false, error: "targetField and targetId are required" },
-        { status: 400 }
-      );
+    if (!isTargetField(targetField)) {
+      return NextResponse.json({ success: false, error: "Invalid targetField." }, { status: 400 });
     }
 
     const hasAccess = await verifyCommentAccess(

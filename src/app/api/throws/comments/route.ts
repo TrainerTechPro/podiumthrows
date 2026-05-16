@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { sendCommentNotification } from "@/lib/notifications/comment";
 import { rateLimit } from "@/lib/rate-limit";
 import { type TargetField, isTargetField, verifyCommentAccess } from "@/lib/comments/access";
+import { parseBody, CommentCreateSchema } from "@/lib/api-schemas";
 
 /* ─── GET — fetch comments for a target ──────────────────────────────────── */
 
@@ -110,33 +111,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { targetField, targetId, text, audioUrl, audioDurationSec } = body as Record<
-      string,
-      unknown
-    >;
+    const parsed = await parseBody(req, CommentCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { targetField, targetId, text, audioUrl, audioDurationSec } = parsed;
 
-    if (!isTargetField(targetField) || typeof targetId !== "string") {
-      return NextResponse.json(
-        { success: false, error: "targetField and targetId are required" },
-        { status: 400 }
-      );
+    if (!isTargetField(targetField)) {
+      return NextResponse.json({ success: false, error: "Invalid targetField." }, { status: 400 });
     }
 
-    // A comment needs EITHER text OR audio. Both cannot be empty.
     const hasText = typeof text === "string" && text.trim().length > 0;
     const hasAudio =
       typeof audioUrl === "string" &&
       audioUrl.trim().length > 0 &&
       typeof audioDurationSec === "number" &&
       audioDurationSec > 0;
-
-    if (!hasText && !hasAudio) {
-      return NextResponse.json(
-        { success: false, error: "Comment must include either text or a voice note." },
-        { status: 400 }
-      );
-    }
 
     // Voice notes: enforce 30s cap server-side as a defense in depth
     // against a crafted client that bypasses the UI limit.
@@ -147,7 +135,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify access
     const hasAccess = await verifyCommentAccess(
       session.userId,
       session.role,

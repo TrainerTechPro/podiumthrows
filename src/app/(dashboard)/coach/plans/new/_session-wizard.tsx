@@ -225,13 +225,13 @@ export function SessionWizard({
           }),
         });
 
-        if (!planRes.ok) {
-          const data = await planRes.json();
-          setError(data.error ?? "Failed to create plan.");
+        const planPayload = await planRes.json().catch(() => null);
+        if (!planRes.ok || !planPayload?.success) {
+          setError(planPayload?.error ?? "Failed to create plan.");
           return;
         }
 
-        const plan = await planRes.json();
+        const plan = planPayload.data;
 
         // 2. Optionally assign to athletes. Derived idempotency key so a
         // retry of step 2 doesn't double-assign — the assignment is keyed

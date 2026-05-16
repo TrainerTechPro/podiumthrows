@@ -5,10 +5,7 @@ import { logger } from "@/lib/logger";
 
 /* ─── POST — clone a workout plan ────────────────────────────────────────── */
 
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -76,7 +73,7 @@ export async function POST(
       select: { id: true, name: true },
     });
 
-    return NextResponse.json(clone, { status: 201 });
+    return NextResponse.json({ success: true, data: clone }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/plans/[id]/clone", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to clone plan." }, { status: 500 });

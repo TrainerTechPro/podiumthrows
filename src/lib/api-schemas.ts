@@ -1698,3 +1698,228 @@ export const InsightComputeSchema = z.object({
 export const InsightDismissSchema = z.object({
   undismiss: z.boolean().optional(),
 });
+
+// ── Coach calendar / builder schemas (envelope hardening, 2026-05-15) ──────
+
+const VALID_THROWS_EVENT = z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
+const VALID_PLAN_BLOCK_TYPE = z.enum(["throwing", "strength", "warmup", "cooldown"]);
+
+const PlanBlockExerciseSchema = z.object({
+  exerciseId: z.string().min(1),
+  sets: z.number().int().nullable().optional(),
+  reps: z.string().nullable().optional(),
+  weight: z.string().nullable().optional(),
+  rpe: z.number().nullable().optional(),
+  distance: z.string().nullable().optional(),
+  restSeconds: z.number().int().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  implementKg: z.number().nullable().optional(),
+});
+
+const PlanBlockSchema = z.object({
+  name: z.string().min(1, "Block needs a name."),
+  blockType: VALID_PLAN_BLOCK_TYPE,
+  restSeconds: z.number().int().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  exercises: z.array(PlanBlockExerciseSchema).optional(),
+});
+
+export const CoachPlanCreateSchema = z.object({
+  name: z.string().min(1, "Plan name is required."),
+  description: z.string().nullable().optional(),
+  event: VALID_THROWS_EVENT.nullable().optional(),
+  isTemplate: z.boolean().optional(),
+  blocks: z.array(PlanBlockSchema).min(1, "At least one block is required."),
+});
+
+export const CoachPlanUpdateSchema = z.object({
+  name: z.string().min(1).nullable().optional(),
+  description: z.string().nullable().optional(),
+  event: VALID_THROWS_EVENT.nullable().optional(),
+  isTemplate: z.boolean().nullable().optional(),
+  blocks: z.array(PlanBlockSchema).nullable().optional(),
+});
+
+export const CoachAssignSessionsSchema = z.object({
+  planId: z.string().min(1, "Plan ID is required."),
+  athleteIds: z.array(z.string().min(1)).min(1, "Select at least one athlete."),
+  scheduledDate: z.string().min(1, "Scheduled date is required."),
+  coachNotes: z.string().nullable().optional(),
+});
+
+export const CoachPracticeCreateSchema = z
+  .object({
+    title: z.string().min(1, "title is required."),
+    date: z.string().nullable().optional(),
+    startTime: z.string().min(1, "startTime is required."),
+    endTime: z.string().min(1, "endTime is required."),
+    location: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
+    groupId: z.string().nullable().optional(),
+    recurring: z
+      .object({
+        untilDate: z.string().min(1),
+      })
+      .nullable()
+      .optional(),
+  })
+  .refine((v) => v.recurring == null || (v.date != null && v.date.length > 0), {
+    message: "date (startDate) is required for recurring practices.",
+    path: ["date"],
+  })
+  .refine((v) => v.recurring != null || (v.date != null && v.date.length > 0), {
+    message: "date is required.",
+    path: ["date"],
+  });
+
+export const CoachPracticeUpdateSchema = z.object({
+  applyToSeries: z.boolean().nullable().optional(),
+  title: z.string().nullable().optional(),
+  date: z.string().nullable().optional(),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  groupId: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+});
+
+export const CoachAttendanceBatchSchema = z.object({
+  updates: z
+    .array(
+      z.object({
+        athleteId: z.string().min(1),
+        status: z.enum(["PRESENT", "LATE", "EXCUSED", "ABSENT"]).nullable(),
+        notes: z.string().nullable().optional(),
+      })
+    )
+    .min(1, "updates must be a non-empty array."),
+});
+
+const PROGRAMMING_TIERS = z.enum(["TEAM", "GROUP", "INDIVIDUAL"]);
+
+export const CoachProgrammingCreateSchema = z
+  .object({
+    title: z.string().min(1, "title is required."),
+    scheduledDate: z.string().min(1, "scheduledDate is required."),
+    throwsSessionId: z.string().min(1, "throwsSessionId is required."),
+    tier: PROGRAMMING_TIERS,
+    groupId: z.string().nullable().optional(),
+    athleteId: z.string().nullable().optional(),
+    parentId: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
+  })
+  .refine((v) => v.tier !== "GROUP" || (v.groupId != null && v.groupId.length > 0), {
+    message: "groupId is required for GROUP sessions.",
+    path: ["groupId"],
+  })
+  .refine((v) => v.tier !== "INDIVIDUAL" || (v.athleteId != null && v.athleteId.length > 0), {
+    message: "athleteId is required for INDIVIDUAL sessions.",
+    path: ["athleteId"],
+  });
+
+export const CoachProgrammingUpdateSchema = z.object({
+  title: z.string().nullable().optional(),
+  throwsSessionId: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  scheduledDate: z.string().nullable().optional(),
+});
+
+export const CoachProgrammingOverrideSchema = z
+  .object({
+    throwsSessionId: z.string().min(1, "throwsSessionId is required."),
+    tier: z.enum(["GROUP", "INDIVIDUAL"]),
+    groupId: z.string().nullable().optional(),
+    athleteId: z.string().nullable().optional(),
+  })
+  .refine((v) => v.tier !== "GROUP" || (v.groupId != null && v.groupId.length > 0), {
+    message: "groupId is required for GROUP overrides.",
+    path: ["groupId"],
+  })
+  .refine((v) => v.tier !== "INDIVIDUAL" || (v.athleteId != null && v.athleteId.length > 0), {
+    message: "athleteId is required for INDIVIDUAL overrides.",
+    path: ["athleteId"],
+  });
+
+// ── Profile picture ────────────────────────────────────────────────────────
+
+export const ProfilePictureUpdateSchema = z.object({
+  avatarUrl: z.string().min(1, "avatarUrl is required"),
+});
+
+// ── Invitations ────────────────────────────────────────────────────────────
+
+export const InvitationCreateSchema = z
+  .object({
+    mode: z.enum(["link", "email"]).default("email"),
+    email: z.string().nullable().optional(),
+    athleteProfileId: z.string().nullable().optional(),
+  })
+  .refine(
+    (v) =>
+      v.mode !== "email" ||
+      (typeof v.email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())),
+    {
+      message: "A valid email address is required.",
+      path: ["email"],
+    }
+  );
+
+// ── Notifications ──────────────────────────────────────────────────────────
+
+export const NotificationPatchSchema = z.object({
+  read: z.boolean(),
+});
+
+export const NotificationPrefsPatchSchema = z
+  .record(z.string(), z.boolean())
+  .refine((v) => Object.keys(v).length > 0, { message: "At least one preference is required." });
+
+export const CoachNotificationPrefsSchema = z
+  .record(z.string(), z.boolean())
+  .refine((v) => Object.keys(v).length > 0, { message: "At least one preference is required." });
+
+export const AthleteNotificationPrefsSchema = z
+  .object({
+    haptics: z.record(z.string(), z.boolean()).nullable().optional(),
+    feedPrivacy: z.record(z.string(), z.boolean()).nullable().optional(),
+  })
+  .passthrough();
+
+export const PushPrefsPatchSchema = z
+  .record(z.string(), z.boolean())
+  .refine((v) => Object.keys(v).length > 0, { message: "At least one preference is required." });
+
+// ── Comments ───────────────────────────────────────────────────────────────
+
+export const CommentCreateSchema = z
+  .object({
+    targetField: z.string().min(1, "targetField is required."),
+    targetId: z.string().min(1, "targetId is required."),
+    text: z.string().nullable().optional(),
+    audioUrl: z.string().nullable().optional(),
+    audioDurationSec: z.number().nullable().optional(),
+  })
+  .refine(
+    (v) => {
+      const hasText = typeof v.text === "string" && v.text.trim().length > 0;
+      const hasAudio =
+        typeof v.audioUrl === "string" &&
+        v.audioUrl.trim().length > 0 &&
+        typeof v.audioDurationSec === "number" &&
+        v.audioDurationSec > 0;
+      return hasText || hasAudio;
+    },
+    { message: "Comment must include either text or a voice note." }
+  );
+
+export const CommentUpdateSchema = z.object({
+  readAt: z.union([z.literal("now"), z.string(), z.null()]).optional(),
+  reaction: z.union([z.literal("THUMBS_UP"), z.literal("THUMBS_DOWN"), z.null()]).optional(),
+  replyText: z.string().nullable().optional(),
+});
+
+export const MarkThreadReadSchema = z.object({
+  targetField: z.string().min(1, "targetField is required."),
+  targetId: z.string().min(1, "targetId is required."),
+});

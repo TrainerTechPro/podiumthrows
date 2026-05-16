@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getProgrammedSessions, createProgrammedSession } from "@/lib/data/programming";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachProgrammingCreateSchema } from "@/lib/api-schemas";
 
 /* ─── GET — list programmed sessions in a date range ────────────────────── */
 
@@ -10,14 +11,15 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },
     });
-    if (!coach) return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+    if (!coach)
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
 
     const { searchParams } = new URL(req.url);
     const start = searchParams.get("start");
@@ -25,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     if (!start || !end) {
       return NextResponse.json(
-        { success: false, error:"Query params 'start' and 'end' (YYYY-MM-DD) are required." },
+        { success: false, error: "Query params 'start' and 'end' (YYYY-MM-DD) are required." },
         { status: 400 }
       );
     }
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("[programming GET]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -44,49 +46,35 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
-      return NextResponse.json({ success: false, error:"Unauthorized" }, { status: 401 });
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
       where: { userId: session.userId },
       select: { id: true },
     });
-    if (!coach) return NextResponse.json({ success: false, error:"Coach not found" }, { status: 404 });
+    if (!coach)
+      return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
 
-    const body = await req.json().catch(() => ({}));
+    const parsed = await parseBody(req, CoachProgrammingCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const { title, scheduledDate, throwsSessionId, tier, groupId, athleteId, parentId, notes } =
-      body as Record<string, unknown>;
-
-    if (typeof title !== "string" || !title.trim()) {
-      return NextResponse.json({ success: false, error:"title is required." }, { status: 400 });
-    }
-    if (typeof scheduledDate !== "string" || !scheduledDate.trim()) {
-      return NextResponse.json({ success: false, error:"scheduledDate is required." }, { status: 400 });
-    }
-    if (typeof throwsSessionId !== "string" || !throwsSessionId.trim()) {
-      return NextResponse.json({ success: false, error:"throwsSessionId is required." }, { status: 400 });
-    }
-    if (tier !== "TEAM" && tier !== "GROUP" && tier !== "INDIVIDUAL") {
-      return NextResponse.json(
-        { success: false, error:"tier must be 'TEAM', 'GROUP', or 'INDIVIDUAL'." },
-        { status: 400 }
-      );
-    }
+      parsed;
 
     const data = await createProgrammedSession(coach.id, {
-      title: title as string,
-      scheduledDate: scheduledDate as string,
-      throwsSessionId: throwsSessionId as string,
-      tier: tier as "TEAM" | "GROUP" | "INDIVIDUAL",
-      groupId: typeof groupId === "string" ? groupId : undefined,
-      athleteId: typeof athleteId === "string" ? athleteId : undefined,
-      parentId: typeof parentId === "string" ? parentId : undefined,
-      notes: typeof notes === "string" ? notes : undefined,
+      title,
+      scheduledDate,
+      throwsSessionId,
+      tier,
+      groupId: groupId ?? undefined,
+      athleteId: athleteId ?? undefined,
+      parentId: parentId ?? undefined,
+      notes: notes ?? undefined,
     });
 
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (err) {
     logger.error("[programming POST]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });
   }
 }

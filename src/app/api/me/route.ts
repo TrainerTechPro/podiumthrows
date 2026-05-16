@@ -33,9 +33,6 @@ export async function DELETE(request: NextRequest) {
       {
         success: false,
         error: eligibility.reason || "Cannot delete account",
-        ...(eligibility.athletesCount !== undefined
-          ? { data: { athletesCount: eligibility.athletesCount } }
-          : {}),
       },
       { status: 409 }
     );

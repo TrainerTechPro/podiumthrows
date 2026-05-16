@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
-import {
-  getPracticeDetail,
-  updatePractice,
-  deletePractice,
-} from "@/lib/data/practices";
+import { getPracticeDetail, updatePractice, deletePractice } from "@/lib/data/practices";
+import { parseBody, CoachPracticeUpdateSchema } from "@/lib/api-schemas";
 
 /* ─── GET — single practice detail ───────────────────────────────────────── */
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -37,18 +31,32 @@ export async function GET(
 
 /* ─── PATCH — update practice ─────────────────────────────────────────────── */
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
-    const body = await req.json();
 
-    const { applyToSeries, ...updates } = body;
+    const parsed = await parseBody(req, CoachPracticeUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { applyToSeries, ...rest } = parsed;
 
-    const result = await updatePractice(id, coach.id, updates, applyToSeries);
+    // updatePractice() takes `string` (not null) for title/date/startTime/endTime
+    // and `string | null` for nullable optional columns. The Zod schema yields
+    // `string | null | undefined` for everything to stay tolerant of the form
+    // sending null for cleared fields — coerce here so the data layer receives
+    // its narrower shape.
+    const updates: Parameters<typeof updatePractice>[2] = {
+      ...(rest.title != null ? { title: rest.title } : {}),
+      ...(rest.date != null ? { date: rest.date } : {}),
+      ...(rest.startTime != null ? { startTime: rest.startTime } : {}),
+      ...(rest.endTime != null ? { endTime: rest.endTime } : {}),
+      ...(rest.status != null ? { status: rest.status } : {}),
+      ...(rest.location !== undefined ? { location: rest.location ?? null } : {}),
+      ...(rest.notes !== undefined ? { notes: rest.notes ?? null } : {}),
+      ...(rest.groupId !== undefined ? { groupId: rest.groupId ?? null } : {}),
+    };
+
+    const result = await updatePractice(id, coach.id, updates, applyToSeries === true);
     return NextResponse.json({ success: true, data: result });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -67,10 +75,7 @@ export async function PATCH(
 
 /* ─── DELETE — cancel / delete practice ──────────────────────────────────── */
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;

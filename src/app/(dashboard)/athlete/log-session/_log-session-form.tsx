@@ -571,11 +571,12 @@ export function LogSessionForm({
     }
 
     try {
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        reportApiError({ res, payload: data }, toast, { onRetry: handleSubmit });
+      const payload = await res.json();
+      if (!res.ok || !payload.success) {
+        reportApiError({ res, payload }, toast, { onRetry: handleSubmit });
         return;
       }
+      const data = payload.data ?? {};
 
       track("session_saved", {
         sessionType: "throws",

@@ -299,7 +299,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, data: created, prs, warnings }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: { ...created, prs, warnings } },
+      { status: 201 }
+    );
   } catch (err) {
     logger.error("POST /api/coach/log-session", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Unknown error";

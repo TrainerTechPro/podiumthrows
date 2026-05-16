@@ -369,7 +369,7 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
     }
 
     return NextResponse.json(
-      { success: true, data: created, prs, warnings, goalCelebrations },
+      { success: true, data: { ...created, prs, warnings, goalCelebrations } },
       { status: 201 }
     );
   } catch (err) {

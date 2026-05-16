@@ -2,16 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-
-const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
-const VALID_BLOCK_TYPES = ["throwing", "strength", "warmup", "cooldown"];
+import { parseBody, CoachPlanUpdateSchema } from "@/lib/api-schemas";
 
 /* ─── PATCH — update workout plan ────────────────────────────────────────── */
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -29,102 +24,75 @@ export async function PATCH(
 
     // Verify ownership
     const existing = await prisma.workoutPlan.findFirst({
-      where: { id: id, coachId: coach.id },
+      where: { id, coachId: coach.id },
       select: { id: true },
     });
     if (!existing) {
       return NextResponse.json({ success: false, error: "Plan not found." }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { name, description, event, isTemplate, blocks } = body as Record<string, unknown>;
+    const parsed = await parseBody(req, CoachPlanUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, description, event, isTemplate, blocks } = parsed;
 
-    if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
-      return NextResponse.json({ success: false, error: "Plan name cannot be empty." }, { status: 400 });
-    }
-    if (event !== undefined && event !== null && (typeof event !== "string" || !VALID_EVENTS.includes(event))) {
-      return NextResponse.json({ success: false, error: "Invalid event." }, { status: 400 });
-    }
+    const planData: Record<string, unknown> = {};
+    if (typeof name === "string") planData.name = name.trim();
+    if (description !== undefined)
+      planData.description = description ? description.trim() || null : null;
+    if (event !== undefined) planData.event = event ?? null;
+    if (isTemplate !== undefined && isTemplate !== null) planData.isTemplate = isTemplate === true;
 
     // If blocks are provided, replace all blocks (delete + recreate)
     if (Array.isArray(blocks)) {
-      for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i] as Record<string, unknown>;
-        if (typeof block.name !== "string" || block.name.trim().length === 0) {
-          return NextResponse.json({ success: false, error: `Block ${i + 1} needs a name.` }, { status: 400 });
-        }
-        if (typeof block.blockType !== "string" || !VALID_BLOCK_TYPES.includes(block.blockType)) {
-          return NextResponse.json({ success: false, error: `Block ${i + 1} has an invalid type.` }, { status: 400 });
-        }
-      }
-
-      // Atomically delete + recreate blocks and update plan metadata
-      const planData: Record<string, unknown> = {};
-      if (typeof name === "string") planData.name = name.trim();
-      if (description !== undefined) planData.description = typeof description === "string" ? description.trim() || null : null;
-      if (event !== undefined) planData.event = event || null;
-      if (isTemplate !== undefined) planData.isTemplate = isTemplate === true;
-
       const updated = await prisma.$transaction(async (tx) => {
-        // Delete existing blocks (cascade deletes block exercises)
         await tx.workoutBlock.deleteMany({ where: { planId: id } });
 
-        // Recreate blocks
         for (let i = 0; i < blocks.length; i++) {
-          const block = blocks[i] as Record<string, unknown>;
+          const block = blocks[i];
           await tx.workoutBlock.create({
             data: {
               planId: id,
-              name: (block.name as string).trim(),
+              name: block.name.trim(),
               order: i,
-              blockType: block.blockType as string,
-              restSeconds: typeof block.restSeconds === "number" ? block.restSeconds : null,
-              notes: typeof block.notes === "string" ? block.notes.trim() || null : null,
+              blockType: block.blockType,
+              restSeconds: block.restSeconds ?? null,
+              notes: block.notes ? block.notes.trim() || null : null,
               exercises: {
-                create: Array.isArray(block.exercises)
-                  ? (block.exercises as Record<string, unknown>[]).map((ex, exIdx) => ({
-                      exerciseId: ex.exerciseId as string,
-                      order: exIdx,
-                      sets: typeof ex.sets === "number" ? ex.sets : null,
-                      reps: typeof ex.reps === "string" ? ex.reps.trim() || null : null,
-                      weight: typeof ex.weight === "string" ? ex.weight.trim() || null : null,
-                      rpe: typeof ex.rpe === "number" ? ex.rpe : null,
-                      distance: typeof ex.distance === "string" ? ex.distance.trim() || null : null,
-                      restSeconds: typeof ex.restSeconds === "number" ? ex.restSeconds : null,
-                      notes: typeof ex.notes === "string" ? ex.notes.trim() || null : null,
-                      implementKg: typeof ex.implementKg === "number" ? ex.implementKg : null,
-                    }))
-                  : [],
+                create: (block.exercises ?? []).map((ex, exIdx) => ({
+                  exerciseId: ex.exerciseId,
+                  order: exIdx,
+                  sets: ex.sets ?? null,
+                  reps: ex.reps ? ex.reps.trim() || null : null,
+                  weight: ex.weight ? ex.weight.trim() || null : null,
+                  rpe: ex.rpe ?? null,
+                  distance: ex.distance ? ex.distance.trim() || null : null,
+                  restSeconds: ex.restSeconds ?? null,
+                  notes: ex.notes ? ex.notes.trim() || null : null,
+                  implementKg: ex.implementKg ?? null,
+                })),
               },
             },
           });
         }
 
-        // Update plan metadata
         return tx.workoutPlan.update({
-          where: { id: id },
+          where: { id },
           data: planData as never,
           select: { id: true, name: true },
         });
       });
 
-      return NextResponse.json(updated);
+      return NextResponse.json({ success: true, data: updated });
     }
 
     // No blocks provided — just update plan metadata
-    const data: Record<string, unknown> = {};
-    if (typeof name === "string") data.name = name.trim();
-    if (description !== undefined) data.description = typeof description === "string" ? description.trim() || null : null;
-    if (event !== undefined) data.event = event || null;
-    if (isTemplate !== undefined) data.isTemplate = isTemplate === true;
-
     const updated = await prisma.workoutPlan.update({
-      where: { id: id },
-      data: data as never,
+      where: { id },
+      data: planData as never,
       select: { id: true, name: true },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PATCH /api/coach/plans/[id]", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to update plan." }, { status: 500 });
@@ -133,10 +101,7 @@ export async function PATCH(
 
 /* ─── DELETE — delete workout plan ───────────────────────────────────────── */
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -153,7 +118,7 @@ export async function DELETE(
     }
 
     const plan = await prisma.workoutPlan.findFirst({
-      where: { id: id, coachId: coach.id },
+      where: { id, coachId: coach.id },
       select: {
         id: true,
         _count: {
@@ -168,12 +133,15 @@ export async function DELETE(
     }
     if (plan._count.sessions > 0) {
       return NextResponse.json(
-        { success: false, error: "Cannot delete a plan with active sessions. Complete or skip them first." },
+        {
+          success: false,
+          error: "Cannot delete a plan with active sessions. Complete or skip them first.",
+        },
         { status: 409 }
       );
     }
 
-    await prisma.workoutPlan.delete({ where: { id: id } });
+    await prisma.workoutPlan.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (err) {

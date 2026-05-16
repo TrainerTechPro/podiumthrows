@@ -16,6 +16,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
 import { logger } from "@/lib/logger";
+import { parseBody, ProfilePictureUpdateSchema } from "@/lib/api-schemas";
 
 const MAX_DATA_URL_SIZE = 4 * 1024 * 1024; // ~3MB decoded
 
@@ -62,12 +63,10 @@ export async function PUT(
     const guard = await assertProxyOwnership(session.userId, athleteId);
     if (guard instanceof NextResponse) return guard;
 
-    const body = await req.json().catch(() => ({}));
-    const { avatarUrl } = body as { avatarUrl?: string };
+    const parsed = await parseBody(req, ProfilePictureUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { avatarUrl } = parsed;
 
-    if (!avatarUrl || typeof avatarUrl !== "string") {
-      return NextResponse.json({ success: false, error: "avatarUrl is required" }, { status: 400 });
-    }
     if (avatarUrl.length > MAX_DATA_URL_SIZE) {
       return NextResponse.json(
         { success: false, error: "Image too large (max ~3MB)" },

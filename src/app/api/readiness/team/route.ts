@@ -21,7 +21,8 @@ export async function GET() {
       where: { userId: session.userId },
       select: { id: true },
     });
-    if (!coach) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    if (!coach)
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
     const athletes = await prisma.athleteProfile.findMany({
       where: { coachId: coach.id },
@@ -54,8 +55,9 @@ export async function GET() {
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     });
 
-    return NextResponse.json(
-      athletes.map((a) => {
+    return NextResponse.json({
+      success: true,
+      data: athletes.map((a) => {
         const latest = a.readinessCheckIns[0] ?? null;
         return {
           athleteId: a.id,
@@ -81,8 +83,8 @@ export async function GET() {
               }
             : null,
         };
-      })
-    );
+      }),
+    });
   } catch (err) {
     logger.error("GET /api/readiness/team", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });

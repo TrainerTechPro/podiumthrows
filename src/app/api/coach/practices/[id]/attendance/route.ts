@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
-import {
-  getPracticeDetail,
-  batchUpdateAttendance,
-  markAllPresent,
-  AttendanceStatus,
-} from "@/lib/data/practices";
+import { getPracticeDetail, batchUpdateAttendance, markAllPresent } from "@/lib/data/practices";
+import { parseBody, CoachAttendanceBatchSchema } from "@/lib/api-schemas";
 
 /* ─── GET — attendance + eligible athletes for a practice ────────────────── */
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -59,31 +52,24 @@ export async function GET(
 
 /* ─── PATCH — batch update attendance statuses ───────────────────────────── */
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
-    const body = await req.json();
 
-    const { updates } = body as {
-      updates: Array<{
-        athleteId: string;
-        status: AttendanceStatus | null;
-        notes?: string;
-      }>;
-    };
+    const parsed = await parseBody(req, CoachAttendanceBatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { updates } = parsed;
 
-    if (!Array.isArray(updates) || updates.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "updates must be a non-empty array." },
-        { status: 400 }
-      );
-    }
-
-    const result = await batchUpdateAttendance(id, coach.id, updates);
+    const result = await batchUpdateAttendance(
+      id,
+      coach.id,
+      updates.map((u) => ({
+        athleteId: u.athleteId,
+        status: u.status,
+        notes: u.notes ?? undefined,
+      }))
+    );
     return NextResponse.json({ success: true, data: result });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -105,10 +91,7 @@ export async function PATCH(
 
 /* ─── POST ?action=mark-all-present ──────────────────────────────────────── */
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;

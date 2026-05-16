@@ -77,6 +77,11 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
+    // This endpoint dispatches on body shape (password change vs profile
+    // update), so we read the JSON once and run the matching parseBody-style
+    // safeParse for the chosen branch. Both branches return the canonical
+    // `{ success: false, error: "Validation failed", fieldErrors }` shape
+    // that `parseBody` itself emits.
     let body: Record<string, unknown>;
     try {
       body = await request.json();
@@ -84,8 +89,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
     }
 
-    // Password change
-    if (body.currentPassword || body.newPassword) {
+    const wantsPasswordChange = body.currentPassword != null || body.newPassword != null;
+
+    // Password change branch
+    if (wantsPasswordChange) {
       const result = PasswordChangeSchema.safeParse(body);
       if (!result.success) {
         const fieldErrors = result.error.issues.map((i) => ({

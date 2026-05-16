@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { markAsRead, deleteNotification, resolveNotificationContext } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
+import { parseBody } from "@/lib/api-schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -25,12 +26,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
-    const json = await req.json().catch(() => ({}));
-    const parsed = PatchSchema.safeParse(json);
-    if (!parsed.success) {
-      return NextResponse.json({ success: false, error: "Invalid body" }, { status: 400 });
-    }
-    const readValue = parsed.data.read ?? true;
+    const parsed = await parseBody(req, PatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const readValue = parsed.read ?? true;
 
     const updated = await markAsRead(id, ctx.profileId, ctx.effectiveRole, readValue);
     if (!updated) {

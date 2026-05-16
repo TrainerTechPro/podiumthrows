@@ -19,9 +19,9 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { commentTargetPair, verifyCommentAccess } from "@/lib/comments/access";
+import { parseBody, CommentUpdateSchema } from "@/lib/api-schemas";
 
 const MAX_REPLY_LENGTH = 40;
-const ALLOWED_REACTIONS = ["THUMBS_UP", "THUMBS_DOWN"] as const;
 const SELF_DELETE_WINDOW_MS = 15 * 60 * 1000;
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -80,48 +80,34 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const parsedBody = await parseBody(req, CommentUpdateSchema);
+    if (parsedBody instanceof NextResponse) return parsedBody;
 
     const updates: Record<string, unknown> = {};
 
-    if ("readAt" in body) {
-      // Accepts "now", an ISO string, or null. "now" is the canonical
-      // usage; explicit ISO is only used by replay/tests.
-      if (body.readAt === "now") {
+    if (parsedBody.readAt !== undefined) {
+      if (parsedBody.readAt === "now") {
         updates.readAt = new Date();
-      } else if (typeof body.readAt === "string") {
-        const parsed = new Date(body.readAt);
-        if (isNaN(parsed.getTime())) {
+      } else if (parsedBody.readAt === null) {
+        updates.readAt = null;
+      } else if (typeof parsedBody.readAt === "string") {
+        const parsedDate = new Date(parsedBody.readAt);
+        if (isNaN(parsedDate.getTime())) {
           return NextResponse.json({ success: false, error: "Invalid readAt." }, { status: 400 });
         }
-        updates.readAt = parsed;
-      } else if (body.readAt === null) {
-        updates.readAt = null;
+        updates.readAt = parsedDate;
       }
     }
 
-    if ("reaction" in body) {
-      const r = body.reaction;
-      if (r === null) {
-        updates.reaction = null;
-      } else if (typeof r === "string" && (ALLOWED_REACTIONS as readonly string[]).includes(r)) {
-        updates.reaction = r;
-      } else {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `reaction must be one of ${ALLOWED_REACTIONS.join(", ")} or null`,
-          },
-          { status: 400 }
-        );
-      }
+    if (parsedBody.reaction !== undefined) {
+      updates.reaction = parsedBody.reaction;
     }
 
-    if ("replyText" in body) {
-      const t = body.replyText;
+    if (parsedBody.replyText !== undefined) {
+      const t = parsedBody.replyText;
       if (t === null) {
         updates.replyText = null;
-      } else if (typeof t === "string") {
+      } else {
         const trimmed = t.trim();
         if (trimmed.length === 0) {
           updates.replyText = null;
@@ -133,11 +119,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         } else {
           updates.replyText = trimmed;
         }
-      } else {
-        return NextResponse.json(
-          { success: false, error: "replyText must be a string or null." },
-          { status: 400 }
-        );
       }
     }
 

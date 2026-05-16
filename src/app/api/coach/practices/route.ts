@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
-import {
-  getCoachPractices,
-  createPractice,
-  createRecurringPractices,
-} from "@/lib/data/practices";
+import { getCoachPractices, createPractice, createRecurringPractices } from "@/lib/data/practices";
+import { parseBody, CoachPracticeCreateSchema } from "@/lib/api-schemas";
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -60,63 +57,33 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
-    const body = await req.json();
 
-    const {
-      title,
-      date,
-      startTime,
-      endTime,
-      location,
-      notes,
-      groupId,
-      recurring,
-    } = body;
-
-    if (!title || !startTime || !endTime) {
-      return NextResponse.json(
-        { success: false, error: "title, startTime, and endTime are required." },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, CoachPracticeCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { title, date, startTime, endTime, location, notes, groupId, recurring } = parsed;
 
     if (recurring?.untilDate) {
-      // Recurring series
-      if (!date) {
-        return NextResponse.json(
-          { success: false, error: "date (startDate) is required for recurring practices." },
-          { status: 400 }
-        );
-      }
       const result = await createRecurringPractices(coach.id, {
         title,
-        startDate: date,
+        startDate: date as string,
         untilDate: recurring.untilDate,
         startTime,
         endTime,
-        location,
-        notes,
-        groupId,
+        location: location ?? undefined,
+        notes: notes ?? undefined,
+        groupId: groupId ?? undefined,
       });
       return NextResponse.json({ success: true, data: result }, { status: 201 });
     }
 
-    // Single practice
-    if (!date) {
-      return NextResponse.json(
-        { success: false, error: "date is required." },
-        { status: 400 }
-      );
-    }
-
     const result = await createPractice(coach.id, {
       title,
-      date,
+      date: date as string,
       startTime,
       endTime,
-      location,
-      notes,
-      groupId,
+      location: location ?? undefined,
+      notes: notes ?? undefined,
+      groupId: groupId ?? undefined,
     });
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (err) {

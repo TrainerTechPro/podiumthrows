@@ -5,6 +5,7 @@ import { PLAN_LIMITS } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { logAudit, auditRequestInfo } from "@/lib/audit";
 import { generateInvitationToken } from "@/lib/invitation-token";
+import { parseBody, InvitationCreateSchema } from "@/lib/api-schemas";
 
 /* ── GET — list all invitations for the authenticated coach ── */
 export async function GET() {
@@ -86,21 +87,13 @@ export async function POST(req: NextRequest) {
     }
 
     /* ── Validate body ── */
-    const body = await req.json().catch(() => ({}));
-    const mode = body.mode === "link" ? "link" : "email";
-    const email =
-      mode === "email" && typeof body.email === "string" ? body.email.trim().toLowerCase() : null;
-    const athleteProfileId =
-      typeof body.athleteProfileId === "string" ? body.athleteProfileId : undefined;
+    const parsed = await parseBody(req, InvitationCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const mode = parsed.mode;
+    const email = mode === "email" && parsed.email ? parsed.email.trim().toLowerCase() : null;
+    const athleteProfileId = parsed.athleteProfileId ?? undefined;
 
-    if (mode === "email") {
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return NextResponse.json(
-          { success: false, error: "A valid email address is required." },
-          { status: 400 }
-        );
-      }
-
+    if (mode === "email" && email) {
       /* ── Check if athlete already exists for this coach ── */
       const existingAthlete = await prisma.athleteProfile.findFirst({
         where: {
@@ -178,8 +171,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { ...invitation, token: raw },
-      emailSent,
+      data: { ...invitation, token: raw, emailSent },
     });
   } catch (err) {
     logger.error("POST /api/invitations", { context: "api", error: err });

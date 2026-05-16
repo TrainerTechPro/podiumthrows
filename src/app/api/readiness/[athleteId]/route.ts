@@ -17,7 +17,8 @@ export async function GET(
 ) {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    if (!session)
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
     const { athleteId } = await params;
 
@@ -26,7 +27,8 @@ export async function GET(
         where: { userId: session.userId },
         select: { id: true },
       });
-      if (!coach) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      if (!coach)
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
       const athleteOnRoster = await prisma.athleteProfile.findFirst({
         where: { id: athleteId, coachId: coach.id },
@@ -68,8 +70,9 @@ export async function GET(
       },
     });
 
-    return NextResponse.json(
-      checkIns.map((c) => ({
+    return NextResponse.json({
+      success: true,
+      data: checkIns.map((c) => ({
         id: c.id,
         date: c.date.toISOString(),
         overallScore: c.overallScore,
@@ -83,8 +86,8 @@ export async function GET(
         injuryStatus: c.injuryStatus as string,
         injuryNotes: c.injuryNotes,
         notes: c.notes,
-      }))
-    );
+      })),
+    });
   } catch (err) {
     logger.error("GET /api/readiness/:athleteId", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });

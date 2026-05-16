@@ -11,6 +11,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { parseBody } from "@/lib/api-schemas";
 
 const DEFAULTS = {
   pushEnabled: true,
@@ -94,30 +95,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const json = await req.json().catch(() => null);
-    if (!json || typeof json !== "object") {
-      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    const parsed = PatchSchema.safeParse(json);
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          fieldErrors: parsed.error.issues.map((i) => ({
-            field: i.path.join(".") || "_body",
-            message: i.message,
-          })),
-        },
-        { status: 400 }
-      );
-    }
-
-    // If both quietStart and quietEnd end up null, clear them. If only one is
-    // provided, require the other to be set (or already stored) so we never
-    // end up with a half-configured window.
-    const input = parsed.data;
+    const parsed = await parseBody(req, PatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const input = parsed;
     if (
       (input.quietStart === null && input.quietEnd === undefined) ||
       (input.quietEnd === null && input.quietStart === undefined)
