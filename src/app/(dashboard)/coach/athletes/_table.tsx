@@ -152,8 +152,8 @@ function ReadinessCell({ row }: { row: AthleteRosterItem }) {
 function StreakCell({ row }: { row: AthleteRosterItem }) {
   if (row.currentStreak === 0) return <span className="text-muted text-sm">—</span>;
   return (
-    <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-      🔥 {row.currentStreak}
+    <span className="text-sm font-semibold tabular-nums text-amber-600 dark:text-amber-400">
+      {row.currentStreak}d
     </span>
   );
 }
