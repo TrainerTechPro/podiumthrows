@@ -130,7 +130,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
                 {/* Top row: icon + email/label + badge + actions */}
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-9 h-9 rounded-full ${inv.email ? "bg-amber-500/10" : "bg-primary-500/10"} flex items-center justify-center shrink-0`}
+                    className={`w-9 h-9 rounded-full ${inv.email ? "bg-primary-500/10" : "bg-primary-500/10"} flex items-center justify-center shrink-0`}
                     aria-hidden="true"
                   >
                     {inv.email ? (
@@ -190,7 +190,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
                     onClick={() => revokeInvitation(inv)}
                     disabled={revokingId === inv.id}
                     aria-label={`Revoke invitation${inv.email ? ` for ${inv.email}` : ""}`}
-                    className="px-3 py-2.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition-all border bg-[var(--surface)] text-muted border-[var(--border)] hover:text-red-600 hover:border-red-500/30 hover:bg-red-500/5 active:bg-red-500/10 disabled:opacity-50 min-h-[44px] sm:min-h-0"
+                    className="px-3 py-2.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition-colors border bg-[var(--surface)] text-muted border-[var(--border)] hover:text-danger-600 hover:border-danger-500/30 hover:bg-danger-500/5 active:bg-danger-500/10 disabled:opacity-50 min-h-[44px] sm:min-h-0"
                   >
                     {revokingId === inv.id ? "Revoking..." : "Revoke"}
                   </button>

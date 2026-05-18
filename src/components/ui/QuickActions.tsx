@@ -54,14 +54,14 @@ const ATHLETE_ACTIONS: QuickActionDef[] = [
     label: "Start Session",
     icon: Play,
     href: "/athlete/quick-start",
-    color: "text-emerald-500",
+    color: "text-success-500",
   },
   {
     id: "wellness",
     label: "Health Check-in",
     icon: Heart,
     href: "/athlete/wellness",
-    color: "text-rose-500",
+    color: "text-danger-500",
   },
   {
     id: "log-throw",
@@ -70,7 +70,7 @@ const ATHLETE_ACTIONS: QuickActionDef[] = [
     href: "/athlete/throws/log",
     color: "text-primary-500",
   },
-  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-amber-500" },
+  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-primary-500" },
   {
     id: "profile",
     label: "Profile",
@@ -93,22 +93,22 @@ const COACH_ACTIONS: QuickActionDef[] = [
     label: "Session Builder",
     icon: Layers,
     href: "/coach/throws/builder",
-    color: "text-blue-500",
+    color: "text-info-500",
   },
-  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-500" },
+  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-info-500" },
   {
     id: "programs",
     label: "Programs",
     icon: FileText,
     href: "/coach/plans",
-    color: "text-amber-500",
+    color: "text-primary-500",
   },
   {
     id: "wellness",
     label: "Team Wellness",
     icon: Activity,
     href: "/coach/wellness",
-    color: "text-rose-500",
+    color: "text-danger-500",
   },
 ];
 
@@ -288,7 +288,7 @@ function CustomizerPanel({
 
       <button
         onClick={() => onChange({ enabled: false })}
-        className="w-full text-center text-micro text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors py-1"
+        className="w-full text-center text-micro text-muted hover:text-danger-500 dark:hover:text-danger-400 transition-colors py-1"
       >
         Disable Quick Actions
       </button>

@@ -35,10 +35,10 @@ function CompletionPill({
   const allDone = completed >= total;
   const tone =
     overdue > 0
-      ? "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400"
+      ? "border-danger-500/30 bg-danger-500/10 text-danger-700 dark:text-danger-400"
       : allDone
         ? "border-[var(--card-border)] bg-surface-100 dark:bg-surface-800 text-muted"
-        : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
+        : "border-primary-500/30 bg-primary-500/10 text-primary-700 dark:text-primary-400";
 
   return (
     <div
@@ -155,7 +155,7 @@ export default async function QuestionnairesPage() {
               <Link
                 key={q.id}
                 href={`/coach/questionnaires/${q.id}`}
-                className="card card-interactive p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
+                className="card card-interactive p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-colors group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">

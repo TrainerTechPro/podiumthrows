@@ -68,9 +68,9 @@ interface WeekCalendarProps {
 /* ─── Phase → day-column tint ─────────────────────────────────────────── */
 
 const PHASE_TINT: Record<NonNullable<TaperPhase>, string> = {
-  race: "bg-red-500/10 ring-1 ring-inset ring-red-500/20",
-  peak: "bg-amber-500/10 ring-1 ring-inset ring-amber-500/20",
-  taper: "bg-amber-500/5",
+  race: "bg-danger-500/10 ring-1 ring-inset ring-danger-500/20",
+  peak: "bg-primary-500/10 ring-1 ring-inset ring-primary-500/20",
+  taper: "bg-primary-500/5",
 };
 
 const PHASE_LABEL: Record<NonNullable<TaperPhase>, string> = {
@@ -169,8 +169,8 @@ export function WeekCalendar({
                   className={cn(
                     "px-2.5 pt-1.5 text-nano font-semibold uppercase tracking-wider",
                     phase === "race"
-                      ? "text-red-600 dark:text-red-400"
-                      : "text-amber-700 dark:text-amber-400"
+                      ? "text-danger-600 dark:text-danger-400"
+                      : "text-primary-700 dark:text-primary-400"
                   )}
                 >
                   {PHASE_LABEL[phase]}
@@ -186,9 +186,9 @@ export function WeekCalendar({
                       href={`/coach/competitions?meet=${encodeURIComponent(c.meetName)}&date=${c.date}`}
                       className={cn(
                         "flex items-center gap-1.5 px-2 py-1 rounded-md text-nano font-medium",
-                        "border border-red-500/20 bg-red-500/10",
-                        "text-red-700 dark:text-red-300",
-                        "hover:border-red-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40",
+                        "border border-danger-500/20 bg-danger-500/10",
+                        "text-danger-700 dark:text-danger-300",
+                        "hover:border-danger-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500/40",
                         "transition-colors"
                       )}
                       aria-label={`${c.athleteName} — ${c.meetName} (${c.priority}-Meet)`}
@@ -241,7 +241,7 @@ export function WeekCalendar({
                       "rounded-lg border-2 border-dashed border-surface-200 dark:border-surface-700",
                       "text-muted hover:text-primary-500 hover:border-primary-500/40",
                       "transition-colors cursor-pointer",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
                     )}
                     aria-label={`Add session on ${day.dayLabel}`}
                   >
@@ -260,7 +260,7 @@ export function WeekCalendar({
                     "rounded-lg border border-dashed border-surface-200 dark:border-surface-700",
                     "text-xs text-muted hover:text-primary-500 hover:border-primary-500/40",
                     "transition-colors cursor-pointer",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
                   )}
                   aria-label={`Add another session on ${day.dayLabel}`}
                 >

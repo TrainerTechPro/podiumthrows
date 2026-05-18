@@ -111,9 +111,7 @@ export default async function QuestionnaireDetailPage({
   // Determine which items to show: blocks (new) or questions (legacy)
   const blocks = questionnaire.blocks as FormBlock[] | null;
   const hasBlocks = blocks && blocks.length > 0;
-  const itemCount = hasBlocks
-    ? blocks.length
-    : questionnaire.questions.length;
+  const itemCount = hasBlocks ? blocks.length : questionnaire.questions.length;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -149,15 +147,15 @@ export default async function QuestionnaireDetailPage({
                 questionnaire.status === "published"
                   ? "success"
                   : questionnaire.status === "archived"
-                  ? "warning"
-                  : "neutral"
+                    ? "warning"
+                    : "neutral"
               }
             >
               {questionnaire.status === "published"
                 ? "Published"
                 : questionnaire.status === "archived"
-                ? "Archived"
-                : "Draft"}
+                  ? "Archived"
+                  : "Draft"}
             </Badge>
             <Badge variant="info">{TYPE_LABELS[questionnaire.type] ?? questionnaire.type}</Badge>
             <Badge variant="neutral">
@@ -198,9 +196,7 @@ export default async function QuestionnaireDetailPage({
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-[var(--foreground)]">
             {questionnaire.assignmentCount > 0
-              ? Math.round(
-                  (questionnaire.responseCount / questionnaire.assignmentCount) * 100
-                )
+              ? Math.round((questionnaire.responseCount / questionnaire.assignmentCount) * 100)
               : 0}
             %
           </div>
@@ -219,23 +215,15 @@ export default async function QuestionnaireDetailPage({
               const meta = BLOCK_REGISTRY[block.type];
               return (
                 <div key={block.id} className="flex gap-3 text-sm">
-                  <span className="text-muted font-mono shrink-0 w-5 text-right">
-                    {i + 1}.
-                  </span>
+                  <span className="text-muted font-mono shrink-0 w-5 text-right">{i + 1}.</span>
                   <div className="flex-1 min-w-0">
                     <span className="text-[var(--foreground)]">
                       {block.label || meta?.label || block.type}
                     </span>
-                    {block.required && (
-                      <span className="text-red-500 ml-1 text-xs">*</span>
-                    )}
-                    <span className="text-muted ml-2 text-xs">
-                      ({meta?.label ?? block.type})
-                    </span>
+                    {block.required && <span className="text-danger-500 ml-1 text-xs">*</span>}
+                    <span className="text-muted ml-2 text-xs">({meta?.label ?? block.type})</span>
                     {block.description && (
-                      <p className="text-xs text-muted mt-0.5 truncate">
-                        {block.description}
-                      </p>
+                      <p className="text-xs text-muted mt-0.5 truncate">{block.description}</p>
                     )}
                   </div>
                 </div>
@@ -243,21 +231,15 @@ export default async function QuestionnaireDetailPage({
             })
           : questionnaire.questions.map((q, i) => (
               <div key={q.id} className="flex gap-3 text-sm">
-                <span className="text-muted font-mono shrink-0 w-5 text-right">
-                  {i + 1}.
-                </span>
+                <span className="text-muted font-mono shrink-0 w-5 text-right">{i + 1}.</span>
                 <div>
                   <span className="text-[var(--foreground)]">{q.text}</span>
-                  {q.required && (
-                    <span className="text-red-500 ml-1 text-xs">*</span>
-                  )}
+                  {q.required && <span className="text-danger-500 ml-1 text-xs">*</span>}
                   <span className="text-muted ml-2 text-xs">
                     ({QUESTION_TYPE_LABELS_SIMPLE[q.type] ?? q.type})
                   </span>
                   {q.options && q.options.length > 0 && (
-                    <div className="text-xs text-muted mt-0.5">
-                      Options: {q.options.join(", ")}
-                    </div>
+                    <div className="text-xs text-muted mt-0.5">Options: {q.options.join(", ")}</div>
                   )}
                 </div>
               </div>
@@ -276,16 +258,13 @@ export default async function QuestionnaireDetailPage({
               <div
                 key={a.athleteId}
                 className={`flex items-center justify-between text-sm rounded-lg px-3 py-2 -mx-3 transition-colors ${
-                  a.completedAt
-                    ? "hover:bg-[var(--muted-bg)] cursor-default"
-                    : ""
+                  a.completedAt ? "hover:bg-[var(--muted-bg)] cursor-default" : ""
                 }`}
               >
                 <span className="text-[var(--foreground)]">{a.athleteName}</span>
                 {a.completedAt ? (
                   <Badge variant="success">
-                    Completed{" "}
-                    {new Date(a.completedAt).toLocaleDateString()}
+                    Completed {new Date(a.completedAt).toLocaleDateString()}
                   </Badge>
                 ) : (
                   <Badge variant="warning">Pending</Badge>
@@ -300,7 +279,7 @@ export default async function QuestionnaireDetailPage({
       {questionnaire.responseCount > 0 && (
         <Link
           href={`/coach/questionnaires/${questionnaire.id}/responses`}
-          className="card card-interactive p-4 flex items-center justify-between hover:ring-2 hover:ring-primary-500/30 transition-all group"
+          className="card card-interactive p-4 flex items-center justify-between hover:ring-2 hover:ring-primary-500/30 transition-colors group"
         >
           <span className="text-sm font-medium text-[var(--foreground)] group-hover:text-primary-600 dark:group-hover:text-primary-400">
             View {questionnaire.responseCount} Response

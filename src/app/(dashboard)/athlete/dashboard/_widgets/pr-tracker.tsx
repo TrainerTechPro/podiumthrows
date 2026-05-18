@@ -73,7 +73,7 @@ export function PRTrackerWidget({ data }: { data: PRTrackerData }) {
 
               {/* Distance */}
               <div className="flex-1 min-w-0">
-                <p className="text-lg font-bold font-mono tabular-nums text-amber-600 dark:text-amber-400">
+                <p className="text-lg font-bold font-mono tabular-nums text-primary-600 dark:text-primary-400">
                   <AnimatedNumber value={row.distance} decimals={2} />
                   <span className="text-xs font-normal text-muted ml-0.5">m</span>
                 </p>

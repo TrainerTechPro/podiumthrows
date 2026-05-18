@@ -17,10 +17,7 @@ const PRIORITIES = [
 
 export function StepCompetitions({ form, update, errors: _errors }: StepCompetitionsProps) {
   function addCompetition() {
-    const next: CompetitionEntry[] = [
-      ...form.competitions,
-      { date: "", name: "", priority: "B" },
-    ];
+    const next: CompetitionEntry[] = [...form.competitions, { date: "", name: "", priority: "B" }];
     update("competitions", next);
   }
 
@@ -43,8 +40,8 @@ export function StepCompetitions({ form, update, errors: _errors }: StepCompetit
           Competition Schedule
         </h2>
         <p className="text-body text-surface-700 dark:text-surface-300">
-          Add upcoming competitions so the program can taper and peak accordingly.
-          This step is optional.
+          Add upcoming competitions so the program can taper and peak accordingly. This step is
+          optional.
         </p>
       </div>
 
@@ -56,11 +53,7 @@ export function StepCompetitions({ form, update, errors: _errors }: StepCompetit
           <p className="text-sm text-surface-700 dark:text-surface-300 mb-4">
             No competitions added yet
           </p>
-          <button
-            type="button"
-            onClick={addCompetition}
-            className="btn-primary px-4 py-2 text-sm"
-          >
+          <button type="button" onClick={addCompetition} className="btn-primary px-4 py-2 text-sm">
             <Plus size={16} strokeWidth={1.75} className="inline mr-1" aria-hidden="true" />
             Add Competition
           </button>
@@ -69,10 +62,7 @@ export function StepCompetitions({ form, update, errors: _errors }: StepCompetit
         <>
           <div className="space-y-3">
             {form.competitions.map((comp, i) => (
-              <div
-                key={i}
-                className="card p-4 space-y-3"
-              >
+              <div key={i} className="card p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                     Competition {i + 1}
@@ -80,7 +70,7 @@ export function StepCompetitions({ form, update, errors: _errors }: StepCompetit
                   <button
                     type="button"
                     onClick={() => removeCompetition(i)}
-                    className="p-1 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="p-1 text-danger-500 hover:text-danger-600 dark:text-danger-400 dark:hover:text-danger-300 transition-colors rounded-lg hover:bg-danger-50 dark:hover:bg-danger-900/20"
                     aria-label={`Remove competition ${i + 1}`}
                   >
                     <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />

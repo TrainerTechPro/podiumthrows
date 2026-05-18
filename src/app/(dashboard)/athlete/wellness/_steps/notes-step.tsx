@@ -39,8 +39,8 @@ export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
           className={cn(
             "w-full bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 text-sm",
             "text-[var(--foreground)] placeholder:text-muted/60",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/50",
-            "resize-none transition-all duration-150"
+            "focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/50",
+            "resize-none transition-colors duration-150"
           )}
         />
       </div>

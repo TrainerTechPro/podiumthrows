@@ -129,7 +129,7 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
                     <button
                       type="button"
                       onClick={() => setDeletingDrill(drill)}
-                      className="text-xs text-red-500 hover:underline"
+                      className="text-xs text-danger-500 hover:underline"
                     >
                       Delete
                     </button>

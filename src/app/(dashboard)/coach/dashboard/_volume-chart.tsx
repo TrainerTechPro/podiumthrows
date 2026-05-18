@@ -47,7 +47,7 @@ export function VolumeChart({ data }: { data: WeeklyVolume }) {
               <div className="w-full flex items-end justify-center flex-1">
                 <div
                   className={cn(
-                    "w-full max-w-[28px] rounded-t transition-all duration-300",
+                    "w-full max-w-[28px] rounded-t transition-colors duration-300",
                     day.throws > 0
                       ? "bg-primary-500 dark:bg-primary-400"
                       : "bg-surface-200 dark:bg-surface-700",

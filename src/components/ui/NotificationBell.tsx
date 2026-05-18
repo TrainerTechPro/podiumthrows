@@ -567,7 +567,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
                           {n.title}
                         </p>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                          {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />}
                           <span className="text-nano text-muted tabular-nums whitespace-nowrap">
                             {relativeTime(n.createdAt)}
                           </span>

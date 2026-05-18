@@ -377,7 +377,7 @@ export function ThrowingBlockView({
                     if (e.key === "Escape") setInputExpanded(false);
                   }}
                   placeholder="0.00"
-                  className="flex-1 px-3 py-3 rounded-md border text-lg tabular-nums font-medium text-center focus:outline-none"
+                  className="flex-1 px-3 py-3 rounded-md border text-lg tabular-nums font-medium text-center focus-visible:outline-none"
                   style={{
                     backgroundColor: "#0a0a0c",
                     borderColor: `${accent}33`,

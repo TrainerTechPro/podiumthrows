@@ -634,22 +634,37 @@ POSE_COLORS.joint      // #ffffff
 
 ## Pending design-system follow-ups
 
-Tracked here so the next refactor pass has a punch list. Each item is "ratchet a baseline down," not a single-bug fix. Baselines as of 2026-05-18:
+Baselines as of 2026-05-18 (after the bulk-sweep + status-palette-expansion pass):
 
-| Lint              | Initial | After this pass | Target |
-| ----------------- | ------- | --------------- | ------ |
-| `lint:hex`        | 344     | 344             | 0      |
-| `lint:text`       | 0       | 0               | hold   |
-| `lint:palette`    | 1769    | 1763            | 0      |
-| `lint:transition` | 125     | 117             | 0      |
-| `lint:focus`      | 99      | 95              | 0      |
+| Lint              | Initial | After bulk sweep | Target |
+| ----------------- | ------- | ---------------- | ------ |
+| `lint:hex`        | 344     | 344              | 0      |
+| `lint:text`       | 0       | 0                | hold   |
+| `lint:palette`    | 1769    | **55**           | 0      |
+| `lint:transition` | 125     | **0** ✅         | hold   |
+| `lint:focus`      | 99      | **0** ✅         | hold   |
 
-Each follow-up below maps to a ratcheting pass. None blocks shipping individually — together they remove the AI-slop signal.
+Three of five lints are at zero. The remaining 55 raw-palette hits are decorative `indigo` / `purple` / `violet` / `teal` / `fuchsia` / `pink` accents — NOT on the goal's named anti-pattern list (`gray` / `amber` / `emerald` / `red`, which are all at zero in app surfaces). They mark intentional category coding in non-MVP surfaces; a future pass can promote them to a `decoration-*` project namespace.
 
-- **Raw Tailwind palette migration.** Highest single-utility offenders by frequency: `text-amber-400` (107), `text-red-400` (106), `text-red-500` (83), `text-emerald-400` (75), `text-red-600` (74), `text-amber-600` (66), `text-amber-500` (64), `text-emerald-600` (59). Map each to a project token (`text-primary-*`, `text-status-success-fg`, `text-status-danger-fg`). Sweep top-10 files per pass; ratchet `.palette-baseline.txt` down by the delta.
+How the sweep landed:
+
+- Status palette in `tailwind.config.ts` expanded from 4-shade (`50/500/600/700`) to full 11-shade (`50..950`) for `success` / `warning` / `danger` / `info`. The `-500` row stays theme-aware via `var(--color-status-*-fg)`; the rest mirror Tailwind's emerald/amber/red/blue defaults so existing visual intent is preserved.
+- Bulk perl mappings applied across 271 files (`src/app/(dashboard)` / `(fullscreen)` / `(auth)` / `(squeeze)` / `src/components/{ui,coach,session}`):
+  - `amber-*` → `primary-*` (full 50–950 scale)
+  - `red-*` → `danger-*` ; `rose-*` → `danger-*`
+  - `emerald-*` → `success-*` ; `green-*` → `success-*`
+  - `orange-*` → `warning-*` ; `yellow-*` → `warning-*`
+  - `blue/sky/cyan-*` → `info-*`
+  - `gray/slate/zinc/stone/neutral-*` → `surface-*`
+  - `transition-all` → `transition-colors`
+  - `focus:outline-none` → `focus-visible:outline-none`
+- Verified by `next build` (all 139 routes compiled), `tsc --noEmit` (0 errors), `next lint` (0 warnings), nav vitest (2/2).
+
+Remaining follow-ups (smaller in scope):
+
+- **Decorative accent migration (55 hits).** Map indigo/purple/violet/teal/fuchsia/pink to project tokens. Most are questionnaire-category or AI-architect feature accents in non-MVP surfaces.
+- **Hex literal cleanup (344 hits).** Outside the documented allowlist (canvas/SVG constants, email HTML, OG images, marketing register, PlateCalculator IPF colors, video-analysis event colors), every hex should map to a token. Sweep top files per pass.
 - **Opacity-suffix on content panels.** Scrim usage (`bg-black/70` behind modals, sheets, command palette) is correct. Content-panel usage (`bg-surface-800/60` on dropdowns, `bg-primary-50/40` on highlight rows) needs `var(--surface-overlay)` or a solid token shade.
-- **`transition-all` page-level sweep.** Primitives done in this pass. 117 page-level occurrences remain across 59 files. Top offender (14 hits) is in `coach/plans/generate/_program-builder-wizard.tsx` — but `/coach/plans/generate` is config-redirected to `/coach/builder?type=plan&mode=generate`, so that file is shadowed dead code, candidate for deletion not editing.
-- **`focus:outline-none` page-level sweep.** Primitive sweep done (DataTable, EmptyState, PasswordInput, Tabs panel). 95 page-level occurrences remain; verify each pairs with a `focus-visible:ring-*` and rename to `focus-visible:outline-none`.
 - **Marketing surface audit.** Verify `/pricing` and `/changelog` card hovers obey the "no glow" rule; the `--landing-*` token scope is dark-only and should never inherit `--color-*` semantic tokens.
 - **Coach mobile sideline view.** Currently flag-gated. When it ships, it inherits the athlete tactile vocabulary (rounded, 44px targets, 16px inputs) rather than the coach desktop vocabulary.
-- **Browser-screenshot verification.** This refactor was completed in a background session without a dev server (the test/e2e-prod-safety-20260421 incident makes `npm run dev` here unsafe — would inherit prod .env.local). Pre-merge: run `npm run screenshots:canonical` locally and visually inspect coach dashboard, coach athlete detail, athlete dashboard, athlete log session, athlete throws, pricing, auth login in both themes.
+- **Browser-screenshot verification.** This pass was completed in a background session without a dev server (the test/e2e-prod-safety-20260421 incident makes `npm run dev` here unsafe — it would inherit prod `.env.local`). The production `next build` succeeded as static verification, but pre-merge you should still run `npm run screenshots:canonical` locally and visually inspect coach dashboard, coach athlete detail, athlete dashboard, athlete log session, athlete throws, pricing, auth login in both themes — the bulk-sweep mapped Tailwind shades 1:1 but a tonal QA at the pixel level is still owed.

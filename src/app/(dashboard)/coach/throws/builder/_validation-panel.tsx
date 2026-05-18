@@ -33,9 +33,9 @@ function getRuleStatus(
 }
 
 const STATUS_STYLE: Record<RuleStatus, string> = {
-  OK: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  WN: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  XX: "bg-red-500/10 text-red-600 dark:text-red-400 animate-danger-pulse",
+  OK: "bg-success-500/10 text-success-600 dark:text-success-400",
+  WN: "bg-primary-500/10 text-primary-600 dark:text-primary-400",
+  XX: "bg-danger-500/10 text-danger-600 dark:text-danger-400 animate-danger-pulse",
 };
 
 /* ─── Scroll to Block ────────────────────────────────────────────── */
@@ -76,7 +76,7 @@ function PanelContent({
         </span>
         <span
           className={`text-xs font-bold tabular-nums ${
-            passingCount === 7 ? "text-emerald-500" : "text-muted"
+            passingCount === 7 ? "text-success-500" : "text-muted"
           }`}
         >
           {passingCount}/7
@@ -237,20 +237,20 @@ export function ValidationBadge({
         style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
       >
         {okCount > 0 && (
-          <span className="flex items-center gap-1 text-xs font-bold text-emerald-500">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span className="flex items-center gap-1 text-xs font-bold text-success-500">
+            <span className="w-2 h-2 rounded-full bg-success-500" />
             {okCount}
           </span>
         )}
         {warningCount > 0 && (
-          <span className="flex items-center gap-1 text-xs font-bold text-amber-500">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
+          <span className="flex items-center gap-1 text-xs font-bold text-primary-500">
+            <span className="w-2 h-2 rounded-full bg-primary-500" />
             {warningCount}
           </span>
         )}
         {criticalCount > 0 && (
-          <span className="flex items-center gap-1 text-xs font-bold text-red-500 animate-danger-pulse">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
+          <span className="flex items-center gap-1 text-xs font-bold text-danger-500 animate-danger-pulse">
+            <span className="w-2 h-2 rounded-full bg-danger-500" />
             {criticalCount}
           </span>
         )}

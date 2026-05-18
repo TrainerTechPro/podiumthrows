@@ -52,7 +52,7 @@ function NotificationIcon({ type }: { type: string }) {
     case "COMPETITION_PR":
       return (
         <div
-          className={`${base} bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400`}
+          className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}
         >
           <Trophy {...ICON_PROPS} />
         </div>
@@ -277,7 +277,7 @@ function NotificationCard({
   // Swipe affordance: drawer is invisible at rest and fades in
   // proportional to swipe distance, fully visible at the latch threshold.
   // Two reasons this matters:
-  //   1. The unread row uses bg-amber-500/5 (95% transparent) so a
+  //   1. The unread row uses bg-primary-500/5 (95% transparent) so a
   //      full-opacity drawer behind it bled blue/red through every unread
   //      card even when the user wasn't swiping.
   //   2. iOS Safari promotes the foreground (transform: translateX) to a
@@ -312,7 +312,7 @@ function NotificationCard({
             if (!n.read) onMarkRead(n.id, true);
             else onMarkRead(n.id, false);
           }}
-          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-info-500 text-white text-micro font-semibold focus:outline-none focus:ring-2 focus:ring-info-500/50"
+          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-info-500 text-white text-micro font-semibold focus-visible:outline-none focus:ring-2 focus:ring-info-500/50"
           tabIndex={swipeOpen ? 0 : -1}
         >
           <Check size={16} strokeWidth={2.25} aria-hidden="true" />
@@ -324,7 +324,7 @@ function NotificationCard({
             closeSwipe();
             onDelete(n.id);
           }}
-          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-danger-500 text-white text-micro font-semibold focus:outline-none focus:ring-2 focus:ring-danger-500/50"
+          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-danger-500 text-white text-micro font-semibold focus-visible:outline-none focus:ring-2 focus:ring-danger-500/50"
           tabIndex={swipeOpen ? 0 : -1}
         >
           <Trash2 size={16} strokeWidth={2.25} aria-hidden="true" />
@@ -336,7 +336,7 @@ function NotificationCard({
       <div
         className={`group relative z-10 flex items-start gap-3 p-4 border ${
           !n.read
-            ? "border-amber-400/20 bg-amber-50/50 dark:bg-amber-500/5"
+            ? "border-primary-400/20 bg-primary-50/50 dark:bg-primary-500/5"
             : "border-surface-200 dark:border-surface-800 bg-[var(--card-bg)]"
         } rounded-xl ${animating ? "transition-transform duration-200 ease-out" : ""}`}
         style={{ transform: `translateX(${offsetX}px)` }}
@@ -357,7 +357,7 @@ function NotificationCard({
             <div className="flex items-center gap-2 shrink-0">
               {!n.read && (
                 <span
-                  className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                  className="w-2 h-2 rounded-full bg-primary-500 shrink-0"
                   role="status"
                   aria-label="Unread"
                 />
@@ -422,7 +422,7 @@ function DesktopOverflowMenu({
         onClick={() => setOpen((v) => !v)}
         aria-label="More actions"
         aria-expanded={open}
-        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 rounded-md p-1.5 text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 rounded-md p-1.5 text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-opacity focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
       >
         <MoreHorizontal size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
@@ -773,7 +773,7 @@ export function NotificationsClient({
           type="button"
           onClick={markAllRead}
           disabled={markingAll || visibleUnread === 0}
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-500/15 hover:bg-primary-200 dark:hover:bg-primary-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-500/15 hover:bg-primary-200 dark:hover:bg-primary-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
         >
           <Check size={12} strokeWidth={2.25} aria-hidden="true" />
           {markingAll ? "Marking…" : "Mark all read"}
@@ -840,7 +840,7 @@ export function NotificationsClient({
                 type="button"
                 onClick={loadMore}
                 disabled={loading}
-                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-[var(--foreground)] bg-[var(--card-bg)] border border-[var(--card-border)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-[var(--foreground)] bg-[var(--card-bg)] border border-[var(--card-border)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
               >
                 {loading ? (
                   <>

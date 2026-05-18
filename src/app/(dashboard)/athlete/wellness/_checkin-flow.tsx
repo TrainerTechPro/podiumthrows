@@ -391,8 +391,13 @@ export function CheckinFlow({
   if (phase === "error") {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-5 text-center">
-        <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
-          <AlertCircle size={28} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
+        <div className="w-14 h-14 rounded-full bg-danger-500/10 flex items-center justify-center">
+          <AlertCircle
+            size={28}
+            strokeWidth={1.75}
+            className="text-danger-500"
+            aria-hidden="true"
+          />
         </div>
         <div className="space-y-1">
           <h3 className="text-lg font-bold font-heading text-[var(--foreground)]">
@@ -441,11 +446,11 @@ export function CheckinFlow({
   if (phase === "queued") {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-5 text-center">
-        <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full bg-primary-500/10 flex items-center justify-center">
           <CheckCircle2
             size={28}
             strokeWidth={1.75}
-            className="text-amber-500"
+            className="text-primary-500"
             aria-hidden="true"
           />
         </div>

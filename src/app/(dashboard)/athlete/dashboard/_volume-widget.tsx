@@ -70,8 +70,13 @@ export function VolumeWidget() {
           Training Volume
         </h3>
         <div className="flex flex-col items-center text-center gap-3 py-3">
-          <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-            <AlertCircle size={20} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
+          <div className="w-10 h-10 rounded-xl bg-danger-500/10 flex items-center justify-center">
+            <AlertCircle
+              size={20}
+              strokeWidth={1.75}
+              className="text-danger-500"
+              aria-hidden="true"
+            />
           </div>
           <p className="text-sm font-medium text-[var(--foreground)]">
             Couldn&apos;t load volume data

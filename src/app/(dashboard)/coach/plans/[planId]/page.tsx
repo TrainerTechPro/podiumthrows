@@ -76,7 +76,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           <Link
             href={`/coach/plans/${plan.id}/print`}
             target="_blank"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
             aria-label="Open print view of plan"
           >
             <Printer size={14} strokeWidth={1.75} aria-hidden="true" />

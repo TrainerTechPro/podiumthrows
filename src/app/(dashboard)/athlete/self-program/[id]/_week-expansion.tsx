@@ -49,28 +49,28 @@ export const PHASE_COLORS: Record<
   { bg: string; text: string; border: string; dot: string }
 > = {
   ACCUMULATION: {
-    bg: "bg-blue-50 dark:bg-blue-500/10",
-    text: "text-blue-700 dark:text-blue-300",
-    border: "border-blue-200 dark:border-blue-500/30",
-    dot: "bg-blue-500",
+    bg: "bg-info-50 dark:bg-info-500/10",
+    text: "text-info-700 dark:text-info-300",
+    border: "border-info-200 dark:border-info-500/30",
+    dot: "bg-info-500",
   },
   TRANSMUTATION: {
-    bg: "bg-amber-50 dark:bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-300",
-    border: "border-amber-200 dark:border-amber-500/30",
-    dot: "bg-amber-500",
+    bg: "bg-primary-50 dark:bg-primary-500/10",
+    text: "text-primary-700 dark:text-primary-300",
+    border: "border-primary-200 dark:border-primary-500/30",
+    dot: "bg-primary-500",
   },
   REALIZATION: {
-    bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-300",
-    border: "border-emerald-200 dark:border-emerald-500/30",
-    dot: "bg-emerald-500",
+    bg: "bg-success-50 dark:bg-success-500/10",
+    text: "text-success-700 dark:text-success-300",
+    border: "border-success-200 dark:border-success-500/30",
+    dot: "bg-success-500",
   },
   COMPETITION: {
-    bg: "bg-red-50 dark:bg-red-500/10",
-    text: "text-red-700 dark:text-red-300",
-    border: "border-red-200 dark:border-red-500/30",
-    dot: "bg-red-500",
+    bg: "bg-danger-50 dark:bg-danger-500/10",
+    text: "text-danger-700 dark:text-danger-300",
+    border: "border-danger-200 dark:border-danger-500/30",
+    dot: "bg-danger-500",
   },
 };
 
@@ -90,13 +90,16 @@ const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
     text: "text-surface-600 dark:text-surface-400",
   },
   IN_PROGRESS: {
-    bg: "bg-amber-50 dark:bg-amber-500/10",
-    text: "text-amber-700 dark:text-amber-300",
+    bg: "bg-primary-50 dark:bg-primary-500/10",
+    text: "text-primary-700 dark:text-primary-300",
   },
-  ACTIVE: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-700 dark:text-amber-300" },
+  ACTIVE: {
+    bg: "bg-primary-50 dark:bg-primary-500/10",
+    text: "text-primary-700 dark:text-primary-300",
+  },
   COMPLETED: {
-    bg: "bg-emerald-50 dark:bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-300",
+    bg: "bg-success-50 dark:bg-success-500/10",
+    text: "text-success-700 dark:text-success-300",
   },
   SKIPPED: {
     bg: "bg-surface-100 dark:bg-surface-800",

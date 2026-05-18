@@ -18,10 +18,10 @@ const DEFICIT_LABELS: Record<string, string> = {
 };
 
 const DEFICIT_COLORS: Record<string, string> = {
-  heavy_implement: "text-amber-500",
-  light_implement: "text-blue-500",
-  strength: "text-red-500",
-  balanced: "text-emerald-500",
+  heavy_implement: "text-primary-500",
+  light_implement: "text-info-500",
+  strength: "text-danger-500",
+  balanced: "text-success-500",
   none: "text-surface-400",
 };
 
@@ -63,7 +63,12 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
       {/* ── Success Banner ── */}
       <div className="text-center space-y-3 pt-4">
         <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary-500/10 mb-2">
-          <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7 sm:w-8 sm:h-8 text-primary-500" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="w-7 h-7 sm:w-8 sm:h-8 text-primary-500"
+            aria-hidden="true"
+          >
             <path
               d="M9 12l2 2 4-4"
               stroke="currentColor"
@@ -75,9 +80,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
           </svg>
         </div>
         <h1 className="text-2xl sm:text-display-md font-heading font-bold text-[var(--foreground)]">
-          {isPaid
-            ? `Welcome to Podium Throws ${planName}!`
-            : "Welcome to Podium Throws!"}
+          {isPaid ? `Welcome to Podium Throws ${planName}!` : "Welcome to Podium Throws!"}
         </h1>
         <p className="text-surface-500 dark:text-surface-400 text-base sm:text-lg">
           Great to have you, {firstName}. Your account is ready to go.
@@ -107,7 +110,11 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
                 <p className="text-sm text-muted mt-1">
                   {[
                     deficitData.event ? EVENT_LABELS[deficitData.event] || deficitData.event : "",
-                    deficitData.gender === "M" ? "Men's" : deficitData.gender === "F" ? "Women's" : "",
+                    deficitData.gender === "M"
+                      ? "Men's"
+                      : deficitData.gender === "F"
+                        ? "Women's"
+                        : "",
                     deficitData.distanceBand ? `${deficitData.distanceBand}m band` : "",
                   ]
                     .filter(Boolean)
@@ -137,8 +144,8 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
           </div>
 
           {deficitData.overPowered && (
-            <div className="bg-red-500/5 border border-red-500/15 rounded-xl p-3">
-              <p className="text-xs font-semibold text-red-500 uppercase tracking-wide">
+            <div className="bg-danger-500/5 border border-danger-500/15 rounded-xl p-3">
+              <p className="text-xs font-semibold text-danger-500 uppercase tracking-wide">
                 Overpowered Flag
               </p>
               <p className="text-sm text-muted mt-1">
@@ -205,9 +212,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
             <p className="font-heading font-semibold text-sm text-[var(--foreground)] group-hover:text-primary-500 transition-colors">
               Explore Throws Hub
             </p>
-            <p className="text-xs text-muted mt-1">
-              Sessions, analytics, and Bondarchuk tools.
-            </p>
+            <p className="text-xs text-muted mt-1">Sessions, analytics, and Bondarchuk tools.</p>
             <span className="inline-flex items-center gap-1 text-xs text-primary-500 mt-3 font-medium">
               Explore <ArrowRightIcon />
             </span>
@@ -219,18 +224,48 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
+                <rect
+                  x="3"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <rect
+                  x="14"
+                  y="3"
+                  width="7"
+                  height="7"
+                  rx="1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <rect
+                  x="3"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <rect
+                  x="14"
+                  y="14"
+                  width="7"
+                  height="7"
+                  rx="1"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
               </svg>
             </div>
             <p className="font-heading font-semibold text-sm text-[var(--foreground)] group-hover:text-primary-500 transition-colors">
               View Your Dashboard
             </p>
-            <p className="text-xs text-muted mt-1">
-              Overview of team activity and readiness.
-            </p>
+            <p className="text-xs text-muted mt-1">Overview of team activity and readiness.</p>
             <span className="inline-flex items-center gap-1 text-xs text-primary-500 mt-3 font-medium">
               Go to dashboard <ArrowRightIcon />
             </span>

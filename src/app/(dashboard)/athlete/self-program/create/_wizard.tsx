@@ -739,7 +739,7 @@ export function SelfProgramWizard({
                   if (i < step) setStep(i);
                 }}
                 disabled={i > step}
-                className={`flex items-center justify-center w-11 h-11 rounded-full text-sm font-semibold transition-all flex-shrink-0 ${
+                className={`flex items-center justify-center w-11 h-11 rounded-full text-sm font-semibold transition-colors flex-shrink-0 ${
                   i === step
                     ? "bg-primary-500 text-black shadow-md"
                     : i < step
@@ -765,7 +765,7 @@ export function SelfProgramWizard({
         {/* Progress bar */}
         <div className="h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary-500 rounded-full transition-all duration-500"
+            className="h-full bg-primary-500 rounded-full transition-colors duration-500"
             style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
           />
         </div>
@@ -826,7 +826,7 @@ export function SelfProgramWizard({
 
       {/* Error */}
       {errors.generate && (
-        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+        <div className="mt-4 p-3 bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-400 rounded-xl text-sm">
           {errors.generate}
         </div>
       )}

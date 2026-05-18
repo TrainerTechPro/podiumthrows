@@ -223,7 +223,7 @@ function DotIndicator({ count, current }: DotIndicatorProps) {
           <span
             key={i}
             className={cn(
-              "rounded-full transition-all duration-200 ease-out",
+              "rounded-full transition-colors duration-200 ease-out",
               // Reserve the active footprint so inactive dots don't shift layout.
               "w-2.5 h-2.5 flex items-center justify-center",
               isActive
@@ -379,7 +379,7 @@ function QuickEntrySheet({
                 key={opt}
                 onClick={() => setFeeling(feeling === opt ? null : opt)}
                 className={cn(
-                  "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all",
+                  "flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-colors",
                   feeling === opt
                     ? "bg-primary-500/20 border-primary-500/60 text-primary-400"
                     : "bg-surface-700 border-surface-600/40 text-[var(--muted)] hover:border-surface-500"
@@ -407,7 +407,7 @@ function QuickEntrySheet({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Optional note..."
-            className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/60"
+            className="w-full bg-surface-700 border border-surface-600/60 rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-surface-400 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/60"
           />
         </div>
 
@@ -415,7 +415,7 @@ function QuickEntrySheet({
         <div className="flex flex-col gap-2 pt-1">
           <button
             onClick={handleSave}
-            className="w-full py-4 rounded-2xl bg-primary-500 text-surface-950 font-heading font-bold text-base hover:bg-primary-400 active:scale-[0.98] transition-all"
+            className="w-full py-4 rounded-2xl bg-primary-500 text-surface-950 font-heading font-bold text-base hover:bg-primary-400 active:scale-[0.98] transition-colors"
           >
             Save
           </button>
@@ -1205,7 +1205,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
               "relative rounded-full flex flex-col items-center justify-center",
               "w-[clamp(200px,55vw,260px)] h-[clamp(200px,55vw,260px)]",
               "bg-gradient-to-br from-primary-400 to-primary-600",
-              "shadow-warm-md focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60",
+              "shadow-warm-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60",
               "cursor-pointer select-none transition-[transform,box-shadow] duration-200 ease-out",
               !prefersReducedMotion && "active:scale-95"
             )}

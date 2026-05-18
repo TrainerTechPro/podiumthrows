@@ -294,7 +294,7 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
         // see-through. Per CLAUDE.md §Overlay Surfaces, content panels must
         // resolve to a fully opaque surface in both themes.
         isCelebration
-          ? "bg-[var(--surface-overlay)] bg-gradient-to-r from-primary-50 via-primary-50/80 to-amber-50 dark:from-primary-950/60 dark:via-primary-950/40 dark:to-amber-950/30 border rounded-xl shadow-lg"
+          ? "bg-[var(--surface-overlay)] bg-gradient-to-r from-primary-50 via-primary-50/80 to-primary-50 dark:from-primary-950/60 dark:via-primary-950/40 dark:to-primary-950/30 border rounded-xl shadow-lg"
           : "bg-[var(--surface-overlay)] border rounded-xl shadow-lg",
         enterClass,
         transitionClass,

@@ -36,10 +36,10 @@ export function CoachComposer({ onPosted }: CoachComposerProps) {
 
   const counterColor =
     charCount >= MAX_LENGTH
-      ? "text-red-500"
+      ? "text-danger-500"
       : charCount >= WARN_LENGTH
-      ? "text-amber-500"
-      : "text-muted";
+        ? "text-primary-500"
+        : "text-muted";
 
   async function handlePost() {
     if (disabled) return;
@@ -92,7 +92,7 @@ export function CoachComposer({ onPosted }: CoachComposerProps) {
         placeholder="Say something to your athletes…"
         rows={3}
         maxLength={MAX_LENGTH + 1} // +1 so the counter shows over-limit state
-        className="w-full resize-none rounded-xl bg-surface-100 dark:bg-surface-800/60 border border-[var(--card-border)] px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-shadow"
+        className="w-full resize-none rounded-xl bg-surface-100 dark:bg-surface-800/60 border border-[var(--card-border)] px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-muted focus-visible:outline-none focus:ring-2 focus:ring-primary-500/40 transition-shadow"
         aria-describedby="coach-post-counter"
       />
 

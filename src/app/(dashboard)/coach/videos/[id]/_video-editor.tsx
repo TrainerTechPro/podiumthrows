@@ -337,7 +337,7 @@ export function VideoEditor({ video, athletes }: Props) {
         {/* Delete */}
         <button
           onClick={() => setShowDeleteConfirm(true)}
-          className="p-1.5 rounded-lg text-surface-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+          className="p-1.5 rounded-lg text-surface-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-500/10 transition-colors"
           title="Delete video"
         >
           <svg

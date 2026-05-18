@@ -13,19 +13,22 @@ const PRIMARY_GOALS = [
   {
     value: "DISTANCE",
     label: "Distance",
-    description: "Maximize throwing distance. The program will prioritize progressive overload and implement sequencing for transfer.",
+    description:
+      "Maximize throwing distance. The program will prioritize progressive overload and implement sequencing for transfer.",
     icon: Crosshair,
   },
   {
     value: "TECHNIQUE",
     label: "Technique",
-    description: "Refine technical consistency. Higher volume at lower intensity with more standing and positional drills.",
+    description:
+      "Refine technical consistency. Higher volume at lower intensity with more standing and positional drills.",
     icon: Focus,
   },
   {
     value: "CONSISTENCY",
     label: "Consistency",
-    description: "Reduce session-to-session variance. Focus on competition simulation and repeatability.",
+    description:
+      "Reduce session-to-session variance. Focus on competition simulation and repeatability.",
     icon: BarChart3,
   },
 ] as const;
@@ -68,7 +71,7 @@ export function StepGoals({ form, update, errors }: StepGoalsProps) {
                 key={goal.value}
                 type="button"
                 onClick={() => update("primaryGoal", goal.value)}
-                className={`card card-interactive p-4 text-left transition-all ${
+                className={`card card-interactive p-4 text-left transition-colors ${
                   isSelected
                     ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                     : "border-[var(--card-border)]"
@@ -93,7 +96,7 @@ export function StepGoals({ form, update, errors }: StepGoalsProps) {
         </div>
 
         {errors.primaryGoal && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.primaryGoal}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">{errors.primaryGoal}</p>
         )}
       </div>
 
@@ -115,7 +118,7 @@ export function StepGoals({ form, update, errors }: StepGoalsProps) {
                 key={mode.value}
                 type="button"
                 onClick={() => update("generationMode", mode.value)}
-                className={`card card-interactive p-4 text-left transition-all ${
+                className={`card card-interactive p-4 text-left transition-colors ${
                   isSelected
                     ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                     : "border-[var(--card-border)]"
@@ -144,7 +147,9 @@ export function StepGoals({ form, update, errors }: StepGoalsProps) {
         </div>
 
         {errors.generationMode && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.generationMode}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">
+            {errors.generationMode}
+          </p>
         )}
       </div>
     </div>

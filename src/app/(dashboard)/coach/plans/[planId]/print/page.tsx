@@ -125,7 +125,10 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
               {coach.firstName} {coach.lastName}
             </span>
             {coach.organization && (
-              <span className="text-muted print:text-gray-600"> &mdash; {coach.organization}</span>
+              <span className="text-muted print:text-surface-600">
+                {" "}
+                &mdash; {coach.organization}
+              </span>
             )}
           </>
         }
@@ -146,7 +149,7 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
 
       {/* Page 1 — plan template structure */}
       <section className="print-keep-together">
-        <h2 className="text-sm font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+        <h2 className="text-sm font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-surface-400 print:text-black print:border-surface-400">
           Plan Structure
         </h2>
         {plan.blocks.length === 0 ? (
@@ -156,29 +159,33 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
             {plan.blocks.map((b) => (
               <div
                 key={b.id}
-                className="print-block border border-gray-300 print:border-gray-500 p-3 rounded-lg print:rounded-none"
+                className="print-block border border-surface-300 print:border-surface-500 p-3 rounded-lg print:rounded-none"
               >
                 <div className="flex items-baseline justify-between gap-2 mb-1.5">
                   <div className="text-sm font-semibold print:text-black">
-                    <span className="font-mono text-muted print:text-gray-600 mr-2">
+                    <span className="font-mono text-muted print:text-surface-600 mr-2">
                       #{b.order + 1}
                     </span>
                     {b.name}
                   </div>
-                  <span className="text-nano uppercase tracking-wider text-muted print:text-gray-600">
+                  <span className="text-nano uppercase tracking-wider text-muted print:text-surface-600">
                     {b.blockType}
                     {b.restSeconds && b.restSeconds > 0 ? ` · Rest ${b.restSeconds}s` : ""}
                   </span>
                 </div>
                 {b.notes && (
-                  <p className="text-xs italic text-muted print:text-gray-600 mb-1.5">{b.notes}</p>
+                  <p className="text-xs italic text-muted print:text-surface-600 mb-1.5">
+                    {b.notes}
+                  </p>
                 )}
                 {b.exercises.length === 0 ? (
-                  <p className="text-xs text-muted print:text-gray-600">No exercises configured.</p>
+                  <p className="text-xs text-muted print:text-surface-600">
+                    No exercises configured.
+                  </p>
                 ) : (
                   <table className="w-full text-xs print:text-black">
                     <thead>
-                      <tr className="border-b border-gray-200 print:border-gray-400">
+                      <tr className="border-b border-surface-200 print:border-surface-400">
                         <th className="text-left py-0.5 font-semibold">Exercise</th>
                         <th className="text-left py-0.5 font-semibold w-32">Category</th>
                         <th className="text-right py-0.5 font-semibold w-20">Sets x Reps</th>
@@ -187,9 +194,12 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
                     </thead>
                     <tbody>
                       {b.exercises.map((ex) => (
-                        <tr key={ex.id} className="border-b border-gray-100 print:border-gray-300">
+                        <tr
+                          key={ex.id}
+                          className="border-b border-surface-100 print:border-surface-300"
+                        >
                           <td className="py-1">{ex.exerciseName}</td>
-                          <td className="py-1 text-muted print:text-gray-600 capitalize">
+                          <td className="py-1 text-muted print:text-surface-600 capitalize">
                             {ex.exerciseCategory.toLowerCase().replace(/_/g, " ")}
                           </td>
                           <td className="py-1 text-right font-mono tabular-nums">
@@ -211,11 +221,11 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
 
       {/* One page per week of the schedule */}
       {weeks.length === 0 ? (
-        <section className="mt-6 pt-4 border-t border-gray-300 print:border-gray-400">
+        <section className="mt-6 pt-4 border-t border-surface-300 print:border-surface-400">
           <h2 className="text-sm font-heading font-bold uppercase tracking-wider mb-2 print:text-black">
             Schedule
           </h2>
-          <p className="text-xs text-muted print:text-gray-600">
+          <p className="text-xs text-muted print:text-surface-600">
             This plan has not been assigned to any sessions yet.
           </p>
         </section>
@@ -223,13 +233,13 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
         weeks.map((w) => (
           <section
             key={w.mondayKey}
-            className="print-page-break print-keep-together pt-6 mt-6 border-t border-gray-300 print:border-gray-400"
+            className="print-page-break print-keep-together pt-6 mt-6 border-t border-surface-300 print:border-surface-400"
           >
             <div className="flex items-baseline justify-between gap-4 mb-3">
               <h2 className="text-base font-heading font-bold uppercase tracking-wider print:text-black">
                 Week of {w.range}
               </h2>
-              <span className="text-xs text-muted print:text-gray-600 font-mono tabular-nums">
+              <span className="text-xs text-muted print:text-surface-600 font-mono tabular-nums">
                 {w.days.reduce((acc, d) => acc + d.athletes.length, 0)} session
                 {w.days.reduce((acc, d) => acc + d.athletes.length, 0) === 1 ? "" : "s"}
               </span>
@@ -239,17 +249,17 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
               {w.days.map((day) => (
                 <div
                   key={day.iso}
-                  className="print-row border border-gray-300 print:border-gray-500 rounded-lg print:rounded-none p-3"
+                  className="print-row border border-surface-300 print:border-surface-500 rounded-lg print:rounded-none p-3"
                 >
-                  <div className="flex items-baseline justify-between gap-2 mb-1.5 pb-1 border-b border-gray-200 print:border-gray-400">
+                  <div className="flex items-baseline justify-between gap-2 mb-1.5 pb-1 border-b border-surface-200 print:border-surface-400">
                     <h3 className="text-sm font-semibold print:text-black">{day.label}</h3>
-                    <span className="text-xs text-muted print:text-gray-600">{plan.name}</span>
+                    <span className="text-xs text-muted print:text-surface-600">{plan.name}</span>
                   </div>
                   <ul className="text-xs print:text-black space-y-0.5">
                     {day.athletes.map((a, i) => (
                       <li key={i} className="flex items-baseline justify-between gap-3">
                         <span>{a.name}</span>
-                        <span className="text-muted print:text-gray-600 text-nano uppercase tracking-wider">
+                        <span className="text-muted print:text-surface-600 text-nano uppercase tracking-wider">
                           {STATUS_LABEL[a.status] ?? a.status}
                         </span>
                       </li>

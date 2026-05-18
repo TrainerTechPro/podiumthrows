@@ -579,7 +579,7 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
               onClick={() => {
                 if (i < step) setStep(i);
               }}
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold transition-all ${
+              className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold transition-colors ${
                 i === step
                   ? "bg-primary-500 text-black shadow-md"
                   : i < step
@@ -604,7 +604,7 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
         </div>
         <div className="h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary-500 rounded-full transition-all duration-500"
+            className="h-full bg-primary-500 rounded-full transition-colors duration-500"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -712,7 +712,7 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
 
       {/* Error */}
       {errors.generate && (
-        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+        <div className="mt-4 p-3 bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-400 rounded-xl text-sm">
           {errors.generate}
         </div>
       )}
@@ -845,7 +845,7 @@ function StepSelectAthleteOrTest({
         <button
           type="button"
           onClick={() => onToggleMode(false)}
-          className={`flex-1 py-2.5 text-sm font-medium transition-all ${
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
             !sandboxMode
               ? "bg-primary-500 text-white"
               : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
@@ -856,7 +856,7 @@ function StepSelectAthleteOrTest({
         <button
           type="button"
           onClick={() => onToggleMode(true)}
-          className={`flex-1 py-2.5 text-sm font-medium transition-all ${
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
             sandboxMode
               ? "bg-primary-500 text-white"
               : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
@@ -869,10 +869,10 @@ function StepSelectAthleteOrTest({
       {sandboxMode ? (
         /* ── Test Profile Form ─────────────────────────────────────── */
         <div className="space-y-4">
-          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl">
             <div className="flex items-start gap-3">
               <svg
-                className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -885,10 +885,10 @@ function StepSelectAthleteOrTest({
                 />
               </svg>
               <div>
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
                   Sandbox Mode
                 </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                <p className="text-xs text-primary-700 dark:text-primary-400 mt-0.5">
                   Create a hypothetical profile to explore what the Bondarchuk engine produces. No
                   data will be saved.
                 </p>
@@ -938,7 +938,7 @@ function StepSelectAthleteOrTest({
                 key={a.id}
                 type="button"
                 onClick={() => onSelect(a.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
                   selectedId === a.id
                     ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                     : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -987,7 +987,7 @@ function StepSelectAthleteOrTest({
             ))}
           </div>
 
-          {errors.athlete && <p className="text-red-500 text-xs">{errors.athlete}</p>}
+          {errors.athlete && <p className="text-danger-500 text-xs">{errors.athlete}</p>}
         </>
       )}
     </div>
@@ -1010,7 +1010,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
                 update("event", ev.value);
                 update("selectedImplements", []);
               }}
-              className={`p-3 rounded-xl border-2 text-left transition-all ${
+              className={`p-3 rounded-xl border-2 text-left transition-colors ${
                 form.event === ev.value
                   ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                   : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -1023,7 +1023,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
             </button>
           ))}
         </div>
-        {errors.event && <p className="text-red-500 text-xs mt-1">{errors.event}</p>}
+        {errors.event && <p className="text-danger-500 text-xs mt-1">{errors.event}</p>}
       </div>
 
       <div>
@@ -1037,7 +1037,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
                 update("gender", g.value);
                 update("selectedImplements", []);
               }}
-              className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${
+              className={`flex-1 p-3 rounded-xl border-2 text-center transition-colors ${
                 form.gender === g.value
                   ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                   : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -1047,7 +1047,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
             </button>
           ))}
         </div>
-        {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
+        {errors.gender && <p className="text-danger-500 text-xs mt-1">{errors.gender}</p>}
       </div>
 
       <div>
@@ -1068,7 +1068,7 @@ function StepEventPr({ form, update, errors = {} }: StepProps) {
           onChange={(e) => update("competitionPr", e.target.value)}
         />
         {errors.competitionPr && (
-          <p className="text-red-500 text-xs mt-1">{errors.competitionPr}</p>
+          <p className="text-danger-500 text-xs mt-1">{errors.competitionPr}</p>
         )}
       </div>
     </div>
@@ -1104,7 +1104,9 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
             improvement target
           </p>
         )}
-        {errors.goalDistance && <p className="text-red-500 text-xs mt-1">{errors.goalDistance}</p>}
+        {errors.goalDistance && (
+          <p className="text-danger-500 text-xs mt-1">{errors.goalDistance}</p>
+        )}
       </div>
 
       <div>
@@ -1126,7 +1128,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
             weeks from now
           </p>
         )}
-        {errors.targetDate && <p className="text-red-500 text-xs mt-1">{errors.targetDate}</p>}
+        {errors.targetDate && <p className="text-danger-500 text-xs mt-1">{errors.targetDate}</p>}
       </div>
 
       {/* Schedule */}
@@ -1144,7 +1146,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
                   key={d}
                   type="button"
                   onClick={() => update("daysPerWeek", d)}
-                  className={`flex-1 p-3 rounded-xl border-2 text-center font-semibold transition-all ${
+                  className={`flex-1 p-3 rounded-xl border-2 text-center font-semibold transition-colors ${
                     form.daysPerWeek === d
                       ? "border-primary-500 bg-[rgba(212,168,67,0.08)] text-primary-600 dark:text-primary-300"
                       : "border-[var(--card-border)] text-surface-700 dark:text-surface-300"
@@ -1173,7 +1175,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
                   key={s}
                   type="button"
                   onClick={() => update("sessionsPerDay", s)}
-                  className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${
+                  className={`flex-1 p-3 rounded-xl border-2 text-center transition-colors ${
                     form.sessionsPerDay === s
                       ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                       : "border-[var(--card-border)]"
@@ -1191,7 +1193,7 @@ function StepGoalSchedule({ form, update, errors = {} }: StepProps) {
           <button
             type="button"
             onClick={() => update("includeLift", !form.includeLift)}
-            className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+            className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${
               form.includeLift
                 ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                 : "border-[var(--card-border)]"
@@ -1301,7 +1303,7 @@ function StepEquipment({
                     if (!impl.isCompetition) toggle(impl.weightKg);
                   }}
                   disabled={impl.isCompetition}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${
                     selected
                       ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                       : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -1309,7 +1311,7 @@ function StepEquipment({
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                         selected
                           ? "bg-primary-500 border-primary-500"
                           : "border-[var(--color-border-strong)]"
@@ -1346,7 +1348,7 @@ function StepEquipment({
           </div>
         )}
 
-        {errors.implements && <p className="text-red-500 text-xs mt-1">{errors.implements}</p>}
+        {errors.implements && <p className="text-danger-500 text-xs mt-1">{errors.implements}</p>}
       </div>
 
       {/* Facilities */}
@@ -1358,7 +1360,7 @@ function StepEquipment({
               key={f.key}
               type="button"
               onClick={() => update(f.key, !form[f.key])}
-              className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+              className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-colors ${
                 form[f.key]
                   ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                   : "border-[var(--card-border)]"
@@ -1392,7 +1394,7 @@ function StepEquipment({
                   key={eq.key}
                   type="button"
                   onClick={() => toggleGymItem(eq.key)}
-                  className={`p-2.5 rounded-lg border text-left text-sm transition-all ${
+                  className={`p-2.5 rounded-lg border text-left text-sm transition-colors ${
                     form.gymEquipment[eq.key]
                       ? "border-primary-500 bg-[rgba(212,168,67,0.08)] font-medium"
                       : "border-[var(--card-border)] text-surface-700 dark:text-surface-300"
@@ -1445,7 +1447,7 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
             onChange={(e) => update("bodyWeightKg", e.target.value)}
           />
           {errors.bodyWeightKg && (
-            <p className="text-red-500 text-xs mt-1">{errors.bodyWeightKg}</p>
+            <p className="text-danger-500 text-xs mt-1">{errors.bodyWeightKg}</p>
           )}
         </div>
 
@@ -1490,7 +1492,7 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
               onChange={(e) => update("yearsThrowing", e.target.value)}
             />
             {errors.yearsThrowing && (
-              <p className="text-red-500 text-xs mt-1">{errors.yearsThrowing}</p>
+              <p className="text-danger-500 text-xs mt-1">{errors.yearsThrowing}</p>
             )}
           </div>
 
@@ -1545,11 +1547,11 @@ function StepLiftingExperience({ form, update, errors = {} }: StepProps) {
           </p>
         </div>
       ) : (
-        <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+        <div className="p-4 bg-primary-50 dark:bg-primary-900/10 border border-primary-200 dark:border-primary-800/30 rounded-xl">
+          <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
             No Adaptation Profile Found
           </p>
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+          <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">
             The program will use moderate adaptation defaults. Complete the Typing Quiz for this
             athlete to personalize their adaptation profile.
           </p>
@@ -1581,7 +1583,7 @@ function StepReview({
     <div className="space-y-4">
       <h3 className="text-section font-heading text-[var(--foreground)]">Review Program Setup</h3>
 
-      <div className="divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="divide-y divide-surface-100 dark:divide-surface-800">
         <ReviewRow label="Athlete" value={athleteName} />
         <ReviewRow label="Event" value={`${eventLabel} (${form.gender})`} />
         <ReviewRow label="Competition PR" value={`${form.competitionPr}m`} />
@@ -1630,9 +1632,9 @@ function ProgramSummaryCard({
     <div className="space-y-6">
       {/* Success Header */}
       <div className="text-center">
-        <div className="w-16 h-16 mx-auto mb-3 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto mb-3 bg-success-100 dark:bg-success-900/20 rounded-full flex items-center justify-center">
           <svg
-            className="w-8 h-8 text-green-600 dark:text-green-400"
+            className="w-8 h-8 text-success-600 dark:text-success-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -1778,25 +1780,25 @@ function SandboxPreviewCard({
       {sequencingViolation && (
         <div
           role="alert"
-          className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl flex items-start gap-3"
+          className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-300 dark:border-primary-700 rounded-xl flex items-start gap-3"
         >
           <AlertTriangle
-            className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+            className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5"
             strokeWidth={1.75}
             aria-hidden="true"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+            <p className="text-sm font-semibold text-primary-900 dark:text-primary-200">
               Bondarchuk sequencing violation — cannot assign this plan
             </p>
-            <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+            <p className="mt-1 text-xs text-primary-800 dark:text-primary-300 leading-relaxed">
               Phase {sequencingViolation.phaseIndex + 1}, Week {sequencingViolation.weekIndex + 1},
               Session {sequencingViolation.sessionIndex + 1}: {sequencingViolation.message}
             </p>
-            <p className="mt-1 text-micro text-amber-800 dark:text-amber-300 font-mono">
+            <p className="mt-1 text-micro text-primary-800 dark:text-primary-300 font-mono">
               {sequencingViolation.sequence}
             </p>
-            <p className="mt-2 text-micro text-amber-800 dark:text-amber-300">
+            <p className="mt-2 text-micro text-primary-800 dark:text-primary-300">
               Vol IV p.114–117: ascending implement order causes 2–4m performance decrease in
               natural athletes. Implement weights must descend (heavy → competition weight).
             </p>
@@ -1805,9 +1807,9 @@ function SandboxPreviewCard({
       )}
 
       {/* Sandbox Banner */}
-      <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center gap-2">
+      <div className="p-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl flex items-center gap-2">
         <svg
-          className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0"
+          className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -1819,7 +1821,7 @@ function SandboxPreviewCard({
             d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
           />
         </svg>
-        <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
+        <p className="text-xs font-medium text-primary-800 dark:text-primary-300">
           Sandbox Preview for &quot;{profileName}&quot; &mdash; {eventLabel} ({form.gender})
         </p>
       </div>
@@ -1905,7 +1907,7 @@ function SandboxPreviewCard({
                       <div className="flex rounded-lg overflow-hidden h-6 text-nano font-semibold">
                         {phase.cePercent > 0 && (
                           <div
-                            className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center"
+                            className="bg-primary-200 dark:bg-primary-800 text-primary-900 dark:text-primary-100 flex items-center justify-center"
                             style={{ width: `${phase.cePercent}%` }}
                           >
                             CE {phase.cePercent}%
@@ -1913,7 +1915,7 @@ function SandboxPreviewCard({
                         )}
                         {phase.sdPercent > 0 && (
                           <div
-                            className="bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 flex items-center justify-center"
+                            className="bg-info-200 dark:bg-info-800 text-info-900 dark:text-info-100 flex items-center justify-center"
                             style={{ width: `${phase.sdPercent}%` }}
                           >
                             SD {phase.sdPercent}%
@@ -1921,7 +1923,7 @@ function SandboxPreviewCard({
                         )}
                         {phase.spPercent > 0 && (
                           <div
-                            className="bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100 flex items-center justify-center"
+                            className="bg-success-200 dark:bg-success-800 text-success-900 dark:text-success-100 flex items-center justify-center"
                             style={{ width: `${phase.spPercent}%` }}
                           >
                             SP {phase.spPercent}%
@@ -1946,7 +1948,7 @@ function SandboxPreviewCard({
                       <div className="flex rounded-lg overflow-hidden h-6 text-nano font-semibold">
                         {phase.heavyPercent > 0 && (
                           <div
-                            className="bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100 flex items-center justify-center"
+                            className="bg-danger-200 dark:bg-danger-800 text-danger-900 dark:text-danger-100 flex items-center justify-center"
                             style={{ width: `${phase.heavyPercent}%` }}
                           >
                             Heavy {phase.heavyPercent}%
@@ -1954,7 +1956,7 @@ function SandboxPreviewCard({
                         )}
                         {phase.compPercent > 0 && (
                           <div
-                            className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center"
+                            className="bg-primary-200 dark:bg-primary-800 text-primary-900 dark:text-primary-100 flex items-center justify-center"
                             style={{ width: `${phase.compPercent}%` }}
                           >
                             Comp {phase.compPercent}%
@@ -1962,7 +1964,7 @@ function SandboxPreviewCard({
                         )}
                         {phase.lightPercent > 0 && (
                           <div
-                            className="bg-sky-200 dark:bg-sky-800 text-sky-900 dark:text-sky-100 flex items-center justify-center"
+                            className="bg-info-200 dark:bg-info-800 text-info-900 dark:text-info-100 flex items-center justify-center"
                             style={{ width: `${phase.lightPercent}%` }}
                           >
                             Light {phase.lightPercent}%
@@ -1980,8 +1982,8 @@ function SandboxPreviewCard({
                         <div className="space-y-1">
                           {phase.exerciseComplex.map((ex: ExerciseComplexEntry, ei: number) => {
                             const cls = CLASSIFICATION_COLOR_PARTS[ex.classification] || {
-                              bg: "bg-gray-100 dark:bg-gray-800",
-                              text: "text-gray-700 dark:text-gray-300",
+                              bg: "bg-surface-100 dark:bg-surface-800",
+                              text: "text-surface-700 dark:text-surface-300",
                             };
                             return (
                               <div
@@ -2041,7 +2043,7 @@ function SandboxPreviewCard({
                     <span className="px-1.5 py-0.5 rounded text-nano font-bold bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
                       {session.dayType}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-nano font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
+                    <span className="px-1.5 py-0.5 rounded text-nano font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300">
                       {session.sessionType.replace(/_/g, " ")}
                     </span>
                     <span className="flex-1 text-xs text-surface-700 dark:text-surface-300 truncate text-right">
@@ -2078,8 +2080,8 @@ function SandboxPreviewCard({
                           <div className="space-y-1">
                             {session.throws.map((t: ThrowPrescription, ti: number) => {
                               const cls = CLASSIFICATION_COLOR_PARTS[t.category] || {
-                                bg: "bg-gray-100 dark:bg-gray-800",
-                                text: "text-gray-700 dark:text-gray-300",
+                                bg: "bg-surface-100 dark:bg-surface-800",
+                                text: "text-surface-700 dark:text-surface-300",
                               };
                               return (
                                 <div
@@ -2121,8 +2123,8 @@ function SandboxPreviewCard({
                           <div className="space-y-1">
                             {session.strength.map((s: StrengthPrescription, si2: number) => {
                               const cls = CLASSIFICATION_COLOR_PARTS[s.classification] || {
-                                bg: "bg-gray-100 dark:bg-gray-800",
-                                text: "text-gray-700 dark:text-gray-300",
+                                bg: "bg-surface-100 dark:bg-surface-800",
+                                text: "text-surface-700 dark:text-surface-300",
                               };
                               return (
                                 <div
@@ -2227,7 +2229,7 @@ function ImplementOrderCheck({
 
   return (
     <div
-      className={`mt-1.5 flex items-center gap-1.5 text-micro ${isDescending ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+      className={`mt-1.5 flex items-center gap-1.5 text-micro ${isDescending ? "text-success-600 dark:text-success-400" : "text-danger-600 dark:text-danger-400"}`}
     >
       {isDescending ? (
         <Check className="w-3.5 h-3.5" strokeWidth={2.5} aria-hidden="true" />

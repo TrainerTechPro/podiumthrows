@@ -124,8 +124,8 @@ export function RecapSheet() {
       ) : data ? (
         <div className="space-y-5">
           {/* Hero number */}
-          <div className="rounded-2xl bg-amber-500/10 border border-amber-500/20 p-5 text-center">
-            <p className="text-xs uppercase tracking-[0.18em] text-amber-500/80">
+          <div className="rounded-2xl bg-primary-500/10 border border-primary-500/20 p-5 text-center">
+            <p className="text-xs uppercase tracking-[0.18em] text-primary-500/80">
               {data.prs.length > 0
                 ? "New PR"
                 : data.streakEnd > 0
@@ -133,7 +133,7 @@ export function RecapSheet() {
                   : "Sessions logged"}
             </p>
             <p
-              className="font-heading text-4xl font-bold text-amber-400 mt-1 tabular-nums"
+              className="font-heading text-4xl font-bold text-primary-400 mt-1 tabular-nums"
               style={{ letterSpacing: "-0.5px" }}
             >
               {data.prs.length > 0
@@ -142,7 +142,9 @@ export function RecapSheet() {
                   ? `${data.streakEnd} days`
                   : data.sessionsLogged}
             </p>
-            <p className="text-sm text-amber-200/80 mt-1.5 italic leading-snug">{data.shoutout}</p>
+            <p className="text-sm text-primary-200/80 mt-1.5 italic leading-snug">
+              {data.shoutout}
+            </p>
           </div>
 
           {/* Stats grid */}
@@ -189,7 +191,7 @@ export function RecapSheet() {
                     <span className="text-[var(--foreground)]">
                       {eventLabel(pr.event)} <span className="text-muted">({pr.implement})</span>
                     </span>
-                    <span className="font-semibold text-amber-500 tabular-nums">
+                    <span className="font-semibold text-primary-500 tabular-nums">
                       {pr.distance.toFixed(2)}m
                     </span>
                   </li>
@@ -211,7 +213,7 @@ export function RecapSheet() {
           <Link
             href="/athlete/throws/trends"
             onClick={dismiss}
-            className="block text-center rounded-xl bg-amber-500 text-surface-950 font-semibold py-3 text-sm active:scale-[0.97] transition-transform"
+            className="block text-center rounded-xl bg-primary-500 text-surface-950 font-semibold py-3 text-sm active:scale-[0.97] transition-transform"
           >
             See full trends
           </Link>

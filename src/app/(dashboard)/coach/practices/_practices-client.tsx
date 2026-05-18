@@ -165,7 +165,7 @@ function PracticeCard({ practice }: { practice: PracticeListItem }) {
 
           <div className="flex items-center gap-3 text-xs text-muted">
             <span className="flex items-center gap-1">
-              <Check size={11} strokeWidth={2.5} className="text-emerald-500" aria-hidden="true" />
+              <Check size={11} strokeWidth={2.5} className="text-success-500" aria-hidden="true" />
               <span className="font-mono tabular-nums">{practice.attendingCount}</span>
               {" attending"}
             </span>
@@ -462,7 +462,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <select
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
+              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
             >
               {TIME_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -478,7 +478,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
             <select
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
+              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
             >
               {TIME_OPTIONS.filter((o) => o.value > startTime).map((o) => (
                 <option key={o.value} value={o.value}>
@@ -507,7 +507,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Any reminders or context for this practice…"
             rows={3}
-            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
+            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
           />
         </div>
 
@@ -553,7 +553,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
                 <select
                   value={selectedGroupId}
                   onChange={(e) => setSelectedGroupId(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
                 >
                   <option value="">Select a group…</option>
                   {groups.map((g) => (
@@ -578,7 +578,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
               role="switch"
               aria-checked={recurringEnabled}
               onClick={() => setRecurringEnabled(!recurringEnabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50 ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 ${
                 recurringEnabled ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600"
               }`}
             >
@@ -812,7 +812,7 @@ export function PracticesClient({
                   <p className="text-xs text-muted">Practices</p>
                 </div>
                 <div className="text-center">
-                  <p className="font-mono text-xl font-bold text-emerald-500 tabular-nums">
+                  <p className="font-mono text-xl font-bold text-success-500 tabular-nums">
                     {practices.reduce((s, p) => s + p.attendingCount, 0)}
                   </p>
                   <p className="text-xs text-muted">Marked Present</p>

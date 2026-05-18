@@ -42,17 +42,17 @@ const KIND_META: Record<ContentKind, { label: string; icon: React.ReactNode; tin
   note: {
     label: "Note",
     icon: <StickyNote size={14} strokeWidth={1.75} aria-hidden="true" />,
-    tint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    tint: "bg-primary-500/10 text-primary-600 dark:text-primary-400",
   },
   session: {
     label: "Session",
     icon: <Calendar size={14} strokeWidth={1.75} aria-hidden="true" />,
-    tint: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    tint: "bg-info-500/10 text-info-600 dark:text-info-400",
   },
   drill: {
     label: "Drill",
     icon: <Activity size={14} strokeWidth={1.75} aria-hidden="true" />,
-    tint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    tint: "bg-success-500/10 text-success-600 dark:text-success-400",
   },
   program: {
     label: "Plan",
@@ -62,12 +62,12 @@ const KIND_META: Record<ContentKind, { label: string; icon: React.ReactNode; tin
   video: {
     label: "Video",
     icon: <Video size={14} strokeWidth={1.75} aria-hidden="true" />,
-    tint: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    tint: "bg-danger-500/10 text-danger-600 dark:text-danger-400",
   },
   feedback: {
     label: "Athlete feedback",
     icon: <MessageSquare size={14} strokeWidth={1.75} aria-hidden="true" />,
-    tint: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+    tint: "bg-info-500/10 text-info-600 dark:text-info-400",
   },
   block_note: {
     label: "Block note",

@@ -187,7 +187,7 @@ export function ManageGroupsModal({
             onChange={(e) => setNewName(e.target.value)}
             placeholder="e.g. UCSD Throws Squad"
             maxLength={100}
-            className="flex-1 px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            className="flex-1 px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30"
             onKeyDown={(e) => {
               if (e.key === "Enter") handleCreate();
             }}
@@ -195,7 +195,7 @@ export function ManageGroupsModal({
           <select
             value={newParentId}
             onChange={(e) => setNewParentId(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            className="px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30"
           >
             <option value="">Top-level</option>
             {topLevel.map((t) => (
@@ -302,7 +302,7 @@ function GroupRow({
                 onChange={(e) => setEditingName(e.target.value)}
                 autoFocus
                 maxLength={100}
-                className="flex-1 px-2 py-1 rounded-lg border border-primary-500 bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                className="flex-1 px-2 py-1 rounded-lg border border-primary-500 bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") onRename(node.id);
                   if (e.key === "Escape") cancelEdit();

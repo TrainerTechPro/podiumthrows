@@ -178,7 +178,7 @@ export function StrengthBlockView({
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder="0"
-              className="w-full px-3 py-3 border tabular-nums text-center focus:outline-none transition-colors"
+              className="w-full px-3 py-3 border tabular-nums text-center focus-visible:outline-none transition-colors"
               style={{
                 backgroundColor: "#0a0a0a",
                 borderColor: "#1a1a1e",
@@ -202,7 +202,7 @@ export function StrengthBlockView({
               onChange={(e) => setReps(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && logSet()}
               placeholder="0"
-              className="w-full px-3 py-3 border tabular-nums text-center focus:outline-none transition-colors"
+              className="w-full px-3 py-3 border tabular-nums text-center focus-visible:outline-none transition-colors"
               style={{
                 backgroundColor: "#0a0a0a",
                 borderColor: "#1a1a1e",
@@ -228,7 +228,7 @@ export function StrengthBlockView({
               <button
                 key={v}
                 onClick={() => setRpe(rpe === v ? null : v)}
-                className="flex-1 py-2 text-xs font-bold transition-all min-h-[44px]"
+                className="flex-1 py-2 text-xs font-bold transition-colors min-h-[44px]"
                 style={{
                   backgroundColor: rpe === v ? accent : "#111117",
                   color: rpe === v ? "#000" : `${accent}55`,

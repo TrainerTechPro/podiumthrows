@@ -719,7 +719,7 @@ function ExerciseLine({
         role="button"
         tabIndex={0}
         aria-pressed={isSelected}
-        className={`group relative min-w-[168px] cursor-pointer rounded-xl border bg-[var(--card-bg)] px-3.5 py-3 transition-all ${
+        className={`group relative min-w-[168px] cursor-pointer rounded-xl border bg-[var(--card-bg)] px-3.5 py-3 transition-colors ${
           isSelected
             ? "border-primary-500 bg-[var(--card-bg)] shadow-[0_0_0_3px_rgba(184,131,12,0.1)]"
             : "border-[var(--card-border)] hover:border-[var(--card-border)] hover:bg-surface-50 dark:hover:bg-surface-900/60"
@@ -897,7 +897,7 @@ function Inspector({
           </div>
           <div className="mb-1.5 h-1 overflow-hidden rounded-full bg-surface-200 dark:bg-surface-800">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-success-500 to-amber-300"
+              className="h-full rounded-full bg-gradient-to-r from-success-500 to-primary-300"
               style={{ width: `${corr.coefficient * 100}%` }}
             />
           </div>

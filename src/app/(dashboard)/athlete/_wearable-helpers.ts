@@ -5,17 +5,17 @@
 /** Color for recovery/readiness score text (0-100 scale) */
 export function scoreColor(score: number | null): string {
   if (score === null) return "text-surface-400";
-  if (score >= 67) return "text-emerald-600 dark:text-emerald-400";
-  if (score >= 34) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (score >= 67) return "text-success-600 dark:text-success-400";
+  if (score >= 34) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 /** Background for recovery/readiness hero card */
 export function scoreBg(score: number | null): string {
   if (score === null) return "bg-surface-100 dark:bg-surface-800";
-  if (score >= 67) return "bg-emerald-50 dark:bg-emerald-500/10";
-  if (score >= 34) return "bg-amber-50 dark:bg-amber-500/10";
-  return "bg-red-50 dark:bg-red-500/10";
+  if (score >= 67) return "bg-success-50 dark:bg-success-500/10";
+  if (score >= 34) return "bg-primary-50 dark:bg-primary-500/10";
+  return "bg-danger-50 dark:bg-danger-500/10";
 }
 
 /** Status label for recovery/readiness score */
@@ -30,18 +30,18 @@ export function scoreLabel(score: number | null): string {
 /** SpO2 color: red <95%, amber 95-96%, emerald >96% */
 export function spo2Color(value: number | null): string {
   if (value === null) return "text-surface-400";
-  if (value > 96) return "text-emerald-600 dark:text-emerald-400";
-  if (value >= 95) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (value > 96) return "text-success-600 dark:text-success-400";
+  if (value >= 95) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 /** Skin temp color: emerald <=0.5C, amber 0.5-1.0C, red >1.0C */
 export function skinTempColor(deviation: number | null): string {
   if (deviation === null) return "text-surface-400";
   const abs = Math.abs(deviation);
-  if (abs <= 0.5) return "text-emerald-600 dark:text-emerald-400";
-  if (abs <= 1.0) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (abs <= 0.5) return "text-success-600 dark:text-success-400";
+  if (abs <= 1.0) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 // ─── Formatters ─────────────────────────────────────────────────────────────

@@ -204,7 +204,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
     >
       <div className="space-y-4">
         {error && (
-          <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-600 dark:text-red-400">
+          <div className="px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20 text-sm text-danger-600 dark:text-danger-400">
             {error}
           </div>
         )}
@@ -261,7 +261,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-[var(--foreground)]">Description</label>
           <textarea
-            className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[80px]"
+            className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[80px]"
             value={form.description}
             onChange={(e) => updateField("description", e.target.value)}
             placeholder="Describe the drill…"
@@ -294,7 +294,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
                 <button
                   type="button"
                   onClick={() => removeCue(i)}
-                  className="px-2 text-muted hover:text-red-500 transition-colors shrink-0"
+                  className="px-2 text-muted hover:text-danger-500 transition-colors shrink-0"
                 >
                   ✕
                 </button>

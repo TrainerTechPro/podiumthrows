@@ -411,7 +411,7 @@ function LinkPill({
         href={link.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-100 dark:bg-surface-800 hover:bg-primary-500/10 dark:hover:bg-primary-500/15 border border-[var(--card-border)] hover:border-primary-500/30 text-sm font-medium text-[var(--foreground)] transition-all duration-150 whitespace-nowrap min-h-[44px]"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-100 dark:bg-surface-800 hover:bg-primary-500/10 dark:hover:bg-primary-500/15 border border-[var(--card-border)] hover:border-primary-500/30 text-sm font-medium text-[var(--foreground)] transition-colors duration-150 whitespace-nowrap min-h-[44px]"
       >
         {link.icon ? (
           <span className="text-base" aria-hidden="true">
@@ -537,7 +537,7 @@ function AnnouncementForm({
           placeholder="What do you want your athletes to know?"
           rows={4}
           maxLength={2000}
-          className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
+          className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
         />
         <p className="text-xs text-muted mt-1 text-right">{body.length}/2000</p>
       </div>
@@ -550,7 +550,7 @@ function AnnouncementForm({
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
           >
             <option value="NORMAL">Normal</option>
             <option value="URGENT">Urgent</option>
@@ -567,7 +567,7 @@ function AnnouncementForm({
               setTargetType(e.target.value);
               setTargetId("");
             }}
-            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
           >
             <option value="ALL">All Athletes</option>
             <option value="GROUP">Group</option>
@@ -584,7 +584,7 @@ function AnnouncementForm({
           <select
             value={targetId}
             onChange={(e) => setTargetId(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
           >
             <option value="">Select a group…</option>
             {eventGroups.map((g) => (
@@ -604,7 +604,7 @@ function AnnouncementForm({
           <select
             value={targetId}
             onChange={(e) => setTargetId(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
           >
             <option value="">Select an athlete…</option>
             {athletes.map((a) => (
@@ -626,7 +626,7 @@ function AnnouncementForm({
             value={expiresAt}
             onChange={(e) => setExpiresAt(e.target.value)}
             min={new Date().toISOString().split("T")[0]}
-            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
           />
         </div>
 
@@ -638,7 +638,7 @@ function AnnouncementForm({
               role="switch"
               aria-checked={pinned}
               onClick={() => setPinned(!pinned)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50 ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 ${
                 pinned ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600"
               }`}
             >

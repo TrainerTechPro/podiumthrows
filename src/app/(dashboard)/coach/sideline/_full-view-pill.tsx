@@ -20,7 +20,7 @@ export function FullCoachViewPill() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border border-[var(--card-border)] hover:border-[var(--color-text-secondary)] transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] border border-[var(--card-border)] hover:border-[var(--color-text-secondary)] transition-colors focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
       >
         Full coach view
         <ArrowRight size={12} strokeWidth={1.75} aria-hidden="true" />

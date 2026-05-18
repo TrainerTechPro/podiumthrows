@@ -65,23 +65,23 @@ const STATUS_CONFIG: Record<
 const FEELING_CONFIG: Record<string, { label: string; colorClass: string }> = {
   GREAT: {
     label: "Great",
-    colorClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    colorClass: "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400",
   },
   GOOD: {
     label: "Good",
-    colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    colorClass: "bg-info-100 text-info-700 dark:bg-info-900/30 dark:text-info-400",
   },
   AVERAGE: {
     label: "Average",
-    colorClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    colorClass: "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
   },
   POOR: {
     label: "Poor",
-    colorClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    colorClass: "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400",
   },
   VERY_POOR: {
     label: "Very Poor",
-    colorClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    colorClass: "bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-400",
   },
 };
 
@@ -91,19 +91,19 @@ const BLOCK_ICON_MAP: Record<
 > = {
   WARMUP: {
     icon: Flame,
-    color: "text-amber-500",
+    color: "text-primary-500",
     label: "Warm-Up",
     borderColor: "var(--amber-500, #f59e0b)",
   },
   THROWING: {
     icon: Target,
-    color: "text-orange-500",
+    color: "text-warning-500",
     label: "Throwing",
     borderColor: "var(--orange-500, #f97316)",
   },
   STRENGTH: {
     icon: Dumbbell,
-    color: "text-blue-500",
+    color: "text-info-500",
     label: "Strength",
     borderColor: "var(--blue-500, #3b82f6)",
   },
@@ -115,7 +115,7 @@ const BLOCK_ICON_MAP: Record<
   },
   COOLDOWN: {
     icon: Snowflake,
-    color: "text-cyan-500",
+    color: "text-info-500",
     label: "Cool-Down",
     borderColor: "var(--cyan-500, #06b6d4)",
   },
@@ -155,15 +155,15 @@ function ThrowingBlockResults({
   const completionColor =
     prescribedCount > 0
       ? actualCount >= prescribedCount
-        ? "text-emerald-600 dark:text-emerald-400"
-        : "text-amber-600 dark:text-amber-400"
+        ? "text-success-600 dark:text-success-400"
+        : "text-primary-600 dark:text-primary-400"
       : "";
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3 text-sm">
         {weight && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-warning-100 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400 font-medium">
             {String(weight)}
           </span>
         )}
@@ -217,7 +217,7 @@ function ThrowingBlockResults({
                       className={cn(
                         "py-2 pr-4 tabular-nums font-semibold",
                         isBest
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-success-600 dark:text-success-400"
                           : "text-[var(--foreground)]"
                       )}
                     >
@@ -240,7 +240,7 @@ function ThrowingBlockResults({
         <div className="flex gap-6 text-xs text-muted pt-1">
           <span>
             Best:{" "}
-            <strong className="text-emerald-600 dark:text-emerald-400 tabular-nums">
+            <strong className="text-success-600 dark:text-success-400 tabular-nums">
               {bestMark!.toFixed(2)}m
             </strong>
           </span>

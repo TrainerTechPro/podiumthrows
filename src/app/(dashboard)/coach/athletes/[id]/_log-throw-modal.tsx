@@ -295,7 +295,7 @@ export function LogThrowModal({
             className="w-full px-4 py-3 rounded-xl text-lg font-mono
               bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)]
               text-[var(--foreground)] placeholder:text-[var(--muted)]
-              focus:outline-none focus:ring-2 focus:ring-primary-500"
+              focus-visible:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
 
@@ -366,7 +366,7 @@ export function LogThrowModal({
             className="w-full px-4 py-3 rounded-xl text-sm
               bg-surface-100 dark:bg-surface-800 border border-[var(--card-border)]
               text-[var(--foreground)] placeholder:text-[var(--muted)]
-              focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+              focus-visible:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
           />
         )}
 

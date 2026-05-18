@@ -174,7 +174,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
               {/* Mini progress bar */}
               <div className="mt-1.5 h-[3px] w-full rounded-full overflow-hidden bg-[var(--card-border)]">
                 <div
-                  className="h-full rounded-full transition-all duration-500"
+                  className="h-full rounded-full transition-colors duration-500"
                   style={{ width: `${pct}%`, backgroundColor: c }}
                 />
               </div>

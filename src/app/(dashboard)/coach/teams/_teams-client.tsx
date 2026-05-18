@@ -517,7 +517,7 @@ export function TeamsClient() {
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g., UCSD Shot Put"
-                className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted/50 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/40"
                 autoFocus
               />
             </div>
@@ -534,7 +534,7 @@ export function TeamsClient() {
                 value={formDesc}
                 onChange={(e) => setFormDesc(e.target.value)}
                 placeholder="Optional description"
-                className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted/50 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/40"
               />
             </div>
           </div>
@@ -604,7 +604,7 @@ export function TeamsClient() {
                     <button
                       onClick={() => handleRemoveMember(athlete.id)}
                       disabled={removingId === athlete.id}
-                      className="p-1 rounded text-muted hover:text-red-500 transition-colors shrink-0 disabled:opacity-50"
+                      className="p-1 rounded text-muted hover:text-danger-500 transition-colors shrink-0 disabled:opacity-50"
                       aria-label={`Remove ${athlete.firstName} ${athlete.lastName}`}
                     >
                       <X size={16} strokeWidth={1.75} aria-hidden="true" />
@@ -708,7 +708,7 @@ export function TeamsClient() {
               </button>
               <button
                 onClick={() => handleDelete(team)}
-                className="p-2 rounded-lg text-muted hover:text-red-500 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+                className="p-2 rounded-lg text-muted hover:text-danger-500 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
                 aria-label={`Delete ${team.name}`}
               >
                 <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" />

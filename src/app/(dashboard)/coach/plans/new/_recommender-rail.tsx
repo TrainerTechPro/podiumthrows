@@ -39,15 +39,15 @@ function formatEventName(event: string): string {
 }
 
 function correlationColor(corr: number): string {
-  if (corr >= 0.7) return "text-green-500";
-  if (corr >= 0.4) return "text-amber-500";
-  return "text-red-500";
+  if (corr >= 0.7) return "text-success-500";
+  if (corr >= 0.4) return "text-primary-500";
+  return "text-danger-500";
 }
 
 function correlationBar(corr: number): string {
-  if (corr >= 0.7) return "bg-green-500";
-  if (corr >= 0.4) return "bg-amber-500";
-  return "bg-red-500";
+  if (corr >= 0.7) return "bg-success-500";
+  if (corr >= 0.4) return "bg-primary-500";
+  return "bg-danger-500";
 }
 
 type AddResult = { ok: true } | { ok: false; reason: string };
@@ -155,8 +155,8 @@ export function RecommenderRail({ event, onAdd }: Props) {
           <p className="text-xs text-muted">Loading…</p>
         </div>
       ) : error ? (
-        <div className="border border-red-500/30 bg-red-500/10 rounded-lg p-3">
-          <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        <div className="border border-danger-500/30 bg-danger-500/10 rounded-lg p-3">
+          <p className="text-xs text-danger-600 dark:text-danger-400">{error}</p>
         </div>
       ) : recommendations.length === 0 ? (
         <div className="border border-dashed border-[var(--card-border)] rounded-lg p-4 text-center">
@@ -220,7 +220,7 @@ export function RecommenderRail({ event, onAdd }: Props) {
                                   <Check
                                     size={12}
                                     strokeWidth={1.75}
-                                    className="text-green-500"
+                                    className="text-success-500"
                                     aria-hidden="true"
                                   />
                                 ) : (
@@ -236,14 +236,14 @@ export function RecommenderRail({ event, onAdd }: Props) {
                           )}
                         </div>
                         {state.status === "blocked" && (
-                          <div className="flex items-start gap-1.5 pt-1 border-t border-amber-500/20">
+                          <div className="flex items-start gap-1.5 pt-1 border-t border-primary-500/20">
                             <AlertTriangle
                               size={12}
                               strokeWidth={1.75}
-                              className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+                              className="text-primary-600 dark:text-primary-400 shrink-0 mt-0.5"
                               aria-hidden="true"
                             />
-                            <p className="text-nano text-amber-700 dark:text-amber-400 leading-tight">
+                            <p className="text-nano text-primary-700 dark:text-primary-400 leading-tight">
                               {state.reason}
                             </p>
                           </div>

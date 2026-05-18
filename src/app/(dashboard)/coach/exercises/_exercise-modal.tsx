@@ -71,14 +71,14 @@ const EMPTY_FORM: ExerciseFormData = {
 
 function correlationVariant(absR: number): "success" | "warning" | "info" {
   if (absR >= 0.75) return "success";
-  if (absR >= 0.60) return "warning";
+  if (absR >= 0.6) return "warning";
   return "info";
 }
 
 function correlationTierClasses(absR: number): { dot: string; text: string } {
-  if (absR >= 0.75) return { dot: "bg-emerald-500", text: "text-emerald-500" };
-  if (absR >= 0.60) return { dot: "bg-amber-500", text: "text-amber-500" };
-  return { dot: "bg-blue-500", text: "text-blue-500" };
+  if (absR >= 0.75) return { dot: "bg-success-500", text: "text-success-500" };
+  if (absR >= 0.6) return { dot: "bg-primary-500", text: "text-primary-500" };
+  return { dot: "bg-info-500", text: "text-info-500" };
 }
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
@@ -152,9 +152,7 @@ export function ExerciseModal({
           defaultReps: form.defaultReps.trim() || null,
         };
 
-        const url = isEditing
-          ? `/api/coach/exercises/${exercise!.id}`
-          : "/api/coach/exercises";
+        const url = isEditing ? `/api/coach/exercises/${exercise!.id}` : "/api/coach/exercises";
         const method = isEditing ? "PATCH" : "POST";
 
         const res = await fetch(url, {
@@ -180,9 +178,8 @@ export function ExerciseModal({
   const showImplementWeight = form.category === "CE" || form.category === "SDE";
 
   // Look up correlation for the current exercise name
-  const corrMatch = exercise && correlationMap
-    ? correlationMap.get(exercise.name.toLowerCase())
-    : undefined;
+  const corrMatch =
+    exercise && correlationMap ? correlationMap.get(exercise.name.toLowerCase()) : undefined;
 
   return (
     <Modal
@@ -193,20 +190,10 @@ export function ExerciseModal({
       title={isEditing ? "Edit Exercise" : "Add Exercise"}
       footer={
         <>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onClose}
-            disabled={isPending}
-          >
+          <Button variant="secondary" size="sm" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSubmit}
-            loading={isPending}
-          >
+          <Button variant="primary" size="sm" onClick={handleSubmit} loading={isPending}>
             {isEditing ? "Save Changes" : "Create Exercise"}
           </Button>
         </>
@@ -240,7 +227,12 @@ export function ExerciseModal({
         {isEditing && corrMatch && filterContext && (
           <div className="rounded-lg border border-[var(--card-border)] bg-surface-50 dark:bg-surface-800/30 p-3 space-y-2">
             <div className="flex items-center gap-2">
-              <TrendingUp size={14} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
+              <TrendingUp
+                size={14}
+                strokeWidth={1.75}
+                className="text-primary-500"
+                aria-hidden="true"
+              />
               <span className="text-xs font-semibold text-muted uppercase tracking-wider">
                 Transfer Coefficient
               </span>
@@ -249,7 +241,9 @@ export function ExerciseModal({
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               <div>
                 <span className="text-muted text-xs">Event</span>
-                <p className="text-[var(--foreground)]">{filterContext.event} ({filterContext.gender})</p>
+                <p className="text-[var(--foreground)]">
+                  {filterContext.event} ({filterContext.gender})
+                </p>
               </div>
               <div>
                 <span className="text-muted text-xs">Band</span>
@@ -257,11 +251,15 @@ export function ExerciseModal({
               </div>
               <div>
                 <span className="text-muted text-xs">Type</span>
-                <p className="text-[var(--foreground)]">{TYPE_LABELS[corrMatch.type] ?? corrMatch.type}</p>
+                <p className="text-[var(--foreground)]">
+                  {TYPE_LABELS[corrMatch.type] ?? corrMatch.type}
+                </p>
               </div>
               <div>
                 <span className="text-muted text-xs">Correlation</span>
-                <p className={`font-semibold tabular-nums ${correlationTierClasses(corrMatch.absCorrelation).text}`}>
+                <p
+                  className={`font-semibold tabular-nums ${correlationTierClasses(corrMatch.absCorrelation).text}`}
+                >
                   {corrMatch.absCorrelation.toFixed(3)}
                 </p>
               </div>
@@ -335,9 +333,7 @@ export function ExerciseModal({
         </div>
 
         {/* Error */}
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
       </div>
     </Modal>
   );

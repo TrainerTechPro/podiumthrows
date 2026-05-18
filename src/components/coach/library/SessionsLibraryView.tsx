@@ -359,9 +359,11 @@ export function SessionsLibraryView({
         size="md"
         footer={
           <div className="space-y-3 w-full">
-            {assignError && <p className="text-sm text-red-600 dark:text-red-400">{assignError}</p>}
+            {assignError && (
+              <p className="text-sm text-danger-600 dark:text-danger-400">{assignError}</p>
+            )}
             {assignSuccess && (
-              <p className="text-sm text-green-600 dark:text-green-400">{assignSuccess}</p>
+              <p className="text-sm text-success-600 dark:text-success-400">{assignSuccess}</p>
             )}
             <div className="flex gap-3">
               <button

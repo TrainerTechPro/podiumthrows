@@ -76,7 +76,7 @@ function PlanCard({
             <Check
               size={14}
               strokeWidth={2.5}
-              className="mt-0.5 shrink-0 text-emerald-500"
+              className="mt-0.5 shrink-0 text-success-500"
               aria-hidden="true"
             />
             {f}
@@ -164,7 +164,7 @@ export function UpgradeModal({ open, onClose, reason, currentPlan = "FREE" }: Up
           )}
         </div>
 
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+        {error && <p className="text-sm text-danger-500 text-center">{error}</p>}
 
         <p className="text-xs text-center text-muted">
           Secure checkout via Stripe. Cancel anytime.

@@ -43,13 +43,13 @@ function statusLabel(status: string): string {
 function dotClasses(type: TimelineItem["type"]): string {
   switch (type) {
     case "throw":
-      return "bg-amber-500/15 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400";
+      return "bg-primary-500/15 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400";
     case "lift":
-      return "bg-blue-500/15 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400";
+      return "bg-info-500/15 dark:bg-info-500/20 text-info-600 dark:text-info-400";
     case "warmup":
-      return "bg-orange-500/15 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400";
+      return "bg-warning-500/15 dark:bg-warning-500/20 text-warning-600 dark:text-warning-400";
     case "cooldown":
-      return "bg-sky-500/15 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400";
+      return "bg-info-500/15 dark:bg-info-500/20 text-info-600 dark:text-info-400";
     case "note":
       return "bg-surface-200 dark:bg-surface-700 text-surface-500 dark:text-surface-400";
     default:
@@ -79,8 +79,8 @@ function DotIcon({ type }: { type: TimelineItem["type"] }) {
 
 /** Superset group badge (A / B / C) */
 const SUPERSET_COLORS: Record<string, string> = {
-  A: "bg-emerald-500 text-white",
-  B: "bg-blue-500 text-white",
+  A: "bg-success-500 text-white",
+  B: "bg-info-500 text-white",
   C: "bg-pink-500 text-white",
 };
 

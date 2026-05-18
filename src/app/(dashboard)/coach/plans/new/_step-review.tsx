@@ -121,8 +121,8 @@ export function StepReview({
       <div
         className={`rounded-lg border px-4 py-3 ${
           validation.valid
-            ? "border-emerald-500/30 bg-emerald-500/10"
-            : "border-amber-500/30 bg-amber-500/10"
+            ? "border-success-500/30 bg-success-500/10"
+            : "border-primary-500/30 bg-primary-500/10"
         }`}
       >
         <div className="flex items-center gap-2 mb-1">
@@ -137,12 +137,12 @@ export function StepReview({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-emerald-500"
+                className="text-success-500"
               >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+              <span className="text-sm font-semibold text-success-700 dark:text-success-400">
                 Bondarchuk Compliant
               </span>
             </>
@@ -157,13 +157,13 @@ export function StepReview({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-amber-500"
+                className="text-primary-500"
               >
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+              <span className="text-sm font-semibold text-primary-700 dark:text-primary-400">
                 Warnings — Review Before Saving
               </span>
             </>
@@ -172,7 +172,7 @@ export function StepReview({
         {!validation.valid && (
           <div className="space-y-1 mt-2">
             {validation.warnings.map((w, i) => (
-              <p key={i} className="text-sm text-amber-700 dark:text-amber-400">
+              <p key={i} className="text-sm text-primary-700 dark:text-primary-400">
                 {w.message}
               </p>
             ))}
@@ -207,7 +207,7 @@ export function StepReview({
                       </span>
                     )}
                     {ex.implementKg > 0 && (
-                      <span className="text-amber-600 dark:text-amber-400 font-bold tabular-nums text-xs">
+                      <span className="text-primary-600 dark:text-primary-400 font-bold tabular-nums text-xs">
                         {ex.implementKg}kg
                       </span>
                     )}

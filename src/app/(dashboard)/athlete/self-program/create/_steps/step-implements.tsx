@@ -61,8 +61,8 @@ export function StepImplements({ form, update, errors, existingImplements }: Ste
       </div>
 
       {implementOptions.length === 0 ? (
-        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-          <p className="text-sm text-amber-800 dark:text-amber-300">
+        <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl">
+          <p className="text-sm text-primary-800 dark:text-primary-300">
             Select an event and gender first to see available implements.
           </p>
         </div>
@@ -97,7 +97,7 @@ export function StepImplements({ form, update, errors, existingImplements }: Ste
                   key={impl.weight}
                   type="button"
                   onClick={() => toggleImplement(impl.weightKg)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
                     isSelected
                       ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                       : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -131,12 +131,12 @@ export function StepImplements({ form, update, errors, existingImplements }: Ste
                         {impl.weightKg} kg
                       </span>
                       {impl.isCompetition && (
-                        <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-nano font-semibold uppercase rounded">
+                        <span className="px-1.5 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 text-nano font-semibold uppercase rounded">
                           Comp
                         </span>
                       )}
                       {isFromInventory && (
-                        <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 text-nano font-semibold uppercase rounded">
+                        <span className="px-1.5 py-0.5 bg-success-100 dark:bg-success-900/30 text-success-800 dark:text-success-300 text-nano font-semibold uppercase rounded">
                           Owned
                         </span>
                       )}
@@ -150,14 +150,14 @@ export function StepImplements({ form, update, errors, existingImplements }: Ste
 
           {/* Warning for < 2 implements */}
           {form.selectedImplements.length > 0 && form.selectedImplements.length < 2 && (
-            <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+            <div className="flex items-start gap-2 p-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl">
               <AlertTriangle
                 size={16}
                 strokeWidth={1.75}
-                className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                className="text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5"
                 aria-hidden="true"
               />
-              <p className="text-xs text-amber-800 dark:text-amber-300">
+              <p className="text-xs text-primary-800 dark:text-primary-300">
                 Bondarchuk methodology works best with at least 2 implements (heavy + competition
                 weight). Consider adding more for optimal training transfer.
               </p>
@@ -167,7 +167,7 @@ export function StepImplements({ form, update, errors, existingImplements }: Ste
       )}
 
       {errors.implements && (
-        <p className="text-sm text-red-600 dark:text-red-400">{errors.implements}</p>
+        <p className="text-sm text-danger-600 dark:text-danger-400">{errors.implements}</p>
       )}
     </div>
   );

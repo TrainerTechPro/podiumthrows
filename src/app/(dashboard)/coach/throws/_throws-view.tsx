@@ -113,23 +113,23 @@ const TEST_STATUS_CONFIG: Record<
 > = {
   never: {
     label: "Never",
-    bg: "bg-red-50 dark:bg-red-900/20",
-    text: "text-red-600 dark:text-red-400",
+    bg: "bg-danger-50 dark:bg-danger-900/20",
+    text: "text-danger-600 dark:text-danger-400",
   },
   overdue: {
     label: "Overdue",
-    bg: "bg-red-50 dark:bg-red-900/20",
-    text: "text-red-600 dark:text-red-400",
+    bg: "bg-danger-50 dark:bg-danger-900/20",
+    text: "text-danger-600 dark:text-danger-400",
   },
   "due-soon": {
     label: "Due Soon",
-    bg: "bg-amber-50 dark:bg-amber-900/20",
-    text: "text-amber-600 dark:text-amber-400",
+    bg: "bg-primary-50 dark:bg-primary-900/20",
+    text: "text-primary-600 dark:text-primary-400",
   },
   ok: {
     label: "OK",
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
-    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-success-50 dark:bg-success-900/20",
+    text: "text-success-600 dark:text-success-400",
   },
 };
 
@@ -385,9 +385,9 @@ export function ThrowsView({
           href="/coach/throws/practice"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-success-100 dark:bg-success-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
             <svg
-              className="w-5 h-5 text-emerald-600 dark:text-emerald-400"
+              className="w-5 h-5 text-success-600 dark:text-success-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -411,9 +411,9 @@ export function ThrowsView({
           href="/coach/throws/invite"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
             <svg
-              className="w-5 h-5 text-amber-600 dark:text-amber-400"
+              className="w-5 h-5 text-primary-600 dark:text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -467,9 +467,9 @@ export function ThrowsView({
           href="/coach/plans/generate"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
             <svg
-              className="w-5 h-5 text-amber-600 dark:text-amber-400"
+              className="w-5 h-5 text-primary-600 dark:text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -499,7 +499,7 @@ export function ThrowsView({
             <h2 className="text-sm font-semibold text-[var(--foreground)]">Roster Pulse</h2>
             <span className="text-sm text-muted">{pulse.length} enrolled</span>
             {needsAttention > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-micro font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-micro font-semibold bg-danger-100 dark:bg-danger-900/30 text-danger-700 dark:text-danger-400">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -597,10 +597,10 @@ export function ThrowsView({
                   row.daysSincePractice == null
                     ? "text-muted"
                     : row.daysSincePractice > 5
-                      ? "text-red-600 dark:text-red-400 font-semibold"
+                      ? "text-danger-600 dark:text-danger-400 font-semibold"
                       : row.daysSincePractice > 2
-                        ? "text-amber-600 dark:text-amber-400"
-                        : "text-emerald-600 dark:text-emerald-400";
+                        ? "text-primary-600 dark:text-primary-400"
+                        : "text-success-600 dark:text-success-400";
                 return (
                   <Fragment key={`mob-${row.id}`}>
                     <div
@@ -800,10 +800,10 @@ export function ThrowsView({
                       row.daysSincePractice == null
                         ? "text-muted"
                         : row.daysSincePractice > 5
-                          ? "text-red-600 dark:text-red-400 font-semibold"
+                          ? "text-danger-600 dark:text-danger-400 font-semibold"
                           : row.daysSincePractice > 2
-                            ? "text-amber-600 dark:text-amber-400"
-                            : "text-emerald-600 dark:text-emerald-400";
+                            ? "text-primary-600 dark:text-primary-400"
+                            : "text-success-600 dark:text-success-400";
                     // For expanded row: training→comp gap
                     const eventLong = CODE_EVENT_MAP[row.event as EventCode] ?? row.event;
                     const prForEvent = row.athlete.throwsPRs?.find((pr) => pr.event === eventLong);
@@ -850,7 +850,7 @@ export function ThrowsView({
                                 {row.deficitPrimary}
                               </span>
                             ) : row.overPowered ? (
-                              <span className="text-nano font-semibold text-amber-600 dark:text-amber-400">
+                              <span className="text-nano font-semibold text-primary-600 dark:text-primary-400">
                                 OverPwrd
                               </span>
                             ) : (
@@ -893,7 +893,7 @@ export function ThrowsView({
                               </span>
                               <div className="w-14 h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden flex-shrink-0">
                                 <div
-                                  className="h-full rounded-full transition-all"
+                                  className="h-full rounded-full transition-colors"
                                   style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }}
                                 />
                               </div>
@@ -960,10 +960,10 @@ export function ThrowsView({
                                       <span
                                         className={`text-xs font-bold ${
                                           prGap > 2
-                                            ? "text-red-600 dark:text-red-400"
+                                            ? "text-danger-600 dark:text-danger-400"
                                             : prGap > 0.5
-                                              ? "text-amber-600 dark:text-amber-400"
-                                              : "text-emerald-600 dark:text-emerald-400"
+                                              ? "text-primary-600 dark:text-primary-400"
+                                              : "text-success-600 dark:text-success-400"
                                         }`}
                                       >
                                         {prGap > 0
@@ -1089,7 +1089,7 @@ export function ThrowsView({
           <p className="text-sm font-medium text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             Completed
           </p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+          <p className="text-2xl font-bold text-success-600 dark:text-success-400 mt-1">
             {completedAssignments}
           </p>
           <p className="text-sm text-muted mt-0.5">
@@ -1159,7 +1159,7 @@ export function ThrowsView({
                   </span>
                   <div className="flex-1 h-3 bg-[var(--muted-bg)] rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all"
+                      className="h-full rounded-full transition-colors"
                       style={{
                         width: `${phaseRatios[cls]}%`,
                         backgroundColor: PHASE_COLORS[selectedPhase],
@@ -1279,7 +1279,7 @@ export function ThrowsView({
           {TAPER_PROTOCOL.map((entry) => (
             <div key={entry.daysOut} className="flex-1 flex flex-col items-center gap-1">
               <div
-                className="w-full rounded-t-md transition-all"
+                className="w-full rounded-t-md transition-colors"
                 style={{
                   height: `${entry.volumeMultiplier * 100}%`,
                   backgroundColor: "#f59e0b",

@@ -93,7 +93,7 @@ export function RestTimer({
           className={cn(
             "tabular-nums font-bold text-sm",
             done
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "text-success-600 dark:text-success-400"
               : running
                 ? "text-primary-600 dark:text-primary-400"
                 : "text-muted"
@@ -104,19 +104,33 @@ export function RestTimer({
         {!done && (
           <button
             onClick={running ? pause : start}
-            aria-label={running ? "Pause rest timer" : remaining < seconds ? "Resume rest timer" : "Start rest timer"}
+            aria-label={
+              running
+                ? "Pause rest timer"
+                : remaining < seconds
+                  ? "Resume rest timer"
+                  : "Start rest timer"
+            }
             className="text-xs text-primary-500 hover:underline"
           >
             {running ? "Pause" : remaining < seconds ? "Resume" : "Start"}
           </button>
         )}
         {(running || remaining < seconds) && !done && (
-          <button onClick={reset} aria-label="Reset rest timer" className="text-xs text-muted hover:underline">
+          <button
+            onClick={reset}
+            aria-label="Reset rest timer"
+            className="text-xs text-muted hover:underline"
+          >
             Reset
           </button>
         )}
         {done && (
-          <button onClick={reset} aria-label="Restart rest timer" className="text-xs text-primary-500 hover:underline">
+          <button
+            onClick={reset}
+            aria-label="Restart rest timer"
+            className="text-xs text-primary-500 hover:underline"
+          >
             Restart
           </button>
         )}
@@ -157,9 +171,7 @@ export function RestTimer({
             strokeDashoffset={strokeDashoffset}
             className={cn(
               "transition-[stroke-dashoffset] duration-1000 ease-linear",
-              done
-                ? "text-emerald-500"
-                : "text-primary-500"
+              done ? "text-success-500" : "text-primary-500"
             )}
           />
         </svg>
@@ -168,18 +180,14 @@ export function RestTimer({
           <span
             className={cn(
               "text-2xl font-bold",
-              done
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-[var(--foreground)]"
+              done ? "text-success-600 dark:text-success-400" : "text-[var(--foreground)]"
             )}
           >
             <NumberFlow value={remaining} duration={300} />
             <span className="text-base font-medium text-muted ml-0.5">s</span>
           </span>
           {done && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-              Done
-            </span>
+            <span className="text-xs text-success-600 dark:text-success-400 font-medium">Done</span>
           )}
         </div>
       </div>
@@ -190,7 +198,13 @@ export function RestTimer({
           <>
             <button
               onClick={running ? pause : start}
-              aria-label={running ? "Pause rest timer" : remaining < seconds ? "Resume rest timer" : "Start rest timer"}
+              aria-label={
+                running
+                  ? "Pause rest timer"
+                  : remaining < seconds
+                    ? "Resume rest timer"
+                    : "Start rest timer"
+              }
               className={cn(
                 "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors",
                 running

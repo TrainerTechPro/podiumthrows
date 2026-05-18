@@ -65,10 +65,10 @@ function isCompetitionWeight(implementKg: number, compWeightKg: number): boolean
 
 /** Get ratio color class based on transfer ratio */
 function getRatioColor(ratio: number): string {
-  if (ratio >= 85 && ratio <= 115) return "text-emerald-600 dark:text-emerald-400";
+  if (ratio >= 85 && ratio <= 115) return "text-success-600 dark:text-success-400";
   if ((ratio >= 75 && ratio < 85) || (ratio > 115 && ratio <= 125))
-    return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+    return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */

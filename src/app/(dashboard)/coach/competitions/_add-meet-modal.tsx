@@ -326,7 +326,7 @@ export function AddMeetModal({
                 <select
                   value={venueType}
                   onChange={(e) => setVenueType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
                 >
                   <option value="">— unspecified —</option>
                   <option value="INDOOR">Indoor</option>
@@ -341,7 +341,7 @@ export function AddMeetModal({
                 <select
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
                 >
                   <option value="THREE_PLUS_THREE">3+3 (qualify → final)</option>
                   <option value="FOUR_STRAIGHT">4 straight throws</option>
@@ -362,7 +362,7 @@ export function AddMeetModal({
                   placeholder="default for event"
                   value={implementWeightKg}
                   onChange={(e) => setImplementWeightKg(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
                 />
               </div>
 
@@ -377,7 +377,7 @@ export function AddMeetModal({
                   placeholder="e.g. 1"
                   value={placeFinish}
                   onChange={(e) => setPlaceFinish(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
                 />
               </div>
             </div>
@@ -394,7 +394,7 @@ export function AddMeetModal({
                   placeholder="e.g. +1.2"
                   value={windMps}
                   onChange={(e) => setWindMps(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm font-mono placeholder:text-muted placeholder:font-body focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
                 />
               </div>
 
@@ -407,7 +407,7 @@ export function AddMeetModal({
                   placeholder="70°F sunny, windy, rain…"
                   value={weather}
                   onChange={(e) => setWeather(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--surface-overlay)] text-[var(--foreground)] text-sm placeholder:text-muted focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
                 />
               </div>
             </div>

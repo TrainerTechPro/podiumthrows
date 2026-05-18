@@ -153,7 +153,7 @@ export function ArchitectClient({ athletes }: Props) {
                   setAnalysis(null);
                 }}
                 className={cn(
-                  "text-left rounded-lg border p-4 transition-all duration-150",
+                  "text-left rounded-lg border p-4 transition-colors duration-150",
                   "hover:border-primary-500/50",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                   isSelected
@@ -232,7 +232,7 @@ export function ArchitectClient({ athletes }: Props) {
         disabled={!selectedAthleteId || isAnalyzing}
         className={cn(
           "w-full py-3.5 rounded-lg font-heading font-semibold text-sm tracking-wide",
-          "transition-all duration-200",
+          "transition-colors duration-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           selectedAthleteId && !isAnalyzing
@@ -304,7 +304,7 @@ function PillButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150",
+        "px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-150",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
         isActive
           ? "bg-primary-500 text-surface-950"
@@ -336,8 +336,8 @@ function AnalysisResults({
               className={cn(
                 "flex items-start gap-3 p-3.5 rounded-lg border",
                 c.type === "error"
-                  ? "bg-red-500/8 border-red-500/30 text-red-400"
-                  : "bg-amber-500/8 border-amber-500/30 text-amber-400"
+                  ? "bg-danger-500/8 border-danger-500/30 text-danger-400"
+                  : "bg-primary-500/8 border-primary-500/30 text-primary-400"
               )}
             >
               {c.type === "error" ? (
@@ -419,8 +419,8 @@ function AnalysisResults({
               className={cn(
                 "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
                 analysis.method.selected === "COMPLEX"
-                  ? "bg-green-500/15 text-green-400"
-                  : "bg-amber-500/15 text-amber-400"
+                  ? "bg-success-500/15 text-success-400"
+                  : "bg-primary-500/15 text-primary-400"
               )}
             >
               {analysis.method.selected}
@@ -557,10 +557,18 @@ function DataPair({ label, value }: { label: string; value: string }) {
 
 function DeficitBadge({ type }: { type: string }) {
   const config: Record<string, { bg: string; text: string; label: string }> = {
-    "force-dominant": { bg: "bg-amber-500/15", text: "text-amber-400", label: "Force-dominant" },
-    "speed-dominant": { bg: "bg-blue-500/15", text: "text-blue-400", label: "Speed-dominant" },
-    "under-developed": { bg: "bg-red-500/15", text: "text-red-400", label: "Under-developed" },
-    balanced: { bg: "bg-green-500/15", text: "text-green-400", label: "Balanced" },
+    "force-dominant": {
+      bg: "bg-primary-500/15",
+      text: "text-primary-400",
+      label: "Force-dominant",
+    },
+    "speed-dominant": { bg: "bg-info-500/15", text: "text-info-400", label: "Speed-dominant" },
+    "under-developed": {
+      bg: "bg-danger-500/15",
+      text: "text-danger-400",
+      label: "Under-developed",
+    },
+    balanced: { bg: "bg-success-500/15", text: "text-success-400", label: "Balanced" },
   };
 
   const c = config[type] ?? config.balanced;
@@ -585,7 +593,7 @@ function BenchmarkStatus({ status, deficit }: { status: string; deficit: number 
 
   if (status === "above") {
     return (
-      <span className="flex items-center gap-1 text-xs text-green-400">
+      <span className="flex items-center gap-1 text-xs text-success-400">
         <CheckCircle2 size={14} strokeWidth={1.75} />
         Above
       </span>
@@ -594,7 +602,7 @@ function BenchmarkStatus({ status, deficit }: { status: string; deficit: number 
 
   if (status === "at") {
     return (
-      <span className="flex items-center gap-1 text-xs text-amber-400">
+      <span className="flex items-center gap-1 text-xs text-primary-400">
         <CheckCircle2 size={14} strokeWidth={1.75} />
         At standard
       </span>
@@ -602,7 +610,7 @@ function BenchmarkStatus({ status, deficit }: { status: string; deficit: number 
   }
 
   return (
-    <span className="flex items-center gap-1 text-xs text-red-400">
+    <span className="flex items-center gap-1 text-xs text-danger-400">
       <XCircle size={14} strokeWidth={1.75} />
       {deficit != null ? `-${deficit}%` : "Below"}
     </span>

@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 import type { WeekDay } from "@/lib/data/training-hub";
 
 const DOT_COLORS: Record<WeekDay["sessionType"], string> = {
-  throws: "bg-amber-500",
-  lift: "bg-blue-500",
-  mixed: "bg-emerald-500",
+  throws: "bg-primary-500",
+  lift: "bg-info-500",
+  mixed: "bg-success-500",
   rest: "",
 };
 

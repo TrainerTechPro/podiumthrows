@@ -37,12 +37,12 @@ export function SessionProgressHeader({
 
   return (
     <div className="sticky top-0 z-30">
-      <div className="mobile-header-blur border-b border-gray-200/60 dark:border-gray-800/60">
+      <div className="mobile-header-blur border-b border-surface-200/60 dark:border-surface-800/60">
         <div className="flex items-center gap-3 px-4 py-3">
           {/* Back */}
           <Link
             href="/athlete/dashboard"
-            className="flex-shrink-0 -ml-1 p-1 text-gray-500 hover:text-primary-600 transition-colors"
+            className="flex-shrink-0 -ml-1 p-1 text-surface-500 hover:text-primary-600 transition-colors"
             aria-label="Back to dashboard"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -58,20 +58,20 @@ export function SessionProgressHeader({
           {/* Center: progress */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              <span className="text-xs font-medium text-surface-600 dark:text-surface-400">
                 {phaseLabel}
               </span>
               {currentPhase === "throws" && totalTarget > 0 && (
-                <span className="text-xs font-semibold text-gray-900 dark:text-white tabular-nums">
+                <span className="text-xs font-semibold text-surface-900 dark:text-white tabular-nums">
                   {totalThrowsLogged}/{totalTarget}
                 </span>
               )}
             </div>
             {/* Progress bar */}
             {totalTarget > 0 && (
-              <div className="h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+              <div className="h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary-500 transition-all duration-500 ease-out"
+                  className="h-full rounded-full bg-primary-500 transition-colors duration-500 ease-out"
                   style={{ width: `${overallProgress}%` }}
                 />
               </div>
@@ -80,7 +80,7 @@ export function SessionProgressHeader({
 
           {/* Right: block indicator */}
           {currentPhase === "throws" && totalThrowBlocks > 0 && (
-            <span className="flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 tabular-nums">
+            <span className="flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 tabular-nums">
               {Math.min(currentBlockIndex + 1, totalThrowBlocks)}/{totalThrowBlocks}
             </span>
           )}
@@ -129,7 +129,7 @@ function IntraEvalBanner({
       // Inline banner in page flow (not a portaled overlay). Page canvas is
       // fully opaque so the /50 tint cascades onto a known surface. Don't
       // "fix" to --surface-overlay — this is a flow element, not a modal.
-      <div className="px-4 py-2.5 border-b border-gray-200/60 dark:border-gray-800/60 bg-surface-50 dark:bg-surface-900/50">
+      <div className="px-4 py-2.5 border-b border-surface-200/60 dark:border-surface-800/60 bg-surface-50 dark:bg-surface-900/50">
         <div className="flex items-center gap-2">
           <svg
             className="animate-spin h-3.5 w-3.5 text-muted"
@@ -160,16 +160,16 @@ function IntraEvalBanner({
   // Applied — green banner
   if (intraEval.status === "applied" && intraEval.suggestion) {
     return (
-      <div className="px-4 py-2.5 border-b border-emerald-200/60 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/20">
+      <div className="px-4 py-2.5 border-b border-success-200/60 dark:border-success-800/40 bg-success-50 dark:bg-success-900/20">
         <div className="flex items-start gap-2">
-          <span className="text-emerald-600 dark:text-emerald-400 text-xs font-medium shrink-0 mt-px">
+          <span className="text-success-600 dark:text-success-400 text-xs font-medium shrink-0 mt-px">
             &#10003; Block 2 adjusted automatically
           </span>
           <span className="flex-1" />
           <button
             type="button"
             onClick={() => dispatch({ type: "INTRA_EVAL_DISMISS" })}
-            className="text-emerald-500/60 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors shrink-0 -mt-0.5"
+            className="text-success-500/60 hover:text-success-600 dark:hover:text-success-400 transition-colors shrink-0 -mt-0.5"
             aria-label="Dismiss"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -182,7 +182,7 @@ function IntraEvalBanner({
             </svg>
           </button>
         </div>
-        <p className="text-micro text-emerald-700/80 dark:text-emerald-300/70 mt-0.5 leading-relaxed">
+        <p className="text-micro text-success-700/80 dark:text-success-300/70 mt-0.5 leading-relaxed">
           {intraEval.suggestion.reasoning}
         </p>
       </div>
@@ -222,11 +222,11 @@ function IntraEvalBanner({
     };
 
     return (
-      <div className="px-4 py-2.5 border-b border-amber-200/60 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/20">
-        <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+      <div className="px-4 py-2.5 border-b border-primary-200/60 dark:border-primary-800/40 bg-primary-50 dark:bg-primary-900/20">
+        <p className="text-xs font-medium text-primary-700 dark:text-primary-400">
           Readiness check — adjustment suggested
         </p>
-        <p className="text-micro text-amber-700/80 dark:text-amber-300/70 mt-0.5 leading-relaxed">
+        <p className="text-micro text-primary-700/80 dark:text-primary-300/70 mt-0.5 leading-relaxed">
           {suggestion.reasoning}
         </p>
         <div className="flex items-center gap-2 mt-2">
@@ -234,14 +234,14 @@ function IntraEvalBanner({
             type="button"
             onClick={handleApply}
             disabled={applying}
-            className="text-micro font-medium px-2.5 py-1 rounded-md bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-colors"
+            className="text-micro font-medium px-2.5 py-1 rounded-md bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 transition-colors"
           >
             {applying ? "Applying..." : "Apply"}
           </button>
           <button
             type="button"
             onClick={() => dispatch({ type: "INTRA_EVAL_DISMISS" })}
-            className="text-micro font-medium px-2.5 py-1 rounded-md text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+            className="text-micro font-medium px-2.5 py-1 rounded-md text-primary-700 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
           >
             Dismiss
           </button>

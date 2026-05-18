@@ -38,10 +38,10 @@ interface AthleteLog {
 }
 
 const EVENT_DOT: Record<string, string> = {
-  SHOT_PUT: "bg-blue-500",
+  SHOT_PUT: "bg-info-500",
   DISCUS: "bg-purple-500",
-  HAMMER: "bg-red-500",
-  JAVELIN: "bg-green-500",
+  HAMMER: "bg-danger-500",
+  JAVELIN: "bg-success-500",
 };
 
 const EVENT_LABELS: Record<string, string> = {

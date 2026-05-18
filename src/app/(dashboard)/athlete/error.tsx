@@ -17,9 +17,8 @@ export default function AthleteError({ error, reset }: ErrorProps) {
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="max-w-md w-full text-center space-y-5">
-
         {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-2xl bg-danger-500/10 flex items-center justify-center mx-auto">
           <svg
             width="28"
             height="28"

@@ -49,7 +49,7 @@ export function QuickCheckStrip({ roster }: { roster: SidelineRosterAthlete[] })
                 <button
                   type="button"
                   onClick={() => setActive(a)}
-                  className="w-[112px] flex flex-col items-center gap-2 rounded-2xl p-3 bg-[var(--card-bg)] border border-[var(--card-border)] active:scale-[0.97] transition-transform focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                  className="w-[112px] flex flex-col items-center gap-2 rounded-2xl p-3 bg-[var(--card-bg)] border border-[var(--card-border)] active:scale-[0.97] transition-transform focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
                   aria-label={`Quick check ${a.firstName} ${a.lastName}`}
                 >
                   <div className="relative">

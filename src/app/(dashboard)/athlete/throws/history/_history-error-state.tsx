@@ -9,12 +9,12 @@ export function HistoryErrorState({ message, onRetry }: Props) {
   return (
     <div
       role="alert"
-      className="card text-center py-10 px-6 border border-red-500/30 bg-red-500/5"
+      className="card text-center py-10 px-6 border border-danger-500/30 bg-danger-500/5"
     >
       <AlertTriangle
         size={24}
         strokeWidth={1.75}
-        className="text-red-400 mx-auto mb-3"
+        className="text-danger-400 mx-auto mb-3"
         aria-hidden="true"
       />
       <h3 className="font-semibold text-[var(--foreground)]">Couldn&rsquo;t load history</h3>

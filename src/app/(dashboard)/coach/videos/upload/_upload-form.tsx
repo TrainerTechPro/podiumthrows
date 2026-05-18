@@ -581,7 +581,7 @@ export function UploadForm({ athleteOptions }: Props) {
                     e.stopPropagation();
                     handleCancel();
                   }}
-                  className="mt-2 text-xs text-red-500 hover:text-red-600"
+                  className="mt-2 text-xs text-danger-500 hover:text-danger-600"
                 >
                   Remove
                 </button>
@@ -658,7 +658,7 @@ export function UploadForm({ athleteOptions }: Props) {
                 <label className="text-xs font-medium text-[var(--foreground)]">
                   Select 10-second clip
                 </label>
-                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">
                   Max 10s required
                 </span>
               </div>
@@ -691,7 +691,7 @@ export function UploadForm({ athleteOptions }: Props) {
 
           {/* MediaRecorder not supported warning */}
           {needsTrim && !mediaRecorderSupported && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20">
               <svg
                 width="14"
                 height="14"
@@ -699,7 +699,7 @@ export function UploadForm({ athleteOptions }: Props) {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+                className="text-primary-600 dark:text-primary-400 shrink-0 mt-0.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -707,7 +707,7 @@ export function UploadForm({ athleteOptions }: Props) {
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <p className="text-xs text-amber-700 dark:text-amber-300">
+              <p className="text-xs text-primary-700 dark:text-primary-300">
                 Your browser does not support video trimming. The full video will be uploaded.
               </p>
             </div>
@@ -742,7 +742,7 @@ export function UploadForm({ athleteOptions }: Props) {
                       setThumbnailPreviewUrl("");
                       setThumbnailBlob(null);
                     }}
-                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center"
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-danger-500 text-white flex items-center justify-center"
                     aria-label="Remove thumbnail"
                   >
                     <svg
@@ -795,7 +795,7 @@ export function UploadForm({ athleteOptions }: Props) {
           />
           <button
             onClick={handleCancel}
-            className="text-xs text-muted hover:text-red-500 transition-colors"
+            className="text-xs text-muted hover:text-danger-500 transition-colors"
           >
             Cancel upload
           </button>
@@ -804,7 +804,7 @@ export function UploadForm({ athleteOptions }: Props) {
 
       {/* ── Error ─────────────────────────────────────────────────────── */}
       {errorMsg && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-danger-50 dark:bg-danger-500/10 border border-danger-200 dark:border-danger-500/20">
           <svg
             width="16"
             height="16"
@@ -812,7 +812,7 @@ export function UploadForm({ athleteOptions }: Props) {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="text-red-500 shrink-0 mt-0.5"
+            className="text-danger-500 shrink-0 mt-0.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -821,14 +821,14 @@ export function UploadForm({ athleteOptions }: Props) {
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           <div>
-            <p className="text-sm text-red-700 dark:text-red-300">{errorMsg}</p>
+            <p className="text-sm text-danger-700 dark:text-danger-300">{errorMsg}</p>
             {phase === "error" && (
               <button
                 onClick={() => {
                   setPhase("selected");
                   setErrorMsg("");
                 }}
-                className="text-xs text-red-500 hover:underline mt-1"
+                className="text-xs text-danger-500 hover:underline mt-1"
               >
                 Try again
               </button>
@@ -845,7 +845,7 @@ export function UploadForm({ athleteOptions }: Props) {
           {/* Title */}
           <div>
             <label className="block text-xs font-medium text-[var(--foreground)] mb-1">
-              Title <span className="text-red-500">*</span>
+              Title <span className="text-danger-500">*</span>
             </label>
             <input
               type="text"

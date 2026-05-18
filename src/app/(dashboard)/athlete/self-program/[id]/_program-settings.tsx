@@ -300,7 +300,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                 type="button"
                 onClick={() => update("daysPerWeek", n)}
                 className={cn(
-                  "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all",
+                  "flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors",
                   form.daysPerWeek === n
                     ? "bg-primary-500 text-white shadow-md"
                     : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700"
@@ -322,7 +322,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                 type="button"
                 onClick={() => update("sessionsPerDay", n)}
                 className={cn(
-                  "flex-1 py-2.5 text-sm font-medium transition-all",
+                  "flex-1 py-2.5 text-sm font-medium transition-colors",
                   form.sessionsPerDay === n
                     ? "bg-primary-500 text-white"
                     : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
@@ -333,7 +333,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
             ))}
           </div>
           {form.sessionsPerDay === 2 && (
-            <p className="text-caption text-amber-700 dark:text-amber-400 mt-1">
+            <p className="text-caption text-primary-700 dark:text-primary-400 mt-1">
               Double sessions split throws and strength into separate AM/PM sessions
             </p>
           )}
@@ -353,7 +353,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
                   type="button"
                   onClick={() => toggleDay(day.value)}
                   className={cn(
-                    "min-h-[44px] rounded-lg text-xs font-semibold transition-all",
+                    "min-h-[44px] rounded-lg text-xs font-semibold transition-colors",
                     isSelected
                       ? "bg-primary-500 text-white shadow-sm"
                       : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-surface-200 dark:hover:bg-surface-700"
@@ -365,14 +365,14 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
             })}
           </div>
           {daysMismatch && (
-            <div className="flex items-start gap-2 mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-start gap-2 mt-2 p-2.5 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
               <AlertTriangle
                 size={14}
                 strokeWidth={1.75}
-                className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                className="text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5"
                 aria-hidden="true"
               />
-              <p className="text-xs text-amber-800 dark:text-amber-300">
+              <p className="text-xs text-primary-800 dark:text-primary-300">
                 You selected {form.preferredDays.length} day
                 {form.preferredDays.length !== 1 ? "s" : ""} but your schedule is set to{" "}
                 {form.daysPerWeek} days/week.
@@ -392,7 +392,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               type="button"
               onClick={() => update("programType", pt.value)}
               className={cn(
-                "card p-4 text-left transition-all",
+                "card p-4 text-left transition-colors",
                 form.programType === pt.value
                   ? "ring-2 ring-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                   : "hover:bg-surface-50 dark:hover:bg-surface-800/50"
@@ -415,7 +415,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               type="button"
               onClick={() => update("primaryGoal", goal.value)}
               className={cn(
-                "card p-4 text-left transition-all",
+                "card p-4 text-left transition-colors",
                 form.primaryGoal === goal.value
                   ? "ring-2 ring-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                   : "hover:bg-surface-50 dark:hover:bg-surface-800/50"

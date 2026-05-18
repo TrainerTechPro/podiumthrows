@@ -245,7 +245,7 @@ function InlineInviteButton({
         {success ? (
           <div className="space-y-4 py-1">
             <div className="text-center py-2">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center mx-auto mb-2">
+              <div className="w-12 h-12 rounded-full bg-success-100 dark:bg-success-500/10 flex items-center justify-center mx-auto mb-2">
                 <svg
                   width="24"
                   height="24"
@@ -298,9 +298,9 @@ function InlineInviteButton({
               )}
               <button
                 onClick={copyLink}
-                className={`w-full flex items-center justify-center gap-2 rounded-xl font-semibold text-sm py-3.5 transition-all min-h-[48px] border ${
+                className={`w-full flex items-center justify-center gap-2 rounded-xl font-semibold text-sm py-3.5 transition-colors min-h-[48px] border ${
                   copied
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                    ? "bg-success-500/10 text-success-600 dark:text-success-400 border-success-500/20"
                     : "bg-[var(--surface)] text-[var(--foreground)] border-[var(--border)] hover:bg-[var(--surface-raised)] active:bg-[var(--surface-hover)]"
                 }`}
               >
@@ -355,7 +355,7 @@ function InlineInviteButton({
                   setError("");
                 }}
                 className={cn(
-                  "flex-1 text-sm font-medium py-2 rounded-lg transition-all",
+                  "flex-1 text-sm font-medium py-2 rounded-lg transition-colors",
                   mode === "email"
                     ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
                     : "text-muted hover:text-[var(--foreground)]"
@@ -369,7 +369,7 @@ function InlineInviteButton({
                   setError("");
                 }}
                 className={cn(
-                  "flex-1 text-sm font-medium py-2 rounded-lg transition-all",
+                  "flex-1 text-sm font-medium py-2 rounded-lg transition-colors",
                   mode === "link"
                     ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
                     : "text-muted hover:text-[var(--foreground)]"

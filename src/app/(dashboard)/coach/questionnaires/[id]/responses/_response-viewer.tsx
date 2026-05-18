@@ -72,16 +72,16 @@ function formatAnswer(answer: unknown): string {
 
 function scoreColor(score: number, max: number): string {
   const pct = max > 0 ? score / max : 0;
-  if (pct >= 0.7) return "text-emerald-600 dark:text-emerald-400";
-  if (pct >= 0.4) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (pct >= 0.7) return "text-success-600 dark:text-success-400";
+  if (pct >= 0.4) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 function scoreBgColor(score: number, max: number): string {
   const pct = max > 0 ? score / max : 0;
-  if (pct >= 0.7) return "bg-emerald-500";
-  if (pct >= 0.4) return "bg-amber-500";
-  return "bg-red-500";
+  if (pct >= 0.7) return "bg-success-500";
+  if (pct >= 0.4) return "bg-primary-500";
+  return "bg-danger-500";
 }
 
 /* ── Composite Score Badge ─────────────────────────────────────────────────── */
@@ -154,7 +154,7 @@ function ResponseCard({
           </div>
           <div className="h-2 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${scoreBgColor(
+              className={`h-full rounded-full transition-colors ${scoreBgColor(
                 response.scores.compositeScore,
                 response.scores.maxPossibleScore
               )}`}
@@ -215,7 +215,7 @@ function ResponseCard({
                 key={i}
                 className={`p-3 rounded-lg ${
                   isYesFlagged
-                    ? "bg-red-500/10 border border-red-500/20"
+                    ? "bg-danger-500/10 border border-danger-500/20"
                     : "bg-surface-50 dark:bg-surface-800/50"
                 }`}
               >
@@ -463,7 +463,7 @@ function SummaryView({ responses, questions, questionnaireType, scoringEnabled }
               )}
               <div className="flex-1 h-2 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${isPARQ ? "bg-red-500" : "bg-primary-500"}`}
+                  className={`h-full rounded-full ${isPARQ ? "bg-danger-500" : "bg-primary-500"}`}
                   style={{ width: `${item.yesPercent}%` }}
                 />
               </div>

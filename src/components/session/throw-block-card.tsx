@@ -106,7 +106,7 @@ export function ThrowBlockCard({
   const drillLabel = DRILL_LABELS[block.drillType] ?? block.drillType;
   const categoryColor =
     CLASSIFICATION_COLORS[block.category] ??
-    "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+    "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400";
 
   return (
     <div className="card animate-fade-in">
@@ -116,7 +116,7 @@ export function ThrowBlockCard({
           <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${categoryColor}`}>
             {block.category}
           </span>
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          <span className="text-sm font-semibold text-surface-900 dark:text-white">
             {block.implement}
           </span>
         </div>
@@ -129,13 +129,13 @@ export function ThrowBlockCard({
       </div>
 
       {/* Drill + target info */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+      <p className="text-xs text-surface-500 dark:text-surface-400 mb-3">
         {drillLabel} &middot; {block.sets * block.repsPerSet} throws &middot; {block.restSeconds}s
         rest
       </p>
 
       {block.notes && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 italic mb-3">{block.notes}</p>
+        <p className="text-xs text-surface-500 dark:text-surface-400 italic mb-3">{block.notes}</p>
       )}
 
       {/* Set progress dots */}
@@ -149,17 +149,17 @@ export function ThrowBlockCard({
           return (
             <div
               key={setIdx}
-              className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+              className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
                 setDone
                   ? "bg-primary-500"
                   : isCurrent
                     ? "bg-primary-300 dark:bg-primary-700 animate-subtle-pulse"
-                    : "bg-gray-200 dark:bg-gray-700"
+                    : "bg-surface-200 dark:bg-surface-700"
               }`}
             />
           );
         })}
-        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 tabular-nums">
+        <span className="text-xs text-surface-500 dark:text-surface-400 ml-1 tabular-nums">
           {throwsLogged}/{totalTarget}
         </span>
       </div>
@@ -170,9 +170,9 @@ export function ThrowBlockCard({
           {currentSetThrows.map((t, i) => (
             <span
               key={i}
-              className="text-sm font-semibold tabular-nums px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white"
+              className="text-sm font-semibold tabular-nums px-2.5 py-1 rounded-lg bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white"
             >
-              {t.distance}m{!t.synced && <span className="ml-1 text-xs text-gray-400">...</span>}
+              {t.distance}m{!t.synced && <span className="ml-1 text-xs text-surface-400">...</span>}
             </span>
           ))}
           {/* Empty slots */}
@@ -180,7 +180,7 @@ export function ThrowBlockCard({
             Array.from({ length: block.repsPerSet - currentSetThrows.length }).map((_, i) => (
               <span
                 key={`empty-${i}`}
-                className="text-sm tabular-nums px-2.5 py-1 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-gray-400"
+                className="text-sm tabular-nums px-2.5 py-1 rounded-lg border border-dashed border-surface-300 dark:border-surface-600 text-surface-400"
               >
                 —
               </span>

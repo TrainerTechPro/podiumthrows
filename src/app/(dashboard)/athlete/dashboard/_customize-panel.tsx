@@ -283,7 +283,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
 
             {/* Error message */}
             {error && (
-              <div className="text-xs text-red-600 dark:text-red-400 mb-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+              <div className="text-xs text-danger-600 dark:text-danger-400 mb-3 px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20">
                 {error}
               </div>
             )}
@@ -301,7 +301,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
                     <button
                       key={presetId}
                       onClick={() => applyPreset(presetId)}
-                      className={`card p-3 text-left transition-all duration-150 ${
+                      className={`card p-3 text-left transition-colors duration-150 ${
                         isActive
                           ? "ring-2 ring-primary-500 bg-primary-500/5"
                           : "hover:bg-surface-50 dark:hover:bg-surface-800/50"

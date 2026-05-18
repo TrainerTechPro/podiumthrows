@@ -37,13 +37,11 @@ export function WarmupChecklist({
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-section font-heading text-gray-900 dark:text-white">
-          Warmup
-        </h2>
+        <h2 className="text-section font-heading text-surface-900 dark:text-white">Warmup</h2>
         <button
           type="button"
           onClick={handleSkip}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          className="text-xs text-surface-500 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
         >
           Skip
         </button>
@@ -55,19 +53,29 @@ export function WarmupChecklist({
             key={i}
             type="button"
             onClick={() => dispatch({ type: "TOGGLE_WARMUP", payload: i })}
-            className="flex items-center gap-3 w-full text-left p-3 rounded-xl transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 min-h-[48px]"
+            className="flex items-center gap-3 w-full text-left p-3 rounded-xl transition-colors hover:bg-surface-50 dark:hover:bg-surface-800/50 min-h-[48px]"
           >
             {/* Checkbox */}
             <div
-              className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+              className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${
                 checked[i]
                   ? "bg-primary-500 border-primary-500"
-                  : "border-gray-300 dark:border-gray-600"
+                  : "border-surface-300 dark:border-surface-600"
               }`}
             >
               {checked[i] && (
-                <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-4 h-4 text-black"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               )}
             </div>
@@ -77,8 +85,8 @@ export function WarmupChecklist({
               <span
                 className={`text-sm font-medium transition-colors ${
                   checked[i]
-                    ? "text-gray-400 dark:text-gray-500 line-through"
-                    : "text-gray-900 dark:text-white"
+                    ? "text-surface-400 dark:text-surface-500 line-through"
+                    : "text-surface-900 dark:text-white"
                 }`}
               >
                 {w.name}
@@ -87,7 +95,7 @@ export function WarmupChecklist({
 
             {/* Duration */}
             {w.duration && (
-              <span className="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+              <span className="flex-shrink-0 text-xs text-surface-500 dark:text-surface-400 tabular-nums">
                 {w.duration}min
               </span>
             )}
@@ -106,7 +114,7 @@ export function WarmupChecklist({
             {hasThrows ? "Start Throws" : hasStrength ? "Start Strength" : "Continue"}
           </button>
         ) : (
-          <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+          <p className="text-center text-xs text-surface-400 dark:text-surface-500">
             Check off each item to continue
           </p>
         )}

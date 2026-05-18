@@ -26,9 +26,7 @@ export function StepEvent({ form, update, errors }: StepEventProps) {
   return (
     <div className="space-y-6 p-1">
       <div>
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-1">
-          Event
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-1">Event</h2>
         <p className="text-body text-surface-700 dark:text-surface-300">
           Which event are you training for?
         </p>
@@ -43,7 +41,7 @@ export function StepEvent({ form, update, errors }: StepEventProps) {
               key={event.value}
               type="button"
               onClick={() => update("event", event.value)}
-              className={`card card-interactive p-4 text-center transition-all ${
+              className={`card card-interactive p-4 text-center transition-colors ${
                 isSelected
                   ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                   : "border-[var(--card-border)]"
@@ -68,21 +66,19 @@ export function StepEvent({ form, update, errors }: StepEventProps) {
       </StaggeredList>
 
       {errors.event && (
-        <p className="text-sm text-red-600 dark:text-red-400">{errors.event}</p>
+        <p className="text-sm text-danger-600 dark:text-danger-400">{errors.event}</p>
       )}
 
       {/* Gender Toggle */}
       <div>
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-2">
-          Gender
-        </h2>
+        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider mb-2">Gender</h2>
         <div className="flex rounded-xl border border-[var(--card-border)] overflow-hidden">
           {GENDERS.map((g) => (
             <button
               key={g.value}
               type="button"
               onClick={() => update("gender", g.value)}
-              className={`flex-1 py-2.5 text-sm font-medium transition-all ${
+              className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                 form.gender === g.value
                   ? "bg-primary-500 text-white"
                   : "bg-transparent text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
@@ -93,7 +89,7 @@ export function StepEvent({ form, update, errors }: StepEventProps) {
           ))}
         </div>
         {errors.gender && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.gender}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">{errors.gender}</p>
         )}
       </div>
     </div>

@@ -495,7 +495,7 @@ export default function CoachSettingsPage() {
 
   const planColors: Record<string, string> = {
     FREE: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300",
-    PRO: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    PRO: "bg-info-100 text-info-700 dark:bg-info-900/30 dark:text-info-400",
     ELITE: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   };
 
@@ -677,7 +677,7 @@ export default function CoachSettingsPage() {
               </div>
               <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--card-border)]">
                 {saved && (
-                  <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+                  <span className="text-sm text-success-600 font-medium flex items-center gap-1">
                     <Check className="h-4 w-4" aria-hidden="true" strokeWidth={1.75} />
                     Saved
                   </span>
@@ -791,11 +791,11 @@ export default function CoachSettingsPage() {
                       Free Plan
                     </span>
                   ) : subscription.paymentFailedAt ? (
-                    <span className="text-sm text-amber-500 font-medium">Past Due</span>
+                    <span className="text-sm text-primary-500 font-medium">Past Due</span>
                   ) : subscription.cancelAtPeriodEnd ? (
-                    <span className="text-sm text-amber-500 font-medium">Canceling</span>
+                    <span className="text-sm text-primary-500 font-medium">Canceling</span>
                   ) : (
-                    <span className="text-sm text-emerald-500 font-medium">Active</span>
+                    <span className="text-sm text-success-500 font-medium">Active</span>
                   )}
                 </div>
                 {subscription.currentPeriodEnd && subscription.plan !== "FREE" && (
@@ -824,7 +824,7 @@ export default function CoachSettingsPage() {
                 {PLAN_LIMITS[subscription.plan] !== Infinity && (
                   <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
                     <div
-                      className="bg-amber-500 h-2 rounded-full transition-all"
+                      className="bg-primary-500 h-2 rounded-full transition-colors"
                       style={{
                         width: `${Math.min(100, (subscription.athleteCount / (PLAN_LIMITS[subscription.plan] || 1)) * 100)}%`,
                       }}
@@ -862,7 +862,7 @@ export default function CoachSettingsPage() {
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -870,7 +870,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -878,7 +878,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -890,7 +890,7 @@ export default function CoachSettingsPage() {
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -898,7 +898,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -906,7 +906,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -914,7 +914,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -926,7 +926,7 @@ export default function CoachSettingsPage() {
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -934,7 +934,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -942,7 +942,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -950,7 +950,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -979,8 +979,8 @@ export default function CoachSettingsPage() {
                 <div
                   className={`mb-4 p-3 rounded-lg text-sm ${
                     inviteMessage.type === "error"
-                      ? "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-                      : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                      ? "bg-danger-50 text-danger-700 border border-danger-200 dark:bg-danger-900/30 dark:text-danger-400 dark:border-danger-800"
+                      : "bg-success-50 text-success-700 border border-success-200 dark:bg-success-900/30 dark:text-success-400 dark:border-success-800"
                   }`}
                 >
                   {inviteMessage.text}
@@ -1090,9 +1090,9 @@ export default function CoachSettingsPage() {
                         <span
                           className={`px-2 py-0.5 text-xs rounded-full font-medium ${
                             inv.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                              ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
                               : inv.status === "ACCEPTED"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
                                 : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
                           }`}
                         >
@@ -1451,7 +1451,7 @@ export default function CoachSettingsPage() {
                   <span
                     aria-hidden="true"
                     className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
-                      reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
+                      reducedMotion ? "bg-primary-500" : "bg-[var(--color-border-strong)]"
                     }`}
                   >
                     <span

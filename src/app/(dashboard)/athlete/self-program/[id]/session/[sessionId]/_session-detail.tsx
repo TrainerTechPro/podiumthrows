@@ -114,18 +114,18 @@ const DAY_NAMES = [
 ];
 
 const SESSION_TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  THROWS_ONLY: { label: "Throws", color: "text-blue-500" },
+  THROWS_ONLY: { label: "Throws", color: "text-info-500" },
   THROWS_LIFT: { label: "Throws + Lifting", color: "text-primary-500" },
-  LIFT_ONLY: { label: "Lifting", color: "text-emerald-500" },
-  COMPETITION_SIM: { label: "Competition Sim", color: "text-red-500" },
+  LIFT_ONLY: { label: "Lifting", color: "text-success-500" },
+  COMPETITION_SIM: { label: "Competition Sim", color: "text-danger-500" },
   RECOVERY: { label: "Recovery", color: "text-teal-500" },
 };
 
 const PHASE_COLORS: Record<string, string> = {
-  ACCUMULATION: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  TRANSMUTATION: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  REALIZATION: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  COMPETITION: "bg-red-500/10 text-red-500 border-red-500/20",
+  ACCUMULATION: "bg-info-500/10 text-info-500 border-info-500/20",
+  TRANSMUTATION: "bg-primary-500/10 text-primary-500 border-primary-500/20",
+  REALIZATION: "bg-success-500/10 text-success-500 border-success-500/20",
+  COMPETITION: "bg-danger-500/10 text-danger-500 border-danger-500/20",
 };
 
 const STATUS_STYLES: Record<string, { label: string; color: string }> = {
@@ -135,15 +135,15 @@ const STATUS_STYLES: Record<string, { label: string; color: string }> = {
   },
   SCHEDULED: {
     label: "Scheduled",
-    color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+    color: "bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400",
   },
   IN_PROGRESS: {
     label: "In Progress",
-    color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+    color: "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400",
   },
   COMPLETED: {
     label: "Completed",
-    color: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
+    color: "bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400",
   },
   SKIPPED: {
     label: "Skipped",
@@ -164,10 +164,10 @@ const DRILL_TYPE_LABELS: Record<string, string> = {
 };
 
 const CLASSIFICATION_LABELS: Record<string, { label: string; color: string }> = {
-  CE: { label: "CE", color: "bg-red-500/10 text-red-500" },
-  SDE: { label: "SDE", color: "bg-orange-500/10 text-orange-500" },
-  SPE: { label: "SPE", color: "bg-amber-500/10 text-amber-500" },
-  GPE: { label: "GPE", color: "bg-blue-500/10 text-blue-500" },
+  CE: { label: "CE", color: "bg-danger-500/10 text-danger-500" },
+  SDE: { label: "SDE", color: "bg-warning-500/10 text-warning-500" },
+  SPE: { label: "SPE", color: "bg-primary-500/10 text-primary-500" },
+  GPE: { label: "GPE", color: "bg-info-500/10 text-info-500" },
 };
 
 function formatDate(iso: string): string {
@@ -446,7 +446,7 @@ export function SessionDetail({
             {statusStyle.label}
           </span>
           {session.wasModified && (
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400">
               Modified
             </span>
           )}
@@ -492,10 +492,10 @@ export function SessionDetail({
 
       {/* In-Progress banner */}
       {status === "IN_PROGRESS" && (
-        <div className="mb-6 card p-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-center space-y-3">
+        <div className="mb-6 card p-4 bg-primary-50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-800 text-center space-y-3">
           <div className="flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+            <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+            <p className="text-sm font-semibold text-primary-700 dark:text-primary-400">
               Workout In Progress
             </p>
           </div>
@@ -515,7 +515,7 @@ export function SessionDetail({
             type="button"
             disabled={resetting}
             onClick={() => setShowResetConfirm(true)}
-            className="text-xs text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
+            className="text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1"
           >
             <Undo2 size={12} strokeWidth={1.75} aria-hidden="true" />
             Started by accident? Reset to planned
@@ -541,7 +541,7 @@ export function SessionDetail({
           <Dumbbell
             size={16}
             strokeWidth={1.75}
-            className="mx-auto text-emerald-500 mb-1"
+            className="mx-auto text-success-500 mb-1"
             aria-hidden="true"
           />
           <div className="text-lg font-semibold tabular-nums">
@@ -553,7 +553,7 @@ export function SessionDetail({
           <Clock
             size={16}
             strokeWidth={1.75}
-            className="mx-auto text-blue-500 mb-1"
+            className="mx-auto text-info-500 mb-1"
             aria-hidden="true"
           />
           <div className="text-lg font-semibold tabular-nums">
@@ -740,7 +740,7 @@ export function SessionDetail({
               onClick={() => setShowResetConfirm(true)}
               className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
             >
-              <Undo2 size={18} strokeWidth={1.75} className="text-red-500" aria-hidden="true" />
+              <Undo2 size={18} strokeWidth={1.75} className="text-danger-500" aria-hidden="true" />
               <div>
                 <div className="text-sm font-medium">Reset Workout</div>
                 <div className="text-xs text-muted">
@@ -774,7 +774,7 @@ export function SessionDetail({
             onClick={() => setShowReschedule(true)}
             className="w-full flex items-center gap-3 px-4 py-3 card hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors rounded-xl text-left"
           >
-            <RotateCcw size={18} strokeWidth={1.75} className="text-blue-500" aria-hidden="true" />
+            <RotateCcw size={18} strokeWidth={1.75} className="text-info-500" aria-hidden="true" />
             <div>
               <div className="text-sm font-medium">Reschedule</div>
               <div className="text-xs text-muted">Move this session to a different day</div>
@@ -791,7 +791,7 @@ export function SessionDetail({
             <SkipForward
               size={18}
               strokeWidth={1.75}
-              className="text-amber-500"
+              className="text-primary-500"
               aria-hidden="true"
             />
             <div>
@@ -804,18 +804,18 @@ export function SessionDetail({
 
       {/* Completed state */}
       {status === "COMPLETED" && (
-        <div className="card p-4 bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-center">
+        <div className="card p-4 bg-success-50 dark:bg-success-900/10 border-success-200 dark:border-success-800 text-center">
           <CheckCircle2
             size={24}
             strokeWidth={1.75}
-            className="text-emerald-500 mx-auto mb-2"
+            className="text-success-500 mx-auto mb-2"
             aria-hidden="true"
           />
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+          <p className="text-sm font-medium text-success-700 dark:text-success-400">
             Session Completed
           </p>
           {session.completedAt && (
-            <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-0.5">
+            <p className="text-xs text-success-600 dark:text-success-500 mt-0.5">
               {formatDate(session.completedAt)}
             </p>
           )}
@@ -888,7 +888,7 @@ export function SessionDetail({
                 type="date"
                 value={rescheduleDate}
                 onChange={(e) => setRescheduleDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary-500/40"
+                className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-primary-500/40"
               />
             </div>
 
@@ -973,7 +973,7 @@ export function SessionDetail({
                 value={modNotes}
                 onChange={(e) => setModNotes(e.target.value)}
                 placeholder="e.g., Dropping 9kg set due to shoulder tightness. Adding 2 extra sets of standing throws with 7.26kg."
-                className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-surface-400 dark:placeholder:text-surface-600 focus:outline-none focus:ring-2 focus:ring-primary-500/40 resize-none"
+                className="w-full px-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-surface-400 dark:placeholder:text-surface-600 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/40 resize-none"
               />
             </div>
 

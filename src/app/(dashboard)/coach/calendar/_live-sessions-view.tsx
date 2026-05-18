@@ -146,7 +146,7 @@ export function LiveSessionsView() {
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 required
-                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
                 placeholder="e.g. Monday Morning Practice"
               />
             </div>
@@ -158,7 +158,7 @@ export function LiveSessionsView() {
                 value={formNotes}
                 onChange={(e) => setFormNotes(e.target.value)}
                 rows={2}
-                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
                 placeholder="Focus areas, weather, venue…"
               />
             </div>
@@ -178,8 +178,8 @@ export function LiveSessionsView() {
 
       {sessions.length === 0 && !showForm && (
         <div className="card text-center py-16 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mx-auto">
-            <Radio size={28} className="text-emerald-500" strokeWidth={1.75} aria-hidden="true" />
+          <div className="w-14 h-14 rounded-2xl bg-success-50 dark:bg-success-900/20 flex items-center justify-center mx-auto">
+            <Radio size={28} className="text-success-500" strokeWidth={1.75} aria-hidden="true" />
           </div>
           <div>
             <p className="font-semibold text-[var(--foreground)] text-sm">
@@ -205,7 +205,7 @@ export function LiveSessionsView() {
       {activeSessions.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-block w-2 h-2 rounded-full bg-success-500 animate-pulse" />
             Active
           </h3>
           {activeSessions.map((session) => (
@@ -237,13 +237,13 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
     >
       <div
         className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-          isActive ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-[var(--muted-bg)]"
+          isActive ? "bg-success-100 dark:bg-success-900/30" : "bg-[var(--muted-bg)]"
         }`}
       >
         {isActive ? (
           <Zap
             size={20}
-            className="text-emerald-600 dark:text-emerald-400"
+            className="text-success-600 dark:text-success-400"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -256,8 +256,8 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-semibold text-[var(--foreground)] text-sm truncate">{session.name}</p>
           {isActive && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-nano font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex-shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-nano font-semibold bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 flex-shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-success-500 animate-pulse" />
               Active
             </span>
           )}

@@ -182,7 +182,7 @@ function DrillCard({
           <button
             type="button"
             onClick={onRemove}
-            className="w-11 h-11 rounded-lg flex items-center justify-center text-muted hover:text-red-500 transition-colors ml-2 shrink-0"
+            className="w-11 h-11 rounded-lg flex items-center justify-center text-muted hover:text-danger-500 transition-colors ml-2 shrink-0"
             aria-label="Remove drill"
           >
             <svg
@@ -769,8 +769,8 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
       {queued ? (
         /* Queued state — payload sits in the outbox; replay drains it */
         <div className="card !p-6 text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center">
-            <WifiOff size={28} strokeWidth={1.75} className="text-amber-500" aria-hidden="true" />
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary-500/10 flex items-center justify-center">
+            <WifiOff size={28} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
           </div>
           <div>
             <p className="text-lg font-bold text-[var(--foreground)]">Saved locally</p>
@@ -793,9 +793,9 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
       ) : saved ? (
         /* Success state */
         <div className="card !p-6 text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto rounded-full bg-success-100 dark:bg-success-900/30 flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-green-600 dark:text-green-400"
+              className="w-8 h-8 text-success-600 dark:text-success-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -849,7 +849,7 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
                       key={ev.value}
                       type="button"
                       onClick={() => setSelectedEvent(ev.value)}
-                      className={`relative rounded-xl p-3 sm:p-4 text-left transition-all border-2 ${
+                      className={`relative rounded-xl p-3 sm:p-4 text-left transition-colors border-2 ${
                         selectedEvent === ev.value
                           ? "border-transparent shadow-lg scale-[1.02]"
                           : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -980,9 +980,9 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
 
               {/* Bondarchuk sequence warning */}
               {sequenceWarning && (
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                   <svg
-                    className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+                    className="w-5 h-5 text-primary-600 dark:text-primary-400 shrink-0 mt-0.5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -995,13 +995,13 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
                     />
                   </svg>
                   <div>
-                    <p className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                    <p className="text-xs font-bold text-primary-800 dark:text-primary-300">
                       Bondarchuk Sequence Warning
                     </p>
-                    <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                    <p className="text-xs text-primary-700 dark:text-primary-400 mt-0.5">
                       {sequenceWarning}
                     </p>
-                    <p className="text-nano text-amber-600 dark:text-amber-500 mt-1">
+                    <p className="text-nano text-primary-600 dark:text-primary-500 mt-1">
                       Reorder your drills heaviest → lightest for optimal transfer.
                     </p>
                   </div>
@@ -1059,7 +1059,7 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
                   </span>
                 </div>
 
-                <div className="divide-y divide-gray-100 dark:divide-gray-700/50">
+                <div className="divide-y divide-surface-100 dark:divide-surface-700/50">
                   {drills.map((drill) => {
                     const meta = DRILL_TYPES.find((d) => d.value === drill.drillType);
                     return (
@@ -1079,7 +1079,7 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
                           </p>
                         </div>
                         {drill.bestMark && (
-                          <span className="text-base font-bold font-mono text-orange-600 dark:text-orange-400">
+                          <span className="text-base font-bold font-mono text-warning-600 dark:text-warning-400">
                             {parseFloat(drill.bestMark).toFixed(2)}m
                           </span>
                         )}
@@ -1110,9 +1110,9 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
 
               {/* Bondarchuk sequence warning in review */}
               {sequenceWarning && (
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                   <svg
-                    className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+                    className="w-5 h-5 text-primary-600 dark:text-primary-400 shrink-0 mt-0.5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1124,7 +1124,9 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
                       d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                     />
                   </svg>
-                  <p className="text-xs text-amber-700 dark:text-amber-400">{sequenceWarning}</p>
+                  <p className="text-xs text-primary-700 dark:text-primary-400">
+                    {sequenceWarning}
+                  </p>
                 </div>
               )}
 

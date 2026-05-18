@@ -26,9 +26,9 @@ const EVENT_LABELS: Record<string, string> = {
 const PRIORITY_STYLES: Record<string, { label: string; color: string }> = {
   A: {
     label: "A Meet",
-    color: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+    color: "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400",
   },
-  B: { label: "B Meet", color: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" },
+  B: { label: "B Meet", color: "bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400" },
   C: {
     label: "C Meet",
     color: "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400",
@@ -78,7 +78,7 @@ function MeetCard({ meet }: { meet: MeetSummary }) {
             {prio.label}
           </span>
           {upcoming ? (
-            <span className="px-2 py-0.5 rounded-md text-micro font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+            <span className="px-2 py-0.5 rounded-md text-micro font-semibold bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400">
               Upcoming
             </span>
           ) : (
@@ -106,7 +106,7 @@ function MeetCard({ meet }: { meet: MeetSummary }) {
                 size={14}
                 strokeWidth={1.75}
                 aria-hidden="true"
-                className="text-green-500"
+                className="text-success-500"
               />
             ) : (
               <Clock size={14} strokeWidth={1.75} aria-hidden="true" />

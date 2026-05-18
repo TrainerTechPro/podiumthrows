@@ -305,8 +305,8 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
   if (queued) {
     return (
       <div className="card p-8 text-center space-y-3">
-        <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
-          <WifiOff size={28} strokeWidth={1.75} className="text-amber-500" aria-hidden="true" />
+        <div className="w-16 h-16 rounded-full bg-primary-500/10 flex items-center justify-center mx-auto">
+          <WifiOff size={28} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
         </div>
         <h2 className="text-lg font-semibold text-[var(--foreground)]">Saved locally</h2>
         <p className="text-sm text-muted max-w-sm mx-auto">
@@ -327,7 +327,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
   if (submitted) {
     return (
       <div className="card p-8 text-center space-y-3">
-        <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-full bg-success-500/15 flex items-center justify-center mx-auto">
           <svg
             width="32"
             height="32"
@@ -335,7 +335,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="text-green-500"
+            className="text-success-500"
           >
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -382,7 +382,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
       )}
 
       {error && (
-        <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-600 dark:text-red-400">
+        <div className="px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20 text-sm text-danger-600 dark:text-danger-400">
           {error}
         </div>
       )}
@@ -400,7 +400,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
           <div key={q.id} className="card p-4 space-y-2">
             <label className="block text-sm font-medium text-[var(--foreground)]">
               {i + 1}. {q.text}
-              {q.required && <span className="text-red-500 ml-1">*</span>}
+              {q.required && <span className="text-danger-500 ml-1">*</span>}
             </label>
 
             {/* Short text */}
@@ -415,7 +415,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
             {/* Long text */}
             {q.type === "long_text" && (
               <textarea
-                className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[80px]"
+                className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[80px]"
                 value={(answers[q.id] as string) ?? ""}
                 onChange={(e) => setAnswer(q.id, e.target.value)}
                 placeholder="Your answer…"
@@ -547,8 +547,8 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
                       className={`px-6 py-3 min-h-[44px] rounded-lg text-sm font-medium transition-colors ${
                         selected
                           ? opt === "Yes"
-                            ? "bg-green-500/15 text-green-600 dark:text-green-400 ring-1 ring-green-500/30"
-                            : "bg-red-500/15 text-red-600 dark:text-red-400 ring-1 ring-red-500/30"
+                            ? "bg-success-500/15 text-success-600 dark:text-success-400 ring-1 ring-success-500/30"
+                            : "bg-danger-500/15 text-danger-600 dark:text-danger-400 ring-1 ring-danger-500/30"
                           : "border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] hover:border-primary-500/50"
                       }`}
                     >

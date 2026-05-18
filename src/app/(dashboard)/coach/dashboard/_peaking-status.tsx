@@ -27,47 +27,26 @@ interface PeakingRow {
 function readinessColor(score: number | null, max: number): string {
   if (score == null) return "text-muted";
   const pct = max > 0 ? score / max : 0;
-  if (pct >= 0.8) return "text-emerald-600 dark:text-emerald-400";
-  if (pct >= 0.6) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (pct >= 0.8) return "text-success-600 dark:text-success-400";
+  if (pct >= 0.6) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
-function TrendIcon({
-  trend,
-}: {
-  trend: "up" | "down" | "stable" | null;
-}) {
+function TrendIcon({ trend }: { trend: "up" | "down" | "stable" | null }) {
   if (trend === "up")
     return (
-      <TrendingUp
-        className="h-3.5 w-3.5 text-emerald-500"
-        strokeWidth={1.75}
-        aria-hidden="true"
-      />
+      <TrendingUp className="h-3.5 w-3.5 text-success-500" strokeWidth={1.75} aria-hidden="true" />
     );
   if (trend === "down")
     return (
-      <TrendingDown
-        className="h-3.5 w-3.5 text-red-500"
-        strokeWidth={1.75}
-        aria-hidden="true"
-      />
+      <TrendingDown className="h-3.5 w-3.5 text-danger-500" strokeWidth={1.75} aria-hidden="true" />
     );
   if (trend === "stable")
-    return (
-      <Minus
-        className="h-3.5 w-3.5 text-surface-400"
-        strokeWidth={1.75}
-        aria-hidden="true"
-      />
-    );
+    return <Minus className="h-3.5 w-3.5 text-surface-400" strokeWidth={1.75} aria-hidden="true" />;
   return null;
 }
 
-export function PeakingStatus({
-  competitions,
-  readiness,
-}: PeakingStatusProps) {
+export function PeakingStatus({ competitions, readiness }: PeakingStatusProps) {
   // Build per-athlete rows from competitions
   const rows: PeakingRow[] = [];
 
@@ -75,14 +54,9 @@ export function PeakingStatus({
     const taper = generateTaperPlan(comp.daysOut);
 
     for (const athlete of comp.athletes) {
-      const volumeReduction =
-        taper != null
-          ? Math.round((1 - taper.volumeMultiplier) * 100)
-          : null;
+      const volumeReduction = taper != null ? Math.round((1 - taper.volumeMultiplier) * 100) : null;
 
-      const matchedReadiness = readiness.find(
-        (r) => r.athleteId === athlete.id
-      );
+      const matchedReadiness = readiness.find((r) => r.athleteId === athlete.id);
 
       rows.push({
         athleteId: athlete.id,
@@ -104,9 +78,7 @@ export function PeakingStatus({
   return (
     <section className="space-y-3">
       {/* Header */}
-      <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-        Peaking Status
-      </h3>
+      <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Peaking Status</h3>
 
       {/* Card with rows */}
       <div className="rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] divide-y divide-[var(--card-border)]">
@@ -114,15 +86,9 @@ export function PeakingStatus({
           <Link
             key={`${row.athleteId}-${row.competitionName}-${i}`}
             href={`/coach/athletes/${row.athleteId}`}
-            className={cn(
-              "flex items-center gap-3 px-4 py-3 card-interactive"
-            )}
+            className={cn("flex items-center gap-3 px-4 py-3 card-interactive")}
           >
-            <Avatar
-              name={row.athleteName}
-              src={row.avatarUrl}
-              size="sm"
-            />
+            <Avatar name={row.athleteName} src={row.avatarUrl} size="sm" />
 
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-[var(--foreground)] truncate">
@@ -135,11 +101,7 @@ export function PeakingStatus({
 
             <div className="flex items-center gap-2 shrink-0">
               {/* Taper badge */}
-              {row.taperWeek != null && (
-                <Badge variant="warning">
-                  Taper {row.taperWeek}
-                </Badge>
-              )}
+              {row.taperWeek != null && <Badge variant="warning">Taper {row.taperWeek}</Badge>}
 
               {/* Volume reduction */}
               {row.volumeReduction != null && (

@@ -222,7 +222,7 @@ function AccordionSection({
         aria-controls={panelId}
         className={cn(
           "w-full flex items-center gap-3 px-4 py-4 text-left min-h-[56px] rounded-xl transition-colors",
-          "focus:outline-none focus:ring-2 focus:ring-primary-500/50",
+          "focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50",
           open ? "bg-primary-500/5" : "bg-[var(--card-bg)] hover:bg-[var(--muted-bg)]/30"
         )}
       >

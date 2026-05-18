@@ -107,9 +107,9 @@ const SEVERITY_LABELS = {
 } as const;
 
 const SEVERITY_TAG_STYLES = {
-  1: "bg-yellow-500/12 text-yellow-400 border-yellow-500/20",
-  2: "bg-amber-500/12 text-amber-400 border-amber-500/20",
-  3: "bg-red-500/12 text-red-400 border-red-500/20",
+  1: "bg-warning-500/12 text-warning-400 border-warning-500/20",
+  2: "bg-primary-500/12 text-primary-400 border-primary-500/20",
+  3: "bg-danger-500/12 text-danger-400 border-danger-500/20",
 } as const;
 
 /* ─── Component ────────────────────────────────────────────────────────── */

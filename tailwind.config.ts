@@ -42,35 +42,65 @@ const config: Config = {
         },
         // Brand accent (same as primary-500)
         brand: "#FFC800",
-        // Semantic status colors.
+        // Semantic status colors — full 50..950 scale.
         // -500 is the primary "use" shade and resolves through the theme-aware
-        // CSS vars defined in globals.css (deep on light, vivid on dark) — see
-        // audit Prompt 13. -50 / -600 / -700 remain fixed hex; they are
-        // deprecated for new code (no theme awareness). Prefer the explicit
-        // `status-*-fg` / `status-*-bg` aliases below for new work.
+        // CSS vars defined in globals.css (deep on light, vivid on dark).
+        // The other shades are fixed hex; prefer the explicit `status-*-fg` /
+        // `status-*-bg` aliases below for theme-aware coloring.
+        // Scale values mirror Tailwind's emerald / amber / red / blue defaults
+        // so existing classes like `text-emerald-400` can be remapped to
+        // `text-success-400` without a visual diff.
         success: {
-          50: "#0a1a10",
+          50: "#ecfdf5",
+          100: "#d1fae5",
+          200: "#a7f3d0",
+          300: "#6ee7b7",
+          400: "#34d399",
           500: "var(--color-status-success-fg)",
-          600: "#00cc6d",
-          700: "#009952",
+          600: "#059669",
+          700: "#047857",
+          800: "#065f46",
+          900: "#064e3b",
+          950: "#022c22",
         },
         warning: {
-          50: "#1a1400",
+          50: "#fffbeb",
+          100: "#fef3c7",
+          200: "#fde68a",
+          300: "#fcd34d",
+          400: "#fbbf24",
           500: "var(--color-status-warning-fg)",
-          600: "#e67a00",
-          700: "#cc6c00",
+          600: "#d97706",
+          700: "#b45309",
+          800: "#92400e",
+          900: "#78350f",
+          950: "#451a03",
         },
         danger: {
-          50: "#1a0808",
+          50: "#fef2f2",
+          100: "#fee2e2",
+          200: "#fecaca",
+          300: "#fca5a5",
+          400: "#f87171",
           500: "var(--color-status-danger-fg)",
-          600: "#e61e1e",
-          700: "#cc1a1a",
+          600: "#dc2626",
+          700: "#b91c1c",
+          800: "#991b1b",
+          900: "#7f1d1d",
+          950: "#450a0a",
         },
         info: {
-          50: "#0a1020",
+          50: "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
           500: "var(--color-status-info-fg)",
-          600: "#3d7ae6",
-          700: "#366dcc",
+          600: "#2563eb",
+          700: "#1d4ed8",
+          800: "#1e40af",
+          900: "#1e3a8a",
+          950: "#172554",
         },
         // Status tokens — theme-aware aliases for --color-status-*.
         // Use `text-status-success-fg`, `bg-status-warning-bg`, etc. for

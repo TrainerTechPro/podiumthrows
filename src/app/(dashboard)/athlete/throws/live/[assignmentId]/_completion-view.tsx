@@ -277,7 +277,7 @@ export function CompletionScreen({
             <button
               key={opt.value}
               onClick={() => setFeeling(opt.value)}
-              className="flex-1 py-2 text-xs font-medium transition-all min-h-[52px] flex flex-col items-center gap-0.5"
+              className="flex-1 py-2 text-xs font-medium transition-colors min-h-[52px] flex flex-col items-center gap-0.5"
               style={{
                 backgroundColor: feeling === opt.value ? "#FFC80008" : "#08080a",
                 border: `1px solid ${feeling === opt.value ? "var(--color-brand)" : "#1a1a1e"}`,
@@ -307,7 +307,7 @@ export function CompletionScreen({
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           placeholder="Any observations, aches, or breakthroughs..."
-          className="w-full px-3 py-3 text-sm resize-none focus:outline-none transition-colors"
+          className="w-full px-3 py-3 text-sm resize-none focus-visible:outline-none transition-colors"
           style={{
             backgroundColor: "#08080a",
             border: "1px solid #1a1a1e",

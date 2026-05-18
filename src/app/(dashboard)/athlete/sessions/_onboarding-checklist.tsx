@@ -23,15 +23,9 @@ export function OnboardingChecklist({
     <div className="space-y-4">
       {/* Coach connection */}
       <div className="card p-4 flex items-center gap-3">
-        <Avatar
-          src={coachAvatarUrl}
-          name={coachName}
-          size="md"
-        />
+        <Avatar src={coachAvatarUrl} name={coachName} size="md" />
         <div>
-          <p className="text-sm font-semibold text-[var(--foreground)]">
-            Connected to {coachName}
-          </p>
+          <p className="text-sm font-semibold text-[var(--foreground)]">Connected to {coachName}</p>
           <p className="text-xs text-muted">
             Complete these steps to help your coach build your program
           </p>
@@ -68,7 +62,7 @@ export function OnboardingChecklist({
               <CheckCircle2
                 size={20}
                 strokeWidth={1.75}
-                className="text-emerald-500 shrink-0"
+                className="text-success-500 shrink-0"
                 aria-hidden="true"
               />
             ) : (
@@ -82,9 +76,7 @@ export function OnboardingChecklist({
             <span
               className={cn(
                 "text-sm font-medium flex-1",
-                item.completed
-                  ? "text-muted line-through"
-                  : "text-[var(--foreground)]"
+                item.completed ? "text-muted line-through" : "text-[var(--foreground)]"
               )}
             >
               {item.label}

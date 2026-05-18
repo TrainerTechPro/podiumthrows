@@ -52,7 +52,7 @@ export default async function CoachFeedbackInboxPage() {
             <p className="text-micro font-semibold uppercase tracking-wider text-muted">
               Acknowledged
             </p>
-            <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-emerald-500">
+            <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-success-500">
               {totalReacted}
             </p>
           </div>
@@ -60,7 +60,7 @@ export default async function CoachFeedbackInboxPage() {
             <p className="text-micro font-semibold uppercase tracking-wider text-muted">
               Thumbs Down
             </p>
-            <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-red-500">
+            <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-danger-500">
               {totalThumbsDown}
             </p>
           </div>
@@ -112,14 +112,14 @@ export default async function CoachFeedbackInboxPage() {
                   </span>
                 )}
                 {row.unread === 0 && row.reacted > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-500">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-success-500">
                     <Check className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                     All seen
                   </span>
                 )}
                 {row.thumbsDown > 0 && (
                   <span
-                    className="inline-flex items-center gap-1 text-xs font-medium text-red-500"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-danger-500"
                     aria-label={`${row.thumbsDown} thumbs down`}
                   >
                     <ThumbsDown className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />

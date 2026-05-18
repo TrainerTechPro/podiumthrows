@@ -89,45 +89,45 @@ const CAMERA_LABELS: Record<string, string> = {
 
 const SEVERITY_STYLES: Record<string, { bg: string; border: string; badge: string }> = {
   HIGH: {
-    bg: "bg-red-50 dark:bg-red-900/20",
-    border: "border-red-200 dark:border-red-800",
-    badge: "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200",
+    bg: "bg-danger-50 dark:bg-danger-900/20",
+    border: "border-danger-200 dark:border-danger-800",
+    badge: "bg-danger-100 dark:bg-danger-900/40 text-danger-800 dark:text-danger-200",
   },
   MEDIUM: {
-    bg: "bg-amber-50 dark:bg-amber-900/20",
-    border: "border-amber-200 dark:border-amber-800",
-    badge: "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200",
+    bg: "bg-primary-50 dark:bg-primary-900/20",
+    border: "border-primary-200 dark:border-primary-800",
+    badge: "bg-primary-100 dark:bg-primary-900/40 text-primary-800 dark:text-primary-200",
   },
   LOW: {
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-    border: "border-blue-200 dark:border-blue-800",
-    badge: "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200",
+    bg: "bg-info-50 dark:bg-info-900/20",
+    border: "border-info-200 dark:border-info-800",
+    badge: "bg-info-100 dark:bg-info-900/40 text-info-800 dark:text-info-200",
   },
 };
 
 function getScoreColor(score: number): string {
-  if (score >= 8) return "text-green-600 dark:text-green-400";
-  if (score >= 6) return "text-blue-600 dark:text-blue-400";
-  if (score >= 4) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (score >= 8) return "text-success-600 dark:text-success-400";
+  if (score >= 6) return "text-info-600 dark:text-info-400";
+  if (score >= 4) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 function getScoreBarColor(score: number): string {
-  if (score >= 8) return "bg-green-500";
-  if (score >= 6) return "bg-blue-500";
-  if (score >= 4) return "bg-amber-500";
-  return "bg-red-500";
+  if (score >= 8) return "bg-success-500";
+  if (score >= 6) return "bg-info-500";
+  if (score >= 4) return "bg-primary-500";
+  return "bg-danger-500";
 }
 
 function getOverallGrade(score: number): { label: string; color: string } {
-  if (score >= 85) return { label: "Excellent", color: "text-green-600 dark:text-green-400" };
-  if (score >= 70) return { label: "Good", color: "text-blue-600 dark:text-blue-400" };
+  if (score >= 85) return { label: "Excellent", color: "text-success-600 dark:text-success-400" };
+  if (score >= 70) return { label: "Good", color: "text-info-600 dark:text-info-400" };
   if (score >= 55)
     return {
       label: "Developing",
-      color: "text-amber-600 dark:text-amber-400",
+      color: "text-primary-600 dark:text-primary-400",
     };
-  return { label: "Needs Work", color: "text-red-600 dark:text-red-400" };
+  return { label: "Needs Work", color: "text-danger-600 dark:text-danger-400" };
 }
 
 const PROCESSING_STATUSES = new Set(["PENDING", "ANALYZING"]);
@@ -206,9 +206,9 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
           Analyzing...
         </h1>
         <div className="card text-center py-16 space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-info-100 dark:bg-info-900/30">
             <svg
-              className="animate-spin w-8 h-8 text-blue-600 dark:text-blue-400"
+              className="animate-spin w-8 h-8 text-info-600 dark:text-info-400"
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
@@ -249,10 +249,10 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
         <h1 className="text-xl sm:text-2xl font-bold font-heading text-[var(--foreground)]">
           Analysis Failed
         </h1>
-        <div className="card border-red-200 dark:border-red-800 space-y-4">
+        <div className="card border-danger-200 dark:border-danger-800 space-y-4">
           <div className="flex items-start gap-3">
             <svg
-              className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5"
+              className="w-6 h-6 text-danger-500 flex-shrink-0 mt-0.5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -266,10 +266,10 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
               />
             </svg>
             <div>
-              <h3 className="font-medium text-red-800 dark:text-red-200">
+              <h3 className="font-medium text-danger-800 dark:text-danger-200">
                 Analysis could not be completed
               </h3>
-              <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+              <p className="text-sm text-danger-600 dark:text-danger-300 mt-1">
                 {analysis.errorMessage || "An unknown error occurred."}
               </p>
             </div>
@@ -282,7 +282,7 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
               type="button"
               onClick={() => setConfirmOpen(true)}
               disabled={deleting}
-              className="btn-secondary text-red-600 dark:text-red-400"
+              className="btn-secondary text-danger-600 dark:text-danger-400"
             >
               {deleting ? "Deleting..." : "Delete"}
             </button>
@@ -328,7 +328,7 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
             type="button"
             onClick={() => setConfirmOpen(true)}
             disabled={deleting}
-            className="btn-secondary text-sm text-red-600 dark:text-red-400"
+            className="btn-secondary text-sm text-danger-600 dark:text-danger-400"
           >
             Delete
           </button>
@@ -393,7 +393,7 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
                 </div>
                 <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
                   <div
-                    className={`h-2 rounded-full transition-all ${getScoreBarColor(phase.score)}`}
+                    className={`h-2 rounded-full transition-colors ${getScoreBarColor(phase.score)}`}
                     style={{ width: `${phase.score * 10}%` }}
                   />
                 </div>
@@ -461,9 +461,9 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
               {analysis.energyLeaks.map((leak, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg p-3"
+                  className="flex items-start gap-3 bg-primary-50 dark:bg-primary-900/10 border border-primary-200 dark:border-primary-800 rounded-lg p-3"
                 >
-                  <div className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums flex-shrink-0">
+                  <div className="bg-primary-100 dark:bg-primary-900/40 text-primary-800 dark:text-primary-200 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums flex-shrink-0">
                     -{leak.percentImpact}%
                   </div>
                   <div>
@@ -518,13 +518,13 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
             {analysis.drillRecs.map((drill, i) => (
               <div
                 key={i}
-                className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4"
+                className="bg-success-50 dark:bg-success-900/10 border border-success-200 dark:border-success-800 rounded-lg p-4"
               >
-                <h3 className="font-medium text-green-800 dark:text-green-200">{drill.name}</h3>
+                <h3 className="font-medium text-success-800 dark:text-success-200">{drill.name}</h3>
                 <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">
                   {drill.description}
                 </p>
-                <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                <p className="text-xs text-success-600 dark:text-success-400 mt-2">
                   Targets: {drill.targetIssue}
                 </p>
               </div>

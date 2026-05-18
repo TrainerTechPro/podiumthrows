@@ -203,7 +203,7 @@ export function PullToRefresh({
           }}
         >
           <div
-            className={`rounded-full bg-amber-500/15 border border-amber-500/40 p-2 ${
+            className={`rounded-full bg-primary-500/15 border border-primary-500/40 p-2 ${
               refreshing ? "animate-spin" : ""
             }`}
             style={
@@ -217,7 +217,12 @@ export function PullToRefresh({
                   }
             }
           >
-            <RefreshCw className="text-amber-500" size={16} strokeWidth={2.25} aria-hidden="true" />
+            <RefreshCw
+              className="text-primary-500"
+              size={16}
+              strokeWidth={2.25}
+              aria-hidden="true"
+            />
           </div>
         </div>
       )}

@@ -13,11 +13,7 @@ interface InlineRestTimerProps {
  * Uses Date.now() delta-based timing to survive iOS screen lock.
  * Auto-starts on mount when autoStart=true.
  */
-export function InlineRestTimer({
-  seconds,
-  onComplete,
-  autoStart = true,
-}: InlineRestTimerProps) {
+export function InlineRestTimer({ seconds, onComplete, autoStart = true }: InlineRestTimerProps) {
   const [remaining, setRemaining] = useState(seconds);
   const [isRunning, setIsRunning] = useState(false);
   const startTimeRef = useRef<number>(0);
@@ -108,7 +104,7 @@ export function InlineRestTimer({
             fill="none"
             stroke="currentColor"
             strokeWidth={strokeWidth}
-            className="text-gray-200 dark:text-gray-700"
+            className="text-surface-200 dark:text-surface-700"
           />
           {/* Progress ring */}
           <circle
@@ -122,7 +118,7 @@ export function InlineRestTimer({
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
             className={`transition-[stroke-dashoffset] duration-200 ${
-              isLow ? "text-red-500" : "text-primary-500"
+              isLow ? "text-danger-500" : "text-primary-500"
             }`}
           />
         </svg>
@@ -130,7 +126,7 @@ export function InlineRestTimer({
         <div className="absolute inset-0 flex items-center justify-center">
           <span
             className={`text-lg font-bold tabular-nums ${
-              isLow ? "text-red-500 animate-subtle-pulse" : "text-gray-900 dark:text-white"
+              isLow ? "text-danger-500 animate-subtle-pulse" : "text-surface-900 dark:text-white"
             }`}
           >
             {timeStr}
@@ -139,7 +135,7 @@ export function InlineRestTimer({
       </div>
 
       {/* Label + skip */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Rest</p>
+      <p className="text-xs text-surface-500 dark:text-surface-400 mt-2">Rest</p>
       <button
         type="button"
         onClick={skip}

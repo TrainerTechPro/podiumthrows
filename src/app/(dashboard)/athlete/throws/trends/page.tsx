@@ -316,7 +316,7 @@ export default function ThrowAnalysisPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-xl border border-[var(--card-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-primary-500" />
               <span className="text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
                 Competition
               </span>
@@ -336,7 +336,7 @@ export default function ThrowAnalysisPage() {
             )}
             <div className="w-full h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-amber-500 rounded-full transition-all duration-700"
+                className="h-full bg-primary-500 rounded-full transition-colors duration-700"
                 style={{ width: `${(totalComp.count / maxCount) * 100}%` }}
               />
             </div>
@@ -344,7 +344,7 @@ export default function ThrowAnalysisPage() {
 
           <div className="rounded-xl border border-[var(--card-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-info-500" />
               <span className="text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
                 Practice
               </span>
@@ -357,14 +357,14 @@ export default function ThrowAnalysisPage() {
             </div>
             {totalPract.avgDistance > 0 && (
               <div>
-                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                <p className="text-sm font-semibold text-info-600 dark:text-info-400">
                   {formatDist(totalPract.avgDistance)} avg
                 </p>
               </div>
             )}
             <div className="w-full h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-700"
+                className="h-full bg-info-500 rounded-full transition-colors duration-700"
                 style={{ width: `${(totalPract.count / maxCount) * 100}%` }}
               />
             </div>
@@ -412,7 +412,7 @@ export default function ThrowAnalysisPage() {
                             {formatDist(row.avgDistance)}
                           </p>
                         </div>
-                        <span className="text-base font-bold font-mono text-orange-600 dark:text-orange-400 whitespace-nowrap">
+                        <span className="text-base font-bold font-mono text-warning-600 dark:text-warning-400 whitespace-nowrap">
                           {formatDist(row.bestDistance)}
                         </span>
                       </div>
@@ -559,7 +559,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
           <select
             value={settings.dateRange}
             onChange={(e) => setDateRange(e.target.value as DateRangeKey)}
-            className="text-xs px-3 min-h-[44px] rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="text-xs px-3 min-h-[44px] rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus-visible:outline-none focus:ring-1 focus:ring-primary-500"
             aria-label="Date range"
           >
             {(Object.keys(DATE_RANGE_LABELS) as DateRangeKey[]).map((key) => (

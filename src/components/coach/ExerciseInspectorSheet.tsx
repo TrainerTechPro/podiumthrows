@@ -191,7 +191,7 @@ function CorrelationBlock({ c }: { c: NonNullable<ExerciseInsightsData["correlat
       </div>
       <div className="mb-1.5 h-1 overflow-hidden rounded-full bg-surface-200 dark:bg-surface-800">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-success-500 to-amber-300"
+          className="h-full rounded-full bg-gradient-to-r from-success-500 to-primary-300"
           style={{ width: `${c.coefficient * 100}%` }}
         />
       </div>

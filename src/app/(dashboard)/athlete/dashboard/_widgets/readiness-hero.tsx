@@ -255,8 +255,8 @@ function NotCheckedInView() {
     <div
       className={cn(
         "card relative overflow-hidden",
-        "bg-gradient-to-br from-primary-500/10 via-amber-500/8 to-primary-500/5",
-        "dark:from-primary-500/15 dark:via-amber-500/10 dark:to-primary-500/8"
+        "bg-gradient-to-br from-primary-500/10 via-primary-500/8 to-primary-500/5",
+        "dark:from-primary-500/15 dark:via-primary-500/10 dark:to-primary-500/8"
       )}
     >
       {/* Pulsing glow overlay — CSS only */}

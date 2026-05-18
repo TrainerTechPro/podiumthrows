@@ -364,7 +364,7 @@ export function AvailabilityDashboard({
               onClick={() => handleExcludeInjuredChange(!excludeInjured)}
               className={[
                 "relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
                 "disabled:opacity-50",
                 excludeInjured ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600",
               ].join(" ")}
@@ -390,7 +390,7 @@ export function AvailabilityDashboard({
                 value={selectedGroupId}
                 onChange={(e) => handleGroupChange(e.target.value)}
                 disabled={loading}
-                className="text-sm rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50 transition-opacity"
+                className="text-sm rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] px-3 py-1.5 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 disabled:opacity-50 transition-opacity"
               >
                 <option value="">All Athletes</option>
                 {eventGroups.map((g) => (

@@ -107,7 +107,7 @@ export function WeeklyGoalWidget({ data }: { data: WeeklyGoalData }) {
               size="md"
             />
             {data.isHit && (
-              <p className="mt-2 text-xs font-semibold text-emerald-500 flex items-center gap-1">
+              <p className="mt-2 text-xs font-semibold text-success-500 flex items-center gap-1">
                 <Check className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
                 Goal reached — keep the momentum going.
               </p>
@@ -208,7 +208,7 @@ function SetGoalDialog({
               key={preset}
               type="button"
               onClick={() => setValue(preset)}
-              className={`rounded-lg px-3 py-2 text-sm font-bold tabular-nums transition-all ${
+              className={`rounded-lg px-3 py-2 text-sm font-bold tabular-nums transition-colors ${
                 active
                   ? "bg-primary-500/10 border border-primary-500 text-[var(--foreground)]"
                   : "border border-[var(--card-border)] bg-surface-50 dark:bg-surface-900/50 text-muted hover:text-[var(--foreground)]"
@@ -231,7 +231,7 @@ function SetGoalDialog({
         />
       </div>
 
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-danger-500">{error}</p>}
 
       <div className="flex gap-2">
         <button

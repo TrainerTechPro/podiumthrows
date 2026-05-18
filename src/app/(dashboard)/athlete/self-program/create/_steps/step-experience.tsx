@@ -45,7 +45,9 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
           onChange={(e) => update("yearsExperience", e.target.value)}
         />
         {errors.yearsExperience && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.yearsExperience}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">
+            {errors.yearsExperience}
+          </p>
         )}
       </div>
 
@@ -68,7 +70,9 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
           ))}
         </select>
         {errors.competitionLevel && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.competitionLevel}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">
+            {errors.competitionLevel}
+          </p>
         )}
       </div>
 
@@ -93,7 +97,7 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
           </span>
         </div>
         {errors.currentPR && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.currentPR}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">{errors.currentPR}</p>
         )}
       </div>
 
@@ -118,7 +122,7 @@ export function StepExperience({ form, update, errors }: StepExperienceProps) {
           </span>
         </div>
         {errors.goalDistance && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.goalDistance}</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">{errors.goalDistance}</p>
         )}
       </div>
 

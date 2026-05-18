@@ -43,8 +43,8 @@ export function SorenessStep({ data, onChange, onNext, onBack }: StepProps) {
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-          <Flame size={20} strokeWidth={1.75} className="text-emerald-500" aria-hidden="true" />
+        <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center shrink-0">
+          <Flame size={20} strokeWidth={1.75} className="text-success-500" aria-hidden="true" />
         </div>
         <div>
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">

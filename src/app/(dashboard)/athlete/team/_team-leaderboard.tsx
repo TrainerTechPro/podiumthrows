@@ -35,39 +35,39 @@ function rankBadge(rank: number): {
     return {
       icon: (
         <Trophy
-          className="h-3.5 w-3.5 text-amber-500"
+          className="h-3.5 w-3.5 text-primary-500"
           strokeWidth={1.75}
           aria-label="First place"
         />
       ),
-      bg: "bg-amber-500/15",
-      ring: "ring-amber-500/40",
+      bg: "bg-primary-500/15",
+      ring: "ring-primary-500/40",
     };
   }
   if (rank === 2) {
     return {
       icon: (
         <Medal
-          className="h-3.5 w-3.5 text-slate-300"
+          className="h-3.5 w-3.5 text-surface-300"
           strokeWidth={1.75}
           aria-label="Second place"
         />
       ),
-      bg: "bg-slate-300/15",
-      ring: "ring-slate-300/30",
+      bg: "bg-surface-300/15",
+      ring: "ring-surface-300/30",
     };
   }
   if (rank === 3) {
     return {
       icon: (
         <Award
-          className="h-3.5 w-3.5 text-orange-400"
+          className="h-3.5 w-3.5 text-warning-400"
           strokeWidth={1.75}
           aria-label="Third place"
         />
       ),
-      bg: "bg-orange-400/15",
-      ring: "ring-orange-400/30",
+      bg: "bg-warning-400/15",
+      ring: "ring-warning-400/30",
     };
   }
   return null;
@@ -208,7 +208,7 @@ export function TeamLeaderboard() {
                       <span className="ml-1 text-nano text-primary-500 font-bold">YOU</span>
                     )}
                   </p>
-                  <p className="font-mono tabular-nums text-2xl font-bold text-amber-500 mt-1">
+                  <p className="font-mono tabular-nums text-2xl font-bold text-primary-500 mt-1">
                     {entry.distance.toFixed(2)}
                     <span className="text-sm">m</span>
                   </p>

@@ -77,11 +77,11 @@ const STATUS_CONFIG: Record<
 > = {
   PRESENT: {
     label: "PRESENT",
-    bg: "bg-emerald-500/10",
-    border: "border-l-4 border-emerald-500",
-    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-success-500/10",
+    border: "border-l-4 border-success-500",
+    text: "text-success-600 dark:text-success-400",
     icon: CheckCircle2,
-    dotColor: "bg-emerald-500",
+    dotColor: "bg-success-500",
   },
   LATE: {
     label: "LATE",
@@ -282,7 +282,7 @@ function AthleteCard({
                 onChange={(e) => setDraftNotes(e.target.value)}
                 placeholder="Add a note (e.g. 'Had class until 3:15')"
                 rows={2}
-                className="w-full px-3 py-2 rounded-lg bg-[var(--card-bg)] border border-[var(--card-border)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
+                className="w-full px-3 py-2 rounded-lg bg-[var(--card-bg)] border border-[var(--card-border)] text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
                 autoFocus
               />
               <div className="flex items-center gap-2 justify-end">
@@ -325,7 +325,7 @@ function SaveStatus({ state }: { state: "idle" | "saving" | "saved" | "error" })
           state === "saving"
             ? "text-muted"
             : state === "saved"
-              ? "text-emerald-500"
+              ? "text-success-500"
               : "text-danger-500"
         }`}
       >
@@ -430,7 +430,7 @@ function EditPracticeModal({
             <select
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
+              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
             >
               {TIME_OPTIONS_EDIT.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -446,7 +446,7 @@ function EditPracticeModal({
             <select
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
+              className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 font-mono"
             >
               {TIME_OPTIONS_EDIT.filter((o) => o.value > startTime).map((o) => (
                 <option key={o.value} value={o.value}>
@@ -469,7 +469,7 @@ function EditPracticeModal({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
+            className="w-full px-3 py-2.5 rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none placeholder:text-muted"
           />
         </div>
       </div>

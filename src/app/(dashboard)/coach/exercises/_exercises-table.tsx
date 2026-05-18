@@ -61,9 +61,9 @@ function getBandsForFilter(event: ThrowEvent, gender: Gender): string[] {
 
 /** Color tier for correlation: green >= 0.75, amber >= 0.60, blue < 0.60 */
 function correlationTierClasses(absR: number): { dot: string; text: string } {
-  if (absR >= 0.75) return { dot: "bg-emerald-500", text: "text-emerald-500" };
-  if (absR >= 0.6) return { dot: "bg-amber-500", text: "text-amber-500" };
-  return { dot: "bg-blue-500", text: "text-blue-500" };
+  if (absR >= 0.75) return { dot: "bg-success-500", text: "text-success-500" };
+  if (absR >= 0.6) return { dot: "bg-primary-500", text: "text-primary-500" };
+  return { dot: "bg-info-500", text: "text-info-500" };
 }
 
 /** Build a map of exercise name → { correlation, absCorrelation, type } */
@@ -316,7 +316,7 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
                   e.stopPropagation();
                   setDeleteTarget(row);
                 }}
-                className="text-sm text-red-600 dark:text-red-400 hover:underline font-medium"
+                className="text-sm text-danger-600 dark:text-danger-400 hover:underline font-medium"
               >
                 Delete
               </button>
