@@ -97,9 +97,13 @@ All viewports under 640px obey:
 6. No `vw`/`vh`-scaled body type
 7. No `position: fixed` form controls that the iOS keyboard can cover
 
-**Primary Color**: `#FFC800` (Warm Amber/Gold)
-**Dark Surface**: `#0a0a0c`
-**Status**: Cyber-tinted semantic colors (neon green, hot orange, electric red, cool blue)
+---
+
+## Brand reference
+
+**Primary Color**: `#FFC800` (warm amber-gold). Used as punctuation accent on coach surfaces, as the tactile brand throughout athlete surfaces, and as the editorial amber on marketing.
+**Dark Surface**: `#0a0a0c`. The marketing canvas; also `--color-bg-canvas` resolved in `.dark`.
+**Status**: theme-aware semantic colors — deep palette on light surfaces, vivid palette on dark, with documented WCAG ratios in `src/app/globals.css` Layer 1.
 
 ---
 
