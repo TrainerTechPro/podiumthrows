@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
             <h1 className="text-display-sm font-heading text-[var(--foreground)]">
               Terms of Service
             </h1>
-            <p className="text-sm text-muted">Last updated: March 1, 2026</p>
+            <p className="text-sm text-muted">Last updated: May 17, 2026</p>
           </header>
 
           <div className="prose-custom space-y-6 text-sm text-[var(--foreground)] leading-relaxed">
@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
               <p className="text-muted">
                 Podium Throws is a subscription-based coaching platform for track &amp; field throws
                 coaches. The platform provides athlete roster management, training session planning,
-                performance tracking, video analysis, and communication tools.
+                performance tracking, video upload and storage, and communication tools.
               </p>
             </section>
 
@@ -100,9 +100,11 @@ export default function TermsOfServicePage() {
             <section className="space-y-3">
               <h2 className="text-lg font-semibold font-heading">7. Termination</h2>
               <p className="text-muted">
-                Either party may terminate at any time. Upon termination, you may request an export
-                of your data within 30 days. After that period, we may delete your data in
-                accordance with our retention policies.
+                Either party may terminate at any time. When you delete your account, your data
+                enters a 30-day grace period during which you can restore it from the link in your
+                deletion email. You may download a full data export at any time from your account
+                settings — before, during, or up until the grace period ends. After the grace period
+                expires we permanently delete your data in accordance with our retention policies.
               </p>
             </section>
 

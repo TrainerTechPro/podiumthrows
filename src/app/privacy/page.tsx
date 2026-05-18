@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
             <h1 className="text-display-sm font-heading text-[var(--foreground)]">
               Privacy Policy
             </h1>
-            <p className="text-sm text-muted">Last updated: March 21, 2026</p>
+            <p className="text-sm text-muted">Last updated: May 17, 2026</p>
           </header>
 
           <div className="prose-custom space-y-6 text-sm text-[var(--foreground)] leading-relaxed">
@@ -50,7 +50,8 @@ export default function PrivacyPolicyPage() {
               </p>
               <p className="text-muted">
                 <strong className="text-[var(--foreground)]">Video Uploads:</strong> Training and
-                competition videos uploaded for analysis.
+                competition videos that coaches and athletes upload to the platform for storage and
+                playback.
               </p>
               <p className="text-muted">
                 <strong className="text-[var(--foreground)]">Usage Data:</strong> Page views and
@@ -62,8 +63,8 @@ export default function PrivacyPolicyPage() {
               <h2 className="text-lg font-semibold font-heading">2. How We Use Your Data</h2>
               <p className="text-muted">
                 We use your data solely to operate the Podium Throws coaching platform — delivering
-                training management, performance tracking, and video analysis features. We do not
-                sell or share your personal data for advertising purposes.
+                training management, performance tracking, and video upload and playback features.
+                We do not sell or share your personal data for advertising purposes.
               </p>
             </section>
 
@@ -97,7 +98,7 @@ export default function PrivacyPolicyPage() {
                 5. Wearable Device Integrations
               </h2>
               <p className="text-muted">
-                You may optionally connect wearable devices (such as WHOOP) to enhance your
+                You may optionally connect wearable devices (WHOOP or Oura Ring) to enhance your
                 readiness data with physiological metrics. When you connect a wearable device:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-muted">
@@ -141,6 +142,11 @@ export default function PrivacyPolicyPage() {
                 integration for recovery and sleep data. WHOOP&apos;s privacy policy governs data
                 collected by their device. We only access data you explicitly authorize.
               </p>
+              <p className="text-muted">
+                <strong className="text-[var(--foreground)]">Oura Ring</strong> — optional wearable
+                integration for readiness, sleep, and HRV data. Oura&apos;s privacy policy governs
+                data collected by their device. We only access data you explicitly authorize.
+              </p>
             </section>
 
             <section className="space-y-3">
@@ -148,8 +154,20 @@ export default function PrivacyPolicyPage() {
                 7. Data Ownership &amp; Deletion
               </h2>
               <p className="text-muted">
-                Coaches own all training data they create. You may request a full export or deletion
-                of your data at any time by contacting us.
+                Coaches own all training data they create. You can download a full export of your
+                account data at any time from{" "}
+                <strong className="text-[var(--foreground)]">Settings → Privacy</strong> (coaches:{" "}
+                <strong className="text-[var(--foreground)]">Settings → Security</strong>), and you
+                can delete your account from the same screen — deletion is a 30-day soft delete with
+                self-serve restore before permanent removal. For any data request our self-serve
+                tools don&apos;t cover, contact us at{" "}
+                <a
+                  href="mailto:privacy@podiumthrows.com"
+                  className="text-primary-500 hover:text-primary-400 transition-colors"
+                >
+                  privacy@podiumthrows.com
+                </a>
+                .
               </p>
             </section>
 
