@@ -1,25 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { requireCoachApi } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { deleteFile } from "@/lib/r2";
-
-const patchSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().max(2000).optional(),
-  annotations: z.array(z.record(z.string(), z.unknown())).optional(),
-  keyPositions: z.array(z.record(z.string(), z.unknown())).optional(),
-  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED"]).optional(),
-  duration: z.number().positive().optional(),
-  fps: z.number().positive().optional(),
-}).strict();
+import { parseBody, VideoAnalysisPatchSchema } from "@/lib/api-schemas";
 
 /* ── GET — fetch single analysis ── */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -43,15 +30,15 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/video-analysis/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch analysis" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch analysis" },
+      { status: 500 }
+    );
   }
 }
 
 /* ── PATCH — update analysis (annotations, key positions, metadata) ── */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -65,17 +52,11 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    const raw = await request.json();
-    const parsed = patchSchema.safeParse(raw);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Invalid input", details: parsed.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(request, VideoAnalysisPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
 
     // Build update with only provided fields; cast JSON arrays for Prisma
-    const { annotations, keyPositions, ...rest } = parsed.data;
+    const { annotations, keyPositions, ...rest } = parsed;
     const updateData: Record<string, unknown> = { ...rest };
     if (annotations !== undefined) updateData.annotations = annotations;
     if (keyPositions !== undefined) updateData.keyPositions = keyPositions;
@@ -91,7 +72,10 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("PATCH /api/video-analysis/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update analysis" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update analysis" },
+      { status: 500 }
+    );
   }
 }
 
@@ -124,15 +108,27 @@ export async function DELETE(
 
     const videoKey = extractKey(existing.videoUrl);
     if (videoKey) {
-      try { await deleteFile(videoKey); } catch (err) {
-        logger.error("Failed to delete video file", { context: "api", metadata: { key: videoKey }, error: err });
+      try {
+        await deleteFile(videoKey);
+      } catch (err) {
+        logger.error("Failed to delete video file", {
+          context: "api",
+          metadata: { key: videoKey },
+          error: err,
+        });
       }
     }
     if (existing.thumbnailUrl) {
       const thumbKey = extractKey(existing.thumbnailUrl);
       if (thumbKey) {
-        try { await deleteFile(thumbKey); } catch (err) {
-          logger.error("Failed to delete thumbnail file", { context: "api", metadata: { key: thumbKey }, error: err });
+        try {
+          await deleteFile(thumbKey);
+        } catch (err) {
+          logger.error("Failed to delete thumbnail file", {
+            context: "api",
+            metadata: { key: thumbKey },
+            error: err,
+          });
         }
       }
     }
@@ -143,6 +139,9 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("DELETE /api/video-analysis/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete analysis" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to delete analysis" },
+      { status: 500 }
+    );
   }
 }

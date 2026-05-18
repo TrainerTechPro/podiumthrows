@@ -287,8 +287,9 @@ export function DeficitFinderClient() {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        setLeadId(data.id ?? null);
+        const payload = await res.json();
+        const id = payload?.success ? payload.data?.id : null;
+        setLeadId(id ?? null);
       }
 
       setEmailSaved(true);

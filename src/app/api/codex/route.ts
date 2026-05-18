@@ -45,7 +45,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: entries });
   } catch (err) {
     logger.error("GET /api/codex", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch codex entries" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch codex entries" },
+      { status: 500 }
+    );
   }
 }
 
@@ -69,7 +72,12 @@ export async function POST(request: NextRequest) {
       return handleLocalUpload(request, user.userId);
     }
 
-    // ── JSON requests (upload-url or confirm) ──
+    // INTENTIONAL EXEMPTION from parseBody: this endpoint dispatches on body
+    // shape. It accepts either multipart/form-data (handleLocalUpload, see
+    // above) or JSON keyed by `step` ("upload-url" | "thumbnail-url" |
+    // "confirm"), each branch with its own validation. A single Zod schema
+    // would have to be a 3-way discriminated union and would still need the
+    // multipart check before parsing — refactoring buys little.
     const body = await request.json();
     const step = body.step as string;
 
@@ -94,10 +102,7 @@ export async function POST(request: NextRequest) {
 }
 
 /* ── Step 1: Generate presigned upload URL ── */
-async function handleUploadUrl(
-  body: Record<string, unknown>,
-  userId: string
-) {
+async function handleUploadUrl(body: Record<string, unknown>, userId: string) {
   const fileName = body.fileName as string | undefined;
   const fileContentType = body.contentType as string | undefined;
   const fileSizeMb = body.fileSizeMb as number | undefined;
@@ -110,8 +115,14 @@ async function handleUploadUrl(
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
   const validExts = ["mp4", "mov", "webm", "m4v", "3gp", "avi", "mkv", "hevc"];
   const validMimes = [
-    "video/mp4", "video/quicktime", "video/webm", "video/x-m4v",
-    "video/3gpp", "video/hevc", "video/x-msvideo", "video/x-matroska",
+    "video/mp4",
+    "video/quicktime",
+    "video/webm",
+    "video/x-m4v",
+    "video/3gpp",
+    "video/hevc",
+    "video/x-msvideo",
+    "video/x-matroska",
   ];
 
   const mimeOk = fileContentType && validMimes.includes(fileContentType);
@@ -125,7 +136,10 @@ async function handleUploadUrl(
   }
 
   if (fileSizeMb && fileSizeMb > 500) {
-    return NextResponse.json({ success: false, error: "File too large (max 500MB)" }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "File too large (max 500MB)" },
+      { status: 400 }
+    );
   }
 
   const fileKey = `codex/${userId}/${randomUUID()}.${ext || "mp4"}`;
@@ -135,7 +149,10 @@ async function handleUploadUrl(
       fileKey,
       fileContentType || "video/mp4"
     );
-    return NextResponse.json({ success: true, data: { mode: "r2", uploadUrl, key: fileKey, publicUrl } });
+    return NextResponse.json({
+      success: true,
+      data: { mode: "r2", uploadUrl, key: fileKey, publicUrl },
+    });
   } else {
     const publicUrl = getPublicUrl(fileKey);
     return NextResponse.json({ success: true, data: { mode: "local", key: fileKey, publicUrl } });
@@ -143,19 +160,16 @@ async function handleUploadUrl(
 }
 
 /* ── Step 1b: Generate presigned URL for thumbnail image ── */
-async function handleThumbnailUrl(
-  body: Record<string, unknown>,
-  userId: string
-) {
+async function handleThumbnailUrl(body: Record<string, unknown>, userId: string) {
   const contentType = (body.contentType as string) || "image/jpeg";
   const fileKey = `codex/${userId}/thumb_${randomUUID()}.jpg`;
 
   if (isR2Configured()) {
-    const { uploadUrl, publicUrl } = await getPresignedUploadUrl(
-      fileKey,
-      contentType
-    );
-    return NextResponse.json({ success: true, data: { mode: "r2", uploadUrl, key: fileKey, publicUrl } });
+    const { uploadUrl, publicUrl } = await getPresignedUploadUrl(fileKey, contentType);
+    return NextResponse.json({
+      success: true,
+      data: { mode: "r2", uploadUrl, key: fileKey, publicUrl },
+    });
   } else {
     const publicUrl = getPublicUrl(fileKey);
     return NextResponse.json({ success: true, data: { mode: "local", key: fileKey, publicUrl } });
@@ -163,10 +177,7 @@ async function handleThumbnailUrl(
 }
 
 /* ── Step 2: Confirm upload and save metadata ── */
-async function handleConfirm(
-  body: Record<string, unknown>,
-  userId: string
-) {
+async function handleConfirm(body: Record<string, unknown>, userId: string) {
   const event = body.event as string | undefined;
   const implement = body.implement as string | undefined;
   const distanceStr = body.distance as string | number | undefined;
@@ -185,7 +196,10 @@ async function handleConfirm(
 
   const distance = typeof distanceStr === "number" ? distanceStr : parseFloat(distanceStr);
   if (isNaN(distance) || distance <= 0) {
-    return NextResponse.json({ success: false, error: "Distance must be a positive number" }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "Distance must be a positive number" },
+      { status: 400 }
+    );
   }
 
   if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {
@@ -233,7 +247,10 @@ async function handleLocalUpload(request: NextRequest, userId: string) {
 
   const distance = parseFloat(distanceStr);
   if (isNaN(distance) || distance <= 0) {
-    return NextResponse.json({ success: false, error: "Distance must be a positive number" }, { status: 400 });
+    return NextResponse.json(
+      { success: false, error: "Distance must be a positive number" },
+      { status: 400 }
+    );
   }
 
   if (!["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"].includes(event)) {

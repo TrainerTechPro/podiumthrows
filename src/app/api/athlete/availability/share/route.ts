@@ -41,8 +41,7 @@ export async function POST() {
       select: { availabilityShareToken: true },
     });
 
-    const token =
-      existing?.availabilityShareToken ?? randomBytes(32).toString("hex");
+    const token = existing?.availabilityShareToken ?? randomBytes(32).toString("hex");
 
     if (!existing?.availabilityShareToken) {
       await prisma.athleteProfile.update({
@@ -52,7 +51,7 @@ export async function POST() {
     }
 
     const shareUrl = `${APP_URL}/availability/${token}`;
-    return NextResponse.json({ success: true, shareUrl });
+    return NextResponse.json({ success: true, data: { shareUrl } });
   } catch (err) {
     logger.error("POST /api/athlete/availability/share", {
       context: "api",
@@ -87,8 +86,7 @@ export async function DELETE() {
     const shareUrl = `${APP_URL}/availability/${newToken}`;
     return NextResponse.json({
       success: true,
-      shareUrl,
-      message: "Previous link revoked. New link generated.",
+      data: { shareUrl, message: "Previous link revoked. New link generated." },
     });
   } catch (err) {
     logger.error("DELETE /api/athlete/availability/share", {

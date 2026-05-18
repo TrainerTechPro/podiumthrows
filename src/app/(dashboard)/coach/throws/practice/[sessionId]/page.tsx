@@ -279,7 +279,7 @@ function LogAttemptPanel({
           setSaving(false);
           return;
         }
-        videoUrl = uploadData.url;
+        videoUrl = uploadData.data?.url ?? null;
       }
 
       const res = await fetch(`/api/throws/practice/${sessionId}/attempts`, {

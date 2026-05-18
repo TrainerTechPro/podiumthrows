@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
     if (isR2Configured()) {
       await uploadSingleFile(key, buffer, file.type);
       const url = getPublicUrl(key);
-      return NextResponse.json({ success: true, url });
+      return NextResponse.json({ success: true, data: { url } });
     } else {
       const localUrl = await saveFileLocally(key, buffer);
-      return NextResponse.json({ success: true, url: localUrl });
+      return NextResponse.json({ success: true, data: { url: localUrl } });
     }
   } catch (error) {
     logger.error("POST /api/uploads/image", { context: "api", error });

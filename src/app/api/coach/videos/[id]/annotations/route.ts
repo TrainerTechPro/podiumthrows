@@ -3,14 +3,7 @@ import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
-const VALID_ANNOTATION_TYPES = [
-  "line",
-  "arrow",
-  "circle",
-  "angle",
-  "freehand",
-  "text",
-];
+const VALID_ANNOTATION_TYPES = ["line", "arrow", "circle", "angle", "freehand", "text"];
 
 type AnnotationInput = {
   id?: string;
@@ -24,10 +17,7 @@ type AnnotationInput = {
   fontSize?: number;
 };
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -88,7 +78,7 @@ export async function PUT(
       data: { annotations: annotations as unknown as never },
     });
 
-    return NextResponse.json({ success: true, count: annotations.length });
+    return NextResponse.json({ success: true, data: { count: annotations.length } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

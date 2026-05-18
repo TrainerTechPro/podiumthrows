@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
       const duration = parseFloat(durationHeader);
       if (!isNaN(duration) && duration > MAX_DURATION_SECONDS) {
         return NextResponse.json(
-          { success: false, error: `Video must be ${MAX_DURATION_SECONDS}s or less (got ${duration.toFixed(1)}s)` },
+          {
+            success: false,
+            error: `Video must be ${MAX_DURATION_SECONDS}s or less (got ${duration.toFixed(1)}s)`,
+          },
           { status: 400 }
         );
       }
@@ -48,7 +51,10 @@ export async function POST(request: NextRequest) {
     const eventRaw = formData.get("event") as string | null;
 
     if (!file) {
-      return NextResponse.json({ success: false, error: "No video file provided" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "No video file provided" },
+        { status: 400 }
+      );
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -105,12 +111,18 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       // Non-fatal — video is uploaded, just not indexed in library
-      logger.error("Failed to create VideoUpload record for practice attempt", { context: "throws/practice/video-upload", error: err });
+      logger.error("Failed to create VideoUpload record for practice attempt", {
+        context: "throws/practice/video-upload",
+        error: err,
+      });
     }
 
-    return NextResponse.json({ success: true, url });
+    return NextResponse.json({ success: true, data: { url } });
   } catch (error) {
-    logger.error("POST /api/throws/practice/video-upload error", { context: "throws/practice/video-upload", error: error });
+    logger.error("POST /api/throws/practice/video-upload error", {
+      context: "throws/practice/video-upload",
+      error: error,
+    });
     return NextResponse.json({ success: false, error: "Upload failed" }, { status: 500 });
   }
 }
