@@ -63,7 +63,7 @@ export function UpgradeBanner({ athleteCount, planLimit }: UpgradeBannerProps) {
             </p>
             <p className="text-xs text-muted mt-0.5">
               {atLimit
-                ? "Upgrade to Pro for up to 25 athletes, plus program builder and video analysis."
+                ? "Upgrade to Pro for up to 25 athletes, plus Bondarchuk session validation and advanced analytics."
                 : "Upgrade to Pro to unlock up to 25 athletes and advanced coaching tools."}
             </p>
             <div className="flex items-center gap-3 mt-3 sm:mt-2">

@@ -15,7 +15,7 @@ describe("MoreInProductStrip", () => {
   it("lists the five remaining features", () => {
     render(<MoreInProductStrip />);
     expect(screen.getByText(/Athlete profiles/i)).toBeInTheDocument();
-    expect(screen.getByText(/Questionnaire builder/i)).toBeInTheDocument();
+    expect(screen.getByText(/Wellness check-ins/i)).toBeInTheDocument();
     expect(screen.getByText(/Event groups/i)).toBeInTheDocument();
     expect(screen.getByText(/Practice tools/i)).toBeInTheDocument();
     expect(screen.getByText(/Performance analytics/i)).toBeInTheDocument();

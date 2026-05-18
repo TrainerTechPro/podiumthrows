@@ -50,7 +50,6 @@ const TIERS: PricingTier[] = [
     features: [
       "Up to 25 athletes",
       "Everything in Free",
-      "Video analysis & annotation",
       "Programming & periodization",
       "Advanced analytics",
       "Priority support",
@@ -68,7 +67,6 @@ const TIERS: PricingTier[] = [
       "Unlimited athletes",
       "Everything in Pro",
       "Event group management",
-      "Custom questionnaires",
       "Dedicated support",
     ],
     cta: "Contact Us",

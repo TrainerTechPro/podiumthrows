@@ -10,7 +10,7 @@
 
 const FEATURES = [
   "Athlete profiles & readiness",
-  "Questionnaire builder",
+  "Wellness check-ins",
   "Event groups (shot / discus / hammer / javelin)",
   "Practice tools (plate calc, rest timer, RPE logger)",
   "Performance analytics",

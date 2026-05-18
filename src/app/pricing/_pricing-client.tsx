@@ -109,6 +109,10 @@ const PLANS: Plan[] = [
     highlight: false,
     cta: "Get Started Free",
     ctaHref: "/register",
+    // MVP cut (2026-05-15): "Video annotation tools" and "Questionnaires &
+    // surveys" rows dropped — both features are gated off by default in
+    // src/lib/flags.ts and the upgrade promise was misleading. Restore both
+    // rows here + the matrix rows below when the flags ship enabled.
     features: [
       { label: "3 athletes", included: true },
       { label: "Basic throw logging", included: true },
@@ -116,9 +120,7 @@ const PLANS: Plan[] = [
       { label: "1 GB video storage", included: true },
       { label: "Wellness check-ins", included: true },
       { label: "Bondarchuk sequencing validation", included: false },
-      { label: "Video annotation tools", included: false },
       { label: "Advanced analytics & charts", included: false },
-      { label: "Questionnaires & surveys", included: false },
       { label: "Priority support", included: false },
       { label: "API access", included: false },
       { label: "Dedicated success manager", included: false },
@@ -141,9 +143,7 @@ const PLANS: Plan[] = [
       { label: "50 GB video storage", included: true },
       { label: "Wellness check-ins", included: true },
       { label: "Bondarchuk sequencing validation", included: true },
-      { label: "Video annotation tools", included: true },
       { label: "Advanced analytics & charts", included: true },
-      { label: "Questionnaires & surveys", included: true },
       { label: "Priority support", included: true },
       { label: "API access", included: false },
       { label: "Dedicated success manager", included: false },
@@ -166,9 +166,7 @@ const PLANS: Plan[] = [
       { label: "500 GB video storage", included: true },
       { label: "Wellness check-ins", included: true },
       { label: "Bondarchuk sequencing validation", included: true },
-      { label: "Video annotation tools", included: true },
       { label: "Advanced analytics & charts", included: true },
-      { label: "Questionnaires & surveys", included: true },
       { label: "Priority support", included: true },
       { label: "API access", included: true },
       { label: "Dedicated success manager", included: true },
@@ -415,13 +413,14 @@ const MATRIX_ROWS = [
   },
   {
     category: "Training",
+    // MVP cut (2026-05-15): "Questionnaires & surveys" row dropped — gated
+    // by `questionnaireBuilder` flag (off by default).
     rows: [
       { feature: "Throw logging", free: true, pro: true, elite: true },
       { feature: "Session builder", free: true, pro: true, elite: true },
       { feature: "Bondarchuk sequence validation", free: false, pro: true, elite: true },
       { feature: "Implement weight rules", free: false, pro: true, elite: true },
       { feature: "Training block templates", free: false, pro: true, elite: true },
-      { feature: "Questionnaires & surveys", free: false, pro: true, elite: true },
     ],
   },
   {
@@ -435,10 +434,11 @@ const MATRIX_ROWS = [
   },
   {
     category: "Video",
+    // MVP cut (2026-05-15): "Video annotation tools" + "Drill video library"
+    // rows dropped — both surfaces are gated by `videoAnnotator` (off by
+    // default). Upload/playback remains so the storage row stays honest.
     rows: [
       { feature: "Video upload & playback", free: true, pro: true, elite: true },
-      { feature: "Video annotation tools", free: false, pro: true, elite: true },
-      { feature: "Drill video library", free: false, pro: true, elite: true },
       { feature: "Storage", free: "1 GB", pro: "50 GB", elite: "500 GB" },
     ],
   },

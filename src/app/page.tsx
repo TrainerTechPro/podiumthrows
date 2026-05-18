@@ -15,12 +15,12 @@ const OG_HOME =
 export const metadata: Metadata = {
   title: "Podium Throws — The Coaching Platform Built for Throws",
   description:
-    "The coaching platform built around Bondarchuk methodology. Session validation, video analysis, and performance tracking for shot put, discus, hammer, and javelin coaches.",
+    "The coaching platform built around Bondarchuk methodology. Session validation and performance tracking for shot put, discus, hammer, and javelin coaches.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Podium Throws — The Coaching Platform Built for Throws",
     description:
-      "The coaching platform built around Bondarchuk methodology. Session validation, video analysis, and performance tracking.",
+      "The coaching platform built around Bondarchuk methodology. Session validation and performance tracking for throws coaches.",
     type: "website",
     images: [
       {
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Podium Throws — The Coaching Platform Built for Throws",
     description:
-      "Session validation, video analysis, and performance tracking for throws coaches. Built around Bondarchuk methodology.",
+      "Session validation and performance tracking for throws coaches. Built around Bondarchuk methodology.",
     images: [OG_HOME],
   },
 };

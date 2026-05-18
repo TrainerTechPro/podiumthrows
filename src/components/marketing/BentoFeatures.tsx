@@ -16,7 +16,9 @@ import ScrollReveal from "./ScrollReveal";
 import MonoLabel from "./MonoLabel";
 import { ValidatedSessionTile } from "./tiles/ValidatedSessionTile";
 import { UnifiedPRTile } from "./tiles/UnifiedPRTile";
-import { PoseAnalysisTile } from "./tiles/PoseAnalysisTile";
+// PoseAnalysisTile retired from the bento — video pose analysis is post-MVP
+// (gated by `videoAnalysis`/`videoAnnotator` in src/lib/flags.ts). File kept on
+// disk; restore the import + tile + col-span when the feature ships.
 import { MoreInProductStrip } from "./MoreInProductStrip";
 
 export default function BentoFeatures() {
@@ -34,7 +36,7 @@ export default function BentoFeatures() {
       {/* ── Section header ─────────────────────────────────────────────── */}
       <ScrollReveal>
         <div style={{ marginBottom: 56, maxWidth: 720 }}>
-          <MonoLabel>The Three Things</MonoLabel>
+          <MonoLabel>What we do</MonoLabel>
           <h2
             className="font-heading"
             style={{
@@ -58,8 +60,8 @@ export default function BentoFeatures() {
               maxWidth: 560,
             }}
           >
-            Three pieces of the product that nothing else on the market does the same way. The rest
-            of the surface backs them up.
+            Two pieces of the product that nothing else on the market does the same way. The rest of
+            the surface backs them up.
           </p>
         </div>
       </ScrollReveal>
@@ -71,9 +73,6 @@ export default function BentoFeatures() {
         </ScrollReveal>
         <ScrollReveal delay={0.08}>
           <UnifiedPRTile />
-        </ScrollReveal>
-        <ScrollReveal delay={0.16} className="lg:col-span-3">
-          <PoseAnalysisTile />
         </ScrollReveal>
       </div>
 
