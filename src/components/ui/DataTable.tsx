@@ -306,7 +306,7 @@ function PageButton({
       className={cn(
         "min-w-[44px] min-h-[44px] px-1.5 rounded-lg text-xs font-medium transition-colors",
         active
-          ? "bg-primary-500 text-white"
+          ? "bg-primary-500 text-[var(--color-text-on-brand)]"
           : "text-muted hover:bg-surface-100 dark:hover:bg-surface-800 hover:text-[var(--foreground)]",
         disabled && "opacity-40 cursor-not-allowed"
       )}

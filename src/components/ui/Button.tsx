@@ -16,8 +16,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<ButtonVariant, string> = {
   primary: [
-    "bg-primary-500 text-white",
-    "hover:bg-primary-600 active:bg-primary-700",
+    // Amber gold + dark on-brand text (11.4:1 AAA) — never white-on-gold,
+    // which the design system rejects as weak. See globals.css
+    // --color-text-on-brand and design-system.md §"Premium is restraint".
+    "bg-primary-500 text-[var(--color-text-on-brand)]",
+    "hover:bg-primary-400 active:bg-primary-600",
     "focus-visible:ring-primary-500/50",
     "shadow-sm hover:shadow",
   ].join(" "),

@@ -278,8 +278,8 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: () => voi
   const transitionClass = skip
     ? ""
     : phase === "exit"
-      ? "transition-all duration-200 ease-in"
-      : "transition-all duration-250 ease-out";
+      ? "transition-[opacity,transform] duration-200 ease-in"
+      : "transition-[opacity,transform] duration-250 ease-out";
 
   return (
     <div

@@ -124,11 +124,14 @@ const config: Config = {
         "3xl": "1.25rem",
       },
       boxShadow: {
-        card: "0 1px 3px 0 rgb(0 0 0 / 0.3), 0 0 1px 0 rgb(255 200 0 / 0.05)",
-        "card-hover": "0 4px 20px 0 rgb(0 0 0 / 0.4), 0 0 15px rgb(255 200 0 / 0.1)",
+        // Card shadows are PLAIN depth — no amber halo. Glow is milestone-only
+        // per design-system.md §"Visual Doctrine". The previous amber stroke
+        // on `card` and `card-hover` read as ambient haze across every list.
+        card: "0 1px 3px 0 rgb(0 0 0 / 0.10), 0 1px 2px 0 rgb(0 0 0 / 0.06)",
+        "card-hover": "0 8px 24px -4px rgb(0 0 0 / 0.18), 0 2px 6px -1px rgb(0 0 0 / 0.10)",
         // Glow is reserved for milestone moments (PR celebration, streak
-        // milestone reveals). Use `shadow-warm-md` for brand CTAs that need
-        // elevation without the omnidirectional glow. See audit Prompt 9.
+        // milestone reveals, urgent wellness flag). NEVER use for routine
+        // hover/focus/decoration. See design-system.md §Box Shadows.
         glow: "0 0 20px rgb(255 200 0 / 0.2)",
         "glow-lg": "0 0 40px rgb(255 200 0 / 0.3)",
         // Directional shadow with a hint of brand warmth — for elevated

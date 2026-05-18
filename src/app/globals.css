@@ -289,13 +289,13 @@
 
 @layer components {
   /* ── Cyberpunk Card System ──────────────────────────────────────────── */
+  /* Card surfaces are FULLY OPAQUE in both themes. Translucent rgba was
+     a 2025 carry-over that pushed text off near-canvas contrast and broke
+     when overlay portals nested cards. The token --card-bg resolves to
+     #ffffff light / #141418 dark via the semantic layer. */
   .card {
-    @apply border border-[var(--card-border)] shadow-card;
-    background: rgba(255, 255, 255, 0.97);
+    @apply border border-[var(--card-border)] shadow-card bg-[var(--card-bg)];
     clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
-  }
-  .dark .card {
-    background: rgba(20, 20, 24, 0.95);
   }
 
   /* Neomorphic rounded card — depth via dual shadow, no border.
@@ -375,17 +375,21 @@
   }
 
   .card-hover {
-    @apply card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5;
+    @apply card hover:shadow-card-hover hover:-translate-y-0.5;
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out;
   }
 
   .card-interactive {
     will-change: transform;
     transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease-out;
   }
+  /* Hover elevation only — no amber glow. Glow is reserved for milestone
+     surfaces (PR celebration, streak reveal). See design-system.md
+     §"Premium is restraint". */
   .card-interactive:hover {
     transform: scale(1.02);
-    box-shadow: 0 4px 20px 0 rgb(0 0 0 / 0.4), 0 0 15px rgb(255 200 0 / 0.1);
-    border-color: rgba(255, 200, 0, 0.25);
+    box-shadow: 0 6px 22px -2px rgb(0 0 0 / 0.18), 0 2px 6px -1px rgb(0 0 0 / 0.12);
+    border-color: var(--color-border-strong, var(--card-border));
   }
   .card-interactive:active {
     transform: scale(0.98);
@@ -449,8 +453,8 @@
       bg-primary-500 text-surface-950 font-semibold text-sm min-h-[44px] uppercase tracking-wider
       hover:bg-primary-400 active:bg-primary-600 active:scale-[0.97]
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50
-      disabled:opacity-50 disabled:cursor-not-allowed
-      transition-all duration-150;
+      disabled:opacity-50 disabled:cursor-not-allowed;
+    transition: background-color 150ms ease-out, transform 150ms ease-out, box-shadow 150ms ease-out;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
 
@@ -460,8 +464,8 @@
       font-medium text-sm border border-surface-100 dark:border-surface-600 min-h-[44px]
       hover:bg-surface-100 dark:hover:bg-surface-700 hover:border-[var(--gold)] hover:border-opacity-30 active:scale-[0.97]
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50
-      disabled:opacity-50 disabled:cursor-not-allowed
-      transition-all duration-150;
+      disabled:opacity-50 disabled:cursor-not-allowed;
+    transition: background-color 150ms ease-out, border-color 150ms ease-out, transform 150ms ease-out;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
 
@@ -470,8 +474,8 @@
       bg-danger-500 text-white font-semibold text-sm uppercase tracking-wider
       hover:bg-danger-600 active:bg-danger-700 active:scale-[0.97]
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500/50
-      disabled:opacity-50 disabled:cursor-not-allowed
-      transition-all duration-150;
+      disabled:opacity-50 disabled:cursor-not-allowed;
+    transition: background-color 150ms ease-out, transform 150ms ease-out;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
 
@@ -480,9 +484,8 @@
       bg-white dark:bg-surface-900 border border-surface-100 dark:border-surface-600
       text-[var(--foreground)] placeholder:text-surface-200 dark:placeholder:text-surface-200
       focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-primary-500/50 focus-visible:border-primary-500
-      focus-visible:shadow-[0_0_12px_rgb(255_200_0/0.1)]
-      disabled:opacity-50 disabled:cursor-not-allowed
-      transition-all duration-150;
+      disabled:opacity-50 disabled:cursor-not-allowed;
+    transition: border-color 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out;
     clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
   }
 
