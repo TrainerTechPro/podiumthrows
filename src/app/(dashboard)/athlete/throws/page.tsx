@@ -8,10 +8,11 @@ export const metadata = {
   title: "Throws",
 };
 
-// Throws Hub is a scoped analytics surface. Today's session and the Quick
-// Log entry point live on the dashboard (state-aware hero) and the bottom
-// tab bar's Log button respectively — never duplicated here.
-const THROWS_HUB_WIDGETS: WidgetId[] = ["readiness", "pr-tracker", "this-week", "volume"];
+// Throws Hub is pure analytics. Today's session lives on the dashboard
+// (state-aware hero), the canonical log entry is the bottom-tab Log button,
+// and readiness is a dedicated Wellness flow off the Home ring. This-week
+// duplicates the Home WeekStrip and has been removed.
+const THROWS_HUB_WIDGETS: WidgetId[] = ["pr-tracker", "volume"];
 
 export default async function ThrowsHubPage() {
   const { athlete } = await requireAthleteSession();

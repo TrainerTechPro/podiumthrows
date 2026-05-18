@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PenLine, Heart, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Heart, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components";
 import { TodayWorkoutWidget } from "../dashboard/_widgets/today-workout";
@@ -16,28 +16,21 @@ import type { TrainingHubData } from "@/lib/data/training-hub";
 
 /* ─── Quick Action Pills ─────────────────────────────────────────────────── */
 
-// MVP cut (2026-05-15): pendingQuestionnaires used to drive a chip; drill
-// videos + questionnaires both hidden from primary nav per audit. Callers
-// still pass it (server data shape unchanged) — we drop it from the props
-// type so TypeScript flags any new use.
+// Quick-Log is the bottom-tab center action — the canonical entry point. We
+// don't repeat it here. The only chip that survives is the contextual
+// readiness check-in nudge (and only when it hasn't been done today).
+// Returns null when nothing's contextual, so the layout collapses cleanly.
 function QuickActions({ readinessCheckedIn }: { readinessCheckedIn: boolean }) {
-  const actions = [
-    { label: "Log Session", href: "/athlete/log-session", icon: PenLine },
-    ...(!readinessCheckedIn ? [{ label: "Check-in", href: "/athlete/wellness", icon: Heart }] : []),
-  ];
-
+  if (readinessCheckedIn) return null;
   return (
     <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
-      {actions.map((a) => (
-        <Link
-          key={a.href}
-          href={a.href}
-          className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-surface-100 dark:bg-surface-800 text-xs font-medium text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors whitespace-nowrap shrink-0"
-        >
-          <a.icon size={13} strokeWidth={1.75} aria-hidden="true" />
-          {a.label}
-        </Link>
-      ))}
+      <Link
+        href="/athlete/wellness"
+        className="flex items-center gap-1.5 px-3 py-2.5 rounded-full bg-surface-100 dark:bg-surface-800 text-xs font-medium text-[var(--foreground)] hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors whitespace-nowrap shrink-0"
+      >
+        <Heart size={13} strokeWidth={1.75} aria-hidden="true" />
+        Check in
+      </Link>
     </div>
   );
 }
@@ -199,9 +192,10 @@ export function TrainingHub({ data }: { data: TrainingHubData }) {
           />
         )}
 
-        {/* Freestyle hero — no programmed session today, so surface it
-            prominently rather than as a small chip. */}
-        <FreestyleCTA variant="hero" />
+        {/* Freestyle CTA stays compact even on "between" — the bottom-tab Log
+            button is the canonical new-log entry; this is a reinforcement,
+            not a competing primary. */}
+        <FreestyleCTA variant="compact" />
 
         {/* Quick actions */}
         <QuickActions readinessCheckedIn={data.readinessCheckedInToday} />

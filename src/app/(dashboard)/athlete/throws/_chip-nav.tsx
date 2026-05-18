@@ -19,6 +19,10 @@ type Chip = {
   matchPaths?: string[];
 };
 
+// Throws is analytics — no Readiness chip here. Readiness has a dedicated
+// home at /athlete/wellness, reached from the Home tab's readiness ring.
+// /athlete/throws/readiness still resolves for deep-link continuity but is
+// no longer offered as a primary path.
 const CHIPS: Chip[] = [
   { label: "Hub", href: "/athlete/throws", matchPaths: ["/athlete/throws"] },
   {
@@ -40,11 +44,6 @@ const CHIPS: Chip[] = [
     label: "Competitions",
     href: "/athlete/competitions",
     matchPaths: ["/athlete/competitions"],
-  },
-  {
-    label: "Readiness",
-    href: "/athlete/throws/readiness",
-    matchPaths: ["/athlete/throws/readiness", "/athlete/throws/quiz"],
   },
 ];
 

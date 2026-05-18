@@ -82,18 +82,40 @@ export async function canActAsAthlete(session: JWTPayload | null): Promise<boole
   return false;
 }
 
+// In production we require Secure (HTTPS-only). Local dev runs on plain
+// http://localhost — Chrome accepts Secure cookies there, but Playwright's
+// Chromium build does not, so e2e + visual QA can't acquire a session. Match
+// the conditional-Secure pattern already used by csrfCookieString().
+const COOKIE_SECURE = process.env.NODE_ENV === "production";
+
 export function setAuthCookie(token: string): string {
-  return `auth-token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${7 * 24 * 60 * 60}`;
+  const parts = [
+    `auth-token=${token}`,
+    "HttpOnly",
+    COOKIE_SECURE ? "Secure" : "",
+    "SameSite=Lax",
+    "Path=/",
+    `Max-Age=${7 * 24 * 60 * 60}`,
+  ];
+  return parts.filter(Boolean).join("; ");
 }
 
 /** Build a Set-Cookie string for a fresh CSRF token (rotated on login/register). */
 export function setCsrfCookie(): string {
   const csrfToken = generateCsrfToken();
-  return csrfCookieString(csrfToken, process.env.NODE_ENV === "production");
+  return csrfCookieString(csrfToken, COOKIE_SECURE);
 }
 
 export function clearAuthCookie(): string {
-  return "auth-token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
+  const parts = [
+    "auth-token=",
+    "HttpOnly",
+    COOKIE_SECURE ? "Secure" : "",
+    "SameSite=Lax",
+    "Path=/",
+    "Max-Age=0",
+  ];
+  return parts.filter(Boolean).join("; ");
 }
 
 /** Build a Set-Cookie string that clears the CSRF cookie. */

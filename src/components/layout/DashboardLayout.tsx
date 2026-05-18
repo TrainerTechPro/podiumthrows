@@ -422,10 +422,14 @@ function AthleteTopBar({
   return (
     <>
       <header
-        className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--color-border-default)] px-4 min-h-[3.5rem] flex items-center gap-3 shrink-0"
+        // Athlete chrome is slimmer than coach (52px vs 56px) — every pixel of
+        // viewport matters when the primary CTA has to land in the thumb half
+        // on iPhone SE (375x667). The bell + avatar buttons keep 44px hit
+        // targets internally; this container just trims breathing room.
+        className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--color-border-default)] px-4 min-h-[3.25rem] flex items-center gap-3 shrink-0"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        <LogoMark size={34} />
+        <LogoMark size={32} />
 
         <div className="flex-1" />
 

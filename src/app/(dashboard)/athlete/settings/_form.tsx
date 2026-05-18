@@ -7,7 +7,6 @@ import type { AthleteProfileFull } from "@/lib/data/athlete";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { Radio, RadioGroup } from "@/components/ui/Radio";
 import { useToast } from "@/components/ui/Toast";
-import { haptic } from "@/lib/haptic";
 
 import { logger } from "@/lib/logger";
 const EVENTS = [
@@ -79,7 +78,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
         }
 
         // Two feedback channels per CLAUDE.md: toast + visual confirmation.
-        haptic.success();
+        // No haptic — settings save isn't a "session complete / PR / log" moment.
         toast.success("Profile saved");
         setSuccess(true);
         router.refresh();

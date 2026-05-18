@@ -80,6 +80,17 @@ export default defineConfig({
       workers: 1,
       testMatch: /canonical-screenshots\.spec\.ts$/,
     },
+    {
+      // Athlete mobile-daily-loop screenshot harness (UX audit 2). Same
+      // pattern as canonical-screenshots — each test owns its viewport.
+      // Logs in via API in each test, so no setup dependency (form-based
+      // auth.setup.ts breaks in dev mode without an explicit JWT_SECRET).
+      name: "athlete-mobile-loop",
+      use: { ...devices["Desktop Chrome"] },
+      fullyParallel: false,
+      workers: 1,
+      testMatch: /athlete-mobile-loop\.spec\.ts$/,
+    },
   ],
   webServer: {
     command: "npm run dev",
@@ -91,6 +102,12 @@ export default defineConfig({
       POSTGRES_PRISMA_URL: LOCAL_DB_URL,
       POSTGRES_URL: LOCAL_DB_URL,
       POSTGRES_URL_NON_POOLING: LOCAL_DB_URL,
+      // Pin a deterministic JWT secret for e2e — without this, the dev
+      // fallback in auth.ts and auth-edge.ts can diverge when the shell
+      // already exports JWT_SECRET from a parent (.env.local in the
+      // non-worktree checkout, shell rc, etc.). With it pinned, sign + verify
+      // always share a key.
+      JWT_SECRET: "e2e-dev-pinned-secret-do-not-use-in-prod",
     },
     timeout: 120_000,
   },

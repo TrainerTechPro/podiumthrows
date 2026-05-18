@@ -42,20 +42,24 @@ export function AthleteHomeClient({ initial, hour, athleteId, masterProfileCompl
   const greeting = useMemo(() => timeGreeting(hour), [hour]);
 
   return (
-    <div className="-mx-4 -my-5 min-h-[calc(100dvh-3.5rem)] sm:-mx-6">
+    <div className="-mx-4 -my-5 min-h-[calc(100dvh-3.25rem)] sm:-mx-6">
       <Hero
         athlete={initial.athlete}
         greeting={greeting}
         readiness={initial.readiness}
         today={initial.today}
       />
-      <MigrationBanner athleteId={athleteId} />
-      {!masterProfileComplete && <MasterProfileBanner />}
+      {/* The state-aware hero card is the first big surface the thumb meets.
+          Banners (migration nudge, master-profile prompt) live BELOW it so
+          the primary CTA stays in the bottom half on iPhone SE (375x667).
+          Source: tasks ux audit 2, athlete daily-loop redesign. */}
       {initial.today ? (
         <TodayHeroCard today={initial.today} />
       ) : (
         <RestDayCard firstName={initial.athlete.firstName} />
       )}
+      <MigrationBanner athleteId={athleteId} />
+      {!masterProfileComplete && <MasterProfileBanner />}
       <SectionHeader label="This week" trailingHref="/athlete/sessions" trailingLabel="See plan" />
       <WeekStrip strip={initial.week} />
       <SectionHeader label="Performance" />
