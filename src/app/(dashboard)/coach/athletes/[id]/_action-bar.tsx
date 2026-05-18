@@ -27,7 +27,7 @@ export function CoachActionBar({ athleteId, athleteName, events, gender }: Actio
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const router = useRouter();
 
-  function handleAction(id: typeof actions[number]["id"]) {
+  function handleAction(id: (typeof actions)[number]["id"]) {
     if (id === "profile") {
       router.push(`/coach/athletes/${athleteId}/profile/edit`);
       return;
@@ -57,9 +57,11 @@ export function CoachActionBar({ athleteId, athleteName, events, gender }: Actio
       </div>
 
       {/* Mobile: sticky bottom icon row */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden
         bg-surface-50 dark:bg-surface-900 border-t border-[var(--card-border)]
-        px-4 py-3">
+        px-4 py-3"
+      >
         <div className="flex justify-around">
           {actions.map(({ id, label, icon: Icon }) => (
             <button
@@ -71,7 +73,7 @@ export function CoachActionBar({ athleteId, athleteName, events, gender }: Actio
               aria-label={label}
             >
               <Icon size={22} strokeWidth={1.75} aria-hidden="true" />
-              <span className="text-[10px] font-medium">{label}</span>
+              <span className="text-nano font-medium">{label}</span>
             </button>
           ))}
         </div>

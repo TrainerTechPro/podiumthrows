@@ -109,7 +109,7 @@ function SectionHeader({
   return (
     <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
       <div className="flex items-baseline gap-2.5 min-w-0">
-        <h2 className="font-heading text-[17px] font-semibold text-[var(--color-text-primary)] tracking-tight">
+        <h2 className="font-heading text-body-lg font-semibold text-[var(--color-text-primary)] tracking-tight">
           {title}
         </h2>
         {context && (
@@ -351,7 +351,7 @@ function ReadinessSparkline({
   if (segments.length === 0) {
     return (
       <div
-        className="h-[18px] w-[72px] flex items-center text-[10px]"
+        className="h-[18px] w-[72px] flex items-center text-nano"
         style={{ color: "var(--color-text-secondary)" }}
         aria-hidden="true"
       >
@@ -430,7 +430,7 @@ function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
                   <span className="text-sm font-semibold tabular-nums" style={{ color: strokeVar }}>
                     {entry.latestScore !== null ? entry.latestScore.toFixed(1) : "—"}
                   </span>
-                  <span className="text-[10px] text-[var(--color-text-secondary)]">
+                  <span className="text-nano text-[var(--color-text-secondary)]">
                     / {entry.maxScore}
                   </span>
                 </div>
@@ -824,7 +824,7 @@ export default async function CoachDashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-secondary)]">
               Command
             </p>
-            <h1 className="font-heading text-[32px] leading-[1.05] font-semibold text-[var(--color-text-primary)]">
+            <h1 className="font-heading text-display leading-[1.05] font-semibold text-[var(--color-text-primary)]">
               Your program, today.
             </h1>
           </div>

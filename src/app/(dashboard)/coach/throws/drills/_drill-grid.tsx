@@ -114,7 +114,7 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
                   <p className="text-sm font-semibold text-[var(--foreground)] leading-tight">
                     {drill.name}
                   </p>
-                  {drill.isGlobal && <span className="text-[10px] text-muted">Built-in</span>}
+                  {drill.isGlobal && <span className="text-nano text-muted">Built-in</span>}
                 </div>
                 {drill.isOwn && (
                   <div className="flex gap-1 shrink-0">
@@ -159,7 +159,7 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
               {/* Cues */}
               {drill.cues.length > 0 && (
                 <div className="space-y-0.5">
-                  <p className="text-[10px] text-muted font-semibold uppercase tracking-wider">
+                  <p className="text-nano text-muted font-semibold uppercase tracking-wider">
                     Cues
                   </p>
                   <ul className="space-y-0.5">
@@ -173,7 +173,7 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
                       </li>
                     ))}
                     {drill.cues.length > 3 && (
-                      <li className="text-[10px] text-muted">+{drill.cues.length - 3} more</li>
+                      <li className="text-nano text-muted">+{drill.cues.length - 3} more</li>
                     )}
                   </ul>
                 </div>
@@ -185,7 +185,7 @@ export function DrillGrid({ drills }: { drills: DrillItem[] }) {
                   {drill.athleteTypes.map((t) => (
                     <span
                       key={t}
-                      className="text-[10px] px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-muted"
+                      className="text-nano px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-muted"
                     >
                       {TYPE_LABELS[t] ?? t}
                     </span>

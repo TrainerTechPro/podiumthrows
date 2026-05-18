@@ -288,7 +288,7 @@ function UpcomingCard({ item }: { item: UpcomingItem }) {
         }`}
       >
         <span
-          className={`text-[9px] font-bold uppercase tracking-wider ${
+          className={`text-nano font-bold uppercase tracking-wider ${
             today ? "text-primary-500" : "text-muted"
           }`}
         >
@@ -302,7 +302,7 @@ function UpcomingCard({ item }: { item: UpcomingItem }) {
           {dayNum}
         </span>
         <span
-          className={`text-[9px] uppercase tracking-wider ${
+          className={`text-nano uppercase tracking-wider ${
             today ? "text-primary-500" : "text-muted"
           }`}
         >
@@ -422,7 +422,7 @@ function LinkPill({
         )}
         {link.title}
       </a>
-      {link.category && <span className="text-[10px] text-muted">{link.category}</span>}
+      {link.category && <span className="text-nano text-muted">{link.category}</span>}
       {isCoach && (
         <div className="absolute -top-2 -right-2 hidden group-hover:flex items-center gap-0.5 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-full px-1 py-0.5 shadow-sm z-10">
           {showUp && (

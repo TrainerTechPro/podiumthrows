@@ -13,9 +13,7 @@ function formatEventName(event: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function CompetitionCountdown({
-  competitions,
-}: CompetitionCountdownProps) {
+export function CompetitionCountdown({ competitions }: CompetitionCountdownProps) {
   if (competitions.length === 0) return null;
 
   return (
@@ -34,17 +32,10 @@ export function CompetitionCountdown({
           >
             {/* Top: priority badge + taper indicator */}
             <div className="flex items-center gap-2">
-              <Badge
-                variant={comp.priority === "A" ? "primary" : "neutral"}
-                dot
-              >
+              <Badge variant={comp.priority === "A" ? "primary" : "neutral"} dot>
                 {comp.priority}-Meet
               </Badge>
-              {comp.taperWeek != null && (
-                <Badge variant="warning">
-                  Taper Wk {comp.taperWeek}
-                </Badge>
-              )}
+              {comp.taperWeek != null && <Badge variant="warning">Taper Wk {comp.taperWeek}</Badge>}
             </div>
 
             {/* Days out — large number */}
@@ -61,19 +52,13 @@ export function CompetitionCountdown({
               >
                 {comp.daysOut}
               </p>
-              <p className="text-[10px] text-surface-400 -mt-0.5">
-                days out
-              </p>
+              <p className="text-nano text-surface-400 -mt-0.5">days out</p>
             </div>
 
             {/* Competition name + event */}
             <div>
-              <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                {comp.name}
-              </p>
-              <p className="text-xs text-muted truncate">
-                {formatEventName(comp.event)}
-              </p>
+              <p className="text-sm font-medium text-[var(--foreground)] truncate">{comp.name}</p>
+              <p className="text-xs text-muted truncate">{formatEventName(comp.event)}</p>
             </div>
 
             {/* Avatar stack */}
@@ -89,7 +74,7 @@ export function CompetitionCountdown({
                   />
                 ))}
                 {comp.athletes.length > 4 && (
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-surface-100 dark:bg-surface-800 ring-2 ring-[var(--card-bg)] text-[9px] font-medium text-muted">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-surface-100 dark:bg-surface-800 ring-2 ring-[var(--card-bg)] text-nano font-medium text-muted">
                     +{comp.athletes.length - 4}
                   </span>
                 )}

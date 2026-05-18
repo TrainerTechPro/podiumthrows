@@ -105,7 +105,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           {item.badge !== undefined && (
             <span
               className={cn(
-                "px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums",
+                "px-1.5 py-0.5 rounded-full text-nano font-bold tabular-nums",
                 isParentActive
                   ? "bg-primary-200 dark:bg-primary-500/30 text-primary-700 dark:text-primary-300"
                   : "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300"
@@ -165,7 +165,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
       {item.badge !== undefined && (
         <span
           className={cn(
-            "ml-auto min-w-[20px] text-center px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums shrink-0",
+            "ml-auto min-w-[20px] text-center px-1.5 py-0.5 rounded-full text-nano font-bold tabular-nums shrink-0",
             isActive
               ? "bg-primary-500/20 text-primary-600 dark:text-primary-300"
               : "bg-surface-200 dark:bg-surface-700 text-surface-600 dark:text-surface-300"
@@ -225,7 +225,7 @@ export function Sidebar({ sections, header, footer, open, onClose, className }: 
           {sections.map((section, si) => (
             <div key={si}>
               {section.title && (
-                <p className="px-3 mb-2 text-[11px] font-bold uppercase tracking-[0.15em] text-surface-400 dark:text-surface-500">
+                <p className="px-3 mb-2 text-micro font-bold uppercase tracking-[0.15em] text-surface-400 dark:text-surface-500">
                   {section.title}
                 </p>
               )}

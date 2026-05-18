@@ -88,9 +88,8 @@ function scoreBgColor(score: number, max: number): string {
 
 function CompositeScoreBadge({ scores }: { scores: Scores }) {
   if (scores.compositeScore === null) return null;
-  const pct = scores.maxPossibleScore > 0
-    ? (scores.compositeScore / scores.maxPossibleScore) * 100
-    : 0;
+  const pct =
+    scores.maxPossibleScore > 0 ? (scores.compositeScore / scores.maxPossibleScore) * 100 : 0;
   const variant: "success" | "warning" | "danger" =
     pct >= 70 ? "success" : pct >= 40 ? "warning" : "danger";
 
@@ -114,8 +113,7 @@ function ResponseCard({
   questionnaireType: string;
   scoringEnabled: boolean;
 }) {
-  const isPARQ =
-    questionnaireType === "ONBOARDING" || questionnaireType === "ASSESSMENT";
+  const isPARQ = questionnaireType === "ONBOARDING" || questionnaireType === "ASSESSMENT";
 
   // Determine if answers are block-based
   const isBlockBased = response.answers.some((a) => a.blockId);
@@ -133,15 +131,11 @@ function ResponseCard({
   return (
     <div className="card p-4 space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h3 className="font-semibold text-[var(--foreground)]">
-          {response.athleteName}
-        </h3>
+        <h3 className="font-semibold text-[var(--foreground)]">{response.athleteName}</h3>
         <div className="flex items-center gap-2">
           {response.scores && <CompositeScoreBadge scores={response.scores} />}
           {response.durationSeconds && (
-            <span className="text-xs text-muted">
-              {formatDuration(response.durationSeconds)}
-            </span>
+            <span className="text-xs text-muted">{formatDuration(response.durationSeconds)}</span>
           )}
           <span className="text-xs text-muted">
             {new Date(response.completedAt).toLocaleString()}
@@ -155,8 +149,7 @@ function ResponseCard({
           <div className="flex items-center justify-between text-xs text-muted">
             <span>Composite Score</span>
             <span>
-              {response.scores.compositeScore.toFixed(1)} /{" "}
-              {response.scores.maxPossibleScore}
+              {response.scores.compositeScore.toFixed(1)} / {response.scores.maxPossibleScore}
             </span>
           </div>
           <div className="h-2 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
@@ -167,9 +160,7 @@ function ResponseCard({
               )}`}
               style={{
                 width: `${Math.min(
-                  (response.scores.compositeScore /
-                    response.scores.maxPossibleScore) *
-                    100,
+                  (response.scores.compositeScore / response.scores.maxPossibleScore) * 100,
                   100
                 )}%`,
               }}
@@ -187,28 +178,20 @@ function ResponseCard({
               : null;
 
             return (
-              <div
-                key={i}
-                className="p-3 rounded-lg bg-surface-50 dark:bg-surface-800/50"
-              >
+              <div key={i} className="p-3 rounded-lg bg-surface-50 dark:bg-surface-800/50">
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-xs text-muted flex items-center gap-1.5">
                     <span>
                       {i + 1}. {a.blockLabel || "Unknown"}
                     </span>
-                    {meta && (
-                      <span className="text-[10px] opacity-60">
-                        ({meta.label})
-                      </span>
-                    )}
+                    {meta && <span className="text-nano opacity-60">({meta.label})</span>}
                   </div>
                   {scoringEnabled && blockScore !== undefined && (
                     <span
                       className={`text-xs font-medium ${scoreColor(
                         blockScore,
                         response.scores?.maxPossibleScore
-                          ? response.scores.maxPossibleScore /
-                            response.scores.blockScores.length
+                          ? response.scores.maxPossibleScore / response.scores.blockScores.length
                           : 10
                       )}`}
                     >
@@ -225,9 +208,7 @@ function ResponseCard({
         : response.answers.map((a, i) => {
             const q = questions.find((q) => q.id === a.questionId);
             const isYesFlagged =
-              isPARQ &&
-              q?.type === "yes_no" &&
-              String(a.answer).toLowerCase() === "yes";
+              isPARQ && q?.type === "yes_no" && String(a.answer).toLowerCase() === "yes";
 
             return (
               <div
@@ -254,28 +235,16 @@ function ResponseCard({
 
 /* ── Summary Tab ───────────────────────────────────────────────────────────── */
 
-function SummaryView({
-  responses,
-  questions,
-  questionnaireType,
-  scoringEnabled,
-}: Props) {
-  const isPARQ =
-    questionnaireType === "ONBOARDING" || questionnaireType === "ASSESSMENT";
-  const isBlockBased = responses.some((r) =>
-    r.answers.some((a) => a.blockId)
-  );
+function SummaryView({ responses, questions, questionnaireType, scoringEnabled }: Props) {
+  const isPARQ = questionnaireType === "ONBOARDING" || questionnaireType === "ASSESSMENT";
+  const isBlockBased = responses.some((r) => r.answers.some((a) => a.blockId));
 
   // Composite score summary
-  const scoredResponses = responses.filter(
-    (r) => r.scores?.compositeScore != null
-  );
+  const scoredResponses = responses.filter((r) => r.scores?.compositeScore != null);
   const avgComposite =
     scoredResponses.length > 0
-      ? scoredResponses.reduce(
-          (sum, r) => sum + (r.scores!.compositeScore ?? 0),
-          0
-        ) / scoredResponses.length
+      ? scoredResponses.reduce((sum, r) => sum + (r.scores!.compositeScore ?? 0), 0) /
+        scoredResponses.length
       : null;
   const maxPossible = scoredResponses[0]?.scores?.maxPossibleScore ?? 0;
 
@@ -305,22 +274,10 @@ function SummaryView({
         .filter(Boolean) as Answer[];
 
       // Numeric types
-      const numericTypes = [
-        "number",
-        "scale_1_5",
-        "scale_1_10",
-        "rpe",
-        "slider",
-        "distance",
-      ];
+      const numericTypes = ["number", "scale_1_5", "scale_1_10", "rpe", "slider", "distance"];
       if (numericTypes.includes(block.type)) {
-        const values = answersForBlock
-          .map((a) => Number(a.answer))
-          .filter((v) => !isNaN(v));
-        const avg =
-          values.length > 0
-            ? values.reduce((s, v) => s + v, 0) / values.length
-            : 0;
+        const values = answersForBlock.map((a) => Number(a.answer)).filter((v) => !isNaN(v));
+        const avg = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : 0;
         return {
           block,
           type: "numeric" as const,
@@ -342,9 +299,7 @@ function SummaryView({
           noCount: answersForBlock.length - yesCount,
           total: answersForBlock.length,
           yesPercent:
-            answersForBlock.length > 0
-              ? Math.round((yesCount / answersForBlock.length) * 100)
-              : 0,
+            answersForBlock.length > 0 ? Math.round((yesCount / answersForBlock.length) * 100) : 0,
         };
       }
 
@@ -364,9 +319,7 @@ function SummaryView({
         .filter(Boolean) as Answer[];
 
       if (q.type === "yes_no") {
-        const yesCount = answersForQ.filter(
-          (a) => String(a.answer).toLowerCase() === "yes"
-        ).length;
+        const yesCount = answersForQ.filter((a) => String(a.answer).toLowerCase() === "yes").length;
         return {
           question: q,
           type: "yes_no" as const,
@@ -374,24 +327,13 @@ function SummaryView({
           noCount: answersForQ.length - yesCount,
           total: answersForQ.length,
           yesPercent:
-            answersForQ.length > 0
-              ? Math.round((yesCount / answersForQ.length) * 100)
-              : 0,
+            answersForQ.length > 0 ? Math.round((yesCount / answersForQ.length) * 100) : 0,
         };
       }
 
-      if (
-        q.type === "scale_1_5" ||
-        q.type === "scale_1_10" ||
-        q.type === "number"
-      ) {
-        const values = answersForQ
-          .map((a) => Number(a.answer))
-          .filter((v) => !isNaN(v));
-        const avg =
-          values.length > 0
-            ? values.reduce((s, v) => s + v, 0) / values.length
-            : 0;
+      if (q.type === "scale_1_5" || q.type === "scale_1_10" || q.type === "number") {
+        const values = answersForQ.map((a) => Number(a.answer)).filter((v) => !isNaN(v));
+        const avg = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : 0;
         return {
           question: q,
           type: "numeric" as const,
@@ -453,9 +395,11 @@ function SummaryView({
             <span>
               {i + 1}. {item.block.label}
             </span>
-            <span className="text-[10px] opacity-60">
-              ({BLOCK_REGISTRY[item.block.type as keyof typeof BLOCK_REGISTRY]
-                ?.label ?? item.block.type})
+            <span className="text-nano opacity-60">
+              (
+              {BLOCK_REGISTRY[item.block.type as keyof typeof BLOCK_REGISTRY]?.label ??
+                item.block.type}
+              )
             </span>
           </div>
 
@@ -519,9 +463,7 @@ function SummaryView({
               )}
               <div className="flex-1 h-2 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${
-                    isPARQ ? "bg-red-500" : "bg-primary-500"
-                  }`}
+                  className={`h-full rounded-full ${isPARQ ? "bg-red-500" : "bg-primary-500"}`}
                   style={{ width: `${item.yesPercent}%` }}
                 />
               </div>
@@ -553,15 +495,8 @@ function SummaryView({
 
 /* ── Main Component ────────────────────────────────────────────────────────── */
 
-export function ResponseViewer({
-  responses,
-  questions,
-  questionnaireType,
-  scoringEnabled,
-}: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(
-    responses[0]?.id ?? null
-  );
+export function ResponseViewer({ responses, questions, questionnaireType, scoringEnabled }: Props) {
+  const [selectedId, setSelectedId] = useState<string | null>(responses[0]?.id ?? null);
   const [tab, setTab] = useState<"individual" | "summary">("individual");
 
   const selected = responses.find((r) => r.id === selectedId);
@@ -627,7 +562,7 @@ export function ResponseViewer({
                     </span>
                   )}
                 </div>
-                <div className="text-[10px] text-muted">
+                <div className="text-nano text-muted">
                   {new Date(r.completedAt).toLocaleDateString()}
                 </div>
               </button>

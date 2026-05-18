@@ -234,13 +234,13 @@ function AthleteCard({
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <div className="flex gap-1">
               {athlete.events.map((e) => (
-                <Badge key={e} variant="neutral" className="text-[10px] px-1.5 py-0">
+                <Badge key={e} variant="neutral" className="text-nano px-1.5 py-0">
                   {EVENT_SHORT[e] ?? e}
                 </Badge>
               ))}
             </div>
             {athlete.conflict && (
-              <span className="flex items-center gap-1 text-[10px] text-warning-600 dark:text-warning-400">
+              <span className="flex items-center gap-1 text-nano text-warning-600 dark:text-warning-400">
                 <AlertTriangle size={9} strokeWidth={1.75} aria-hidden="true" />
                 {athlete.conflict.reason}
               </span>
@@ -253,12 +253,12 @@ function AthleteCard({
           {cfg ? (
             <>
               <span className={`w-2 h-2 rounded-full ${cfg.dotColor}`} aria-hidden="true" />
-              <span className={`text-[11px] font-bold uppercase tracking-wider ${cfg.text}`}>
+              <span className={`text-micro font-bold uppercase tracking-wider ${cfg.text}`}>
                 {cfg.label}
               </span>
             </>
           ) : (
-            <span className="text-[11px] font-medium text-muted uppercase tracking-wider">—</span>
+            <span className="text-micro font-medium text-muted uppercase tracking-wider">—</span>
           )}
           {notes && (
             <Pencil size={11} strokeWidth={1.75} className="text-muted ml-1" aria-hidden="true" />
@@ -781,7 +781,7 @@ export function AttendanceClient({
           <span className="font-mono text-sm font-bold tabular-nums text-[var(--foreground)]">
             {markedCount}/{eligibleAthletes.length}
           </span>
-          <p className="text-[10px] text-muted">marked</p>
+          <p className="text-nano text-muted">marked</p>
         </div>
       </div>
 

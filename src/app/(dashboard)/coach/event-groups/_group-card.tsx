@@ -90,7 +90,7 @@ export function GroupCard({ group, onClick, selected }: GroupCardProps) {
               />
             ))}
             {overflow > 0 && (
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 text-[9px] font-semibold text-[var(--foreground)] ring-2 ring-[var(--card-bg)]">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-surface-200 dark:bg-surface-700 text-nano font-semibold text-[var(--foreground)] ring-2 ring-[var(--card-bg)]">
                 +{overflow}
               </span>
             )}

@@ -83,7 +83,7 @@ export function CompletionScreen({
         <h2
           className="text-2xl font-heading font-bold"
           style={{
-            color: "#FFC800",
+            color: "var(--color-brand)",
             textShadow: "0 0 32px #FFC80055, 0 0 64px #FFC80022",
           }}
         >
@@ -108,7 +108,7 @@ export function CompletionScreen({
           >
             Total Throws
           </p>
-          <span style={{ color: "#FFC800" }}>
+          <span style={{ color: "var(--color-brand)" }}>
             <AnimatedNumber
               value={totalThrowCount}
               className="text-xl font-heading font-bold tabular-nums"
@@ -131,7 +131,7 @@ export function CompletionScreen({
           >
             Marked
           </p>
-          <span style={{ color: "#FFC800" }}>
+          <span style={{ color: "var(--color-brand)" }}>
             <AnimatedNumber
               value={markedCount}
               className="text-xl font-heading font-bold tabular-nums"
@@ -157,7 +157,7 @@ export function CompletionScreen({
           {bestMark > 0 ? (
             <span
               className="text-xl font-heading font-bold tabular-nums"
-              style={{ color: "#FFC800" }}
+              style={{ color: "var(--color-brand)" }}
             >
               <AnimatedNumber
                 value={bestMark}
@@ -190,7 +190,10 @@ export function CompletionScreen({
           >
             Duration
           </p>
-          <p className="text-xl font-heading font-bold tabular-nums" style={{ color: "#FFC800" }}>
+          <p
+            className="text-xl font-heading font-bold tabular-nums"
+            style={{ color: "var(--color-brand)" }}
+          >
             {formatElapsed(elapsed)}
           </p>
         </div>
@@ -212,7 +215,10 @@ export function CompletionScreen({
           >
             Strength Volume
           </p>
-          <p className="text-xl font-heading font-bold tabular-nums" style={{ color: "#FFC800" }}>
+          <p
+            className="text-xl font-heading font-bold tabular-nums"
+            style={{ color: "var(--color-brand)" }}
+          >
             {totalVolume.toLocaleString()}
             <span className="text-sm font-semibold ml-0.5" style={{ color: "#FFC80088" }}>
               kg
@@ -227,7 +233,7 @@ export function CompletionScreen({
           className="text-nano uppercase font-semibold block"
           style={{ letterSpacing: "3px", color: "#888" }}
         >
-          Session RPE — <span style={{ color: "#FFC800" }}>{rpe ?? "—"}</span>
+          Session RPE — <span style={{ color: "var(--color-brand)" }}>{rpe ?? "—"}</span>
         </label>
         <input
           type="range"
@@ -238,7 +244,7 @@ export function CompletionScreen({
           onChange={(e) => setRpe(parseInt(e.target.value))}
           className="w-full h-2 appearance-none cursor-pointer"
           style={{
-            accentColor: "#FFC800",
+            accentColor: "var(--color-brand)",
             background:
               rpe != null
                 ? `linear-gradient(to right, #FFC800 ${(rpe - 1) * 11.1}%, #1a1a1e ${(rpe - 1) * 11.1}%)`
@@ -250,7 +256,7 @@ export function CompletionScreen({
             <span
               key={v}
               className="text-nano font-semibold tabular-nums"
-              style={{ color: v === rpe ? "#FFC800" : "#444" }}
+              style={{ color: v === rpe ? "var(--color-brand)" : "#444" }}
             >
               {v}
             </span>
@@ -274,8 +280,8 @@ export function CompletionScreen({
               className="flex-1 py-2 text-xs font-medium transition-all min-h-[52px] flex flex-col items-center gap-0.5"
               style={{
                 backgroundColor: feeling === opt.value ? "#FFC80008" : "#08080a",
-                border: `1px solid ${feeling === opt.value ? "#FFC800" : "#1a1a1e"}`,
-                color: feeling === opt.value ? "#FFC800" : "#666",
+                border: `1px solid ${feeling === opt.value ? "var(--color-brand)" : "#1a1a1e"}`,
+                color: feeling === opt.value ? "var(--color-brand)" : "#666",
                 clipPath: CHAMFER,
               }}
             >
@@ -326,7 +332,7 @@ export function CompletionScreen({
           className="w-full min-h-[52px] font-bold text-micro uppercase disabled:opacity-40 transition-opacity"
           style={{
             letterSpacing: "3px",
-            backgroundColor: "#FFC800",
+            backgroundColor: "var(--color-brand)",
             color: "#000",
             clipPath: CHAMFER_LG,
           }}

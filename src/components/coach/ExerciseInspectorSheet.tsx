@@ -67,7 +67,7 @@ function SheetTitle({ data }: { data: ExerciseInsightsData | null }) {
   if (!data) {
     return (
       <span
-        className="block min-h-[44px] font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--brand-color)]"
+        className="block min-h-[44px] font-mono text-nano uppercase tracking-[0.22em] text-[var(--brand-color)]"
         style={{ color: "#B8830C" }}
       >
         SELECTED · CORRELATION
@@ -78,19 +78,16 @@ function SheetTitle({ data }: { data: ExerciseInsightsData | null }) {
   const sub = data.laneName ? `${capitalize(data.laneName)}.` : "";
   return (
     <div>
-      <div
-        className="font-mono text-[9px] uppercase tracking-[0.22em]"
-        style={{ color: "#B8830C" }}
-      >
+      <div className="font-mono text-nano uppercase tracking-[0.22em]" style={{ color: "#B8830C" }}>
         SELECTED · CORRELATION
       </div>
       <h2
         id="sheet-title"
-        className="mt-1 font-heading text-[20px] font-semibold leading-tight tracking-[-0.005em] text-[var(--foreground)]"
+        className="mt-1 font-heading text-section font-semibold leading-tight tracking-[-0.005em] text-[var(--foreground)]"
       >
         {titleText}
       </h2>
-      {sub ? <p className="mt-1 text-[12.5px] text-[var(--muted)]">{sub}</p> : null}
+      {sub ? <p className="mt-1 text-micro text-[var(--muted)]">{sub}</p> : null}
     </div>
   );
 }
@@ -162,7 +159,7 @@ function Section({
         hideBorder ? "" : "border-b border-[var(--card-border)]"
       } last:mb-0 last:border-b-0 last:pb-0`}
     >
-      <div className="mb-2.5 font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+      <div className="mb-2.5 font-mono text-nano uppercase tracking-[0.2em] text-[var(--muted)]">
         {label}
       </div>
       {children}
@@ -183,11 +180,11 @@ function CorrelationBlock({ c }: { c: NonNullable<ExerciseInsightsData["correlat
   return (
     <>
       <div className="mb-2 flex items-baseline gap-2.5">
-        <span className="font-mono text-[30px] font-semibold leading-none tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
+        <span className="font-mono text-3xl font-semibold leading-none tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
           {c.coefficient.toFixed(2)}
         </span>
         <span
-          className={`rounded-md px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] ${bandClass}`}
+          className={`rounded-md px-2 py-0.5 font-mono text-nano font-medium uppercase tracking-[0.1em] ${bandClass}`}
         >
           {c.band} TRANSFER
         </span>
@@ -198,7 +195,7 @@ function CorrelationBlock({ c }: { c: NonNullable<ExerciseInsightsData["correlat
           style={{ width: `${c.coefficient * 100}%` }}
         />
       </div>
-      <div className="font-mono text-[10px] tracking-[0.04em] text-[var(--muted)]">
+      <div className="font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
         {captionParts.join(" · ") || "—"}
       </div>
     </>
@@ -235,7 +232,7 @@ function HistorySparkline({ history }: { history: ExerciseInsightsData["history"
           );
         })}
       </div>
-      <div className="flex justify-between font-mono text-[10px] tracking-[0.04em] text-[var(--muted)]">
+      <div className="flex justify-between font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
         <span>{history[0]?.label ?? ""}</span>
         {history.length > 2 ? <span>{history[Math.floor(history.length / 2)].label}</span> : null}
         <span
@@ -252,7 +249,7 @@ function HistorySparkline({ history }: { history: ExerciseInsightsData["history"
 
 function KvRow({ k, v, mono = true }: { k: string; v: string | number; mono?: boolean }) {
   return (
-    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-[7px] text-[12.5px] last:border-b-0">
+    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-[7px] text-micro last:border-b-0">
       <span className="text-[var(--muted)]">{k}</span>
       <span
         className={`font-medium tabular-nums text-[var(--foreground)] ${mono ? "font-mono" : ""}`}
@@ -266,10 +263,10 @@ function KvRow({ k, v, mono = true }: { k: string; v: string | number; mono?: bo
 function NoteCard({ quote, attribution }: { quote: string; attribution: string }) {
   return (
     <div className="rounded-[10px] border border-[var(--card-border)] bg-surface-50 px-3.5 py-3 dark:bg-surface-900/60">
-      <p className="text-[13px] italic leading-[1.5] text-[var(--foreground)]">
+      <p className="text-caption italic leading-[1.5] text-[var(--foreground)]">
         &ldquo;{quote}&rdquo;
       </p>
-      <p className="mt-1.5 font-mono text-[10px] tracking-[0.04em] text-[var(--muted)]">
+      <p className="mt-1.5 font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
         — {attribution}
       </p>
     </div>
@@ -283,7 +280,7 @@ function CitationRow({ label, href }: { label: string; href: string | null }) {
     </span>
   );
   return (
-    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-[7px] text-[12.5px] last:border-b-0">
+    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-[7px] text-micro last:border-b-0">
       <span className="text-[var(--muted)]">{label}</span>
       {href ? (
         <a
@@ -325,13 +322,13 @@ function SheetSkeleton() {
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="px-1.5 pt-4">
-      <p className="text-[13px] text-danger-500">Couldn&apos;t load insights — {message}</p>
+      <p className="text-caption text-danger-500">Couldn&apos;t load insights — {message}</p>
     </div>
   );
 }
 
 function EmptyText({ children }: { children: React.ReactNode }) {
-  return <p className="text-[12.5px] leading-relaxed text-[var(--muted)]">{children}</p>;
+  return <p className="text-micro leading-relaxed text-[var(--muted)]">{children}</p>;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

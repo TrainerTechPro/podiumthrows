@@ -628,7 +628,7 @@ export function LiveCapture({ athletes }: Props) {
         <div className="lg:w-[40%] space-y-3">
           {/* Live angles */}
           <div className="card p-4">
-            <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-3">
+            <p className="text-nano font-bold text-muted uppercase tracking-wider mb-3">
               Live Angles
             </p>
             {!cameraReady ? (
@@ -663,9 +663,7 @@ export function LiveCapture({ athletes }: Props) {
 
           {/* Mark positions */}
           <div className="card p-4 space-y-3">
-            <p className="text-[10px] font-bold text-muted uppercase tracking-wider">
-              Mark Position
-            </p>
+            <p className="text-nano font-bold text-muted uppercase tracking-wider">Mark Position</p>
             <div className="flex flex-wrap gap-1.5">
               {POSITION_LABELS.map((label) => (
                 <button
@@ -705,7 +703,7 @@ export function LiveCapture({ athletes }: Props) {
             {/* Saved marks */}
             {marks.length > 0 && (
               <div className="space-y-1.5 pt-2 border-t border-surface-200 dark:border-surface-700">
-                <p className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                <p className="text-nano font-bold text-muted uppercase tracking-wider">
                   Marked ({marks.length})
                 </p>
                 {marks.map((m) => {
@@ -744,7 +742,7 @@ export function LiveCapture({ athletes }: Props) {
 
           {/* Tips */}
           <div className="card p-4 space-y-2">
-            <p className="text-[10px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
+            <p className="text-nano font-bold text-muted uppercase tracking-wider flex items-center gap-1.5">
               <VideoIcon size={10} strokeWidth={1.75} aria-hidden="true" />
               Tips
             </p>

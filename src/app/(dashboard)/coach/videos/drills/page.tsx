@@ -67,15 +67,23 @@ export default async function DrillVideoLibraryPage({
             aria-label="Back to Video Library"
             className="text-sm text-muted hover:text-[var(--foreground)] transition-colors inline-flex items-center gap-1"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <polyline points="15 18 9 12 15 6" />
             </svg>
             Video Library
           </Link>
         </div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          Drill Videos
-        </h1>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Drill Videos</h1>
         <p className="text-sm text-muted mt-0.5">
           {drills.length} drill{drills.length !== 1 ? "s" : ""} with video demonstrations
         </p>
@@ -119,7 +127,14 @@ export default async function DrillVideoLibraryPage({
       {drills.length === 0 ? (
         <EmptyState
           icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polygon points="23 7 16 12 23 17 23 7" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
@@ -130,15 +145,21 @@ export default async function DrillVideoLibraryPage({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {drills.map((drill) => (
-            <div
-              key={drill.id}
-              className="card overflow-hidden group"
-            >
+            <div key={drill.id} className="card overflow-hidden group">
               {/* Video thumbnail area */}
               <div className="relative aspect-video bg-surface-100 dark:bg-surface-800">
                 {/* We just show a video icon since drills store external URLs */}
                 <div className="flex items-center justify-center h-full text-surface-400">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polygon points="23 7 16 12 23 17 23 7" />
                     <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                   </svg>
@@ -153,7 +174,13 @@ export default async function DrillVideoLibraryPage({
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20"
                   >
                     <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-surface-900 ml-0.5">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="text-surface-900 ml-0.5"
+                      >
                         <polygon points="5 3 19 12 5 21" />
                       </svg>
                     </div>
@@ -167,19 +194,11 @@ export default async function DrillVideoLibraryPage({
                   {drill.name}
                 </h3>
                 {drill.description && (
-                  <p className="text-xs text-muted mt-0.5 line-clamp-2">
-                    {drill.description}
-                  </p>
+                  <p className="text-xs text-muted mt-0.5 line-clamp-2">{drill.description}</p>
                 )}
                 <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  {drill.event && (
-                    <Badge variant="primary">
-                      {formatEventType(drill.event)}
-                    </Badge>
-                  )}
-                  <Badge variant="info">
-                    {CATEGORY_LABELS[drill.category] ?? drill.category}
-                  </Badge>
+                  {drill.event && <Badge variant="primary">{formatEventType(drill.event)}</Badge>}
+                  <Badge variant="info">{CATEGORY_LABELS[drill.category] ?? drill.category}</Badge>
                   {drill.difficulty && (
                     <Badge variant={DIFFICULTY_VARIANTS[drill.difficulty] ?? "neutral"}>
                       {drill.difficulty.charAt(0).toUpperCase() + drill.difficulty.slice(1)}
@@ -188,10 +207,10 @@ export default async function DrillVideoLibraryPage({
                 </div>
                 {drill.cues.length > 0 && (
                   <div className="mt-2">
-                    <p className="text-[10px] font-medium text-surface-400 uppercase tracking-wider mb-0.5">
+                    <p className="text-nano font-medium text-surface-400 uppercase tracking-wider mb-0.5">
                       Cues
                     </p>
-                    <ul className="text-[10px] text-surface-500 space-y-0.5">
+                    <ul className="text-nano text-surface-500 space-y-0.5">
                       {drill.cues.slice(0, 3).map((cue, i) => (
                         <li key={i} className="flex items-start gap-1">
                           <span className="text-primary-500 mt-px">•</span>
@@ -199,9 +218,7 @@ export default async function DrillVideoLibraryPage({
                         </li>
                       ))}
                       {drill.cues.length > 3 && (
-                        <li className="text-surface-400">
-                          +{drill.cues.length - 3} more
-                        </li>
+                        <li className="text-surface-400">+{drill.cues.length - 3} more</li>
                       )}
                     </ul>
                   </div>

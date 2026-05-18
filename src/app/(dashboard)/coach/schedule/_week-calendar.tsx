@@ -167,7 +167,7 @@ export function WeekCalendar({
               {phase && (
                 <div
                   className={cn(
-                    "px-2.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wider",
+                    "px-2.5 pt-1.5 text-nano font-semibold uppercase tracking-wider",
                     phase === "race"
                       ? "text-red-600 dark:text-red-400"
                       : "text-amber-700 dark:text-amber-400"
@@ -185,7 +185,7 @@ export function WeekCalendar({
                       key={c.id}
                       href={`/coach/competitions?meet=${encodeURIComponent(c.meetName)}&date=${c.date}`}
                       className={cn(
-                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium",
+                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-nano font-medium",
                         "border border-red-500/20 bg-red-500/10",
                         "text-red-700 dark:text-red-300",
                         "hover:border-red-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40",
@@ -206,7 +206,7 @@ export function WeekCalendar({
                   {hiddenCompCount > 0 && (
                     <Link
                       href={`/coach/competitions?date=${day.dateStr}`}
-                      className="block text-[10px] text-muted hover:text-primary-500 px-2 py-0.5"
+                      className="block text-nano text-muted hover:text-primary-500 px-2 py-0.5"
                     >
                       + {hiddenCompCount} more
                     </Link>

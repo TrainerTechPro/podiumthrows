@@ -408,7 +408,7 @@ function LogAttemptPanel({
                     key={unit}
                     type="button"
                     onClick={() => setDistanceUnit(unit)}
-                    className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+                    className={`px-2.5 py-0.5 text-nano font-medium transition-colors ${
                       distanceUnit === unit
                         ? "bg-primary-500 text-white"
                         : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
@@ -436,7 +436,7 @@ function LogAttemptPanel({
               )}
             </div>
             {existingPR && (
-              <p className="text-[11px] text-muted mt-1">
+              <p className="text-micro text-muted mt-1">
                 Current PR:{" "}
                 <span className="font-mono font-semibold text-surface-700 dark:text-surface-300">
                   {existingPR.distance.toFixed(2)}m
@@ -673,14 +673,14 @@ function AttemptCard({
             {attempt.athlete.user.firstName} {attempt.athlete.user.lastName}
           </p>
           <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold text-white flex-shrink-0"
+            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-nano font-bold text-white flex-shrink-0"
             style={{ backgroundColor: eventColor }}
           >
             {eventLabel}
           </span>
-          <span className="text-[10px] text-muted flex-shrink-0">{attempt.implement}</span>
+          <span className="text-nano text-muted flex-shrink-0">{attempt.implement}</span>
           {attempt.isPR && (
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex-shrink-0">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-nano font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex-shrink-0">
               ★ PR
             </span>
           )}
@@ -703,7 +703,7 @@ function AttemptCard({
               href={attempt.videoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-primary-600 dark:text-primary-300 hover:text-primary-600 font-medium"
+              className="inline-flex items-center gap-1 text-micro text-primary-600 dark:text-primary-300 hover:text-primary-600 font-medium"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -726,7 +726,7 @@ function AttemptCard({
           <CommentThread targetField="practiceAttemptId" targetId={attempt.id} compact />
         )}
         <div className="flex items-center gap-1.5">
-          <p className="text-[10px] text-muted">
+          <p className="text-nano text-muted">
             #{attempt.attemptNumber} ·{" "}
             {attempt._pendingId ? "just now" : formatTime(attempt.createdAt)}
           </p>
@@ -740,13 +740,13 @@ function AttemptCard({
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="text-[11px] px-2 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                className="text-micro px-2 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
               >
                 {deleting ? "…" : "Yes"}
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
+                className="text-micro px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 hover:bg-[var(--muted-bg)]"
               >
                 No
               </button>
@@ -1096,7 +1096,7 @@ export default function LiveSessionPage() {
                     </p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white"
+                        className="text-nano font-bold px-1.5 py-0.5 rounded-full text-white"
                         style={{ backgroundColor: eventColor }}
                       >
                         {eventLabel}
@@ -1105,7 +1105,7 @@ export default function LiveSessionPage() {
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <p className="text-lg font-bold text-[var(--foreground)]">{count}</p>
-                    <p className="text-[10px] text-muted">{count === 1 ? "attempt" : "attempts"}</p>
+                    <p className="text-nano text-muted">{count === 1 ? "attempt" : "attempts"}</p>
                   </div>
                   {!isClosed && (
                     <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center">

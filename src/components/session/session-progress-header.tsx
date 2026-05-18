@@ -182,7 +182,7 @@ function IntraEvalBanner({
             </svg>
           </button>
         </div>
-        <p className="text-[11px] text-emerald-700/80 dark:text-emerald-300/70 mt-0.5 leading-relaxed">
+        <p className="text-micro text-emerald-700/80 dark:text-emerald-300/70 mt-0.5 leading-relaxed">
           {intraEval.suggestion.reasoning}
         </p>
       </div>
@@ -226,7 +226,7 @@ function IntraEvalBanner({
         <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
           Readiness check — adjustment suggested
         </p>
-        <p className="text-[11px] text-amber-700/80 dark:text-amber-300/70 mt-0.5 leading-relaxed">
+        <p className="text-micro text-amber-700/80 dark:text-amber-300/70 mt-0.5 leading-relaxed">
           {suggestion.reasoning}
         </p>
         <div className="flex items-center gap-2 mt-2">
@@ -234,14 +234,14 @@ function IntraEvalBanner({
             type="button"
             onClick={handleApply}
             disabled={applying}
-            className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-colors"
+            className="text-micro font-medium px-2.5 py-1 rounded-md bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 transition-colors"
           >
             {applying ? "Applying..." : "Apply"}
           </button>
           <button
             type="button"
             onClick={() => dispatch({ type: "INTRA_EVAL_DISMISS" })}
-            className="text-[11px] font-medium px-2.5 py-1 rounded-md text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+            className="text-micro font-medium px-2.5 py-1 rounded-md text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
           >
             Dismiss
           </button>

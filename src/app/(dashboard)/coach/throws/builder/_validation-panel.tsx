@@ -102,7 +102,7 @@ function PanelContent({
               >
                 {/* Status badge */}
                 <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                  className={`text-nano font-bold px-1.5 py-0.5 rounded shrink-0 ${
                     STATUS_STYLE[rule.status]
                   }`}
                 >
@@ -131,7 +131,7 @@ function PanelContent({
                       <p className="text-xs text-muted leading-relaxed">{issue.message}</p>
                       {issue.blockIndices && issue.blockIndices.length > 0 && (
                         <div className="flex items-center gap-1.5 mt-1">
-                          <span className="text-[10px] text-muted">Blocks:</span>
+                          <span className="text-nano text-muted">Blocks:</span>
                           {issue.blockIndices.map((idx) => (
                             <button
                               key={idx}
@@ -140,7 +140,7 @@ function PanelContent({
                                 e.stopPropagation();
                                 scrollToBlock(idx);
                               }}
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-primary-500 hover:bg-primary-500/10 transition-colors"
+                              className="text-nano font-bold px-1.5 py-0.5 rounded bg-surface-100 dark:bg-surface-800 text-primary-500 hover:bg-primary-500/10 transition-colors"
                             >
                               #{idx + 1}
                             </button>

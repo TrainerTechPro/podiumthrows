@@ -13,18 +13,18 @@ export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const sizes: Record<AvatarSize, { container: string; text: string; status: string }> = {
-  xs: { container: "w-6 h-6",   text: "text-[9px]",  status: "w-1.5 h-1.5 ring-1" },
-  sm: { container: "w-8 h-8",   text: "text-xs",     status: "w-2 h-2 ring-1" },
-  md: { container: "w-10 h-10", text: "text-sm",     status: "w-2.5 h-2.5 ring-[1.5px]" },
-  lg: { container: "w-14 h-14", text: "text-base",   status: "w-3 h-3 ring-2" },
-  xl: { container: "w-20 h-20", text: "text-xl",     status: "w-3.5 h-3.5 ring-2" },
+  xs: { container: "w-6 h-6", text: "text-nano", status: "w-1.5 h-1.5 ring-1" },
+  sm: { container: "w-8 h-8", text: "text-xs", status: "w-2 h-2 ring-1" },
+  md: { container: "w-10 h-10", text: "text-sm", status: "w-2.5 h-2.5 ring-[1.5px]" },
+  lg: { container: "w-14 h-14", text: "text-base", status: "w-3 h-3 ring-2" },
+  xl: { container: "w-20 h-20", text: "text-xl", status: "w-3.5 h-3.5 ring-2" },
 };
 
 const statusColors: Record<AvatarStatus, string> = {
-  online:  "bg-success-500",
+  online: "bg-success-500",
   offline: "bg-surface-400",
-  away:    "bg-warning-500",
-  none:    "hidden",
+  away: "bg-warning-500",
+  none: "hidden",
 };
 
 /** Deterministic color based on name — amber/gold family stays primary */
@@ -42,7 +42,14 @@ function getAvatarColor(name: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
-export function Avatar({ name, src, size = "md", status = "none", className, ...props }: AvatarProps) {
+export function Avatar({
+  name,
+  src,
+  size = "md",
+  status = "none",
+  className,
+  ...props
+}: AvatarProps) {
   const { container, text, status: statusSize } = sizes[size];
   const initials = getInitials(name);
   const colorClasses = getAvatarColor(name);

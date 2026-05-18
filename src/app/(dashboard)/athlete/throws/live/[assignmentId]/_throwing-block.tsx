@@ -235,7 +235,7 @@ export function ThrowingBlockView({
           let label = String(num);
 
           if (isDone) {
-            bg = "#00FF88";
+            bg = "var(--palette-success-vivid)";
             fg = "#000";
             label = "\u2713";
           } else if (isSkipped) {
@@ -454,7 +454,7 @@ export function ThrowingBlockView({
             <span
               key={t.throwNumber}
               className="text-xs tabular-nums"
-              style={{ color: t.isPersonalBest ? "#FFC800" : `${accent}88` }}
+              style={{ color: t.isPersonalBest ? "var(--color-brand)" : `${accent}88` }}
             >
               #{t.throwNumber} {t.distance !== null ? `${t.distance.toFixed(2)}m` : "\u2014"}
               {t.isPersonalBest && (
@@ -479,12 +479,12 @@ export function ThrowingBlockView({
             size={20}
             strokeWidth={1.75}
             className="mx-auto mb-1"
-            style={{ color: "#00FF88" }}
+            style={{ color: "var(--palette-success-vivid)" }}
             aria-hidden="true"
           />
           <p
             className="text-xs font-bold uppercase"
-            style={{ letterSpacing: "3px", color: "#00FF88" }}
+            style={{ letterSpacing: "3px", color: "var(--palette-success-vivid)" }}
           >
             Block Complete
           </p>

@@ -418,14 +418,14 @@ export default function AutoregulationSettingsPage() {
                         {athlete.firstName} {athlete.lastName}
                       </span>
                       {athlete.mode === null && (
-                        <span className="text-[11px] text-muted italic">Using coach default</span>
+                        <span className="text-micro text-muted italic">Using coach default</span>
                       )}
                       <span className="flex-1" />
                       {athlete.mode !== null && (
                         <button
                           type="button"
                           onClick={() => resetAthleteToDefault(athlete.athleteId)}
-                          className="text-[11px] text-muted hover:text-[var(--foreground)] transition-colors"
+                          className="text-micro text-muted hover:text-[var(--foreground)] transition-colors"
                         >
                           Use coach default
                         </button>
@@ -454,7 +454,7 @@ export default function AutoregulationSettingsPage() {
                           return next;
                         });
                       }}
-                      className="text-[11px] text-muted hover:text-[var(--foreground)] transition-colors flex items-center gap-1"
+                      className="text-micro text-muted hover:text-[var(--foreground)] transition-colors flex items-center gap-1"
                     >
                       <svg
                         className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
@@ -534,11 +534,11 @@ function ModeSelector({
                 : "border-[var(--card-border)] hover:border-surface-400 dark:hover:border-surface-500 text-muted"
             }`}
           >
-            <span className={`block font-medium ${compact ? "text-[11px]" : "text-xs"}`}>
+            <span className={`block font-medium ${compact ? "text-micro" : "text-xs"}`}>
               {opt.label}
             </span>
             {!compact && (
-              <span className="block text-[11px] text-muted mt-0.5 leading-snug">
+              <span className="block text-micro text-muted mt-0.5 leading-snug">
                 {opt.description}
               </span>
             )}
@@ -605,7 +605,7 @@ function SaveRow({
       </button>
 
       {isDirty && !saving && status === null && (
-        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+        <span className="text-micro text-amber-600 dark:text-amber-400 font-medium">
           Unsaved changes
         </span>
       )}

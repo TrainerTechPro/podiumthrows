@@ -34,9 +34,7 @@ function riskLabel(risk: "low" | "moderate" | "high" | null): string {
 
 function formatPhase(phase: string | null): string {
   if (!phase) return "—";
-  return phase
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return phase.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function LoadOverview({ entries, depth }: LoadOverviewProps) {
@@ -48,10 +46,10 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
     <section className="space-y-3">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
-          Training Load
-        </h3>
-        <p className="text-[10px] text-surface-400">7-day overview · ACWR 0.8–1.3 = optimal, &gt;1.3 = risk</p>
+        <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Training Load</h3>
+        <p className="text-nano text-surface-400">
+          7-day overview · ACWR 0.8–1.3 = optimal, &gt;1.3 = risk
+        </p>
       </div>
 
       {/* Desktop — table */}
@@ -59,34 +57,34 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-[var(--card-border)]">
-              <th className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-nano font-semibold text-surface-400 uppercase tracking-wider">
                 Athlete
               </th>
-              <th className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
+              <th className="px-4 py-2.5 text-nano font-semibold text-surface-400 uppercase tracking-wider text-right">
                 Throws
               </th>
               <th
-                className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right"
+                className="px-4 py-2.5 text-nano font-semibold text-surface-400 uppercase tracking-wider text-right"
                 title="Acute:Chronic Workload Ratio — optimal range 0.8–1.3, above 1.3 = elevated injury risk"
               >
                 ACWR
               </th>
-              <th className="px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
+              <th className="px-4 py-2.5 text-nano font-semibold text-surface-400 uppercase tracking-wider text-right">
                 Risk
               </th>
               {isAdvanced && (
                 <>
-                  <th className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right">
+                  <th className="hidden md:table-cell px-4 py-2.5 text-nano font-semibold text-surface-400 uppercase tracking-wider text-right">
                     Phase
                   </th>
                   <th
-                    className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right"
+                    className="hidden md:table-cell px-4 py-2.5 text-nano font-semibold text-surface-400 uppercase tracking-wider text-right"
                     title="Heavy implement deficit — gap between heavy and competition implement performance (>15-20% = separate adaptations)"
                   >
                     Deficit
                   </th>
                   <th
-                    className="hidden md:table-cell px-4 py-2.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider text-right"
+                    className="hidden md:table-cell px-4 py-2.5 text-nano font-semibold text-surface-400 uppercase tracking-wider text-right"
                     title="Short-term fatigue — recent training stress relative to fitness"
                   >
                     STF
@@ -97,20 +95,13 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
           </thead>
           <tbody className="divide-y divide-[var(--card-border)]">
             {entries.map((entry) => (
-              <tr
-                key={entry.athleteId}
-                className="card-interactive"
-              >
+              <tr key={entry.athleteId} className="card-interactive">
                 <td className="px-4 py-2.5">
                   <Link
                     href={`/coach/athletes/${entry.athleteId}`}
                     className="flex items-center gap-2.5"
                   >
-                    <Avatar
-                      name={entry.athleteName}
-                      src={entry.avatarUrl}
-                      size="xs"
-                    />
+                    <Avatar name={entry.athleteName} src={entry.avatarUrl} size="xs" />
                     <span className="text-sm font-medium text-[var(--foreground)] truncate max-w-[10rem]">
                       {entry.athleteName}
                     </span>
@@ -122,12 +113,7 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
                   </span>
                 </td>
                 <td className="px-4 py-2.5 text-right">
-                  <span
-                    className={cn(
-                      "text-sm font-medium tabular-nums",
-                      acwrColor(entry.acwr)
-                    )}
-                  >
+                  <span className={cn("text-sm font-medium tabular-nums", acwrColor(entry.acwr))}>
                     {entry.acwr != null ? entry.acwr.toFixed(2) : "—"}
                   </span>
                 </td>
@@ -150,9 +136,7 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
                     </td>
                     <td className="hidden md:table-cell px-4 py-2.5 text-right">
                       <span className="text-xs tabular-nums text-muted">
-                        {entry.sessionsToForm != null
-                          ? entry.sessionsToForm
-                          : "—"}
+                        {entry.sessionsToForm != null ? entry.sessionsToForm : "—"}
                       </span>
                     </td>
                   </>
@@ -173,24 +157,20 @@ export function LoadOverview({ entries, depth }: LoadOverviewProps) {
               "flex items-center gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3 card-interactive"
             )}
           >
-            <Avatar
-              name={entry.athleteName}
-              src={entry.avatarUrl}
-              size="sm"
-            />
+            <Avatar name={entry.athleteName} src={entry.avatarUrl} size="sm" />
 
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-[var(--foreground)] truncate">
                 {entry.athleteName}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5 text-[10px] font-medium text-[var(--foreground)]">
+                <span className="inline-flex items-center rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5 text-nano font-medium text-[var(--foreground)]">
                   {entry.throwsThisWeek} throws
                 </span>
                 {entry.acwr != null && (
                   <span
                     className={cn(
-                      "inline-flex items-center rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5 text-[10px] font-medium tabular-nums",
+                      "inline-flex items-center rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5 text-nano font-medium tabular-nums",
                       acwrColor(entry.acwr)
                     )}
                   >

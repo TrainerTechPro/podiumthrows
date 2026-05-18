@@ -787,7 +787,7 @@ function UnitToggle({
           key={unit}
           type="button"
           onClick={() => onChange(unit)}
-          className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+          className={`px-2.5 py-0.5 text-nano font-medium transition-colors ${
             value === unit
               ? "bg-primary-500 text-white"
               : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
@@ -1793,10 +1793,10 @@ function SandboxPreviewCard({
               Phase {sequencingViolation.phaseIndex + 1}, Week {sequencingViolation.weekIndex + 1},
               Session {sequencingViolation.sessionIndex + 1}: {sequencingViolation.message}
             </p>
-            <p className="mt-1 text-[11px] text-amber-800 dark:text-amber-300 font-mono">
+            <p className="mt-1 text-micro text-amber-800 dark:text-amber-300 font-mono">
               {sequencingViolation.sequence}
             </p>
-            <p className="mt-2 text-[11px] text-amber-800 dark:text-amber-300">
+            <p className="mt-2 text-micro text-amber-800 dark:text-amber-300">
               Vol IV p.114–117: ascending implement order causes 2–4m performance decrease in
               natural athletes. Implement weights must descend (heavy → competition weight).
             </p>
@@ -1828,25 +1828,25 @@ function SandboxPreviewCard({
       <div className="grid grid-cols-4 gap-2">
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
           <p className="text-xl font-bold font-heading text-primary-500">{generated.totalWeeks}</p>
-          <p className="text-[10px] text-surface-700 dark:text-surface-300">Weeks</p>
+          <p className="text-nano text-surface-700 dark:text-surface-300">Weeks</p>
         </div>
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
           <p className="text-xl font-bold font-heading text-primary-500">
             {generated.summary.totalPhases}
           </p>
-          <p className="text-[10px] text-surface-700 dark:text-surface-300">Phases</p>
+          <p className="text-nano text-surface-700 dark:text-surface-300">Phases</p>
         </div>
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
           <p className="text-xl font-bold font-heading text-primary-500">
             {generated.summary.totalSessions}
           </p>
-          <p className="text-[10px] text-surface-700 dark:text-surface-300">Sessions</p>
+          <p className="text-nano text-surface-700 dark:text-surface-300">Sessions</p>
         </div>
         <div className="text-center p-3 bg-[var(--muted-bg)] rounded-xl">
           <p className="text-xl font-bold font-heading text-primary-500">
             {generated.summary.estimatedTotalThrows.toLocaleString()}
           </p>
-          <p className="text-[10px] text-surface-700 dark:text-surface-300">Total Throws</p>
+          <p className="text-nano text-surface-700 dark:text-surface-300">Total Throws</p>
         </div>
       </div>
 
@@ -1899,10 +1899,10 @@ function SandboxPreviewCard({
                   <div className="px-3 pb-3 space-y-3 border-t border-[var(--card-border)]">
                     {/* Category Ratios (CE/SD/SP/GP) */}
                     <div className="pt-3">
-                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                      <p className="text-micro font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                         Exercise Categories
                       </p>
-                      <div className="flex rounded-lg overflow-hidden h-6 text-[10px] font-semibold">
+                      <div className="flex rounded-lg overflow-hidden h-6 text-nano font-semibold">
                         {phase.cePercent > 0 && (
                           <div
                             className="bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 flex items-center justify-center"
@@ -1940,10 +1940,10 @@ function SandboxPreviewCard({
 
                     {/* Implement Distribution */}
                     <div>
-                      <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                      <p className="text-micro font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                         Implement Distribution
                       </p>
-                      <div className="flex rounded-lg overflow-hidden h-6 text-[10px] font-semibold">
+                      <div className="flex rounded-lg overflow-hidden h-6 text-nano font-semibold">
                         {phase.heavyPercent > 0 && (
                           <div
                             className="bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100 flex items-center justify-center"
@@ -1974,7 +1974,7 @@ function SandboxPreviewCard({
                     {/* Exercise Complex */}
                     {phase.exerciseComplex?.length > 0 && (
                       <div>
-                        <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                        <p className="text-micro font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                           Exercise Complex
                         </p>
                         <div className="space-y-1">
@@ -1989,7 +1989,7 @@ function SandboxPreviewCard({
                                 className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs"
                               >
                                 <span
-                                  className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}
+                                  className={`inline-block px-1.5 py-0.5 rounded text-nano font-semibold ${cls.bg} ${cls.text}`}
                                 >
                                   {ex.classification}
                                 </span>
@@ -2038,10 +2038,10 @@ function SandboxPreviewCard({
                     <span className="text-sm font-semibold text-[var(--foreground)]">
                       {DAY_SHORT[session.dayOfWeek] || `Day ${session.dayOfWeek}`}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
+                    <span className="px-1.5 py-0.5 rounded text-nano font-bold bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
                       {session.dayType}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
+                    <span className="px-1.5 py-0.5 rounded text-nano font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
                       {session.sessionType.replace(/_/g, " ")}
                     </span>
                     <span className="flex-1 text-xs text-surface-700 dark:text-surface-300 truncate text-right">
@@ -2064,7 +2064,7 @@ function SandboxPreviewCard({
 
                   {isExpanded && (
                     <div className="px-3 pb-3 space-y-3 border-t border-[var(--card-border)]">
-                      <p className="text-[11px] text-surface-700 dark:text-surface-300 pt-2">
+                      <p className="text-micro text-surface-700 dark:text-surface-300 pt-2">
                         ~{session.totalThrowsTarget} throws &middot; ~{session.estimatedDuration}{" "}
                         min
                       </p>
@@ -2072,7 +2072,7 @@ function SandboxPreviewCard({
                       {/* Throws Block */}
                       {session.throws?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          <p className="text-micro font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                             Throws
                           </p>
                           <div className="space-y-1">
@@ -2090,7 +2090,7 @@ function SandboxPreviewCard({
                                     {t.implement}
                                   </span>
                                   <span
-                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}
+                                    className={`px-1.5 py-0.5 rounded text-nano font-semibold ${cls.bg} ${cls.text}`}
                                   >
                                     {t.category}
                                   </span>
@@ -2115,7 +2115,7 @@ function SandboxPreviewCard({
                       {/* Strength Block */}
                       {session.strength?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          <p className="text-micro font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                             Strength
                           </p>
                           <div className="space-y-1">
@@ -2130,7 +2130,7 @@ function SandboxPreviewCard({
                                   className="flex items-center gap-2 py-1.5 px-2 rounded-lg bg-[var(--muted-bg)] text-xs"
                                 >
                                   <span
-                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls.bg} ${cls.text}`}
+                                    className={`px-1.5 py-0.5 rounded text-nano font-semibold ${cls.bg} ${cls.text}`}
                                   >
                                     {s.classification}
                                   </span>
@@ -2160,14 +2160,14 @@ function SandboxPreviewCard({
                       {/* Warmup */}
                       {session.warmup?.length > 0 && (
                         <div>
-                          <p className="text-[11px] font-medium text-surface-700 dark:text-surface-300 mb-1.5">
+                          <p className="text-micro font-medium text-surface-700 dark:text-surface-300 mb-1.5">
                             Warmup
                           </p>
                           <div className="flex flex-wrap gap-1.5">
                             {session.warmup.map((w: WarmupPrescription, wi: number) => (
                               <span
                                 key={wi}
-                                className="text-[11px] px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
+                                className="text-micro px-2 py-1 rounded-lg bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
                               >
                                 {w.name}
                                 {w.duration ? ` (${w.duration}min)` : ""}
@@ -2227,7 +2227,7 @@ function ImplementOrderCheck({
 
   return (
     <div
-      className={`mt-1.5 flex items-center gap-1.5 text-[11px] ${isDescending ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+      className={`mt-1.5 flex items-center gap-1.5 text-micro ${isDescending ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
     >
       {isDescending ? (
         <Check className="w-3.5 h-3.5" strokeWidth={2.5} aria-hidden="true" />

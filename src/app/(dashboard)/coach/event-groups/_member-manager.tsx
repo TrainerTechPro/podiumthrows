@@ -220,7 +220,7 @@ export function MemberManager({ group, onUpdated }: MemberManagerProps) {
                   </span>
                   <div className="flex flex-wrap gap-1 mt-0.5">
                     {athlete.events.map((event) => (
-                      <Badge key={event} variant="neutral" className="text-[10px] px-1.5 py-0">
+                      <Badge key={event} variant="neutral" className="text-nano px-1.5 py-0">
                         {EVENT_LABELS[event] ?? event}
                       </Badge>
                     ))}

@@ -10,13 +10,7 @@ function setCookie(name: string, value: string) {
   document.cookie = `${name}=${value};path=/;max-age=${60 * 60 * 24 * 365}`;
 }
 
-export function ModeSelector({
-  mode,
-  depth,
-}: {
-  mode: DashboardMode;
-  depth: DashboardDepth;
-}) {
+export function ModeSelector({ mode, depth }: { mode: DashboardMode; depth: DashboardDepth }) {
   const router = useRouter();
 
   function setMode(m: DashboardMode) {
@@ -57,7 +51,7 @@ export function ModeSelector({
       </div>
       <button
         onClick={() => setDepth(depth === "standard" ? "advanced" : "standard")}
-        className="text-[10px] font-medium text-surface-400 hover:text-[var(--foreground)] transition-colors"
+        className="text-nano font-medium text-surface-400 hover:text-[var(--foreground)] transition-colors"
       >
         {depth === "standard" ? "Show Advanced" : "Hide Advanced"}
       </button>

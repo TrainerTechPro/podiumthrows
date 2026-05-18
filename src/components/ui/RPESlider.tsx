@@ -5,7 +5,10 @@ import { cn } from "@/lib/utils";
 import { getRpeHex } from "@/lib/design-tokens";
 import { NumberFlow } from "./NumberFlow";
 
-export interface RPESliderProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "min" | "max" | "value" | "onChange"> {
+export interface RPESliderProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "type" | "min" | "max" | "value" | "onChange"
+> {
   value: number;
   onChange: (value: number) => void;
   showLabels?: boolean;
@@ -14,15 +17,15 @@ export interface RPESliderProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 }
 
 const RPE_LABELS: Record<number, { short: string; desc: string }> = {
-  1:  { short: "1",  desc: "Very easy" },
-  2:  { short: "2",  desc: "Easy" },
-  3:  { short: "3",  desc: "Moderate" },
-  4:  { short: "4",  desc: "Somewhat hard" },
-  5:  { short: "5",  desc: "Hard" },
-  6:  { short: "6",  desc: "Hard+" },
-  7:  { short: "7",  desc: "Very hard" },
-  8:  { short: "8",  desc: "Very hard+" },
-  9:  { short: "9",  desc: "Near maximal" },
+  1: { short: "1", desc: "Very easy" },
+  2: { short: "2", desc: "Easy" },
+  3: { short: "3", desc: "Moderate" },
+  4: { short: "4", desc: "Somewhat hard" },
+  5: { short: "5", desc: "Hard" },
+  6: { short: "6", desc: "Hard+" },
+  7: { short: "7", desc: "Very hard" },
+  8: { short: "8", desc: "Very hard+" },
+  9: { short: "9", desc: "Near maximal" },
   10: { short: "10", desc: "Maximal" },
 };
 
@@ -62,10 +65,7 @@ export function RPESlider({
           <span className="text-base font-medium text-muted leading-none mb-0.5">/ 10</span>
         </div>
         {showDescription && (
-          <span
-            className="text-sm font-medium transition-colors duration-200"
-            style={{ color }}
-          >
+          <span className="text-sm font-medium transition-colors duration-200" style={{ color }}>
             {label.desc}
           </span>
         )}
@@ -103,11 +103,9 @@ export function RPESlider({
               onClick={() => !disabled && onChange(n)}
               disabled={disabled}
               className={cn(
-                "text-[10px] tabular-nums transition-all duration-150 leading-none",
+                "text-nano tabular-nums transition-all duration-150 leading-none",
                 "hover:font-semibold",
-                n === value
-                  ? "font-bold"
-                  : "font-normal text-muted"
+                n === value ? "font-bold" : "font-normal text-muted"
               )}
               style={{ color: n === value ? color : undefined }}
               aria-label={`Set RPE to ${n}`}

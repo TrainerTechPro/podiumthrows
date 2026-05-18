@@ -479,7 +479,7 @@ export function VideoEditor({ video, athletes }: Props) {
 
             {/* Video info */}
             <div className="card p-3 space-y-2">
-              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">
+              <h3 className="text-nano font-semibold uppercase tracking-wider text-surface-400 dark:text-surface-500">
                 Video Info
               </h3>
               <div className="space-y-1.5 text-xs">
@@ -709,7 +709,7 @@ function CompareVideoPicker({ videos, loading, onSelect, dark = false }: Compare
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{v.title ?? "Untitled"}</p>
                     {v.durationSec && (
-                      <p className="text-[10px] text-surface-500 tabular-nums font-mono">
+                      <p className="text-nano text-surface-500 tabular-nums font-mono">
                         {formatTimestamp(v.durationSec)}
                       </p>
                     )}
@@ -717,7 +717,7 @@ function CompareVideoPicker({ videos, loading, onSelect, dark = false }: Compare
                 </button>
               ))}
               {search && filtered?.length === 0 && (
-                <p className="text-[10px] text-surface-500 text-center py-2">No results</p>
+                <p className="text-nano text-surface-500 text-center py-2">No results</p>
               )}
             </div>
           </div>

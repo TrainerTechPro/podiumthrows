@@ -32,22 +32,26 @@ const ATHLETE_TYPES: { value: AthleteType; label: string; description: string }[
   {
     value: "EXPLOSIVE",
     label: "Explosive",
-    description: "Best transfer from competition & close-weight implements. Responds to specific, high-velocity exercises.",
+    description:
+      "Best transfer from competition & close-weight implements. Responds to specific, high-velocity exercises.",
   },
   {
     value: "SPEED_STRENGTH",
     label: "Speed-Strength",
-    description: "Strong transfer from SDE exercises. Benefits from speed-focused training with moderate loads.",
+    description:
+      "Strong transfer from SDE exercises. Benefits from speed-focused training with moderate loads.",
   },
   {
     value: "STRENGTH_SPEED",
     label: "Strength-Speed",
-    description: "Strong transfer from SPE exercises. Benefits from strength-focused training with sub-maximal loads.",
+    description:
+      "Strong transfer from SPE exercises. Benefits from strength-focused training with sub-maximal loads.",
   },
   {
     value: "STRENGTH",
     label: "Strength",
-    description: "Broad transfer from GPE and strength work. Benefits from general strength development.",
+    description:
+      "Broad transfer from GPE and strength work. Benefits from general strength development.",
   },
 ];
 
@@ -71,12 +75,21 @@ function StepIndicator({ current }: { current: number }) {
               i < current
                 ? "bg-primary-500 text-white"
                 : i === current
-                ? "bg-primary-500 text-white ring-4 ring-primary-500/20"
-                : "bg-surface-200 dark:bg-surface-700 text-muted",
+                  ? "bg-primary-500 text-white ring-4 ring-primary-500/20"
+                  : "bg-surface-200 dark:bg-surface-700 text-muted",
             ].join(" ")}
           >
             {i < current ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             ) : (
@@ -197,7 +210,10 @@ export function AssessmentWizard({
     setError(null);
     startTransition(async () => {
       try {
-        const results: Record<string, { exerciseName: string; category: string; correlation: number }> = {};
+        const results: Record<
+          string,
+          { exerciseName: string; category: string; correlation: number }
+        > = {};
         for (const c of correlations) {
           results[c.exerciseId] = {
             exerciseName: c.exerciseName,
@@ -254,9 +270,7 @@ export function AssessmentWizard({
       <StepIndicator current={currentStepIdx} />
 
       {error && (
-        <div className="p-3 mb-4 rounded-lg bg-danger-500/10 text-danger-500 text-sm">
-          {error}
-        </div>
+        <div className="p-3 mb-4 rounded-lg bg-danger-500/10 text-danger-500 text-sm">{error}</div>
       )}
 
       {/* Step 1: Select Exercises */}
@@ -267,7 +281,8 @@ export function AssessmentWizard({
               Select Test Exercises
             </h2>
             <p className="text-sm text-muted mt-1">
-              Choose 6-10 exercises across categories to assess transfer correlations for {athleteName}.
+              Choose 6-10 exercises across categories to assess transfer correlations for{" "}
+              {athleteName}.
             </p>
           </div>
 
@@ -301,7 +316,16 @@ export function AssessmentWizard({
                           ].join(" ")}
                         >
                           {checked && (
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg
+                              width="10"
+                              height="10"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="white"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
                           )}
@@ -348,16 +372,13 @@ export function AssessmentWizard({
 
           <div className="space-y-3">
             {correlations.map((entry, i) => (
-              <div
-                key={entry.exerciseId}
-                className="card p-4"
-              >
+              <div key={entry.exerciseId} className="card p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <span className="text-sm font-medium text-[var(--foreground)]">
                       {entry.exerciseName}
                     </span>
-                    <Badge variant="neutral" className="ml-2 text-[10px]">
+                    <Badge variant="neutral" className="ml-2 text-nano">
                       {entry.category}
                     </Badge>
                   </div>
@@ -378,7 +399,7 @@ export function AssessmentWizard({
                   }}
                   className="w-full accent-primary-500"
                 />
-                <div className="flex justify-between text-[10px] text-muted mt-1">
+                <div className="flex justify-between text-nano text-muted mt-1">
                   <span>No Transfer</span>
                   <span>Strong Transfer</span>
                 </div>
@@ -394,11 +415,7 @@ export function AssessmentWizard({
             >
               Back
             </button>
-            <button
-              type="button"
-              onClick={goToDetermine}
-              className="btn btn-primary text-sm"
-            >
+            <button type="button" onClick={goToDetermine} className="btn btn-primary text-sm">
               Next: Determine Type
             </button>
           </div>
@@ -436,11 +453,25 @@ export function AssessmentWizard({
                 ].join(" ")}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant={TYPE_COLORS[type.value] as "warning" | "primary" | "success" | "danger"}>
+                  <Badge
+                    variant={
+                      TYPE_COLORS[type.value] as "warning" | "primary" | "success" | "danger"
+                    }
+                  >
                     {type.label}
                   </Badge>
                   {selectedType === type.value && (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-500">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-primary-500"
+                    >
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}
@@ -491,16 +522,16 @@ export function AssessmentWizard({
             <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
               Review & Save
             </h2>
-            <p className="text-sm text-muted mt-1">
-              Confirm the assessment for {athleteName}.
-            </p>
+            <p className="text-sm text-muted mt-1">Confirm the assessment for {athleteName}.</p>
           </div>
 
           <div className="card p-4 space-y-4">
             {/* Type */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted">Athlete Type</span>
-              <Badge variant={TYPE_COLORS[selectedType] as "warning" | "primary" | "success" | "danger"}>
+              <Badge
+                variant={TYPE_COLORS[selectedType] as "warning" | "primary" | "success" | "danger"}
+              >
                 {selectedType.replace(/_/g, " ")}
               </Badge>
             </div>
@@ -518,8 +549,8 @@ export function AssessmentWizard({
                         c.score >= 0.7
                           ? "text-green-500"
                           : c.score >= 0.4
-                          ? "text-amber-500"
-                          : "text-red-500",
+                            ? "text-amber-500"
+                            : "text-red-500",
                       ].join(" ")}
                     >
                       {c.score.toFixed(2)}

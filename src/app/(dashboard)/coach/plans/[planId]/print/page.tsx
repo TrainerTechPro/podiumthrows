@@ -165,7 +165,7 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
                     </span>
                     {b.name}
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted print:text-gray-600">
+                  <span className="text-nano uppercase tracking-wider text-muted print:text-gray-600">
                     {b.blockType}
                     {b.restSeconds && b.restSeconds > 0 ? ` · Rest ${b.restSeconds}s` : ""}
                   </span>
@@ -249,7 +249,7 @@ export default async function PrintPlanPage({ params }: { params: Promise<{ plan
                     {day.athletes.map((a, i) => (
                       <li key={i} className="flex items-baseline justify-between gap-3">
                         <span>{a.name}</span>
-                        <span className="text-muted print:text-gray-600 text-[10px] uppercase tracking-wider">
+                        <span className="text-muted print:text-gray-600 text-nano uppercase tracking-wider">
                           {STATUS_LABEL[a.status] ?? a.status}
                         </span>
                       </li>

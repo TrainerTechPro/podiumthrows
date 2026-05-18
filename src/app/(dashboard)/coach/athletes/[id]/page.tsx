@@ -208,7 +208,7 @@ function DecisionHero({
             <p className={cn("text-3xl font-bold font-heading tabular-nums", readinessColor)}>
               {readinessScore !== null ? readinessScore.toFixed(1) : "—"}
             </p>
-            <p className="text-[11px] text-muted mt-0.5">Readiness</p>
+            <p className="text-micro text-muted mt-0.5">Readiness</p>
           </div>
 
           {/* ACWR */}
@@ -216,7 +216,7 @@ function DecisionHero({
             <p className={cn("text-3xl font-bold font-heading tabular-nums", acwrColor)}>
               {acwrRatio !== null ? acwrRatio.toFixed(2) : "—"}
             </p>
-            <p className="text-[11px] text-muted mt-0.5">{acwrLabel}</p>
+            <p className="text-micro text-muted mt-0.5">{acwrLabel}</p>
           </div>
 
           {/* Injury */}
@@ -239,7 +239,7 @@ function DecisionHero({
                 {isInjured ? "Injured" : "Healthy"}
               </p>
             </div>
-            <p className="text-[11px] text-muted mt-0.5">
+            <p className="text-micro text-muted mt-0.5">
               {isInjured ? "Active injury" : "No injuries"}
             </p>
           </div>
@@ -303,7 +303,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
               <p className={cn("text-3xl font-bold tabular-nums font-heading", rateColor)}>
                 {stats.rate.toFixed(0)}%
               </p>
-              <p className="text-[11px] text-muted mt-0.5">Attendance rate</p>
+              <p className="text-micro text-muted mt-0.5">Attendance rate</p>
             </div>
 
             {stats.currentStreak > 0 && (
@@ -318,7 +318,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
                   <p className="text-xl font-bold tabular-nums font-heading text-[var(--foreground)]">
                     {stats.currentStreak}
                   </p>
-                  <p className="text-[11px] text-muted">practice streak</p>
+                  <p className="text-micro text-muted">practice streak</p>
                 </div>
               </div>
             )}
@@ -332,7 +332,7 @@ function AttendanceSection({ stats }: { stats: AttendanceStats }) {
                 className="rounded-xl bg-surface-50 dark:bg-surface-800/50 px-3 py-2.5 text-center"
               >
                 <p className={cn("text-lg font-bold tabular-nums font-heading", color)}>{value}</p>
-                <p className="text-[11px] text-muted mt-0.5">{label}</p>
+                <p className="text-micro text-muted mt-0.5">{label}</p>
               </div>
             ))}
           </div>
@@ -725,7 +725,7 @@ function TrainingTab({
                         {a.selfFeeling && (
                           <span
                             className={cn(
-                              "text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize",
+                              "text-nano font-semibold px-1.5 py-0.5 rounded capitalize",
                               feelingClass
                             )}
                           >
@@ -894,7 +894,7 @@ function ThrowsTab({
               <p className="text-xl font-bold font-heading text-[var(--foreground)] tabular-nums">
                 {best.toFixed(2)}m
               </p>
-              <p className="text-[11px] text-muted">
+              <p className="text-micro text-muted">
                 Best · {count} {count === 1 ? "throw" : "throws"}
               </p>
             </div>
@@ -1181,7 +1181,7 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
                           <span
                             key={`${area.slug}-${area.side ?? "center"}`}
                             className={cn(
-                              "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+                              "text-nano font-medium px-2 py-0.5 rounded-full border",
                               // Severity 3 = danger / 2 = warning / 1 = info
                               // Yellow doesn't exist as a semantic level — info
                               // is the closest "noted but low severity" register.
@@ -1299,7 +1299,7 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
                       <th
                         key={label}
                         className={cn(
-                          "px-4 py-2.5 text-left text-[10px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap",
+                          "px-4 py-2.5 text-left text-nano font-semibold text-muted uppercase tracking-wider whitespace-nowrap",
                           hide && "hidden sm:table-cell"
                         )}
                       >
@@ -1407,7 +1407,7 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
               <p className={cn("text-2xl font-bold font-heading tabular-nums", color)}>
                 {!isNaN(numericPart) ? `${numericPart.toFixed(1)}${suffix}` : value}
               </p>
-              <p className="text-[11px] text-muted">{note ?? "30-day avg"}</p>
+              <p className="text-micro text-muted">{note ?? "30-day avg"}</p>
             </div>
           );
         })}
@@ -1598,7 +1598,7 @@ function GoalsTab({ goals }: { goals: GoalItem[] }) {
             <div className="space-y-3">
               <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
                 Active Goals
-                <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-500 text-white text-[10px] font-bold">
+                <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-500 text-white text-nano font-bold">
                   {active.length}
                 </span>
               </h2>

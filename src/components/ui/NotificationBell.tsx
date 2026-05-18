@@ -464,7 +464,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
       >
         <Bell size={20} strokeWidth={1.75} aria-hidden="true" />
         {count > 0 && (
-          <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-danger-500 text-white text-[10px] font-bold tabular-nums px-1 animate-spring-up">
+          <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-danger-500 text-white text-nano font-bold tabular-nums px-1 animate-spring-up">
             {count > 99 ? "99+" : count}
           </span>
         )}
@@ -498,7 +498,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="flex items-center gap-1 text-[11px] text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                className="flex items-center gap-1 text-micro text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 <CheckCheck size={13} strokeWidth={1.75} aria-hidden="true" />
                 Mark all read
@@ -558,7 +558,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
                       <div className="flex items-start justify-between gap-2">
                         <p
                           className={cn(
-                            "text-[13px] leading-snug truncate",
+                            "text-caption leading-snug truncate",
                             !n.read
                               ? "font-semibold text-[var(--foreground)]"
                               : "font-medium text-[var(--foreground)]/80"
@@ -568,12 +568,12 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
                         </p>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
-                          <span className="text-[10px] text-muted tabular-nums whitespace-nowrap">
+                          <span className="text-nano text-muted tabular-nums whitespace-nowrap">
                             {relativeTime(n.createdAt)}
                           </span>
                         </div>
                       </div>
-                      <p className="text-[11px] text-muted mt-0.5 line-clamp-2 leading-relaxed">
+                      <p className="text-micro text-muted mt-0.5 line-clamp-2 leading-relaxed">
                         {n.body}
                       </p>
                     </div>

@@ -88,7 +88,7 @@ export function KeyboardShortcutsModal() {
       <div className="space-y-5">
         {GROUPS.map((group) => (
           <section key={group.title}>
-            <h3 className="text-[10px] font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5 mb-2">
+            <h3 className="text-nano font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <span className="text-surface-400">{group.icon}</span>
               {group.title}
             </h3>
@@ -100,11 +100,11 @@ export function KeyboardShortcutsModal() {
                     {item.keys.map((k, i) => (
                       <span key={`${item.label}-${i}`} className="flex items-center gap-1">
                         {i > 0 && (
-                          <span className="text-[10px] text-surface-400" aria-hidden="true">
+                          <span className="text-nano text-surface-400" aria-hidden="true">
                             +
                           </span>
                         )}
-                        <kbd className="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded text-[11px] font-mono font-medium text-[var(--foreground)] bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+                        <kbd className="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded text-micro font-mono font-medium text-[var(--foreground)] bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
                           {k}
                         </kbd>
                       </span>
@@ -118,7 +118,7 @@ export function KeyboardShortcutsModal() {
 
         <p className="text-xs text-muted pt-2 border-t border-[var(--card-border)]/40">
           Press{" "}
-          <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-mono font-medium text-[var(--foreground)] bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+          <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-micro font-mono font-medium text-[var(--foreground)] bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
             ?
           </kbd>{" "}
           anywhere outside an input to open this panel.

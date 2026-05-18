@@ -222,9 +222,7 @@ function ThrowingBlockResults({
                       )}
                     >
                       {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
-                      {isBest && (
-                        <span className="ml-1.5 text-[10px] font-bold uppercase">Best</span>
-                      )}
+                      {isBest && <span className="ml-1.5 text-nano font-bold uppercase">Best</span>}
                     </td>
                     <td className="py-2 pr-4 text-muted">{log.implement}</td>
                     <td className="py-2 text-muted text-xs">{log.notes ?? ""}</td>

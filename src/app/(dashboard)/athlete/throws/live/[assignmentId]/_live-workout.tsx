@@ -83,7 +83,7 @@ function TimelineNode({
             borderRadius: "50%",
             marginTop: 14,
             backgroundColor: isCompleted
-              ? "#00FF88"
+              ? "var(--palette-success-vivid)"
               : isExpanded
                 ? accent
                 : "rgba(255,255,255,0.08)",
@@ -142,7 +142,7 @@ function TimelineNode({
                     size={14}
                     strokeWidth={1.75}
                     className="inline mr-1.5 -mt-0.5"
-                    style={{ color: "#00FF88" }}
+                    style={{ color: "var(--palette-success-vivid)" }}
                     aria-hidden="true"
                   />
                 )}
@@ -544,7 +544,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
           <div className="text-center flex-1">
             <h1
               className="text-sm font-heading font-bold tracking-wider"
-              style={{ color: "#FFC800" }}
+              style={{ color: "var(--color-brand)" }}
             >
               {data.sessionName}
             </h1>
@@ -566,7 +566,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
             className="h-full rounded-full transition-all duration-700 ease-out"
             style={{
               width: `${data.blocks.length > 0 ? (completedBlocks / data.blocks.length) * 100 : 0}%`,
-              backgroundColor: "#FFC800",
+              backgroundColor: "var(--color-brand)",
               boxShadow: "0 0 8px #FFC80044",
             }}
           />
@@ -708,7 +708,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
                   height: 12,
                   borderRadius: "50%",
                   marginTop: 14,
-                  backgroundColor: "#00FF88",
+                  backgroundColor: "var(--palette-success-vivid)",
                   boxShadow: "0 0 10px #00FF8844",
                 }}
               />
@@ -733,7 +733,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
                 setShowCompletion(true);
               }}
               className="w-full py-4 text-sm font-bold tracking-widest rounded-xl transition-transform active:scale-[0.97]"
-              style={{ background: "#00FF88", color: "#000" }}
+              style={{ background: "var(--palette-success-vivid)", color: "#000" }}
             >
               FINISH SESSION
             </button>

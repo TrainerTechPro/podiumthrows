@@ -83,7 +83,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         !checked && !indeterminate && "bg-transparent border-surface-300 dark:border-surface-600",
         // Checked or indeterminate — amber fill
         (checked || indeterminate) &&
-          "bg-primary-500 border-primary-500 shadow-[0_0_0_1px_var(--primary-500,#FFC800)]",
+          "bg-primary-500 border-primary-500 shadow-[0_0_0_1px_var(--color-brand)]",
         // Disabled
         disabled && "opacity-40 cursor-not-allowed",
         // Error border (only when not checked — checked/indeterminate already amber)

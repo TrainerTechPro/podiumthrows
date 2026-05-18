@@ -18,7 +18,7 @@ import { metersToFtInString } from "@/lib/units/convert";
  * lighter-than-comp shifts cool (teal/blue). This keeps the chart readable even
  * when 5+ weights are visible for one event.
  */
-const COLOR_COMP = "#FFC800"; // brand amber — competition weight
+const COLOR_COMP = "var(--color-brand)"; // brand amber — competition weight
 const COLOR_HEAVY = ["#FF6B2C", "#E63946", "#B7094C"]; // warm tones, heaviest = darkest
 const COLOR_LIGHT = ["#22D3EE", "#3B82F6", "#6366F1"]; // cool tones, lightest = deepest
 

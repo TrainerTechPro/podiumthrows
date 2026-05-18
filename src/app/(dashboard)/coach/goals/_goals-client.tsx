@@ -340,7 +340,7 @@ function GoalCard({ goal, onUpdateProgress, onAbandon }: GoalCardProps) {
       </div>
 
       {/* Meta row */}
-      <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted">
+      <div className="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 text-nano text-muted">
         <div className="flex items-center gap-3">
           {goal.deadline && (
             <span className={overdue && isActive ? "text-danger-500 font-medium" : ""}>

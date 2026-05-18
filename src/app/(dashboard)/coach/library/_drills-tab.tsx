@@ -143,7 +143,7 @@ export function DrillsTab({
                 </h3>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {d.event && (
-                    <span className="text-[10px] font-bold text-muted uppercase tracking-wide">
+                    <span className="text-nano font-bold text-muted uppercase tracking-wide">
                       {formatEventType(d.event)}
                     </span>
                   )}

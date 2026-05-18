@@ -142,7 +142,7 @@ export function WarmupCooldownView({
               onClick={onAdvance}
               className="w-full mt-4 py-4 text-sm font-bold tracking-widest animate-fade-slide-in"
               style={{
-                background: isLastBlock ? "#00FF88" : accent,
+                background: isLastBlock ? "var(--palette-success-vivid)" : accent,
                 color: "#000",
                 clipPath: CHAMFER_LG,
               }}

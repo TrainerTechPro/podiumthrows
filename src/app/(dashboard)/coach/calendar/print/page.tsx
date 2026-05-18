@@ -282,7 +282,7 @@ function SessionBlock({
       {/* Throwing blocks */}
       {throwingBlocks.length > 0 && (
         <div className="mb-2">
-          <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted print:text-gray-500 mb-1">
+          <h4 className="text-nano font-bold uppercase tracking-wider text-muted print:text-gray-500 mb-1">
             Throwing
           </h4>
           <table className="w-full text-xs print:text-black">
@@ -323,7 +323,7 @@ function SessionBlock({
       {/* Strength blocks */}
       {strengthBlocks.length > 0 && (
         <div className="mb-2">
-          <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted print:text-gray-500 mb-1">
+          <h4 className="text-nano font-bold uppercase tracking-wider text-muted print:text-gray-500 mb-1">
             Strength
           </h4>
           <table className="w-full text-xs print:text-black">
