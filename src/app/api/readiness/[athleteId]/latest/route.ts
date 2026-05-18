@@ -67,23 +67,29 @@ export async function GET(
       },
     });
 
-    if (!checkIn) return NextResponse.json(null);
+    if (!checkIn) {
+      return NextResponse.json({ success: true, data: { checkIn: null } });
+    }
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      id: checkIn.id,
-      date: checkIn.date.toISOString(),
-      overallScore: checkIn.overallScore,
-      sleepQuality: checkIn.sleepQuality,
-      sleepHours: checkIn.sleepHours,
-      soreness: checkIn.soreness,
-      sorenessArea: checkIn.sorenessArea,
-      stressLevel: checkIn.stressLevel,
-      energyMood: checkIn.energyMood,
-      hydration: checkIn.hydration as string,
-      injuryStatus: checkIn.injuryStatus as string,
-      injuryNotes: checkIn.injuryNotes,
-      notes: checkIn.notes,
+      success: true,
+      data: {
+        checkIn: {
+          id: checkIn.id,
+          date: checkIn.date.toISOString(),
+          overallScore: checkIn.overallScore,
+          sleepQuality: checkIn.sleepQuality,
+          sleepHours: checkIn.sleepHours,
+          soreness: checkIn.soreness,
+          sorenessArea: checkIn.sorenessArea,
+          stressLevel: checkIn.stressLevel,
+          energyMood: checkIn.energyMood,
+          hydration: checkIn.hydration as string,
+          injuryStatus: checkIn.injuryStatus as string,
+          injuryNotes: checkIn.injuryNotes,
+          notes: checkIn.notes,
+        },
+      },
     });
   } catch (err) {
     logger.error("GET /api/readiness/:athleteId/latest", { context: "api", error: err });

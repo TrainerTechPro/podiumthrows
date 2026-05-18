@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, GoalUpdateSchema } from "@/lib/api-schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -35,11 +36,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Goal not found." }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { currentValue, status, title, targetValue, deadline, description } = body as Record<
-      string,
-      unknown
-    >;
+    const parsed = await parseBody(req, GoalUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { currentValue, status, title, targetValue, deadline, description } = parsed;
 
     const data: Record<string, unknown> = {};
 
@@ -74,8 +73,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       }
     }
 
-    const validStatuses = ["ACTIVE", "COMPLETED", "ABANDONED"];
-    if (typeof status === "string" && validStatuses.includes(status)) {
+    if (typeof status === "string") {
       data.status = status;
     }
 
@@ -103,14 +101,16 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      goal: {
-        ...updated,
-        event: updated.event as string | null,
-        status: updated.status as string,
-        deadline: updated.deadline?.toISOString() ?? null,
-        createdAt: updated.createdAt.toISOString(),
+      success: true,
+      data: {
+        goal: {
+          ...updated,
+          event: updated.event as string | null,
+          status: updated.status as string,
+          deadline: updated.deadline?.toISOString() ?? null,
+          createdAt: updated.createdAt.toISOString(),
+        },
       },
     });
   } catch (err) {
@@ -153,7 +153,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       data: { status: "ABANDONED" },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { id } });
   } catch (err) {
     logger.error("DELETE /api/coach/goals/[id]", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to delete goal." }, { status: 500 });

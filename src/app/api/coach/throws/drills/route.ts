@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCoachSession, getDrillLibrary } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
+import { parseBody, CoachDrillCreateSchema } from "@/lib/api-schemas";
 
 const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 const VALID_CATEGORIES = ["CE", "SDE", "SPE", "GPE"];
@@ -36,8 +37,7 @@ export async function GET(req: NextRequest) {
     if (search) filters.search = search;
 
     const drills = await getDrillLibrary(coach.id, filters);
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ drills });
+    return NextResponse.json({ success: true, data: { drills } });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
@@ -46,8 +46,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachSession();
-    const body = await req.json();
 
+    const parsed = await parseBody(req, CoachDrillCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       name,
       description,
@@ -58,34 +59,7 @@ export async function POST(req: NextRequest) {
       difficulty,
       cues,
       athleteTypes,
-    } = body;
-
-    // Validation
-    if (!name || typeof name !== "string" || name.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Name is required" }, { status: 400 });
-    }
-    if (!category || !VALID_CATEGORIES.includes(category)) {
-      return NextResponse.json(
-        { success: false, error: "Valid category is required (CE, SDE, SPE, GPE)" },
-        { status: 400 }
-      );
-    }
-    if (event && !VALID_EVENTS.includes(event)) {
-      return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
-    }
-    if (difficulty && !VALID_DIFFICULTIES.includes(difficulty)) {
-      return NextResponse.json({ success: false, error: "Invalid difficulty" }, { status: 400 });
-    }
-    if (athleteTypes && Array.isArray(athleteTypes)) {
-      for (const at of athleteTypes) {
-        if (!VALID_ATHLETE_TYPES.includes(at)) {
-          return NextResponse.json(
-            { success: false, error: `Invalid athlete type: ${at}` },
-            { status: 400 }
-          );
-        }
-      }
-    }
+    } = parsed;
 
     const drill = await prisma.drill.create({
       data: {
@@ -93,18 +67,17 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         description: description?.trim() || null,
         videoUrl: videoUrl?.trim() || null,
-        event: event || null,
+        event: event ?? null,
         category,
-        implementKg: implementKg != null ? parseFloat(implementKg) : null,
-        difficulty: difficulty || null,
-        cues: Array.isArray(cues) ? cues.filter((c: string) => c.trim()) : [],
-        athleteTypes: Array.isArray(athleteTypes) ? athleteTypes : [],
+        implementKg: implementKg ?? null,
+        difficulty: difficulty ?? null,
+        cues: cues?.filter((c) => c.trim()) ?? [],
+        athleteTypes: athleteTypes ?? [],
         isGlobal: false,
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ drill }, { status: 201 });
+    return NextResponse.json({ success: true, data: { drill } }, { status: 201 });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }

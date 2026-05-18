@@ -3,11 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { checkAndSetCoachPR } from "@/lib/coach-throws";
-import {
-  validateImplementSequence,
-  type BondarchukWarning,
-  type BlockInput,
-} from "@/lib/bondarchuk";
+import { validateFullSession, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
 import { parseBody, LogSessionSchema } from "@/lib/api-schemas";
 import { findCatalogMatchForWeight } from "@/lib/implements";
 import { EventType, type ImplementType } from "@prisma/client";
@@ -295,7 +291,10 @@ export async function POST(request: NextRequest) {
           })),
       };
       if (throwingBlock.exercises.length > 1) {
-        const result = validateImplementSequence([throwingBlock]);
+        // Use the aggregate validator so logged sessions also surface
+        // the 15-20% weight differential rule (Vol IV p.85-88), not only
+        // descending-order violations.
+        const result = validateFullSession([throwingBlock]);
         warnings = result.warnings;
       }
     }

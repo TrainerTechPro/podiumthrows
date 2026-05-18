@@ -86,7 +86,7 @@ export function RecommenderRail({ event, onAdd }: Props) {
           throw new Error(payload?.error || `Request failed (${res.status})`);
         }
         if (!cancelled) {
-          setRecommendations(payload?.recommendations ?? []);
+          setRecommendations(payload?.data?.recommendations ?? []);
         }
       })
       .catch((err) => {

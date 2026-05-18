@@ -105,8 +105,9 @@ export function PlanActions({
 
       if (res.ok) {
         const data = await res.json();
+        const created = (data?.success ? data.data?.created : undefined) ?? 0;
         success(
-          `Assigned to ${data.created} athlete${data.created === 1 ? "" : "s"}`,
+          `Assigned to ${created} athlete${created === 1 ? "" : "s"}`,
           "Sessions appear on the schedule."
         );
         closeAssignModal();

@@ -123,17 +123,19 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       "output.mp4",
     ];
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      videoId: id,
-      sourceDownloadUrl,
-      outputUploadUrl,
-      outputKey,
-      transcodedPublicUrl,
-      ffmpegCommand: ffmpegCommand.join(" "),
-      ffmpegArgs: ffmpegCommand,
-      gopSize: 15,
-      completeCallbackUrl: `/api/coach/videos/${id}/transcode/complete`,
+      success: true,
+      data: {
+        videoId: id,
+        sourceDownloadUrl,
+        outputUploadUrl,
+        outputKey,
+        transcodedPublicUrl,
+        ffmpegCommand: ffmpegCommand.join(" "),
+        ffmpegArgs: ffmpegCommand,
+        gopSize: 15,
+        completeCallbackUrl: `/api/coach/videos/${id}/transcode/complete`,
+      },
     });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -167,13 +169,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      videoId: video.id,
-      transcodeStatus: video.transcodeStatus,
-      transcodedUrl: video.transcodedUrl,
-      gopInterval: video.gopInterval,
-      fps: video.fps,
+      success: true,
+      data: {
+        videoId: video.id,
+        transcodeStatus: video.transcodeStatus,
+        transcodedUrl: video.transcodedUrl,
+        gopInterval: video.gopInterval,
+        fps: video.fps,
+      },
     });
   } catch (err) {
     if (err instanceof AuthError) {

@@ -340,22 +340,37 @@ export function UploadForm({ athleteOptions }: Props) {
 
       if (!urlRes.ok) {
         const data = await urlRes.json();
-        throw new Error(data.error ?? "Failed to get upload URL");
+        throw new Error(data?.error ?? "Failed to get upload URL");
       }
 
-      const { uploadUrl, key, publicUrl, mode } = await urlRes.json();
+      const urlPayload = await urlRes.json();
+      if (!urlPayload?.success) {
+        throw new Error(urlPayload?.error ?? "Failed to get upload URL");
+      }
+      const { uploadUrl, key, publicUrl, mode } = urlPayload.data as {
+        uploadUrl: string;
+        key: string;
+        publicUrl: string;
+        mode: "r2" | "local";
+      };
 
       // 2. Upload thumbnail (non-blocking, non-fatal)
       let thumbnailPublicUrl: string | undefined;
       if (thumbRes?.ok && thumbnailBlob) {
         try {
-          const thumbData = await thumbRes.json();
+          const thumbPayload = await thumbRes.json();
+          if (!thumbPayload?.success) throw new Error("thumbnail upload-url failed");
           const {
             uploadUrl: thumbUrl,
             key: thumbKey,
             publicUrl: thumbPublicUrl,
             mode: thumbMode,
-          } = thumbData;
+          } = thumbPayload.data as {
+            uploadUrl: string;
+            key: string;
+            publicUrl: string;
+            mode: "r2" | "local";
+          };
 
           if (thumbMode === "local") {
             const fd = new FormData();
@@ -409,11 +424,14 @@ export function UploadForm({ athleteOptions }: Props) {
 
       if (!createRes.ok) {
         const data = await createRes.json();
-        throw new Error(data.error ?? "Failed to create video record");
+        throw new Error(data?.error ?? "Failed to create video record");
       }
 
-      const { video } = await createRes.json();
-      videoId = video.id;
+      const createPayload = await createRes.json();
+      if (!createPayload?.success) {
+        throw new Error(createPayload?.error ?? "Failed to create video record");
+      }
+      videoId = createPayload.data.video.id as string;
 
       // 4. Upload video blob directly to R2 (or local)
       setPhase("uploading");

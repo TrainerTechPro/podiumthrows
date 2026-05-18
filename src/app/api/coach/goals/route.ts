@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { getTeamGoals } from "@/lib/data/coach";
-import type { EventType } from "@prisma/client";
+import { parseBody, CoachGoalCreateSchema } from "@/lib/api-schemas";
 
 /* ─── GET — fetch all goals across the coach's roster ────────────────────── */
 
@@ -23,8 +23,7 @@ export async function GET() {
     }
 
     const goals = await getTeamGoals(coach.id);
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ goals });
+    return NextResponse.json({ success: true, data: { goals } });
   } catch (err) {
     logger.error("GET /api/coach/goals", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to fetch goals." }, { status: 500 });
@@ -48,16 +47,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const parsed = await parseBody(req, CoachGoalCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const { athleteId, title, targetValue, unit, deadline, startingValue, description, event } =
-      body as Record<string, unknown>;
-
-    if (typeof athleteId !== "string" || athleteId.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Athlete ID is required." },
-        { status: 400 }
-      );
-    }
+      parsed;
 
     // Verify coach owns this athlete
     const athlete = await prisma.athleteProfile.findFirst({
@@ -71,21 +64,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (typeof title !== "string" || title.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Title is required." }, { status: 400 });
-    }
-    if (typeof targetValue !== "number" || targetValue <= 0) {
-      return NextResponse.json(
-        { success: false, error: "Target value must be a positive number." },
-        { status: 400 }
-      );
-    }
-    if (typeof unit !== "string" || unit.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "Unit is required." }, { status: 400 });
-    }
-
-    const deadlineDate =
-      typeof deadline === "string" && deadline.length > 0 ? new Date(deadline) : null;
+    const deadlineDate = deadline && deadline.length > 0 ? new Date(deadline) : null;
     if (deadlineDate && isNaN(deadlineDate.getTime())) {
       return NextResponse.json(
         { success: false, error: "Invalid deadline date." },
@@ -93,18 +72,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const starting = typeof startingValue === "number" ? startingValue : null;
-
     const goal = await prisma.goal.create({
       data: {
         athleteId: athlete.id,
-        title: (title as string).trim(),
-        description: typeof description === "string" ? description.trim() || null : null,
-        targetValue: targetValue as number,
-        currentValue: starting ?? 0,
-        startingValue: starting,
-        unit: (unit as string).trim(),
-        event: typeof event === "string" && event.length > 0 ? (event as EventType) : null,
+        title: title.trim(),
+        description: description ? description.trim() || null : null,
+        targetValue,
+        currentValue: startingValue ?? 0,
+        startingValue: startingValue ?? null,
+        unit: unit.trim(),
+        event: event ?? null,
         deadline: deadlineDate,
         status: "ACTIVE",
       },
@@ -123,15 +100,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json(
       {
-        goal: {
-          ...goal,
-          event: goal.event as string | null,
-          status: goal.status as string,
-          deadline: goal.deadline?.toISOString() ?? null,
-          createdAt: goal.createdAt.toISOString(),
+        success: true,
+        data: {
+          goal: {
+            ...goal,
+            event: goal.event as string | null,
+            status: goal.status as string,
+            deadline: goal.deadline?.toISOString() ?? null,
+            createdAt: goal.createdAt.toISOString(),
+          },
         },
       },
       { status: 201 }

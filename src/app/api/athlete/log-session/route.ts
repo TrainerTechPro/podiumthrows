@@ -4,11 +4,7 @@ import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { parseBodyText, LogSessionSchema } from "@/lib/api-schemas";
 import { withIdempotency } from "@/lib/idempotency";
-import {
-  validateImplementSequence,
-  type BondarchukWarning,
-  type BlockInput,
-} from "@/lib/bondarchuk";
+import { validateFullSession, type BondarchukWarning, type BlockInput } from "@/lib/bondarchuk";
 import { recordThrow } from "@/lib/throws/pr";
 import { syncGoalsFromDrillLogs } from "@/lib/throws/goal-sync";
 import { findCatalogMatchForWeight, recomputeManyPRs } from "@/lib/implements";
@@ -365,7 +361,10 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
         })),
     };
     if (throwingBlock.exercises.length > 1) {
-      const result = validateImplementSequence([throwingBlock]);
+      // validateFullSession also runs the 15-20% weight differential rule
+      // (Vol IV p.85-88) so the response includes both descending-order
+      // and differential warnings.
+      const result = validateFullSession([throwingBlock]);
       warnings = result.warnings;
     }
 

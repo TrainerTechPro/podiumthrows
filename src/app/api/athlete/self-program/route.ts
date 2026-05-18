@@ -74,8 +74,7 @@ async function postHandler(userId: string): Promise<NextResponse> {
       select: { id: true },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ id: config.id }, { status: 201 });
+    return NextResponse.json({ success: true, data: { id: config.id } }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/athlete/self-program", { context: "api", error: err });
     return NextResponse.json(

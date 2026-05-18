@@ -8,6 +8,7 @@ import { getSession, canActAsAthlete } from "@/lib/auth";
 import { canAccessSelfProgram } from "@/lib/authorize";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, SelfProgramUpdateSchema } from "@/lib/api-schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -101,8 +102,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ config });
+    return NextResponse.json({ success: true, data: { config } });
   } catch (err) {
     logger.error("GET /api/athlete/self-program/[id]", { context: "api", error: err });
     return NextResponse.json(
@@ -151,7 +151,9 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const parsed = await parseBody(req, SelfProgramUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const body: Record<string, unknown> = parsed;
 
     // Locked fields are only locked on finalized configs that already have a
     // generated program. During wizard flow (drafts or configs without a
@@ -163,7 +165,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     // gender, or their baseline PR.
     const isLocked = !existing.isDraft && !!existing.trainingProgramId;
     if (isLocked) {
-      const lockedAttempt = LOCKED_FIELDS.filter((f) => f in (body as Record<string, unknown>));
+      const lockedAttempt = LOCKED_FIELDS.filter((f) => f in body);
       if (lockedAttempt.length > 0) {
         return NextResponse.json(
           {
@@ -176,7 +178,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     }
 
     // Server-side validation for editable fields
-    const typedBody = body as Record<string, unknown>;
+    const typedBody: Record<string, unknown> = body;
     if ("daysPerWeek" in typedBody) {
       const v = typedBody.daysPerWeek;
       if (typeof v !== "number" || v < 2 || v > 5) {
@@ -247,7 +249,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
     const data: Record<string, unknown> = {};
 
-    for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(body)) {
       if (!allowedFields.has(key)) continue;
 
       // Convert startDate string to Date object
@@ -274,8 +276,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
       data,
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ config: updated });
+    return NextResponse.json({ success: true, data: { config: updated } });
   } catch (err) {
     logger.error("PUT /api/athlete/self-program/[id]", { context: "api", error: err });
     return NextResponse.json(

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { withIdempotency } from "@/lib/idempotency";
+import { parseBodyText, CoachAssignSessionsSchema } from "@/lib/api-schemas";
 
 /* ─── POST — assign plan to athletes as training sessions ────────────────── */
 
@@ -28,30 +29,9 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
       return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = bodyText ? JSON.parse(bodyText) : {};
-    } catch {
-      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
-    }
-    const { planId, athleteIds, scheduledDate, coachNotes } = body;
-
-    // Validate
-    if (typeof planId !== "string") {
-      return NextResponse.json({ success: false, error: "Plan ID is required." }, { status: 400 });
-    }
-    if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Select at least one athlete." },
-        { status: 400 }
-      );
-    }
-    if (typeof scheduledDate !== "string") {
-      return NextResponse.json(
-        { success: false, error: "Scheduled date is required." },
-        { status: 400 }
-      );
-    }
+    const parsed = parseBodyText(bodyText, CoachAssignSessionsSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { planId, athleteIds, scheduledDate, coachNotes } = parsed;
 
     // Verify plan belongs to this coach
     const plan = await prisma.workoutPlan.findFirst({
@@ -64,11 +44,11 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
 
     // Verify all athletes belong to this coach
     const validAthletes = await prisma.athleteProfile.findMany({
-      where: { id: { in: athleteIds as string[] }, coachId: coach.id },
+      where: { id: { in: athleteIds }, coachId: coach.id },
       select: { id: true },
     });
     const validIds = new Set(validAthletes.map((a) => a.id));
-    const invalidIds = (athleteIds as string[]).filter((id) => !validIds.has(id));
+    const invalidIds = athleteIds.filter((id) => !validIds.has(id));
     if (invalidIds.length > 0) {
       return NextResponse.json(
         { success: false, error: "Some athletes are not on your roster." },
@@ -77,24 +57,26 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
     }
 
     // Create training sessions for each athlete
-    const parsedDate = new Date(scheduledDate as string);
+    const parsedDate = new Date(scheduledDate);
     if (isNaN(parsedDate.getTime())) {
       return NextResponse.json({ success: false, error: "Invalid date." }, { status: 400 });
     }
 
     const sessions = await prisma.trainingSession.createMany({
-      data: (athleteIds as string[]).map((athleteId) => ({
-        planId: planId as string,
+      data: athleteIds.map((athleteId) => ({
+        planId,
         athleteId,
         scheduledDate: parsedDate,
-        coachNotes: typeof coachNotes === "string" ? coachNotes.trim() || null : null,
+        coachNotes: coachNotes ? coachNotes.trim() || null : null,
         status: "SCHEDULED" as const,
       })),
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json(
-      { created: sessions.count, scheduledDate: parsedDate.toISOString() },
+      {
+        success: true,
+        data: { created: sessions.count, scheduledDate: parsedDate.toISOString() },
+      },
       { status: 201 }
     );
   } catch (err) {

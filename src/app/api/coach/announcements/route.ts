@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
 import { getCoachAnnouncements, createAnnouncement } from "@/lib/data/team-hub";
+import { parseBody, CoachAnnouncementCreateSchema } from "@/lib/api-schemas";
 
 /* ─── GET — list all non-expired announcements for the coach ─────────────── */
 
@@ -15,7 +16,10 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/announcements", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch announcements." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch announcements." },
+      { status: 500 }
+    );
   }
 }
 
@@ -24,51 +28,29 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
-    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-
-    const { title, body: bodyText, priority, pinned, targetType, targetId, expiresAt } = body;
-
-    if (typeof title !== "string" || !title.trim()) {
-      return NextResponse.json({ success: false, error: "title is required." }, { status: 400 });
-    }
-    if (typeof bodyText !== "string" || !bodyText.trim()) {
-      return NextResponse.json({ success: false, error: "body is required." }, { status: 400 });
-    }
-
-    // Validate priority
-    const validPriorities = ["NORMAL", "URGENT"];
-    if (priority !== undefined && !validPriorities.includes(priority as string)) {
-      return NextResponse.json(
-        { success: false, error: `priority must be one of: ${validPriorities.join(", ")}` },
-        { status: 400 },
-      );
-    }
-
-    // Validate targetType
-    const validTargetTypes = ["ALL", "GROUP", "INDIVIDUAL"];
-    if (targetType !== undefined && !validTargetTypes.includes(targetType as string)) {
-      return NextResponse.json(
-        { success: false, error: `targetType must be one of: ${validTargetTypes.join(", ")}` },
-        { status: 400 },
-      );
-    }
+    const parsed = await parseBody(req, CoachAnnouncementCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { title, body: bodyText, priority, pinned, targetType, targetId, expiresAt } = parsed;
 
     // Parse expiresAt
     let expiresAtDate: Date | null = null;
-    if (expiresAt !== undefined && expiresAt !== null) {
-      expiresAtDate = new Date(expiresAt as string);
+    if (expiresAt) {
+      expiresAtDate = new Date(expiresAt);
       if (isNaN(expiresAtDate.getTime())) {
-        return NextResponse.json({ success: false, error: "Invalid expiresAt date." }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: "Invalid expiresAt date." },
+          { status: 400 }
+        );
       }
     }
 
     const result = await createAnnouncement(coach.id, {
       title: title.trim(),
       body: bodyText.trim(),
-      priority: typeof priority === "string" ? priority : undefined,
-      pinned: typeof pinned === "boolean" ? pinned : undefined,
-      targetType: typeof targetType === "string" ? targetType : undefined,
-      targetId: typeof targetId === "string" ? targetId : null,
+      priority: priority ?? undefined,
+      pinned: pinned ?? undefined,
+      targetType: targetType ?? undefined,
+      targetId: targetId ?? null,
       expiresAt: expiresAtDate,
     });
 
@@ -78,6 +60,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/announcements", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to create announcement." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to create announcement." },
+      { status: 500 }
+    );
   }
 }

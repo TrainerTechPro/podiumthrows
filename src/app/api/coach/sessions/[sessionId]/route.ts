@@ -179,13 +179,16 @@ export async function PATCH(
       })),
     }));
     const result = validateFullSession(validatorInput);
-    if (!result.valid) {
-      const first = result.warnings[0];
+    // Only block on error-severity warnings (descending order + block
+    // structure). Soft warnings (cross_block_ascending, weight_differential)
+    // surface in the UI but must not 409 the session — they're coaching
+    // notes, not structural violations.
+    const firstError = result.warnings.find((w) => w.severity === "error");
+    if (firstError) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            first?.message ?? "Bondarchuk sequencing rule violated — see Volume IV, p.114-117.",
+          error: firstError.message,
         },
         { status: 409 }
       );

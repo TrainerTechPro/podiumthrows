@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachNotificationToggleSchema } from "@/lib/api-schemas";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -35,8 +36,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { read } = body as Record<string, unknown>;
+    const parsed = await parseBody(req, CoachNotificationToggleSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { read } = parsed;
 
     const readValue = typeof read === "boolean" ? read : !existing.read;
 
@@ -55,12 +57,14 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      notification: {
-        ...updated,
-        metadata: updated.metadata as Record<string, unknown> | null,
-        createdAt: updated.createdAt.toISOString(),
+      success: true,
+      data: {
+        notification: {
+          ...updated,
+          metadata: updated.metadata as Record<string, unknown> | null,
+          createdAt: updated.createdAt.toISOString(),
+        },
       },
     });
   } catch (err) {

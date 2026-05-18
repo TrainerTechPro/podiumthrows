@@ -250,14 +250,15 @@ export function SessionDetail({
         { method: "POST", headers: { "Content-Type": "application/json", ...csrfHeaders() } }
       );
       const data = await res.json().catch(() => ({}));
+      const assignmentId = data?.success ? data.data?.assignmentId : undefined;
 
-      if (res.ok && data.assignmentId) {
+      if (res.ok && assignmentId) {
         success("Workout started", "Launching live view...");
-        router.push(`/athlete/throws/${data.assignmentId}?view=live`);
+        router.push(`/athlete/throws/${assignmentId}?view=live`);
       } else if (res.status === 409) {
         // 409 means the session is already completed — informational, not
         // an error worth a Try-again action.
-        toast.warning("Already done", data.error || "Session already completed");
+        toast.warning("Already done", data?.error || "Session already completed");
       } else {
         reportApiError({ res, payload: data }, toast, { onRetry: handleStartWorkout });
       }

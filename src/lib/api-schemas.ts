@@ -1084,6 +1084,11 @@ export const GoalCreateSchema = z.object({
   description: z.string().nullable().optional(),
 });
 
+/** POST /api/coach/goals — coach also supplies the target athleteId. */
+export const CoachGoalCreateSchema = GoalCreateSchema.extend({
+  athleteId: z.string().min(1, "Athlete ID is required."),
+});
+
 export const GoalUpdateSchema = z
   .object({
     title: z.string().min(1).max(200).optional(),
@@ -1192,6 +1197,24 @@ export const QuickLogEditSchema = z.object({
 });
 
 /**
+ * POST /api/athlete/throws — log a standalone throw (outside of a session).
+ * Numeric form fields follow CLAUDE.md §3/§4 — accept 0 and null where the
+ * client form may send either.
+ */
+export const AthleteThrowLogSchema = z.object({
+  event: ThrowsEventEnum,
+  implementKg: z.number().positive("Implement weight must be a positive number."),
+  distance: z.number().positive("Distance must be a positive number."),
+  isCompetition: z.boolean().nullable().optional(),
+  rpe: z.number().min(1).max(10).nullable().optional(),
+  notes: z.string().nullable().optional(),
+  attemptNumber: z.number().int().min(0).nullable().optional(),
+  wireLength: z.enum(["FULL", "THREE_QUARTER", "HALF"]).nullable().optional(),
+  implementWeightUnit: z.enum(["kg", "lbs"]).nullable().optional(),
+  implementWeightOriginal: z.number().nullable().optional(),
+});
+
+/**
  * POST /api/drill-videos/recommend — return 3 ranked watch-next suggestions
  * after a clip ends. `athleteId` is optional and validated server-side against
  * the session for forward compatibility (e.g. a coach previewing on behalf of
@@ -1212,6 +1235,350 @@ export const DrillVideoViewSchema = z.object({
   source: z.enum(["manual", "recommendation", "autoplay"]).default("manual"),
   recommendedFromId: z.string().min(1).nullable().optional(),
   completed: z.boolean().nullable().optional(),
+});
+
+// ── Coach Announcements + Competitions ────────────────────────────────
+
+const AnnouncementPriorityEnum = z.enum(["NORMAL", "URGENT"]);
+const AnnouncementTargetTypeEnum = z.enum(["ALL", "GROUP", "INDIVIDUAL"]);
+
+/** POST /api/coach/announcements — coach posts a new announcement. */
+export const CoachAnnouncementCreateSchema = z.object({
+  title: z.string().min(1, "title is required."),
+  body: z.string().min(1, "body is required."),
+  priority: AnnouncementPriorityEnum.nullable().optional(),
+  pinned: z.boolean().nullable().optional(),
+  targetType: AnnouncementTargetTypeEnum.nullable().optional(),
+  targetId: z.string().nullable().optional(),
+  expiresAt: z.string().nullable().optional(),
+});
+
+/** PATCH /api/coach/announcements/[id] — partial edit. */
+export const CoachAnnouncementUpdateSchema = z
+  .object({
+    title: z.string().nullable().optional(),
+    body: z.string().nullable().optional(),
+    priority: AnnouncementPriorityEnum.nullable().optional(),
+    pinned: z.boolean().nullable().optional(),
+    targetType: AnnouncementTargetTypeEnum.nullable().optional(),
+    targetId: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .refine((d) => Object.keys(d).length > 0, {
+    message: "At least one field is required",
+  });
+
+const CompetitionVenueTypeEnum = z.enum(["INDOOR", "OUTDOOR"]);
+const CompetitionFormatEnum = z.enum(["THREE_PLUS_THREE", "FOUR_STRAIGHT"]);
+const CompetitionPriorityEnum = z.enum(["A", "B", "C"]);
+const CompetitionEventEnum = z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
+
+/** POST /api/coach/competitions — batch-create entries for a meet. */
+export const CoachCompetitionCreateSchema = z.object({
+  name: z.string().min(1, "name is required"),
+  date: z.string().min(1, "date is required"),
+  priority: CompetitionPriorityEnum.nullable().optional(),
+  entries: z
+    .array(
+      z.object({
+        athleteId: z.string().min(1),
+        event: CompetitionEventEnum,
+      })
+    )
+    .min(1, "entries[] is required"),
+  venueType: CompetitionVenueTypeEnum.nullable().optional(),
+  format: CompetitionFormatEnum.nullable().optional(),
+  implementWeightKg: z.number().nullable().optional(),
+  placeFinish: z.number().nullable().optional(),
+  windMps: z.number().nullable().optional(),
+  weather: z.string().nullable().optional(),
+});
+
+/** PATCH /api/coach/competitions — batch-update results. */
+export const CoachCompetitionResultsSchema = z.object({
+  results: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        result: z.number().nullable(),
+        notes: z.string().nullable().optional(),
+      })
+    )
+    .min(1, "results[] is required"),
+});
+
+// ── User Settings (small mutations) ────────────────────────────────────
+
+/** PATCH /api/user/timezone — sync browser-detected zone to server. */
+export const UserTimezoneUpdateSchema = z.object({
+  timezone: z.string().min(1, "timezone required"),
+});
+
+/** PUT /api/user/mode — toggle coach activeMode between COACH and TRAINING. */
+export const UserModeUpdateSchema = z.object({
+  mode: z.enum(["COACH", "TRAINING"]),
+});
+
+/** PATCH /api/athlete/push-preferences — partial-merge boolean toggles. */
+export const AthletePushPreferencesPatchSchema = z
+  .object({
+    coachFeedback: z.boolean(),
+    teammatePRs: z.boolean(),
+    streakReminder: z.boolean(),
+    weeklyGoalReminder: z.boolean(),
+    practiceReminder: z.boolean(),
+    weeklyRecapEmail: z.boolean(),
+    weeklyRecapInApp: z.boolean(),
+  })
+  .partial();
+
+/** POST /api/coach/notification-preferences — partial-merge inApp toggles. */
+export const CoachNotificationPreferencesPatchSchema = z
+  .object({
+    inApp: z.record(z.string(), z.boolean()).nullable().optional(),
+  })
+  .passthrough();
+
+// ── Athlete Notification Preferences ───────────────────────────────────
+
+const StreakReminderPrefsPartial = z
+  .object({
+    enabled: z.boolean(),
+    promptDismissed: z.boolean(),
+  })
+  .partial();
+
+const FeedPrivacyPrefsPartial = z
+  .object({
+    sharePRs: z.boolean(),
+    shareSessions: z.boolean(),
+    shareStreaks: z.boolean(),
+    shareGoals: z.boolean(),
+  })
+  .partial();
+
+const HapticsPrefsPartial = z.object({ enabled: z.boolean() }).partial();
+
+/** POST /api/athlete/notification-preferences — partial-merge upsert. */
+export const NotificationPreferencesPatchSchema = z
+  .object({
+    streakReminder: StreakReminderPrefsPartial.nullable().optional(),
+    feedPrivacy: FeedPrivacyPrefsPartial.nullable().optional(),
+    haptics: HapticsPrefsPartial.nullable().optional(),
+  })
+  .passthrough();
+
+// ── Athlete Team Activity Reactions ────────────────────────────────────
+
+const ReactionEmojiEnum = z.enum(["fire", "lift", "hundred"]);
+
+/** POST/DELETE /api/athlete/team-activity/[id]/reactions — toggle emoji. */
+export const TeamActivityReactionSchema = z.object({
+  emoji: ReactionEmojiEnum,
+});
+
+// ── Athlete Self-Program ───────────────────────────────────────────────
+
+/**
+ * PUT /api/athlete/self-program/[id] — partial wizard update.
+ *
+ * Body shape is large and rules vary by draft/locked state, so the route
+ * still owns the field-level validation. This schema only guards JSON
+ * shape (must be an object) and provides the canonical entry point so
+ * mutations don't escape past parseBody.
+ */
+export const SelfProgramUpdateSchema = z.record(z.string(), z.unknown());
+
+// ── Coach Videos ───────────────────────────────────────────────────────
+
+const VideoEventEnum = z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
+const VideoCategoryEnum = z.enum(["training", "competition", "drill", "analysis"]);
+const VideoStatusEnum = z.enum(["uploading", "processing", "ready", "failed"]);
+
+/** POST /api/coach/videos — create video record after upload. */
+export const CoachVideoCreateSchema = z.object({
+  url: z.string().min(1, "url is required"),
+  storageKey: z.string().nullable().optional(),
+  title: z.string().min(1, "title is required"),
+  description: z.string().nullable().optional(),
+  event: VideoEventEnum.nullable().optional(),
+  athleteId: z.string().nullable().optional(),
+  category: VideoCategoryEnum.nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  durationSec: z.number().nullable().optional(),
+  fileSizeMb: z.number().nullable().optional(),
+  thumbnailUrl: z.string().nullable().optional(),
+  status: VideoStatusEnum.nullable().optional(),
+});
+
+/** PUT /api/coach/videos/[id] — partial metadata update. */
+export const CoachVideoUpdateSchema = z
+  .object({
+    title: z.string().min(1).optional(),
+    description: z.string().nullable().optional(),
+    event: VideoEventEnum.nullable().optional(),
+    category: VideoCategoryEnum.nullable().optional(),
+    tags: z.array(z.string()).nullable().optional(),
+  })
+  .refine((d) => Object.keys(d).length > 0, {
+    message: "At least one field is required",
+  });
+
+/** PATCH /api/coach/videos/[id]/status — pipeline state transition. */
+export const CoachVideoStatusPatchSchema = z.object({
+  status: VideoStatusEnum,
+});
+
+/** POST /api/coach/videos/[id]/transcode/complete — external transcoder callback. */
+export const CoachVideoTranscodeCompleteSchema = z.object({
+  transcodedKey: z.string().nullable().optional(),
+  transcodedUrl: z.string().nullable().optional(),
+  fps: z.number().nullable().optional(),
+  gopInterval: z.number().nullable().optional(),
+  success: z.boolean(),
+  error: z.string().nullable().optional(),
+});
+
+/** POST /api/coach/videos/[id]/share — share a video with athletes. */
+export const CoachVideoShareSchema = z.object({
+  athleteIds: z.array(z.string()).min(1, "athleteIds must be a non-empty array"),
+});
+
+/** POST /api/coach/videos/upload-url — request a presigned upload URL. */
+export const CoachVideoUploadUrlSchema = z.object({
+  fileName: z.string().min(1, "fileName is required"),
+  contentType: z.string().min(1, "contentType is required"),
+  fileSizeMb: z.number().nullable().optional(),
+});
+
+/** POST /api/coach/videos/upload-thumbnail-url — JPEG thumbnail presign. */
+export const CoachVideoUploadThumbnailUrlSchema = z.object({
+  fileName: z.string().min(1, "fileName is required"),
+  contentType: z.string().min(1, "contentType is required"),
+});
+
+/** POST /api/coach/videos/[id]/frame-annotations — single annotation upsert. */
+export const CoachFrameAnnotationSchema = z.object({
+  timestamp: z.number().nonnegative("timestamp must be a non-negative number"),
+  source: z.string().nullable().optional(),
+  payload: z.record(z.string(), z.unknown()),
+});
+
+/** PUT /api/coach/videos/[id]/frame-annotations — batch upsert. */
+export const CoachFrameAnnotationsBatchSchema = z.object({
+  frameAnnotations: z
+    .array(
+      z.object({
+        timestamp: z.number().nonnegative(),
+        source: z.string().nullable().optional(),
+        payload: z.record(z.string(), z.unknown()),
+      })
+    )
+    .min(1, "frameAnnotations must be a non-empty array"),
+});
+
+// ── Coach Sessions ─────────────────────────────────────────────────────
+
+/** POST /api/coach/sessions — assign a plan to athletes as training sessions. */
+export const CoachAssignSessionsSchema = z.object({
+  planId: z.string().min(1, "Plan ID is required."),
+  athleteIds: z.array(z.string()).min(1, "Select at least one athlete."),
+  scheduledDate: z.string().min(1, "Scheduled date is required."),
+  coachNotes: z.string().nullable().optional(),
+});
+
+// ── Coach Notifications ────────────────────────────────────────────────
+
+/** PATCH /api/coach/notifications — bulk mark read/unread. */
+export const CoachNotificationsBulkSchema = z.object({
+  ids: z.array(z.string()).nullable().optional(),
+  read: z.boolean().nullable().optional(),
+  markAll: z.boolean().nullable().optional(),
+});
+
+/** PATCH /api/coach/notifications/[id] — toggle a single notification's read. */
+export const CoachNotificationToggleSchema = z.object({
+  read: z.boolean().nullable().optional(),
+});
+
+// ── Coach Throws (Bondarchuk assessment + drill library) ───────────────
+
+const AthleteTypeEnum = z.enum(["EXPLOSIVE", "SPEED_STRENGTH", "STRENGTH_SPEED", "STRENGTH"]);
+const CoachThrowsEventEnum = z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
+const DrillCategoryEnum = z.enum(["CE", "SDE", "SPE", "GPE"]);
+const DrillDifficultyEnum = z.enum(["beginner", "intermediate", "advanced"]);
+
+/** POST /api/coach/throws/assessment — save a Bondarchuk type-assessment. */
+export const CoachAssessmentCreateSchema = z.object({
+  athleteId: z.string().min(1, "athleteId is required"),
+  athleteType: AthleteTypeEnum,
+  results: z.record(z.string(), z.unknown()),
+  notes: z.string().nullable().optional(),
+});
+
+const DrillBaseFields = {
+  name: z.string().min(1, "Name is required").max(200),
+  description: z.string().nullable().optional(),
+  videoUrl: z.string().nullable().optional(),
+  event: CoachThrowsEventEnum.nullable().optional(),
+  category: DrillCategoryEnum,
+  // Client may send number or numeric string; coerce.
+  implementKg: z.coerce.number().nullable().optional(),
+  difficulty: DrillDifficultyEnum.nullable().optional(),
+  cues: z.array(z.string()).nullable().optional(),
+  athleteTypes: z.array(AthleteTypeEnum).nullable().optional(),
+};
+
+export const CoachDrillCreateSchema = z.object(DrillBaseFields);
+
+/** PUT /api/coach/throws/drills/[id] — partial update; all fields optional. */
+export const CoachDrillUpdateSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    description: z.string().nullable().optional(),
+    videoUrl: z.string().nullable().optional(),
+    event: ThrowsEventEnum.nullable().optional(),
+    category: DrillCategoryEnum.optional(),
+    implementKg: z.coerce.number().nullable().optional(),
+    difficulty: DrillDifficultyEnum.nullable().optional(),
+    cues: z.array(z.string()).nullable().optional(),
+    athleteTypes: z.array(AthleteTypeEnum).nullable().optional(),
+  })
+  .refine((d) => Object.keys(d).length > 0, {
+    message: "At least one field is required",
+  });
+
+// ── Push Notifications ──────────────────────────────────────────────────
+
+const PushPayloadSchema = z.object({
+  title: z.string().min(1),
+  body: z.string().min(1),
+  url: z.string().nullable().optional(),
+  tag: z.string().nullable().optional(),
+  data: z.record(z.string(), z.unknown()).nullable().optional(),
+});
+
+const PushPreferenceKeyEnum = z.enum([
+  "coachFeedback",
+  "teammatePRs",
+  "streakReminder",
+  "weeklyGoalReminder",
+  "practiceReminder",
+  "weeklyRecapEmail",
+  "weeklyRecapInApp",
+]);
+
+/**
+ * POST /api/push/send — internal/cron endpoint.
+ * Resolves targets from one of userId / athleteId / userIds and gates on a
+ * specific push preference key before delivering.
+ */
+export const PushSendSchema = z.object({
+  userId: z.string().nullable().optional(),
+  athleteId: z.string().nullable().optional(),
+  userIds: z.array(z.string()).nullable().optional(),
+  preferenceKey: PushPreferenceKeyEnum,
+  payload: PushPayloadSchema,
 });
 
 // ── parseBody Helper ────────────────────────────────────────────────────

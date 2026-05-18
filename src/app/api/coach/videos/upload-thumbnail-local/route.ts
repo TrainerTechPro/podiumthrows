@@ -35,8 +35,7 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const publicUrl = await saveFileLocally(key, buffer);
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ publicUrl });
+    return NextResponse.json({ success: true, data: { publicUrl } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

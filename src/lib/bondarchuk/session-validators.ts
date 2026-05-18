@@ -150,15 +150,11 @@ export function validateCrossBlockSequence(blocks: BlockInput[]): ValidationResu
 
     // Get heaviest implement in each block
     const prevMax = Math.max(
-      ...prevBlock.block.exercises
-        .filter((e) => e.implementKg != null)
-        .map((e) => e.implementKg!),
+      ...prevBlock.block.exercises.filter((e) => e.implementKg != null).map((e) => e.implementKg!),
       0
     );
     const currMax = Math.max(
-      ...currBlock.block.exercises
-        .filter((e) => e.implementKg != null)
-        .map((e) => e.implementKg!),
+      ...currBlock.block.exercises.filter((e) => e.implementKg != null).map((e) => e.implementKg!),
       0
     );
 
@@ -176,13 +172,117 @@ export function validateCrossBlockSequence(blocks: BlockInput[]): ValidationResu
 }
 
 /**
+ * Rule 4: Adjacent implement drops should stay within the 15-20% transfer
+ * window. Vol IV p.85-88: implements that differ by more than ~20% create
+ * separate adaptation zones rather than transfer, so the second implement
+ * stops feeding the first.
+ *
+ * "Adjacent" here means: two weighted exercises sitting next to each other
+ * inside the same throwing block. We also flag the heaviest-to-heaviest drop
+ * between consecutive throwing blocks so the rule is honoured at the session
+ * timeline, not only within a block.
+ *
+ * Severity is always `warning` — this is a coaching note, not a structural
+ * violation. The descending-order rule (validateImplementSequence) and the
+ * block-structure rule (validateBlockStructure) remain the only `error`-grade
+ * gates.
+ */
+const DIFFERENTIAL_SOFT_THRESHOLD = 0.15;
+const DIFFERENTIAL_HARD_THRESHOLD = 0.2;
+
+function describeDifferential(diff: number): string {
+  const pct = Math.round(diff * 100);
+  if (diff > DIFFERENTIAL_HARD_THRESHOLD) {
+    return `${pct}% — exceeds the 20% Vol IV ceiling (separate adaptation zones, no transfer)`;
+  }
+  return `${pct}% — inside the 15-20% upper limit of the optimal transfer window`;
+}
+
+export function validateWeightDifferential(blocks: BlockInput[]): ValidationResult {
+  const warnings: BondarchukWarning[] = [];
+
+  // (a) Within each throwing block, flag adjacent weighted pairs.
+  blocks.forEach((block, blockIdx) => {
+    if (block.blockType !== "throwing") return;
+    const weighted = block.exercises
+      .map((exercise, exerciseIndex) => ({ exercise, exerciseIndex }))
+      .filter(({ exercise }) => exercise.implementKg != null);
+
+    for (let i = 1; i < weighted.length; i++) {
+      const prev = weighted[i - 1];
+      const curr = weighted[i];
+      const prevKg = prev.exercise.implementKg!;
+      const currKg = curr.exercise.implementKg!;
+      // Use the heavier side as the denominator so a drop from 9→7 is 22%, not 28%.
+      const denom = Math.max(prevKg, currKg);
+      if (denom === 0) continue;
+      const diff = Math.abs(prevKg - currKg) / denom;
+      if (diff > DIFFERENTIAL_SOFT_THRESHOLD) {
+        warnings.push({
+          type: "weight_differential",
+          message: `Block "${block.name}": ${prev.exercise.name} (${prevKg}kg) → ${curr.exercise.name} (${currKg}kg) differ by ${describeDifferential(diff)}.`,
+          severity: "warning",
+          blockIndex: blockIdx,
+          exerciseIndex: curr.exerciseIndex,
+        });
+      }
+    }
+  });
+
+  // (b) Across consecutive throwing blocks, flag the heaviest-to-heaviest drop.
+  //     Mirrors validateCrossBlockSequence's max-to-max pattern so the rule
+  //     surfaces a 9kg block followed by a 6kg block (33% drop) at the session
+  //     level too.
+  const throwingBlocks = blocks
+    .map((block, index) => ({ block, index }))
+    .filter(({ block }) => block.blockType === "throwing");
+
+  for (let i = 1; i < throwingBlocks.length; i++) {
+    const prevEntry = throwingBlocks[i - 1];
+    const currEntry = throwingBlocks[i];
+
+    const prevMax = Math.max(
+      ...prevEntry.block.exercises.filter((e) => e.implementKg != null).map((e) => e.implementKg!),
+      0
+    );
+    const currMax = Math.max(
+      ...currEntry.block.exercises.filter((e) => e.implementKg != null).map((e) => e.implementKg!),
+      0
+    );
+    if (prevMax === 0 || currMax === 0) continue;
+
+    const denom = Math.max(prevMax, currMax);
+    const diff = Math.abs(prevMax - currMax) / denom;
+    if (diff > DIFFERENTIAL_SOFT_THRESHOLD) {
+      warnings.push({
+        type: "weight_differential",
+        message: `"${prevEntry.block.name}" (${prevMax}kg heaviest) → "${currEntry.block.name}" (${currMax}kg heaviest) differ by ${describeDifferential(diff)}.`,
+        severity: "warning",
+        blockIndex: currEntry.index,
+      });
+    }
+  }
+
+  return { valid: warnings.length === 0, warnings };
+}
+
+/**
  * Combined validation — runs all session-level checks.
+ *
+ * Result semantics:
+ *   - `warnings` aggregates every issue from every sub-validator, including
+ *     informational ones (`weight_differential`, `cross_block_ascending`).
+ *   - `valid` is true only when there are zero issues of any severity.
+ *     Consumers that want to block the user (API 4xx, builder Save disable)
+ *     SHOULD inspect `severity === "error"` rather than `!valid`, so that
+ *     soft warnings surface in the UI without rejecting the session.
  */
 export function validateFullSession(blocks: BlockInput[]): ValidationResult {
   const results = [
     validateImplementSequence(blocks),
     validateBlockStructure(blocks),
     validateCrossBlockSequence(blocks),
+    validateWeightDifferential(blocks),
   ];
 
   const allWarnings = results.flatMap((r) => r.warnings);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachVideoTranscodeCompleteSchema } from "@/lib/api-schemas";
 
 /* ─── POST — Mark transcode as complete ─────────────────────────────────────── *
  *
@@ -42,15 +43,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    const body = await req.json();
-    const { transcodedKey, transcodedUrl, fps, gopInterval, success, error } = body as {
-      transcodedKey?: string;
-      transcodedUrl?: string;
-      fps?: number;
-      gopInterval?: number;
-      success?: boolean;
-      error?: string;
-    };
+    const parsed = await parseBody(req, CoachVideoTranscodeCompleteSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { transcodedKey, transcodedUrl, fps, gopInterval, success, error } = parsed;
 
     if (!success) {
       // Transcode failed — reset status
@@ -61,12 +56,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         },
       });
 
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json(
         {
-          videoId: id,
-          transcodeStatus: "failed",
-          error: error ?? "Transcode failed",
+          success: true,
+          data: {
+            videoId: id,
+            transcodeStatus: "failed" as const,
+            error: error ?? "Transcode failed",
+          },
         },
         { status: 200 }
       );
@@ -91,13 +88,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      videoId: id,
-      transcodeStatus: "ready",
-      transcodedUrl,
-      gopInterval: gopInterval ?? 15,
-      fps: fps ?? 60,
+      success: true,
+      data: {
+        videoId: id,
+        transcodeStatus: "ready" as const,
+        transcodedUrl,
+        gopInterval: gopInterval ?? 15,
+        fps: fps ?? 60,
+      },
     });
   } catch (err) {
     if (err instanceof AuthError) {

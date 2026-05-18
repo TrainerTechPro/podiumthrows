@@ -96,7 +96,8 @@ export function VideoEditor({ video, athletes }: Props) {
       const res = await fetch("/api/coach/videos");
       if (!res.ok) throw new Error("Failed to load");
       const data = await res.json();
-      setCompareVideos((data.videos as CompareVideo[]).filter((v) => v.id !== video.id));
+      const list = (data?.success ? data.data?.videos : []) as CompareVideo[];
+      setCompareVideos(list.filter((v) => v.id !== video.id));
     } catch {
       toastError("Error", "Could not load video library.");
     } finally {

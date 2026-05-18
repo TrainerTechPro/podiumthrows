@@ -25,6 +25,7 @@ export {
   validateImplementSequence,
   validateBlockStructure,
   validateCrossBlockSequence,
+  validateWeightDifferential,
   validateFullSession,
   type BondarchukWarning,
   type ValidationResult,
@@ -32,4 +33,9 @@ export {
   type ExerciseInput,
 } from "./session-validators";
 
-export { validateBlockOrder, type SessionBlockType, type BlockOrderInput, type BlockOrderResult } from "./block-order";
+export {
+  validateBlockOrder,
+  type SessionBlockType,
+  type BlockOrderInput,
+  type BlockOrderResult,
+} from "./block-order";

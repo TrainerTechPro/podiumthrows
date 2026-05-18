@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError, getCoachVideos } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
-
-const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
-const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
-const VALID_STATUSES = ["uploading", "processing", "ready", "failed"];
+import { parseBody, CoachVideoCreateSchema } from "@/lib/api-schemas";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,8 +17,7 @@ export async function GET(req: NextRequest) {
     };
 
     const videos = await getCoachVideos(coach.id, filters);
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ videos });
+    return NextResponse.json({ success: true, data: { videos } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -35,8 +31,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
-    const body = await req.json();
-
+    const parsed = await parseBody(req, CoachVideoCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       url,
       storageKey,
@@ -49,56 +45,10 @@ export async function POST(req: NextRequest) {
       durationSec,
       fileSizeMb,
       thumbnailUrl,
-      status: requestedStatus,
-    } = body as {
-      url?: string;
-      storageKey?: string;
-      title?: string;
-      description?: string;
-      event?: string;
-      athleteId?: string;
-      category?: string;
-      tags?: string[];
-      durationSec?: number;
-      fileSizeMb?: number;
-      thumbnailUrl?: string;
-      status?: string;
-    };
+      status,
+    } = parsed;
 
-    if (!url) {
-      return NextResponse.json({ success: false, error: "url is required" }, { status: 400 });
-    }
-    if (!title || title.trim().length === 0) {
-      return NextResponse.json({ success: false, error: "title is required" }, { status: 400 });
-    }
-
-    // Validate status if provided (defaults to "ready" for backward compat)
-    const initialStatus = requestedStatus ?? "ready";
-    if (!VALID_STATUSES.includes(initialStatus)) {
-      return NextResponse.json(
-        { success: false, error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
-        { status: 400 }
-      );
-    }
-
-    // Validate event if provided
-    if (event && !VALID_EVENTS.includes(event)) {
-      return NextResponse.json(
-        { success: false, error: `Invalid event. Must be one of: ${VALID_EVENTS.join(", ")}` },
-        { status: 400 }
-      );
-    }
-
-    // Validate category if provided
-    if (category && !VALID_CATEGORIES.includes(category)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(", ")}`,
-        },
-        { status: 400 }
-      );
-    }
+    const initialStatus = status ?? "ready";
 
     // Validate athlete belongs to coach
     if (athleteId) {
@@ -115,22 +65,21 @@ export async function POST(req: NextRequest) {
       data: {
         coachId: coach.id,
         url,
-        storageKey: storageKey || null,
+        storageKey: storageKey ?? null,
         title: title.trim(),
         description: description?.trim() || null,
-        event: event ? (event as "SHOT_PUT" | "DISCUS" | "HAMMER" | "JAVELIN") : null,
-        athleteId: athleteId || null,
-        category: category || null,
-        tags: tags || [],
-        durationSec: durationSec || null,
-        fileSizeMb: fileSizeMb || null,
-        thumbnailUrl: thumbnailUrl || null,
+        event: event ?? null,
+        athleteId: athleteId ?? null,
+        category: category ?? null,
+        tags: tags ?? [],
+        durationSec: durationSec ?? null,
+        fileSizeMb: fileSizeMb ?? null,
+        thumbnailUrl: thumbnailUrl ?? null,
         status: initialStatus,
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ video: { id: video.id } }, { status: 201 });
+    return NextResponse.json({ success: true, data: { video: { id: video.id } } }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

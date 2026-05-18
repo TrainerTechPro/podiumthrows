@@ -19,8 +19,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/push";
-import { getPushPreferencesByUserId, type PushPreferenceKey } from "@/lib/push/preferences";
+import { getPushPreferencesByUserId } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
+import { parseBody, PushSendSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,42 +34,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as {
-      userId?: string;
-      athleteId?: string;
-      userIds?: string[];
-      preferenceKey?: PushPreferenceKey;
-      payload?: {
-        title: string;
-        body: string;
-        url?: string;
-        tag?: string;
-        data?: Record<string, unknown>;
-      };
-    };
-
-    if (!body.payload || !body.payload.title || !body.payload.body) {
-      return NextResponse.json(
-        { success: false, error: "payload.title and payload.body required" },
-        { status: 400 }
-      );
-    }
-    if (!body.preferenceKey) {
-      return NextResponse.json(
-        { success: false, error: "preferenceKey required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, PushSendSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { userId, athleteId, userIds, preferenceKey, payload } = parsed;
 
     // Resolve target userIds
     let targetUserIds: string[] = [];
-    if (body.userIds?.length) {
-      targetUserIds = body.userIds;
-    } else if (body.userId) {
-      targetUserIds = [body.userId];
-    } else if (body.athleteId) {
+    if (userIds?.length) {
+      targetUserIds = userIds;
+    } else if (userId) {
+      targetUserIds = [userId];
+    } else if (athleteId) {
       const athlete = await prisma.athleteProfile.findUnique({
-        where: { id: body.athleteId },
+        where: { id: athleteId },
         select: { userId: true },
       });
       if (athlete) targetUserIds = [athlete.userId];
@@ -82,16 +60,22 @@ export async function POST(req: NextRequest) {
     let skipped = 0;
     let failed = 0;
 
-    for (const userId of targetUserIds) {
+    for (const targetId of targetUserIds) {
       try {
         // Check preference — skip if the user has opted out
-        const prefs = await getPushPreferencesByUserId(userId);
-        if (!prefs[body.preferenceKey]) {
+        const prefs = await getPushPreferencesByUserId(targetId);
+        if (!prefs[preferenceKey]) {
           skipped++;
           continue;
         }
 
-        const deliveries = await sendPushToUser(userId, body.payload);
+        const deliveries = await sendPushToUser(targetId, {
+          title: payload.title,
+          body: payload.body,
+          url: payload.url ?? undefined,
+          tag: payload.tag ?? undefined,
+          data: payload.data ?? undefined,
+        });
         if (deliveries > 0) {
           sent++;
         } else {
@@ -101,15 +85,14 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         logger.error("push send error", {
           context: "push",
-          userId,
+          userId: targetId,
           error: err,
         });
         failed++;
       }
     }
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ sent, skipped, failed });
+    return NextResponse.json({ success: true, data: { sent, skipped, failed } });
   } catch (err) {
     logger.error("/api/push/send error", { context: "push", error: err });
     return NextResponse.json({ success: false, error: "Failed" }, { status: 500 });

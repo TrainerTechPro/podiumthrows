@@ -21,6 +21,7 @@ import {
   type CoachNotificationPreferences,
   type CoachNotificationType,
 } from "@/lib/notifications/coach-preferences";
+import { parseBody, CoachNotificationPreferencesPatchSchema } from "@/lib/api-schemas";
 
 export async function GET() {
   try {
@@ -66,9 +67,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Coach not found" }, { status: 404 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const incomingInApp =
-      body.inApp && typeof body.inApp === "object" ? (body.inApp as Record<string, unknown>) : null;
+    const parsed = await parseBody(req, CoachNotificationPreferencesPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const incomingInApp = parsed.inApp ?? null;
 
     const current = parseCoachPrefs(coach.notificationPreferences);
     const mergedInApp = { ...current.inApp };

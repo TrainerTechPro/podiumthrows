@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getSession, canActAsAthlete } from "@/lib/auth";
-import { isValidEvent } from "@/lib/throws";
 import { recordThrow } from "@/lib/throws/pr";
 import { awardPRAchievement } from "@/lib/achievements";
 import { notifyCoachPR } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
+import { parseBody, AthleteThrowLogSchema } from "@/lib/api-schemas";
 
 /* ─── POST — log a standalone throw (outside of a session) ────────────────── */
 
@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const parsed = await parseBody(req, AthleteThrowLogSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       event,
       implementKg,
@@ -37,27 +38,7 @@ export async function POST(req: NextRequest) {
       wireLength,
       implementWeightUnit,
       implementWeightOriginal,
-    } = body as Record<string, unknown>;
-
-    // Validate required fields
-    if (!isValidEvent(event)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid event. Must be SHOT_PUT, DISCUS, HAMMER, or JAVELIN." },
-        { status: 400 }
-      );
-    }
-    if (typeof implementKg !== "number" || implementKg <= 0) {
-      return NextResponse.json(
-        { success: false, error: "Implement weight must be a positive number." },
-        { status: 400 }
-      );
-    }
-    if (typeof distance !== "number" || distance <= 0) {
-      return NextResponse.json(
-        { success: false, error: "Distance must be a positive number." },
-        { status: 400 }
-      );
-    }
+    } = parsed;
 
     // Create throw log first (no session — standalone), then atomic PR write.
     const throwLog = await prisma.throwLog.create({
@@ -66,22 +47,15 @@ export async function POST(req: NextRequest) {
         sessionId: null,
         event: event as never,
         implementWeight: implementKg,
-        implementWeightUnit:
-          typeof implementWeightUnit === "string" && ["kg", "lbs"].includes(implementWeightUnit)
-            ? implementWeightUnit
-            : "kg",
-        implementWeightOriginal:
-          typeof implementWeightOriginal === "number" ? implementWeightOriginal : null,
+        implementWeightUnit: implementWeightUnit ?? "kg",
+        implementWeightOriginal: implementWeightOriginal ?? null,
         distance,
         isPersonalBest: false,
         isCompetition: isCompetition === true,
-        rpe: typeof rpe === "number" && rpe >= 1 && rpe <= 10 ? rpe : null,
-        attemptNumber: typeof attemptNumber === "number" ? attemptNumber : null,
-        wireLength:
-          typeof wireLength === "string" && ["FULL", "THREE_QUARTER", "HALF"].includes(wireLength)
-            ? wireLength
-            : null,
-        notes: typeof notes === "string" ? notes.trim() || null : null,
+        rpe: rpe ?? null,
+        attemptNumber: attemptNumber ?? null,
+        wireLength: wireLength ?? null,
+        notes: notes ? notes.trim() || null : null,
       },
       select: {
         id: true,

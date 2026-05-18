@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
-
-const VALID_MODES = ["COACH", "TRAINING"] as const;
-type ActiveMode = (typeof VALID_MODES)[number];
+import { parseBody, UserModeUpdateSchema } from "@/lib/api-schemas";
 
 /* ─── PUT — toggle User.activeMode ──────────────────────────────────────── */
 
@@ -15,17 +13,9 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { mode } = body as { mode?: unknown };
-
-    if (!mode || !VALID_MODES.includes(mode as ActiveMode)) {
-      return NextResponse.json(
-        { success: false, error: `mode must be one of: ${VALID_MODES.join(", ")}` },
-        { status: 400 }
-      );
-    }
-
-    const targetMode = mode as ActiveMode;
+    const parsed = await parseBody(req, UserModeUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const targetMode = parsed.mode;
 
     // If switching to TRAINING, verify coach has enabled it
     if (targetMode === "TRAINING") {
@@ -56,7 +46,7 @@ export async function PUT(req: NextRequest) {
       ...(isProduction ? ["Secure"] : []),
     ].join("; ");
 
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, data: { mode: targetMode } });
     response.headers.append("Set-Cookie", cookieValue);
     return response;
   } catch (err) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachVideoStatusPatchSchema } from "@/lib/api-schemas";
 
 /* ─── GET — Poll video status ─────────────────────────────────────────────── *
  *
@@ -31,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    return NextResponse.json(video);
+    return NextResponse.json({ success: true, data: video });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -74,12 +75,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { status } = body as { status?: string };
-
-    if (!status) {
-      return NextResponse.json({ success: false, error: "status is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(req, CoachVideoStatusPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { status } = parsed;
 
     const allowed = VALID_TRANSITIONS[video.status];
     if (!allowed || !allowed.includes(status)) {
@@ -94,8 +92,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       data: { status },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ videoId: id, status });
+    return NextResponse.json({ success: true, data: { videoId: id, status } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

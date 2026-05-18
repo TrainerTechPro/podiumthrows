@@ -111,7 +111,10 @@ export function StreakReminder({
         cache: "no-store",
       });
       if (!res.ok) return;
-      status = (await res.json()) as StreakStatusResponse;
+      const payload = (await res.json()) as
+        | { success: true; data: StreakStatusResponse }
+        | { success: false; error: string };
+      status = payload.success ? payload.data : null;
     } catch {
       return;
     }

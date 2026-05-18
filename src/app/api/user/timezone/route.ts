@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, UserTimezoneUpdateSchema } from "@/lib/api-schemas";
 
 /**
  * PATCH /api/user/timezone
@@ -18,14 +19,13 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as { timezone?: string };
-    if (!body.timezone || typeof body.timezone !== "string") {
-      return NextResponse.json({ success: false, error: "timezone required" }, { status: 400 });
-    }
+    const parsed = await parseBody(req, UserTimezoneUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { timezone } = parsed;
 
     // Validate the IANA zone
     try {
-      new Intl.DateTimeFormat("en-US", { timeZone: body.timezone }).format(new Date());
+      new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format(new Date());
     } catch {
       return NextResponse.json({ success: false, error: "invalid timezone" }, { status: 400 });
     }
@@ -33,16 +33,16 @@ export async function PATCH(req: NextRequest) {
     if (session.role === "COACH") {
       await prisma.coachProfile.updateMany({
         where: { userId: session.userId },
-        data: { timezone: body.timezone },
+        data: { timezone },
       });
     } else {
       await prisma.athleteProfile.updateMany({
         where: { userId: session.userId },
-        data: { timezone: body.timezone },
+        data: { timezone },
       });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { timezone } });
   } catch (err) {
     logger.error("PATCH /api/user/timezone", { error: err });
     return NextResponse.json({ success: false, error: "Failed" }, { status: 500 });

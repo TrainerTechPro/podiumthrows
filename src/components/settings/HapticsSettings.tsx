@@ -33,10 +33,11 @@ export function HapticsSettings() {
           cache: "no-store",
         });
         if (!res.ok) return;
-        const data = (await res.json()) as {
-          preferences: { haptics?: { enabled?: boolean } };
-        };
-        const next = data.preferences.haptics?.enabled !== false;
+        const payload = (await res.json()) as
+          | { success: true; data: { preferences: { haptics?: { enabled?: boolean } } } }
+          | { success: false; error: string };
+        if (!payload.success) return;
+        const next = payload.data.preferences.haptics?.enabled !== false;
         setEnabled(next);
         setHapticPreference(next);
       } finally {
