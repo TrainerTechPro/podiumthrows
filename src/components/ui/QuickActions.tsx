@@ -426,7 +426,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
                     <Link
                       href={action.href}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 mx-1.5 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/60 active:scale-[0.98] transition-all duration-150"
+                      className="flex items-center gap-3 mx-1.5 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/60 active:scale-[0.98] transition-[background-color,transform] duration-150"
                     >
                       <div className="w-9 h-9 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0">
                         <Icon
@@ -494,10 +494,10 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
           "fixed z-[9995] w-14 h-14 rounded-full",
           "flex items-center justify-center",
           "bg-primary-500 hover:bg-primary-600 active:scale-95",
-          "text-white shadow-xl shadow-primary-500/25",
+          "text-[var(--color-text-on-brand)] shadow-xl shadow-primary-500/25",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
           "focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-          "transition-all duration-150",
+          "transition-[background-color,transform,box-shadow] duration-150",
           position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6"
         )}
         style={{

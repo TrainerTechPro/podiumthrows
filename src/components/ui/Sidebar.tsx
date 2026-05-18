@@ -78,7 +78,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           type="button"
           onClick={() => setExpanded(!expanded)}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-[background-color,color] duration-150 group",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
             isParentActive
               ? "text-primary-700 dark:text-primary-300"
@@ -135,7 +135,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 group",
+        "flex items-center gap-3 rounded-xl text-sm font-medium transition-[background-color,color] duration-150 group",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
         depth > 0 ? "px-3 py-2" : "px-3 py-2.5",
         isActive

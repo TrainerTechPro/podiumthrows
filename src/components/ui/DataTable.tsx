@@ -218,7 +218,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     className={cn(
                       "transition-colors",
                       onRowClick &&
-                        "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset",
+                        "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset",
                       rowClassName?.(row)
                     )}
                   >
@@ -482,7 +482,7 @@ export function DataTableBody<T extends Record<string, unknown>>({
             className={cn(
               "transition-colors",
               onRowClick &&
-                "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset",
+                "cursor-pointer hover:bg-surface-50 dark:hover:bg-surface-800/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset",
               rowClassName?.(row)
             )}
           >

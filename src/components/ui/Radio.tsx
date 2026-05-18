@@ -211,7 +211,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
     <span
       className={cn(
         "relative inline-flex items-center justify-center shrink-0",
-        "w-[18px] h-[18px] rounded-full border transition-all duration-150",
+        "w-[18px] h-[18px] rounded-full border transition-[border-color,border-width] duration-150",
         !isChecked && "bg-transparent border-surface-300 dark:border-surface-600",
         isChecked && "bg-transparent border-primary-500 border-[5px]",
         isDisabled && "opacity-40 cursor-not-allowed",

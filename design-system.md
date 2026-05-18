@@ -23,7 +23,17 @@ The product is not one app — it is two. The coach desktop and the athlete phon
 | Explicit transition lists                                 | `transition-all`                                                                  |
 | Type tokens (`text-body`, `text-caption`, `text-section`) | Bracketed `text-[Npx]` in app surfaces                                            |
 
-The lint scripts in `scripts/lint-hex-literals.sh` and `scripts/lint-text-sizes.sh` ratchet the last two downward. New code must not raise the baseline.
+Five ratcheting lint scripts enforce the doctrine. Run `npm run lint:design` to check all five:
+
+| Script            | Catches                                                    | Baseline file              |
+| ----------------- | ---------------------------------------------------------- | -------------------------- |
+| `lint:hex`        | Hardcoded `#RRGGBB` in app surfaces                        | `.hex-baseline.txt`        |
+| `lint:text`       | Bracketed `text-[Npx]` in app surfaces                     | `.text-size-baseline.txt`  |
+| `lint:palette`    | Raw default-Tailwind palettes (amber/emerald/red/gray/...) | `.palette-baseline.txt`    |
+| `lint:transition` | `transition-all` in app surfaces                           | `.transition-baseline.txt` |
+| `lint:focus`      | `focus:outline-none` (the unconditional suppressor)        | `.focus-baseline.txt`      |
+
+The pre-push hook runs all five. CI runs them on every PR. Baselines ratchet ONLY downward — never up. Add a new violation to a primitive and the push fails. Fix three and lower the baseline by exactly three.
 
 ### Glow is a milestone effect, not an ambient effect
 
@@ -624,12 +634,22 @@ POSE_COLORS.joint      // #ffffff
 
 ## Pending design-system follow-ups
 
-Tracked here so the next refactor pass has a punch list. Each item is "raise the bar app-wide," not a single-bug fix.
+Tracked here so the next refactor pass has a punch list. Each item is "ratchet a baseline down," not a single-bug fix. Baselines as of 2026-05-18:
 
-- **Raw Tailwind palettes in app surfaces.** `text-emerald-*`, `bg-amber-*` (default Tailwind amber, not the project `primary-*`), `text-red-*` still appear across NotificationBell, Badge, dashboards, settings. Map each to a semantic token (`text-status-success-fg`, `text-status-warning-fg`, `text-status-danger-fg`).
-- **Opacity-suffix backgrounds on content panels.** Scrim usage (`bg-black/70`) is correct; content-panel usage (`bg-surface-800/60`, `bg-primary-50/40`) needs replacing with `var(--surface-overlay)` or solid token shades.
-- **Bracketed `text-[Npx]` cleanup.** Lint baseline is 0 — keep it there. New code must use type tokens.
-- **`outline-none` without `focus-visible` ring.** A few primitives (CommandPalette search input, Tabs panel root) suppress the native outline without supplying a replacement. Replace with `focus-visible:outline-none` and pair every suppression with a ring.
-- **`transition-all` sweep in pages.** Primitives done as of 2026-05-18 (Button, .btn-\*, .input, .card-hover, Toast, Tabs). Page-level surfaces still have ~170 occurrences — convert each to an explicit property list.
-- **Marketing surface audit.** Glow / gradient decoration on `/pricing` and `/changelog` cards should be reviewed against the editorial register.
+| Lint              | Initial | After this pass | Target |
+| ----------------- | ------- | --------------- | ------ |
+| `lint:hex`        | 344     | 344             | 0      |
+| `lint:text`       | 0       | 0               | hold   |
+| `lint:palette`    | 1769    | 1763            | 0      |
+| `lint:transition` | 125     | 117             | 0      |
+| `lint:focus`      | 99      | 95              | 0      |
+
+Each follow-up below maps to a ratcheting pass. None blocks shipping individually — together they remove the AI-slop signal.
+
+- **Raw Tailwind palette migration.** Highest single-utility offenders by frequency: `text-amber-400` (107), `text-red-400` (106), `text-red-500` (83), `text-emerald-400` (75), `text-red-600` (74), `text-amber-600` (66), `text-amber-500` (64), `text-emerald-600` (59). Map each to a project token (`text-primary-*`, `text-status-success-fg`, `text-status-danger-fg`). Sweep top-10 files per pass; ratchet `.palette-baseline.txt` down by the delta.
+- **Opacity-suffix on content panels.** Scrim usage (`bg-black/70` behind modals, sheets, command palette) is correct. Content-panel usage (`bg-surface-800/60` on dropdowns, `bg-primary-50/40` on highlight rows) needs `var(--surface-overlay)` or a solid token shade.
+- **`transition-all` page-level sweep.** Primitives done in this pass. 117 page-level occurrences remain across 59 files. Top offender (14 hits) is in `coach/plans/generate/_program-builder-wizard.tsx` — but `/coach/plans/generate` is config-redirected to `/coach/builder?type=plan&mode=generate`, so that file is shadowed dead code, candidate for deletion not editing.
+- **`focus:outline-none` page-level sweep.** Primitive sweep done (DataTable, EmptyState, PasswordInput, Tabs panel). 95 page-level occurrences remain; verify each pairs with a `focus-visible:ring-*` and rename to `focus-visible:outline-none`.
+- **Marketing surface audit.** Verify `/pricing` and `/changelog` card hovers obey the "no glow" rule; the `--landing-*` token scope is dark-only and should never inherit `--color-*` semantic tokens.
 - **Coach mobile sideline view.** Currently flag-gated. When it ships, it inherits the athlete tactile vocabulary (rounded, 44px targets, 16px inputs) rather than the coach desktop vocabulary.
+- **Browser-screenshot verification.** This refactor was completed in a background session without a dev server (the test/e2e-prod-safety-20260421 incident makes `npm run dev` here unsafe — would inherit prod .env.local). Pre-merge: run `npm run screenshots:canonical` locally and visually inspect coach dashboard, coach athlete detail, athlete dashboard, athlete log session, athlete throws, pricing, auth login in both themes.
