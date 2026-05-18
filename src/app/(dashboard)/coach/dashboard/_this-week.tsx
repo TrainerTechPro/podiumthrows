@@ -83,7 +83,7 @@ export function ThisWeek({ summary }: { summary: ThisWeekSummary }) {
       <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
         <h2
           id="this-week-heading"
-          className="font-heading text-[17px] font-semibold text-[var(--color-text-primary)] tracking-tight"
+          className="font-heading text-body-lg font-semibold text-[var(--color-text-primary)] tracking-tight"
         >
           This week
         </h2>
@@ -139,10 +139,10 @@ function TileBody({ tile }: { tile: Tile }) {
           {tile.count}
         </span>
         {active && (
-          <span className="text-[10px] font-medium text-[var(--color-text-secondary)]">View →</span>
+          <span className="text-nano font-medium text-[var(--color-text-secondary)]">View →</span>
         )}
       </div>
-      <p className="text-[11px] leading-snug text-[var(--color-text-secondary)] opacity-80">
+      <p className="text-micro leading-snug text-[var(--color-text-secondary)] opacity-80">
         {tile.hint}
       </p>
     </div>

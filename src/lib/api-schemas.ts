@@ -1740,13 +1740,6 @@ export const CoachPlanUpdateSchema = z.object({
   blocks: z.array(PlanBlockSchema).nullable().optional(),
 });
 
-export const CoachAssignSessionsSchema = z.object({
-  planId: z.string().min(1, "Plan ID is required."),
-  athleteIds: z.array(z.string().min(1)).min(1, "Select at least one athlete."),
-  scheduledDate: z.string().min(1, "Scheduled date is required."),
-  coachNotes: z.string().nullable().optional(),
-});
-
 export const CoachPracticeCreateSchema = z
   .object({
     title: z.string().min(1, "title is required."),
