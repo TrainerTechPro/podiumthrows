@@ -3,6 +3,7 @@ import {
   validateImplementSequence,
   validateBlockStructure,
   validateCrossBlockSequence,
+  validateWeightDifferential,
   validateFullSession,
   type BlockInput,
 } from "@/lib/bondarchuk/session-validators";
@@ -86,10 +87,7 @@ describe("session-validators: validateBlockStructure", () => {
   });
 
   it("rejects two consecutive throwing blocks", () => {
-    const result = validateBlockStructure([
-      throwingBlock("B1", [8]),
-      throwingBlock("B2", [7.26]),
-    ]);
+    const result = validateBlockStructure([throwingBlock("B1", [8]), throwingBlock("B2", [7.26])]);
     expect(result.valid).toBe(false);
     expect(result.warnings[0].type).toBe("consecutive_throwing");
   });
@@ -132,6 +130,107 @@ describe("session-validators: validateCrossBlockSequence", () => {
   });
 });
 
+// ── validateWeightDifferential ──────────────────────────────────────────
+
+describe("session-validators: validateWeightDifferential", () => {
+  it("accepts an in-window drop (8 → 7.26 ≈ 9%)", () => {
+    const result = validateWeightDifferential([throwingBlock("B1", [8, 7.26])]);
+    expect(result.valid).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it("accepts repeated identical weights (0% diff)", () => {
+    const result = validateWeightDifferential([throwingBlock("B1", [7.26, 7.26, 7.26])]);
+    expect(result.valid).toBe(true);
+  });
+
+  it("flags a 17% drop with the 15-20% upper-limit message", () => {
+    // 9 → 7.5 = 16.7% drop
+    const result = validateWeightDifferential([throwingBlock("B1", [9, 7.5])]);
+    expect(result.valid).toBe(false);
+    const warning = result.warnings[0];
+    expect(warning.type).toBe("weight_differential");
+    expect(warning.severity).toBe("warning");
+    expect(warning.message).toMatch(/upper limit of the optimal transfer window/);
+    expect(warning.blockIndex).toBe(0);
+    expect(warning.exerciseIndex).toBe(1);
+  });
+
+  it("flags a >20% drop with the separate-adaptation-zone message", () => {
+    // 9 → 6 = 33% drop
+    const result = validateWeightDifferential([throwingBlock("B1", [9, 6])]);
+    expect(result.valid).toBe(false);
+    const warning = result.warnings[0];
+    expect(warning.severity).toBe("warning");
+    expect(warning.message).toMatch(/exceeds the 20% Vol IV ceiling/);
+    expect(warning.message).toMatch(/separate adaptation zones/);
+  });
+
+  it("treats 20% exactly as in-window (boundary inclusive)", () => {
+    // 10 → 8 = exactly 20% — the rule is "more than 20%"
+    const result = validateWeightDifferential([throwingBlock("B1", [10, 8])]);
+    // 20% diff is the soft threshold's upper limit; we flag only > 15%.
+    // 20% > 15% so it IS flagged, but as upper-limit, not exceeds-20.
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0].message).toMatch(/upper limit of the optimal transfer window/);
+    expect(result.warnings[0].message).not.toMatch(/exceeds the 20%/);
+  });
+
+  it("flags differential across consecutive throwing blocks (heaviest-to-heaviest)", () => {
+    // B1 max=9, B2 max=6 → 33% drop
+    const result = validateWeightDifferential([
+      throwingBlock("B1", [9, 8]),
+      strengthBlock("Lifts"),
+      throwingBlock("B2", [6]),
+    ]);
+    // Within-block drops are 11% (9→8) and 0%, no within-block warnings.
+    // Across blocks: 9 → 6 = 33% → warning.
+    expect(
+      result.warnings.some((w) => w.message.includes('"B1"') && w.message.includes('"B2"'))
+    ).toBe(true);
+  });
+
+  it("ignores non-throwing blocks", () => {
+    const result = validateWeightDifferential([strengthBlock("Lifts"), warmupBlock()]);
+    expect(result.valid).toBe(true);
+  });
+
+  it("ignores exercises without an implement weight", () => {
+    const block: BlockInput = {
+      name: "B1",
+      blockType: "throwing",
+      exercises: [
+        { name: "9kg throw", implementKg: 9 },
+        { name: "stretching", implementKg: null },
+        { name: "7.26kg throw", implementKg: 7.26 },
+      ],
+    };
+    // Weighted-only sequence: 9 → 7.26 = 19.3% → upper-limit warning.
+    const result = validateWeightDifferential([block]);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0].message).toMatch(/upper limit/);
+  });
+});
+
+// ── interaction with descending-order validation ────────────────────────
+
+describe("session-validators: differential × descending interaction", () => {
+  it("ascending order produces an error, while differential adds an independent warning", () => {
+    // 6 → 9 = ascending (descending-order ERROR) and 33% differential (WARNING)
+    const result = validateFullSession([throwingBlock("B1", [6, 9])]);
+    const types = result.warnings.map((w) => w.type);
+    expect(types).toContain("ascending_weight");
+    expect(types).toContain("weight_differential");
+    const error = result.warnings.find((w) => w.severity === "error");
+    expect(error?.type).toBe("ascending_weight");
+  });
+
+  it("clean descending small drop (~10%) emits no warnings", () => {
+    const result = validateFullSession([throwingBlock("B1", [8, 7.26])]);
+    expect(result.valid).toBe(true);
+  });
+});
+
 // ── validateFullSession ─────────────────────────────────────────────────
 
 describe("session-validators: validateFullSession", () => {
@@ -147,10 +246,13 @@ describe("session-validators: validateFullSession", () => {
   });
 
   it("returns valid=true for a clean session", () => {
+    // B1 max → B2 max stays under 15% (9 → 8 = 11%) so the cross-block
+    // differential rule doesn't trip. Within each block the steps are
+    // also under 15%.
     const result = validateFullSession([
       throwingBlock("B1", [9, 8, 7.26]),
       strengthBlock("Lifts"),
-      throwingBlock("B2", [6]),
+      throwingBlock("B2", [8]),
       strengthBlock("Core"),
     ]);
     expect(result.valid).toBe(true);

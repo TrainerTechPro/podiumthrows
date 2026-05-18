@@ -211,9 +211,14 @@ function CoachSessionDesktop({ initial }: Props) {
       toBlockId: targetLaneId,
     });
     const result = validateCandidateBlocks(candidate);
-    if (!result.valid) {
-      const w = result.warnings[0];
-      setViolationTooltip(`${w?.message ?? "Bondarchuk violation"} (Vol IV · p.114-117)`);
+    // Only reject drops that introduce structural violations (descending
+    // order, block structure). Soft warnings (cross_block_ascending,
+    // weight_differential) surface in the badge but shouldn't block the
+    // move — coaches need to be able to assemble a plan and review the
+    // notes afterwards.
+    const firstError = result.warnings.find((w) => w.severity === "error");
+    if (firstError) {
+      setViolationTooltip(`${firstError.message} (Vol IV · p.114-117)`);
       setValidatorPulseDanger(true);
       setTimeout(() => setValidatorPulseDanger(false), 900);
       setTimeout(() => setViolationTooltip(null), 4500);
