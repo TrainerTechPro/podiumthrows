@@ -26,7 +26,7 @@ export async function DELETE(
 
     try {
       await removeMember(id, coach.id, athleteId);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { deleted: true } });
     } catch {
       return NextResponse.json({ success: false, error: "Event group not found" }, { status: 404 });
     }

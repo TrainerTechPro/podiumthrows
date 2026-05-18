@@ -18,10 +18,7 @@ export async function PUT(req: NextRequest) {
     const { avatarUrl } = body as { avatarUrl?: string };
 
     if (!avatarUrl || typeof avatarUrl !== "string") {
-      return NextResponse.json(
-        { success: false, error: "avatarUrl is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "avatarUrl is required" }, { status: 400 });
     }
 
     if (avatarUrl.length > MAX_DATA_URL_SIZE) {
@@ -56,7 +53,10 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, data: { avatarUrl: updated.avatarUrl } });
   } catch (err) {
     logger.error("PUT /api/coach/profile-picture", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update profile picture" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update profile picture" },
+      { status: 500 }
+    );
   }
 }
 
@@ -83,9 +83,12 @@ export async function DELETE() {
       });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/coach/profile-picture", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to remove profile picture" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to remove profile picture" },
+      { status: 500 }
+    );
   }
 }

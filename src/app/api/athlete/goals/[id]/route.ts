@@ -178,7 +178,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     revalidateTag(`athlete-${athlete.id}`);
     if (athlete.coachId) revalidateTag(`coach-${athlete.coachId}`);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/athlete/goals/[id]", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to delete goal." }, { status: 500 });

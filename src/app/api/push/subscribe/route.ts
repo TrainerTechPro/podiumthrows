@@ -33,10 +33,8 @@ export async function POST(req: NextRequest) {
     const body = (await req.json().catch(() => ({}))) as SubscribeBody;
 
     const endpoint = typeof body.endpoint === "string" ? body.endpoint : null;
-    const p256dh =
-      body.keys && typeof body.keys.p256dh === "string" ? body.keys.p256dh : null;
-    const authSecret =
-      body.keys && typeof body.keys.auth === "string" ? body.keys.auth : null;
+    const p256dh = body.keys && typeof body.keys.p256dh === "string" ? body.keys.p256dh : null;
+    const authSecret = body.keys && typeof body.keys.auth === "string" ? body.keys.auth : null;
 
     if (!endpoint || !p256dh || !authSecret) {
       return NextResponse.json(
@@ -46,9 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     const expirationTime =
-      typeof body.expirationTime === "number"
-        ? new Date(body.expirationTime)
-        : null;
+      typeof body.expirationTime === "number" ? new Date(body.expirationTime) : null;
 
     const userAgent = req.headers.get("user-agent") ?? null;
 
@@ -74,7 +70,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { subscribed: true } });
   } catch (err) {
     logger.error("POST /api/push/subscribe", { context: "api", error: err });
     return NextResponse.json(
@@ -102,7 +98,7 @@ export async function DELETE(req: NextRequest) {
       where: { endpoint, userId: session.userId },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { unsubscribed: true } });
   } catch (err) {
     logger.error("DELETE /api/push/subscribe", { context: "api", error: err });
     return NextResponse.json(

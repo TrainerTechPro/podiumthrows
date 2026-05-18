@@ -59,7 +59,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     await deleteProgrammedSession(id, coach.id);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("[programming DELETE]", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

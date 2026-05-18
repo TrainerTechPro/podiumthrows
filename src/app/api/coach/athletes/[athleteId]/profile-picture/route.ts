@@ -115,7 +115,7 @@ export async function DELETE(
       data: { avatarUrl: null },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/coach/athletes/[athleteId]/profile-picture", {
       context: "api",

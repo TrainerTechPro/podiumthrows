@@ -143,7 +143,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     await prisma.workoutPlan.delete({ where: { id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/coach/plans/[id]", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to delete plan." }, { status: 500 });

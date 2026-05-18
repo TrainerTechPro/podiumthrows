@@ -32,7 +32,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ sl
       data: { lastSeenReleaseSlug: release.slug },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { acknowledged: true } });
   } catch (err) {
     logger.error("POST /api/releases/[slug]/ack", { context: "api", error: err });
     return NextResponse.json(

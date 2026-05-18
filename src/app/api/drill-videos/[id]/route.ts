@@ -5,10 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isR2Configured, deleteObject, extractR2KeyFromUrl } from "@/lib/r2";
 import { logger } from "@/lib/logger";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -37,7 +34,10 @@ export async function GET(
         select: { id: true },
       });
       if (!coachProfile) {
-        return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+        return NextResponse.json(
+          { success: false, error: "Coach profile not found" },
+          { status: 404 }
+        );
       }
       // Coach must own the video or be the coach of the athlete
       if (video.coachId !== coachProfile.id && video.athleteId) {
@@ -57,7 +57,10 @@ export async function GET(
     return NextResponse.json({ success: true, data: { ...video, videoUrl } });
   } catch (error) {
     logger.error("Get drill video error", { context: "drill-videos", error: error });
-    return NextResponse.json({ success: false, error: "Failed to get drill video" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to get drill video" },
+      { status: 500 }
+    );
   }
 }
 
@@ -120,9 +123,12 @@ export async function DELETE(
 
     await prisma.drillVideo.delete({ where: { id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (error) {
     logger.error("Delete drill video error", { context: "drill-videos", error: error });
-    return NextResponse.json({ success: false, error: "Failed to delete drill video" }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to delete drill video" },
+      { status: 500 }
+    );
   }
 }

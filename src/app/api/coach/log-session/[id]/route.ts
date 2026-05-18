@@ -240,7 +240,7 @@ export async function DELETE(
       await recalculateCoachPRs(coach.id, entry.event, affectedImplements);
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/coach/log-session/[id]", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to delete" }, { status: 500 });

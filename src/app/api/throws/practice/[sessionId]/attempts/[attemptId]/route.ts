@@ -55,7 +55,7 @@ export async function DELETE(
       { timeout: 30_000 }
     );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (error) {
     logger.error("DELETE /api/throws/practice/[sessionId]/attempts/[attemptId] error", {
       context: "throws/practice/attempts",

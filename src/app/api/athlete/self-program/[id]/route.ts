@@ -340,7 +340,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/athlete/self-program/[id]", {
       context: "api",

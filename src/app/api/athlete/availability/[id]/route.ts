@@ -2,17 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import {
-  updateAvailabilityBlock,
-  deleteAvailabilityBlock,
-} from "@/lib/data/availability";
+import { updateAvailabilityBlock, deleteAvailabilityBlock } from "@/lib/data/availability";
 
 /* ─── PATCH — update a single availability block ─────────────────────────── */
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
@@ -42,10 +36,7 @@ export async function PATCH(
 
 /* ─── DELETE — delete a single availability block ────────────────────────── */
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session || session.role !== "ATHLETE") {
@@ -62,7 +53,7 @@ export async function DELETE(
 
     const { id } = await params;
     await deleteAvailabilityBlock(id, athlete.id);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/athlete/availability/[id]", { context: "api", error: err });
     const message = err instanceof Error ? err.message : "Failed to delete availability block.";

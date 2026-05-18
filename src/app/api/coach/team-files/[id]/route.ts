@@ -6,10 +6,7 @@ import { logger } from "@/lib/logger";
 
 /* ─── DELETE — remove a team file (DB + R2) ──────────────────────────────── */
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachApi();
     const { id } = await params;
@@ -34,7 +31,7 @@ export async function DELETE(
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -46,9 +43,6 @@ export async function DELETE(
       context: "api",
       error: err,
     });
-    return NextResponse.json(
-      { success: false, error: "Failed to delete file" },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: "Failed to delete file" }, { status: 500 });
   }
 }

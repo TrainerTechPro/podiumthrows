@@ -13,10 +13,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { programId } = await params;
@@ -50,10 +47,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     });
 
     if (!program) {
-      return NextResponse.json(
-        { success: false, error: "Program not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ success: false, error: "Program not found" }, { status: 404 });
     }
 
     // Verify ownership
@@ -63,10 +57,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         select: { id: true },
       });
       if (!athleteProfile || program.athleteId !== athleteProfile.id) {
-        return NextResponse.json(
-          { success: false, error: "Forbidden" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       }
     } else if (user.role === "COACH") {
       const coachProfile = await prisma.coachProfile.findUnique({
@@ -74,10 +65,7 @@ export async function GET(req: NextRequest, { params }: Params) {
         select: { id: true },
       });
       if (!coachProfile || program.coachId !== coachProfile.id) {
-        return NextResponse.json(
-          { success: false, error: "Forbidden" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       }
     }
 
@@ -90,10 +78,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       context: "throws/program/[id]",
       error,
     });
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch program" },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch program" }, { status: 500 });
   }
 }
 
@@ -103,10 +88,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { programId } = await params;
@@ -119,10 +101,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     });
 
     if (!program) {
-      return NextResponse.json(
-        { success: false, error: "Program not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ success: false, error: "Program not found" }, { status: 404 });
     }
 
     if (user.role === "ATHLETE") {
@@ -131,10 +110,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         select: { id: true },
       });
       if (!athleteProfile || program.athleteId !== athleteProfile.id) {
-        return NextResponse.json(
-          { success: false, error: "Forbidden" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       }
     } else if (user.role === "COACH") {
       const coachProfile = await prisma.coachProfile.findUnique({
@@ -142,10 +118,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         select: { id: true },
       });
       if (!coachProfile || program.coachId !== coachProfile.id) {
-        return NextResponse.json(
-          { success: false, error: "Forbidden" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       }
     }
 
@@ -172,7 +145,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     });
     return NextResponse.json(
       { success: false, error: "Failed to update program" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -183,10 +156,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { programId } = await params;
@@ -197,10 +167,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     });
 
     if (!program) {
-      return NextResponse.json(
-        { success: false, error: "Program not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ success: false, error: "Program not found" }, { status: 404 });
     }
 
     if (user.role === "ATHLETE") {
@@ -209,10 +176,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
         select: { id: true },
       });
       if (!athleteProfile || program.athleteId !== athleteProfile.id) {
-        return NextResponse.json(
-          { success: false, error: "Forbidden" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       }
     } else if (user.role === "COACH") {
       const coachProfile = await prisma.coachProfile.findUnique({
@@ -220,10 +184,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
         select: { id: true },
       });
       if (!coachProfile || program.coachId !== coachProfile.id) {
-        return NextResponse.json(
-          { success: false, error: "Forbidden" },
-          { status: 403 },
-        );
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
       }
     }
 
@@ -232,7 +193,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       data: { status: "ARCHIVED" },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (error) {
     logger.error("Delete program error", {
       context: "throws/program/[id]",
@@ -240,7 +201,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     });
     return NextResponse.json(
       { success: false, error: "Failed to archive program" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

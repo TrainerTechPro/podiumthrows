@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.json({ success: true });
+  const response = NextResponse.json({ success: true, data: { ok: true } });
   response.headers.append("Set-Cookie", clearAuthCookie());
   response.headers.append("Set-Cookie", clearCsrfCookie());
 

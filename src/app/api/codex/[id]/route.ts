@@ -30,7 +30,7 @@ export async function DELETE(
 
     await prisma.codexEntry.delete({ where: { id: id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/codex/:id", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Failed to delete entry" }, { status: 500 });

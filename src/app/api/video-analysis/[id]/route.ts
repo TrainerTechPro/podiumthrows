@@ -133,7 +133,7 @@ export async function DELETE(
       }
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     if (err instanceof Error && err.name === "AuthError") {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

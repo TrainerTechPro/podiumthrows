@@ -29,10 +29,7 @@ export async function GET() {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== "COACH") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -42,7 +39,7 @@ export async function GET() {
     if (!coach) {
       return NextResponse.json(
         { success: false, error: "Coach profile not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -60,14 +57,15 @@ export async function GET() {
     });
 
     // Per-athlete overrides
-    const overrides = athletes.length > 0
-      ? await prisma.autoregulationSettings.findMany({
-          where: {
-            coachId: coach.id,
-            athleteId: { in: athletes.map((a) => a.id) },
-          },
-        })
-      : [];
+    const overrides =
+      athletes.length > 0
+        ? await prisma.autoregulationSettings.findMany({
+            where: {
+              coachId: coach.id,
+              athleteId: { in: athletes.map((a) => a.id) },
+            },
+          })
+        : [];
     const overrideMap = new Map(overrides.map((o) => [o.athleteId, o]));
 
     return NextResponse.json({
@@ -93,10 +91,7 @@ export async function GET() {
     });
   } catch (error) {
     logger.error("GET autoregulation-settings error", { error });
-    return NextResponse.json(
-      { success: false, error: "Failed to load settings" },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: "Failed to load settings" }, { status: 500 });
   }
 }
 
@@ -108,10 +103,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== "COACH") {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const coach = await prisma.coachProfile.findUnique({
@@ -121,7 +113,7 @@ export async function PATCH(req: NextRequest) {
     if (!coach) {
       return NextResponse.json(
         { success: false, error: "Coach profile not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -144,7 +136,7 @@ export async function PATCH(req: NextRequest) {
         },
       });
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { ok: true } });
     }
 
     if (targetType === "ATHLETES") {
@@ -158,7 +150,7 @@ export async function PATCH(req: NextRequest) {
         if (!hasAccess) {
           return NextResponse.json(
             { success: false, error: `You do not manage athlete ${a.athleteId}` },
-            { status: 403 },
+            { status: 403 }
           );
         }
       }
@@ -177,11 +169,11 @@ export async function PATCH(req: NextRequest) {
               mode: a.mode ?? "NOTIFY",
               timescalesJson: JSON.stringify(a.timescales ?? DEFAULT_TIMESCALES),
             },
-          }),
-        ),
+          })
+        )
       );
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { ok: true } });
     }
 
     if (targetType === "ATHLETE") {
@@ -192,7 +184,7 @@ export async function PATCH(req: NextRequest) {
       if (!hasAccess) {
         return NextResponse.json(
           { success: false, error: "You do not manage this athlete" },
-          { status: 403 },
+          { status: 403 }
         );
       }
 
@@ -214,18 +206,12 @@ export async function PATCH(req: NextRequest) {
         });
       }
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { ok: true } });
     }
 
-    return NextResponse.json(
-      { success: false, error: "Invalid targetType" },
-      { status: 400 },
-    );
+    return NextResponse.json({ success: false, error: "Invalid targetType" }, { status: 400 });
   } catch (error) {
     logger.error("PATCH autoregulation-settings error", { error });
-    return NextResponse.json(
-      { success: false, error: "Failed to save settings" },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: "Failed to save settings" }, { status: 500 });
   }
 }

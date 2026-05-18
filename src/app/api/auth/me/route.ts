@@ -163,7 +163,7 @@ export async function PATCH(request: NextRequest) {
         ...auditRequestInfo(request),
       });
 
-      const response = NextResponse.json({ success: true });
+      const response = NextResponse.json({ success: true, data: { ok: true } });
       response.headers.append("Set-Cookie", setAuthCookie(newToken));
       response.headers.append("Set-Cookie", setCsrfCookie());
       return response;
@@ -208,7 +208,7 @@ export async function PATCH(request: NextRequest) {
           });
         }
       }
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { ok: true } });
     }
 
     return NextResponse.json({ success: false, error: "Nothing to update" }, { status: 400 });

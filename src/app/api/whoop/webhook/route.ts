@@ -10,10 +10,7 @@ const WHOOP_WEBHOOK_SECRET = process.env.WHOOP_WEBHOOK_SECRET;
  * Verify the WHOOP webhook signature (HMAC-SHA256).
  * Returns true if valid or if no secret is configured (local dev).
  */
-async function verifyWhoopSignature(
-  rawBody: string,
-  signature: string | null
-): Promise<boolean> {
+async function verifyWhoopSignature(rawBody: string, signature: string | null): Promise<boolean> {
   if (!WHOOP_WEBHOOK_SECRET) {
     // No secret configured — skip verification in local dev
     logger.warn("WHOOP webhook: WHOOP_WEBHOOK_SECRET not set, skipping signature verification", {
@@ -22,14 +19,8 @@ async function verifyWhoopSignature(
     return true;
   }
   if (!signature) return false;
-  const expected = crypto
-    .createHmac("sha256", WHOOP_WEBHOOK_SECRET)
-    .update(rawBody)
-    .digest("hex");
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  );
+  const expected = crypto.createHmac("sha256", WHOOP_WEBHOOK_SECRET).update(rawBody).digest("hex");
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
 /**
@@ -59,7 +50,7 @@ export async function POST(request: NextRequest) {
         context: "api",
         metadata: { body },
       });
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { ok: true } });
     }
 
     // Look up connection by WHOOP user ID
@@ -70,15 +61,15 @@ export async function POST(request: NextRequest) {
 
     if (!connection) {
       // User may have disconnected — acknowledge silently
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { ok: true } });
     }
 
     await syncWhoopData(connection.id);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { ok: true } });
   } catch (err) {
     logger.error("POST /api/whoop/webhook", { context: "api", error: err });
     // Always return 200 so WHOOP doesn't retry
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { ok: true } });
   }
 }

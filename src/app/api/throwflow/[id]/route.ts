@@ -4,10 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 
 // GET /api/throwflow/[id] — get a single analysis with full details
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const currentUser = await getCurrentUser();
@@ -19,7 +16,10 @@ export async function GET(
       where: { userId: currentUser.userId },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const analysis = await prisma.throwAnalysis.findUnique({
@@ -61,9 +61,7 @@ export async function GET(
       status: analysis.status,
       errorMessage: analysis.errorMessage,
       createdAt: analysis.createdAt.toISOString(),
-      athleteName: analysis.athlete
-        ? analysis.athlete.user.email
-        : null,
+      athleteName: analysis.athlete ? analysis.athlete.user.email : null,
     };
 
     return NextResponse.json({ success: true, data });
@@ -74,10 +72,7 @@ export async function GET(
 }
 
 // DELETE /api/throwflow/[id] — delete an analysis
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const currentUser = await getCurrentUser();
@@ -89,7 +84,10 @@ export async function DELETE(
       where: { userId: currentUser.userId },
     });
     if (!coach) {
-      return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Coach profile not found" },
+        { status: 404 }
+      );
     }
 
     const analysis = await prisma.throwAnalysis.findUnique({
@@ -106,7 +104,7 @@ export async function DELETE(
 
     await prisma.throwAnalysis.delete({ where: { id: id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (error) {
     logger.error("DELETE /api/throwflow/[id] error", { context: "throwflow", error: error });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

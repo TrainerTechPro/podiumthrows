@@ -51,10 +51,7 @@ export async function POST(req: NextRequest) {
     }
     const trimmed = rawText.trim();
     if (trimmed.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "Post cannot be empty." },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Post cannot be empty." }, { status: 400 });
     }
     if (trimmed.length > MAX_POST_LENGTH) {
       return NextResponse.json(
@@ -68,15 +65,12 @@ export async function POST(req: NextRequest) {
 
     await emitCoachPost(coach.id, { body: trimmed });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { ok: true } });
   } catch (err) {
     logger.error("POST /api/coach/team-activity", {
       context: "api",
       error: err,
     });
-    return NextResponse.json(
-      { success: false, error: "Failed to create post." },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to create post." }, { status: 500 });
   }
 }

@@ -133,7 +133,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       where: { questionnaireId: id },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }

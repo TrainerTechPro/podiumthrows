@@ -5,17 +5,17 @@ import { parseBody, QuestionnaireUpdateSchema } from "@/lib/api-schemas";
 
 // Validation for type/status now lives in QuestionnaireUpdateSchema.
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
     const { id } = await params;
     const questionnaire = await getQuestionnaireById(id, coach.id);
 
     if (!questionnaire) {
-      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Questionnaire not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({ success: true, data: { questionnaire } });
@@ -24,10 +24,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
     const { id } = await params;
@@ -38,17 +35,29 @@ export async function PUT(
     });
 
     if (!existing) {
-      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Questionnaire not found" },
+        { status: 404 }
+      );
     }
 
     const parsed = await parseBody(req, QuestionnaireUpdateSchema);
     if (parsed instanceof NextResponse) return parsed;
     const {
-      title, description, type, status,
-      blocks, questions,
-      displayMode, welcomeScreen, thankYouScreen,
-      conditionalLogic, scoringEnabled, scoringRules,
-      allowAnonymous, expiresAt,
+      title,
+      description,
+      type,
+      status,
+      blocks,
+      questions,
+      displayMode,
+      welcomeScreen,
+      thankYouScreen,
+      conditionalLogic,
+      scoringEnabled,
+      scoringRules,
+      allowAnonymous,
+      expiresAt,
     } = parsed;
 
     // Build update payload — only include fields that were sent
@@ -86,10 +95,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { coach } = await requireCoachSession();
     const { id } = await params;
@@ -100,12 +106,15 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json({ success: false, error: "Questionnaire not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Questionnaire not found" },
+        { status: 404 }
+      );
     }
 
     await prisma.questionnaire.delete({ where: { id: id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }

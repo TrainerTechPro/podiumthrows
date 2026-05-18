@@ -24,7 +24,10 @@ export async function POST() {
     });
 
     if (!athlete) {
-      return NextResponse.json({ success: false, error: "Athlete profile not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Athlete profile not found" },
+        { status: 404 }
+      );
     }
 
     const connection = await prisma.whoopConnection.findUnique({
@@ -32,7 +35,10 @@ export async function POST() {
     });
 
     if (!connection) {
-      return NextResponse.json({ success: false, error: "No WHOOP connection found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "No WHOOP connection found" },
+        { status: 404 }
+      );
     }
 
     // Try to revoke the access token at WHOOP (best-effort)
@@ -55,7 +61,7 @@ export async function POST() {
       where: { id: connection.id },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { disconnected: true } });
   } catch (err) {
     logger.error("POST /api/whoop/disconnect", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });

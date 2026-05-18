@@ -52,5 +52,5 @@ export async function POST(request: NextRequest) {
     ...auditRequestInfo(request),
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, data: { restored: true } });
 }

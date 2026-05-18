@@ -10,10 +10,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { parseBody, PodiumRosterPatchSchema } from "@/lib/api-schemas";
 import { canAccessAthlete } from "@/lib/authorize";
-import {
-  computeDistanceBand,
-  calculateDeficits,
-} from "@/lib/throws/podium-profile";
+import { computeDistanceBand, calculateDeficits } from "@/lib/throws/podium-profile";
 import type { EventCode, GenderCode } from "@/lib/throws/constants";
 import { CODE_EVENT_MAP } from "@/lib/throws/constants";
 import type { StrengthBenchmarks } from "@/lib/throws/podium-profile";
@@ -21,8 +18,12 @@ import { logger } from "@/lib/logger";
 
 // Convert profile codes ("HT"/"F") → KPI standard names ("HAMMER"/"FEMALE")
 const GENDER_FULL: Record<string, string> = { M: "MALE", F: "FEMALE" };
-function kpiEvent(e: string) { return CODE_EVENT_MAP[e as EventCode] ?? e; }
-function kpiGender(g: string) { return GENDER_FULL[g] ?? g; }
+function kpiEvent(e: string) {
+  return CODE_EVENT_MAP[e as EventCode] ?? e;
+}
+function kpiGender(g: string) {
+  return GENDER_FULL[g] ?? g;
+}
 
 // ── GET ────────────────────────────────────────────────────────────────────
 
@@ -33,19 +34,19 @@ export async function GET(
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { athleteId } = await params;
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const profiles = await prisma.throwsProfile.findMany({
@@ -78,10 +79,7 @@ export async function GET(
     return NextResponse.json({ success: true, data: profiles[0], profiles });
   } catch (error) {
     logger.error("Get podium profile error", { context: "throws/podium-roster", error: error });
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch profile" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch profile" }, { status: 500 });
   }
 }
 
@@ -94,25 +92,22 @@ export async function PATCH(
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
     if (currentUser.role !== "COACH") {
-      return NextResponse.json(
-        { success: false, error: "Coaches only" },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: "Coaches only" }, { status: 403 });
     }
 
     const { athleteId } = await params;
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const body = await parseBody(request, PodiumRosterPatchSchema);
@@ -124,7 +119,7 @@ export async function PATCH(
         where: { athleteId },
         data: { status: "inactive", inactiveAt: new Date() },
       });
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, data: { ok: true } });
     }
 
     // For other updates, find the specific profile (by event if provided, else first active)
@@ -136,10 +131,7 @@ export async function PATCH(
           where: { athleteId, status: "active" },
         });
     if (!profile) {
-      return NextResponse.json(
-        { success: false, error: "Profile not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Profile not found" }, { status: 404 });
     }
 
     const updateData: Record<string, unknown> = {};
@@ -155,14 +147,10 @@ export async function PATCH(
     }
 
     // ── Implement PRs ──────────────────────────────────────────────
-    if (body.heavyImplementPr != null)
-      updateData.heavyImplementPr = body.heavyImplementPr;
-    if (body.heavyImplementKg != null)
-      updateData.heavyImplementKg = body.heavyImplementKg;
-    if (body.lightImplementPr != null)
-      updateData.lightImplementPr = body.lightImplementPr;
-    if (body.lightImplementKg != null)
-      updateData.lightImplementKg = body.lightImplementKg;
+    if (body.heavyImplementPr != null) updateData.heavyImplementPr = body.heavyImplementPr;
+    if (body.heavyImplementKg != null) updateData.heavyImplementKg = body.heavyImplementKg;
+    if (body.lightImplementPr != null) updateData.lightImplementPr = body.lightImplementPr;
+    if (body.lightImplementKg != null) updateData.lightImplementKg = body.lightImplementKg;
 
     // ── Strength benchmarks ────────────────────────────────────────
     if (body.strengthBenchmarks != null) {
@@ -170,12 +158,9 @@ export async function PATCH(
     }
 
     // ── Adaptation fields ──────────────────────────────────────────
-    if (body.adaptationProfile != null)
-      updateData.adaptationProfile = body.adaptationProfile;
-    if (body.sessionsToForm != null)
-      updateData.sessionsToForm = body.sessionsToForm;
-    if (body.recommendedMethod != null)
-      updateData.recommendedMethod = body.recommendedMethod;
+    if (body.adaptationProfile != null) updateData.adaptationProfile = body.adaptationProfile;
+    if (body.sessionsToForm != null) updateData.sessionsToForm = body.sessionsToForm;
+    if (body.recommendedMethod != null) updateData.recommendedMethod = body.recommendedMethod;
     if (body.coachNotes != null) updateData.coachNotes = body.coachNotes;
 
     // ── Recompute deficits if we have enough data ──────────────────
@@ -201,7 +186,8 @@ export async function PATCH(
         const lightPr =
           (updateData.lightImplementPr as number | null | undefined) ?? profile.lightImplementPr;
         const rawBenchmarks =
-          (updateData.strengthBenchmarks as string | null | undefined) ?? profile.strengthBenchmarks;
+          (updateData.strengthBenchmarks as string | null | undefined) ??
+          profile.strengthBenchmarks;
         const strengthBenchmarks: StrengthBenchmarks | null = rawBenchmarks
           ? JSON.parse(rawBenchmarks as string)
           : null;

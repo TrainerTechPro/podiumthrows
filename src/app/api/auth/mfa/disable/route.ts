@@ -16,16 +16,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      "unknown";
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
     const rl = await rateLimit(`mfa-disable:${ip}`, {
       maxAttempts: 3,
       windowMs: 60_000,
     });
     if (!rl.success) {
       return NextResponse.json(
-        { success: false, error:"Too many requests. Please try again later." },
+        { success: false, error: "Too many requests. Please try again later." },
         {
           status: 429,
           headers: {
@@ -51,15 +49,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (
-      !user ||
-      !user.coachProfile?.mfaEnabled ||
-      !user.coachProfile.mfaSecret
-    ) {
-      return NextResponse.json(
-        { success: false, error:"MFA is not enabled" },
-        { status: 400 }
-      );
+    if (!user || !user.coachProfile?.mfaEnabled || !user.coachProfile.mfaSecret) {
+      return NextResponse.json({ success: false, error: "MFA is not enabled" }, { status: 400 });
     }
 
     // Verify password
@@ -68,10 +59,7 @@ export async function POST(request: NextRequest) {
     }
     const passwordValid = await verifyPassword(password, user.passwordHash);
     if (!passwordValid) {
-      return NextResponse.json(
-        { success: false, error:"Invalid password" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Invalid password" }, { status: 401 });
     }
 
     // Verify TOTP
@@ -108,14 +96,14 @@ export async function POST(request: NextRequest) {
       ...auditRequestInfo(request),
     });
 
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, data: { ok: true } });
     response.headers.append("Set-Cookie", setAuthCookie(newToken));
     response.headers.append("Set-Cookie", setCsrfCookie());
     return response;
   } catch (e) {
     logger.error("MFA disable error", { context: "api", error: e });
     return NextResponse.json(
-      { success: false, error:"An unexpected error occurred" },
+      { success: false, error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

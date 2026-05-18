@@ -13,10 +13,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== "COACH") {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const body = await req.json();
@@ -25,7 +22,7 @@ export async function PATCH(req: NextRequest) {
     if (action !== "complete" && action !== "dismiss") {
       return NextResponse.json(
         { success: false, error: "action must be 'complete' or 'dismiss'" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -34,12 +31,12 @@ export async function PATCH(req: NextRequest) {
       data: { onboardingCompletedAt: new Date() },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { ok: true } });
   } catch (err) {
     logger.error("PATCH /api/coach/onboarding", { context: "api", error: err });
     return NextResponse.json(
       { success: false, error: "Failed to update onboarding status" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

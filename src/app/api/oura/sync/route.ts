@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       data: { lastSyncError: null, lastSyncErrorAt: null },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { synced: true } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     logger.error("POST /api/oura/sync", { context: "api", error: err, metadata: { message } });

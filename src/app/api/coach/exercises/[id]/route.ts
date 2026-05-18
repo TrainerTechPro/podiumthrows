@@ -8,10 +8,7 @@ const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
 
 /* ─── PATCH — update own exercise ────────────────────────────────────────── */
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -33,33 +30,56 @@ export async function PATCH(
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json({ success: false, error: "Exercise not found or not editable." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Exercise not found or not editable." },
+        { status: 404 }
+      );
     }
 
     const body = await req.json().catch(() => ({}));
-    const { name, description, category, event, implementWeight, equipment, defaultSets, defaultReps } =
-      body as Record<string, unknown>;
+    const {
+      name,
+      description,
+      category,
+      event,
+      implementWeight,
+      equipment,
+      defaultSets,
+      defaultReps,
+    } = body as Record<string, unknown>;
 
     // Validate optional fields
     if (name !== undefined && (typeof name !== "string" || name.trim().length === 0)) {
       return NextResponse.json({ success: false, error: "Name cannot be empty." }, { status: 400 });
     }
-    if (category !== undefined && (typeof category !== "string" || !VALID_CATEGORIES.includes(category))) {
+    if (
+      category !== undefined &&
+      (typeof category !== "string" || !VALID_CATEGORIES.includes(category))
+    ) {
       return NextResponse.json({ success: false, error: "Invalid category." }, { status: 400 });
     }
-    if (event !== undefined && event !== null && (typeof event !== "string" || !VALID_EVENTS.includes(event))) {
+    if (
+      event !== undefined &&
+      event !== null &&
+      (typeof event !== "string" || !VALID_EVENTS.includes(event))
+    ) {
       return NextResponse.json({ success: false, error: "Invalid event." }, { status: 400 });
     }
 
     const data: Record<string, unknown> = {};
     if (typeof name === "string") data.name = name.trim();
-    if (description !== undefined) data.description = typeof description === "string" ? description.trim() || null : null;
+    if (description !== undefined)
+      data.description = typeof description === "string" ? description.trim() || null : null;
     if (typeof category === "string") data.category = category;
     if (event !== undefined) data.event = event || null;
-    if (implementWeight !== undefined) data.implementWeight = typeof implementWeight === "number" ? implementWeight : null;
-    if (equipment !== undefined) data.equipment = typeof equipment === "string" ? equipment.trim() || null : null;
-    if (defaultSets !== undefined) data.defaultSets = typeof defaultSets === "number" ? defaultSets : null;
-    if (defaultReps !== undefined) data.defaultReps = typeof defaultReps === "string" ? defaultReps.trim() || null : null;
+    if (implementWeight !== undefined)
+      data.implementWeight = typeof implementWeight === "number" ? implementWeight : null;
+    if (equipment !== undefined)
+      data.equipment = typeof equipment === "string" ? equipment.trim() || null : null;
+    if (defaultSets !== undefined)
+      data.defaultSets = typeof defaultSets === "number" ? defaultSets : null;
+    if (defaultReps !== undefined)
+      data.defaultReps = typeof defaultReps === "string" ? defaultReps.trim() || null : null;
 
     const updated = await prisma.exercise.update({
       where: { id: id },
@@ -81,16 +101,16 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (err) {
     logger.error("PATCH /api/coach/exercises/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update exercise." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to update exercise." },
+      { status: 500 }
+    );
   }
 }
 
 /* ─── DELETE — delete own exercise ───────────────────────────────────────── */
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getSession();
@@ -111,20 +131,30 @@ export async function DELETE(
       select: { id: true, _count: { select: { blockExercises: true } } },
     });
     if (!existing) {
-      return NextResponse.json({ success: false, error: "Exercise not found or not deletable." }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "Exercise not found or not deletable." },
+        { status: 404 }
+      );
     }
     if (existing._count.blockExercises > 0) {
       return NextResponse.json(
-        { success: false, error: "Cannot delete an exercise that is used in workout plans. Remove it from all plans first." },
+        {
+          success: false,
+          error:
+            "Cannot delete an exercise that is used in workout plans. Remove it from all plans first.",
+        },
         { status: 409 }
       );
     }
 
     await prisma.exercise.delete({ where: { id: id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { deleted: true } });
   } catch (err) {
     logger.error("DELETE /api/coach/exercises/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete exercise." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to delete exercise." },
+      { status: 500 }
+    );
   }
 }
