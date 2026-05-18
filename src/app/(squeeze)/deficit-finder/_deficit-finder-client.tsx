@@ -9,12 +9,7 @@ type EventCode = "SP" | "DT" | "HT" | "JT";
 type GenderCode = "M" | "F";
 type Step = "form" | "results";
 type DeficitLevel = "above" | "within" | "below" | "far_below";
-type DeficitType =
-  | "heavy_implement"
-  | "light_implement"
-  | "strength"
-  | "balanced"
-  | "none";
+type DeficitType = "heavy_implement" | "light_implement" | "strength" | "balanced" | "none";
 
 interface DeficitResult {
   primary: DeficitType;
@@ -42,10 +37,10 @@ interface KpiBenchmark {
 const KPI_DEFAULTS: Record<string, KpiBenchmark> = {
   SP_M: { heavyRatioMin: 0.88, heavyRatioTypical: 0.93, squatBwMin: 1.8, squatBwTypical: 2.1 },
   SP_F: { heavyRatioMin: 0.87, heavyRatioTypical: 0.92, squatBwMin: 1.5, squatBwTypical: 1.8 },
-  DT_M: { heavyRatioMin: 0.85, heavyRatioTypical: 0.90, squatBwMin: 1.6, squatBwTypical: 1.9 },
+  DT_M: { heavyRatioMin: 0.85, heavyRatioTypical: 0.9, squatBwMin: 1.6, squatBwTypical: 1.9 },
   DT_F: { heavyRatioMin: 0.84, heavyRatioTypical: 0.89, squatBwMin: 1.3, squatBwTypical: 1.6 },
   HT_M: { heavyRatioMin: 0.86, heavyRatioTypical: 0.91, squatBwMin: 1.5, squatBwTypical: 1.8 },
-  HT_F: { heavyRatioMin: 0.85, heavyRatioTypical: 0.90, squatBwMin: 1.2, squatBwTypical: 1.5 },
+  HT_F: { heavyRatioMin: 0.85, heavyRatioTypical: 0.9, squatBwMin: 1.2, squatBwTypical: 1.5 },
   JT_M: { heavyRatioMin: 0.83, heavyRatioTypical: 0.88, squatBwMin: 1.4, squatBwTypical: 1.7 },
   JT_F: { heavyRatioMin: 0.82, heavyRatioTypical: 0.87, squatBwMin: 1.2, squatBwTypical: 1.5 },
 };
@@ -69,17 +64,25 @@ const EVENT_LABELS: Record<EventCode, string> = {
 };
 
 const COMP_WEIGHTS: Record<string, string> = {
-  SP_M: "7.26kg", SP_F: "4kg",
-  DT_M: "2kg", DT_F: "1kg",
-  HT_M: "7.26kg", HT_F: "4kg",
-  JT_M: "800g", JT_F: "600g",
+  SP_M: "7.26kg",
+  SP_F: "4kg",
+  DT_M: "2kg",
+  DT_F: "1kg",
+  HT_M: "7.26kg",
+  HT_F: "4kg",
+  JT_M: "800g",
+  JT_F: "600g",
 };
 
 const HEAVY_EXAMPLES: Record<string, string> = {
-  SP_M: "8kg or 9kg shot", SP_F: "5kg shot",
-  DT_M: "2.5kg discus", DT_F: "1.25kg discus",
-  HT_M: "8kg or 9kg hammer", HT_F: "5kg hammer",
-  JT_M: "900g javelin", JT_F: "700g javelin",
+  SP_M: "8kg or 9kg shot",
+  SP_F: "5kg shot",
+  DT_M: "2.5kg discus",
+  DT_F: "1.25kg discus",
+  HT_M: "8kg or 9kg hammer",
+  HT_F: "5kg hammer",
+  JT_M: "900g javelin",
+  JT_F: "700g javelin",
 };
 
 // ── Calculator Logic ─────────────────────────────────────────────────
@@ -100,12 +103,7 @@ function classifyBand(event: EventCode, gender: GenderCode, pr: number): string 
   return null;
 }
 
-function classifyLevel(
-  ratio: number,
-  min: number,
-  typical: number,
-  margin = 0.07
-): DeficitLevel {
+function classifyLevel(ratio: number, min: number, typical: number, margin = 0.07): DeficitLevel {
   const upper = typical * 1.05;
   if (ratio >= upper) return "above";
   if (ratio >= min) return "within";
@@ -126,16 +124,14 @@ function runDeficitAnalysis(
   const band = classifyBand(event, gender, competitionPr);
 
   const heavyRatio = heavyMark && heavyMark > 0 ? heavyMark / competitionPr : null;
-  const heavyStatus = heavyRatio !== null
-    ? classifyLevel(heavyRatio, kpi.heavyRatioMin, kpi.heavyRatioTypical)
-    : null;
+  const heavyStatus =
+    heavyRatio !== null
+      ? classifyLevel(heavyRatio, kpi.heavyRatioMin, kpi.heavyRatioTypical)
+      : null;
 
-  const squatBwRatio = squatKg && bodyweightKg && bodyweightKg > 0
-    ? squatKg / bodyweightKg
-    : null;
-  const squatStatus = squatBwRatio !== null
-    ? classifyLevel(squatBwRatio, kpi.squatBwMin, kpi.squatBwTypical)
-    : null;
+  const squatBwRatio = squatKg && bodyweightKg && bodyweightKg > 0 ? squatKg / bodyweightKg : null;
+  const squatStatus =
+    squatBwRatio !== null ? classifyLevel(squatBwRatio, kpi.squatBwMin, kpi.squatBwTypical) : null;
 
   // Determine primary deficit
   const deficitOrder: DeficitLevel[] = ["far_below", "below", "within", "above"];
@@ -157,23 +153,17 @@ function runDeficitAnalysis(
   // Over-powered: strength is above while heavy implement is below
   if (
     squatStatus &&
-    (squatStatus === "above") &&
+    squatStatus === "above" &&
     heavyStatus &&
     (heavyStatus === "below" || heavyStatus === "far_below")
   ) {
     overPowered = true;
   }
 
-  const overallStatuses = [heavyStatus, squatStatus].filter(
-    (s): s is DeficitLevel => s !== null
-  );
-  const worstIdx = Math.min(
-    ...overallStatuses.map((s) => deficitOrder.indexOf(s))
-  );
+  const overallStatuses = [heavyStatus, squatStatus].filter((s): s is DeficitLevel => s !== null);
+  const worstIdx = Math.min(...overallStatuses.map((s) => deficitOrder.indexOf(s)));
   const overallStatus: DeficitLevel =
-    overallStatuses.length > 0
-      ? deficitOrder[worstIdx] || "within"
-      : "within";
+    overallStatuses.length > 0 ? deficitOrder[worstIdx] || "within" : "within";
 
   return {
     primary,
@@ -193,22 +183,26 @@ const RECOMMENDATIONS: Record<DeficitType, { title: string; text: string; action
   heavy_implement: {
     title: "Heavy Implement Deficit",
     text: "Your athlete is not generating sufficient force with above-competition weights. The heavy implement mark relative to competition PR is below the Bondarchuk benchmark for this distance band.",
-    action: "Increase heavy implement proportion to 35-45% of total throws. Add heavy implement-specific drills (standing throws, power position) with the overweight implement 3-4x per week.",
+    action:
+      "Increase heavy implement proportion to 35-45% of total throws. Add heavy implement-specific drills (standing throws, power position) with the overweight implement 3-4x per week.",
   },
   light_implement: {
     title: "Light Implement Deficit",
     text: "Your athlete lacks velocity transfer from light to competition weight. This usually indicates a rhythm or timing issue rather than a raw power problem.",
-    action: "Increase light implement proportion to 30-40% of total throws. Focus on technical speed, rhythm, and full-throw execution with light implements.",
+    action:
+      "Increase light implement proportion to 30-40% of total throws. Focus on technical speed, rhythm, and full-throw execution with light implements.",
   },
   strength: {
     title: "Strength Deficit",
     text: "Your athlete's squat-to-bodyweight ratio is below the Bondarchuk standard for their throwing level. Their strength base isn't supporting their current competition marks.",
-    action: "Add 3-4 strength sessions per week with emphasis on squat and power clean. Target a minimum squat-to-bodyweight ratio improvement of 0.2 over the next training block.",
+    action:
+      "Add 3-4 strength sessions per week with emphasis on squat and power clean. Target a minimum squat-to-bodyweight ratio improvement of 0.2 over the next training block.",
   },
   balanced: {
     title: "Balanced Profile",
     text: "All measured ratios fall within the Bondarchuk target range for this distance band. Your athlete's training balance is appropriate for their competition level.",
-    action: "Maintain current implement and strength distribution. Focus on technical refinement, competition-specific volume, and peaking strategy for upcoming meets.",
+    action:
+      "Maintain current implement and strength distribution. Focus on technical refinement, competition-specific volume, and peaking strategy for upcoming meets.",
   },
   none: {
     title: "Insufficient Data",
@@ -332,7 +326,10 @@ export function DeficitFinderClient() {
           {/* Event + Gender selectors */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-heading text-xs uppercase tracking-wider mb-2" style={{ color: "#8a8278" }}>
+              <label
+                className="block font-heading text-xs uppercase tracking-wider mb-2"
+                style={{ color: "#8a8278" }}
+              >
                 Event
               </label>
               <select
@@ -346,12 +343,17 @@ export function DeficitFinderClient() {
                 }}
               >
                 {(["SP", "DT", "HT", "JT"] as EventCode[]).map((ev) => (
-                  <option key={ev} value={ev}>{EVENT_LABELS[ev]}</option>
+                  <option key={ev} value={ev}>
+                    {EVENT_LABELS[ev]}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block font-heading text-xs uppercase tracking-wider mb-2" style={{ color: "#8a8278" }}>
+              <label
+                className="block font-heading text-xs uppercase tracking-wider mb-2"
+                style={{ color: "#8a8278" }}
+              >
                 Gender
               </label>
               <select
@@ -372,7 +374,10 @@ export function DeficitFinderClient() {
 
           {/* Competition PR */}
           <div>
-            <label className="block font-heading text-xs uppercase tracking-wider mb-2" style={{ color: "#8a8278" }}>
+            <label
+              className="block font-heading text-xs uppercase tracking-wider mb-2"
+              style={{ color: "#8a8278" }}
+            >
               Competition PR (meters) *
             </label>
             <input
@@ -394,7 +399,10 @@ export function DeficitFinderClient() {
 
           {/* Heavy Implement Mark */}
           <div>
-            <label className="block font-heading text-xs uppercase tracking-wider mb-2" style={{ color: "#8a8278" }}>
+            <label
+              className="block font-heading text-xs uppercase tracking-wider mb-2"
+              style={{ color: "#8a8278" }}
+            >
               Heavy Implement Best Mark (meters)
             </label>
             <input
@@ -416,7 +424,10 @@ export function DeficitFinderClient() {
           {/* Squat + Bodyweight side by side */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-heading text-xs uppercase tracking-wider mb-2" style={{ color: "#8a8278" }}>
+              <label
+                className="block font-heading text-xs uppercase tracking-wider mb-2"
+                style={{ color: "#8a8278" }}
+              >
                 Best Squat (kg)
               </label>
               <input
@@ -435,7 +446,10 @@ export function DeficitFinderClient() {
               />
             </div>
             <div>
-              <label className="block font-heading text-xs uppercase tracking-wider mb-2" style={{ color: "#8a8278" }}>
+              <label
+                className="block font-heading text-xs uppercase tracking-wider mb-2"
+                style={{ color: "#8a8278" }}
+              >
                 Bodyweight (kg)
               </label>
               <input
@@ -457,7 +471,8 @@ export function DeficitFinderClient() {
 
           {/* Helper note */}
           <p className="font-body text-xs" style={{ color: "#5a554e" }}>
-            Enter at least the competition PR plus one other value (heavy implement mark or squat + bodyweight) for a meaningful analysis.
+            Enter at least the competition PR plus one other value (heavy implement mark or squat +
+            bodyweight) for a meaningful analysis.
           </p>
 
           {/* CTA */}
@@ -487,16 +502,22 @@ export function DeficitFinderClient() {
             {/* Header with overall status */}
             <div className="flex items-start justify-between mb-6">
               <div>
-                <p className="font-heading text-xs uppercase tracking-[0.22em] mb-1" style={{ color: "rgba(245,158,11,0.8)" }}>
+                <p
+                  className="font-heading text-xs uppercase tracking-[0.22em] mb-1"
+                  style={{ color: "rgba(245,158,11,0.8)" }}
+                >
                   Deficit Analysis
                 </p>
-                <h2 className="font-heading font-bold text-xl sm:text-2xl" style={{ color: "#f0ede6" }}>
+                <h2
+                  className="font-heading font-bold text-xl sm:text-2xl"
+                  style={{ color: "#f0ede6" }}
+                >
                   {rec.title}
                 </h2>
               </div>
               {result.overPowered && (
                 <span
-                  className="font-heading text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full"
+                  className="font-heading text-nano uppercase tracking-wider px-2.5 py-1 rounded-full"
                   style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#ef4444" }}
                 >
                   Overpowered
@@ -511,14 +532,20 @@ export function DeficitFinderClient() {
             >
               {result.heavyRatio !== null && result.heavyStatus && (
                 <div>
-                  <p className="font-heading text-xs uppercase tracking-wider mb-1" style={{ color: "#6b655a" }}>
+                  <p
+                    className="font-heading text-xs uppercase tracking-wider mb-1"
+                    style={{ color: "#6b655a" }}
+                  >
                     Heavy Impl. Ratio
                   </p>
-                  <p className="font-heading font-bold text-2xl" style={{ color: STATUS_STYLES[result.heavyStatus].color }}>
+                  <p
+                    className="font-heading font-bold text-2xl"
+                    style={{ color: STATUS_STYLES[result.heavyStatus].color }}
+                  >
                     {(result.heavyRatio * 100).toFixed(1)}%
                   </p>
                   <span
-                    className="inline-block font-heading text-[10px] uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full"
+                    className="inline-block font-heading text-nano uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full"
                     style={{
                       backgroundColor: STATUS_STYLES[result.heavyStatus].bg,
                       color: STATUS_STYLES[result.heavyStatus].color,
@@ -530,14 +557,20 @@ export function DeficitFinderClient() {
               )}
               {result.squatBwRatio !== null && result.squatStatus && (
                 <div>
-                  <p className="font-heading text-xs uppercase tracking-wider mb-1" style={{ color: "#6b655a" }}>
+                  <p
+                    className="font-heading text-xs uppercase tracking-wider mb-1"
+                    style={{ color: "#6b655a" }}
+                  >
                     Squat-to-BW
                   </p>
-                  <p className="font-heading font-bold text-2xl" style={{ color: STATUS_STYLES[result.squatStatus].color }}>
+                  <p
+                    className="font-heading font-bold text-2xl"
+                    style={{ color: STATUS_STYLES[result.squatStatus].color }}
+                  >
                     {result.squatBwRatio.toFixed(2)}x
                   </p>
                   <span
-                    className="inline-block font-heading text-[10px] uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full"
+                    className="inline-block font-heading text-nano uppercase tracking-wider mt-1 px-2 py-0.5 rounded-full"
                     style={{
                       backgroundColor: STATUS_STYLES[result.squatStatus].bg,
                       color: STATUS_STYLES[result.squatStatus].color,
@@ -552,7 +585,8 @@ export function DeficitFinderClient() {
             {/* Distance band + event */}
             {result.distanceBand && (
               <p className="font-body text-xs mb-4" style={{ color: "#6b655a" }}>
-                {EVENT_LABELS[event]} &middot; {gender === "M" ? "Men" : "Women"}&rsquo;s &middot; {result.distanceBand}m band
+                {EVENT_LABELS[event]} &middot; {gender === "M" ? "Men" : "Women"}&rsquo;s &middot;{" "}
+                {result.distanceBand}m band
               </p>
             )}
 
@@ -564,15 +598,22 @@ export function DeficitFinderClient() {
             {result.overPowered && (
               <div
                 className="rounded-lg p-4 mb-4"
-                style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}
+                style={{
+                  backgroundColor: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.15)",
+                }}
               >
-                <p className="font-heading text-xs uppercase tracking-wider mb-1" style={{ color: "#ef4444" }}>
+                <p
+                  className="font-heading text-xs uppercase tracking-wider mb-1"
+                  style={{ color: "#ef4444" }}
+                >
                   Overpowered Flag
                 </p>
                 <p className="font-body text-sm" style={{ color: "#a09a90" }}>
-                  This athlete&rsquo;s strength exceeds the target range while implement marks are below target.
-                  They are wasting adaptation capacity on general strength that isn&rsquo;t transferring to the throw.
-                  Shift volume from general preparation to specific developmental exercises.
+                  This athlete&rsquo;s strength exceeds the target range while implement marks are
+                  below target. They are wasting adaptation capacity on general strength that
+                  isn&rsquo;t transferring to the throw. Shift volume from general preparation to
+                  specific developmental exercises.
                 </p>
               </div>
             )}
@@ -580,9 +621,15 @@ export function DeficitFinderClient() {
             {/* Recommendation */}
             <div
               className="rounded-lg p-4"
-              style={{ backgroundColor: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.12)" }}
+              style={{
+                backgroundColor: "rgba(245,158,11,0.06)",
+                border: "1px solid rgba(245,158,11,0.12)",
+              }}
             >
-              <p className="font-heading text-xs uppercase tracking-wider mb-2" style={{ color: "#f59e0b" }}>
+              <p
+                className="font-heading text-xs uppercase tracking-wider mb-2"
+                style={{ color: "#f59e0b" }}
+              >
                 Training Recommendation
               </p>
               <p className="font-body text-sm leading-relaxed" style={{ color: "#a09a90" }}>
@@ -605,7 +652,8 @@ export function DeficitFinderClient() {
                 Save your results &amp; get the full methodology guide
               </p>
               <p className="font-body text-sm mb-5" style={{ color: "#8a8278" }}>
-                We&rsquo;ll email your deficit report plus the Bondarchuk Phase Ratios Cheatsheet. No spam.
+                We&rsquo;ll email your deficit report plus the Bondarchuk Phase Ratios Cheatsheet.
+                No spam.
               </p>
 
               <div className="space-y-3">
@@ -659,9 +707,18 @@ export function DeficitFinderClient() {
                 border: "1px solid #2a2720",
               }}
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4" style={{ backgroundColor: "rgba(34,197,94,0.12)" }}>
+              <div
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4"
+                style={{ backgroundColor: "rgba(34,197,94,0.12)" }}
+              >
                 <svg className="w-6 h-6" viewBox="0 0 20 20" fill="none">
-                  <path d="M5 10.5l3 3L15 7" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M5 10.5l3 3L15 7"
+                    stroke="#22c55e"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <p className="font-heading font-semibold text-base mb-2" style={{ color: "#f0ede6" }}>

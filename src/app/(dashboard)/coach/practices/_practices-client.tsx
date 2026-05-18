@@ -119,7 +119,7 @@ function PracticeCard({ practice }: { practice: PracticeListItem }) {
         }`}
       >
         <span
-          className={`text-[10px] font-bold uppercase tracking-wider ${
+          className={`text-nano font-bold uppercase tracking-wider ${
             isToday ? "text-primary-500" : "text-muted"
           }`}
         >
@@ -272,7 +272,7 @@ function ConflictSidebar({
             />
             Conflict Summary
             {hasAny && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-warning-500/15 text-warning-600 dark:text-warning-400">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-nano font-bold bg-warning-500/15 text-warning-600 dark:text-warning-400">
                 {entries.reduce((s, e) => s + e.conflicts.length, 0)}
               </span>
             )}

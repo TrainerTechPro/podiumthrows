@@ -68,7 +68,7 @@ export default async function DrillsPage({
           </div>
           <p className="text-sm text-muted">
             {drills.length} drill{drills.length !== 1 ? "s" : ""}{" "}
-            <span className="text-[10px]">
+            <span className="text-nano">
               ({globalCount} built-in · {ownCount} custom)
             </span>
           </p>

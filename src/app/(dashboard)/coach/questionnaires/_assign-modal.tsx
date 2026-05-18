@@ -131,7 +131,7 @@ export function AssignModal({
                   {a.firstName} {a.lastName}
                 </span>
                 {isAssigned && (
-                  <span className="text-[10px] text-muted ml-auto">Already assigned</span>
+                  <span className="text-nano text-muted ml-auto">Already assigned</span>
                 )}
               </label>
             );

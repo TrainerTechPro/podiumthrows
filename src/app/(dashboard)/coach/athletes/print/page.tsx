@@ -181,7 +181,7 @@ export default async function PrintRosterPage({
                   <td className="py-1.5 px-2 font-mono">
                     {a.classStanding ? (CLASS_LABEL[a.classStanding] ?? a.classStanding) : "—"}
                   </td>
-                  <td className="py-1.5 px-2 font-mono text-[11px]">{a.user.email}</td>
+                  <td className="py-1.5 px-2 font-mono text-micro">{a.user.email}</td>
                   <td className="py-1.5 px-2 font-mono tabular-nums">
                     {formatLastSession(lastSession)}
                   </td>

@@ -256,7 +256,7 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-semibold text-[var(--foreground)] text-sm truncate">{session.name}</p>
           {isActive && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex-shrink-0">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-nano font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex-shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Active
             </span>

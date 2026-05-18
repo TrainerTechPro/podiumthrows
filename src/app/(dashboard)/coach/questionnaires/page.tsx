@@ -42,7 +42,7 @@ function CompletionPill({
 
   return (
     <div
-      className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-semibold tabular-nums ${tone}`}
+      className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-micro font-semibold tabular-nums ${tone}`}
       title={
         overdue > 0
           ? `${completed} of ${total} completed · ${overdue} overdue`
@@ -53,7 +53,7 @@ function CompletionPill({
         {completed} / {total}
       </span>
       {overdue > 0 && (
-        <span className="text-[10px] font-bold uppercase tracking-wider">{overdue} late</span>
+        <span className="text-nano font-bold uppercase tracking-wider">{overdue} late</span>
       )}
     </div>
   );
@@ -176,11 +176,11 @@ export default async function QuestionnairesPage() {
                 <div className="flex items-center gap-6 text-sm text-muted shrink-0">
                   <div className="text-center hidden sm:block">
                     <div className="font-semibold text-[var(--foreground)]">{itemCount}</div>
-                    <div className="text-[10px]">{itemLabel}</div>
+                    <div className="text-nano">{itemLabel}</div>
                   </div>
                   <div className="text-center">
                     <div className="font-semibold text-[var(--foreground)]">{q.responseCount}</div>
-                    <div className="text-[10px]">responses</div>
+                    <div className="text-nano">responses</div>
                   </div>
                   {q.assignmentCount > 0 ? (
                     <CompletionPill
@@ -191,7 +191,7 @@ export default async function QuestionnairesPage() {
                   ) : (
                     <div className="text-center hidden sm:block">
                       <div className="font-semibold text-[var(--foreground)]">0</div>
-                      <div className="text-[10px]">assigned</div>
+                      <div className="text-nano">assigned</div>
                     </div>
                   )}
                 </div>

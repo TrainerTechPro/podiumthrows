@@ -337,7 +337,7 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
                 <div className="flex items-center gap-4 px-4 py-3.5">
                   {/* Date blob */}
                   <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 text-center bg-surface-100 dark:bg-surface-800 text-muted">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide leading-none">
+                    <span className="text-nano font-semibold uppercase tracking-wide leading-none">
                       {(() => {
                         const [, m] = session.date.split("-").map(Number);
                         return [

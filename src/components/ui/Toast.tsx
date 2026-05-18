@@ -445,7 +445,7 @@ function Toaster({
             aria-live="polite"
             className="pointer-events-none flex justify-center sm:justify-end"
           >
-            <span className="rounded-full border border-[var(--card-border)] bg-[var(--surface-overlay)] px-3 py-1 text-[11px] font-semibold text-muted tabular-nums shadow-sm">
+            <span className="rounded-full border border-[var(--card-border)] bg-[var(--surface-overlay)] px-3 py-1 text-micro font-semibold text-muted tabular-nums shadow-sm">
               +{overflowCount} more
             </span>
           </div>

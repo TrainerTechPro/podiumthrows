@@ -65,13 +65,27 @@ export const REGION_TO_SLUG: Record<string, { slug: Slug; side?: "left" | "right
 function slugToRegionLabel(slug: Slug, side?: "left" | "right"): string {
   const sideLabel = side === "left" ? "L." : side === "right" ? "R." : "";
   const nameMap: Record<string, string> = {
-    neck: "Neck", deltoids: "Shoulder", chest: "Chest", biceps: "Biceps",
-    triceps: "Triceps", forearm: "Forearm", hands: "Hand",
-    "upper-back": "Upper Back", "lower-back": "Lower Back",
-    abs: "Abs", obliques: "Obliques", adductors: "Hip",
-    gluteal: "Glutes", quadriceps: "Quad", hamstring: "Hamstring",
-    knees: "Knee", tibialis: "Shin", calves: "Calf",
-    ankles: "Ankle", feet: "Foot", trapezius: "Traps",
+    neck: "Neck",
+    deltoids: "Shoulder",
+    chest: "Chest",
+    biceps: "Biceps",
+    triceps: "Triceps",
+    forearm: "Forearm",
+    hands: "Hand",
+    "upper-back": "Upper Back",
+    "lower-back": "Lower Back",
+    abs: "Abs",
+    obliques: "Obliques",
+    adductors: "Hip",
+    gluteal: "Glutes",
+    quadriceps: "Quad",
+    hamstring: "Hamstring",
+    knees: "Knee",
+    tibialis: "Shin",
+    calves: "Calf",
+    ankles: "Ankle",
+    feet: "Foot",
+    trapezius: "Traps",
     head: "Head",
   };
   const name = nameMap[slug] ?? slug;
@@ -134,7 +148,8 @@ export function InteractiveBodyMap({
 
     const result: ExtendedBodyPart[] = [];
     for (const [, areas] of bySlug) {
-      const hasBilateral = areas.some((a) => a.side === "left") && areas.some((a) => a.side === "right");
+      const hasBilateral =
+        areas.some((a) => a.side === "left") && areas.some((a) => a.side === "right");
       if (hasBilateral) {
         // Both sides selected — use the highest severity so the color is
         // representative, and omit `side` so the library fills both paths.
@@ -166,9 +181,7 @@ export function InteractiveBodyMap({
       if (disabled || !part.slug) return;
 
       const slug = part.slug;
-      const existing = value.find(
-        (a) => a.slug === slug && a.side === side
-      );
+      const existing = value.find((a) => a.slug === slug && a.side === side);
 
       if (existing) {
         if (existing.severity < 3) {
@@ -187,10 +200,7 @@ export function InteractiveBodyMap({
       } else {
         // Add new with mild severity
         const region = slugToRegionLabel(slug, side);
-        onChange([
-          ...value,
-          { region, slug, side, severity: 1 },
-        ]);
+        onChange([...value, { region, slug, side, severity: 1 }]);
       }
     },
     [value, onChange, disabled]
@@ -307,11 +317,7 @@ export function InteractiveBodyMap({
 
       {/* Body diagram */}
       <div className="flex justify-center">
-        <div
-          ref={svgContainerRef}
-          onKeyDown={handleSvgKeyDown}
-          className="w-[220px] sm:w-[260px]"
-        >
+        <div ref={svgContainerRef} onKeyDown={handleSvgKeyDown} className="w-[220px] sm:w-[260px]">
           <Body
             data={bodyData}
             side={viewSide}
@@ -331,19 +337,14 @@ export function InteractiveBodyMap({
       <div className="flex justify-center gap-4">
         {([1, 2, 3] as const).map((sev) => (
           <div key={sev} className="flex items-center gap-1.5">
-            <div
-              className="w-2.5 h-2.5 rounded-sm"
-              style={{ background: SEVERITY_COLORS[sev] }}
-            />
-            <span className="text-[10px] text-muted font-medium">
-              {SEVERITY_LABELS[sev]}
-            </span>
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: SEVERITY_COLORS[sev] }} />
+            <span className="text-nano text-muted font-medium">{SEVERITY_LABELS[sev]}</span>
           </div>
         ))}
       </div>
 
       {/* Hint */}
-      <p className="text-center text-[10px] text-surface-500">
+      <p className="text-center text-nano text-surface-500">
         Tap a body part to mark soreness. Tap again to increase severity.
       </p>
 
@@ -354,7 +355,7 @@ export function InteractiveBodyMap({
             <span
               key={`${area.slug}-${area.side ?? "center"}`}
               className={cn(
-                "inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border",
+                "inline-flex items-center gap-1 text-micro font-medium px-2.5 py-1 rounded-full border",
                 SEVERITY_TAG_STYLES[area.severity]
               )}
             >

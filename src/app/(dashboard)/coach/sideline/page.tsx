@@ -77,7 +77,7 @@ export default async function CoachSidelinePage() {
       {/* Sticky header — sideline · team name + Full coach view pill */}
       <header className="sticky top-0 -mx-4 px-4 sm:-mx-6 sm:px-6 py-3 bg-[var(--background)] z-10 flex items-center justify-between gap-3 border-b border-[var(--card-border)]/50">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
+          <p className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
             Sideline
           </p>
           <h1 className="font-heading text-lg font-semibold text-[var(--foreground)] truncate">

@@ -87,11 +87,7 @@ function Sparkline({ history }: { history: { date: string; score: number }[] }) 
         }
         const barHeight = Math.max(2, (score / 10) * height);
         const fillClass =
-          score >= 7
-            ? "fill-emerald-500"
-            : score >= 5
-            ? "fill-amber-500"
-            : "fill-red-500";
+          score >= 7 ? "fill-emerald-500" : score >= 5 ? "fill-amber-500" : "fill-red-500";
         return (
           <rect
             key={i}
@@ -110,21 +106,13 @@ function Sparkline({ history }: { history: { date: string; score: number }[] }) 
 
 /* ─── Main Component ─────────────────────────────────────────────── */
 
-export function ReadinessGrid({
-  athletes,
-}: {
-  athletes: TeamReadinessDetail[];
-}) {
+export function ReadinessGrid({ athletes }: { athletes: TeamReadinessDetail[] }) {
   const [eventFilter, setEventFilter] = useState("ALL");
 
   const filtered =
-    eventFilter === "ALL"
-      ? athletes
-      : athletes.filter((a) => a.events.includes(eventFilter));
+    eventFilter === "ALL" ? athletes : athletes.filter((a) => a.events.includes(eventFilter));
 
-  const flagged = filtered.filter(
-    (a) => a.latestScore !== null && a.latestScore < THRESHOLD
-  );
+  const flagged = filtered.filter((a) => a.latestScore !== null && a.latestScore < THRESHOLD);
 
   return (
     <>
@@ -139,16 +127,10 @@ export function ReadinessGrid({
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-              {flagged.length} athlete{flagged.length !== 1 ? "s" : ""} below
-              readiness threshold
+              {flagged.length} athlete{flagged.length !== 1 ? "s" : ""} below readiness threshold
             </p>
             <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5 truncate">
-              {flagged
-                .map(
-                  (a) =>
-                    `${a.athleteName} (${a.latestScore?.toFixed(1)})`
-                )
-                .join(" · ")}
+              {flagged.map((a) => `${a.athleteName} (${a.latestScore?.toFixed(1)})`).join(" · ")}
             </p>
           </div>
         </div>
@@ -184,9 +166,7 @@ export function ReadinessGrid({
       {filtered.length === 0 ? (
         <div className="card text-center py-12">
           <p className="text-sm text-muted">
-            {athletes.length === 0
-              ? "No readiness data yet."
-              : "No athletes in this event group."}
+            {athletes.length === 0 ? "No readiness data yet." : "No athletes in this event group."}
           </p>
           {athletes.length === 0 && (
             <p className="text-xs text-muted mt-1">
@@ -230,8 +210,7 @@ export function ReadinessGrid({
                     {athlete.athleteName}
                   </p>
                   <p className="text-xs text-muted truncate">
-                    {athlete.events.map(formatEventName).join(" · ") ||
-                      "No events"}
+                    {athlete.events.map(formatEventName).join(" · ") || "No events"}
                   </p>
                 </div>
 
@@ -257,14 +236,12 @@ export function ReadinessGrid({
               {/* Category badges row */}
               {athlete.latestScore !== null && (
                 <div className="flex items-center gap-1.5 px-4 pb-3 pt-0">
-                  {(
-                    Object.entries(athlete.categories) as [string, number | null][]
-                  )
+                  {(Object.entries(athlete.categories) as [string, number | null][])
                     .filter(([, v]) => v !== null)
                     .map(([key, value]) => (
                       <span
                         key={key}
-                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${categoryBadgeColor(
+                        className={`text-nano font-semibold px-1.5 py-0.5 rounded ${categoryBadgeColor(
                           value!
                         )}`}
                       >

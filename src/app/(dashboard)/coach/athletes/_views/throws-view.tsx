@@ -259,7 +259,7 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
           >
             {tab.label}
             {tab.id === "podium" && podiumAthletes.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgba(212,168,67,0.12)] text-primary-600 dark:text-primary-300 text-[10px] font-bold">
+              <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgba(212,168,67,0.12)] text-primary-600 dark:text-primary-300 text-nano font-bold">
                 {podiumAthletes.length}
               </span>
             )}
@@ -516,14 +516,14 @@ function PodiumAthleteCard({
             {profile.athlete.user.firstName} {profile.athlete.user.lastName}
           </p>
           <span
-            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold text-white flex-shrink-0"
+            className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-micro font-semibold text-white flex-shrink-0"
             style={{ backgroundColor: eventColor }}
           >
             {eventLabel}
             <span className="opacity-80">{profile.gender === "M" ? "♂" : "♀"}</span>
           </span>
           {profile.competitionPb && (
-            <span className="text-[11px] font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
+            <span className="text-micro font-mono text-surface-700 dark:text-surface-300 flex-shrink-0">
               {profile.competitionPb.toFixed(2)}m
               {profile.currentDistanceBand && (
                 <span className="font-sans ml-1 text-muted">
@@ -536,12 +536,12 @@ function PodiumAthleteCard({
         <div className="flex items-center gap-2 flex-wrap">
           {deficitLevel && deficitType && deficitType !== "none" ? (
             <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium flex-shrink-0 ${DEFICIT_LEVEL_COLORS[deficitLevel]} ${DEFICIT_LEVEL_BG[deficitLevel]}`}
+              className={`inline-flex items-center px-2 py-0.5 rounded-md text-nano font-medium flex-shrink-0 ${DEFICIT_LEVEL_COLORS[deficitLevel]} ${DEFICIT_LEVEL_BG[deficitLevel]}`}
             >
               {DEFICIT_TYPE_LABELS[deficitType]}
             </span>
           ) : (
-            <span className="text-[10px] text-muted flex-shrink-0">
+            <span className="text-nano text-muted flex-shrink-0">
               {profile.competitionPb ? "Awaiting test data" : "No PB entered"}
             </span>
           )}
@@ -674,7 +674,7 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
           </select>
           {p.autoImported && (
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
                 <svg
                   className="w-2.5 h-2.5"
                   fill="none"
@@ -692,12 +692,12 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
                 Auto-imported
               </span>
               {p.autoImportedPrCount > 0 && (
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                <span className="text-nano text-emerald-600 dark:text-emerald-400">
                   {p.autoImportedPrCount} mark{p.autoImportedPrCount !== 1 ? "s" : ""} found
                 </span>
               )}
               {rosterMatch && rosterMatch.events?.length > 0 && (
-                <span className="text-[10px] text-surface-700 dark:text-surface-300">
+                <span className="text-nano text-surface-700 dark:text-surface-300">
                   {rosterMatch.events.length} event{rosterMatch.events.length !== 1 ? "s" : ""}
                 </span>
               )}
@@ -756,7 +756,7 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
                   key={unit}
                   type="button"
                   onClick={() => p.setEnrollDistUnit(unit)}
-                  className={`px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
+                  className={`px-2.5 py-0.5 text-nano font-medium transition-colors ${
                     p.enrollDistUnit === unit
                       ? "bg-primary-500 text-white"
                       : "bg-surface-100 dark:bg-surface-800 text-muted hover:text-[var(--foreground)]"
@@ -862,7 +862,7 @@ function AllTab(p: AllTabProps) {
                   {athlete.user.firstName} {athlete.user.lastName}
                 </p>
                 {!isClaimed && rosterMatch && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 flex-shrink-0">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 flex-shrink-0">
                     Not yet claimed
                   </span>
                 )}
@@ -874,7 +874,7 @@ function AllTab(p: AllTabProps) {
 
             {enrolled && profileRow ? (
               <span
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-white flex-shrink-0"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-micro font-semibold text-white flex-shrink-0"
                 style={{
                   backgroundColor: EVENT_COLORS[profileRow.event as EventCode] ?? "#d4a843",
                 }}
@@ -896,7 +896,7 @@ function AllTab(p: AllTabProps) {
                 Podium {EVENT_LABELS[profileRow.event as EventCode]}
               </span>
             ) : (
-              <span className="text-[11px] text-muted flex-shrink-0">Not enrolled</span>
+              <span className="text-micro text-muted flex-shrink-0">Not enrolled</span>
             )}
 
             <div

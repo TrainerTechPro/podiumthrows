@@ -565,7 +565,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
               role="status"
             />
           )}
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-nano font-mono font-medium text-surface-400 bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
             ESC
           </kbd>
           <button
@@ -594,7 +594,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                 aria-selected={active}
                 onClick={() => setFilter(f.key)}
                 className={cn(
-                  "shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+                  "shrink-0 px-2.5 py-1 rounded-full text-micro font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
                   active
                     ? "bg-primary-500/15 text-primary-700 dark:text-primary-300 border border-primary-500/30"
                     : "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 border border-transparent hover:text-[var(--foreground)]"
@@ -604,7 +604,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
               </button>
             );
           })}
-          <span className="ml-auto hidden sm:inline-flex items-center gap-1 text-[10px] text-surface-400 shrink-0 pr-1">
+          <span className="ml-auto hidden sm:inline-flex items-center gap-1 text-nano text-surface-400 shrink-0 pr-1">
             <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
               Tab
             </kbd>
@@ -622,7 +622,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
           {/* Recent searches — only when no query and not scoped */}
           {!hasQuery && filter === "all" && recentSearches.length > 0 && (
             <>
-              <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="px-4 py-1.5 text-nano font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Clock size={12} strokeWidth={1.75} aria-hidden="true" />
                 Recent
               </div>
@@ -674,7 +674,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
               : `Show more in ${meta.label}`;
             return (
               <div key={group} role="group" aria-label={meta.label}>
-                <div className="px-4 py-1.5 text-[10px] font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
+                <div className="px-4 py-1.5 text-nano font-semibold text-surface-400 uppercase tracking-wider flex items-center gap-1.5">
                   <span className="shrink-0">{meta.icon}</span>
                   {meta.label}
                 </div>
@@ -738,7 +738,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                           )
                         )}
                         {isContentRow && item.subtitle && (
-                          <span className="text-[10px] uppercase tracking-wider text-surface-400 dark:text-surface-500 mt-0.5 truncate block">
+                          <span className="text-nano uppercase tracking-wider text-surface-400 dark:text-surface-500 mt-0.5 truncate block">
                             {item.subtitle}
                           </span>
                         )}
@@ -750,7 +750,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
                   <button
                     type="button"
                     onClick={() => navigate(showMoreHref)}
-                    className="w-full text-left px-4 py-2 text-[11px] font-medium text-primary-600 dark:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors flex items-center gap-1"
+                    className="w-full text-left px-4 py-2 text-micro font-medium text-primary-600 dark:text-primary-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors flex items-center gap-1"
                   >
                     {showMoreLabel}
                     <ArrowRight size={11} strokeWidth={1.75} aria-hidden="true" />
@@ -762,7 +762,7 @@ export function CommandPalette({ sections }: CommandPaletteProps) {
         </div>
 
         {/* Footer hint */}
-        <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--card-border)] text-[10px] text-surface-400">
+        <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--card-border)] text-nano text-surface-400">
           <span className="flex items-center gap-1">
             <kbd className="px-1 py-0.5 rounded font-mono bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
               &uarr;&darr;

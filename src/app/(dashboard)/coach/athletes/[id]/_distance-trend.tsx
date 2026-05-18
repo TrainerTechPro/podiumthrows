@@ -46,8 +46,8 @@ function formatTooltipDate(iso: string): string {
 /* ─── Data Processing ───────────────────────────────────────────────────── */
 
 interface ChartPoint {
-  date: string;      // ISO date string (day precision)
-  dateLabel: string;  // "Mar 12"
+  date: string; // ISO date string (day precision)
+  dateLabel: string; // "Mar 12"
   event: string;
   distance: number;
   implementWeight: number;
@@ -61,9 +61,7 @@ function processThrows(
   rangeDays: number
 ): { points: ChartPoint[]; eventKeys: string[] } {
   const now = new Date();
-  const cutoff = rangeDays > 0
-    ? new Date(now.getTime() - rangeDays * 86_400_000)
-    : null;
+  const cutoff = rangeDays > 0 ? new Date(now.getTime() - rangeDays * 86_400_000) : null;
 
   // Filter and group by date+event (best distance per day per event)
   const grouped = new Map<string, ChartPoint>();
@@ -90,9 +88,7 @@ function processThrows(
     }
   }
 
-  const points = [...grouped.values()].sort(
-    (a, b) => a.date.localeCompare(b.date)
-  );
+  const points = [...grouped.values()].sort((a, b) => a.date.localeCompare(b.date));
 
   const eventKeys = [...new Set(points.map((p) => p.event))].sort();
 
@@ -129,10 +125,7 @@ function buildSeries(
 
 /* ─── Tooltip Meta (parallel to series data) ────────────────────────────── */
 
-function buildTooltipMeta(
-  points: ChartPoint[],
-  eventKeys: string[]
-): Map<string, ChartPoint> {
+function buildTooltipMeta(points: ChartPoint[], eventKeys: string[]): Map<string, ChartPoint> {
   const meta = new Map<string, ChartPoint>();
   eventKeys.forEach((event, si) => {
     const eventPoints = points.filter((p) => p.event === event);
@@ -179,21 +172,12 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
     [throws, selectedEvents, rangeDays]
   );
 
-  const { series, prLookup } = useMemo(
-    () => buildSeries(points, eventKeys),
-    [points, eventKeys]
-  );
+  const { series, prLookup } = useMemo(() => buildSeries(points, eventKeys), [points, eventKeys]);
 
-  const tooltipMeta = useMemo(
-    () => buildTooltipMeta(points, eventKeys),
-    [points, eventKeys]
-  );
+  const tooltipMeta = useMemo(() => buildTooltipMeta(points, eventKeys), [points, eventKeys]);
 
   // Events that exist in the data (for filter pills)
-  const availableEvents = useMemo(
-    () => [...new Set(throws.map((t) => t.event))].sort(),
-    [throws]
-  );
+  const availableEvents = useMemo(() => [...new Set(throws.map((t) => t.event))].sort(), [throws]);
 
   // Hover handlers
   const handlePointHover = useCallback(
@@ -233,7 +217,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
             {/* Diamond overlay */}
             <polygon
               points={`${info.svgX},${info.svgY - 7} ${info.svgX + 4},${info.svgY} ${info.svgX},${info.svgY + 7} ${info.svgX - 4},${info.svgY}`}
-              fill="#FFC800"
+              fill="var(--color-brand)"
               stroke="var(--card-bg)"
               strokeWidth="1"
               opacity="0.9"
@@ -260,9 +244,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
   if (throws.length === 0) {
     return (
       <div className="card px-6 py-10 text-center">
-        <p className="text-sm text-muted">
-          Log throws to see distance trends
-        </p>
+        <p className="text-sm text-muted">Log throws to see distance trends</p>
       </div>
     );
   }
@@ -322,9 +304,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
       {/* Chart */}
       {points.length === 0 ? (
         <div className="card px-6 py-10 text-center">
-          <p className="text-sm text-muted">
-            No throws in the selected range
-          </p>
+          <p className="text-sm text-muted">No throws in the selected range</p>
         </div>
       ) : (
         <div className="card p-4 relative" ref={chartRef}>
@@ -345,10 +325,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
             <div
               className="absolute z-50 pointer-events-none"
               style={{
-                left: Math.min(
-                  hovered.mouseX + 12,
-                  (chartRef.current?.offsetWidth ?? 300) - 180
-                ),
+                left: Math.min(hovered.mouseX + 12, (chartRef.current?.offsetWidth ?? 300) - 180),
                 top: Math.max(hovered.mouseY - 60, 4),
               }}
             >
@@ -361,20 +338,14 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
                     className="w-2 h-2 rounded-full shrink-0"
                     style={{ backgroundColor: hovered.info.color }}
                   />
-                  <span className="text-muted">
-                    {formatEventLabel(hovered.meta.event)}
-                  </span>
+                  <span className="text-muted">{formatEventLabel(hovered.meta.event)}</span>
                 </div>
                 <p className="font-mono tabular-nums text-[var(--foreground)] text-sm font-bold">
                   {hovered.meta.distance.toFixed(2)}m
                 </p>
-                <p className="text-muted">
-                  {formatImplementWeight(hovered.meta.implementWeight)}
-                </p>
+                <p className="text-muted">{formatImplementWeight(hovered.meta.implementWeight)}</p>
                 {hovered.meta.isPersonalBest && (
-                  <p className="text-amber-500 font-semibold">
-                    ◆ Personal Record
-                  </p>
+                  <p className="text-amber-500 font-semibold">◆ Personal Record</p>
                 )}
               </div>
             </div>
@@ -384,7 +355,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
           {prLookup.size > 0 && (
             <div className="flex items-center gap-1.5 mt-2 ml-1">
               <span className="text-amber-500 text-xs">◆</span>
-              <span className="text-[11px] text-muted">Personal Record</span>
+              <span className="text-micro text-muted">Personal Record</span>
             </div>
           )}
         </div>

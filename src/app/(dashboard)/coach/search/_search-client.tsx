@@ -280,7 +280,7 @@ export function SearchPageClient({ initialQuery, initialKind }: SearchPageClient
               {hasQuery && counts && (
                 <span
                   className={cn(
-                    "rounded-full text-[10px] font-mono px-1.5",
+                    "rounded-full text-nano font-mono px-1.5",
                     active
                       ? "bg-primary-500/20 text-primary-700 dark:text-primary-300"
                       : "bg-surface-200/60 dark:bg-surface-700 text-surface-500 dark:text-surface-400"
@@ -344,7 +344,7 @@ export function SearchPageClient({ initialQuery, initialKind }: SearchPageClient
                   <div className="flex items-start justify-between gap-3 mb-1">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider",
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-nano font-medium uppercase tracking-wider",
                         KIND_META[hit.kind].tint
                       )}
                     >
@@ -352,7 +352,7 @@ export function SearchPageClient({ initialQuery, initialKind }: SearchPageClient
                       {KIND_META[hit.kind].label}
                     </span>
                     <time
-                      className="text-[10px] font-mono text-surface-400 dark:text-surface-500 shrink-0"
+                      className="text-nano font-mono text-surface-400 dark:text-surface-500 shrink-0"
                       dateTime={hit.createdAt}
                     >
                       {new Date(hit.createdAt).toLocaleDateString()}
@@ -362,7 +362,7 @@ export function SearchPageClient({ initialQuery, initialKind }: SearchPageClient
                     {hit.title}
                   </h3>
                   {hit.parentLabel && (
-                    <p className="text-[11px] text-surface-400 dark:text-surface-500 truncate mt-0.5">
+                    <p className="text-micro text-surface-400 dark:text-surface-500 truncate mt-0.5">
                       {hit.parentLabel}
                     </p>
                   )}

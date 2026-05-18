@@ -14,13 +14,18 @@ interface TimelineProgressDotsProps {
 export function TimelineProgressDots({
   total,
   completed,
-  accentColor = "#FFC800",
+  accentColor = "var(--color-brand)",
 }: TimelineProgressDotsProps) {
   // Clamp to reasonable max for display
   const displayTotal = Math.min(total, 30);
 
   return (
-    <div className="flex flex-wrap gap-1.5 py-1" role="progressbar" aria-valuenow={completed} aria-valuemax={total}>
+    <div
+      className="flex flex-wrap gap-1.5 py-1"
+      role="progressbar"
+      aria-valuenow={completed}
+      aria-valuemax={total}
+    >
       {Array.from({ length: displayTotal }, (_, i) => {
         const isFilled = i < completed;
         const isCurrent = i === completed && completed < total;

@@ -427,7 +427,7 @@ function ActiveBlockCard({
             className="my-1 flex w-full items-baseline gap-2 text-left"
             aria-label="Edit distance"
           >
-            <span className="font-mono text-[60px] font-semibold leading-none tabular-nums tracking-[-0.025em] text-[var(--foreground)]">
+            <span className="font-mono text-6xl font-semibold leading-none tabular-nums tracking-[-0.025em] text-[var(--foreground)]">
               <NumberFlow value={distanceNumber ?? 0} decimals={2} duration={350} />
             </span>
             <span className="font-mono text-section font-medium text-[var(--muted)]">m</span>

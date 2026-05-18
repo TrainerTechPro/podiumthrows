@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useRef, type Dispatch } from "react";
-import type {
-  StrengthBlock,
-  LiftEntry,
-  SessionAction,
-} from "./use-session-reducer";
+import type { StrengthBlock, LiftEntry, SessionAction } from "./use-session-reducer";
 import { CLASSIFICATION_COLORS } from "@/lib/throws/constants";
 
 // ── Props ────────────────────────────────────────────────────────────
@@ -67,7 +63,9 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
 
   const setsLogged = logged.length;
   const allDone = setsLogged >= block.sets;
-  const categoryColor = CLASSIFICATION_COLORS[block.classification] ?? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+  const categoryColor =
+    CLASSIFICATION_COLORS[block.classification] ??
+    "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
 
   function handleLog() {
     const w = parseFloat(weight);
@@ -122,9 +120,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
                 {lift.weight}kg &times; {lift.reps}
                 {lift.rpe ? ` @ RPE ${lift.rpe}` : ""}
               </span>
-              {!lift.synced && (
-                <span className="text-xs text-gray-400">...</span>
-              )}
+              {!lift.synced && <span className="text-xs text-gray-400">...</span>}
             </div>
           ))}
         </div>
@@ -154,7 +150,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
         <div className="space-y-2">
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
+              <label className="text-nano uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
                 kg
               </label>
               <input
@@ -170,7 +166,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
               />
             </div>
             <div className="flex-1">
-              <label className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
+              <label className="text-nano uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
                 Reps
               </label>
               <input
@@ -185,7 +181,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
               />
             </div>
             <div className="w-16">
-              <label className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
+              <label className="text-nano uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
                 RPE
               </label>
               <input

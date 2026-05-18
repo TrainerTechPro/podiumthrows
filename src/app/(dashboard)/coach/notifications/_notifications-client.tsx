@@ -312,7 +312,7 @@ function NotificationCard({
             if (!n.read) onMarkRead(n.id, true);
             else onMarkRead(n.id, false);
           }}
-          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-info-500 text-white text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-info-500/50"
+          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-info-500 text-white text-micro font-semibold focus:outline-none focus:ring-2 focus:ring-info-500/50"
           tabIndex={swipeOpen ? 0 : -1}
         >
           <Check size={16} strokeWidth={2.25} aria-hidden="true" />
@@ -324,7 +324,7 @@ function NotificationCard({
             closeSwipe();
             onDelete(n.id);
           }}
-          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-danger-500 text-white text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-danger-500/50"
+          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-danger-500 text-white text-micro font-semibold focus:outline-none focus:ring-2 focus:ring-danger-500/50"
           tabIndex={swipeOpen ? 0 : -1}
         >
           <Trash2 size={16} strokeWidth={2.25} aria-hidden="true" />
@@ -362,7 +362,7 @@ function NotificationCard({
                   aria-label="Unread"
                 />
               )}
-              <span className="text-[10px] text-muted tabular-nums whitespace-nowrap">
+              <span className="text-nano text-muted tabular-nums whitespace-nowrap">
                 {relativeTime(n.createdAt)}
               </span>
             </div>
@@ -377,7 +377,7 @@ function NotificationCard({
               onClick={() => {
                 if (!n.read) onMarkRead(n.id, true);
               }}
-              className="text-[10px] text-primary-600 dark:text-primary-400 hover:underline"
+              className="text-nano text-primary-600 dark:text-primary-400 hover:underline"
             >
               View details →
             </Link>

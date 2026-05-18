@@ -17,6 +17,12 @@ export type WidgetId =
   | "pr-tracker"
   | "weekly-goal";
 
+// MVP cut (2026-05-15): "videos" and "questionnaires" are flag-gated post-MVP
+// (`videoAnnotator` + `questionnaireBuilder` in src/lib/flags.ts). Dropped from
+// the pickable catalog so the customize panel doesn't surface widgets the
+// athlete can't actually fill. The IDs remain in the `WidgetId` union below so
+// legacy stored configs deserialize without errors and the WidgetRenderer
+// switch stays exhaustive. Add back to both arrays when the flags ship on.
 export const WIDGET_IDS: WidgetId[] = [
   "readiness",
   "today-workout",
@@ -26,8 +32,6 @@ export const WIDGET_IDS: WidgetId[] = [
   "goals",
   "volume",
   "upcoming-sessions",
-  "videos",
-  "questionnaires",
   "this-week",
   "pr-tracker",
   "weekly-goal",
@@ -42,19 +46,69 @@ export type WidgetMeta = {
 };
 
 export const WIDGET_CATALOG: WidgetMeta[] = [
-  { id: "readiness", name: "Readiness Score", description: "Today's readiness check-in and score", icon: "Heart", pinned: true },
-  { id: "today-workout", name: "Today's Workout", description: "Preview timeline of today's sessions", icon: "Dumbbell" },
-  { id: "calendar", name: "Workout Calendar", description: "Month view with session indicators", icon: "Calendar" },
+  {
+    id: "readiness",
+    name: "Readiness Score",
+    description: "Today's readiness check-in and score",
+    icon: "Heart",
+    pinned: true,
+  },
+  {
+    id: "today-workout",
+    name: "Today's Workout",
+    description: "Preview timeline of today's sessions",
+    icon: "Dumbbell",
+  },
+  {
+    id: "calendar",
+    name: "Workout Calendar",
+    description: "Month view with session indicators",
+    icon: "Calendar",
+  },
   { id: "prs", name: "Personal Bests", description: "Latest PRs across events", icon: "Award" },
-  { id: "quick-stats", name: "Quick Stats", description: "Sessions this week, streak, total", icon: "Hash" },
-  { id: "goals", name: "Goals Progress", description: "Active goals with progress bars", icon: "Target" },
-  { id: "volume", name: "Training Volume", description: "Weekly throws/lifts volume chart", icon: "TrendingUp" },
-  { id: "upcoming-sessions", name: "Upcoming Sessions", description: "Next 5 scheduled sessions", icon: "CalendarDays" },
-  { id: "videos", name: "Recent Videos", description: "Latest coaching videos", icon: "Video" },
-  { id: "questionnaires", name: "Pending Questionnaires", description: "Unanswered coach questionnaires", icon: "ClipboardList" },
-  { id: "this-week", name: "This Week", description: "Totals and comparison to last week", icon: "Calendar" },
-  { id: "pr-tracker", name: "PR Tracker", description: "PRs per implement with next target", icon: "Trophy" },
-  { id: "weekly-goal", name: "Weekly Goal", description: "Set a throws target and track progress", icon: "Target" },
+  {
+    id: "quick-stats",
+    name: "Quick Stats",
+    description: "Sessions this week, streak, total",
+    icon: "Hash",
+  },
+  {
+    id: "goals",
+    name: "Goals Progress",
+    description: "Active goals with progress bars",
+    icon: "Target",
+  },
+  {
+    id: "volume",
+    name: "Training Volume",
+    description: "Weekly throws/lifts volume chart",
+    icon: "TrendingUp",
+  },
+  {
+    id: "upcoming-sessions",
+    name: "Upcoming Sessions",
+    description: "Next 5 scheduled sessions",
+    icon: "CalendarDays",
+  },
+  // "videos" + "questionnaires" entries dropped in MVP cut — see WIDGET_IDS note above.
+  {
+    id: "this-week",
+    name: "This Week",
+    description: "Totals and comparison to last week",
+    icon: "Calendar",
+  },
+  {
+    id: "pr-tracker",
+    name: "PR Tracker",
+    description: "PRs per implement with next target",
+    icon: "Trophy",
+  },
+  {
+    id: "weekly-goal",
+    name: "Weekly Goal",
+    description: "Set a throws target and track progress",
+    icon: "Target",
+  },
 ];
 
 /* ─── Dashboard Config ───────────────────────────────────────────────────── */
@@ -75,13 +129,55 @@ export const PRESETS: Record<PresetId, DashboardConfig> = {
   },
   performance: {
     preset: "performance",
-    widgets: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats"],
-    order: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats"],
+    widgets: [
+      "readiness",
+      "today-workout",
+      "this-week",
+      "weekly-goal",
+      "pr-tracker",
+      "calendar",
+      "prs",
+      "quick-stats",
+    ],
+    order: [
+      "readiness",
+      "today-workout",
+      "this-week",
+      "weekly-goal",
+      "pr-tracker",
+      "calendar",
+      "prs",
+      "quick-stats",
+    ],
   },
   detailed: {
     preset: "detailed",
-    widgets: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats", "goals", "volume", "upcoming-sessions"],
-    order: ["readiness", "today-workout", "this-week", "weekly-goal", "pr-tracker", "calendar", "prs", "quick-stats", "goals", "volume", "upcoming-sessions"],
+    widgets: [
+      "readiness",
+      "today-workout",
+      "this-week",
+      "weekly-goal",
+      "pr-tracker",
+      "calendar",
+      "prs",
+      "quick-stats",
+      "goals",
+      "volume",
+      "upcoming-sessions",
+    ],
+    order: [
+      "readiness",
+      "today-workout",
+      "this-week",
+      "weekly-goal",
+      "pr-tracker",
+      "calendar",
+      "prs",
+      "quick-stats",
+      "goals",
+      "volume",
+      "upcoming-sessions",
+    ],
   },
   recovery: {
     preset: "recovery",

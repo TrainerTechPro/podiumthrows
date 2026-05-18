@@ -74,15 +74,15 @@ function MeetCard({ meet }: { meet: MeetSummary }) {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${prio.color}`}>
+          <span className={`px-2 py-0.5 rounded-md text-micro font-semibold ${prio.color}`}>
             {prio.label}
           </span>
           {upcoming ? (
-            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+            <span className="px-2 py-0.5 rounded-md text-micro font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
               Upcoming
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400">
+            <span className="px-2 py-0.5 rounded-md text-micro font-semibold bg-surface-100 dark:bg-surface-800 text-surface-500 dark:text-surface-400">
               Past
             </span>
           )}

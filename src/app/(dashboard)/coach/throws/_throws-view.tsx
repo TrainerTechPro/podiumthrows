@@ -165,7 +165,7 @@ function SortHeader({
       onClick={() => onSort(sortKey)}
     >
       <span
-        className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${
+        className={`inline-flex items-center gap-1 text-nano font-semibold uppercase tracking-wider ${
           active ? "text-primary-600 dark:text-primary-300" : "text-muted"
         }`}
       >
@@ -196,7 +196,7 @@ function ImplementSplitBar({
 }) {
   const total = split.heavy + split.competition + split.light;
   if (total === 0) {
-    return <span className="text-[10px] text-muted">No throws logged</span>;
+    return <span className="text-nano text-muted">No throws logged</span>;
   }
   const heavyPct = Math.round((split.heavy / total) * 100);
   const compPct = Math.round((split.competition / total) * 100);
@@ -206,7 +206,7 @@ function ImplementSplitBar({
       <div className="flex h-4 rounded-full overflow-hidden">
         {heavyPct > 0 && (
           <div
-            className="flex items-center justify-center text-[9px] font-bold text-white"
+            className="flex items-center justify-center text-nano font-bold text-white"
             style={{ width: `${heavyPct}%`, backgroundColor: "#ef4444" }}
             title={`Heavy: ${heavyPct}%`}
           >
@@ -215,7 +215,7 @@ function ImplementSplitBar({
         )}
         {compPct > 0 && (
           <div
-            className="flex items-center justify-center text-[9px] font-bold text-white"
+            className="flex items-center justify-center text-nano font-bold text-white"
             style={{ width: `${compPct}%`, backgroundColor: "#22c55e" }}
             title={`Comp: ${compPct}%`}
           >
@@ -224,7 +224,7 @@ function ImplementSplitBar({
         )}
         {lightPct > 0 && (
           <div
-            className="flex items-center justify-center text-[9px] font-bold text-white"
+            className="flex items-center justify-center text-nano font-bold text-white"
             style={{ width: `${lightPct}%`, backgroundColor: "#a78bfa" }}
             title={`Light: ${lightPct}%`}
           >
@@ -232,7 +232,7 @@ function ImplementSplitBar({
           </div>
         )}
       </div>
-      <div className="flex justify-between text-[10px] text-surface-700 dark:text-surface-300">
+      <div className="flex justify-between text-nano text-surface-700 dark:text-surface-300">
         <span>Hvy · {split.heavy}</span>
         <span>Comp · {split.competition}</span>
         <span>Lt · {split.light}</span>
@@ -256,11 +256,11 @@ function WellnessBar({
   const color = effectiveValue >= 7 ? "#5BB88A" : effectiveValue >= 4 ? "#D4915A" : "#D46A6A";
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] text-muted w-16 flex-shrink-0">{label}</span>
+      <span className="text-nano text-muted w-16 flex-shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[10px] font-bold text-[var(--foreground)] w-4 text-right">{value}</span>
+      <span className="text-nano font-bold text-[var(--foreground)] w-4 text-right">{value}</span>
     </div>
   );
 }
@@ -499,7 +499,7 @@ export function ThrowsView({
             <h2 className="text-sm font-semibold text-[var(--foreground)]">Roster Pulse</h2>
             <span className="text-sm text-muted">{pulse.length} enrolled</span>
             {needsAttention > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-micro font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -620,7 +620,7 @@ export function ThrowsView({
                               {row.athlete.firstName} {row.athlete.lastName}
                             </span>
                             <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0"
+                              className="text-nano font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0"
                               style={{ backgroundColor: eventColor }}
                             >
                               {eventLabel} {row.gender === "M" ? "♂" : "♀"}
@@ -628,7 +628,7 @@ export function ThrowsView({
                           </div>
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <span
-                              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${testCfg.bg} ${testCfg.text}`}
+                              className={`text-nano font-semibold px-1.5 py-0.5 rounded ${testCfg.bg} ${testCfg.text}`}
                             >
                               {row.testStatus === "overdue" && row.daysSinceTest != null
                                 ? `${row.daysSinceTest}d ago`
@@ -636,7 +636,7 @@ export function ThrowsView({
                             </span>
                             {row.trainingPhase && (
                               <span
-                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                                className="text-nano font-semibold px-1.5 py-0.5 rounded"
                                 style={{
                                   color: PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888",
                                   backgroundColor: `${PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888"}20`,
@@ -655,7 +655,7 @@ export function ThrowsView({
                                   style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }}
                                 />
                               </div>
-                              <span className="text-[10px] text-muted">/{target}</span>
+                              <span className="text-nano text-muted">/{target}</span>
                             </div>
                           </div>
                         </div>
@@ -688,7 +688,7 @@ export function ThrowsView({
                         <ImplementSplitBar split={row.implementSplit} />
                         {row.latestCheckIn && (
                           <div className="space-y-1.5">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                            <p className="text-nano font-semibold uppercase tracking-wider text-muted">
                               Wellness
                             </p>
                             <WellnessBar
@@ -749,10 +749,10 @@ export function ThrowsView({
                       currentDir={sortDir}
                       onSort={toggleSort}
                     />
-                    <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
+                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
                       Deficit
                     </th>
-                    <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
+                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
                       Phase
                     </th>
                     <SortHeader
@@ -777,10 +777,10 @@ export function ThrowsView({
                       currentDir={sortDir}
                       onSort={toggleSort}
                     />
-                    <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
+                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
                       Str
                     </th>
-                    <th className="py-2 px-2 text-left text-[10px] font-semibold uppercase tracking-wider text-muted">
+                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
                       Recent Mark
                     </th>
                     <th className="py-2 px-3 w-8" />
@@ -837,7 +837,7 @@ export function ThrowsView({
                           {/* Event */}
                           <td className="py-2.5 px-2">
                             <span
-                              className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white whitespace-nowrap"
+                              className="text-nano font-bold px-1.5 py-0.5 rounded-full text-white whitespace-nowrap"
                               style={{ backgroundColor: eventColor }}
                             >
                               {eventLabel} {row.gender === "M" ? "♂" : "♀"}
@@ -846,22 +846,22 @@ export function ThrowsView({
                           {/* Deficit */}
                           <td className="py-2.5 px-2">
                             {row.deficitPrimary && row.deficitPrimary !== "none" ? (
-                              <span className="text-[10px] text-surface-700 dark:text-surface-300 max-w-[72px] truncate block">
+                              <span className="text-nano text-surface-700 dark:text-surface-300 max-w-[72px] truncate block">
                                 {row.deficitPrimary}
                               </span>
                             ) : row.overPowered ? (
-                              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                              <span className="text-nano font-semibold text-amber-600 dark:text-amber-400">
                                 OverPwrd
                               </span>
                             ) : (
-                              <span className="text-[10px] text-muted">—</span>
+                              <span className="text-nano text-muted">—</span>
                             )}
                           </td>
                           {/* Phase */}
                           <td className="py-2.5 px-2">
                             {row.trainingPhase ? (
                               <span
-                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap"
+                                className="text-nano font-semibold px-1.5 py-0.5 rounded whitespace-nowrap"
                                 style={{
                                   color: PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888",
                                   backgroundColor: `${PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888"}20`,
@@ -870,13 +870,13 @@ export function ThrowsView({
                                 {PHASE_SHORT[row.trainingPhase] ?? row.trainingPhase.slice(0, 5)}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-muted">—</span>
+                              <span className="text-nano text-muted">—</span>
                             )}
                           </td>
                           {/* Test Status */}
                           <td className="py-2.5 px-2">
                             <span
-                              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${testCfg.bg} ${testCfg.text}`}
+                              className={`text-nano font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${testCfg.bg} ${testCfg.text}`}
                             >
                               {row.testStatus === "overdue" && row.daysSinceTest != null
                                 ? `${row.daysSinceTest}d ago`
@@ -897,7 +897,7 @@ export function ThrowsView({
                                   style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }}
                                 />
                               </div>
-                              <span className="text-[10px] text-muted">/{target}</span>
+                              <span className="text-nano text-muted">/{target}</span>
                             </div>
                           </td>
                           {/* Days Off */}
@@ -912,7 +912,7 @@ export function ThrowsView({
                           </td>
                           {/* Strength */}
                           <td className="py-2.5 px-2">
-                            <span className="text-[10px] text-muted">—</span>
+                            <span className="text-nano text-muted">—</span>
                           </td>
                           {/* Recent Mark */}
                           <td className="py-2.5 px-2">
@@ -921,7 +921,7 @@ export function ThrowsView({
                                 {row.recentBestMark.distance.toFixed(2)}m
                               </span>
                             ) : (
-                              <span className="text-[10px] text-muted">—</span>
+                              <span className="text-nano text-muted">—</span>
                             )}
                           </td>
                           {/* Chevron */}
@@ -950,13 +950,13 @@ export function ThrowsView({
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                 {/* Implement Split */}
                                 <div className="space-y-2">
-                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                                  <p className="text-nano font-semibold uppercase tracking-wider text-muted">
                                     Implement Split (7d)
                                   </p>
                                   <ImplementSplitBar split={row.implementSplit} />
                                   {prGap != null && (
                                     <div className="mt-2 pt-2 border-t border-[var(--card-border)]/50">
-                                      <p className="text-[10px] text-muted">Training → Comp gap</p>
+                                      <p className="text-nano text-muted">Training → Comp gap</p>
                                       <span
                                         className={`text-xs font-bold ${
                                           prGap > 2
@@ -970,7 +970,7 @@ export function ThrowsView({
                                           ? `−${prGap.toFixed(2)}m deficit`
                                           : `+${Math.abs(prGap).toFixed(2)}m above comp PB`}
                                       </span>
-                                      <p className="text-[10px] text-muted mt-0.5">
+                                      <p className="text-nano text-muted mt-0.5">
                                         {prForEvent?.distance.toFixed(2)}m training vs{" "}
                                         {row.competitionPb?.toFixed(2)}m comp PB
                                       </p>
@@ -979,7 +979,7 @@ export function ThrowsView({
                                 </div>
                                 {/* Wellness */}
                                 <div className="space-y-2">
-                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                                  <p className="text-nano font-semibold uppercase tracking-wider text-muted">
                                     Wellness
                                   </p>
                                   {row.latestCheckIn ? (
@@ -1001,7 +1001,7 @@ export function ThrowsView({
                                           invert
                                         />
                                       )}
-                                      <p className="text-[10px] text-muted mt-0.5">
+                                      <p className="text-nano text-muted mt-0.5">
                                         Checked in{" "}
                                         {new Date(row.latestCheckIn.date).toLocaleDateString(
                                           "en-US",
@@ -1013,12 +1013,12 @@ export function ThrowsView({
                                       </p>
                                     </div>
                                   ) : (
-                                    <p className="text-[10px] text-muted">No recent check-in</p>
+                                    <p className="text-nano text-muted">No recent check-in</p>
                                   )}
                                 </div>
                                 {/* Quick Actions + Mark */}
                                 <div className="space-y-2">
-                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                                  <p className="text-nano font-semibold uppercase tracking-wider text-muted">
                                     Quick Actions
                                   </p>
                                   <div className="flex flex-col gap-2">
@@ -1039,11 +1039,11 @@ export function ThrowsView({
                                   </div>
                                   {row.recentBestMark && (
                                     <div className="mt-1 pt-2 border-t border-[var(--card-border)]/50">
-                                      <p className="text-[10px] text-muted">Recent best mark</p>
+                                      <p className="text-nano text-muted">Recent best mark</p>
                                       <p className="text-sm font-bold text-[var(--foreground)]">
                                         {row.recentBestMark.distance.toFixed(2)}m
                                       </p>
-                                      <p className="text-[10px] text-muted">
+                                      <p className="text-nano text-muted">
                                         {new Date(row.recentBestMark.date).toLocaleDateString(
                                           "en-US",
                                           {
@@ -1211,28 +1211,28 @@ export function ThrowsView({
             </p>
             <div className="flex h-6 rounded-full overflow-hidden">
               <div
-                className="flex items-center justify-center text-[10px] font-bold text-white"
+                className="flex items-center justify-center text-nano font-bold text-white"
                 style={{ width: `${phaseDist.heavyPercent}%`, backgroundColor: "#ef4444" }}
                 title={`Heavy: ${phaseDist.heavyPercent}%`}
               >
                 {phaseDist.heavyPercent}%
               </div>
               <div
-                className="flex items-center justify-center text-[10px] font-bold text-white"
+                className="flex items-center justify-center text-nano font-bold text-white"
                 style={{ width: `${phaseDist.compPercent}%`, backgroundColor: "#22c55e" }}
                 title={`Comp: ${phaseDist.compPercent}%`}
               >
                 {phaseDist.compPercent}%
               </div>
               <div
-                className="flex items-center justify-center text-[10px] font-bold text-white"
+                className="flex items-center justify-center text-nano font-bold text-white"
                 style={{ width: `${phaseDist.lightPercent}%`, backgroundColor: "#a78bfa" }}
                 title={`Light: ${phaseDist.lightPercent}%`}
               >
                 {phaseDist.lightPercent}%
               </div>
             </div>
-            <div className="flex justify-between text-[10px] text-surface-700 dark:text-surface-300">
+            <div className="flex justify-between text-nano text-surface-700 dark:text-surface-300">
               <span>Heavy</span>
               <span>Competition</span>
               <span>Light</span>
@@ -1255,16 +1255,16 @@ export function ThrowsView({
                 >
                   <p className="text-xs font-bold text-[var(--foreground)]">{day.day}</p>
                   <p
-                    className="text-[10px] font-semibold"
+                    className="text-nano font-semibold"
                     style={{ color: PHASE_COLORS[selectedPhase] }}
                   >
                     Type {day.type}
                   </p>
-                  <p className="text-[10px] text-surface-700 dark:text-surface-300">{day.focus}</p>
-                  <p className="text-[10px] text-muted">
+                  <p className="text-nano text-surface-700 dark:text-surface-300">{day.focus}</p>
+                  <p className="text-nano text-muted">
                     {day.throwsMin}–{day.throwsMax} throws
                   </p>
-                  <p className="text-[10px] text-muted">Str: {day.strength}</p>
+                  <p className="text-nano text-muted">Str: {day.strength}</p>
                 </div>
               ))}
             </div>
@@ -1286,10 +1286,10 @@ export function ThrowsView({
                   opacity: 0.3 + entry.volumeMultiplier * 0.7,
                 }}
               />
-              <span className="text-[10px] font-bold text-[var(--foreground)]">
+              <span className="text-nano font-bold text-[var(--foreground)]">
                 {Math.round(entry.volumeMultiplier * 100)}%
               </span>
-              <span className="text-[10px] text-muted">{entry.daysOut}d out</span>
+              <span className="text-nano text-muted">{entry.daysOut}d out</span>
             </div>
           ))}
         </div>
@@ -1345,7 +1345,7 @@ export function ThrowsView({
                           return (
                             <span
                               key={ev}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-nano font-bold text-white"
                               style={{ backgroundColor: meta?.color || "#666" }}
                             >
                               {meta?.label || ev}
@@ -1357,7 +1357,7 @@ export function ThrowsView({
                         </span>
                         {session.targetPhase && (
                           <span
-                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                            className="text-nano font-semibold px-1.5 py-0.5 rounded"
                             style={{
                               color: PHASE_COLORS[session.targetPhase as TrainingPhase] || "#666",
                               backgroundColor: `${PHASE_COLORS[session.targetPhase as TrainingPhase] || "#666"}15`,

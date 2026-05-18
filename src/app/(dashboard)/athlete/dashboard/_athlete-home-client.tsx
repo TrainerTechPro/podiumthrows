@@ -167,8 +167,8 @@ function ReadinessRing({ readiness }: { readiness: AthleteDashboardDTO["readines
       <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
         <defs>
           <linearGradient id={id.current} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#00FF88" />
-            <stop offset="100%" stopColor="#FFC800" />
+            <stop offset="0%" stopColor="var(--palette-success-vivid)" />
+            <stop offset="100%" stopColor="var(--color-brand)" />
           </linearGradient>
         </defs>
         <circle

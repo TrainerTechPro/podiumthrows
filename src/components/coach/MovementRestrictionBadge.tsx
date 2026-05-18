@@ -39,7 +39,7 @@ export function MovementRestrictionBadge({ violations, variant = "icon" }: Props
   if (variant === "chip") {
     return (
       <span
-        className="inline-flex items-center gap-1 rounded-full border border-warning-500/40 bg-warning-500/10 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-warning-500"
+        className="inline-flex items-center gap-1 rounded-full border border-warning-500/40 bg-warning-500/10 px-2 py-0.5 text-nano font-semibold uppercase tracking-wider text-warning-500"
         title={title}
         aria-label={ariaLabel}
       >

@@ -217,7 +217,7 @@ function CustomizerPanel({
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted">Position</p>
+        <p className="text-micro font-medium uppercase tracking-wider text-muted">Position</p>
         <div className="flex gap-1">
           {(["left", "right"] as const).map((side) => (
             <button
@@ -239,7 +239,7 @@ function CustomizerPanel({
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+        <p className="text-micro font-medium uppercase tracking-wider text-muted">
           Actions ({prefs.items.length}/{MAX_ITEMS})
         </p>
         <div className="space-y-1">
@@ -288,7 +288,7 @@ function CustomizerPanel({
 
       <button
         onClick={() => onChange({ enabled: false })}
-        className="w-full text-center text-[11px] text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors py-1"
+        className="w-full text-center text-micro text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors py-1"
       >
         Disable Quick Actions
       </button>
@@ -436,7 +436,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
                           aria-hidden="true"
                         />
                       </div>
-                      <span className="text-[13px] font-semibold text-[var(--foreground)]">
+                      <span className="text-caption font-semibold text-[var(--foreground)]">
                         {action.label}
                       </span>
                     </Link>
@@ -456,7 +456,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
                 aria-label="Customize quick actions"
               >
                 <Settings size={13} strokeWidth={1.75} aria-hidden="true" />
-                <span className="text-[11px] font-medium">Customize</span>
+                <span className="text-micro font-medium">Customize</span>
               </button>
             </div>
           </motion.div>

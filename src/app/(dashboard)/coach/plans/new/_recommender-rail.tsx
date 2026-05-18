@@ -172,7 +172,7 @@ export function RecommenderRail({ event, onAdd }: Props) {
 
             return (
               <div key={cat} className="space-y-1.5">
-                <h4 className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                <h4 className="text-nano font-semibold text-muted uppercase tracking-wider">
                   {CATEGORY_LABELS[cat] ?? cat}
                 </h4>
                 <div className="space-y-1">
@@ -203,12 +203,12 @@ export function RecommenderRail({ event, onAdd }: Props) {
                           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                             <Badge variant="neutral">{rec.category}</Badge>
                             {rec.implementWeight ? (
-                              <span className="text-[10px] text-muted tabular-nums">
+                              <span className="text-nano text-muted tabular-nums">
                                 {formatImplementWeight(rec.implementWeight)}
                               </span>
                             ) : null}
                             {rec.equipment ? (
-                              <span className="text-[10px] text-muted">{rec.equipment}</span>
+                              <span className="text-nano text-muted">{rec.equipment}</span>
                             ) : null}
                           </div>
                           {onAdd && (
@@ -229,7 +229,7 @@ export function RecommenderRail({ event, onAdd }: Props) {
                               }
                               onClick={() => handleAdd(rec)}
                               aria-label={`Add ${rec.name} to current block`}
-                              className="!px-2 !py-1 !text-[11px] !h-auto"
+                              className="!px-2 !py-1 !text-micro !h-auto"
                             >
                               {state.status === "added" ? "Added" : "Add"}
                             </Button>
@@ -243,7 +243,7 @@ export function RecommenderRail({ event, onAdd }: Props) {
                               className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
                               aria-hidden="true"
                             />
-                            <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-tight">
+                            <p className="text-nano text-amber-700 dark:text-amber-400 leading-tight">
                               {state.reason}
                             </p>
                           </div>

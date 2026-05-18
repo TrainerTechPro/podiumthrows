@@ -141,10 +141,10 @@ function PageHeader({ athleteName, dateLabel }: { athleteName: string; dateLabel
         <span>Roster</span>
       </Link>
       <div className="min-w-0 flex-1 px-2 text-center">
-        <div className="truncate font-heading text-[15px] font-semibold leading-tight text-[var(--foreground)]">
+        <div className="truncate font-heading text-body font-semibold leading-tight text-[var(--foreground)]">
           {athleteName}
         </div>
-        <div className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.1em] text-[var(--muted)]">
+        <div className="mt-0.5 truncate font-mono text-nano uppercase tracking-[0.1em] text-[var(--muted)]">
           {dateLabel}
         </div>
       </div>
@@ -164,18 +164,18 @@ function PageHeader({ athleteName, dateLabel }: { athleteName: string; dateLabel
 function IdentityRow({ athlete }: { athlete: CoachSessionDetailDTO["athlete"] }) {
   return (
     <div className="flex items-center gap-3 border-b border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3.5">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] border border-[var(--card-border)] bg-gradient-to-br from-surface-300 to-surface-400 font-heading text-[13px] font-bold text-[var(--foreground)] dark:from-surface-700 dark:to-surface-800">
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] border border-[var(--card-border)] bg-gradient-to-br from-surface-300 to-surface-400 font-heading text-caption font-bold text-[var(--foreground)] dark:from-surface-700 dark:to-surface-800">
         {athlete.initials}
       </div>
       <div className="min-w-0 flex-1">
         <div
-          className="truncate font-heading text-[17px] font-semibold leading-tight tracking-[-0.005em] text-[var(--foreground)]"
+          className="truncate font-heading text-body-lg font-semibold leading-tight tracking-[-0.005em] text-[var(--foreground)]"
           title={athlete.name}
         >
           {athlete.name}
         </div>
         <div
-          className="mt-0.5 truncate font-mono text-[10.5px] tracking-[0.06em] text-[var(--muted)]"
+          className="mt-0.5 truncate font-mono text-nano tracking-[0.06em] text-[var(--muted)]"
           title={athlete.meta}
         >
           {athlete.meta}
@@ -232,7 +232,7 @@ function Chip({
           : "border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)]";
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] font-medium tracking-[0.04em] ${cls}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-micro font-medium tracking-[0.04em] ${cls}`}
     >
       {icon}
       {children}
@@ -250,8 +250,8 @@ function ReadinessChip({ stat }: { stat: CoachStat }) {
           ? "text-danger-500"
           : "text-[var(--foreground)]";
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--card-border)] bg-[var(--card-bg)] px-2.5 py-1 font-mono text-[11px] font-medium tracking-[0.04em]">
-      <span className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)]">RDY</span>
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--card-border)] bg-[var(--card-bg)] px-2.5 py-1 font-mono text-micro font-medium tracking-[0.04em]">
+      <span className="text-nano uppercase tracking-[0.16em] text-[var(--muted)]">RDY</span>
       <span className={`font-semibold tabular-nums ${valTone}`}>{stat.value}</span>
     </span>
   );
@@ -281,10 +281,10 @@ function PerioBand({ p }: { p: NonNullable<CoachSessionDetailDTO["periodization"
   return (
     <div className="border-b border-[var(--card-border)] bg-[var(--card-bg)] px-4 py-3">
       <div className="mb-2 flex items-baseline justify-between">
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+        <span className="font-mono text-nano uppercase tracking-[0.2em] text-[var(--muted)]">
           Phase · {p.phaseLabel}
         </span>
-        <span className="font-mono text-[11px] font-medium tracking-[0.06em] text-[var(--foreground)]">
+        <span className="font-mono text-micro font-medium tracking-[0.06em] text-[var(--foreground)]">
           WK {p.currentWeek} / {p.totalWeeks}
         </span>
       </div>
@@ -314,10 +314,10 @@ function PerioBand({ p }: { p: NonNullable<CoachSessionDetailDTO["periodization"
 function SectionHeader({ dto }: { dto: CoachSessionDetailDTO }) {
   return (
     <div className="flex items-center justify-between px-4 pb-3 pt-4">
-      <h3 className="font-heading text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--foreground)]">
+      <h3 className="font-heading text-micro font-semibold uppercase tracking-[0.16em] text-[var(--foreground)]">
         Today&apos;s Session
       </h3>
-      <div className="font-mono text-[10px] tracking-[0.06em] text-[var(--muted)]">
+      <div className="font-mono text-nano tracking-[0.06em] text-[var(--muted)]">
         {dto.totalDurationMinutes} MIN ·{" "}
         <span className="font-medium text-[var(--foreground)]">
           {dto.completedBlocks} OF {dto.totalBlocks} BLOCKS
@@ -385,22 +385,22 @@ function BlockHead({
       }`}
     >
       <span
-        className={`inline-flex min-w-[20px] items-center gap-1.5 font-mono text-[10px] font-semibold tracking-[0.1em] ${
+        className={`inline-flex min-w-[20px] items-center gap-1.5 font-mono text-nano font-semibold tracking-[0.1em] ${
           isActive ? "text-primary-500" : "text-[var(--muted)]"
         }`}
       >
         {isActive ? <PulseDot /> : null}
         {block.badge}
       </span>
-      <span className="flex-1 font-heading text-[13.5px] font-semibold tracking-[0.005em] text-[var(--foreground)]">
+      <span className="flex-1 font-heading text-caption font-semibold tracking-[0.005em] text-[var(--foreground)]">
         {block.name}
       </span>
       <span
-        className={`rounded-md px-1.5 py-0.5 font-mono text-[8.5px] uppercase tracking-[0.18em] ${tagClass}`}
+        className={`rounded-md px-1.5 py-0.5 font-mono text-nano uppercase tracking-[0.18em] ${tagClass}`}
       >
         {block.tag}
       </span>
-      <span className="font-mono text-[10px] tracking-[0.04em] text-[var(--muted)]">
+      <span className="font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
         {extractMinutes(block.durationLabel)}
       </span>
       {isComplete ? (
@@ -435,11 +435,11 @@ function ActiveBlockBody({
         <ImplementRow exercises={block.exercises} onOpenInspector={onOpenInspector} />
         <div className="flex items-center justify-between rounded-[9px] bg-surface-50 px-2.5 py-2 font-mono dark:bg-surface-900/60">
           <div>
-            <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)]">
+            <div className="text-nano uppercase tracking-[0.16em] text-[var(--muted)]">
               {lastThrow ? "LAST THROW" : "NO THROWS YET"}
             </div>
             {lastThrow ? (
-              <div className="mt-0.5 text-[14px] font-semibold tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
+              <div className="mt-0.5 text-sm font-semibold tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
                 {lastThrow.distanceLabel}
                 {lastThrow.rpeLabel ? (
                   <span className="font-medium text-[var(--muted)]">
@@ -451,10 +451,10 @@ function ActiveBlockBody({
             ) : null}
           </div>
           <div className="text-right">
-            <div className="text-[9px] uppercase tracking-[0.16em] text-[var(--muted)]">
+            <div className="text-nano uppercase tracking-[0.16em] text-[var(--muted)]">
               PROGRESS
             </div>
-            <div className="mt-0.5 text-[13px] tabular-nums">
+            <div className="mt-0.5 text-caption tabular-nums">
               <strong className="font-semibold text-[var(--foreground)]">{totals.completed}</strong>
               <span className="text-[var(--muted)]"> / {totals.prescribed} thrown</span>
             </div>
@@ -479,7 +479,7 @@ function LockedBlockBody({
 
   if (block.exercises.length === 0) {
     return (
-      <div className="px-3.5 py-2.5 font-mono text-[10px] tracking-[0.06em] text-[var(--muted)]">
+      <div className="px-3.5 py-2.5 font-mono text-nano tracking-[0.06em] text-[var(--muted)]">
         Empty block.
       </div>
     );
@@ -515,7 +515,7 @@ function ExerciseMiniPill({
 }) {
   if (kind === "throwing" && exercise.implementKg != null) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-2 py-1 font-mono text-[11px] tracking-[0.02em] text-[var(--muted)]">
+      <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-2 py-1 font-mono text-micro tracking-[0.02em] text-[var(--muted)]">
         {exercise.isHeaviestInBlock ? (
           <span className="h-1 w-1 rounded-full bg-primary-500" aria-hidden="true" />
         ) : null}
@@ -531,7 +531,7 @@ function ExerciseMiniPill({
   const violations = getExerciseViolations(exercise.name, restrictions);
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-2 py-1 font-mono text-[11px] tracking-[0.02em] text-[var(--muted)]">
+    <span className="inline-flex items-center gap-1.5 rounded-md border border-[var(--card-border)] bg-[var(--card-bg)] px-2 py-1 font-mono text-micro tracking-[0.02em] text-[var(--muted)]">
       <strong className="font-semibold text-[var(--foreground)]">{exercise.name}</strong>
       <MovementRestrictionBadge violations={violations} />
       {exercise.sets && exercise.reps ? (
@@ -559,7 +559,7 @@ function ImplementRow({
         <span key={ex.id} className="inline-flex items-center gap-2">
           <ImplementPill exercise={ex} onClick={() => onOpenInspector(ex.id)} />
           {i < throwing.length - 1 ? (
-            <span aria-hidden="true" className="font-mono text-[12px] text-[var(--muted)]/70">
+            <span aria-hidden="true" className="font-mono text-micro text-[var(--muted)]/70">
               →
             </span>
           ) : null}
@@ -575,7 +575,7 @@ function ImplementPill({ exercise, onClick }: { exercise: CoachExerciseDTO; onCl
       type="button"
       onClick={onClick}
       aria-label={`Inspect ${exercise.name} ${formatKg(exercise.implementKg ?? 0)}`}
-      className="inline-flex items-center gap-1.5 rounded-[9px] border border-[var(--card-border)] bg-surface-50 px-2.5 py-1.5 font-mono text-[12.5px] font-semibold tabular-nums text-[var(--foreground)] transition-colors hover:bg-surface-100 active:scale-[0.98] dark:bg-surface-900/60 dark:hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
+      className="inline-flex items-center gap-1.5 rounded-[9px] border border-[var(--card-border)] bg-surface-50 px-2.5 py-1.5 font-mono text-micro font-semibold tabular-nums text-[var(--foreground)] transition-colors hover:bg-surface-100 active:scale-[0.98] dark:bg-surface-900/60 dark:hover:bg-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
     >
       {exercise.isHeaviestInBlock ? (
         <span
@@ -585,7 +585,7 @@ function ImplementPill({ exercise, onClick }: { exercise: CoachExerciseDTO; onCl
       ) : null}
       <span>{formatKg(exercise.implementKg ?? 0)}</span>
       {exercise.sets != null ? (
-        <span className="text-[11px] font-medium text-[var(--muted)]">×{exercise.sets}</span>
+        <span className="text-micro font-medium text-[var(--muted)]">×{exercise.sets}</span>
       ) : null}
     </button>
   );
@@ -671,13 +671,13 @@ function NoteComposer({
         placeholder="What did you see? What's the cue?"
         rows={5}
         autoFocus
-        className="resize-none rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-3 text-[15px] text-[var(--foreground)] outline-none focus:border-primary-500/40 focus:ring-2 focus:ring-primary-500/20"
+        className="resize-none rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-3 text-body text-[var(--foreground)] outline-none focus:border-primary-500/40 focus:ring-2 focus:ring-primary-500/20"
       />
       <div className="flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={() => setContent("")}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-1.5 text-[13px] text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-1.5 text-caption text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
         >
           <X className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
           Clear
@@ -686,7 +686,7 @@ function NoteComposer({
           type="button"
           onClick={handleSave}
           disabled={submitting || content.trim().length === 0}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--background)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3.5 py-1.5 text-caption font-medium text-[var(--background)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Save className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
           {submitting ? "Saving…" : "Save note"}

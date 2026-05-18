@@ -388,7 +388,7 @@ function QuickEntrySheet({
                 aria-label={FEELING_LABELS[opt]}
               >
                 <span className="text-2xl leading-none">{FEELING_EMOJI[opt]}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider">
+                <span className="text-nano font-semibold uppercase tracking-wider">
                   {FEELING_LABELS[opt]}
                 </span>
               </button>
@@ -1115,7 +1115,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
                     >
                       {currentImplement?.displayLabel ??
                         (currentImplement ? `${currentImplement.implementWeight}kg` : "—")}
-                      <span className="text-[10px] no-underline">▾</span>
+                      <span className="text-nano no-underline">▾</span>
                     </button>
                   </span>
                 </div>
@@ -1146,7 +1146,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
                         >
                           {presetLabel ?? `${w}kg`}
                           {isComp && !isActive && (
-                            <span className="ml-1 text-[9px] text-primary-400 font-sans">comp</span>
+                            <span className="ml-1 text-nano text-primary-400 font-sans">comp</span>
                           )}
                         </button>
                       );
@@ -1157,9 +1157,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
             )}
           </div>
           {implements_.length > 1 && (
-            <p className="text-[10px] text-[var(--muted)] mt-1 tracking-wider">
-              ← swipe to switch →
-            </p>
+            <p className="text-nano text-[var(--muted)] mt-1 tracking-wider">← swipe to switch →</p>
           )}
         </div>
 
@@ -1224,7 +1222,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
             <span className="font-heading font-bold text-xl text-surface-950 tracking-wide select-none pointer-events-none">
               LOG THROW
             </span>
-            <span className="text-[10px] font-semibold text-surface-800/70 uppercase tracking-widest mt-1 select-none pointer-events-none">
+            <span className="text-nano font-semibold text-surface-800/70 uppercase tracking-widest mt-1 select-none pointer-events-none">
               Hold for details
             </span>
           </button>
@@ -1247,7 +1245,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
           ) : recentThrows.length > 0 ? (
             <div className="overflow-x-auto custom-scrollbar">
               <div className="flex gap-3 px-5 py-3">
-                <span className="text-[10px] text-[var(--muted)] self-center shrink-0 uppercase tracking-wider">
+                <span className="text-nano text-[var(--muted)] self-center shrink-0 uppercase tracking-wider">
                   Recent
                 </span>
                 {recentThrows.slice(0, 3).map((t, i) => (

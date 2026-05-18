@@ -31,7 +31,7 @@ export function PRBoard({ prs }: PRBoardProps) {
           <Award className="h-5 w-5 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
           <div>
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Recent PRs</h3>
-            <p className="text-[10px] text-surface-400">last 14 days</p>
+            <p className="text-nano text-surface-400">last 14 days</p>
           </div>
         </div>
         <Link
@@ -103,7 +103,7 @@ export function PRBoard({ prs }: PRBoardProps) {
               <p className="text-sm font-bold tabular-nums text-amber-500">
                 {pr.distance.toFixed(2)}m
               </p>
-              <p className="text-[10px] text-surface-400">{formatDate(pr.date)}</p>
+              <p className="text-nano text-surface-400">{formatDate(pr.date)}</p>
             </div>
           </Link>
         ))}

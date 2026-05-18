@@ -136,7 +136,7 @@ export function SummaryStep({ score, streak, data, ouraData, onDone }: SummarySt
             value={score}
             decimals={1}
             duration={1200}
-            className="text-[40px] font-extrabold font-heading leading-none"
+            className="text-display-lg font-extrabold font-heading leading-none"
           />
         </div>
       </div>

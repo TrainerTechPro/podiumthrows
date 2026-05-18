@@ -305,7 +305,7 @@ export function SessionsLibraryView({
                       return (
                         <span
                           key={ev}
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-nano font-bold text-white"
                           style={{ backgroundColor: meta?.color || "#666" }}
                         >
                           {meta?.label || ev}
@@ -317,7 +317,7 @@ export function SessionsLibraryView({
                     </span>
                     {session.targetPhase && (
                       <span
-                        className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                        className="text-nano font-semibold px-1.5 py-0.5 rounded"
                         style={{
                           color: PHASE_COLORS[session.targetPhase as TrainingPhase] || "#666",
                           backgroundColor: `${PHASE_COLORS[session.targetPhase as TrainingPhase] || "#666"}15`,

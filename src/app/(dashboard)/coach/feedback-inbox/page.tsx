@@ -43,13 +43,13 @@ export default async function CoachFeedbackInboxPage() {
       {rows.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           <div className="card p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Unread</p>
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted">Unread</p>
             <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-[var(--foreground)]">
               {totalUnread}
             </p>
           </div>
           <div className="card p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted">
               Acknowledged
             </p>
             <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-emerald-500">
@@ -57,7 +57,7 @@ export default async function CoachFeedbackInboxPage() {
             </p>
           </div>
           <div className="card p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <p className="text-micro font-semibold uppercase tracking-wider text-muted">
               Thumbs Down
             </p>
             <p className="mt-1 text-2xl font-bold font-heading tabular-nums text-red-500">

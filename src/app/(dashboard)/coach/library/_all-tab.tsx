@@ -107,7 +107,7 @@ export function AllTab({ plans, exercises, drills, onTabChange: _onTabChange }: 
                     href={h.href}
                     className="card card-interactive !p-3 flex items-center gap-3"
                   >
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 shrink-0">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-nano font-bold uppercase tracking-wider bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 shrink-0">
                       {h.type}
                     </span>
                     <span className="flex-1 min-w-0">

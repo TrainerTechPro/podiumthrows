@@ -71,8 +71,8 @@ export function DeleteAccountSection({ role }: Props) {
           {role === "COACH" ? (
             <>
               {" "}
-              If you have athletes on your roster, you&apos;ll need to remove them or have them
-              transfer to another coach first.
+              If you have athletes on your roster, remove them first — your account can&apos;t be
+              deleted while it&apos;s their coach of record.
             </>
           ) : null}
         </p>

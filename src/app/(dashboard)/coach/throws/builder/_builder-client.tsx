@@ -552,7 +552,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
                 {(["CE", "SD", "SP", "GP"] as const).map((cls) => (
                   <div key={cls} className="flex items-center gap-1.5">
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${CLASSIFICATION_COLORS[cls]}`}
+                      className={`text-nano font-bold px-1.5 py-0.5 rounded ${CLASSIFICATION_COLORS[cls]}`}
                     >
                       {cls}
                     </span>
@@ -562,7 +562,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
                         style={{ width: `${phaseRatios[cls]}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-surface-700 dark:text-surface-300 w-6 text-right">
+                    <span className="text-nano text-surface-700 dark:text-surface-300 w-6 text-right">
                       {phaseRatios[cls]}%
                     </span>
                   </div>
@@ -577,7 +577,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
               <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
                 Rest Intervals
               </p>
-              <div className="space-y-1 text-[10px]">
+              <div className="space-y-1 text-nano">
                 <div className="flex justify-between text-surface-700 dark:text-surface-300">
                   <span>CE throws</span>
                   <span>{phaseRest.CE}s</span>
@@ -622,16 +622,16 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
                   return (
                     <div key={i} className="flex items-center gap-1.5">
                       <span
-                        className={`text-[9px] font-bold px-1 py-0.5 rounded ${CLASSIFICATION_COLORS[ex.type as Classification] || CLASSIFICATION_COLORS.SP}`}
+                        className={`text-nano font-bold px-1 py-0.5 rounded ${CLASSIFICATION_COLORS[ex.type as Classification] || CLASSIFICATION_COLORS.SP}`}
                       >
                         {ex.type}
                       </span>
-                      <span className="text-[10px] text-surface-700 dark:text-surface-300 truncate flex-1">
+                      <span className="text-nano text-surface-700 dark:text-surface-300 truncate flex-1">
                         {ex.exercise}
                       </span>
                       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`} />
                       <span
-                        className={`text-[10px] font-mono tabular-nums font-semibold ${textColor}`}
+                        className={`text-nano font-mono tabular-nums font-semibold ${textColor}`}
                       >
                         {absR.toFixed(3)}
                       </span>
@@ -739,7 +739,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
                   ))}
                 </select>
                 {targetPhase && (
-                  <p className="text-[10px] text-muted mt-1">
+                  <p className="text-nano text-muted mt-1">
                     {TRAINING_PHASES.find((p) => p.value === targetPhase)?.description}
                   </p>
                 )}
@@ -1296,7 +1296,7 @@ function StrengthBlockEditor({
                 </label>
               )}
               <span
-                className={`block text-center text-[10px] font-bold px-1 py-1.5 rounded ${CLASSIFICATION_COLORS[ex.classification as Classification] || CLASSIFICATION_COLORS.GP}`}
+                className={`block text-center text-nano font-bold px-1 py-1.5 rounded ${CLASSIFICATION_COLORS[ex.classification as Classification] || CLASSIFICATION_COLORS.GP}`}
               >
                 {ex.classification}
               </span>
@@ -1321,7 +1321,7 @@ function StrengthBlockEditor({
             </div>
           </div>
           {ex.name && (
-            <p className="text-[10px] text-muted pl-1">
+            <p className="text-nano text-muted pl-1">
               {CLASSIFICATIONS[ex.classification as Classification]?.description || ""}
             </p>
           )}

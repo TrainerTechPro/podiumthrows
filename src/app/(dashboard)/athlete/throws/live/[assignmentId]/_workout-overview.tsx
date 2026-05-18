@@ -27,7 +27,10 @@ export function WorkoutOverview({
     <div className="space-y-6 pb-8">
       {/* Session title */}
       <div className="text-center pt-2">
-        <h2 className="text-lg font-heading font-bold tracking-wider" style={{ color: "#FFC800" }}>
+        <h2
+          className="text-lg font-heading font-bold tracking-wider"
+          style={{ color: "var(--color-brand)" }}
+        >
           {data.sessionName}
         </h2>
         <p className="text-nano uppercase tracking-widest mt-1" style={{ color: "#ffffff33" }}>
@@ -38,7 +41,7 @@ export function WorkoutOverview({
       {/* Quick stats */}
       <div className="flex justify-center gap-4">
         <div className="text-center">
-          <span className="text-xl font-bold tabular-nums" style={{ color: "#FFC800" }}>
+          <span className="text-xl font-bold tabular-nums" style={{ color: "var(--color-brand)" }}>
             {data.blocks.length}
           </span>
           <p className="text-nano uppercase tracking-widest" style={{ color: "#ffffff44" }}>
@@ -59,7 +62,9 @@ export function WorkoutOverview({
               <>
                 <span
                   className="text-xl font-bold tabular-nums"
-                  style={{ color: loggedThrows > 0 ? "#00FF88" : "#FFC800" }}
+                  style={{
+                    color: loggedThrows > 0 ? "var(--palette-success-vivid)" : "var(--color-brand)",
+                  }}
                 >
                   {loggedThrows}
                 </span>
@@ -74,7 +79,7 @@ export function WorkoutOverview({
           </p>
         </div>
         <div className="text-center">
-          <span className="text-xl font-bold tabular-nums" style={{ color: "#FFC800" }}>
+          <span className="text-xl font-bold tabular-nums" style={{ color: "var(--color-brand)" }}>
             {Array.from(blockStates.values()).reduce((sum, s) => sum + s.sets.length, 0)}
           </span>
           <p className="text-nano uppercase tracking-widest" style={{ color: "#ffffff44" }}>

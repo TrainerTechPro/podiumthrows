@@ -238,7 +238,7 @@ function CoachSessionDesktop({ initial }: Props) {
     <div className="-mx-4 -mt-5 flex h-[calc(100dvh-4rem)] flex-col bg-[var(--background)] sm:-mx-6">
       {/* In-page top bar — breadcrumb + ⌘K + chrome icons */}
       <div className="flex h-13 items-center gap-4 border-b border-[var(--card-border)] bg-[var(--card-bg)] px-5">
-        <nav className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--muted)]">
+        <nav className="flex items-center gap-1.5 text-caption font-medium text-[var(--muted)]">
           <Link href="/coach/athletes" className="hover:text-[var(--foreground)]">
             Roster
           </Link>
@@ -256,11 +256,11 @@ function CoachSessionDesktop({ initial }: Props) {
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent("podium:open-command-palette"))}
-          className="flex min-w-[260px] items-center gap-2 rounded-lg border border-[var(--card-border)] bg-surface-50 px-3 py-1.5 text-[12.5px] text-[var(--muted)] transition-colors hover:bg-surface-100 dark:bg-surface-900 dark:hover:bg-surface-800"
+          className="flex min-w-[260px] items-center gap-2 rounded-lg border border-[var(--card-border)] bg-surface-50 px-3 py-1.5 text-micro text-[var(--muted)] transition-colors hover:bg-surface-100 dark:bg-surface-900 dark:hover:bg-surface-800"
         >
           <Search className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
           <span>Search athletes, sessions, exercises</span>
-          <span className="ml-auto rounded-md border border-[var(--card-border)] bg-surface-100 px-1.5 py-px font-mono text-[10px] text-[var(--muted)] dark:bg-surface-800">
+          <span className="ml-auto rounded-md border border-[var(--card-border)] bg-surface-100 px-1.5 py-px font-mono text-nano text-[var(--muted)] dark:bg-surface-800">
             ⌘K
           </span>
         </button>
@@ -328,10 +328,10 @@ function CoachSessionDesktop({ initial }: Props) {
                 aria-hidden="true"
               />
               <div>
-                <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.18em]">
+                <div className="mb-1 font-mono text-nano uppercase tracking-[0.18em]">
                   Volume IV violation
                 </div>
-                <div className="text-[13px] leading-relaxed">
+                <div className="text-caption leading-relaxed">
                   {liveValidator.warnings[0]?.message}{" "}
                   <span className="font-mono text-[var(--muted)]">(Vol IV · p.114-117)</span>
                 </div>
@@ -404,7 +404,7 @@ function AthleteStrip({
             {dto.athlete.name}
           </h2>
           <div
-            className="mt-1 truncate font-mono text-[11.5px] tracking-[0.06em] text-[var(--muted)]"
+            className="mt-1 truncate font-mono text-micro tracking-[0.06em] text-[var(--muted)]"
             title={dto.athlete.meta}
           >
             {dto.athlete.meta}
@@ -414,7 +414,7 @@ function AthleteStrip({
           <button
             type="button"
             onClick={onNote}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-1.5 text-caption font-medium text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
           >
             <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
             Note
@@ -423,7 +423,7 @@ function AthleteStrip({
             type="button"
             onClick={onSave}
             disabled={!hasPending || saving}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--background)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3.5 py-1.5 text-caption font-medium text-[var(--background)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
             {saving ? "Saving…" : "Save"}
@@ -434,14 +434,14 @@ function AthleteStrip({
       <div className="stats-row flex items-center gap-5 border-t border-[var(--card-border)] bg-surface-50 px-5 py-3 dark:bg-surface-900/60">
         {dto.periodization ? (
           <div className="flex flex-1 min-w-[220px] flex-col gap-1.5">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+            <span className="font-mono text-nano uppercase tracking-[0.2em] text-[var(--muted)]">
               Phase · {dto.periodization.phaseLabel}
             </span>
             <PerioTrack
               total={dto.periodization.totalWeeks}
               current={dto.periodization.currentWeek}
             />
-            <div className="flex justify-between font-mono text-[10px] tracking-[0.04em] text-[var(--muted)]">
+            <div className="flex justify-between font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
               <span>WK 1</span>
               <span className="font-medium text-[var(--foreground)]">
                 WK {dto.periodization.currentWeek} / {dto.periodization.totalWeeks}
@@ -511,7 +511,7 @@ function Stat({
           : "text-[var(--foreground)]";
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+      <span className="font-mono text-nano uppercase tracking-[0.2em] text-[var(--muted)]">
         {stat.label}
       </span>
       <span className={`font-mono text-sm font-semibold tabular-nums tracking-wide ${toneClass}`}>
@@ -544,7 +544,7 @@ function SectionHeader({
         </h3>
         <div className="relative">
           <span
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 font-mono text-[11px] font-medium tracking-[0.04em] transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 font-mono text-micro font-medium tracking-[0.04em] transition-colors ${
               tone === "success"
                 ? "border-success-500/25 bg-success-500/10 text-success-500"
                 : "border-danger-500/30 bg-danger-500/10 text-danger-500"
@@ -561,14 +561,14 @@ function SectionHeader({
           {tooltip ? (
             <div
               role="tooltip"
-              className="absolute left-0 top-[calc(100%+8px)] z-30 w-[320px] rounded-xl border border-[var(--card-border)] bg-[var(--surface-overlay)] p-3 text-[12px] leading-relaxed text-[var(--foreground)] shadow-lg"
+              className="absolute left-0 top-[calc(100%+8px)] z-30 w-[320px] rounded-xl border border-[var(--card-border)] bg-[var(--surface-overlay)] p-3 text-micro leading-relaxed text-[var(--foreground)] shadow-lg"
             >
               {tooltip}
             </div>
           ) : null}
         </div>
       </div>
-      <div className="font-mono text-[11px] tracking-[0.06em] text-[var(--muted)]">
+      <div className="font-mono text-micro tracking-[0.06em] text-[var(--muted)]">
         {dto.totalDurationMinutes} MIN · {dto.totalBlocks} BLOCKS ·{" "}
         <span className="font-medium text-[var(--foreground)]">
           {dto.completedBlocks} OF {dto.totalBlocks} COMPLETE
@@ -628,23 +628,23 @@ function Lane({
       >
         <div className="flex items-center gap-2.5">
           <span
-            className={`inline-flex min-w-[22px] items-center gap-1.5 font-mono text-[11px] font-semibold tracking-[0.1em] ${
+            className={`inline-flex min-w-[22px] items-center gap-1.5 font-mono text-micro font-semibold tracking-[0.1em] ${
               isActive ? "text-primary-500" : "text-[var(--muted)]"
             }`}
           >
             {isActive ? <PulseDot /> : null}
             {lane.badge}
           </span>
-          <span className="font-heading text-[14px] font-semibold tracking-[0.005em] text-[var(--foreground)]">
+          <span className="font-heading text-sm font-semibold tracking-[0.005em] text-[var(--foreground)]">
             {lane.name}
           </span>
           <span
-            className={`rounded-md px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.18em] ${tagClass}`}
+            className={`rounded-md px-1.5 py-0.5 font-mono text-nano uppercase tracking-[0.18em] ${tagClass}`}
           >
             {lane.tag}
           </span>
         </div>
-        <div className="flex items-center gap-2.5 font-mono text-[11px] tracking-[0.04em] text-[var(--muted)]">
+        <div className="flex items-center gap-2.5 font-mono text-micro tracking-[0.04em] text-[var(--muted)]">
           <span>{lane.durationLabel}</span>
           {lane.status === "complete" ? (
             <CheckCircle2
@@ -658,7 +658,7 @@ function Lane({
 
       <div className="flex flex-wrap items-stretch gap-2.5 px-4 py-3">
         {lane.exercises.length === 0 ? (
-          <div className="w-full rounded-xl border border-dashed border-[var(--card-border)] py-6 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+          <div className="w-full rounded-xl border border-dashed border-[var(--card-border)] py-6 text-center font-mono text-micro uppercase tracking-[0.18em] text-[var(--muted)]">
             Drop an exercise here
           </div>
         ) : null}
@@ -742,13 +742,13 @@ function ExerciseLine({
             />
           ) : (
             <span className="inline-flex items-center gap-1.5">
-              <span className="font-heading text-[14px] font-semibold text-[var(--foreground)]">
+              <span className="font-heading text-sm font-semibold text-[var(--foreground)]">
                 {exercise.name}
               </span>
               <MovementRestrictionBadge violations={violations} />
             </span>
           )}
-          <span className="font-mono text-[11px] tracking-[0.04em] text-[var(--muted)]">
+          <span className="font-mono text-micro tracking-[0.04em] text-[var(--muted)]">
             {isThrowing
               ? `×${exercise.sets ?? 0}`
               : `${exercise.sets ?? 0}×${exercise.reps ?? "?"}`}
@@ -772,7 +772,7 @@ function ExerciseLine({
                 }}
               />
             </div>
-            <div className="flex justify-between font-mono text-[10.5px] tracking-[0.04em] text-[var(--muted)]">
+            <div className="flex justify-between font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
               <span>
                 <span className="font-medium text-[var(--foreground)]">
                   {exercise.completedThrows ?? 0}
@@ -789,7 +789,7 @@ function ExerciseLine({
             </div>
           </>
         ) : (
-          <div className="font-mono text-[11px] tracking-[0.03em] text-[var(--muted)]">
+          <div className="font-mono text-micro tracking-[0.03em] text-[var(--muted)]">
             {exercise.setsBreakdown ?? exercise.weight ?? "—"}
           </div>
         )}
@@ -817,19 +817,19 @@ function ImplementValue({
 }) {
   if (kg == null) {
     return (
-      <span className="font-mono text-[18px] font-semibold tabular-nums tracking-[-0.01em] text-[var(--muted)]">
+      <span className="font-mono text-lg font-semibold tabular-nums tracking-[-0.01em] text-[var(--muted)]">
         —
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1.5 font-mono text-[18px] font-semibold tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
+    <span className="flex items-center gap-1.5 font-mono text-lg font-semibold tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
       {isHeaviest ? (
         <span
           className="inline-block h-[5px] w-[5px] rounded-full bg-primary-500"
           style={
             laneActive
-              ? { boxShadow: "0 0 6px rgba(255,200,0,0.45)", background: "#FFC800" }
+              ? { boxShadow: "0 0 6px rgba(255,200,0,0.45)", background: "var(--color-brand)" }
               : undefined
           }
           aria-hidden="true"
@@ -852,7 +852,7 @@ function Inspector({
   if (!exercise) {
     return (
       <aside className="hidden w-[320px] shrink-0 overflow-y-auto custom-scrollbar border-l border-[var(--card-border)] bg-surface-50 px-5 py-6 dark:bg-surface-900/60 lg:block">
-        <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--muted)]">
+        <div className="font-mono text-nano uppercase tracking-[0.22em] text-[var(--muted)]">
           Selected exercise
         </div>
         <p className="mt-2 text-sm text-[var(--muted)]">
@@ -869,24 +869,22 @@ function Inspector({
 
   return (
     <aside className="hidden w-[320px] shrink-0 overflow-y-auto custom-scrollbar border-l border-[var(--card-border)] bg-surface-50 px-5 py-6 dark:bg-surface-900/60 lg:block">
-      <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">
+      <div className="font-mono text-nano uppercase tracking-[0.22em] text-primary-600 dark:text-primary-400">
         Selected exercise
       </div>
-      <h2 className="mt-1 font-heading text-[19px] font-semibold tracking-[-0.005em] text-[var(--foreground)]">
+      <h2 className="mt-1 font-heading text-lg font-semibold tracking-[-0.005em] text-[var(--foreground)]">
         {title}
       </h2>
-      <p className="mb-5 mt-1 text-[12.5px] text-[var(--muted)]">
-        {laneName ? `${laneName}.` : ""}
-      </p>
+      <p className="mb-5 mt-1 text-micro text-[var(--muted)]">{laneName ? `${laneName}.` : ""}</p>
 
       {corr ? (
         <InspectorBlock label="Correlation to comp">
           <div className="mb-2 flex items-baseline gap-2">
-            <span className="font-mono text-[32px] font-semibold leading-none tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
+            <span className="font-mono text-display font-semibold leading-none tabular-nums tracking-[-0.01em] text-[var(--foreground)]">
               {corr.coefficient.toFixed(2)}
             </span>
             <span
-              className={`rounded-md px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] ${
+              className={`rounded-md px-2 py-0.5 font-mono text-nano font-medium uppercase tracking-[0.1em] ${
                 corr.band === "HIGH"
                   ? "bg-success-500/10 text-success-500"
                   : corr.band === "MEDIUM"
@@ -903,7 +901,7 @@ function Inspector({
               style={{ width: `${corr.coefficient * 100}%` }}
             />
           </div>
-          <div className="font-mono text-[10px] tracking-[0.04em] text-[var(--muted)]">
+          <div className="font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
             <span>
               {corr.population ? `${corr.population} · ` : ""}n={corr.sampleSize ?? "—"}
             </span>
@@ -911,7 +909,7 @@ function Inspector({
         </InspectorBlock>
       ) : (
         <InspectorBlock label="Correlation to comp">
-          <p className="font-mono text-[11px] text-[var(--muted)]">
+          <p className="font-mono text-micro text-[var(--muted)]">
             No transfer data on file. Add coefficients in the Exercise Library to surface here.
           </p>
         </InspectorBlock>
@@ -947,7 +945,7 @@ function InspectorBlock({
         hideBorder ? "" : "border-b border-[var(--card-border)]"
       } last:mb-0 last:border-b-0 last:pb-0`}
     >
-      <div className="mb-2.5 font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+      <div className="mb-2.5 font-mono text-nano uppercase tracking-[0.2em] text-[var(--muted)]">
         {label}
       </div>
       {children}
@@ -957,7 +955,7 @@ function InspectorBlock({
 
 function KvRow({ k, v, mono = true }: { k: string; v: string | number; mono?: boolean }) {
   return (
-    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-1.5 text-[12.5px] last:border-b-0">
+    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-1.5 text-micro last:border-b-0">
       <span className="text-[var(--muted)]">{k}</span>
       <span
         className={`font-medium tabular-nums text-[var(--foreground)] ${mono ? "font-mono" : ""}`}
@@ -970,7 +968,7 @@ function KvRow({ k, v, mono = true }: { k: string; v: string | number; mono?: bo
 
 function CitationRow({ label, href }: { label: string; href?: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-1.5 text-[12.5px] last:border-b-0">
+    <div className="flex items-center justify-between border-b border-[var(--card-border)] py-1.5 text-micro last:border-b-0">
       <span className="text-[var(--muted)]">{label}</span>
       {href ? (
         <a
@@ -1050,7 +1048,7 @@ function NoteComposer({
         <button
           type="button"
           onClick={() => setContent("")}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-1.5 text-[13px] text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] px-3.5 py-1.5 text-caption text-[var(--foreground)] transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
         >
           <X className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
           Clear
@@ -1059,7 +1057,7 @@ function NoteComposer({
           type="button"
           onClick={handleSave}
           disabled={submitting || content.trim().length === 0}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--background)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--foreground)] px-3.5 py-1.5 text-caption font-medium text-[var(--background)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Save className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
           {submitting ? "Saving…" : "Save note"}

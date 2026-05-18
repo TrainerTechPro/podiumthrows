@@ -12,16 +12,10 @@ export function VolumeChart({ data }: { data: WeeklyVolume }) {
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-center gap-2">
-        <BarChart3
-          className="w-4 h-4 text-primary-500"
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
+        <BarChart3 className="w-4 h-4 text-primary-500" strokeWidth={1.75} aria-hidden="true" />
         <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
           Weekly Volume
-          <span className="ml-1.5 text-surface-400 font-normal normal-case">
-            throws
-          </span>
+          <span className="ml-1.5 text-surface-400 font-normal normal-case">throws</span>
         </h3>
       </div>
 
@@ -41,7 +35,7 @@ export function VolumeChart({ data }: { data: WeeklyVolume }) {
               {/* Hover tooltip */}
               <div
                 className={cn(
-                  "text-[10px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap transition-opacity",
+                  "text-nano font-medium px-1.5 py-0.5 rounded whitespace-nowrap transition-opacity",
                   "bg-surface-800 text-surface-100 dark:bg-surface-200 dark:text-surface-900",
                   isHovered && day.throws > 0 ? "opacity-100" : "opacity-0"
                 )}
@@ -74,10 +68,8 @@ export function VolumeChart({ data }: { data: WeeklyVolume }) {
               {/* Day label */}
               <span
                 className={cn(
-                  "text-[10px] uppercase tracking-wider",
-                  isToday
-                    ? "text-primary-500 font-semibold"
-                    : "text-muted"
+                  "text-nano uppercase tracking-wider",
+                  isToday ? "text-primary-500 font-semibold" : "text-muted"
                 )}
               >
                 {day.label}

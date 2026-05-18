@@ -161,9 +161,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
     };
 
     try {
-      const url = isEdit
-        ? `/api/coach/throws/drills/${editDrill!.id}`
-        : "/api/coach/throws/drills";
+      const url = isEdit ? `/api/coach/throws/drills/${editDrill!.id}` : "/api/coach/throws/drills";
       const method = isEdit ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -261,9 +259,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
 
         {/* Description */}
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-[var(--foreground)]">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-[var(--foreground)]">Description</label>
           <textarea
             className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[80px]"
             value={form.description}
@@ -338,9 +334,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
               );
             })}
           </div>
-          <p className="text-[10px] text-muted">
-            Leave empty if the drill applies to all types.
-          </p>
+          <p className="text-nano text-muted">Leave empty if the drill applies to all types.</p>
         </div>
       </div>
     </Modal>

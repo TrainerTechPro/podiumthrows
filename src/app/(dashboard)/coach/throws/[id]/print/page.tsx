@@ -170,7 +170,7 @@ export default async function CoachThrowsSessionPrintPage({
       <div className="grid grid-cols-[1.6fr_1fr] gap-5 print-keep-together">
         {/* ─── Left column: prescribed blocks in execution order ──────── */}
         <section>
-          <h2 className="text-[10px] font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+          <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
             Session Plan
           </h2>
 
@@ -218,7 +218,7 @@ export default async function CoachThrowsSessionPrintPage({
         {/* ─── Right column: observation / writing space ─────────────── */}
         <section className="space-y-4">
           <div>
-            <h2 className="text-[10px] font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
               Athlete State
             </h2>
             <FieldGrid
@@ -232,14 +232,14 @@ export default async function CoachThrowsSessionPrintPage({
           </div>
 
           <div>
-            <h2 className="text-[10px] font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
               Coaching Cues
             </h2>
             <NoteLines count={3} />
           </div>
 
           <div>
-            <h2 className="text-[10px] font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
               Observations
             </h2>
             <NoteLines count={6} />
@@ -362,7 +362,7 @@ function FieldGrid({ fields }: { fields: { label: string; width: "narrow" | "wid
     <div className="grid grid-cols-2 gap-x-3 gap-y-2">
       {fields.map((f) => (
         <div key={f.label} className="flex items-baseline gap-2">
-          <span className="text-[10px] uppercase tracking-wider text-muted print:text-gray-600 shrink-0">
+          <span className="text-nano uppercase tracking-wider text-muted print:text-gray-600 shrink-0">
             {f.label}
           </span>
           <span className="flex-1 border-b border-gray-300 print:border-gray-400 h-4" />

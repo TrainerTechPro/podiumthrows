@@ -36,8 +36,13 @@ export function getRestSeconds(cfg: Record<string, unknown>): number {
 /* ─── Classification color system ───────────────────────────────────── */
 
 export const CLASSIFICATION_ACCENT: Record<string, string> = {
-  CE: "#FFC800", SDE: "#FF8800", SPE: "#00FF88", GPE: "#4488FF",
-  STRENGTH: "#4488FF", WARMUP: "#FF8800", COOLDOWN: "#00BBFF",
+  CE: "var(--color-brand)",
+  SDE: "#FF8800",
+  SPE: "var(--palette-success-vivid)",
+  GPE: "#4488FF",
+  STRENGTH: "#4488FF",
+  WARMUP: "#FF8800",
+  COOLDOWN: "#00BBFF",
 };
 
 export function getBlockAccent(block: BlockData): string {
@@ -46,7 +51,7 @@ export function getBlockAccent(block: BlockData): string {
   if (classification && CLASSIFICATION_ACCENT[classification]) {
     return CLASSIFICATION_ACCENT[classification];
   }
-  return CLASSIFICATION_ACCENT[block.blockType] ?? "#FFC800";
+  return CLASSIFICATION_ACCENT[block.blockType] ?? "var(--color-brand)";
 }
 
 export function getBlockLabel(block: BlockData): string {
