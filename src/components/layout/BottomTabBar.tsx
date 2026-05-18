@@ -38,7 +38,9 @@ const TABS: Tab[] = [
     href: "/athlete/dashboard",
     label: "Home",
     icon: LayoutDashboard,
-    matchPaths: ["/athlete/dashboard"],
+    // Wellness is reached from Home's readiness ring — it's a Home-tab flow,
+    // not a settings page. Highlight Home when the athlete is checking in.
+    matchPaths: ["/athlete/dashboard", "/athlete/wellness"],
   },
   {
     href: "/athlete/sessions",
@@ -61,6 +63,8 @@ const TABS: Tab[] = [
     href: "/athlete/throws",
     label: "Throws",
     icon: Activity,
+    // Analytics-only surface. Readiness/quiz are deep-link survivors but no
+    // longer primary IA — they live under Wellness (Home) for new entries.
     matchPaths: [
       "/athlete/throws",
       "/athlete/throws/trends",
@@ -77,16 +81,14 @@ const TABS: Tab[] = [
     href: "/athlete/profile",
     label: "Me",
     icon: UserCircle,
-    // MVP cut (2026-05-15): /athlete/team now redirects to /athlete/dashboard.
-    // /athlete/wellness stays under Me (it's the readiness check-in).
-    // /athlete/availability + /athlete/integrations are deep-link-only —
-    // they still resolve when reached from coach calendar or wearable
-    // banners, so Me highlights for context.
+    // Profile + account/settings only. Wellness moved to Home tab (canonical
+    // entry is the readiness ring). Availability + integrations remain
+    // deep-link-only (coach calendar, wearable banners) and still highlight
+    // Me for context — they're settings-shape pages.
     matchPaths: [
       "/athlete/profile",
       "/athlete/settings",
       "/athlete/notifications",
-      "/athlete/wellness",
       "/athlete/availability",
       "/athlete/integrations",
     ],
